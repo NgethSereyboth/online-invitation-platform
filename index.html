@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sovan Invite Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header><strong>Sovan Invite</strong><span id="saveState">Saved locally</span><span id="serverState">Local mode</span><button id="backupBtn">Backup</button><button id="restoreBtn">Restore</button><input id="restoreFile" type="file" accept="application/json" hidden><button id="previewBtn">Guest preview</button><button id="publishBtn" class="primary">Publish snapshot</button></header>
+  <main>
+    <aside class="left">
+      <h2>Content</h2>
+      <label>Couple names<input id="names" value="Sophea & Dara"></label>
+      <label>Event date<input id="date" type="date" value="2026-12-27"></label>
+      <label>Venue<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
+      <label>Invitation message<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
+      <h2>Materials</h2>
+      <label class="upload">Upload photo<input id="photoUpload" type="file" accept="image/*"></label>
+      <div id="assets" class="assets"></div>
+      <button id="addText">+ Add text</button>
+      <p class="hint">Select an object, then drag it or use its lower-right handle to resize.</p>
+    </aside>
+    <section class="stage-wrap">
+      <div class="toolbar"><button data-device="390">Mobile</button><button data-device="760">Tablet</button><button data-device="1100">Desktop</button><span>Draft canvas</span></div>
+      <div id="stage" class="stage">
+        <div class="decor">✦</div>
+        <div class="object text-object" data-id="title" style="left:8%;top:10%;width:84%;height:110px"><div class="content title">Sophea & Dara</div><i></i></div>
+        <div class="object text-object" data-id="subtitle" style="left:12%;top:31%;width:76%;height:80px"><div class="content subtitle">Together with our families, we warmly invite you to celebrate our wedding.</div><i></i></div>
+        <div class="object image-object" data-id="hero" style="left:12%;top:49%;width:76%;height:250px"><img alt="Wedding flowers" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23eac7b8'/%3E%3Cstop offset='1' stop-color='%239d4555'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23g)'/%3E%3Ccircle cx='270' cy='280' r='120' fill='%23f9eee5' opacity='.8'/%3E%3Ccircle cx='490' cy='270' r='150' fill='%23d98c9a' opacity='.7'/%3E%3Ctext x='400' y='530' text-anchor='middle' font-family='serif' font-size='34' fill='white'%3EOur Celebration%3C/text%3E%3C/svg%3E"><i></i></div>
+        <div class="object text-object" data-id="details" style="left:12%;top:83%;width:76%;height:90px"><div class="content details">27 December 2026<br>The Riverside Ballroom, Phnom Penh</div><i></i></div>
+      </div>
+    </section>
+    <aside class="right">
+      <h2>Style & motion</h2>
+      <div id="noSelection" class="empty">Select an object on the canvas.</div>
+      <div id="properties" hidden>
+        <label>Font<select id="font"><option value="Georgia,serif">Classic Serif</option><option value="Arial,sans-serif">Modern Sans</option><option value="'Trebuchet MS',sans-serif">Friendly</option></select></label>
+        <label>Text color<input id="color" type="color" value="#47252d"></label>
+        <label>Animation<select id="animation"><option value="fade-up">Fade up</option><option value="soft-zoom">Soft zoom</option><option value="slide-left">Slide left</option><option value="float">Gentle float</option><option value="none">None</option></select></label>
+        <label>Duration<input id="duration" type="range" min="300" max="3000" step="100" value="900"></label>
+        <button id="duplicate">Duplicate</button><button id="deleteBtn" class="danger">Delete</button>
+      </div>
+      <h2>Theme</h2>
+      <label>Accent<input id="accent" type="color" value="#9d4555"></label>
+      <h2>Publishing</h2>
+      <div id="publishInfo" class="card">No snapshot published yet.</div>
+      <button id="historyBtn">Published versions</button>
+      <button id="rsvpBtn">View RSVP responses</button>
+    </aside>
+  </main>
+  <dialog id="modal"><button class="close">×</button><div id="modalBody"></div></dialog>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
