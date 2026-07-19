@@ -6,6 +6,8 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 
 - Browser-based demo sign-in and multi-invitation dashboard
 - Create, duplicate, and open invitation records from the dashboard
+- Server-backed registration, login, 30-day sessions, and logout
+- Owner-scoped drafts, publishing, uploads, versions, and RSVP management
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
