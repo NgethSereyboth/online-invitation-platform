@@ -30,6 +30,7 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - Four reusable invitation themes and four opening-cover styles
 - Blur, bounce, and card-flip animation presets with configurable duration
 - Optional live days/hours/minutes/seconds countdown with custom heading and section ordering
+- Bidirectional Gregorian ↔ Khmer lunar date selection and Khmer/Gregorian/bilingual guest display
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
@@ -54,6 +55,8 @@ The demo stores documents, snapshots, assets, and RSVPs locally. `storage.js` is
 ## Included development backend
 
 `server.py` uses only Python's standard library and provides SQLite-backed invitations, immutable publications, RSVP records, public routes at `/i/{slug}`, and validated material storage. Runtime data is created under `data/` and is excluded from the downloadable source archive until the server is run.
+
+Khmer lunar conversion uses the zero-dependency MIT-licensed [MomentKH 3.0.3](https://github.com/ThyrithSor/momentkh) browser bundle. The selected conversion result is saved into each publish snapshot so invitations retain their chosen Khmer wording.
 
 ## GitHub Pages
 

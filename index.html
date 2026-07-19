@@ -14,6 +14,15 @@
       <label>Couple names<input id="names" value="Sophea & Dara"></label>
       <label>Event date<input id="date" type="date" value="2026-12-27"></label>
       <label>Event time<input id="time" type="time" value="16:00"></label>
+      <label>Date display<select id="dateFormat"><option value="both">Khmer lunar + Gregorian</option><option value="khmer">Khmer lunar only</option><option value="gregorian">Gregorian only</option></select></label>
+      <div id="khmerDatePreview" class="card khmer-text">Select a date to calculate its Khmer lunar date.</div>
+      <details class="khmer-picker"><summary>Select using Khmer lunar calendar</summary>
+        <label>Lunar day<select id="khmerDay"></select></label>
+        <label>Moon phase<select id="khmerPhase"><option value="0">កើត</option><option value="1">រោច</option></select></label>
+        <label>Lunar month<select id="khmerMonth"></select></label>
+        <label>Buddhist Era year<input id="khmerYear" type="number" min="2400" max="2700" value="2570"></label>
+        <button id="useKhmerDate" type="button">Use this Khmer date</button>
+      </details>
       <label>Venue<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
       <label>Invitation message<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
       <h2>Guest response</h2>
@@ -82,6 +91,7 @@ rsvp</textarea></label>
     </aside>
   </main>
   <dialog id="modal"><button class="close">×</button><div id="modalBody"></div></dialog>
+  <script src="vendor/momentkh.js"></script>
   <script src="storage.js"></script>
   <script src="app.js"></script>
 </body>
