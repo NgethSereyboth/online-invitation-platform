@@ -17,13 +17,15 @@ def connect():
     db.executescript("""
     CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, created_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS invitations(id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, draft_json TEXT NOT NULL, updated_at INTEGER NOT NULL, owner_id TEXT);
+    CREATE TABLE IF NOT EXISTS invitations(id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, draft_json TEXT NOT NULL, updated_at INTEGER NOT NULL, owner_id TEXT, archived INTEGER NOT NULL DEFAULT 0, views INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE IF NOT EXISTS publications(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, published_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS rsvps(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, publication_id TEXT NOT NULL, name TEXT NOT NULL, status TEXT NOT NULL, guest_count INTEGER NOT NULL, note TEXT, created_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS assets(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, created_at INTEGER NOT NULL);
     """)
     columns={row["name"] for row in db.execute("PRAGMA table_info(invitations)")}
     if "owner_id" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN owner_id TEXT")
+    if "archived" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+    if "views" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
     return db
 
 def clean_slug(value):
@@ -73,8 +75,13 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
     def do_PUT(self):
         path = urlparse(self.path).path
+        if path.startswith("/api/invitations/") and path.endswith("/archive"): return self.archive_invitation(path.split("/")[3])
         if path.startswith("/api/invitations/"): return self.save_draft(path.split("/")[3])
         self.json(404, {"error": "Not found"})
+    def do_DELETE(self):
+        path=urlparse(self.path).path
+        if path.startswith("/api/invitations/"): return self.delete_invitation(path.split("/")[3])
+        self.json(404,{"error":"Not found"})
     def do_POST(self):
         path = urlparse(self.path).path
         try:
@@ -114,10 +121,10 @@ class Handler(SimpleHTTPRequestHandler):
         user=self.require_user()
         if not user:return
         with connect() as db:
-            rows=db.execute("SELECT i.id,i.slug,i.updated_at,CASE WHEN EXISTS(SELECT 1 FROM publications p WHERE p.invitation_id=i.id) THEN 'Published' ELSE 'Draft' END status,(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json FROM invitations i WHERE i.owner_id=? ORDER BY i.updated_at DESC",(user["id"],)).fetchall()
+            rows=db.execute("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,CASE WHEN EXISTS(SELECT 1 FROM publications p WHERE p.invitation_id=i.id) THEN 'Published' ELSE 'Draft' END status,(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json FROM invitations i WHERE i.owner_id=? ORDER BY i.archived,i.updated_at DESC",(user["id"],)).fetchall()
         result=[]
         for row in rows:
-            draft=json.loads(row["draft_json"]); result.append({"id":row["id"],"slug":row["slug"],"title":draft.get("fields",{}).get("names","Untitled invitation"),"status":row["status"],"rsvps":row["rsvps"],"updatedAt":row["updated_at"]})
+            draft=json.loads(row["draft_json"]); result.append({"id":row["id"],"slug":row["slug"],"title":draft.get("fields",{}).get("names","Untitled invitation"),"status":"Archived" if row["archived"] else row["status"],"archived":bool(row["archived"]),"views":row["views"],"rsvps":row["rsvps"],"updatedAt":row["updated_at"]})
         self.json(200,result)
     def create_invitation(self):
         user=self.require_user()
@@ -128,6 +135,23 @@ class Handler(SimpleHTTPRequestHandler):
             while db.execute("SELECT 1 FROM invitations WHERE slug=?",(slug,)).fetchone(): slug=f"{base}-{n}"; n+=1
             db.execute("INSERT INTO invitations(id,slug,draft_json,updated_at,owner_id) VALUES(?,?,?,?,?)",(invite_id,slug,json.dumps(data.get("document",{})),now,user["id"]))
         self.json(201,{"id":invite_id,"slug":slug})
+    def archive_invitation(self,invite_id):
+        user=self.require_user()
+        if not user:return
+        data=self.body(10_000); archived=1 if data.get("archived",True) else 0
+        with connect() as db: changed=db.execute("UPDATE invitations SET archived=?,updated_at=? WHERE id=? AND owner_id=?",(archived,int(time.time()*1000),invite_id,user["id"])).rowcount
+        self.json(200 if changed else 404,{"archived":bool(archived)})
+    def delete_invitation(self,invite_id):
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
+            asset_rows=db.execute("SELECT path FROM assets WHERE invitation_id=?",(invite_id,)).fetchall()
+            db.execute("DELETE FROM rsvps WHERE invitation_id=?",(invite_id,));db.execute("DELETE FROM publications WHERE invitation_id=?",(invite_id,));db.execute("DELETE FROM assets WHERE invitation_id=?",(invite_id,));db.execute("DELETE FROM invitations WHERE id=?",(invite_id,))
+        for row in asset_rows:
+            path=UPLOADS/row["path"]
+            if path.exists():path.unlink()
+        self.json(200,{"deleted":True})
     def save_draft(self, invite_id):
         user=self.require_user()
         if not user:return
@@ -146,7 +170,8 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(201,{"publicationId":pub_id,"version":now,"slug":row["slug"],"url":f"/i/{row['slug']}"})
     def get_public(self, slug):
         with connect() as db:
-            row=db.execute("SELECT i.id,p.id publication_id,p.version,p.document_json FROM invitations i JOIN publications p ON p.invitation_id=i.id WHERE i.slug=? ORDER BY p.published_at DESC LIMIT 1",(slug,)).fetchone()
+            row=db.execute("SELECT i.id,p.id publication_id,p.version,p.document_json FROM invitations i JOIN publications p ON p.invitation_id=i.id WHERE i.slug=? AND i.archived=0 ORDER BY p.published_at DESC LIMIT 1",(slug,)).fetchone()
+            if row:db.execute("UPDATE invitations SET views=views+1 WHERE id=?",(row["id"],))
         if not row:return self.json(404,{"error":"Published invitation not found"})
         self.json(200,{"invitationId":row["id"],"publicationId":row["publication_id"],"version":row["version"],"document":json.loads(row["document_json"])})
     def rsvp(self, slug):

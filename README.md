@@ -8,6 +8,9 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - Create, duplicate, and open invitation records from the dashboard
 - Server-backed registration, login, 30-day sessions, and logout
 - Owner-scoped drafts, publishing, uploads, versions, and RSVP management
+- Archive, restore, and permanent invitation deletion controls
+- Public invitation view counting and dashboard analytics
+- Authenticated server material uploads with offline browser copies
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
