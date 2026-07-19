@@ -13,6 +13,7 @@
       <h2>Content</h2>
       <label>Couple names<input id="names" value="Sophea & Dara"></label>
       <label>Event date<input id="date" type="date" value="2026-12-27"></label>
+      <label>Event time<input id="time" type="time" value="16:00"></label>
       <label>Venue<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
       <label>Invitation message<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
       <h2>Guest response</h2>
@@ -20,11 +21,14 @@
       <p class="hint">Turn this off for a pure invitation with no attending, declined, or pending response.</p>
       <h2>Invitation sections</h2>
       <label>Quick preset<select id="invitationPreset"><option value="custom">Custom</option><option value="pure">Pure invitation</option><option value="rsvp">Simple invitation + RSVP</option><option value="full">Full event experience</option></select></label>
-      <label>Section order — one per line<textarea id="sectionOrder" placeholder="gallery&#10;schedule&#10;venue&#10;rsvp">gallery
+      <label>Section order — one per line<textarea id="sectionOrder" placeholder="gallery&#10;countdown&#10;schedule&#10;venue&#10;rsvp">gallery
+countdown
 schedule
 venue
 rsvp</textarea></label>
-      <p class="hint">Use gallery, schedule, venue, and rsvp. Move the lines to control the guest-page order.</p>
+      <p class="hint">Use gallery, countdown, schedule, venue, and rsvp. Move the lines to control the guest-page order.</p>
+      <label><input id="countdownEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show live event countdown</label>
+      <label>Countdown heading<input id="countdownTitle" value="Counting down to our celebration"></label>
       <label><input id="scheduleEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show event schedule</label>
       <label>Schedule — one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
 5:00 PM | Wedding ceremony

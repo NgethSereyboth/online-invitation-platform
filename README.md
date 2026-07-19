@@ -29,6 +29,7 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - YouTube and YouTube Music link support with validated video IDs and tap-triggered playback
 - Four reusable invitation themes and four opening-cover styles
 - Blur, bounce, and card-flip animation presets with configurable duration
+- Optional live days/hours/minutes/seconds countdown with custom heading and section ordering
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
