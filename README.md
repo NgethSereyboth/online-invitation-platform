@@ -11,6 +11,9 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - Archive, restore, and permanent invitation deletion controls
 - Public invitation view counting and dashboard analytics
 - Authenticated server material uploads with offline browser copies
+- Guest-list dashboard with RSVP status summaries
+- Personalized guest links that prefill the invited guest's name
+- CSV guest-list export and owner-protected guest removal
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
