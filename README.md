@@ -14,6 +14,9 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - Guest-list dashboard with RSVP status summaries
 - Personalized guest links that prefill the invited guest's name
 - CSV guest-list export and owner-protected guest removal
+- Bulk CSV guest import with quoted-field support
+- Guest search, RSVP filters, and arrival check-in tracking
+- Personalized QR-code preview and download
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls

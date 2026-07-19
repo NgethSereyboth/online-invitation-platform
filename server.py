@@ -21,12 +21,15 @@ def connect():
     CREATE TABLE IF NOT EXISTS publications(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, published_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS rsvps(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, publication_id TEXT NOT NULL, name TEXT NOT NULL, status TEXT NOT NULL, guest_count INTEGER NOT NULL, note TEXT, created_at INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS assets(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, token TEXT UNIQUE NOT NULL, created_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, token TEXT UNIQUE NOT NULL, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER);
     """)
     columns={row["name"] for row in db.execute("PRAGMA table_info(invitations)")}
     if "owner_id" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN owner_id TEXT")
     if "archived" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
     if "views" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
+    guest_columns={row["name"] for row in db.execute("PRAGMA table_info(guests)")}
+    if "checked_in" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in INTEGER NOT NULL DEFAULT 0")
+    if "checked_in_at" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in_at INTEGER")
     return db
 
 def clean_slug(value):
@@ -79,6 +82,7 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_GET()
     def do_PUT(self):
         path = urlparse(self.path).path
+        if "/guests/" in path and path.endswith("/check-in"): return self.check_in_guest(path.split("/")[3],path.split("/")[5])
         if path.startswith("/api/invitations/") and path.endswith("/archive"): return self.archive_invitation(path.split("/")[3])
         if path.startswith("/api/invitations/"): return self.save_draft(path.split("/")[3])
         self.json(404, {"error": "Not found"})
@@ -188,7 +192,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not user:return
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
-            rows=db.execute("SELECT g.id,g.name,g.phone,g.token,g.created_at,(SELECT status FROM rsvps r WHERE r.invitation_id=g.invitation_id AND lower(r.name)=lower(g.name) ORDER BY created_at DESC LIMIT 1) rsvp_status FROM guests g WHERE g.invitation_id=? ORDER BY g.created_at DESC",(invite_id,)).fetchall()
+            rows=db.execute("SELECT g.id,g.name,g.phone,g.token,g.created_at,g.checked_in,g.checked_in_at,(SELECT status FROM rsvps r WHERE r.invitation_id=g.invitation_id AND lower(r.name)=lower(g.name) ORDER BY created_at DESC LIMIT 1) rsvp_status FROM guests g WHERE g.invitation_id=? ORDER BY g.created_at DESC",(invite_id,)).fetchall()
         self.json(200,[dict(row) for row in rows])
     def add_guest(self,invite_id):
         user=self.require_user()
@@ -197,7 +201,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not name:raise ValueError("Guest name is required")
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
-            guest_id=str(uuid.uuid4());token=secrets.token_urlsafe(12);db.execute("INSERT INTO guests VALUES(?,?,?,?,?,?)",(guest_id,invite_id,name,str(data.get("phone","")).strip()[:40],token,int(time.time()*1000)))
+            guest_id=str(uuid.uuid4());token=secrets.token_urlsafe(12);db.execute("INSERT INTO guests(id,invitation_id,name,phone,token,created_at) VALUES(?,?,?,?,?,?)",(guest_id,invite_id,name,str(data.get("phone","")).strip()[:40],token,int(time.time()*1000)))
         self.json(201,{"id":guest_id,"name":name,"token":token})
     def delete_guest(self,invite_id,guest_id):
         user=self.require_user()
@@ -206,6 +210,14 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             changed=db.execute("DELETE FROM guests WHERE id=? AND invitation_id=?",(guest_id,invite_id)).rowcount
         self.json(200 if changed else 404,{"deleted":bool(changed)})
+    def check_in_guest(self,invite_id,guest_id):
+        user=self.require_user()
+        if not user:return
+        data=self.body(10_000);checked=1 if data.get("checkedIn",True) else 0;checked_at=int(time.time()*1000) if checked else None
+        with connect() as db:
+            if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
+            changed=db.execute("UPDATE guests SET checked_in=?,checked_in_at=? WHERE id=? AND invitation_id=?",(checked,checked_at,guest_id,invite_id)).rowcount
+        self.json(200 if changed else 404,{"checkedIn":bool(checked),"checkedInAt":checked_at})
     def rsvp(self, slug):
         data=self.body(100_000); name=str(data.get("name","")).strip()[:120]
         if not name:raise ValueError("Name is required")
