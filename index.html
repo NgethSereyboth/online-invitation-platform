@@ -19,12 +19,14 @@
       <label><input id="rsvpEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Enable RSVP attendance form</label>
       <p class="hint">Turn this off for a pure invitation with no attending, declined, or pending response.</p>
       <h2>Invitation sections</h2>
+      <label>Quick preset<select id="invitationPreset"><option value="custom">Custom</option><option value="pure">Pure invitation</option><option value="rsvp">Simple invitation + RSVP</option><option value="full">Full event experience</option></select></label>
       <label><input id="scheduleEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show event schedule</label>
       <label>Schedule — one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
 5:00 PM | Wedding ceremony
 6:30 PM | Dinner reception</textarea></label>
       <label><input id="venueEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show venue and map</label>
       <label>Map link<input id="mapUrl" type="url" placeholder="https://maps.google.com/..."></label>
+      <label>Additional venues — one per line<textarea id="venuesText" placeholder="Reception | Hotel Ballroom | https://maps.google.com/..."></textarea></label>
       <label><input id="galleryEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show photo gallery</label>
       <h2>Materials</h2>
       <label class="upload">Upload photo<input id="photoUpload" type="file" accept="image/*"></label>
@@ -51,6 +53,8 @@
         <label>Animation<select id="animation"><option value="fade-up">Fade up</option><option value="soft-zoom">Soft zoom</option><option value="slide-left">Slide left</option><option value="float">Gentle float</option><option value="none">None</option></select></label>
         <label>Duration<input id="duration" type="range" min="300" max="3000" step="100" value="900"></label>
         <button id="duplicate">Duplicate</button><button id="deleteBtn" class="danger">Delete</button>
+        <h2>Fine position</h2>
+        <div class="actions"><button data-nudge="up">↑</button><button data-nudge="left">←</button><button data-nudge="right">→</button><button data-nudge="down">↓</button><button data-size="smaller">− Size</button><button data-size="larger">+ Size</button></div>
       </div>
       <h2>Theme</h2>
       <label>Accent<input id="accent" type="color" value="#9d4555"></label>

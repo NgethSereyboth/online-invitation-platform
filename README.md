@@ -20,6 +20,9 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - Optional RSVP section for pure invitations that do not collect attendance responses
 - Optional schedule, venue/map, gallery, and RSVP section visibility
 - Editable multi-item event schedule and validated external map link
+- Quick presets for pure, RSVP-focused, and full-event invitations
+- Multiple named venues with individual addresses and map links
+- Fine nudge and resize controls for touch and mobile editing
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
