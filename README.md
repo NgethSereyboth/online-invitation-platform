@@ -4,6 +4,9 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 
 ## Included
 
+- Browser-based demo sign-in and multi-invitation dashboard
+- Create, duplicate, and open invitation records from the dashboard
+
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls
 - IndexedDB image material library (larger and safer than localStorage) and reusable canvas objects
