@@ -27,6 +27,8 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 - Optional MP3/M4A background music with browser-safe tap-to-open playback
 - Configurable animated opening cover and guest music pause/resume control
 - YouTube and YouTube Music link support with validated video IDs and tap-triggered playback
+- Four reusable invitation themes and four opening-cover styles
+- Blur, bounce, and card-flip animation presets with configurable duration
 
 - Editable event content with autosave through a replaceable repository layer
 - Direct selection, drag, resize, duplicate, delete, font, color, and animation controls

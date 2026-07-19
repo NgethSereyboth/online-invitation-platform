@@ -40,6 +40,7 @@ rsvp</textarea></label>
       <p class="hint">When a valid YouTube link is present, it is used instead of the uploaded audio.</p>
       <label><input id="musicEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Play uploaded background music</label>
       <label><input id="openingEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show “Tap to open” entrance</label>
+      <label>Opening style<select id="openingStyle"><option value="soft">Soft glow</option><option value="curtain">Royal curtain</option><option value="night">Midnight lights</option><option value="minimal">Minimal</option></select></label>
       <div id="musicState" class="card">No music selected.</div>
       <div id="assets" class="assets"></div>
       <button id="addText">+ Add text</button>
@@ -61,13 +62,14 @@ rsvp</textarea></label>
       <div id="properties" hidden>
         <label>Font<select id="font"><option value="Georgia,serif">Classic Serif</option><option value="Arial,sans-serif">Modern Sans</option><option value="'Trebuchet MS',sans-serif">Friendly</option></select></label>
         <label>Text color<input id="color" type="color" value="#47252d"></label>
-        <label>Animation<select id="animation"><option value="fade-up">Fade up</option><option value="soft-zoom">Soft zoom</option><option value="slide-left">Slide left</option><option value="float">Gentle float</option><option value="none">None</option></select></label>
+        <label>Animation<select id="animation"><option value="fade-up">Fade up</option><option value="soft-zoom">Soft zoom</option><option value="slide-left">Slide left</option><option value="blur-in">Blur reveal</option><option value="bounce-in">Elegant bounce</option><option value="flip-in">Card flip</option><option value="float">Gentle float</option><option value="none">None</option></select></label>
         <label>Duration<input id="duration" type="range" min="300" max="3000" step="100" value="900"></label>
         <button id="duplicate">Duplicate</button><button id="deleteBtn" class="danger">Delete</button>
         <h2>Fine position</h2>
         <div class="actions"><button data-nudge="up">↑</button><button data-nudge="left">←</button><button data-nudge="right">→</button><button data-nudge="down">↓</button><button data-size="smaller">− Size</button><button data-size="larger">+ Size</button></div>
       </div>
       <h2>Theme</h2>
+      <label>Design theme<select id="designTheme"><option value="rose">Royal Rose</option><option value="gold">Khmer Gold</option><option value="emerald">Emerald Garden</option><option value="midnight">Midnight Luxury</option></select></label>
       <label>Accent<input id="accent" type="color" value="#9d4555"></label>
       <h2>Publishing</h2>
       <div id="publishInfo" class="card">No snapshot published yet.</div>
