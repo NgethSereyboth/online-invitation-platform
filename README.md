@@ -1,4 +1,4 @@
-# Sovan Invite Studio — usable local demo
+# E-Invitation project
 
 For the complete backend demo, run `python server.py` and open `http://127.0.0.1:4175`. Opening `index.html` directly still provides local-only mode.
 
