@@ -6,8 +6,10 @@ For the complete backend demo, run `python server.py` and open `http://127.0.0.1
 
 - Browser-based demo sign-in and multi-invitation dashboard
 - Create, duplicate, and open invitation records from the dashboard
+- Guided creation dialog with Wedding, Birthday, and Business starter documents
 - Server-backed registration, login, 30-day sessions, and logout
 - Owner-scoped drafts, publishing, uploads, versions, and RSVP management
+- Reliable dashboard-to-editor server draft loading without duplicate invitation creation
 - Archive, restore, and permanent invitation deletion controls
 - Public invitation view counting and dashboard analytics
 - Authenticated server material uploads with offline browser copies

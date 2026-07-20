@@ -3,6 +3,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, unquote, parse_qs
 from pathlib import Path
 import base64, hashlib, hmac, json, re, secrets, sqlite3, time, uuid
+from contextlib import contextmanager
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
@@ -11,26 +12,34 @@ DB = DATA / "invites.db"
 DATA.mkdir(exist_ok=True)
 UPLOADS.mkdir(exist_ok=True)
 
+@contextmanager
 def connect():
     db = sqlite3.connect(DB)
     db.row_factory = sqlite3.Row
-    db.executescript("""
-    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS invitations(id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, draft_json TEXT NOT NULL, updated_at INTEGER NOT NULL, owner_id TEXT, archived INTEGER NOT NULL DEFAULT 0, views INTEGER NOT NULL DEFAULT 0);
-    CREATE TABLE IF NOT EXISTS publications(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, published_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS rsvps(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, publication_id TEXT NOT NULL, name TEXT NOT NULL, status TEXT NOT NULL, guest_count INTEGER NOT NULL, note TEXT, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS assets(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, token TEXT UNIQUE NOT NULL, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER);
-    """)
-    columns={row["name"] for row in db.execute("PRAGMA table_info(invitations)")}
-    if "owner_id" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN owner_id TEXT")
-    if "archived" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
-    if "views" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
-    guest_columns={row["name"] for row in db.execute("PRAGMA table_info(guests)")}
-    if "checked_in" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in INTEGER NOT NULL DEFAULT 0")
-    if "checked_in_at" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in_at INTEGER")
-    return db
+    try:
+        db.executescript("""
+        CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, created_at INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS invitations(id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, draft_json TEXT NOT NULL, updated_at INTEGER NOT NULL, owner_id TEXT, archived INTEGER NOT NULL DEFAULT 0, views INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS publications(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, published_at INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS rsvps(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, publication_id TEXT NOT NULL, name TEXT NOT NULL, status TEXT NOT NULL, guest_count INTEGER NOT NULL, note TEXT, created_at INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS assets(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, mime TEXT NOT NULL, path TEXT NOT NULL, size INTEGER NOT NULL, created_at INTEGER NOT NULL);
+        CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, token TEXT UNIQUE NOT NULL, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER);
+        """)
+        columns={row["name"] for row in db.execute("PRAGMA table_info(invitations)")}
+        if "owner_id" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN owner_id TEXT")
+        if "archived" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+        if "views" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
+        guest_columns={row["name"] for row in db.execute("PRAGMA table_info(guests)")}
+        if "checked_in" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in INTEGER NOT NULL DEFAULT 0")
+        if "checked_in_at" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in_at INTEGER")
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 def clean_slug(value):
     value = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
@@ -70,6 +79,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/auth/me":
             user=self.user(); return self.json(200,{"user":dict(user) if user else None})
         if path == "/api/invitations": return self.list_invitations()
+        if path.startswith("/api/invitations/") and path.count("/") == 3: return self.get_invitation(path.split("/")[3])
         if path.startswith("/i/"): return self.serve_public(path.split("/", 2)[2])
         if path.startswith("/api/public/"):
             guest=parse_qs(urlparse(self.path).query).get("guest",[None])[0]
@@ -134,7 +144,7 @@ class Handler(SimpleHTTPRequestHandler):
             rows=db.execute("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,CASE WHEN EXISTS(SELECT 1 FROM publications p WHERE p.invitation_id=i.id) THEN 'Published' ELSE 'Draft' END status,(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json FROM invitations i WHERE i.owner_id=? ORDER BY i.archived,i.updated_at DESC",(user["id"],)).fetchall()
         result=[]
         for row in rows:
-            draft=json.loads(row["draft_json"]); result.append({"id":row["id"],"slug":row["slug"],"title":draft.get("fields",{}).get("names","Untitled invitation"),"status":"Archived" if row["archived"] else row["status"],"archived":bool(row["archived"]),"views":row["views"],"rsvps":row["rsvps"],"updatedAt":row["updated_at"]})
+            draft=json.loads(row["draft_json"]); result.append({"id":row["id"],"slug":row["slug"],"title":draft.get("fields",{}).get("names","Untitled invitation"),"type":draft.get("eventType","Invitation"),"status":"Archived" if row["archived"] else row["status"],"archived":bool(row["archived"]),"views":row["views"],"rsvps":row["rsvps"],"updatedAt":row["updated_at"]})
         self.json(200,result)
     def create_invitation(self):
         user=self.require_user()
@@ -145,6 +155,13 @@ class Handler(SimpleHTTPRequestHandler):
             while db.execute("SELECT 1 FROM invitations WHERE slug=?",(slug,)).fetchone(): slug=f"{base}-{n}"; n+=1
             db.execute("INSERT INTO invitations(id,slug,draft_json,updated_at,owner_id) VALUES(?,?,?,?,?)",(invite_id,slug,json.dumps(data.get("document",{})),now,user["id"]))
         self.json(201,{"id":invite_id,"slug":slug})
+    def get_invitation(self,invite_id):
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            row=db.execute("SELECT id,slug,draft_json,updated_at,archived FROM invitations WHERE id=? AND owner_id=?",(invite_id,user["id"])).fetchone()
+        if not row:return self.json(404,{"error":"Invitation not found"})
+        self.json(200,{"id":row["id"],"slug":row["slug"],"document":json.loads(row["draft_json"]),"updatedAt":row["updated_at"],"archived":bool(row["archived"])})
     def archive_invitation(self,invite_id):
         user=self.require_user()
         if not user:return
