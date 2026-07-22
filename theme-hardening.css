@@ -1,0 +1,17 @@
+/* Final app-surface hardening: prevent legacy light-only colors from leaking into dark mode. */
+body:not(.guest){background:var(--app-bg)!important;color:var(--app-text)!important}
+body:not(.guest) main,body:not(.guest) section,body:not(.guest) article,body:not(.guest) aside,body:not(.guest) dialog{color:var(--app-text)}
+body:not(.guest) p,body:not(.guest) .hint,body:not(.guest) .download-note,body:not(.guest) .library-hint,body:not(.guest) .provider-note p,body:not(.guest) .workspace-card p{color:var(--app-muted)!important}
+body:not(.guest) h1,body:not(.guest) h2,body:not(.guest) h3,body:not(.guest) h4{color:var(--app-text)!important}
+body:not(.guest) .account-summary>div,body:not(.guest) .workspace-metric,body:not(.guest) .material-tags span,body:not(.guest) .library-summary span,body:not(.guest) .badge,body:not(.guest) .notice,body:not(.guest) .provider-note{background:var(--app-surface-2)!important;color:var(--app-text)!important;border-color:var(--app-line)!important}
+body:not(.guest) .account-card,body:not(.guest) .workspace-card,body:not(.guest) .admin-metric,body:not(.guest) .admin-row,body:not(.guest) .material-card-page,body:not(.guest) .upload-box,body:not(.guest) .plan,body:not(.guest) .plan-status,body:not(.guest) .usage-card,body:not(.guest) .response-card,body:not(.guest) .wish-card{background:var(--app-surface)!important;border-color:var(--app-line)!important;color:var(--app-text)!important}
+body:not(.guest) input,body:not(.guest) textarea,body:not(.guest) select{background:var(--app-surface)!important;color:var(--app-text)!important;border-color:var(--app-line-2)!important}
+body:not(.guest) button:not(.primary):not(.danger){color:var(--app-text)}
+html[data-theme="dark"] body:not(.guest) .notice{background:color-mix(in srgb,var(--app-warn) 10%,var(--app-surface))!important;border-color:color-mix(in srgb,var(--app-warn) 38%,var(--app-line))!important}
+html[data-theme="dark"] body:not(.guest) .danger-text,html[data-theme="dark"] body:not(.guest) .danger{color:var(--danger)!important}
+@media(max-width:760px){body:not(.guest){overflow-x:hidden}body:not(.guest) main{max-width:100%}}
+
+/* A high-specificity layout rule turns the signed-out panel into a grid. Preserve
+   the native hidden contract after authentication instead of leaving both views
+   visible and focusable. */
+body[data-page="dashboard"] #loginView[hidden]{display:none!important}
