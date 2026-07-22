@@ -1,0 +1,2 @@
+const token=new URLSearchParams(location.search).get('token')||'',status=document.querySelector('#status');
+(async()=>{if(!token){status.textContent='No verification token was provided.';return}try{const response=await fetch('/api/auth/verification/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})}),data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Verification failed');status.textContent='Your email address is now verified.'}catch(error){status.textContent=error.message}})();

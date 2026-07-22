@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><head><script src="theme-init.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reset password — E-invitation-website</title><link rel="stylesheet" href="styles.css"><style>.auth-page{max-width:480px;margin:70px auto;padding:28px;background:#fff;border:1px solid var(--line);border-radius:18px}.auth-page h1{font:34px Georgia,serif;color:var(--accent)}.auth-page form{display:grid;gap:12px}.auth-page label{display:grid;gap:6px}.auth-page .status{min-height:24px;color:#655}.auth-page .success{color:#176443}</style><link rel="stylesheet" href="modern-ui.css">  <link rel="stylesheet" href="final-experience.css">
+<link rel="stylesheet" href="canvas-plus.css">
+<link rel="stylesheet" href="ui-dialogs.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="theme-hardening.css">
+<link rel="stylesheet" href="ux-refine.css">
+</head><body data-page="reset"><header><strong>E-invitation-website</strong><a href="dashboard.html"><button type="button">Back to sign in</button></a></header><main class="auth-page">
+  <div class="canvas-auth-visual">
+    <div><span class="canvas-auth-badge">✦ Secure access</span></div>
+    <div><h2>Recover account access cleanly and safely.</h2><p>Request a secure reset link, choose a new password, and return to the same creative workspace without losing your invitation data.</p></div>
+    <div class="canvas-auth-bullets"><div><span>✓</span><div><strong>Simple request flow</strong><small>Use the email attached to your E-invitation-website account.</small></div></div><div><span>✓</span><div><strong>Secure reset</strong><small>Reset tokens expire and existing sessions are invalidated after a password change.</small></div></div></div>
+  </div>
+  <div class="canvas-auth-panel">
+    <section id="requestView"><h1>Reset your password</h1><p>Enter the email address used for your account.</p><form id="requestForm"><label>Email<input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><button class="primary">Send reset link</button></form><p id="requestStatus" class="canvas-auth-status status"></p></section>
+    <section id="confirmView" hidden><h1>Choose a new password</h1><p>Use at least eight characters and avoid reusing an old password.</p><form id="confirmForm"><label>New password<input name="newPassword" type="password" minlength="8" required autocomplete="new-password"></label><label>Confirm password<input name="confirmPassword" type="password" minlength="8" required autocomplete="new-password"></label><button class="primary">Reset password</button></form><p id="confirmStatus" class="canvas-auth-status status"></p></section>
+    <div class="canvas-auth-links"><a href="dashboard.html">← Back to sign in</a></div>
+  </div>
+</main><script src="ui-dialogs.js"></script>
+<script src="reset.js"></script><script src="modern-ui.js"></script>  <script src="final-experience.js"></script>
+<script src="ux-refine.js"></script>
+</body></html>

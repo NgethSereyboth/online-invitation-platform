@@ -1,0 +1,11 @@
+.git
+__pycache__
+*.pyc
+*.zip
+*.7z
+backups
+data
+.venv
+setup-einvite.log
+.einvite-setup-complete.json
+data-test

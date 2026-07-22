@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head><script src="theme-init.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Material Library — E-invitation-website</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .library-page{max-width:1240px;margin:auto;padding:28px}.library-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.library-head h1{font:38px Georgia,serif;color:var(--accent);margin:0 auto 0 0}.library-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) repeat(3,minmax(130px,auto));gap:10px;margin:24px 0}.library-summary{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 22px}.library-summary span{padding:8px 12px;border-radius:999px;background:#fff;border:1px solid var(--line)}.material-grid-page{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}.material-card-page{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 8px 22px #0000000c}.material-thumb{height:150px;background:#eee;display:grid;place-items:center;overflow:hidden;position:relative}.material-thumb img,.material-thumb video{width:100%;height:100%;object-fit:cover}.material-thumb .audio-mark{font-size:54px;color:var(--accent)}.material-thumb .favorite-mark{position:absolute;right:9px;top:8px;background:#fff;border-radius:999px;width:30px;height:30px;display:grid;place-items:center;color:#c58d1d}.material-info{padding:13px}.material-info strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.material-tags{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.material-tags span{font-size:11px;background:#f3efeb;border-radius:999px;padding:4px 7px}.material-card-page .actions{padding:0 13px 13px}.upload-box{padding:18px;background:#fff;border:1px solid var(--line);border-radius:14px;margin:18px 0}.upload-row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.empty-library{grid-column:1/-1;padding:50px;text-align:center;background:#fff;border:1px dashed var(--line);border-radius:16px}.edit-material-dialog{width:min(560px,calc(100% - 30px));border:0;border-radius:16px;padding:24px}.edit-material-dialog::backdrop{background:#21151d88}.progress-line{height:5px;background:#eee;border-radius:999px;overflow:hidden;margin-top:10px}.progress-line span{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}.danger-text{color:#a21d2d}.library-hint{font-size:13px;color:#756b66}.library-folder{font-size:12px;color:#766;margin-top:5px}@media(max-width:760px){.library-toolbar,.upload-row{grid-template-columns:1fr}.library-page{padding:18px}.library-head h1{width:100%}}
+  </style>
+<link rel="stylesheet" href="modern-ui.css">  <link rel="stylesheet" href="final-experience.css">
+<link rel="stylesheet" href="canvas-plus.css">
+<link rel="stylesheet" href="ui-dialogs.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="theme-hardening.css">
+<link rel="stylesheet" href="ux-refine.css">
+<link rel="stylesheet" href="final-polish.css">
+</head>
+<body data-page="materials">
+<header><strong>E-invitation-website</strong><a href="dashboard.html"><button type="button">Dashboard</button></a><a href="templates.html"><button type="button">Template Studio</button></a><a href="account.html"><button type="button">Account</button></a></header>
+<main class="library-page">
+  <div class="library-head"><div><h1>Material Library</h1><p class="library-hint">Your account-wide collection of photos, music, and invitation videos.</p></div><button id="refreshBtn" type="button">Refresh</button></div>
+  <section class="upload-box">
+    <h2>Upload material</h2>
+    <div class="upload-row"><label>Store under invitation<select id="uploadInvitation"></select></label><label>Choose file<input id="uploadFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/mp4,video/mp4,video/webm"></label><button id="uploadBtn" class="primary" type="button">Upload</button></div>
+    <p class="library-hint">Images and audio: up to 15 MB. MP4/WebM video: up to 50 MB. For large production libraries, object storage such as Cloudflare R2/S3 remains the recommended deployment target.</p>
+    <div class="progress-line" hidden><span id="uploadProgress"></span></div>
+  </section>
+  <div class="library-toolbar"><input id="search" type="search" placeholder="Search name, folder, or tags…"><select id="typeFilter"><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="favorite">Favorites</option></select><input id="folderFilter" placeholder="Folder"><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option><option value="size">Largest first</option></select></div>
+  <div id="summary" class="library-summary"></div>
+  <section id="grid" class="material-grid-page"></section>
+</main>
+<dialog id="editDialog" class="edit-material-dialog"><form id="editForm"><h2>Material details</h2><input id="editId" type="hidden"><label>Name<input id="editName" maxlength="180" required></label><label>Folder<input id="editFolder" maxlength="80" placeholder="e.g. Pre-wedding"></label><label>Tags — comma separated<input id="editTags" maxlength="500"></label><label class="toggle-row"><span>Favorite</span><input id="editFavorite" type="checkbox"></label><p id="editMeta" class="library-hint"></p><div class="dialog-actions"><button id="deleteBtn" class="danger" type="button">Delete</button><button id="cancelEdit" type="button">Cancel</button><button class="primary" type="submit">Save details</button></div></form></dialog>
+<script src="ui-dialogs.js"></script>
+  <script src="upload-client.js"></script>
+<script src="materials.js"></script>
+<script src="modern-ui.js"></script>  <script src="final-experience.js"></script>
+<script src="ux-refine.js"></script>
+<script src="final-polish.js"></script>
+</body>
+</html>

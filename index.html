@@ -1,17 +1,26 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head><script src="theme-init.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sovan Invite Studio</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>E-invitation-website</title>
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="studio-experience.css" />
+<link rel="stylesheet" href="modern-ui.css">  <link rel="stylesheet" href="final-experience.css">
+<link rel="stylesheet" href="editor-suite.css">
+<link rel="stylesheet" href="ui-dialogs.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="theme-hardening.css">
+<link rel="stylesheet" href="ux-refine.css">
+<link rel="stylesheet" href="final-polish.css">
 </head>
-<body>
-  <header><strong>Sovan Invite</strong><a href="dashboard.html"><button>Dashboard</button></a><span id="saveState">Saved locally</span><span id="serverState">Local mode</span><button id="backupBtn">Backup</button><button id="restoreBtn">Restore</button><input id="restoreFile" type="file" accept="application/json" hidden><button id="previewBtn">Guest preview</button><button id="publishBtn" class="primary">Publish snapshot</button></header>
+<body data-page="index">
+  <header><strong>E-invitation-website</strong><a href="dashboard.html"><button>Dashboard</button></a><span id="saveState">Saved locally</span><span id="serverState">Local mode</span><button id="backupBtn">Backup</button><button id="restoreBtn">Restore</button><input id="restoreFile" type="file" accept="application/json" hidden><button id="undoBtn" title="Undo (Ctrl+Z)">Undo</button><button id="redoBtn" title="Redo (Ctrl+Y)">Redo</button><button id="previewBtn">Guest preview</button><button id="publishBtn" class="primary">Publish snapshot</button></header>
   <main>
     <aside class="left">
       <h2>Content</h2>
-      <label>Couple names<input id="names" value="Sophea & Dara"></label>
+      <label>Guest language mode<select id="languageMode"><option value="en">English only</option><option value="km">Khmer only</option><option value="both">Khmer + English</option></select></label>
+      <label>Couple names — English<input id="names" value="Sophea & Dara"></label>
+      <label>Couple names — Khmer<input id="namesKm" class="khmer-text" value="សុភា & ដារ៉ា"></label>
       <label>Event date<input id="date" type="date" value="2026-12-27"></label>
       <label>Event time<input id="time" type="time" value="16:00"></label>
       <label>Date display<select id="dateFormat"><option value="both">Khmer lunar + Gregorian</option><option value="khmer">Khmer lunar only</option><option value="gregorian">Gregorian only</option></select></label>
@@ -23,31 +32,96 @@
         <label>Buddhist Era year<input id="khmerYear" type="number" min="2400" max="2700" value="2570"></label>
         <button id="useKhmerDate" type="button">Use this Khmer date</button>
       </details>
-      <label>Venue<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
-      <label>Invitation message<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
+      <label>Venue — English<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
+      <label>Venue — Khmer<input id="venueKm" class="khmer-text" value="សាលពិធីមង្គលការ រាជធានីភ្នំពេញ"></label>
+      <label>Invitation message — English<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
+      <label>Invitation message — Khmer<textarea id="messageKm" class="khmer-text">ជាមួយនឹងក្រុមគ្រួសាររបស់យើង យើងខ្ញុំសូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរពិធីមង្គលការរបស់យើង។</textarea></label>
+      <h2>Host contact</h2>
+      <label><input id="contactEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show contact-host buttons</label>
+      <label>Phone number<input id="contactPhone" type="tel" placeholder="+855 12 345 678"></label>
+      <label>Telegram username or link<input id="contactTelegram" placeholder="username or https://t.me/username"></label>
       <h2>Guest response</h2>
       <label><input id="rsvpEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Enable RSVP attendance form</label>
       <p class="hint">Turn this off for a pure invitation with no attending, declined, or pending response.</p>
+      <h3>Custom RSVP questions</h3>
+      <p class="hint">Add optional questions such as meal preference, transportation, accommodation, or special requests.</p>
+      <div id="rsvpFieldsManager" class="custom-blocks-manager"></div>
+      <button id="addRsvpField" type="button">+ Add RSVP question</button>
+      <label><input id="wishesEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Enable private guest wishes</label>
+      <p class="hint">Guests can send a separate congratulatory message without submitting RSVP. Wishes are visible only to the invitation owner.</p>
       <h2>Invitation sections</h2>
       <label>Quick preset<select id="invitationPreset"><option value="custom">Custom</option><option value="pure">Pure invitation</option><option value="rsvp">Simple invitation + RSVP</option><option value="full">Full event experience</option></select></label>
-      <label>Section order — one per line<textarea id="sectionOrder" placeholder="gallery&#10;countdown&#10;schedule&#10;venue&#10;rsvp">gallery
+      <label>Section order — one per line<textarea id="sectionOrder" placeholder="gallery&#10;video&#10;countdown&#10;schedule&#10;venue&#10;rsvp">gallery
 countdown
 schedule
+custom
 venue
+contact
 rsvp</textarea></label>
-      <p class="hint">Use gallery, countdown, schedule, venue, and rsvp. Move the lines to control the guest-page order.</p>
+      <p class="hint">Use gallery, countdown, schedule, custom, venue, contact, rsvp, and any visual page tokens shown by the page builder. Move the lines to control the guest-page order.</p>
+      <h2>Visual page builder</h2>
+      <p class="hint">Add complete free-form invitation pages and place them anywhere in the published invitation flow. Each page has its own editable canvas, background, animation, and objects.</p>
+      <h3>Page navigator</h3>
+      <p class="hint">Click a thumbnail to edit it. Drag visual-page thumbnails to reorder their relative page sequence.</p>
+      <div id="pageNavigator" class="page-navigator" aria-label="Invitation page navigator"></div>
+      <h3>Master page background</h3>
+      <div class="master-page-style card">
+        <label class="toggle-row"><span>Enable master background</span><input id="masterPageEnabled" type="checkbox"></label>
+        <label>Background color<input id="masterPageBackground" type="color" value="#fffaf6"></label>
+        <label>Background image URL<input id="masterPageImage" type="text" placeholder="Image URL or uploaded asset URL"></label>
+        <div class="mini-actions"><button id="masterPageChooseMaterial" type="button">Choose from materials</button><button id="masterPageUseSelected" type="button">Use selected image</button><button id="masterPageClearImage" type="button">Clear image</button></div>
+        <label>Background fit<select id="masterPageSize"><option value="cover">Cover</option><option value="contain">Contain</option></select></label>
+        <label>Dark overlay <span id="masterPageOverlayValue">0%</span><input id="masterPageOverlay" type="range" min="0" max="80" step="1" value="0"></label>
+      </div>
+      <div class="page-builder-library" aria-label="Visual page templates">
+        <button type="button" data-add-page="title"><span>✦</span><strong>Title Page</strong></button>
+        <button type="button" data-add-page="photo"><span>▣</span><strong>Photo Feature</strong></button>
+        <button type="button" data-add-page="quote"><span>“</span><strong>Quote Page</strong></button>
+        <button type="button" data-add-page="story"><span>♥</span><strong>Story Page</strong></button>
+        <button type="button" data-add-page="details"><span>◇</span><strong>Details Page</strong></button>
+        <button type="button" data-add-page="collage"><span>▦</span><strong>Photo Collage</strong></button>
+        <button type="button" data-add-page="split"><span>◫</span><strong>Split Feature</strong></button>
+        <button type="button" data-add-page="ceremony"><span>♢</span><strong>Ceremony Page</strong></button>
+        <button type="button" data-add-page="thankyou"><span>♡</span><strong>Thank You</strong></button>
+      </div>
+      <div class="page-builder-actions"><button id="editHeroCanvas" type="button">Edit main hero canvas</button></div>
+      <div id="designPagesManager" class="design-pages-manager"></div>
+      <h3>Reusable page templates</h3>
+      <div id="savedPageTemplates" class="saved-page-templates"></div>
       <label><input id="countdownEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show live event countdown</label>
-      <label>Countdown heading<input id="countdownTitle" value="Counting down to our celebration"></label>
+      <label>Countdown heading — English<input id="countdownTitle" value="Counting down to our celebration"></label>
+      <label>Countdown heading — Khmer<input id="countdownTitleKm" class="khmer-text" value="រាប់ថយក្រោយទៅកាន់ថ្ងៃដ៏ពិសេសរបស់យើង"></label>
+      <label>Countdown layout<select id="countdownLayout"><option value="cards">Number cards</option><option value="minimal">Minimal</option><option value="pill">Compact pills</option></select></label>
       <label><input id="scheduleEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show event schedule</label>
-      <label>Schedule — one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
+      <label>Schedule — English, one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
 5:00 PM | Wedding ceremony
 6:30 PM | Dinner reception</textarea></label>
+      <label>Schedule — Khmer, matching line order<textarea id="scheduleTextKm" class="khmer-text" placeholder="4:00 PM | ទទួលភ្ញៀវ&#10;5:00 PM | ពិធីមង្គលការ&#10;6:30 PM | ពិសាអាហារ">4:00 PM | ទទួលភ្ញៀវ
+5:00 PM | ពិធីមង្គលការ
+6:30 PM | ពិសាអាហារពេលល្ងាច</textarea></label>
+      <label>Schedule layout<select id="scheduleLayout"><option value="timeline">Elegant timeline</option><option value="cards">Event cards</option><option value="minimal">Minimal list</option></select></label>
       <label><input id="venueEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show venue and map</label>
       <label>Map link<input id="mapUrl" type="url" placeholder="https://maps.google.com/..."></label>
-      <label>Additional venues — one per line<textarea id="venuesText" placeholder="Reception | Hotel Ballroom | https://maps.google.com/..."></textarea></label>
+      <label>Additional venues — English, one per line<textarea id="venuesText" placeholder="Reception | Hotel Ballroom | https://maps.google.com/..."></textarea></label>
+      <label>Additional venues — Khmer, matching line order<textarea id="venuesTextKm" class="khmer-text" placeholder="ពិធីទទួលភ្ញៀវ | សាលសណ្ឋាគារ | https://maps.google.com/..."></textarea></label>
+      <label>Venue layout<select id="venueLayout"><option value="cards">Venue cards</option><option value="stacked">Stacked details</option><option value="split">Split layout</option></select></label>
       <label><input id="galleryEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show photo gallery</label>
+      <label>Gallery layout<select id="galleryStyle"><option value="grid">Elegant grid</option><option value="filmstrip">Horizontal film strip</option><option value="full">Full-width portraits</option></select></label>
       <h2>Materials</h2>
-      <label class="upload">Upload photo<input id="photoUpload" type="file" accept="image/*"></label>
+      <div class="asset-library-controls">
+        <input id="assetSearch" type="search" placeholder="Search your material library…" aria-label="Search material library">
+        <select id="assetTypeFilter" aria-label="Filter materials"><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="favorites">Favorites</option><option value="all">All materials</option></select>
+      </div>
+      <div class="asset-library-controls asset-library-secondary">
+        <input id="assetFolderFilter" type="search" placeholder="Filter by folder…" aria-label="Filter materials by folder">
+        <button id="refreshAssets" type="button">Refresh library</button>
+      </div>
+      <p id="assetLibraryStats" class="hint"></p>
+      <label class="upload">Upload photo<input id="photoUpload" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+      <label class="upload">Upload featured video<input id="videoUpload" type="file" accept="video/mp4,video/webm"></label>
+      <label><input id="videoEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Show featured video section</label>
+      <div id="videoState" class="card">No featured video selected.</div>
+      <button id="clearVideo" type="button">Clear featured video</button>
       <label class="upload">Upload background music<input id="musicUpload" type="file" accept="audio/mpeg,audio/mp4"></label>
       <label>YouTube music/video link<input id="youtubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=..."></label>
       <p class="hint">When a valid YouTube link is present, it is used instead of the uploaded audio.</p>
@@ -56,43 +130,161 @@ rsvp</textarea></label>
       <label>Opening style<select id="openingStyle"><option value="soft">Soft glow</option><option value="curtain">Royal curtain</option><option value="night">Midnight lights</option><option value="minimal">Minimal</option></select></label>
       <div id="musicState" class="card">No music selected.</div>
       <div id="assets" class="assets"></div>
+      <h2>Gallery photos</h2>
+      <div id="galleryManager" class="gallery-manager"></div>
+      <h2>Custom sections</h2>
+      <label>Custom section layout<select id="customLayout"><option value="cards">Elegant cards</option><option value="editorial">Editorial</option><option value="alternating">Alternating</option></select></label>
+      <p class="hint">Add reusable story, dress-code, note, or other information blocks. Each block supports English and Khmer.</p>
+      <div id="customBlocksManager" class="custom-blocks-manager"></div>
+      <div class="block-library" aria-label="Section block library">
+        <button type="button" data-add-block="story"><span>♥</span><strong>Our Story</strong></button>
+        <button type="button" data-add-block="dress-code"><span>✦</span><strong>Dress Code</strong></button>
+        <button type="button" data-add-block="note"><span>!</span><strong>Important Note</strong></button>
+        <button type="button" data-add-block="quote"><span>“</span><strong>Quote</strong></button>
+        <button type="button" data-add-block="accommodation"><span>⌂</span><strong>Accommodation</strong></button>
+        <button type="button" data-add-block="gift"><span>◇</span><strong>Gift Note</strong></button>
+      </div>
+      <label>Other block type<select id="newBlockType"><option value="custom">Custom Section</option><option value="story">Our Story</option><option value="dress-code">Dress Code</option><option value="note">Important Note</option><option value="quote">Quote</option><option value="accommodation">Accommodation</option><option value="gift">Gift Note</option></select></label>
+      <button id="addCustomBlock" type="button">+ Add custom section block</button>
+      <h3>Saved content blocks</h3>
+      <div id="savedBlockTemplates" class="saved-block-templates"></div>
       <button id="addText">+ Add text</button>
-      <p class="hint">Select an object, then drag it or use its lower-right handle to resize.</p>
+      <h2>Elements</h2>
+      <div class="element-library" aria-label="Design element library">
+        <button type="button" data-add-element="rectangle"><span class="element-preview rectangle"></span><strong>Rectangle</strong></button>
+        <button type="button" data-add-element="circle"><span class="element-preview circle"></span><strong>Circle</strong></button>
+        <button type="button" data-add-element="line"><span class="element-preview line"></span><strong>Line</strong></button>
+        <button type="button" data-add-element="panel"><span class="element-preview panel"></span><strong>Background panel</strong></button>
+        <button type="button" data-add-element="heart"><span class="element-glyph">♥</span><strong>Heart</strong></button>
+        <button type="button" data-add-element="sparkle"><span class="element-glyph">✦</span><strong>Sparkle</strong></button>
+        <button type="button" data-add-element="flourish"><span class="element-glyph">❦</span><strong>Flourish</strong></button>
+        <button type="button" data-add-element="diamond"><span class="element-glyph">◇</span><strong>Diamond</strong></button>
+      </div>
+      <p class="hint">Shapes and decorative elements are editable, layerable, groupable, and included in the published artistic hero.</p>
+      <h2>Reusable element groups</h2>
+      <button id="saveElementGroup" type="button">Save selected as reusable group</button>
+      <div id="savedGroups" class="saved-groups"></div>
+      <p class="hint">Select multiple objects, save them as a reusable group, then insert the same composition into another design.</p>
+      <p class="hint">Select an object, then drag it, use the lower-right handle to resize, or drag the top rotation handle. Drag on empty canvas space to box-select multiple objects.</p>
     </aside>
     <section class="stage-wrap">
-      <div class="toolbar"><button data-device="390">Mobile</button><button data-device="760">Tablet</button><button data-device="1100">Desktop</button><span>Draft canvas</span></div>
-      <div id="stage" class="stage">
-        <div class="decor">✦</div>
+      <div class="toolbar">
+        <button data-device="390">Mobile</button><button data-device="760">Tablet</button><button data-device="1100">Desktop</button>
+        <span class="toolbar-divider"></span>
+        <button id="zoomOut" title="Zoom out">−</button>
+        <select id="zoomLevel" aria-label="Canvas zoom"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+        <button id="zoomIn" title="Zoom in">+</button><button id="fitCanvas">Fit</button>
+        <button id="panToggle" aria-pressed="false" title="Pan canvas (or hold Space)">Hand</button>
+        <button id="rulersToggle" aria-pressed="false">Rulers</button><button id="safeMarginToggle" aria-pressed="false">Safe margins</button><span class="toolbar-divider"></span><button id="copyObjects" title="Copy selected objects (Ctrl/Cmd+C)">Copy</button><button id="pasteObjects" title="Paste objects (Ctrl/Cmd+V)">Paste</button>
+        <span id="activeCanvasLabel">Main hero canvas</span>
+      </div>
+      <div id="canvasViewport" class="canvas-viewport">
+        <div id="canvasFrame" class="canvas-frame">
+          <div class="ruler ruler-x" aria-hidden="true"></div><div class="ruler ruler-y" aria-hidden="true"></div>
+          <div id="stage" class="stage">
+            <div class="safe-margin-overlay" aria-hidden="true"><span>Safe area</span></div>
+            <div class="decor">✦</div>
         <div class="object text-object" data-id="title" style="left:8%;top:10%;width:84%;height:110px"><div class="content title">Sophea & Dara</div><i></i></div>
         <div class="object text-object" data-id="subtitle" style="left:12%;top:31%;width:76%;height:80px"><div class="content subtitle">Together with our families, we warmly invite you to celebrate our wedding.</div><i></i></div>
         <div class="object image-object" data-id="hero" style="left:12%;top:49%;width:76%;height:250px"><img alt="Wedding flowers" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23eac7b8'/%3E%3Cstop offset='1' stop-color='%239d4555'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23g)'/%3E%3Ccircle cx='270' cy='280' r='120' fill='%23f9eee5' opacity='.8'/%3E%3Ccircle cx='490' cy='270' r='150' fill='%23d98c9a' opacity='.7'/%3E%3Ctext x='400' y='530' text-anchor='middle' font-family='serif' font-size='34' fill='white'%3EOur Celebration%3C/text%3E%3C/svg%3E"><i></i></div>
         <div class="object text-object" data-id="details" style="left:12%;top:83%;width:76%;height:90px"><div class="content details">27 December 2026<br>The Riverside Ballroom, Phnom Penh</div><i></i></div>
+          </div>
+        </div>
       </div>
     </section>
     <aside class="right">
       <h2>Style & motion</h2>
       <div id="noSelection" class="empty">Select an object on the canvas.</div>
       <div id="properties" hidden>
-        <label>Font<select id="font"><option value="Georgia,serif">Classic Serif</option><option value="Arial,sans-serif">Modern Sans</option><option value="'Trebuchet MS',sans-serif">Friendly</option></select></label>
-        <label>Text color<input id="color" type="color" value="#47252d"></label>
+        <div class="selection-summary"><strong id="selectionCount">1 selected</strong><span>Shift/Ctrl-click to select more</span></div>
+        <label id="textContentLabel">Text content<textarea id="textContent" rows="3"></textarea></label>
+        <div id="typographyControls">
+          <label>Font<select id="font"><option value="Georgia,serif">Classic Serif</option><option value="Arial,sans-serif">Modern Sans</option><option value="'Trebuchet MS',sans-serif">Friendly</option><option value="'Noto Serif Khmer','Khmer OS Battambang',serif">Khmer Serif</option><option value="'Noto Sans Khmer','Khmer OS Battambang',sans-serif">Khmer Sans</option><option value="'Khmer OS Muol Light','Noto Serif Khmer',serif">Khmer Ceremonial</option></select></label>
+          <label>Text color<input id="color" type="color" value="#47252d"></label>
+          <label>Font size <span id="fontSizeValue">32px</span><input id="fontSize" type="range" min="10" max="160" step="1" value="32"></label>
+          <label>Text alignment<select id="textAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+          <div class="typography-toggle-row"><button type="button" id="fontBold" aria-pressed="false"><strong>B</strong></button><button type="button" id="fontItalic" aria-pressed="false"><em>I</em></button></div>
+          <label>Letter spacing <span id="letterSpacingValue">0px</span><input id="letterSpacing" type="range" min="-2" max="20" step="0.5" value="0"></label>
+          <label>Line height <span id="lineHeightValue">1.35</span><input id="lineHeight" type="range" min="0.8" max="3" step="0.05" value="1.35"></label>
+        </div>
         <label>Animation<select id="animation"><option value="fade-up">Fade up</option><option value="soft-zoom">Soft zoom</option><option value="slide-left">Slide left</option><option value="blur-in">Blur reveal</option><option value="bounce-in">Elegant bounce</option><option value="flip-in">Card flip</option><option value="float">Gentle float</option><option value="none">None</option></select></label>
         <label>Duration<input id="duration" type="range" min="300" max="3000" step="100" value="900"></label>
+        <label>Rotation <span id="rotationValue">0°</span><input id="rotation" type="range" min="-180" max="180" step="1" value="0"></label>
+        <div id="shapeControls" hidden>
+          <h2>Shape</h2>
+          <label>Fill color<input id="fillColor" type="color" value="#d9a6ad"></label>
+          <label>Shape<select id="shapeKind"><option value="rectangle">Rectangle</option><option value="circle">Circle / ellipse</option><option value="line">Line</option></select></label>
+        </div>
+        <h2>Appearance</h2>
+        <label>Opacity <span id="opacityValue">100%</span><input id="objectOpacity" type="range" min="10" max="100" step="1" value="100"></label>
+        <label>Border width <span id="borderWidthValue">0px</span><input id="borderWidth" type="range" min="0" max="12" step="1" value="0"></label>
+        <label>Border color<input id="borderColor" type="color" value="#ffffff"></label>
+        <label>Corner radius <span id="borderRadiusValue">0px</span><input id="borderRadius" type="range" min="0" max="120" step="1" value="0"></label>
+        <label>Shadow blur <span id="shadowBlurValue">0px</span><input id="shadowBlur" type="range" min="0" max="60" step="1" value="0"></label>
+        <label>Shadow color<input id="shadowColor" type="color" value="#000000"></label>
+        <div id="imageControls" hidden>
+          <label>Image fit<select id="imageFit"><option value="cover">Crop to fill</option><option value="contain">Show full image</option></select></label>
+          <label>Image mask<select id="imageMask"><option value="none">No mask</option><option value="circle">Circle / oval</option><option value="arch">Arch portrait</option><option value="diamond">Diamond</option><option value="hexagon">Hexagon</option><option value="blob">Organic blob</option></select></label>
+          <label>Image frame<select id="imageFrame"><option value="none">No frame</option><option value="white">Classic white</option><option value="gold">Gold</option><option value="dark">Dark</option></select></label>
+          <div id="cropPreview" class="crop-preview" title="Click anywhere to choose the crop focus"><img alt="Crop preview"><span id="cropFocus"></span></div>
+          <p class="hint">Click the crop preview to choose the focal point.</p>
+          <label>Horizontal focus<input id="imagePositionX" type="range" min="0" max="100" value="50"></label>
+          <label>Vertical focus<input id="imagePositionY" type="range" min="0" max="100" value="50"></label>
+          <label class="toggle-row"><span>Include in photo gallery</span><input id="showInGallery" type="checkbox" checked></label>
+        </div>
+        <label class="toggle-row"><span>Show in published artistic hero</span><input id="showInHero" type="checkbox" checked></label>
+        <label class="toggle-row"><span>Lock object</span><input id="objectLocked" type="checkbox"></label>
+        <div class="actions"><button id="bringForward">Bring forward</button><button id="sendBackward">Send backward</button></div>
+        <div class="actions"><button id="groupObjects">Group</button><button id="ungroupObjects">Ungroup</button></div>
+        <h2>Align selected</h2>
+        <div class="alignment-grid">
+          <button data-align="left" title="Align left">⇤</button><button data-align="center" title="Align horizontal centers">↔</button><button data-align="right" title="Align right">⇥</button>
+          <button data-align="top" title="Align top">⇧</button><button data-align="middle" title="Align vertical centers">↕</button><button data-align="bottom" title="Align bottom">⇩</button>
+          <button data-distribute="horizontal" title="Distribute horizontally">H</button><button data-distribute="vertical" title="Distribute vertically">V</button>
+        </div>
         <button id="duplicate">Duplicate</button><button id="deleteBtn" class="danger">Delete</button>
         <h2>Fine position</h2>
         <div class="actions"><button data-nudge="up">↑</button><button data-nudge="left">←</button><button data-nudge="right">→</button><button data-nudge="down">↓</button><button data-size="smaller">− Size</button><button data-size="larger">+ Size</button></div>
       </div>
-      <h2>Theme</h2>
-      <label>Design theme<select id="designTheme"><option value="rose">Royal Rose</option><option value="gold">Khmer Gold</option><option value="emerald">Emerald Garden</option><option value="midnight">Midnight Luxury</option></select></label>
+      <h2>Layers</h2><div id="layersPanel" class="layers-panel"></div>
+      <h2>Section motion</h2><p class="hint">Control the entrance animation for each published section.</p><div id="sectionAnimationsManager" class="section-animations-manager"></div>
+      <h2>Section appearance</h2><p class="hint">Give individual published sections their own background, text color, and corner treatment.</p><div id="sectionStylesManager" class="section-styles-manager"></div>
+      <h2>Template & palette</h2>
+      <label>Invitation template<select id="designTheme"><option value="rose">Royal Rose</option><option value="gold">Khmer Gold</option><option value="emerald">Emerald Garden</option><option value="midnight">Midnight Luxury</option></select></label>
+      <label>Global palette<select id="palettePreset"><option value="template">Use template colors</option><option value="rose">Rose Quartz</option><option value="gold">Royal Gold</option><option value="emerald">Emerald Garden</option><option value="midnight">Midnight Violet</option><option value="ivory-navy">Ivory & Navy</option><option value="custom">Custom</option></select></label>
+      <div class="palette-grid">
+        <label>Page<input id="paletteBackground" type="color" value="#fff8f2"></label>
+        <label>Surface<input id="paletteSurface" type="color" value="#ffffff"></label>
+        <label>Text<input id="paletteText" type="color" value="#342c26"></label>
+        <label>Heading<input id="paletteHeading" type="color" value="#9d4555"></label>
+      </div>
       <label>Accent<input id="accent" type="color" value="#9d4555"></label>
-      <h2>Publishing</h2>
+      <h2>Reusable invitation template</h2><p class="hint">Save this complete invitation — pages, canvas design, section styling, palette, and animation — as a reusable account template.</p><button id="saveFullTemplateBtn" type="button">Save complete design as template</button><div id="templateSaveState" class="hint"></div><h2>Publishing</h2>
+      <div id="publishingSettings" class="card">
+        <label>Public link slug<input id="publicSlug" placeholder="your-event"></label>
+        <label>Guest access<select id="accessMode"><option value="unlisted">Anyone with the link</option><option value="password">Password protected</option></select></label>
+        <label id="accessPasswordLabel" hidden>Invitation password<input id="accessPassword" type="password" minlength="4" placeholder="Set or replace password"></label>
+        <button id="savePublishingSettings" type="button">Save link & access settings</button>
+        <p id="publishingSettingsState" class="hint"></p>
+      </div>
       <div id="publishInfo" class="card">No snapshot published yet.</div>
       <button id="historyBtn">Published versions</button>
+      <button id="unpublishBtn" type="button">Unpublish invitation</button>
       <button id="rsvpBtn">View RSVP responses</button>
+      <button id="wishesBtn" type="button">View guest wishes</button>
     </aside>
   </main>
   <dialog id="modal"><button class="close">×</button><div id="modalBody"></div></dialog>
+  <script src="renderer-core.js"></script>
   <script src="vendor/momentkh.js"></script>
   <script src="storage.js"></script>
-  <script src="app.js"></script>
+  <script src="ui-dialogs.js"></script>
+  <script src="upload-client.js"></script>
+<script src="app.js"></script>
+  <script src="studio-experience.js"></script>
+<script src="modern-ui.js"></script>  <script src="final-experience.js"></script>
+<script src="editor-suite.js"></script>
+<script src="ux-refine.js"></script>
+<script src="final-polish.js"></script>
 </body>
 </html>

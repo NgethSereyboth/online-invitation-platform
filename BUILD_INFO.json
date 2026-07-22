@@ -1,0 +1,20 @@
+{
+  "product": "E-invitation-website",
+  "build": "final-visual-refinement",
+  "date": "2026-07-22",
+  "status": "Final visual review candidate",
+  "tests": [
+    "static_integrity_test",
+    "smoke_test",
+    "plan_limit_test",
+    "final_features_test",
+    "production_foundations_test",
+    "provider_adapters_test",
+    "realtime_storage_test",
+    "signed_upload_backend_test",
+    "ui_smoke_test (environment-dependent)",
+    "visual_regression (environment-dependent)"
+  ],
+  "notes": "Final local review build: real invitation dashboard previews, compact project menus, material preview/use-in-design workflow, authenticated material empty state, visual SVG element library, richer font/text browser, responsive auto-collapsing editor panels, contextual toolbar overflow, management CSS isolation, and expanded visual-regression viewport coverage. Provider-backed production services still require deployment credentials.",
+  "ui_refinement": "2026-07-22-final-dashboard-materials-editor-polish"
+}

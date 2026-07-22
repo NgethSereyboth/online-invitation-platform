@@ -1,0 +1,17 @@
+/* Canonical application design tokens. Guest invitation themes remain independent. */
+:root{
+ --surface-0:#f5f6f8;--surface-1:#ffffff;--surface-2:#f8f8fb;--surface-3:#eff0f4;
+ --text-1:#1f2026;--text-2:#646773;--text-3:#8e919b;--border-1:#e2e3e8;--border-2:#d3d5dc;
+ --brand:#8b465b;--brand-2:#9c6cff;--brand-soft:#f5e8ed;--success:#2b9b68;--warning:#c98322;--danger:#c6404d;
+ --shadow-1:0 2px 8px rgba(23,25,32,.06);--shadow-2:0 16px 46px rgba(23,25,32,.11);--shadow-3:0 32px 90px rgba(18,20,27,.2);
+ --radius-sm:10px;--radius-md:14px;--radius-lg:20px;--radius-xl:28px;
+ --app-bg:var(--surface-0);--app-surface:var(--surface-1);--app-surface-2:var(--surface-2);--app-surface-3:var(--surface-3);
+ --app-text:var(--text-1);--app-muted:var(--text-2);--app-faint:var(--text-3);--app-line:var(--border-1);--app-line-2:var(--border-2);
+ --app-accent:var(--brand);--app-accent-2:var(--brand-2);--app-accent-soft:var(--brand-soft);--app-good:var(--success);--app-warn:var(--warning);
+}
+html[data-theme="dark"]{
+ --surface-0:#111218;--surface-1:#191a21;--surface-2:#202129;--surface-3:#292b34;
+ --text-1:#f3f4f8;--text-2:#b2b4be;--text-3:#858895;--border-1:#2f313b;--border-2:#3c3f4b;
+ --brand:#e18aa5;--brand-2:#a98cff;--brand-soft:#38252e;--success:#69d095;--warning:#f2b65c;--danger:#ff7883;
+ --shadow-1:0 2px 10px rgba(0,0,0,.22);--shadow-2:0 18px 50px rgba(0,0,0,.34);--shadow-3:0 36px 100px rgba(0,0,0,.55);
+}

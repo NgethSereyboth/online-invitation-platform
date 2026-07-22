@@ -1,0 +1,4 @@
+# Optional production integrations. The local prototype still runs with Python's standard library only.
+boto3>=1.35,<2
+psycopg[binary]>=3.2,<4
+redis>=5,<6
