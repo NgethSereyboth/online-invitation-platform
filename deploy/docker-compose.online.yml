@@ -1,0 +1,80 @@
+# Production overlay for a public Docker/VPS host. Use together with:
+# docker-compose.production.example.yml
+x-online-app: &online-app
+  build:
+    context: .
+    dockerfile: Dockerfile.online
+  environment:
+    EINVITE_ALLOWED_HOSTS: "${EINVITE_DOMAIN:?set EINVITE_DOMAIN}"
+    EINVITE_PUBLIC_BASE_URL: "https://${EINVITE_DOMAIN:?set EINVITE_DOMAIN}"
+    EINVITE_COOKIE_SECURE: "1"
+    EINVITE_TRUSTED_PROXY_IPS: "172.31.52.10"
+    EINVITE_MALWARE_SCANNER_COMMAND: "clamdscan --stream --no-summary --config-file=/etc/clamav/clamd.remote.conf"
+    EINVITE_REQUIRE_MALWARE_SCAN: "1"
+  depends_on:
+    clamav:
+      condition: service_healthy
+
+services:
+  web:
+    <<: *online-app
+
+  worker:
+    <<: *online-app
+
+  scheduler:
+    <<: *online-app
+
+  caddy:
+    image: caddy:2.11.4-alpine
+    restart: unless-stopped
+    init: true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      EINVITE_DOMAIN: "${EINVITE_DOMAIN:?set EINVITE_DOMAIN}"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      edge:
+        ipv4_address: 172.31.52.10
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    depends_on:
+      web:
+        condition: service_healthy
+
+  clamav:
+    image: clamav/clamav:1.4.6
+    restart: unless-stopped
+    init: true
+    volumes:
+      - clamav-signatures:/var/lib/clamav
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping=1 >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 180s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge:
+    ipam:
+      config:
+        - subnet: 172.31.52.0/24
+
+volumes:
+  caddy-data:
+  caddy-config:
+  clamav-signatures:

@@ -1,0 +1,154 @@
+x-app-environment: &app-environment
+  EINVITE_PRODUCTION: "1"
+  EINVITE_REQUIRE_DURABLE_SERVICES: "1"
+  EINVITE_DATABASE_URL: "postgresql://einvite:${EINVITE_POSTGRES_PASSWORD:?set EINVITE_POSTGRES_PASSWORD}@postgres:5432/einvite"
+  EINVITE_REDIS_URL: "redis://:${EINVITE_REDIS_PASSWORD:?set EINVITE_REDIS_PASSWORD}@redis:6379/0"
+  EINVITE_OBJECT_STORAGE_PROVIDER: minio
+  EINVITE_OBJECT_STORAGE_BUCKET: "${EINVITE_OBJECT_STORAGE_BUCKET:-einvite-private}"
+  EINVITE_OBJECT_STORAGE_ENDPOINT: http://minio:9000
+  EINVITE_OBJECT_STORAGE_REGION: us-east-1
+  EINVITE_OBJECT_STORAGE_ACCESS_KEY: "${EINVITE_MINIO_ROOT_USER:?set EINVITE_MINIO_ROOT_USER}"
+  EINVITE_OBJECT_STORAGE_SECRET_KEY: "${EINVITE_MINIO_ROOT_PASSWORD:?set EINVITE_MINIO_ROOT_PASSWORD}"
+  EINVITE_ALLOW_INSECURE_OBJECT_STORAGE: "1"
+  EINVITE_BACKUP_PROVIDER: object
+
+x-app-service: &app-service
+  build: .
+  env_file: "${EINVITE_ENV_FILE:-.env.production}"
+  restart: unless-stopped
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:size=256m,mode=1777
+  volumes:
+    - app-data:/data
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  stop_grace_period: 30s
+
+services:
+  web:
+    <<: *app-service
+    command: ["python", "server.py", "--host", "0.0.0.0", "--port", "8080"]
+    environment:
+      <<: *app-environment
+      EINVITE_PROCESS_ROLE: web
+      EINVITE_WORKER_CONCURRENCY: "0"
+    ports:
+      - "${EINVITE_BIND_ADDRESS:-127.0.0.1}:${EINVITE_HTTP_PORT:-8080}:8080"
+    networks: [edge, backend]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio: {condition: service_healthy}
+      minio-init: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8080/api/health/ready',timeout=5)"]
+      interval: 30s
+      timeout: 8s
+      start_period: 30s
+      retries: 5
+
+  worker:
+    <<: *app-service
+    command: ["python", "platform_worker_v32.py"]
+    environment:
+      <<: *app-environment
+      EINVITE_PROCESS_ROLE: worker
+      EINVITE_WORKER_CONCURRENCY: "${EINVITE_WORKER_CONCURRENCY:-4}"
+    networks: [edge, backend]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio-init: {condition: service_completed_successfully}
+
+  scheduler:
+    <<: *app-service
+    command: ["python", "platform_scheduler_v32.py"]
+    environment:
+      <<: *app-environment
+      EINVITE_PROCESS_ROLE: scheduler
+      EINVITE_WORKER_CONCURRENCY: "0"
+    networks: [edge, backend]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio-init: {condition: service_completed_successfully}
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: einvite
+      POSTGRES_USER: einvite
+      POSTGRES_PASSWORD: "${EINVITE_POSTGRES_PASSWORD:?set EINVITE_POSTGRES_PASSWORD}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U einvite -d einvite"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    stop_grace_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: "${EINVITE_REDIS_PASSWORD:?set EINVITE_REDIS_PASSWORD}"
+    command: ["/bin/sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    volumes:
+      - redis-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: "${EINVITE_MINIO_ROOT_USER:?set EINVITE_MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${EINVITE_MINIO_ROOT_PASSWORD:?set EINVITE_MINIO_ROOT_PASSWORD}"
+    volumes:
+      - object-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 15s
+      timeout: 8s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    restart: "no"
+    environment:
+      MINIO_ROOT_USER: "${EINVITE_MINIO_ROOT_USER:?set EINVITE_MINIO_ROOT_USER}"
+      MINIO_ROOT_PASSWORD: "${EINVITE_MINIO_ROOT_PASSWORD:?set EINVITE_MINIO_ROOT_PASSWORD}"
+      EINVITE_OBJECT_STORAGE_BUCKET: "${EINVITE_OBJECT_STORAGE_BUCKET:-einvite-private}"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do sleep 2; done;
+        mc mb --ignore-existing "local/$$EINVITE_OBJECT_STORAGE_BUCKET";
+        mc anonymous set none "local/$$EINVITE_OBJECT_STORAGE_BUCKET"
+    networks: [backend]
+    depends_on:
+      minio: {condition: service_healthy}
+
+networks:
+  edge:
+  backend:
+    internal: true
+
+volumes:
+  app-data:
+  postgres-data:
+  redis-data:
+  object-data:

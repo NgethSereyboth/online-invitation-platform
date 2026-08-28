@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+export PYTHONUTF8=1 PYTHONIOENCODING=utf-8 EINVITE_REQUIRE_BROWSER=1
+python3 release_check_v28.py | tee V28_RELEASE_CHECK_LINUX.log
+grep -q '^EINVITATION_V28_RELEASE_CHECK_PASSED$' V28_RELEASE_CHECK_LINUX.log
+echo EINVITATION_V28_LINUX_RELEASE_CHECK_PASSED

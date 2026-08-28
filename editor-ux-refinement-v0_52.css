@@ -1,0 +1,93 @@
+/* V0.52 editor interaction refinement: one primary text toolbar, collision-safe overlays, and unclipped tool labels. */
+body.studio-experience .v24-inline-toolbar,
+body.studio-experience .ei-rich-toolbar,
+body.studio-experience #workflowQuickStrip,
+body.studio-experience .studio-canvas-hint {
+  display: none !important;
+}
+
+body.studio-experience #v20TypographyToolbar {
+  align-items: center;
+  min-height: 46px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+body.studio-experience #v20TypographyToolbar.collapsed {
+  justify-content: flex-start;
+  min-height: 42px;
+  padding-block: 5px;
+}
+
+body.studio-experience #v20TypographyToolbar.collapsed > :not(.v20-toolbar-toggle) {
+  display: none !important;
+}
+
+body.studio-experience .v20-toolbar-toggle {
+  flex: 0 0 auto;
+  min-width: 118px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 5px 10px !important;
+  border-radius: 9px !important;
+  white-space: nowrap;
+}
+
+body.studio-experience .studio-tool-rail {
+  overflow-x: hidden !important;
+}
+
+body.studio-experience .studio-rail-button {
+  width: 100%;
+  min-width: 0;
+  overflow: visible !important;
+}
+
+body.studio-experience .studio-nav-label {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 1px;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+body.studio-experience .ei-tool-rail button > span {
+  display: none !important;
+}
+
+body.studio-experience .ei-tool-rail {
+  width: 48px;
+  overflow: hidden;
+}
+
+body.studio-experience .workflow-v4-popover {
+  width: max-content;
+  max-width: min(334px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+
+@media (max-width: 820px) {
+  body.studio-experience #v20TypographyToolbar {
+    display: flex !important;
+  }
+
+  body.studio-experience #v20TypographyToolbar:not(.collapsed) {
+    max-height: 58px;
+  }
+
+  body.studio-experience .studio-nav-label {
+    width: calc(100% + 12px);
+    max-width: none;
+    margin-inline: -6px;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 8px;
+  }
+}

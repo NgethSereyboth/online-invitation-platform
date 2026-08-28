@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script src="theme-init.js"></script><script src="backend-mode-v14.js"></script>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Plans &amp; Usage — E-invitation-website</title>
+  <link rel="stylesheet" href="bundle-billing-v15.css">
+</head>
+<body data-page="billing">
+  <header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link">Dashboard</a><a href="account.html" class="button-link">Account</a></header>
+  <main class="billing-page">
+    <div id="checkoutResult" class="checkout-result" hidden></div>
+    <div class="billing-head"><div><span class="eyebrow">Membership</span><h1>Plans &amp; usage</h1><p>Choose the capacity that fits your invitation work.</p></div><div class="plan-status"><small>Current plan</small><strong id="currentPlan">Loading…</strong><div id="planRole"></div></div></div>
+    <section id="usageGrid" class="usage-grid"></section>
+    <div class="notice" id="billingNotice">Checking secure checkout availability…</div>
+    <section class="plans" id="planCards"></section>
+    <section class="payment-assurance" aria-labelledby="securePaymentTitle">
+      <div class="payment-shield" aria-hidden="true">✓</div>
+      <div><span class="eyebrow">Hosted payment</span><h2 id="securePaymentTitle">Card details stay with the payment gateway</h2><p>The gateway processes Visa and Mastercard details on its secure checkout. The invitation platform receives only a verified payment result and then updates the account tier.</p></div>
+      <div class="gateway-card"><small>Payment provider</small><strong id="gatewayName">Secure card checkout</strong><span id="gatewayState" class="gateway-pending">Checking configuration</span><div class="card-brands"><b>VISA</b><b>Mastercard</b></div></div>
+    </section>
+  </main>
+  <script src="bundle-billing-v15.js"></script>
+</body>
+</html>

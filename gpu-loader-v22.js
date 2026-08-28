@@ -1,0 +1,1 @@
+(()=>{let p,a='gpu-texture-cache webgl-scene-backend gpu-projection adaptive-gpu-quality'.split(' ');EInviteGPUReady=()=>p??=a.reduce((p,n)=>p.then(()=>new Promise((y,j)=>{let s=document.head.appendChild(document.createElement('script'));s.src=n+'-v22.js';s.onload=y;s.onerror=j})),Promise.resolve());setTimeout(()=>EInviteGPUReady().catch(()=>0),250)})();

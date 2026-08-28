@@ -1,0 +1,479 @@
+{
+  "earlyScripts": [
+    "backend-mode-v14.js",
+    "theme-init.js"
+  ],
+  "pages": {
+    "account.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "account.js",
+        "account-security-v13.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "styles.css",
+        "account-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "account-security-v13.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "admin.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "admin.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "monitoring.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "styles.css",
+        "admin-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "monitoring.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "analytics.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "invitation-context.js",
+        "analytics.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "styles.css",
+        "analytics-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "accessibility-v12.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "billing.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "billing.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "styles.css",
+        "billing-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "checkin.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "invitation-context.js",
+        "checkin-v13.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "styles.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "accessibility-v12.css",
+        "checkin-v13.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "dashboard.html": {
+      "scripts": [
+        "typography-contract.js",
+        "typography-document-model.js",
+        "typography-layout-service.js",
+        "renderer-core.js",
+        "ui-dialogs.js",
+        "invitation-context.js",
+        "dashboard.js",
+        "dashboard-enhancements.js",
+        "dashboard-polish.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js",
+        "final-polish.js",
+        "dashboard-empty-state.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "typography-fonts.css",
+        "typography-system-v20.css",
+        "styles.css",
+        "dashboard-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "final-polish.css",
+        "dashboard-empty-state.css",
+        "accessibility-v12.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "designer.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "designer.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "styles.css",
+        "studio-experience.css",
+        "designer-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "guests.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "invitation-context.js",
+        "guests.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "styles.css",
+        "guests-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "accessibility-v12.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "index.html": {
+      "scripts": [
+        "runtime-lifecycle-v15.js",
+        "performance-loader-v22.js",
+        "editor-command-system-v23.js",
+        "typography-contract.js",
+        "custom-font-core-v22.js",
+        "typography-document-model.js",
+        "typography-layout-service.js",
+        "renderer-core.js",
+        "timeline-runtime-v13.js",
+        "scene-model-v22.js",
+        "editor-schema-v13.js",
+        "experience-schema.js",
+        "document-schema-v32.js",
+        "vendor/momentkh.js",
+        "storage.js",
+        "ui-dialogs.js",
+        "upload-client.js",
+        "invitation-context.js",
+        "app.js",
+        "studio-experience.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "editor-suite.js",
+        "ai-editor-action-service-v27.js",
+        "editor-deferred-tools-bootstrap-v0_52.js",
+        "collaboration.js",
+        "collaboration-live.js",
+        "ux-refine.js",
+        "final-polish.js",
+        "editor-layout-stability.js",
+        "workflow-refine.js",
+        "workflow-continuity.js",
+        "workflow-creation-flow-v4.js",
+        "workflow-ux-v5.js",
+        "workflow-pro-editor-v6.js",
+        "workflow-final-audit-v7.js",
+        "opening-scenes.js",
+        "guest-layouts.js",
+        "social-card.js",
+        "storyboard.js",
+        "style-kits.js",
+        "accessibility-polish.js",
+        "editor-commands-v13.js",
+        "typography-editor-v20.js",
+        "editor-canva-v13.js",
+        "editor-shared-styles-v13.js",
+        "photo-editor-v13.js",
+        "photo-retouch-v13.js",
+        "timeline-v13.js",
+        "product-operations-v13.js",
+        "mobile-editor-v14.js",
+        "windows-ui-v16.js",
+        "professional-editor-v17.js",
+        "editor-responsive-contract-v27.js"
+      ],
+      "styles": [
+        "typography-fonts.css",
+        "typography-system-v20.css",
+        "styles.css",
+        "studio-experience.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "editor-suite.css",
+        "ai-assistant-loader-v27.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "final-polish.css",
+        "workflow-refine.css",
+        "editor-layout-stability.css",
+        "workflow-continuity.css",
+        "workflow-creation-flow-v4.css",
+        "workflow-ux-v5.css",
+        "workflow-pro-editor-v6.css",
+        "workflow-final-audit-v7.css",
+        "style-kits.css",
+        "editor-canva-v13.css",
+        "editor-shared-styles-v13.css",
+        "opening-scenes.css",
+        "storyboard.css",
+        "social-card.css",
+        "accessibility-v12.css",
+        "photo-editor-v13.css",
+        "photo-retouch-v13.css",
+        "timeline-v13.css",
+        "product-operations-v13.css",
+        "stabilized-v14.css",
+        "windows-ui-v16.css",
+        "editor-ux-refinement-v0_52.css",
+        "professional-editor-v17.css",
+        "zoom-layout-v22.css",
+        "graphics-runtime-v22.css",
+        "editor-responsive-contract-v27.css"
+      ]
+    },
+    "materials.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "upload-client.js",
+        "upload-folder-client-v53.js",
+        "invitation-context.js",
+        "materials.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js",
+        "final-polish.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "styles.css",
+        "materials-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "final-polish.css",
+        "accessibility-v12.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "privacy.html": {
+      "scripts": [],
+      "styles": [
+        "styles.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "privacy-v13.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "public.html": {
+      "scripts": [
+        "runtime-lifecycle-v15.js",
+        "typography-contract.js",
+        "custom-font-core-v22.js",
+        "typography-document-model.js",
+        "typography-layout-service.js",
+        "rich-text-renderer-v21.js",
+        "renderer-core.js",
+        "experience-schema.js",
+        "document-schema-v32.js",
+        "advanced-public-loader-v32.js",
+        "opening-scenes.js",
+        "guest-layouts.js",
+        "public-share-panel.js",
+        "guest-journey.js",
+        "public-page.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "typography-fonts.css",
+        "rich-text-renderer-v21.css",
+        "styles.css",
+        "opening-scenes.css",
+        "guest-layouts.css",
+        "guest-journey.css"
+      ]
+    },
+    "reset.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "reset.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "styles.css",
+        "reset-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "responses.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "invitation-context.js",
+        "responses.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "styles.css",
+        "responses-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "accessibility-v12.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "templates.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "builtin-templates.js",
+        "templates.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js",
+        "accessibility-polish.js"
+      ],
+      "styles": [
+        "styles.css",
+        "studio-experience.css",
+        "templates-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "accessibility-v12.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    },
+    "verify.html": {
+      "scripts": [
+        "ui-dialogs.js",
+        "verify.js",
+        "modern-ui.js",
+        "final-experience.js",
+        "ux-refine.js"
+      ],
+      "styles": [
+        "styles.css",
+        "verify-page-v13.css",
+        "modern-ui.css",
+        "compact-theme-v0_52.css",
+        "final-experience.css",
+        "canvas-plus.css",
+        "ui-dialogs.css",
+        "tokens.css",
+        "theme-hardening.css",
+        "ux-refine.css",
+        "stabilized-v14.css",
+        "zoom-layout-pages-v22.css"
+      ]
+    }
+  },
+  "version": 15
+}

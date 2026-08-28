@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: e_invitation_website
+      POSTGRES_USER: einvite
+      POSTGRES_PASSWORD: einvite_local_password
+    volumes:
+      - einvite_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U einvite -d e_invitation_website"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - einvite_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      EINVITE_DATA_DIR: /data
+      EINVITE_PUBLIC_BASE_URL: http://localhost:8080
+      EINVITE_DATABASE_URL: postgresql://einvite:einvite_local_password@postgres:5432/e_invitation_website
+      EINVITE_REDIS_URL: redis://redis:6379/0
+      EINVITE_COOKIE_SECURE: 0
+      EINVITE_DEV_AUTH_TOKENS: 1
+      EINVITE_ENFORCE_PLAN_LIMITS: 0
+      EINVITE_UPLOAD_SIGNING_SECRET: local-docker-review-secret-change-before-production
+    volumes:
+      - einvite_appdata:/data
+
+volumes:
+  einvite_pgdata:
+  einvite_redisdata:
+  einvite_appdata:

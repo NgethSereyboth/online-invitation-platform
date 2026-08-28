@@ -1,0 +1,35 @@
+[Unit]
+Description=E-Invitation production application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=einvite
+Group=einvite
+WorkingDirectory=__PROJECT_ROOT__
+EnvironmentFile=__ENVIRONMENT_FILE__
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+Environment=EINVITE_DATA_DIR=__PROJECT_ROOT__/data
+Environment=EINVITE_ALLOWED_HOSTS=__DOMAIN__,localhost,127.0.0.1
+Environment=EINVITE_TRUSTED_PROXY_IPS=127.0.0.1,::1
+Environment=EINVITE_MALWARE_SCANNER_COMMAND=clamdscan --stream --no-summary
+Environment=EINVITE_REQUIRE_MALWARE_SCAN=1
+ExecStart=__PROJECT_ROOT__/.venv/bin/python -u server.py --host 127.0.0.1 --port 8080
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__PROJECT_ROOT__/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+data/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local and production credentials must never be committed.
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+
+# Local runtime and diagnostic artifacts.
+*.log
+*.pid
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.test-deps*/
+

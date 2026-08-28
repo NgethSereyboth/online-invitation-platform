@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "maxParagraphs": 256,
+  "maxRuns": 2048,
+  "maxEntities": 256,
+  "maxDocumentCharacters": 100000,
+  "maxParagraphCharacters": 20000,
+  "maxRunCharacters": 10000,
+  "maxTabStops": 16,
+  "maxListDepth": 8,
+  "maxHtmlBytes": 200000,
+  "maxIdLength": 64,
+  "maxStyleIdLength": 64,
+  "maxEntityTitleLength": 160,
+  "locales": [
+    "en",
+    "km",
+    "und"
+  ],
+  "directions": [
+    "auto",
+    "ltr",
+    "rtl"
+  ],
+  "alignments": [
+    "left",
+    "center",
+    "right",
+    "justify"
+  ],
+  "listTypes": [
+    "none",
+    "bullet",
+    "ordered"
+  ],
+  "listMarkers": [
+    "disc",
+    "circle",
+    "square",
+    "decimal",
+    "lower-alpha",
+    "upper-alpha",
+    "lower-roman",
+    "upper-roman"
+  ],
+  "tabAlignments": [
+    "left",
+    "center",
+    "right",
+    "decimal"
+  ],
+  "tabLeaders": [
+    "none",
+    "dots",
+    "dashes",
+    "line"
+  ],
+  "urlProtocols": [
+    "https",
+    "http",
+    "mailto",
+    "tel"
+  ],
+  "markKeys": [
+    "strong",
+    "emphasis",
+    "underline",
+    "strikethrough",
+    "colorToken",
+    "fontPairing",
+    "fontSize"
+  ],
+  "paragraphOverrideKeys": [
+    "textAlign",
+    "lineHeight",
+    "spaceBefore",
+    "spaceAfter",
+    "indentLeft",
+    "indentRight",
+    "firstLineIndent",
+    "direction"
+  ],
+  "maxLegacyNesting": 32
+}

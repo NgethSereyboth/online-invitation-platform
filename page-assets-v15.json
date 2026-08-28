@@ -1,0 +1,331 @@
+{
+  "pages": {
+    "account.html": {
+      "bytes": 267726,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-account-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-account-v15.css"
+      ]
+    },
+    "admin.html": {
+      "bytes": 263365,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-admin-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-admin-v15.css"
+      ]
+    },
+    "analytics.html": {
+      "bytes": 262046,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-analytics-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-analytics-v15.css"
+      ]
+    },
+    "billing.html": {
+      "bytes": 260553,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-billing-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-billing-v15.css"
+      ]
+    },
+    "checkin.html": {
+      "bytes": 91409,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-checkin-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-checkin-v15.css"
+      ]
+    },
+    "dashboard.html": {
+      "bytes": 448386,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-dashboard-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-dashboard-v15.css"
+      ]
+    },
+    "designer.html": {
+      "bytes": 281709,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-designer-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-designer-v15.css"
+      ]
+    },
+    "guests.html": {
+      "bytes": 270383,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-guests-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-guests-v15.css"
+      ]
+    },
+    "index.html": {
+      "bytes": 1418825,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-index-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-index-v15.css"
+      ]
+    },
+    "materials.html": {
+      "bytes": 337210,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-materials-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-materials-v15.css"
+      ]
+    },
+    "privacy.html": {
+      "bytes": 74220,
+      "scriptCount": 1,
+      "scripts": [
+        "theme-init.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-privacy-v15.css"
+      ]
+    },
+    "public.html": {
+      "bytes": 246140,
+      "scriptCount": 1,
+      "scripts": [
+        "bundle-public-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-public-v15.css"
+      ]
+    },
+    "reset.html": {
+      "bytes": 252444,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-reset-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-reset-v15.css"
+      ]
+    },
+    "responses.html": {
+      "bytes": 265962,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-responses-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-responses-v15.css"
+      ]
+    },
+    "templates.html": {
+      "bytes": 302623,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-templates-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-templates-v15.css"
+      ]
+    },
+    "verify.html": {
+      "bytes": 251262,
+      "scriptCount": 3,
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-verify-v15.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-verify-v15.css"
+      ]
+    }
+  },
+  "routes": {
+    "account-admin": {
+      "budgets": {
+        "bytes": 470000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "account.html",
+        "admin.html",
+        "billing.html",
+        "verify.html",
+        "reset.html",
+        "privacy.html"
+      ],
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-account-v15.js",
+        "bundle-admin-v15.js",
+        "bundle-billing-v15.js",
+        "bundle-verify-v15.js",
+        "bundle-reset-v15.js"
+      ],
+      "styles": [
+        "bundle-account-v15.css",
+        "bundle-admin-v15.css",
+        "bundle-billing-v15.css",
+        "bundle-verify-v15.css",
+        "bundle-reset-v15.css",
+        "bundle-privacy-v15.css"
+      ]
+    },
+    "dashboard": {
+      "budgets": {
+        "bytes": 460000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "dashboard.html"
+      ],
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-dashboard-v15.js"
+      ],
+      "styles": [
+        "bundle-dashboard-v15.css"
+      ]
+    },
+    "editor": {
+      "budgets": {
+        "bytes": 1420000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "index.html"
+      ],
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-index-v15.js"
+      ],
+      "styles": [
+        "bundle-index-v15.css"
+      ]
+    },
+    "event-operations": {
+      "budgets": {
+        "bytes": 530000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "guests.html",
+        "responses.html",
+        "analytics.html",
+        "materials.html",
+        "checkin.html",
+        "templates.html",
+        "designer.html"
+      ],
+      "scripts": [
+        "theme-init.js",
+        "backend-mode-v14.js",
+        "bundle-guests-v15.js",
+        "bundle-responses-v15.js",
+        "bundle-analytics-v15.js",
+        "bundle-materials-v15.js",
+        "bundle-checkin-v15.js",
+        "bundle-templates-v15.js",
+        "bundle-designer-v15.js"
+      ],
+      "styles": [
+        "bundle-guests-v15.css",
+        "bundle-responses-v15.css",
+        "bundle-analytics-v15.css",
+        "bundle-materials-v15.css",
+        "bundle-checkin-v15.css",
+        "bundle-templates-v15.css",
+        "bundle-designer-v15.css"
+      ]
+    },
+    "public-guest": {
+      "budgets": {
+        "bytes": 260000,
+        "scripts": 1,
+        "styles": 1
+      },
+      "pages": [
+        "public.html"
+      ],
+      "scripts": [
+        "bundle-public-v15.js"
+      ],
+      "styles": [
+        "bundle-public-v15.css"
+      ]
+    }
+  },
+  "version": 15
+}

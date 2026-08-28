@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><script src="theme-init.js"></script><script src="backend-mode-v14.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My Invitations — E-invitation-website</title><link rel="stylesheet" href="bundle-dashboard-v15.css">  
+
+
+
+
+
+
+
+
+</head><body data-page="dashboard"><header><strong>E-invitation-website</strong><span id="accountName"></span><a id="adminBtn" href="admin.html" hidden class="button-link">Admin</a><a id="designerBtn" href="designer.html" hidden class="button-link">Designer Workspace</a><a href="materials.html" class="button-link">Materials</a><a href="billing.html" class="button-link">Plans</a><a id="accountBtn" href="account.html" class="button-link">Account</a><button id="logoutBtn">Sign out</button></header><section id="loginView" class="login canvas-auth-layout">
+  <div class="canvas-auth-visual">
+    <div><span class="canvas-auth-badge">✦ Invitation Studio</span></div>
+    <div><h1>Design invitations that feel premium, personal, and alive.</h1><p>A modern creative workspace built specifically for interactive invitations, RSVP, guest management, Khmer dates, media, and event publishing.</p></div>
+    <div class="canvas-auth-bullets">
+      <div><span>1</span><div><strong>Create visually</strong><small>Layered page design, rich typography, photos, animation, reusable templates, and invitation-first creative tools.</small></div></div>
+      <div><span>2</span><div><strong>Publish interactively</strong><small>Share a live invitation website with music, galleries, maps, countdowns, RSVP, wishes, and personalized guest links.</small></div></div>
+      <div><span>3</span><div><strong>Manage the event</strong><small>Track responses, guests, check-in, analytics, materials, and invitation versions from one account.</small></div></div>
+    </div>
+  </div>
+  <div class="canvas-auth-panel">
+    <div class="canvas-auth-tabs"><button id="authSignInTab" type="button" class="active">Sign in</button><button id="authRegisterTab" type="button">Create account</button></div>
+    <div><h2 id="authTitle">Welcome back</h2><p id="authIntro">Sign in to continue working on your invitations and events.</p></div>
+    <div class="canvas-auth-form">
+      <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+      <label>Password<input id="password" type="password" autocomplete="current-password" placeholder="At least 8 characters"></label>
+      <label id="registerConfirmWrap" hidden>Confirm password<input id="registerConfirmPassword" type="password" autocomplete="new-password" placeholder="Repeat your password"></label>
+    </div>
+    <div class="canvas-auth-actions"><button id="loginBtn" class="primary">Sign in</button><button id="passkeyLoginBtn" type="button">Use a passkey</button><div class="canvas-auth-links"><a href="reset.html">Forgot password?</a><span class="canvas-auth-note">A local-browser fallback remains available when the development backend is offline.</span></div></div>
+    <p id="authStatus" class="canvas-auth-status" aria-live="polite"></p>
+  </div>
+</section><section id="dashboardView" class="dash" hidden><div class="dash-head"><h1>My invitations</h1><a href="templates.html" id="studioBtn" class="button-link">Template Studio</a><button id="newBtn" class="primary">+ Create invitation</button></div><div id="inviteGrid" class="invite-grid"></div></section>
+<dialog id="createDialog" class="create-dialog"><form id="createForm"><h2>Create invitation</h2><label>Invitation name<input id="newTitle" required maxlength="120" placeholder="Sophea &amp; Dara"></label><label>Event type<select id="newType"><option value="Wedding">Wedding</option><option value="Birthday">Birthday</option><option value="Business">Business event</option></select></label><input id="newTemplate" type="hidden" value="rose"><div class="template-toolbar"><input id="templateSearch" type="search" placeholder="Search templates…"><div class="template-tabs" id="templateTabs"><button type="button" class="active" data-template-filter="all">All</button><button type="button" data-template-filter="Wedding">Wedding</button><button type="button" data-template-filter="Birthday">Birthday</button><button type="button" data-template-filter="Business">Business</button><button type="button" data-template-filter="mine">My templates</button><button type="button" data-template-filter="marketplace">Marketplace</button><button type="button" data-template-filter="favorites">★ Favorites</button></div></div><div class="template-preview-grid" id="templateChoices"></div><div id="templateSummary" class="template-summary"></div><p class="hint">Built-in templates now include page structure, palette, section styling, animation, and visual-page layouts. Invitations saved as your own templates appear here too.</p><div class="dialog-actions"><button id="cancelCreate" type="button">Cancel</button><button id="confirmCreate" class="primary" type="submit">Create from template</button></div></form></dialog><dialog id="templatePreviewDialog" class="template-preview-dialog"><div id="templatePreviewBody"></div><div class="dialog-actions"><button id="closeTemplatePreview" type="button">Close</button><button id="usePreviewTemplate" class="primary" type="button">Use this template</button></div></dialog><script src="bundle-dashboard-v15.js"></script>
+  
+
+
+
+
+</body></html>
