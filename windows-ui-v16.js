@@ -92,11 +92,21 @@
     const wrap = $('.stage-wrap');
     const context = $('.ei-context-toolbar');
     if (!wrap || !context) return;
+    const isVisible = context.classList.contains('visible');
+    const shouldBeVisible = context.children.length > 0 && context.style.display !== 'none';
+    
     if (!context.classList.contains('v16-context-row')) {
       context.classList.add('v16-context-row');
       const viewport = $('#canvasViewport', wrap);
       if (viewport) wrap.insertBefore(context, viewport);
       else wrap.append(context);
+    }
+    
+    // Toggle visibility class smoothly instead of display:none
+    if (shouldBeVisible && !isVisible) {
+      context.classList.add('visible');
+    } else if (!shouldBeVisible && isVisible) {
+      context.classList.remove('visible');
     }
   }
   function ensureDockOrder() {
