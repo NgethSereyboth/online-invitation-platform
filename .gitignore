@@ -7,7 +7,7 @@
 # Environment and configuration files
 .env
 .env.local
-.env.*
+*.env.*
 
 # Logs
 *.log
@@ -15,10 +15,6 @@
 # OS generated files
 .DS_Store
 Thumbs.db
-
-# Editor/IDE files
-.vscode/
-.idea/
 
 # Compressed files
 *.zip
