@@ -7,12 +7,12 @@
 # Environment and configuration files
 .env
 .env.local
-*.env.*
+.env.*
 
 # Logs
 *.log
 
-# OS generated files
+# OS-specific files
 .DS_Store
 Thumbs.db
 
