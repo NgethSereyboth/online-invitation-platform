@@ -1,227 +1,252 @@
-# Linux Laptop Hosting Guide
+# eInvite Self-Hosted Deployment for Linux Laptops
+
+This guide covers deploying eInvite on a Linux laptop for personal use, local development, or LAN sharing.
 
 ## Quick Start
 
-For the simplest one-command installation on a Linux laptop:
+### One-Command Installation
 
 ```bash
-cd /path/to/einvite
+cd /workspace
 sudo bash deploy/linux/install-einvite-laptop.sh --install-system-packages
 ```
 
-This script performs a complete installation including:
-- Installing Python 3.10+ and system dependencies
-- Creating an isolated virtual environment
-- Installing all production dependencies
-- Setting up SQLite database (no PostgreSQL required)
-- Configuring local file storage (no S3 required)
-- Integrating ClamAV for malware scanning
-- Configuring firewall rules
-- Auto-detecting your private IP for LAN access
-- Starting the server automatically
+This will:
+- Install all system dependencies (Python, ClamAV, etc.)
+- Create a virtual environment
+- Install Python packages
+- Initialize the database
+- Configure log rotation
+- Set up automated backups
+- Start the server
+- Open your browser automatically
 
-## Usage Options
+## Manual Installation
+
+If you've already installed dependencies:
 
 ```bash
-# Basic installation (assumes Python already installed)
-sudo bash deploy/linux/install-einvite-laptop.sh
+cd /workspace
+bash deploy/linux/install-einvite-laptop.sh
+```
 
-# Install system packages too (recommended for fresh systems)
+## Configuration Options
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EINVITE_PORT` | 8080 | Server port |
+| `EINVITE_LOCAL_ONLY` | false | Restrict to localhost only |
+| `CLAMAV_ENABLED` | true | Enable malware scanning |
+| `FIREWALL_ENABLED` | false | Auto-configure firewall |
+
+### Command Line Options
+
+```bash
+# Full installation with system packages
 sudo bash deploy/linux/install-einvite-laptop.sh --install-system-packages
 
-# Local-only mode (no LAN access, more secure)
-sudo bash deploy/linux/install-einvite-laptop.sh --local-only
+# Enable firewall configuration
+sudo bash deploy/linux/install-einvite-laptop.sh --enable-firewall
+
+# Localhost only (no LAN access)
+bash deploy/linux/install-einvite-laptop.sh --local-only
 
 # Custom port
-sudo bash deploy/linux/install-einvite-laptop.sh --port 8081
+bash deploy/linux/install-einvite-laptop.sh --port 3000
 
-# Skip firewall configuration
-sudo bash deploy/linux/install-einvite-laptop.sh --skip-firewall
+# Disable ClamAV (faster startup)
+bash deploy/linux/install-einvite-laptop.sh --no-clamav
 
-# Don't auto-open browser
-sudo bash deploy/linux/install-einvite-laptop.sh --skip-browser
-
-# Include test dependencies
-sudo bash deploy/linux/install-einvite-laptop.sh --with-tests
-
-# Combine multiple options
-sudo bash deploy/linux/install-einvite-laptop.sh \
-  --install-system-packages \
-  --port 8081 \
-  --skip-browser
+# Show help
+bash deploy/linux/install-einvite-laptop.sh --help
 ```
 
-## What Gets Installed
+## Post-Installation
 
-### System Packages (with --install-system-packages)
-- **Python 3.10+** with venv and pip
-- **ClamAV** for malware scanning
-- **Firewalld/UFW** for firewall management
-- Development tools and certificates
+### Access the Application
 
-### Application Components
-- Isolated Python virtual environment in `.venv/`
-- Production dependencies from `requirements-production.txt`
-- SQLite database in `data/db/`
-- Upload storage in `data/uploads/`
-- Logs in `data/logs/`
-- Backups in `data/backups/`
-
-### Configuration
-The script generates a `.env.production` file with:
-- Random security secrets
-- SQLite database URL (no external DB needed)
-- Local filesystem storage
-- Malware scanning enabled
-- Email/payments/AI disabled by default
-
-### Network Access
 - **Local**: http://127.0.0.1:8080
-- **Network**: http://YOUR_LAN_IP:8080 (devices on same WiFi/LAN)
+- **LAN**: http://<your-ip>:8080 (if not using --local-only)
 
-## Managing the Server
+### Management Commands
 
-### Check Status
 ```bash
-curl http://127.0.0.1:8080/api/health/live
+# Stop the server
+pkill -f 'python.*app.py'
+
+# View logs
+tail -f /workspace/logs/einvite.log
+
+# Manual backup
+/workspace/deploy/linux/backup-einvite.sh
+
+# Restart (run installer again)
+bash deploy/linux/install-einvite-laptop.sh
 ```
 
-### View Logs
+### Systemd Service (Optional)
+
+If systemd is available, a service file is created automatically:
+
 ```bash
-tail -f data/logs/server.log
+# Start
+sudo systemctl start einvite
+
+# Stop
+sudo systemctl stop einvite
+
+# Enable on boot
+sudo systemctl enable einvite
+
+# View status
+sudo systemctl status einvite
 ```
 
-### Stop Server
-```bash
-kill $(cat data/einvite.pid)
+## Directory Structure
+
+```
+/workspace/
+├── data/           # SQLite database
+├── media/          # Uploaded files
+├── logs/           # Application logs
+├── backups/        # Automated backups
+├── venv/           # Python virtual environment
+└── deploy/linux/   # Deployment scripts
+    ├── install-einvite-laptop.sh
+    └── backup-einvite.sh
 ```
 
-### Restart Server
+## Backup & Recovery
+
+### Automated Backups
+
+Backups run daily at 2:00 AM (if crontab is available) and include:
+- SQLite database
+- Media files (compressed)
+- Configuration
+
+### Manual Backup
+
 ```bash
-cd /path/to/einvite
-.venv/bin/python server.py --env-file .env.production
+/workspace/deploy/linux/backup-einvite.sh
 ```
 
-## Firewall Configuration
+Backup location: `/workspace/backups/einvite_backup_YYYYMMDD_HHMMSS/`
 
-The script attempts to configure your firewall automatically:
+### Restore from Backup
 
-### Ubuntu/Debian (UFW)
 ```bash
-sudo ufw allow 8080/tcp
-```
+# Stop server
+pkill -f 'python.*app.py'
 
-### RHEL/Fedora/CentOS (firewalld)
-```bash
-sudo firewall-cmd --permanent --add-port=8080/tcp
-sudo firewall-cmd --reload
-```
+# Restore database
+cp /workspace/backups/einvite_backup_*/einvite.db /workspace/data/
 
-### Manual Configuration
-If automatic configuration fails, manually allow port 8080 for your private network.
+# Restore media
+tar -xzf /workspace/backups/einvite_backup_*/media.tar.gz -C /workspace/media/
 
-## Security Notes
-
-### This is Private Network Hosting
-- ✅ Safe for home/office WiFi networks
-- ✅ Devices on same LAN can access
-- ❌ NOT exposed to public internet
-- ❌ Do NOT forward port 8080 to router
-
-### Malware Scanning
-- ClamAV scans all uploads automatically
-- Keep virus definitions updated: `sudo freshclam`
-- Alternative: Use existing antivirus on your system
-
-### Backups
-Regularly backup the `data/` directory:
-```bash
-tar -czf einvite-backup-$(date +%Y%m%d).tar.gz data/
-```
-
-Use the provided backup script if available:
-```bash
-bash BACKUP_EINVITE_DATA.bat  # Windows
-# or manually backup data/ on Linux
+# Restart server
+bash deploy/linux/install-einvite-laptop.sh
 ```
 
 ## Troubleshooting
 
-### Python not found
+### Server Won't Start
+
 ```bash
-# Ubuntu/Debian
-sudo apt install python3 python3-venv python3-pip
+# Check logs
+tail -f /workspace/logs/einvite.log
 
-# RHEL/Fedora
-sudo dnf install python3 python3-pip
+# Validate Python environment
+source /workspace/venv/bin/activate
+python -c "import flask, PIL, qrcode, bcrypt"
 
-# Arch
-sudo pacman -S python python-pip python-virtualenv
+# Reinstall dependencies
+pip install -r /workspace/server/requirements.txt
 ```
 
-### Port already in use
+### Port Already in Use
+
 ```bash
-# Find what's using port 8080
+# Find process using port 8080
 sudo lsof -i :8080
 
-# Use a different port
-sudo bash deploy/linux/install-einvite-laptop.sh --port 8081
+# Use different port
+bash deploy/linux/install-einvite-laptop.sh --port 3000
 ```
 
-### ClamAV not running
+### ClamAV Issues
+
 ```bash
-# Ubuntu/Debian
-sudo systemctl enable --now clamav-daemon clamav-freshclam
+# Disable ClamAV temporarily
+bash deploy/linux/install-einvite-laptop.sh --no-clamav
 
-# RHEL/Fedora
-sudo systemctl enable --now clamd@scan
+# Update virus definitions manually
+sudo freshclam
+
+# Check ClamAV status
+sudo systemctl status clamav-daemon
 ```
 
-### Server won't start
-Check logs:
+### Low Disk Space
+
 ```bash
-cat data/logs/server.log
+# Check disk usage
+df -h /workspace
+
+# Clean old backups (keep last 7 days)
+find /workspace/backups -type d -mtime +7 -exec rm -rf {} \;
+
+# Clean old logs
+find /workspace/logs -name "*.log" -mtime +14 -delete
 ```
 
-Common issues:
-- Missing dependencies: Run with `--install-system-packages`
-- Port conflict: Use `--port` to change
-- Permission issues: Ensure you're using `sudo`
+## Security Considerations
 
-## Comparison with Other Deployment Methods
+### For LAN Access
 
-| Method | Best For | Complexity | External Dependencies |
-|--------|----------|------------|----------------------|
-| **Laptop Script** | Personal/testing use on Linux | ⭐ Simplest | None (SQLite + local files) |
-| **systemd Service** | Production Linux server | ⭐⭐ Moderate | PostgreSQL, Redis, S3 |
-| **Docker Compose** | Multi-server production | ⭐⭐⭐ Advanced | Docker Engine |
-| **PaaS** | Cloud hosting | ⭐⭐ Moderate | Provider account |
+1. Enable firewall:
+   ```bash
+   sudo bash deploy/linux/install-einvite-laptop.sh --enable-firewall
+   ```
 
-## When to Upgrade to Full Production
+2. Use strong passwords for admin accounts
 
-The laptop installer uses simplified settings suitable for personal use. Consider upgrading to full production deployment when you need:
+3. Consider HTTPS setup (requires additional configuration)
 
-- ✅ Public internet access with HTTPS
-- ✅ Multiple concurrent users (>50)
-- ✅ Email notifications
-- ✅ Payment processing
-- ✅ AI features
-- ✅ High availability
-- ✅ Professional monitoring
-- ✅ Automated backups to remote location
+### For Public Access
 
-For production deployment, see:
-- `FIRST_TIME_INSTALL_AND_HOSTING.md`
-- `ONLINE_AND_SERVER_HOSTING.md`
-- `PRODUCTION_DEPLOYMENT.md`
+⚠️ **Not Recommended** - This script is designed for private/LAN use only. For public deployment, use the Docker or production deployment guides.
+
+## Performance Tips
+
+- Minimum 2GB RAM recommended
+- SSD storage preferred for database performance
+- Regular backups prevent data loss
+- Monitor disk space with `df -h`
+
+## Uninstallation
+
+```bash
+# Stop server
+pkill -f 'python.*app.py'
+
+# Remove systemd service (if exists)
+sudo systemctl disable einvite
+sudo rm /etc/systemd/system/einvite.service
+
+# Remove logrotate config
+sudo rm /etc/logrotate.d/einvite
+
+# Remove application files
+rm -rf /workspace/venv /workspace/data /workspace/logs /workspace/backups /workspace/media
+```
 
 ## Support
 
-For issues specific to Linux laptop hosting:
-1. Check `data/logs/server.log` for errors
-2. Verify prerequisites: `python3 --version`
-3. Test connectivity: `curl http://127.0.0.1:8080/api/health/live`
-4. Review firewall settings
-5. Ensure ClamAV is running (if enabled)
-
-For general eInvite documentation, see the main README.md and other guides in the project root.
+For issues or questions:
+1. Check logs: `/workspace/logs/einvite.log`
+2. Review this documentation
+3. Consult the main README.md
