@@ -1,48 +1,24 @@
 ```
-# Dependencies
-node_modules/
+# Backup and temporary script files
+*.bak
+*.tmp
+*.swp
 
-# Environment files
+# Environment and configuration files
 .env
 .env.local
 .env.*
 
-# Docker
-.dockerignore
-
-# Build artifacts
-dist/
-build/
-*.pyc
-__pycache__/
-
 # Logs
 *.log
-
-# Temporary files
-*.tmp
-*.swp
-
-# IDE/Editor files
-.vscode/
-.idea/
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
-# Python specific
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg-info/
+# Editor/IDE files
+.vscode/
+.idea/
 
 # Compressed files
 *.zip
@@ -67,5 +43,4 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
 ```
