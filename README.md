@@ -1,167 +1,133 @@
-# E-Invitation Platform — Professional Invitation Design & Event Management
+# eInvite Platform - Project Structure
 
-[![Release](https://img.shields.io/badge/release-V28-blue)](V28_ARCHITECTURE.md)
-[![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE)
+A professional invitation design and event management platform with self-hosting capabilities.
 
-## 🎨 What It Does
+## 📁 Directory Structure
 
-**eInvite** is a professional invitation design and event management platform with:
-
-- **Canva-quality visual editor** with drag-and-drop design
-- **Bilingual support**: English + Khmer (with lunar calendar integration)
-- **Guest management** with RSVP, meal preferences, and private messages
-- **Team collaboration** with real-time review and approval workflows
-- **AI-powered design assistance** with budget controls
-- **Template marketplace** for reusable designs
-- **Plugin platform** for extensible features
-- **Event automation** for programs, tasks, vendors, and incidents
-- **Self-hosted deployment** on Windows, Linux, or Docker
+```
+einvite/
+├── src/                      # Source code
+│   ├── css/                  # Stylesheets (119 files)
+│   ├── js/                   # JavaScript modules (175 files)
+│   ├── html/                 # HTML pages (17 files)
+│   └── python/               # Python backend utilities (26 files)
+│
+├── ai_agent/                 # AI Agent service (V53)
+│   ├── service.py            # Main AI service
+│   ├── tools.py              # AI tool definitions
+│   ├── providers.py          # LLM provider adapters
+│   └── ...
+│
+├── platform_v32/             # Core platform service (V32)
+│   ├── service.py            # Main platform service
+│   ├── schema.py             # Database schema
+│   ├── storage.py            # Storage backend
+│   └── ...
+│
+├── future_platform_v52/      # Next-gen platform (V52)
+│   ├── service.py            # Event automation service
+│   └── schema.py             # Extended schema
+│
+├── deploy/                   # Deployment configurations
+│   ├── linux/                # Linux deployment scripts
+│   │   ├── install-einvite-laptop.sh    # One-click laptop installer
+│   │   ├── backup-einvite.sh            # Automated backups
+│   │   └── einvite.service.template     # Systemd service
+│   ├── windows/              # Windows deployment scripts
+│   ├── paas/                 # PaaS configurations
+│   ├── Dockerfile            # Container build
+│   └── docker-compose.*.yml  # Compose configurations
+│
+├── scripts/                  # Utility scripts
+│   ├── *.ps1                 # PowerShell scripts (Windows)
+│   ├── *.sh                  # Shell scripts (Linux/Mac)
+│   └── *.cmd/.bat            # Batch files (Windows)
+│
+├── tests/                    # Test suite (200+ tests)
+│   ├── v*_*.py               # Version-specific tests
+│   └── visual_regression.py  # Visual testing
+│
+├── docs/                     # Documentation & References
+│   ├── *.md                  # Markdown documentation (111 files)
+│   ├── *.json                # JSON configs & reports
+│   ├── postgres_schema.sql   # Database schema reference
+│   ├── requirements-*.txt    # Python dependencies
+│   └── V*_RELEASE_*.sha256   # Release verification hashes
+│
+├── assets/                   # Static assets
+│   └── fonts/                # Custom fonts
+│
+├── licenses/                 # License files
+│   └── fonts/                # Font licenses
+│
+├── vendor/                   # Third-party libraries
+│   └── momentkh.js           # Khmer calendar library
+│
+├── .gitignore                # Git ignore rules
+└── .nojekyll                 # GitHub Pages bypass
+```
 
 ## 🚀 Quick Start
 
-### Windows Laptop Hosting
-```cmd
-HOST_EINVITE_ON_LAPTOP.bat
-```
-
 ### Linux Laptop Hosting
 ```bash
+cd deinveitate
 sudo bash deploy/linux/install-einvite-laptop.sh --install-system-packages
 ```
 
-### Docker Production Hosting
-```bash
-# See FIRST_TIME_INSTALL_AND_HOSTING.md for complete instructions
+### Windows Laptop Hosting
+```powershell
+.\scripts\host-einvite-laptop.ps1
 ```
 
-## 📚 Documentation
-
-| Guide | Description |
-|-------|-------------|
-| [FIRST_TIME_INSTALL_AND_HOSTING.md](FIRST_TIME_INSTALL_AND_HOSTING.md) | Complete installation guide for all platforms |
-| [LINUX_LAPTOP_HOSTING.md](LINUX_LAPTOP_HOSTING.md) | One-command Linux laptop setup |
-| [LAPTOP_HOSTING.md](LAPTOP_HOSTING.md) | Windows laptop hosting guide |
-| [ONLINE_AND_SERVER_HOSTING.md](ONLINE_AND_SERVER_HOSTING.md) | Production server deployment |
-| [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) | Production architecture and operations |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture overview |
-| [SECURITY.md](SECURITY.md) | Security features and hardening |
-
-## ✨ Core Features
-
-### Design & Editing (V24-V32)
-- Professional visual editor with direct manipulation
-- Smart layouts and responsive templates
-- Custom typography with Khmer font support
-- Photo editing and media workflow
-- Animation export capabilities (V44)
-
-### Guest Management (V23-V32)
-- RSVP system with custom questions
-- Guest lists and contact management
-- Private wishes/messages from guests
-- QR code invitation sharing
-- Public guest pages
-
-### Collaboration (V23.8+)
-- Multi-user collaboration with presence indicators
-- Comment threads and approvals
-- Activity timeline tracking
-- Publishing gates with 1-5 required approvals
-- Version control with snapshots
-
-### AI & Automation (V35, V48, V52)
-- AI Agent for design assistance
-- Plugin platform for extensions
-- Event program and task automation
-- Vendor and incident management
-- Deterministic conflict detection
-
-### Enterprise Features (V42-V47)
-- Government/enterprise protocols (V42)
-- Publishing domains with verification (V45)
-- Data merge and bulk operations (V47)
-
-## 🔧 Self-Hosting Options
-
-| Method | Best For | Complexity |
-|--------|----------|------------|
-| **Windows Laptop** | Personal use on Windows | ⭐ Simplest |
-| **Linux Laptop** | Personal use on Linux | ⭐ Simplest |
-| **Docker Compose** | Production server | ⭐⭐⭐ Advanced |
-| **Native Linux** | Enterprise deployment | ⭐⭐ Moderate |
-| **PaaS** | Cloud hosting | ⭐⭐ Moderate |
-
-### Requirements
-
-**Minimum:**
-- Python 3.10+
-- Modern browser (Chrome, Firefox, Edge)
-- 2GB RAM, 1GB disk space
-
-**Production (Docker/Native):**
-- PostgreSQL 14+
-- Redis 6+
-- Object storage (S3/R2/MinIO)
-- HTTPS reverse proxy (Caddy/Nginx)
-- ClamAV for malware scanning
-
-## 🛡️ Security Features
-
-- Scoped roles and workspace memberships
-- Signed URLs for secure media access
-- GDPR-style privacy requests
-- Immutable publication fingerprints
-- Malware scanning on all uploads
-- Secret-safe logging
-- Audit timelines with hash verification
-
-## 📦 Backup & Recovery
-
-- Automated backup scheduling
-- Recovery archives for download
-- Hash-verified audit timeline
-- Off-host backup support
-- Documented restore procedures
-
-## 🧪 Testing & Quality
-
-Run the complete test suite:
+### Docker Deployment
 ```bash
-python release_check.py
+docker-compose -f deploy/docker-compose.production.example.yml up -d
 ```
 
-Version-specific tests:
+## 📊 Project Statistics
+
+- **Frontend**: 175 JS modules, 119 CSS stylesheets, 17 HTML pages
+- **Backend**: 3 Python service packages (platform_v32, future_platform_v52, ai_agent)
+- **Tests**: 200+ integration and unit tests
+- **Documentation**: 111 markdown files covering all features
+- **Deployment**: Multi-platform support (Linux, Windows, Docker, PaaS)
+
+## 🎯 Key Features
+
+- 🎨 Canva-quality visual invitation editor
+- 🌐 Bilingual support (English + Khmer)
+- 👥 Guest management with RSVP
+- 🤖 AI-powered design assistance
+- 🔐 Multi-user collaboration with review workflows
+- 📦 Template marketplace
+- 🔌 Plugin platform
+- 🎬 Event automation & operations
+- 🖥️ Self-hosted deployment (SQLite or PostgreSQL)
+- ☁️ Production-ready with backups, monitoring, and security
+
+## 📖 Documentation
+
+See `/docs` directory for comprehensive documentation:
+- `ARCHITECTURE.md` - System architecture overview
+- `LINUX_LAPTOP_HOSTING.md` - Linux installation guide
+- `FIRST_TIME_INSTALL_AND_HOSTING.md` - Getting started
+- `PRODUCTION_DEPLOYMENT.md` - Production setup
+- `AI_LEARNING_AND_AUTOMATION_V53.md` - AI features
+
+## 🔧 Development
+
 ```bash
-python tests/v28_*.py
+# Install dependencies
+pip install -r docs/requirements-production.txt
+
+# Run tests
+python -m pytest tests/
+
+# Start development server
+python -m platform_v32.service
 ```
 
-Three-run certification:
-```bash
-./RUN_V28_RELEASE_CHECK_LINUX.sh  # Linux
-RUN_V28_RELEASE_CHECK_LINUX.bat   # Windows
-```
+## 📝 License
 
-## 📄 License
-
-Proprietary software. See LICENSE file for terms.
-
-## 🤝 Support
-
-For issues and questions:
-1. Check relevant documentation in project root
-2. Review version-specific reports (V*_REPORT.md files)
-3. Check logs in `data/logs/`
-4. Run preflight checks: `python production_preflight.py`
-
-## 🗺️ Roadmap
-
-- ✅ V24-V28: Core platform stability
-- ✅ V29-V32: Advanced editing and collaboration
-- ✅ V35-V36: AI agent and template marketplace
-- ✅ V42-V48: Enterprise features and plugin platform
-- ✅ V52-V53: Event automation ecosystem
-- 🔜 Future: Mobile apps, advanced analytics, more integrations
-
----
-
-**Ready to get started?** Run the laptop hosting script for your platform above, or see [FIRST_TIME_INSTALL_AND_HOSTING.md](FIRST_TIME_INSTALL_AND_HOSTING.md) for complete deployment options.
+See individual license files in `/licenses` directory.

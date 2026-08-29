@@ -1,35 +1,48 @@
-```bash
-# Backup files
-*.bak
-
-# Logs
-*.log
+```
+# Dependencies
+node_modules/
 
 # Environment files
 .env
 .env.local
-*.env.*
+.env.*
 
-# Dependencies
-node_modules/
-.venv/
-venv/
-__pycache__/
-*.egg-info/
+# Docker
+.dockerignore
+
+# Build artifacts
 dist/
 build/
-target/
-.gradle/
+*.pyc
+__pycache__/
 
-# Editors
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# IDE/Editor files
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Python specific
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
 
 # Compressed files
 *.zip
@@ -55,49 +68,4 @@ Thumbs.db
 *.tar.xz
 *.tar.zst
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Python specific
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.so
-*.egg
-*.eggs
-*.egg-info/
-dist/
-build/
-develop-eggs/
-.installed.cfg
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.cph
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git/
-.mypy_cache/
-.pytest_cache/
-.hypothesis/
-cover/
-DerivedData/
-*.xcodeproj/
-xcuserdata/
-*.pdf
-*.dmg
-*.pkg
 ```
