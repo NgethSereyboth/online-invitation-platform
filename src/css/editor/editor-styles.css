@@ -1,0 +1,549 @@
+/* =========================================================================
+   editor-styles.css — Consolidated editor chrome styles (v54 refactor).
+   -------------------------------------------------------------------------
+   Merges the former `windows-ui-v16.css` and `workspace-experience-v24.css`
+   into one documented stylesheet and adds the rules that fix:
+
+     3. Stable toolbar — the tool shortcut bar no longer reflows on context
+        changes; the context row reserves a stable height.
+     4. Full sidebar labels — category titles show in full, with an
+        icon-only collapse mode.
+     5. Navigation overflow — workspace nav cards/bubbles wrap long words.
+
+   The old versioned files (windows-ui-v16.css, workspace-experience-v24.css)
+   have been deleted; this file replaces them.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. Stage column ordering (formerly windows-ui-v16.css)
+   The stage column is a flex column: toolbar → context row → viewport → dock.
+   ------------------------------------------------------------------------- */
+body.windows-ui-v54 .stage-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+/* Primary toolbar — stable, non-reflowing. overflow-x auto so buttons never
+   jump position; they simply scroll when narrow. */
+body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar {
+  order: 1;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  gap: 5px !important;
+}
+
+/* Context row — STABLE. We reserve a min-height row and only toggle a
+   `visible` class so showing/hiding it never shifts surrounding chrome.
+   This is the core of the "stable toolbar" fix. */
+body.windows-ui-v54 .stage-wrap > .v54-context-row {
+  order: 2;
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  flex: 0 0 auto !important;
+  width: calc(100% - 20px) !important;
+  max-width: none !important;
+  min-height: 0 !important;          /* reserved: grows to content when visible */
+  height: auto !important;
+  margin: 0 10px 0 !important;
+  padding: 0 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+  transition: opacity .18s ease !important;
+  opacity: 0;
+  visibility: hidden;
+}
+
+body.windows-ui-v54 .stage-wrap > .v54-context-row.visible {
+  min-height: 44px !important;
+  margin: 6px 10px 0 !important;
+  padding: 5px 8px !important;
+  border: 1px solid var(--app-line, #e4e4e9) !important;
+  background: var(--app-surface, #fff) !important;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* When not visible, collapse the row to zero height BUT keep it in flow so the
+   viewport below does not jump. */
+body.windows-ui-v54 .stage-wrap > .v54-context-row:not(.visible) {
+  display: block !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+body.windows-ui-v54 .stage-wrap > .v54-context-row::-webkit-scrollbar { display: none !important; }
+body.windows-ui-v54 .stage-wrap > .v54-context-row > * { flex: 0 0 auto !important; }
+
+/* Canvas viewport + page dock slots. */
+body.windows-ui-v54 .stage-wrap > .canvas-viewport { order: 3; min-height: 0 !important; padding-bottom: 18px !important; }
+body.windows-ui-v54 .stage-wrap > .workflow-page-dock {
+  order: 4;
+  position: relative !important;
+  left: auto !important; right: auto !important; bottom: auto !important;
+  transform: none !important;
+  flex: 0 0 auto !important;
+  width: min(760px, calc(100% - 20px)) !important;
+  max-width: calc(100% - 20px) !important;
+  margin: 7px auto 10px !important;
+  box-sizing: border-box !important;
+  z-index: 36 !important;
+}
+body.windows-ui-v54 .workflow-page-dock-track { min-width: 0 !important; scrollbar-width: none !important; }
+body.windows-ui-v54 .workflow-page-dock-track::-webkit-scrollbar { display: none !important; }
+
+/* Keep modal close buttons above the toolbar More panel. */
+body.windows-ui-v54 #modal.final-dialog > .close { z-index: 10001 !important; pointer-events: auto !important; }
+
+/* -------------------------------------------------------------------------
+   2. Toolbar "More" overflow menu (formerly windows-ui-v16.css)
+   ------------------------------------------------------------------------- */
+body.windows-ui-v54 .v54-toolbar-more { position: relative; flex: 0 0 auto; z-index: 90; }
+body.windows-ui-v54 .v54-toolbar-more > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  min-height: 34px; padding: 5px 10px;
+  border: 1px solid var(--app-line, #e4e4e9); border-radius: 9px;
+  background: var(--app-surface-2, #f7f7f9); color: var(--app-text, #35353b);
+  font-size: 11px; font-weight: 700; user-select: none;
+}
+body.windows-ui-v54 .v54-toolbar-more > summary::-webkit-details-marker { display: none; }
+body.windows-ui-v54 .v54-toolbar-more > summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--app-accent, #7d4052) 45%, transparent);
+  outline-offset: 2px;
+}
+body.windows-ui-v54 .v54-toolbar-more[open] > summary {
+  background: color-mix(in srgb, var(--app-accent, #7d4052) 10%, var(--app-surface, #fff));
+  border-color: color-mix(in srgb, var(--app-accent, #7d4052) 35%, var(--app-line, #e4e4e9));
+}
+body.windows-ui-v54 .v54-toolbar-more-panel {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: min(260px, calc(100vw - 24px));
+  padding: 9px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px;
+  border: 1px solid var(--app-line, #e4e4e9); border-radius: 14px;
+  background: var(--app-surface, #fff);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .2);
+}
+body.windows-ui-v54 .v54-toolbar-more:not([open]) .v54-toolbar-more-panel { display: none !important; }
+
+/* Secondary controls laid out inside the More panel — neutralise any leftover
+   absolute positioning so they sit naturally in the grid. */
+body.windows-ui-v54 .v54-toolbar-more-panel .v54-toolbar-secondary {
+  position: relative !important;
+  inset: auto !important; transform: none !important; z-index: auto !important;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  width: 100% !important; min-width: 0 !important; min-height: 40px !important; height: auto !important;
+  margin: 0 !important; padding: 7px 8px !important;
+  border-radius: 9px !important; box-shadow: none !important;
+  font-size: 11px !important; white-space: normal !important;
+  color: var(--app-text, #35353b) !important;
+}
+body.windows-ui-v54 .v54-toolbar-more-panel .v54-toolbar-secondary::after { display: none !important; }
+body.windows-ui-v54 .v54-toolbar-more-panel .ei-focus-toggle[aria-pressed="true"] {
+  background: var(--app-accent, #7d4052) !important; color: #fff !important;
+}
+
+/* Compact toolbars (≤1600px) tighten padding so the primary icons stay put. */
+@media (max-width: 1600px) {
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar { padding-inline: 7px !important; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar button,
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar select { padding-inline: 7px !important; min-width: 34px !important; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar .toolbar-divider { margin-inline: 1px !important; }
+  body.windows-ui-v54 #activeCanvasLabel {
+    display: none !important; max-width: 110px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+}
+@media (max-width: 1180px) { body.windows-ui-v54 #activeCanvasLabel { display: none !important; } }
+
+/* Hide tool-rail scrollbars for a clean look. */
+body.windows-ui-v54 .ei-tool-rail { scrollbar-width: none !important; -ms-overflow-style: none !important; overscroll-behavior-x: contain !important; }
+body.windows-ui-v54 .ei-tool-rail::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+
+/* Tour transitions must not fight the stable toolbar. */
+body.windows-ui-v54 .final-tour,
+body.windows-ui-v54 .final-tour * { transition-property: transform, opacity !important; transition-duration: .16s !important; }
+
+/* Mobile: simplify the stage column. */
+@media (max-width: 640px) {
+  body.windows-ui-v54 .stage-wrap > .workflow-page-dock {
+    left: auto !important; right: auto !important; transform: none !important;
+    width: calc(100% - 16px) !important; max-width: none !important;
+    margin: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important; padding: 5px !important;
+  }
+  body.windows-ui-v54 .workflow-page-dock-track { overflow: hidden !important; display: flex !important; }
+  body.windows-ui-v54 .workflow-page-chip:not(.active) { display: none !important; }
+  body.windows-ui-v54 .workflow-page-chip.active {
+    display: grid !important; min-width: 0 !important; width: 100% !important; flex: 1 1 auto !important;
+    grid-template-columns: 30px minmax(0, 1fr) !important;
+  }
+  body.windows-ui-v54 .workflow-page-chip.active strong { max-width: none !important; }
+  body.windows-ui-v54 .workflow-page-add,
+  body.windows-ui-v54 #workflowV7DockFlow { flex: 0 0 44px !important; width: 44px !important; height: 44px !important; min-height: 44px !important; padding: 0 !important; }
+  body.windows-ui-v54 #workflowV7DockFlow b { display: none !important; }
+  body.windows-ui-v54 .v54-toolbar-more { display: none !important; }
+  body.windows-ui-v54 .stage-wrap > .v54-context-row { display: none !important; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: none !important; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar::-webkit-scrollbar { display: none !important; }
+  body.windows-ui-v54 .mobile-editor-v14-bar { padding-bottom: env(safe-area-inset-bottom) !important; height: calc(68px + env(safe-area-inset-bottom)) !important; }
+}
+
+/* -------------------------------------------------------------------------
+   3. Workspace experience chrome (formerly workspace-experience-v24.css)
+   ------------------------------------------------------------------------- */
+body.workspace-experience-v54 {
+  --v54-canvas: #eceef2;
+  --v54-panel: #fff;
+  --v54-ink: #29252d;
+  --v54-muted: #6f6874;
+  --v54-accent: #7f4779;
+  --v54-line: #20172718;
+}
+
+body.workspace-experience-v54 .stage-wrap { position: relative; background: var(--v54-canvas); min-width: 0; }
+
+body.workspace-experience-v54 .stage-wrap > .toolbar {
+  position: relative; z-index: 40; min-height: 48px; padding: 7px 10px;
+  background: color-mix(in srgb, var(--panel, #fff) 94%, transparent);
+  border-bottom: 1px solid var(--v54-line);
+  box-shadow: 0 1px 0 #fff8; backdrop-filter: blur(14px); gap: 5px;
+}
+body.workspace-experience-v54 .stage-wrap > .toolbar > button,
+body.workspace-experience-v54 .stage-wrap > .toolbar > select {
+  min-height: 32px; border-radius: 8px; border-color: transparent; background: transparent;
+}
+body.workspace-experience-v54 .stage-wrap > .toolbar > button:hover,
+body.workspace-experience-v54 .stage-wrap > .toolbar > select:hover {
+  background: #7f47790d; border-color: #7f477921;
+}
+
+body.workspace-experience-v54 #canvasViewport {
+  position: relative;
+  background: radial-gradient(circle at 50% 25%, #f7f8fa 0, #eef0f4 42%, #e7e9ee 100%);
+  scroll-behavior: auto; overscroll-behavior: contain;
+}
+body.workspace-experience-v54 #canvasViewport::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(#fff5 1px, transparent 1px), linear-gradient(90deg, #fff5 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, #0006, transparent 72%);
+}
+body.workspace-experience-v54 #canvasFrame { filter: drop-shadow(0 16px 28px #29202e20); transition: filter .18s ease; }
+body.workspace-experience-v54 #stage { box-shadow: 0 0 0 1px #2b20301a, 0 2px 6px #2b203012; background-clip: padding-box; }
+body.workspace-experience-v54 #canvasViewport.panning #canvasFrame,
+body.workspace-experience-v54 #canvasViewport.v54-middle-panning #canvasFrame { filter: drop-shadow(0 10px 18px #29202e16); }
+body.workspace-experience-v54 #canvasViewport.v54-middle-panning,
+body.workspace-experience-v54 #canvasViewport.v54-middle-panning * { cursor: grabbing !important; user-select: none !important; }
+
+/* Zoom HUD (bottom-right cluster). */
+.v54-canvas-hud {
+  position: absolute; z-index: 80; right: 16px; bottom: 16px;
+  display: flex; align-items: center; gap: 3px; padding: 5px;
+  border: 1px solid #25192818; border-radius: 12px;
+  background: color-mix(in srgb, var(--panel, #fff) 94%, transparent);
+  box-shadow: 0 8px 28px #27192c1e; backdrop-filter: blur(14px);
+}
+.v54-canvas-hud button { min-width: 31px; height: 31px; padding: 0 9px; border: 0; border-radius: 8px; background: transparent; color: var(--text, #29252d); font-size: 12px; white-space: nowrap; }
+.v54-canvas-hud button:hover:not(:disabled) { background: #7f477912; }
+.v54-canvas-hud button:disabled { opacity: .38; }
+.v54-canvas-hud > span { width: 1px; height: 20px; background: #25192818; margin: 0 2px; }
+.v54-canvas-hud .v54-zoom-value { min-width: 58px; font-variant-numeric: tabular-nums; font-weight: 700; }
+
+/* Zoom preset popover. */
+.v54-zoom-menu {
+  position: fixed; z-index: 10060; display: grid; grid-template-columns: repeat(2, minmax(72px, 1fr)); gap: 4px;
+  width: 190px; padding: 7px; border: 1px solid #2519281f; border-radius: 12px;
+  background: var(--panel, #fff); box-shadow: 0 18px 48px #160d1b35; color: var(--text, #29252d);
+}
+.v54-zoom-menu[hidden] { display: none; }
+.v54-zoom-menu button { min-height: 34px; border: 0; border-radius: 8px; background: transparent; text-align: left; padding: 7px 9px; }
+.v54-zoom-menu button:hover, .v54-zoom-menu button:focus { background: #7f477912; outline: none; }
+.v54-zoom-menu hr, .v54-zoom-menu small { grid-column: 1 / -1; }
+.v54-zoom-menu hr { width: 100%; border: 0; border-top: 1px solid #25192818; }
+.v54-zoom-menu small { padding: 4px 6px; color: var(--muted, #6f6874); line-height: 1.35; }
+
+/* Selection card — floating size/rotation read-out. */
+.v54-selection-card {
+  position: sticky; z-index: 35; left: 14px; top: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  width: max-content; max-width: calc(100% - 28px);
+  margin: 12px 0 -54px 14px; padding: 8px 10px;
+  border: 1px solid #25192817; border-radius: 10px;
+  background: color-mix(in srgb, var(--panel, #fff) 93%, transparent);
+  box-shadow: 0 6px 20px #21152615; backdrop-filter: blur(12px);
+  pointer-events: none; color: var(--text, #29252d);
+}
+.v54-selection-card[hidden] { display: none; }
+.v54-selection-card div { min-width: 0; }
+.v54-selection-card small, .v54-selection-card strong { display: block; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v54-selection-card small { font-size: 10px; color: var(--muted, #6f6874); }
+.v54-selection-card strong { font-size: 12px; }
+.v54-selection-card > span { font-size: 11px; color: var(--muted, #6f6874); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Hover label. */
+.v54-hover-box { position: fixed; z-index: 9995; pointer-events: none; border: 1px solid color-mix(in srgb, var(--v54-accent, #7f4779) 65%, transparent); border-radius: 3px; transform-origin: center; }
+.v54-hover-box[hidden] { display: none; }
+.v54-hover-box span { position: absolute; left: -1px; top: -22px; max-width: 180px; padding: 3px 6px; border-radius: 6px; background: #302332; color: #fff; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 4px 12px #0002; }
+
+/* Context toolbar (shared with v23 module). */
+body.workspace-experience-v54 .v23-context-toolbar { position: relative; flex: 1 1 auto; justify-content: flex-end; overflow: visible; }
+body.workspace-experience-v54 .v23-context-toolbar > div { overflow: visible; }
+body.workspace-experience-v54 .v23-context-toolbar button { border-radius: 8px; border-color: transparent; }
+body.workspace-experience-v54 .v23-context-toolbar button.primary { box-shadow: 0 2px 8px #6f3f6926; }
+.v54-context-hidden { display: none !important; }
+
+/* Panels. */
+body.workspace-experience-v54 .left, body.workspace-experience-v54 .right { background: color-mix(in srgb, var(--panel, #fff) 97%, #f2edf3); border-color: var(--v54-line); }
+body.workspace-experience-v54 .right > h2, body.workspace-experience-v54 .left > h2 { letter-spacing: -.01em; }
+
+@media (max-width: 900px) {
+  body.workspace-experience-v54 .stage-wrap { display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+  .v54-canvas-hud { position: relative; inset: auto; order: 3; align-self: center; flex: 0 0 auto; margin: 8px auto calc(8px + env(safe-area-inset-bottom)); max-width: calc(100vw - 20px); overflow-x: auto; transform: none; }
+  .v54-canvas-hud [data-v54-zoom="selection"], .v54-canvas-hud [data-command-id="workspace.hidePanels"] { display: none; }
+  .v54-selection-card { top: 8px; margin-left: 8px; max-width: calc(100% - 16px); }
+  body.workspace-experience-v54 .stage-wrap > .toolbar > button[data-device],
+  body.workspace-experience-v54 .stage-wrap > .toolbar > #rulersToggle,
+  body.workspace-experience-v54 .stage-wrap > .toolbar > #safeMarginToggle { display: none; }
+}
+@media (max-width: 600px) {
+  .v54-canvas-hud { position: relative; inset: auto; left: auto; right: auto; bottom: auto; transform: none; margin: 7px auto calc(7px + env(safe-area-inset-bottom)); }
+  .v54-canvas-hud [data-v54-zoom="fit"] { display: none; }
+  .v54-selection-card { display: none !important; }
+  .v54-hover-box { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.workspace-experience-v54 #canvasFrame, .v54-canvas-hud, .v54-selection-card { transition: none !important; animation: none !important; }
+}
+
+/* Inspector mode toggle (Essentials / All). */
+.v54-inspector-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 10px; padding: 7px 8px; border: 1px solid #25192814; border-radius: 9px; background: #7f477908; }
+.v54-inspector-mode span { font-size: 11px; color: var(--muted, #6f6874); }
+.v54-inspector-mode button { min-height: 29px; padding: 4px 8px; border-radius: 7px; font-size: 11px; }
+.v54-inspector-essential .v54-advanced-control { display: none !important; }
+.v54-inspector-essential #properties { padding-bottom: 8px; }
+.v54-inspector-essential #properties > h2 { margin-top: 12px; }
+
+/* Alt-drag duplicate preview ghosts. */
+body.v54-alt-duplicating, body.v54-alt-duplicating * { cursor: copy !important; user-select: none !important; }
+.object[data-v54-duplicate-preview="1"] { pointer-events: none !important; opacity: .82; outline: 1px solid #7f4779 !important; outline-offset: 2px; filter: drop-shadow(0 8px 16px #2b173322); will-change: translate; z-index: 9996 !important; }
+
+/* Final editor refinement — predictable top bar + main height. */
+body.workspace-experience-v54 > .studio-topbar { height: 58px !important; min-height: 58px !important; max-height: 58px !important; flex-flow: row nowrap !important; overflow: visible !important; padding-block: 8px !important; }
+body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 88px) !important; }
+body.workspace-experience-v54 .canvas-header-more-menu { width: min(286px, calc(100vw - 20px)); max-height: min(620px, calc(100dvh - 76px)); overflow: auto; padding: 8px !important; gap: 6px !important; }
+.v54-header-menu-section { display: grid; gap: 4px; padding: 5px; }
+.v54-header-menu-section + .v54-header-menu-section { border-top: 1px solid var(--app-line, #e4e4e9); padding-top: 10px; }
+.v54-header-menu-section > strong { padding: 0 5px 3px; color: var(--app-muted, #8a8085) !important; font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
+.v54-header-menu-section button { min-height: 36px !important; border-radius: 9px !important; padding: 7px 9px !important; color: var(--app-text, #35353b) !important; }
+
+/* Inspector tabs — keep tab labels readable but clipped gracefully. */
+body.workspace-experience-v54 .studio-inspector-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; overflow: hidden !important; scrollbar-width: none !important; }
+body.workspace-experience-v54 .studio-inspector-tab { width: auto !important; min-width: 0 !important; padding-inline: 2px !important; overflow: hidden !important; }
+body.workspace-experience-v54 .studio-inspector-tab small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Inspector empty state. */
+.v54-inspector-empty { display: grid; place-items: center; gap: 9px; margin: 20px 2px; padding: 28px 15px; border: 1px dashed color-mix(in srgb, var(--app-accent, #7d4052) 28%, var(--app-line, #e4e4e9)); border-radius: 16px; background: linear-gradient(145deg, color-mix(in srgb, var(--app-accent, #7d4052) 7%, var(--app-surface, #fff)), var(--app-surface, #fff)); text-align: center; }
+.v54-inspector-empty[hidden] { display: none !important; }
+.v54-inspector-empty > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: var(--app-accent-soft, #f0e6e9); color: var(--app-accent, #7d4052); font-size: 20px; }
+.v54-inspector-empty > strong { font-size: 13px; }
+.v54-inspector-empty > p { max-width: 230px; margin: 0; color: var(--app-muted, #8a8085); font-size: 10px; line-height: 1.55; }
+.v54-inspector-empty > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+.v54-inspector-empty button { min-height: 33px !important; padding: 6px 9px !important; border-radius: 9px !important; font-size: 9px !important; }
+
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not(.studio-inspector-heading):not(.v54-inspector-empty) { display: none !important; }
+body.workspace-experience-v54.v54-inspector-essential.v54-has-selection [data-inspector-pane="object"] > .v54-advanced-control { display: none !important; }
+
+/* Toolbar horizontal scroll (when narrow) — keep buttons in place. */
+body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: none !important; }
+body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar::-webkit-scrollbar { display: none !important; }
+body.workspace-experience-v54 .v23-context-toolbar { min-width: 0 !important; flex: 0 1 auto !important; }
+body.workspace-experience-v54 .v23-context-toolbar > div { min-width: 0 !important; }
+
+/* Footer Tools overflow menu. */
+.v54-footer-tools { position: relative; display: block !important; }
+.v54-footer-tools[hidden] { display: none !important; }
+.v54-footer-tools-trigger { min-height: 24px !important; padding: 3px 8px !important; border: 1px solid #4d4e55 !important; border-radius: 6px !important; background: #2d2e34 !important; color: #f2f2f4 !important; font-size: 9px !important; }
+.v54-footer-tools-trigger span { margin-left: 3px; color: #aeb0b7; }
+.v54-footer-tools-menu { position: absolute; right: 0; bottom: 31px; z-index: 12050; width: min(460px, calc(100vw - 24px)); max-height: min(430px, 70dvh); overflow: auto; padding: 10px; border: 1px solid var(--app-line, #e4e4e9); border-radius: 14px; background: color-mix(in srgb, var(--app-surface, #fff) 97%, transparent); box-shadow: 0 20px 55px #0005; backdrop-filter: blur(18px); color: var(--app-text, #35353b); }
+.v54-footer-tools-menu[hidden] { display: none; }
+.v54-footer-tools-menu > strong { display: block; padding: 2px 4px 8px; color: var(--app-muted, #8a8085); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
+.v54-footer-tools-menu > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.v54-footer-tools-menu button { justify-content: flex-start !important; min-height: 35px !important; padding: 7px 9px !important; border: 1px solid var(--app-line, #e4e4e9) !important; border-radius: 8px !important; background: var(--app-surface-2, #f7f7f9) !important; color: var(--app-text, #35353b) !important; font-size: 9px !important; text-align: left !important; }
+
+body.workspace-experience-v54 .studio-statusbar { overflow: visible !important; }
+body.workspace-experience-v54 .studio-statusbar > div { min-width: 0; }
+body.workspace-experience-v54 .studio-statusbar > div:last-child { overflow: visible; white-space: nowrap; }
+body.workspace-experience-v54 .studio-status-center { min-width: 0; overflow: hidden; }
+body.workspace-experience-v54 .studio-status-center span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+html[data-theme="dark"] .v54-inspector-empty { background: linear-gradient(145deg, color-mix(in srgb, var(--app-accent, #7d4052) 10%, var(--app-surface, #fff)), var(--app-surface, #fff)); }
+html[data-theme="dark"] .v54-footer-tools-menu { box-shadow: 0 22px 60px #000a; }
+
+/* Compact device buttons (≤1450px) collapse to a single-letter short label. */
+@media (max-width: 1450px) {
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > button.v54-device-button { width: 36px !important; min-width: 36px !important; padding-inline: 0 !important; font-size: 0 !important; color: transparent !important; }
+  body.studio-experience.workspace-experience-v54 .v54-device-button::after { content: attr(data-short); font-size: 10px !important; font-weight: 750; color: var(--app-text, #35353b); }
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #zoomOut,
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #zoomLevel,
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #zoomIn,
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #fitCanvas,
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #panToggle,
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > .toolbar-divider { display: none !important; }
+  body.workspace-experience-v54 .v23-context-toolbar { width: 110px !important; max-width: 110px !important; flex: 0 0 110px !important; }
+  body.workspace-experience-v54 .v23-context-toolbar > span { display: none !important; }
+}
+@media (max-width: 1180px) {
+  body.workspace-experience-v54 > .studio-topbar { gap: 5px !important; }
+  body.workspace-experience-v54 > .studio-topbar .studio-document-title { display: flex !important; }
+  .v54-header-menu-actions:not([hidden]) { display: grid !important; }
+}
+@media (max-width: 900px) {
+  body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 58px) !important; }
+  .v54-footer-tools-menu > div { grid-template-columns: 1fr; }
+  body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { padding-right: 6px !important; }
+}
+@media (max-width: 700px) {
+  body.workspace-experience-v54 > .studio-topbar { padding-inline: 8px !important; }
+  body.workspace-experience-v54 > .studio-topbar .studio-document-title { max-width: none !important; }
+  .v54-inspector-empty { margin: 12px 2px; padding: 20px 12px; }
+  .v54-footer-tools-menu { right: -4px; }
+}
+@media (max-width: 600px) {
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { display: none !important; }
+}
+@media (max-width: 600px) {
+  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left {
+    position: fixed !important; inset: 58px 0 68px 0 !important; width: 100vw !important; max-width: 100vw !important; height: auto !important; padding: 0 !important;
+    display: grid !important; grid-template-columns: var(--einvite-rail-width, 66px) minmax(0, 1fr) !important; overflow: hidden !important;
+  }
+  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-tool-rail { position: relative !important; inset: auto !important; width: var(--einvite-rail-width, 66px) !important; min-width: var(--einvite-rail-width, 66px) !important; height: 100% !important; margin: 0 !important; }
+  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-pane-host { position: relative !important; inset: auto !important; width: auto !important; min-width: 0 !important; height: 100% !important; transform: none !important; margin: 0 !important; overflow: hidden !important; }
+}
+
+/* -------------------------------------------------------------------------
+   4. Full sidebar labels + collapse-to-icons toggle (bug #4)
+   The dark tool rail previously clipped category titles ("Ele..."). These
+   rules show full labels by default and switch to icon-only when the user
+   toggles the collapse button (added by ui-layout.js).
+   ------------------------------------------------------------------------- */
+
+/* Default: full labels, wrapped gracefully. */
+body.studio-experience .studio-tool-rail .studio-rail-button {
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  white-space: normal !important;          /* allow wrapping instead of ellipsis */
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: keep-all !important;         /* never break a word mid-character */
+  overflow-wrap: anywhere !important;      /* but allow long words to wrap */
+  min-height: 62px;
+}
+body.studio-experience .studio-tool-rail .studio-rail-button small,
+body.studio-experience .studio-tool-rail .studio-rail-button span:not(.studio-nav-icon) {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* Pane category headings (h2) — show in full. */
+body.studio-experience .studio-pane h2,
+body.studio-experience .studio-pane-heading h1,
+body.studio-experience .studio-inspector-heading strong {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  text-overflow: clip !important;
+}
+
+/* The collapse button itself. */
+.v54-sidebar-collapse {
+  align-self: center;
+  margin: 2px auto 6px;
+  width: 28px; height: 28px; min-height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid #3a3b42;
+  background: #2b2c33;
+  color: #cfd0d6;
+  font-size: 14px; font-weight: 700;
+  line-height: 1;
+  display: grid; place-items: center;
+}
+.v54-sidebar-collapse:hover { background: #3a3b44; color: #fff; }
+.v54-sidebar-collapse:focus-visible { outline: 2px solid var(--app-accent, #7d4052); outline-offset: 2px; }
+
+/* Collapsed (icon-only) mode. */
+body.sidebar-collapsed.studio-experience .studio-tool-rail { width: 56px !important; }
+body.sidebar-collapsed.studio-experience .left { grid-template-columns: 56px minmax(0, 1fr) !important; }
+body.sidebar-collapsed.studio-experience .studio-tool-rail .studio-rail-button {
+  min-height: 48px; padding: 8px 2px;
+}
+body.sidebar-collapsed.studio-experience .studio-tool-rail .studio-rail-button small,
+body.sidebar-collapsed.studio-experience .studio-tool-rail .studio-rail-button span:not(.studio-nav-icon) {
+  display: none !important;      /* icon-only */
+}
+body.sidebar-collapsed.studio-experience .studio-rail-button .studio-nav-icon { font-size: 18px; }
+
+/* -------------------------------------------------------------------------
+   5. Navigation overflow fix (bug #5)
+   Every workspace navigation surface tagged `v54-nav-text` wraps long words
+   and never spills outside its box.
+   ------------------------------------------------------------------------- */
+.v54-nav-text {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  hyphens: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.v54-nav-text[title] { /* titles remain accessible via tooltip */ }
+
+/* Page chips specifically: keep the label on one line when it fits, wrap
+   when it does not. */
+.workflow-page-chip.v54-nav-text,
+.workflow-page-chip strong.v54-nav-text {
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  max-width: 100%;
+}
+
+/* Layer rows: long layer names wrap instead of overflowing the row. */
+.layer-row.v54-nav-text,
+.v23-command-row.v54-nav-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Dashboard overview cards: numbers can be long (e.g. 1,234,567). */
+.dashboard-overview-cards article.v54-nav-text strong { word-break: break-all; }
+
+/* -------------------------------------------------------------------------
+   6. Auto-fit suppression visual guard (bugs #1 & #2)
+   While AutoFitGuard is active (body.ei-suppress-autofit), pin the rendered
+   font size to the configured value so a stray refit cannot shrink it
+   mid-drag. The JS guard is the primary defence; this CSS is a backstop.
+   ------------------------------------------------------------------------- */
+body.ei-suppress-autofit .object[data-text-auto-fit="fit"] .content,
+body.ei-suppress-autofit .object[data-typography-model-version] .content {
+  /* Defer to the element's configured font size; disallow the auto-fit
+     computed override while the user is actively resizing/selecting. */
+  font-size: var(--ei-font-size, attr(data-font-size)) !important;
+  transition: none !important;
+}
+/* When suppressing, hide any "text refitted" status toast so the user is not
+   misled into thinking the font was changed. */
+body.ei-suppress-autofit [id$="TypographyState"],
+body.ei-suppress-autofit #typographyV19State { opacity: .35; }

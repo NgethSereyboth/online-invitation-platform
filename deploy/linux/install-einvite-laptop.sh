@@ -140,30 +140,112 @@ install_system_packages() {
 
 check_prerequisites() {
   log_info "Checking prerequisites..."
-  
+
   # Python check
   if ! command -v python3 >/dev/null 2>&1; then
     log_error "Python 3 is not installed. Run with --install-system-packages or install manually."
     exit 1
   fi
-  
+
   if ! python3 -c 'import sys; assert sys.version_info >= (3,10), "Python 3.10+ required"' 2>/dev/null; then
     log_error "Python 3.10 or newer is required."
     exit 1
   fi
-  
+
   # venv check
   if ! python3 -m venv --help >/dev/null 2>&1; then
     log_error "Python venv module is missing. Install python3-venv."
     exit 1
   fi
-  
-  # ClamAV check (warning only)
-  if ! command -v clamdscan >/dev/null 2>&1; then
-    log_warn "ClamAV not found. Upload scanning will be disabled."
+
+  # ClamAV check (warning only — the dedicated ensure_clamav_installed step
+  # below will attempt to install it, but we keep the prerequisite warning
+  # so a laptop without apt/dnf is not silently left unprotected).
+  if ! command -v clamdscan >/dev/null 2>&1 && ! command -v clamd >/dev/null 2>&1; then
+    log_warn "ClamAV not found. The installer will attempt to install it next."
   fi
-  
+
   log_info "Prerequisites check passed."
+}
+
+# V54 security hardening: ensure ClamAV (clamdscan / clamd) is installed and
+# running so the backend's security_scanner_v54 module can scan uploads via the
+# clamd INSTREAM protocol. The installer fails closed only when both the
+# install AND the EINVITE_ALLOW_NO_SCANNER=0 default hold; on a laptop without
+# apt/dnf the operator must install ClamAV manually (or set
+# EINVITE_ALLOW_NO_SCANNER=1 in the repo-root .env to bypass at their own risk).
+ensure_clamav_installed() {
+  log_info "Checking for ClamAV..."
+
+  # Already installed and on PATH? Then there is nothing to do.
+  if command -v clamdscan >/dev/null 2>&1 || command -v clamd >/dev/null 2>&1; then
+    log_info "ClamAV scanner binary already installed."
+  else
+    log_warn "ClamAV is missing. Attempting to install clamav + clamav-daemon..."
+
+    local pkg_mgr
+    pkg_mgr=$(detect_package_manager)
+    if [[ -z "$pkg_mgr" ]]; then
+      log_warn "No supported package manager found. Install ClamAV manually: apt-get install -y clamav clamav-daemon (or dnf/yum/pacman equivalent)."
+      log_warn "Without ClamAV, the server will refuse to start unless EINVITE_ALLOW_NO_SCANNER=1 is set in .env."
+      return 0
+    fi
+
+    # Run apt-get with sudo when the installer was launched without root.
+    local sudo_cmd=""
+    if [[ $EUID -ne 0 ]]; then
+      if command -v sudo >/dev/null 2>&1; then
+        sudo_cmd="sudo"
+      else
+        log_error "ClamAV install requires root. Re-run this installer with sudo, or install ClamAV manually."
+        return 0
+      fi
+    fi
+
+    case "$pkg_mgr" in
+      apt)
+        $sudo_cmd apt-get update -qq
+        $sudo_cmd DEBIAN_FRONTEND=noninteractive apt-get install -y -qq clamav clamav-daemon || {
+          log_warn "apt-get could not install ClamAV. Install it manually before hosting."
+          return 0
+        }
+        ;;
+      dnf|yum)
+        $sudo_cmd "$pkg_mgr" install -y -q clamav clamav-update || {
+          log_warn "$pkg_mgr could not install ClamAV. Install it manually before hosting."
+          return 0
+        }
+        ;;
+      pacman)
+        $sudo_cmd pacman -Sy --noconfirm clamav || {
+          log_warn "pacman could not install ClamAV. Install it manually before hosting."
+          return 0
+        }
+        ;;
+    esac
+  fi
+
+  # Start and enable the clamav-daemon service so clamd INSTREAM works.
+  if command -v systemctl >/dev/null 2>&1; then
+    if systemctl list-unit-files 2>/dev/null | grep -q '^clamav-daemon\.service'; then
+      $sudo_cmd systemctl enable --now clamav-daemon 2>/dev/null || true
+      log_info "ClamAV daemon enabled and started."
+    elif systemctl list-unit-files 2>/dev/null | grep -q '^clamd\.service\|^clamd@\.service'; then
+      $sudo_cmd systemctl enable --now clamd 2>/dev/null || $sudo_cmd systemctl enable --now 'clamd@scan' 2>/dev/null || true
+      log_info "clamd service enabled and started."
+    else
+      log_warn "clamav-daemon systemd unit not found. Start the daemon manually before scanning uploads."
+    fi
+  else
+    log_warn "systemctl not available. Start clamav-daemon manually before scanning uploads."
+  fi
+
+  # Refresh the virus database once (best-effort; the daemon does this on a
+  # schedule, but a fresh install has no database yet and the first upload
+  # scan would otherwise return an error verdict).
+  if command -v freshclam >/dev/null 2>&1; then
+    $sudo_cmd freshclam --no-dns 2>/dev/null || $sudo_cmd freshclam 2>/dev/null || true
+  fi
 }
 
 setup_virtual_environment() {
@@ -267,6 +349,57 @@ EOF
   
   chmod 0640 "$env_file"
   log_info "Environment file created: $env_file"
+}
+
+# V54 security hardening: write the repo-root .env template that the backend's
+# secrets_v54.py module reads at startup. The template is intentionally minimal
+# and dev-safe: HTTP-only (EINVITE_COOKIE_SECURE=0), loopback host allowlist,
+# and the two long-lived secrets left BLANK so the app auto-generates strong
+# values on first launch and appends them to this file. The operator can later
+# replace the empty placeholders with pinned values if they need a stable
+# secret across laptop restarts.
+generate_repo_env_template() {
+  local env_file="$PROJECT_ROOT/.env"
+
+  if [[ -f "$env_file" ]]; then
+    log_info "Repo-root .env template already exists, skipping generation."
+    return 0
+  fi
+
+  log_info "Generating repo-root .env template (V54 security defaults)..."
+
+  cat > "$env_file" <<'EOF'
+# eInvite laptop-hosting environment (V54 security defaults).
+# Generated by deploy/linux/install-einvite-laptop.sh.
+#
+# Security defaults:
+#   * EINVITE_COOKIE_SECURE=0 — HTTP-only hosting on the loopback/private
+#     network. Switch to 1 (and put the app behind HTTPS) before exposing
+#     the site to the public Internet.
+#   * EINVITE_ALLOWED_HOSTS=localhost 127.0.0.1 — only these Host headers
+#     are accepted. Add the laptop's LAN IP if you want other devices on
+#     the same Wi-Fi to reach the site. Values may be comma- or space-separated.
+#   * EINVITE_ALLOW_NO_SCANNER=0 — the server refuses to start without a
+#     working ClamAV/Defender scanner. Set to 1 ONLY for an isolated dev
+#     laptop where you accept the risk of accepting unscanned uploads.
+#   * EINVITE_SECRET_KEY= / EINVITE_BILLING_WEBHOOK_SECRET= — intentionally
+#     blank. On the first launch, secrets_v54.py generates strong random
+#     values, populates the running process, and appends the generated
+#     values to THIS file on the next launch (when the keys are absent).
+#     To pin a stable secret, replace the empty value with a long random
+#     string (>= 32 chars) before the first launch.
+
+EINVITE_COOKIE_SECURE=0
+EINVITE_ALLOWED_HOSTS=localhost 127.0.0.1
+EINVITE_ALLOW_NO_SCANNER=0
+# Leave blank for auto-generation by secrets_v54.py:
+EINVITE_SECRET_KEY=
+EINVITE_BILLING_WEBHOOK_SECRET=
+EOF
+
+  chmod 0600 "$env_file"
+  log_info "Repo-root .env template created: $env_file"
+  log_info "First launch will auto-generate EINVITE_SECRET_KEY / EINVITE_BILLING_WEBHOOK_SECRET."
 }
 
 configure_firewall() {
@@ -410,9 +543,11 @@ main() {
   fi
   
   check_prerequisites
+  ensure_clamav_installed
   setup_virtual_environment
   setup_data_directories
   generate_environment_file
+  generate_repo_env_template
   configure_firewall
   verify_installation
   start_server

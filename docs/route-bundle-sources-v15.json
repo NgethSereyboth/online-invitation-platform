@@ -261,9 +261,11 @@
         "timeline-v13.js",
         "product-operations-v13.js",
         "mobile-editor-v14.js",
-        "windows-ui-v16.js",
         "professional-editor-v17.js",
-        "editor-responsive-contract-v27.js"
+        "editor-responsive-contract-v27.js",
+        "editor/editor-core.js",
+        "editor/ui-layout.js",
+        "editor/ui-components.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -299,12 +301,12 @@
         "timeline-v13.css",
         "product-operations-v13.css",
         "stabilized-v14.css",
-        "windows-ui-v16.css",
         "editor-ux-refinement-v0_52.css",
         "professional-editor-v17.css",
         "zoom-layout-v22.css",
         "graphics-runtime-v22.css",
-        "editor-responsive-contract-v27.css"
+        "editor-responsive-contract-v27.css",
+        "editor/editor-styles.css"
       ]
     },
     "materials.html": {
