@@ -16,6 +16,10 @@
 .DS_Store
 Thumbs.db
 
+# Editor/IDE files
+.vscode/
+.idea/
+
 # Compressed files
 *.zip
 *.gz
