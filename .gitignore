@@ -4,7 +4,7 @@
 *.tmp
 *.swp
 
-# Environment files
+# Environment and configuration files
 .env
 .env.local
 *.env.*
