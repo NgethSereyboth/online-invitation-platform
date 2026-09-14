@@ -1,0 +1,15 @@
+{$EINVITE_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy web:8080 {
+        health_uri /api/health/live
+        health_interval 30s
+        health_timeout 5s
+    }
+    header {
+        -Server
+    }
+    log {
+        output stdout
+        format json
+    }
+}

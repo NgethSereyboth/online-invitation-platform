@@ -1,0 +1,302 @@
+{
+  "product": "E-invitation-website",
+  "build": "intelligent-event-ecosystem-v0.52",
+  "releaseName": "V0.52 Intelligent Event Ecosystem - Production Deployment Hardening",
+  "date": "2026-08-10",
+  "status": "V0.52 local security-hardened release candidate; 101/101 deterministic checks passed and production certification remains pending.",
+  "baseline": "e-invitation-platform-intelligent-event-ecosystem-v0.52-repaired(2).zip (independent-audit repair baseline)",
+  "version": "0.52",
+  "schemaVersion": 27,
+  "sceneModelVersion": 3,
+  "releaseMarkers": [
+    "V27_0_BULK_REMEDIATION_PASSED",
+    "V27_1_BACKUP_AUTOMATION_PASSED",
+    "V27_2_AUDIT_TRAIL_PASSED",
+    "V27_3_3_STUDIO_AUTOMATION_PASSED",
+    "V27_3_4_REPAIR_PASSED"
+  ],
+  "certification": {
+    "schemaVersion": 27,
+    "implementationBuild": "V0.52 security-hardened release candidate",
+    "fullDeterministicGate": "Security-hardened candidate: 101/101 deterministic checks passed together on 2026-08-10.",
+    "fullBrowserGate": "Production-hardened release: 114/114 required browser checks passed sequentially in isolated data directories.",
+    "nativeWindowsRuns": 0,
+    "nativeLinuxRuns": 0,
+    "externalProviderIntegration": "not run \u2014 credentials intentionally absent",
+    "physicalGpuBenchmark": "not run",
+    "securityAudit": "Authorized local non-destructive adversarial review completed on 2026-08-10; an independent professional penetration test remains pending.",
+    "loadAndScaleAudit": "not run",
+    "disasterRecoveryDrill": "not run",
+    "releaseCertification": "Security-hardened candidate passed 101/101 deterministic checks, including a live adversarial boundary suite; the complete 116-browser matrix, independent penetration test, external hosting/provider credentials, managed-service integration, platform release markers, and a real backup restore drill remain pending",
+    "editorRouteLimit": 1420000,
+    "editorRouteBytes": 1414838,
+    "editorRouteHeadroom": 5162,
+    "readmeSha256": "f3c158d37f1ab2367a4bd0565c230535369596431709cbbd3cb234c324633330",
+    "editorPageStartupBytes": 1415893,
+    "publicRouteLimit": 260000,
+    "publicRouteBytes": 233585,
+    "publicRouteHeadroom": 26415
+  },
+  "reviewWorkflow": {
+    "model": "V23.7.0 private collaborator-only review records with page, object, point, and thread anchors",
+    "annotations": "V23.7.1 canvas pins, selection comments, exact-point placement, replies, filtering, jumping, resolve/reopen, and bounded import/export",
+    "approvals": "V23.7.2 saved-revision fingerprints, approval decisions, and stale-design detection",
+    "refinement": "V23.7.3 desktop/mobile containment, command/context integration, polling, accessible status, migrations, lifecycle cleanup, and performance verification"
+  },
+  "photoStyleWorkflow": {
+    "library": "V23.6.3 persistent reusable photo styles and batch application"
+  },
+  "photoWorkflow": {
+    "editor": "V23.5.3 transactional non-destructive photo editing"
+  },
+  "assetWorkflow": {
+    "browser": "V23.4.3 unified searchable image assets and direct placement"
+  },
+  "reviewOperations": {
+    "notifications": "V23.8.0 private bounded in-app activity for comments, replies, resolution, approval requests, decisions, and policy changes",
+    "assignment": "V23.8.1 owner/collaborator reviewer suggestions and independent distinct-reviewer approval counting",
+    "publishReadiness": "V23.8.2 opt-in manager-controlled approval and unresolved-comment publishing gates with revision-aware readiness",
+    "refinement": "V23.8.3 desktop/mobile activity UI, unread management, lifecycle cleanup, release integration, and performance verification"
+  },
+  "canvasWorkflow": {
+    "directManipulation": "V24.1 inline text, crop workflow, local floating controls, selection breadcrumbs, and V24.0 pointer-centered zoom/Alt-drag duplication",
+    "content": "V24.2 unified invitation content browser across images, elements, pages, sections, saved components, styles, and commands",
+    "layout": "V24.3 smart stacks, tidy grid, equal sizing, responsive anchors, invitation formats, and layout diagnostics",
+    "brandComponents": "V24.4 event brand kits and local/account reusable components",
+    "collaboration": "V24.5 review summaries, assignments, priorities, due dates, mentions, CSV reporting, and server review-task persistence",
+    "qualityExport": "V24.6 accessibility repair, quality checks, PNG/SVG/PDF-oriented print, all-pages PNG ZIP, and private project backup"
+  },
+  "templateGovernance": {
+    "adaptiveTemplates": "V25.0 editable five-page invitation families with semantic roles, responsive anchors, and event-field bindings",
+    "studioGovernance": "V25.1 authenticated studio resources, approval/deprecation status, resource versions, optional locks, and server publication rules",
+    "printReadiness": "V25.2 Khmer/font/output preflight bound to the current design fingerprint with automatic stale detection",
+    "bindings": "V25.3 refreshable names, Khmer names, dates, venues, contacts, schedules, and hero media with detach/relink protection",
+    "refinement": "V25.3.3 fingerprint-aware preflight invalidation, real-origin server detection for fast offline libraries, governed typography-lock verification, mobile containment, and bounded performance."
+  },
+  "studioAutomation": {
+    "bulkRemediation": "V27.0 compatible release pinning, manual-update detection, CSV adoption export, and bounded bulk jobs",
+    "backupAutomation": "V27.1 scheduled/manual local recovery archives with retention and authenticated downloads",
+    "auditTrail": "V27.2 bounded integrity-verified operational audit projection",
+    "repair": "V27.3.5 stabilization adds agent-safe transactions, target/revision binding, layout-safe previews, accessible lazy-loaded assistant UI, honest provider status, mobile HUD separation, and release evidence without changing schema 14."
+  },
+  "baselineSha256": "a42ae49bc3cc9ca00e4899f25f0d7eae9938aea4d11e6e7693213ed148fd59c1",
+  "requiredPendingMarkers": [
+    "EINVITATION_V0_52_ALL_REQUIRED_REVIEW_CHECKS_PASSED",
+    "EINVITATION_V0_52_RELEASE_CHECK_PASSED",
+    "EINVITATION_V0_52_WINDOWS_RELEASE_CHECK_PASSED",
+    "EINVITATION_V0_52_LINUX_RELEASE_CHECK_PASSED"
+  ],
+  "agentSafeEditorFoundation": {
+    "transactionService": "V27.3.5 model-first atomic editor actions with one-step history and rollback",
+    "targetBinding": "Invitation, page, target, revision, document/target fingerprint and snapshot validation",
+    "layoutPreview": "Side-effect-free shared-renderer diagnostics at 320, 360, 390, 430, 820, 1024, 1180 and 1440 pixels",
+    "assistantLoading": "Large assistant JS/CSS lazy-loaded; canonical route retains only a small bootstrap and transaction service",
+    "providerDisclosure": "Connected AI only for confirmed external provider output; deterministic local templates labelled Template helper \u2014 offline",
+    "mobileAccessibility": "Modal mobile bottom sheet, complementary desktop panel, focus containment/restoration, inert lifecycle, 44px targets and no supported-width overflow",
+    "canvasHud": "Reserved mobile workspace chrome with zero artboard-object intersection at required mobile sizes"
+  },
+  "aiCreativeAgent": {
+    "conversation": "Project-scoped authenticated threads with session-only offline fallback, streaming message events, plan/progress/preview/result/error/cancellation types, and stable context references.",
+    "serverArchitecture": [
+      "ai_agent/config.py",
+      "ai_agent/storage.py",
+      "ai_agent/context.py",
+      "ai_agent/providers.py",
+      "ai_agent/tools.py",
+      "ai_agent/service.py"
+    ],
+    "typedTools": "Provider output is limited to the registered JSON-schema tools; selectors, HTML, SQL, executable code, filesystem paths, arbitrary URLs, and network destinations are rejected.",
+    "transactions": "Document mutations use EInviteAgentActionService and EInviteEditorBridge with preview, target/revision checks, atomic batches, rollback, and one-click Undo AI job.",
+    "confirmationBoundaries": "Publish/unpublish, message preparation, object deletion, exports, background removal, and other declared high/medium-risk operations require explicit confirmation.",
+    "providers": "Deterministic fake provider for offline tests and a strict server-side external provider adapter; keys never enter the browser or invitation document.",
+    "loading": "Agent UI, registry, and CSS remain lazy-loaded and are not added to the canonical editor route bundle.",
+    "schemaVersion": 18
+  },
+  "professionalLayersV29": {
+    "sceneGraph": "Normalized professionalScene v1 with stable layer/object IDs, hierarchy, frames, masks, components, constraints and compatibility projections.",
+    "vectors": "First-class vector primitives, paths, gradients/strokes, sanitized SVG, path editing utilities and bounded boolean/compound operations.",
+    "ui": "Lazy accessible layer tree, multi-selection, reorder/nesting, search/filter, visibility/lock, components and precision controls."
+  },
+  "rasterWorkspaceV30": {
+    "model": "Non-destructive raster edit documents referencing immutable assets; no large bytes/base64 in invitation JSON.",
+    "workspace": "Lazy recoverable raster workspace with crop/transform, selection/tool operation records, layers, masks, adjustments and before/after.",
+    "rendering": "Tile-worker foundations, bounded local Pillow adapter, durable jobs, cancellation, idempotency and stale-result protection."
+  },
+  "collaborationV31": {
+    "model": "Project-owned CRDT-compatible identities, LWW registers, conflict-safe sequences, structured rich-text updates, epochs and state vectors.",
+    "transport": "Authenticated local polling adapter with WebSocket-compatible provider boundary, durable updates/checkpoints, presence, offline queue and recovery export.",
+    "scale": "Page/artboard helpers, spatial index, virtualization, merge fields, CSV/batch foundations and durable acknowledged publishing state."
+  },
+  "productionPlatformV32": {
+    "tenancy": "Personal-workspace migration, workspace memberships/roles, tenant ownership columns, invitation-scoped collaborator compatibility and centralized authorization.",
+    "storage": "Local plus optional S3/R2/MinIO-compatible private object storage, signed downloads/uploads, multipart sessions and object versions.",
+    "jobs": "Durable database-backed web/worker/scheduler roles with retries, cancellation, idempotency and graceful shutdown.",
+    "hardening": "Publication fingerprints/epochs, advanced-asset preflight, privacy requests, backups/recovery epochs, observability, health endpoints and deployment schema.",
+    "status": "implementation complete; production deployment hardening implemented and exact release audit pending"
+  },
+  "productionDeploymentHardening": {
+    "preflight": "Credential-safe production validation enforces HTTPS, secure cookies, distinct stable signing secrets, PostgreSQL, authenticated Redis, private object storage, non-local backups, and bounded trusted proxies.",
+    "environmentGeneration": "prepare_production_env.py generates independent database, Redis, MinIO, upload, media, and guest-token secrets without printing them and refuses overwrite.",
+    "container": "Unprivileged read-only application containers, explicit persistent volumes, authenticated durable dependencies, pinned MinIO images, private backend networking, health-gated startup, and loopback-only default publishing.",
+    "readiness": "Traffic readiness now probes configuration, a live database query, object-storage access, and configured Redis connectivity and returns HTTP 503 when any dependency is unavailable.",
+    "operations": "Production launch checklist covers TLS/DNS, least privilege, CORS, backups, restore drills, monitoring, cutover, rollback, and post-launch review.",
+    "credentialsRequired": "Real hosting, PostgreSQL, Redis, object-storage/CDN, SMTP, billing, and optional AI provider credentials remain operator-supplied and are not included in the release.",
+    "firstTimeSetup": "FIRST_TIME_SETUP.cmd provides a lightweight Windows runtime setup; FIRST_TIME_HOSTING_SETUP.cmd consolidates validation, local/LAN, Docker, and native Windows Server paths; deploy/linux/setup-einvite-linux-once.sh prepares Linux prerequisites and the isolated Python environment.",
+    "operatorGuide": "FIRST_TIME_INSTALL_AND_HOSTING.md documents Windows desktop, Windows Server, Docker/VPS, native Linux/systemd, and container-PaaS deployment with credential, malware-scanning, backup, health, update, and restore requirements."
+  },
+  "selectedRoadmapV34V52": {
+    "V34": "Unified Quick Edit and Advanced Studio workspaces with saved layouts and shared selection/transaction boundaries.",
+    "V35": "Production AI routing policies, provider failover, budgets, saved workflows, typed registered tools and existing confirmation boundaries.",
+    "V36": "Versioned private/public template marketplace records, moderation metadata, compatibility manifests and workspace installations.",
+    "V42": "Government protocol documents, classifications, delegation metadata, official directory foundations and ordered approval chains.",
+    "V44": "Multi-track keyframe timelines, reduced-motion contracts, audio metadata and provider-neutral export jobs/assets.",
+    "V45": "Verified custom domains, publication environments, schedules, access settings and activation through existing stable host routing.",
+    "V47": "Bounded data-source mappings, validation metadata, idempotent bulk-generation jobs and generated invitation variants.",
+    "V48": "Declarative signed-manifest-ready plugin platform with allow-listed permissions/extension points and no arbitrary executable authority.",
+    "V52": "Internal compatibility milestone for event programs, tasks, vendors, incidents, bounded automations and deterministic operational readiness intelligence; the cumulative product release is named V0.52."
+  },
+  "certificationBoundary": "No public version, schema, or README change. The security-hardened candidate passed 101/101 deterministic checks, including live abuse cases for authentication, CSRF, host/request-header handling, IDOR, upload validation, ZIP-bomb resistance, signed-object authorization, and information disclosure. The complete 116-browser matrix, independent penetration test, real hosting/provider integration, and disaster-recovery certification remain pending.",
+  "securityHardening2026_08_10": {
+    "scope": "Authorized, non-destructive testing against local loopback instances and temporary databases only.",
+    "authentication": "Production admin bootstrap now requires verified email; password inputs are bounded; reset and passkey-start responses resist account enumeration; WebAuthn user-presence is required.",
+    "sessions": "Production session-cookie requests require a valid session-bound CSRF token independent of optional browser metadata.",
+    "networkBoundary": "Host authorities and request IDs are normalized; forwarded protocol is trusted only from exact configured proxy IPs; malformed/untrusted hosts are rejected.",
+    "uploads": "Legacy and V32 uploads enforce allow-listed MIME types, checksums, magic-byte/image validation, scanner policy, quarantine/deletion on rejection, per-entry archive limits, and compression-ratio limits.",
+    "storage": "Signed object delivery requires a tenant-owned object-version record; unsafe content cannot be served inline.",
+    "disclosure": "Arbitrary root JSON artifacts are no longer public and production health endpoints return minimal status.",
+    "reliability": "New registrations provision personal workspaces safely regardless of readiness-probe or endpoint initialization order.",
+    "report": "SECURITY_HARDENING_REPORT_2026-08-10.md"
+  },
+  "repairV0_52": {
+    "versioning": "Cumulative release renamed from V52.0 to V0.52 while retaining internal V52 API/file/document identifiers for backward compatibility.",
+    "routeBudget": "Canonical editor bundle route is 1411906 bytes (8094 bytes headroom); complete index startup assets are 1415893 bytes. Public route is 233585 bytes (26415 bytes headroom) under the unchanged 260000-byte limit.",
+    "trustedTypes": "New V34\u2013V0.52 interfaces and deferred launchers no longer use runtime HTML insertion or runtime style text injection.",
+    "accessibility": "Platform drawer now switches between desktop complementary and mobile modal-dialog semantics, traps mobile focus, inerts/restores background content and restores opener focus safely.",
+    "security": "Marketplace self-approval blocked, production domain verification requires a provider, AI policy secrets are stripped, plugin manifests are deep-scanned and animation properties are allow-listed.",
+    "privacy": "Bulk generation persists only mapped values, validates required columns and stores personalized tokens only as hashes.",
+    "assetIdentity": "Uploaded image, audio, video, raster and rendition references use canonical server asset IDs online while preserving separate local fallback IDs; invitation/workspace-scoped legacy migration is enforced server-side.",
+    "agentPanel": "Current V28 panel has a top-layer desktop contract, mobile modal semantics, document-level Escape handling, initialization locking, safe offline-thread fallback, abort/disposal and focus restoration.",
+    "layoutAndTheme": "Panel width aliases are updated atomically, both resizers align to actual boundaries, and the V0.52 platform drawer uses canonical light/dark application tokens.",
+    "rasterWorker": "V30 uses OffscreenCanvas/createImageBitmap worker rendering with progress, cancellation, fingerprint/stale-result rejection and a bounded Canvas 2D fallback.",
+    "schemaIdempotency": "Schema-27 normalization preserves the original lastMigratedFrom value so repeated normalization is stable.",
+    "releaseRunner": "Current V0.52 deterministic/browser contracts are registered; --continue-on-failure provides a complete audit mode and invalid Windows OPENSSL_CONF is cleared only for child processes.",
+    "aiBackendConversation": "Invitation review context uses the canonical resolved flag; pre-stream failures are sanitized, streamed failures terminate with a valid error event, and AI jobs/reservations finalize exactly once.",
+    "dashboardNavigation": "Visible project covers route through the explicit card action instead of recursively clicking themselves; action-menu Edit remains the canonical companion path.",
+    "autosaveTruth": "Server draft autosave no longer shadows the browser document object; newest pending edits are coalesced safely, transient failures retry with bounded backoff, revision/auth/validation failures stay distinct, and UI diagnostics are sanitized.",
+    "releaseGateStabilization": "Test-only V0.52 gate stabilization centralizes fresh-editor onboarding dismissal, exercises autosave through visible Event settings controls, and replaces V17 served Undo/Redo fixed sleeps with authoritative geometry/group/history/selection waits. No production source, public version, schema, README, or bundle budget changed.",
+    "overlayAndPageFocusReliability": "Professional V17 selection overlays now coalesce live geometry refreshes across zoom, viewport scroll, workspace/layout resize, bounded stage/viewport ResizeObserver notifications, and browser resize with lifecycle cleanup. V22 page-card reconciliation restores focus on the surviving card synchronously with preventScroll and exposes an authoritative render sequence for regression synchronization."
+  },
+  "internalMilestone": 52,
+  "compatibilityFloor": "V27.3.5",
+  "implementedMilestones": [
+    "V27.3.5",
+    "V28",
+    "V29",
+    "V30",
+    "V31",
+    "V32",
+    "V34",
+    "V35",
+    "V36",
+    "V42",
+    "V44",
+    "V45",
+    "V47",
+    "V48",
+    "V52"
+  ],
+  "validationEvidence": {
+    "pythonFilesCompiled": 253,
+    "topLevelJavaScriptFilesChecked": 173,
+    "deterministicChecksPassed": 101,
+    "deterministicChecksRegistered": 101,
+    "targetedInlineChromiumSuitesPassed": 20,
+    "localhostBrowserBlock": "net::ERR_BLOCKED_BY_ADMINISTRATOR before application code executes for real HTTP-served browser tests in this environment",
+    "canonicalBuildChecks": [
+      "typography contract",
+      "rich-text contract",
+      "editor bundle",
+      "route bundles",
+      "page manifest"
+    ],
+    "registeredBrowserChecks": 116,
+    "registeredTotalChecks": 217,
+    "continueOnFailureCommand": "2026-08-10 security-hardening run: python run_review_checks.py --skip-browser --continue-on-failure --fast-workers 4 passed all 101 deterministic checks after regenerating release hashes; the complete 116-browser rerun remains pending.",
+    "newServedBrowserRegressions": "Current direct autosave and V17 served attempts are blocked at initial page.goto by managed Chromium net::ERR_BLOCKED_BY_ADMINISTRATOR before application code; final unrestricted repetitions required.",
+    "browserChecksPassedInThisEnvironment": 114,
+    "browserChecksFailedInThisEnvironment": 0,
+    "totalChecksPassedInThisEnvironment": 205,
+    "completeGateExitCode": 0,
+    "servedBrowserFailuresBlockedByEnvironment": false,
+    "productionHardeningExactGate": "2026-08-09: 91/91 deterministic, 114/114 browser, 205/205 total, exit 0; matching Playwright 1.61 Chromium installed and all browser skips treated as failures.",
+    "baselineOnlyChromiumGeometryMismatch": "tests/v17_professional_editor_core_test.py fails under this container Chromium and also fails from the untouched supplied baseline; it was not modified in this pass and was green in the independent audit.",
+    "v17ServedRepeatRuns": "Current local served repetition cannot execute application/history code because managed Chromium blocks loopback HTTP navigation; final unrestricted 10/10 required.",
+    "releaseGateStabilizationBaseline": "e-invitation-platform-intelligent-event-ecosystem-v0.52-repaired-final.zip; SHA-256 bf1c92d9a17f1bd4931cb6200874fbb5e31ed20f6ae25f8200c36695d89e060b",
+    "releaseGateReliabilityBaseline": "Independent unrestricted audit supplied by user for this pass: deterministic 90/90, browser 113/114, total 203/204, exit 1; only registered failure tests/v17_served_editor_test.py.",
+    "releaseGateReliabilityLocalExactCommand": "python run_review_checks.py --continue-on-failure --fast-workers 8 attempted; local tool/browser policy prevents a truthful complete 204-check certification in this environment.",
+    "releaseGateReliabilityLocalDeterministicProgress": "63/63 completed registered deterministic entries reported PASS before the tool wall-clock ceiling terminated the local runner; no deterministic failure was reported.",
+    "releaseGateReliabilityQuickEdit": "10 successful fresh-process inline_editor_runtime_test.py executions with stable two-frame geometry and real hit-test reachability; one additional non-counted Playwright process hung during teardown before reporting.",
+    "releaseGateReliabilityServedBrowser": "Direct autosave and V17 served attempts are blocked at initial page.goto by managed Chromium net::ERR_BLOCKED_BY_ADMINISTRATOR before application code; not counted as product failures or passes.",
+    "releaseGateReliabilityTarget": "Unrestricted rerun target remains 90/90 deterministic, 114/114 browser, 204/204 total, exit 0.",
+    "finalV17ReliabilityInput": "Independent unrestricted evidence supplied by user: deterministic 90/90, browser 113/114, total 203/204, autosave 3/3, inline editor 10/10, V17 served editor 1/10.",
+    "finalV17ReliabilityCorrection": "tests/v17_served_editor_test.py now uses the real visible V24 Selection canvas control to make rotate/resize handles reachable, verifies pointer start/destination are in viewport, and requires a 420ms authoritative quiescent baseline (with two animation frames plus a task turn per probe) before rotate/resize history assertions. One valid gesture must still produce exactly one professional command and one undo entry.",
+    "finalV17LocalServedBrowser": "This container system Chromium blocks loopback HTTP at initial page.goto with net::ERR_BLOCKED_BY_ADMINISTRATOR. Playwright-managed Chromium is not installed and cannot be downloaded because outbound DNS is unavailable. Local served-browser attempts therefore do not reach V17 application code and are not counted as passes or product failures.",
+    "finalV17Target": "Unrestricted rerun target: V17 served 10/10, autosave 3/3, inline editor 10/10, deterministic 90/90, browser 114/114, total 204/204, exit 0.",
+    "finalV17LocalExactGate": "Exact command `python run_review_checks.py --continue-on-failure --fast-workers 8` was attempted in this container. The execution tool terminated the long command after 34/34 completed deterministic entries had reported PASS; no assertion failure had been reported at termination, and the browser phase was not reached.",
+    "finalV17LocalRepetitions": "Six completed local V17 served attempts all stopped at the initial loopback page.goto with managed Chromium net::ERR_BLOCKED_BY_ADMINISTRATOR before application code. Additional batched attempts were terminated by the tool wall-clock limit. These are environment blocks, not V17 pass/fail evidence.",
+    "finalV17StaticValidation": "246 Python sources compile; 172 top-level JavaScript files pass node --check; dependency/WOFF2/Chromium-launch preflight passes; editor, route and page-manifest check-only builders pass; final release-evidence contract passes.",
+    "finalOverlayFocusReliabilityInput": "Independent unrestricted evidence supplied by user: deterministic 90/90, browser 112/114, total 202/204, exit 1; V17 served 0/10, autosave 3/3, inline editor 10/10, V22 page refinement one full-gate focus failure followed by 10/10 isolated fresh runs.",
+    "finalOverlayFocusCorrection": "professional-editor-v17.js now synchronizes the body-positioned selection overlay from live getBoundingClientRect values after zoom/scroll/layout changes using one coalesced requestAnimationFrame scheduler plus bounded viewport/stage resize observation; tests/v17_served_editor_test.py diagnostic JavaScript is syntactically complete. page-experience-v22.js preserves the reconciled card node and restores focus synchronously with preventScroll while exposing renderSequence for authoritative test completion.",
+    "finalOverlayFocusTarget": "Unrestricted rerun target: V17 served 10/10, autosave 3/3, inline editor 10/10, V22 focus 10/10, deterministic 90/90, browser 114/114, total 204/204, exit 0.",
+    "publishAutosaveBarrierInput": "Independent unrestricted evidence supplied by user: deterministic 90/90, browser 113/114, total 203/204, exit 1; V17 served 8/10; autosave 3/3; inline editor 10/10; V22 page refinement 10/10. Sole registered failure was tests/v17_served_editor_test.py.",
+    "publishAutosaveBarrierDesign": "Client save scheduling now uses a monotonic generation across saveTimer, serverSaveTimer and requestIdleCallback, one active server-save drain promise, and a publish barrier that invalidates stale callbacks, waits active writes, captures one authoritative document, sends expectedRevision, and flushes only the newest edit queued during publishing. The publish endpoint atomically revision-checks, writes that exact document to draft_json, inserts the immutable publication snapshot, marks published, increments invitation document_version once, and returns the authoritative revision.",
+    "publishAutosaveRemoteConflict": "Focused real-server regression proves a genuine remote-client revision advance still returns revision_conflict to a stale publish and preserves both the remote draft and prior publication without overwrite.",
+    "publishAutosaveFocusedServerTest": "tests/v0_52_publish_barrier_server_test.py passed in the unrestricted Codex environment before the final evidence freeze.",
+    "publishAutosaveFocusedBrowserTest": "tests/v0_52_publish_autosave_barrier_browser_test.py passed 10/10 fresh processes in the unrestricted Codex environment. It authoritatively waits for the ordinary autosave PUT and covers pending saveTimer, pending serverSaveTimer, native idle callback, already-running PUT, publish/autosave/republish, monotonic revisions, snapshot/draft equality, and true remote conflict.",
+    "codexFinalV17Reliability": "tests/v17_served_editor_test.py passed 10/10 fresh processes after phase-aware publish diagnostics were bundled.",
+    "codexFinalSupportingReliability": "autosave 3/3; inline editor 10/10; V22 page refinement/focus 10/10; publish/autosave barrier browser 10/10.",
+    "codexFinalCandidateNote": "Application source and derived route artifacts are frozen before the final exact 204-check gate. The release-evidence contract intentionally keeps certification pending until platform-specific release markers are produced.",
+    "codexFinalNestedTransformCorrection": "Professional V17 overlay visibility now uses the intersection of the canvas viewport and the actual visual viewport, synchronizes after state geometry changes, and immediately settles scroll position before interaction so every rotated nested-group resize handle remains reachable.",
+    "codexFinalNestedTransformReliability": "tests/v18_nested_transform_matrix_test.py passed the complete nine-case fresh-Chromium matrix 3/3 after focused nw/se/s/sw repetitions passed 3/3 each; the unchanged 1,420,000-byte editor route ceiling remains satisfied.",
+    "codexFinalV17CoreCorrection": "The isolated core regression now performs bounded real pointer marquee attempts from hit-tested empty points inside the visible stage/viewport intersection, and resets the document before east/south multi-resize cases so prior rotation and boundary clamping cannot turn a transform assertion into a no-op.",
+    "codexFinalV17CoreReliability": "tests/v17_professional_editor_core_test.py passed 10/10 fresh Chromium processes after each of the two geometry-hardening revisions; the final visible-marquee revision is the release candidate."
+  },
+  "aiProjectOperatorV53_1": {
+    "operatorVersion": "53.1",
+    "publicProductVersion": "0.52 (unchanged)",
+    "capabilityCoverage": {
+      "registeredTools": 80,
+      "connectedTools": 80,
+      "missingBindings": 0,
+      "coverageFile": "AI_PROJECT_OPERATOR_CAPABILITY_COVERAGE_V53_1.json"
+    },
+    "governance": "Permission-aware discovery and authorization at context, planning, confirmation, per-operation execution, and authoritative server APIs; stale revisions/fingerprints are rejected.",
+    "materials": "Persistent nested folders, browser directory import, ZIP fallback, checksum deduplication, quota/signature/path validation, progress/cancel, and object/local storage compatibility.",
+    "referenceDesign": "Validated DesignBlueprint v1 workflow with protected-asset/watermark approximation warnings, preview/style/palette/typography modes, responsive verification, and governed new-invitation creation.",
+    "localProviders": "Server-only Ollama, LM Studio, and GPT4All-compatible discovery/routing with exact endpoint allowlisting, SSRF protection, capability records, role selection, health checks, and offline fallback.",
+    "persistence": "Idempotent SQLite/runtime and PostgreSQL schema coverage for blueprints, verification results, local provider metadata, model capabilities, folders, import jobs, existing plans/jobs/memory/feedback/knowledge/tool outcomes.",
+    "canonicalEditorRoute": {
+      "bytes": 1415734,
+      "limit": 1420000,
+      "headroom": 4266,
+      "lazyOperatorExtensions": true
+    },
+    "focusedValidation": {
+      "contractsAndServer": "passed",
+      "browserRegistryConversationAccessibilityLayout": "passed",
+      "productionFoundations": "passed",
+      "productionEnvironmentHardening": "passed after repairing an existing optional-billing placeholder mismatch in the generator",
+      "localProviderLiveProbe": "Ollama, LM Studio, and GPT4All endpoints were unavailable; redirect refusal was independently exercised against two live local HTTP servers and passed.",
+      "mobileBrowserHarness": "passed at 390x844 with dialog/aria-modal semantics, exact viewport containment, and zero horizontal overflow",
+      "repairGate": "100/100 deterministic checks and 7/7 focused Chromium suites passed after final editor UX refinement; live in-app inspection verified desktop/mobile/tablet containment, direct move/resize/undo, preview interaction, light/dark tokens, stable menus, focus restoration, and zero application console errors."
+    }
+  },
+  "finalUxRefinement": {
+    "editorChrome": "Single-row responsive header, compact contextual canvas controls, overflow-safe inspector tabs, and a consolidated status-bar Tools menu.",
+    "inspector": "Selection-aware Essentials view with a clear empty state and optional advanced effects, timeline, and AI controls.",
+    "mobile": "Initial canvas auto-fit, contained side-by-side tools drawer, usable Quick Edit sheet, and overflow-free account layout.",
+    "reliability": "Context action cloning is bounded to the source toolbar, preventing recursive menu growth and hidden DOM inflation.",
+    "interactionEvidence": "Live pointer selection, movement, resize, and two-step undo were verified on the invitation canvas; public preview opening and guest sections were verified.",
+    "validation": "100/100 deterministic checks plus 7/7 focused browser suites passed on 2026-08-09."
+  }
+}
