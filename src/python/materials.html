@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head><script src="theme-init.js"></script><script src="backend-mode-v14.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Material Library — E-invitation-website</title>
+  <link rel="stylesheet" href="bundle-materials-v15.css">
+  
+  
+
+
+
+
+
+
+
+</head>
+<body data-page="materials">
+<header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link">Dashboard</a><a href="templates.html" class="button-link">Template Studio</a><a href="account.html" class="button-link">Account</a></header>
+<main class="library-page">
+  <div class="library-head"><div><h1>Material Library</h1><p class="library-hint">Your account-wide collection of photos, music, and invitation videos.</p></div><button id="refreshBtn" type="button">Refresh</button></div>
+  <section class="upload-box">
+    <h2>Upload material</h2>
+    <div class="upload-row"><label>Store under invitation<select id="uploadInvitation"></select></label><label>Choose files<input id="uploadFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/mp4,video/mp4,video/webm"></label><button id="uploadBtn" class="primary" type="button">Upload files</button></div>
+    <div class="upload-row"><label>Choose a materials folder<input id="uploadFolder" type="file" multiple webkitdirectory directory accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/mp4,video/mp4,video/webm"></label><button id="uploadFolderBtn" type="button">Import folder</button><label>ZIP fallback<input id="uploadZip" type="file" accept=".zip,application/zip,application/x-zip-compressed"></label><button id="uploadZipBtn" type="button">Import ZIP</button></div>
+    <p class="library-hint">Folder and ZIP import preserve nested material folders. ZIP extraction rejects traversal, symbolic links, executables, invalid signatures, oversized batches, and unsupported files. Images: 15 MB each; audio: 25 MB; video: 50 MB.</p>
+    <div class="progress-line" hidden><span id="uploadProgress"></span></div><div id="uploadStatus" class="library-hint" role="status" aria-live="polite"></div><div id="uploadActions" class="actions" hidden><button id="cancelUpload" type="button">Cancel upload</button><button id="retryUpload" type="button" hidden>Retry failed uploads</button></div>
+  </section>
+  <div class="library-toolbar"><input id="search" type="search" placeholder="Search name, folder, or tags…"><select id="typeFilter"><option value="all">All types</option><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="font">Fonts</option><option value="favorite">Favorites</option></select><input id="folderFilter" placeholder="Folder"><select id="sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A–Z</option><option value="size">Largest first</option></select></div>
+  <div id="summary" class="library-summary"></div>
+  <section id="grid" class="material-grid-page"></section>
+</main>
+<dialog id="editDialog" class="edit-material-dialog"><form id="editForm"><h2>Material details</h2><input id="editId" type="hidden"><label>Name<input id="editName" maxlength="180" required></label><label>Folder<input id="editFolder" maxlength="1000" placeholder="e.g. Wedding Materials/Bride"></label><label>Tags — comma separated<input id="editTags" maxlength="500"></label><label class="toggle-row"><span>Favorite</span><input id="editFavorite" type="checkbox"></label><p id="editMeta" class="library-hint"></p><div class="dialog-actions"><button id="deleteBtn" class="danger" type="button">Delete</button><button id="cancelEdit" type="button">Cancel</button><button class="primary" type="submit">Save details</button></div></form></dialog>
+<script src="bundle-materials-v15.js"></script>
+  
+
+  
+
+
+</body>
+</html>

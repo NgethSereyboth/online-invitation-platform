@@ -1,0 +1,439 @@
+/**
+ * eInvite Editor - UI Layout Styles
+ * 
+ * This file contains all styles for the editor layout including:
+ * - Sidebar navigation
+ * - Toolbar positioning
+ * - Category labels
+ * - Panel organization
+ * 
+ * KEY FIXES APPLIED:
+ * - Toolbar icons do not jump/move within brackets
+ * - Category labels show full text (no truncation like "Ele...")
+ * - Collapsible sidebar with icon-only mode
+ * - Stable panel positioning
+ */
+
+/* ==========================================================================
+   MAIN EDITOR LAYOUT
+   ========================================================================== */
+
+.editor-layout {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Left Sidebar */
+.editor-sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    z-index: 100;
+}
+
+/* Collapsed sidebar (icon-only mode) */
+.editor-sidebar.collapsed {
+    width: 70px;
+    min-width: 70px;
+}
+
+/* Main Content Area */
+.editor-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Right Properties Panel */
+.editor-properties {
+    width: 260px;
+    min-width: 260px;
+    background: #ffffff;
+    border-left: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+/* ==========================================================================
+   TOOLBAR - STABLE POSITIONING (NO JUMPING ICONS)
+   ========================================================================== */
+
+.editor-toolbar {
+    height: 56px;
+    min-height: 56px;
+    background: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    /* CRITICAL FIX: Prevent layout shifts */
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* Toolbar container for tools */
+.toolbar-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    /* FIXED: Icons stay in place */
+    position: relative;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+}
+
+.toolbar-tools::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* Individual toolbar buttons - NO MOVEMENT */
+.toolbar-button {
+    /* FIXED: Static positioning */
+    position: static;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    /* Prevent any transform-based movement */
+    transform: none !important;
+    margin: 0;
+}
+
+.toolbar-button:hover {
+    background: #f5f5f5;
+    border-color: #e0e0e0;
+}
+
+.toolbar-button.active {
+    background: #e3f2fd;
+    border-color: #2196f3;
+    color: #1976d2;
+}
+
+/* Toolbar icons - FIXED POSITIONING */
+.toolbar-icon {
+    /* CRITICAL: No position changes */
+    position: static;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    /* Smooth but stable transitions */
+    transition: opacity 0.2s ease;
+}
+
+.toolbar-button:hover .toolbar-icon {
+    opacity: 1;
+}
+
+/* Toolbar separator */
+.toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: #e0e0e0;
+    margin: 0 8px;
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   SIDEBAR CATEGORIES - FULL TEXT LABELS
+   ========================================================================== */
+
+.sidebar-categories {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+}
+
+/* Category item */
+.sidebar-category {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    /* Ensure full text visibility */
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar-category:hover {
+    background: #f5f5f5;
+}
+
+.sidebar-category.active {
+    background: #e3f2fd;
+    border-left: 3px solid #2196f3;
+}
+
+/* Category icon */
+.sidebar-category-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Category label - SHOW FULL TEXT (FIXED) */
+.sidebar-category-label {
+    /* CRITICAL FIX: Show full text, no truncation */
+    flex: 1;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    /* Allow text to fully display */
+    min-width: 0;
+}
+
+/* Hidden label in collapsed mode */
+.editor-sidebar.collapsed .sidebar-category-label {
+    display: none;
+}
+
+/* Adjust spacing in collapsed mode */
+.editor-sidebar.collapsed .sidebar-category {
+    padding: 12px 8px;
+    justify-content: center;
+}
+
+.editor-sidebar.collapsed .sidebar-category-icon {
+    margin-right: 0;
+}
+
+/* ==========================================================================
+   CONTEXT TOOLBAR - STABLE (NO 72PX SHIFT)
+   ========================================================================== */
+
+.context-toolbar-row {
+    /* FIXED: No unexpected height changes */
+    height: auto;
+    min-height: 48px;
+    max-height: 48px;
+    background: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    /* Prevent layout shift */
+    flex-shrink: 0;
+    overflow: hidden;
+    /* Smooth show/hide without shifting */
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Hidden state */
+.context-toolbar-row.hidden {
+    opacity: 0;
+    visibility: hidden;
+    /* Don't collapse height to prevent shift */
+    min-height: 0;
+    max-height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Context toolbar items */
+.context-toolbar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.context-toolbar-label {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+}
+
+.context-toolbar-control {
+    height: 32px;
+    min-width: 100px;
+    padding: 0 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   CANVAS AREA
+   ========================================================================== */
+
+.canvas-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #f5f5f5;
+    /* Center content */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==========================================================================
+   BOTTOM PANEL (Timeline/Layers)
+   ========================================================================== */
+
+.bottom-panel {
+    height: 200px;
+    min-height: 150px;
+    max-height: 400px;
+    background: #ffffff;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    resize: vertical;
+    overflow: auto;
+}
+
+.bottom-panel-header {
+    height: 40px;
+    min-height: 40px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-weight: 600;
+    font-size: 14px;
+    background: #fafafa;
+}
+
+.bottom-panel-content {
+    flex: 1;
+    overflow: auto;
+    padding: 8px;
+}
+
+/* ==========================================================================
+   SCROLLBARS
+   ========================================================================== */
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #c0c0c0 #f5f5f5;
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+    .editor-sidebar {
+        width: 240px;
+        min-width: 240px;
+    }
+    
+    .editor-properties {
+        width: 240px;
+        min-width: 240px;
+    }
+}
+
+@media (max-width: 768px) {
+    .editor-layout {
+        flex-direction: column;
+    }
+    
+    .editor-sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .editor-properties {
+        display: none; /* Hide on mobile */
+    }
+    
+    .context-toolbar-row {
+        flex-wrap: wrap;
+    }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+/* Focus states */
+.toolbar-button:focus,
+.sidebar-category:focus {
+    outline: 2px solid #2196f3;
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .editor-sidebar,
+    .toolbar-button,
+    .sidebar-category,
+    .context-toolbar-row {
+        transition: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .editor-sidebar,
+    .editor-properties,
+    .editor-toolbar {
+        border-color: #000;
+    }
+    
+    .toolbar-button.active {
+        border: 2px solid #000;
+    }
+}
