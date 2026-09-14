@@ -58,6 +58,11 @@ function scheduleTextFit(items=$$('.object[data-text-auto-fit="fit"]')){const li
 function initializeV19Typography(){
 typographyLayoutController?.disconnect?.();
 typographyLayoutController=TypographyLayoutService.installResponsive($('#stage')||document,{selector:'.object[data-text-auto-fit="fit"],.object[data-typography-model-version]',targetFor:object=>object?.querySelector?.('.content'),modelFor:(content,object)=>applyTypographyLayout(object,content),onResult:(result,content,object,model)=>{const changed=syncTypographyLayoutResult(result,content,object,model);if(changed&&$('#typographyV19State'))$('#typographyV19State').textContent='Text refitted for the current layout and loaded fonts.'},events:['einvite:professional-command-committed','einvite:state-applied'],observeMutations:true});
+// v54: expose the responsive controller so AutoFitGuard (editor-core.js) can
+// patch its schedule/refit methods to suppress auto-fit during resize/rotate
+// drags and on selection (bugs #1 & #2). Without this, the controller is a
+// module-local variable and the guard cannot reach it.
+window.typographyLayoutController=typographyLayoutController;
 requestAnimationFrame(()=>typographyLayoutController.refresh())
 }
 function mutationId(){return crypto.randomUUID?.()||`mutation-${Date.now()}-${Math.random().toString(36).slice(2)}`}

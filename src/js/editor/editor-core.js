@@ -245,31 +245,75 @@
     }
 
     /**
-     * Patch the global TypographyLayoutService so its `schedule` and `refit`
-     * methods become no-ops while suppression is active. Safe to call before
-     * the service exists (it will retry on later selection events).
+     * Patch the global TypographyLayoutService AND the responsive controller
+     * so their `schedule` and `refit` methods become no-ops while suppression
+     * is active. Safe to call before they exist (retries on later events).
+     *
+     * Note: the service object (window.TypographyLayoutService) exposes
+     * `installResponsive` but NOT `schedule`/`refit` directly — those live on
+     * the controller returned by `installResponsive`, which app.js exposes on
+     * `window.typographyLayoutController`. We patch both shapes defensively.
+     *
+     * This is retryable: if the controller appears later (app.js creates it
+     * after editor-core installs), a subsequent patch() call will patch it.
+     * The `patched` flag only guards the service-level fit patch.
      */
     function patch() {
       const svc = window.TypographyLayoutService;
-      if (!svc || patched) return;
+      if (!svc) return;
+      // Always attempt to patch the controller — it may appear after install.
+      patchController(window.typographyLayoutController);
+      // Patch the service-level fit methods once.
+      if (patched) return;
       patched = true;
-      // The responsive controller exposes `schedule`; the service exposes
-      // `refit`. Patch both shapes defensively.
-      if (typeof svc.schedule === 'function' && !svc.__v54Patched) {
-        originalSchedule = svc.schedule.bind(svc);
-        svc.schedule = function scheduled(items, ...rest) {
-          if (suppressed) return; // honour the user's font size during resize/click
-          return originalSchedule(items, ...rest);
-        };
-        svc.__v54Patched = true;
-      }
-      if (typeof svc.refit === 'function' && !svc.__v54RefitPatched) {
-        originalRefit = svc.refit.bind(svc);
-        svc.refit = function refit(node, ...rest) {
+      if (typeof svc.fit === 'function' && !svc.__v54FitPatched) {
+        const originalFit = svc.fit.bind(svc);
+        svc.fit = function fit(...rest) {
           if (suppressed) return null;
-          return originalRefit(node, ...rest);
+          return originalFit(...rest);
         };
-        svc.__v54RefitPatched = true;
+        svc.__v54FitPatched = true;
+      }
+      if (typeof svc.fitAndDiagnose === 'function' && !svc.__v54FitDiagnosePatched) {
+        const originalFitDiag = svc.fitAndDiagnose.bind(svc);
+        svc.fitAndDiagnose = function fitAndDiagnose(...rest) {
+          if (suppressed) return null;
+          return originalFitDiag(...rest);
+        };
+        svc.__v54FitDiagnosePatched = true;
+      }
+    }
+
+    /**
+     * Patch a responsive controller's `schedule` and `refit` methods.
+     * Idempotent per controller (guarded by `__v54Patched`).
+     * @param {object|null} ctrl
+     */
+    function patchController(ctrl) {
+      if (!ctrl) return;
+      if (typeof ctrl.schedule === 'function' && !ctrl.__v54Patched) {
+        const original = ctrl.schedule.bind(ctrl);
+        ctrl.schedule = function scheduled(items, ...rest) {
+          if (suppressed) return; // honour the user's font size during resize/click
+          return original(items, ...rest);
+        };
+        ctrl.__v54Patched = true;
+      }
+      if (typeof ctrl.refit === 'function' && !ctrl.__v54RefitPatched) {
+        const original = ctrl.refit.bind(ctrl);
+        ctrl.refit = function refit(node, ...rest) {
+          if (suppressed) return null;
+          return original(node, ...rest);
+        };
+        ctrl.__v54RefitPatched = true;
+      }
+      if (typeof ctrl.refresh === 'function' && !ctrl.__v54RefreshPatched) {
+        const original = ctrl.refresh.bind(ctrl);
+        ctrl.refresh = function refresh(...rest) {
+          if (suppressed) return null;
+          return original(...rest);
+        };
+        ctrl.__v54RefreshPatched = true;
       }
     }
 
@@ -950,6 +994,7 @@
    * selecting an object does NOT trigger an automatic box refit (bug #2).
    */
   function onSelectionChanged() {
+    AutoFitGuard.patch();   // re-attempt controller patch (may appear after install)
     AutoFitGuard.pulse();
     scheduleUpdate();
   }
@@ -1012,7 +1057,7 @@
     }, true);
 
     on(window, 'einvite:zoom-changed', scheduleUpdate);
-    on(window, 'einvite:state-applied', scheduleUpdate);
+    on(window, 'einvite:state-applied', () => { AutoFitGuard.patch(); scheduleUpdate(); });
     on(window, 'einvite:editor-state-replaced', scheduleUpdate);
     on(window, 'resize', () => { AutoFitGuard.patch(); organizeHeader(); organizeFooter(); scheduleUpdate(); });
 
