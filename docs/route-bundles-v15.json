@@ -270,8 +270,8 @@
     },
     "index.html": {
       "javascript": "bundle-index-v15.js",
-      "scriptBytes": 1094902,
-      "scriptSha256": "0412626db378c0c4d6802a1bdef13e760e2c20a811c6120c1ca70accecba1471",
+      "scriptBytes": 1097217,
+      "scriptSha256": "915624c9897f1c04c274caa712153c2149fccf1ef6a64b6ecffb52d83dc17761",
       "sources": {
         "scripts": [
           "runtime-lifecycle-v15.js",
