@@ -136,7 +136,12 @@
         "ux-refine.js",
         "final-polish.js",
         "dashboard-empty-state.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "delivery-dialog.js",
+        "invitation-edit-history.js",
+        "host-signup-sheets.js",
+        "host-polls.js",
+        "toast.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -155,7 +160,8 @@
         "dashboard-empty-state.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "guest-features-v54_1.css"
       ]
     },
     "designer.html": {
@@ -365,6 +371,10 @@
         "guest-layouts.js",
         "public-share-panel.js",
         "guest-journey.js",
+        "signup-sheets.js",
+        "polls.js",
+        "album.js",
+        "invitation-edit-history.js",
         "public-page.js",
         "ux-refine.js"
       ],
@@ -374,7 +384,8 @@
         "styles.css",
         "opening-scenes.css",
         "guest-layouts.css",
-        "guest-journey.css"
+        "guest-journey.css",
+        "guest-features-v54_1.css"
       ]
     },
     "reset.html": {

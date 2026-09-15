@@ -29,8 +29,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 188900,
-      "styleSha256": "790dd32bb1748a021c798051053ae2bb1f5d722a954d2170df64a6bdd553654e",
+      "styleBytes": 215350,
+      "styleSha256": "0abb49bb4700fbe9f73f89dd861ea6fdf263e6c485bbe404910ff5d32834eb16",
       "stylesheet": "bundle-account-v15.css"
     },
     "admin.html": {
@@ -62,8 +62,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 188580,
-      "styleSha256": "7f0e0dac6ce940c9164bc79d206953c9d125796a9f8e5f766c3cddfa81b8a29e",
+      "styleBytes": 215030,
+      "styleSha256": "8c77f8fb698e33538651e2efd47420630d4fb993b64e923448584e19e35ae328",
       "stylesheet": "bundle-admin-v15.css"
     },
     "analytics.html": {
@@ -96,8 +96,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 188576,
-      "styleSha256": "8b2aa24203780f0618f5347d2d4866e0936806a1b5679a772636c0f63a643bb2",
+      "styleBytes": 215943,
+      "styleSha256": "ff8783aacb53a9b564f09234386d07407f350867eec5316e782452f312945939",
       "stylesheet": "bundle-analytics-v15.css"
     },
     "billing.html": {
@@ -127,8 +127,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 191076,
-      "styleSha256": "88049bf3dc012a73c534afe6cde16a5d5ce8d6d97ec20b46f27fcbc6f52fad38",
+      "styleBytes": 217526,
+      "styleSha256": "219a56d5c05d95b9db429f7861b70dcfd1dd7532022be1173c04e999546f8d58",
       "stylesheet": "bundle-billing-v15.css"
     },
     "checkin.html": {
@@ -152,14 +152,14 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 71045,
-      "styleSha256": "0781e3a1ea180d2d3a3b5092d1f4a07cf217974d1ec8b93cf05d084d53e87625",
+      "styleBytes": 76014,
+      "styleSha256": "d03a592fd9a38084fb7cd71f73c2d415ec0954a9537c7c05badf16ce1db63386",
       "stylesheet": "bundle-checkin-v15.css"
     },
     "dashboard.html": {
       "javascript": "bundle-dashboard-v15.js",
-      "scriptBytes": 216826,
-      "scriptSha256": "2c1d480947d2aa9afd94579fa17643022e38531740a1040447f3f20342e337db",
+      "scriptBytes": 309032,
+      "scriptSha256": "1093bf38fbedce25aa57efc3adefb4fe9c4aec199175841bc58465feee8afcc6",
       "sources": {
         "scripts": [
           "typography-contract.js",
@@ -176,7 +176,12 @@
           "ux-refine.js",
           "final-polish.js",
           "dashboard-empty-state.js",
-          "accessibility-polish.js"
+          "accessibility-polish.js",
+          "delivery-dialog.js",
+          "invitation-edit-history.js",
+          "host-signup-sheets.js",
+          "host-polls.js",
+          "toast.js"
         ],
         "styles": [
           "typography-fonts.css",
@@ -195,11 +200,12 @@
           "dashboard-empty-state.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages-v22.css",
+          "guest-features-v54_1.css"
         ]
       },
-      "styleBytes": 227573,
-      "styleSha256": "3843386cb19f4544b55f82511a99c1373a06e607193a1be68b6ccb71e8bc7bae",
+      "styleBytes": 259597,
+      "styleSha256": "463f333e60b4ae23135f94dd7aba3a3a9c4e90d33c31d869b9df87cca9b79670",
       "stylesheet": "bundle-dashboard-v15.css"
     },
     "designer.html": {
@@ -230,8 +236,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 216369,
-      "styleSha256": "d302a0bac523e7a79e17f239e77742425b91938acad169a595acebb28b1f8954",
+      "styleBytes": 242819,
+      "styleSha256": "49026bf85fb2f752ed3f500bad88dd52056d2ccbfe09acf7bb2b2ed6807d874b",
       "stylesheet": "bundle-designer-v15.css"
     },
     "guests.html": {
@@ -264,8 +270,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 188066,
-      "styleSha256": "5d7b417032e86ac357e35d45ca36caba892a59d3adb71822764638fa0f9d29e9",
+      "styleBytes": 215433,
+      "styleSha256": "e14a15666296da19fe3e81a534e2b0740591f367d82e331d204bf0d216de0d16",
       "stylesheet": "bundle-guests-v15.css"
     },
     "index.html": {
@@ -373,8 +379,8 @@
           "editor/editor-styles.css"
         ]
       },
-      "styleBytes": 402337,
-      "styleSha256": "77fc635ee52727858c47f06030263db2ec23a47be3623c2bd1c3b4259dd65263",
+      "styleBytes": 429704,
+      "styleSha256": "0bd77f314d87d50d2e6034c726e9033f12d71b5f7aa1f43a5c4f37eba54f0d05",
       "stylesheet": "bundle-index-v15.css"
     },
     "materials.html": {
@@ -411,8 +417,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 213066,
-      "styleSha256": "48352837a4e97c13a137f1a6612487260673466e16062858f963ed15838ac7c5",
+      "styleBytes": 240433,
+      "styleSha256": "fa682f6d1de071f11bd6db01a104e82ef04f1c4f610d3e4ada913dd431ac536d",
       "stylesheet": "bundle-materials-v15.css"
     },
     "privacy.html": {
@@ -429,14 +435,14 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 72456,
-      "styleSha256": "2b4304ab1c872974f34b3c49c83e01be5d25ef14fca285973745ca6a491f8f15",
+      "styleBytes": 98904,
+      "styleSha256": "ba97d4b1195c80a32a35b039e331188e7fd638b4d64070fc8ff2e8ba56886332",
       "stylesheet": "bundle-privacy-v15.css"
     },
     "public.html": {
       "javascript": "bundle-public-v15.js",
-      "scriptBytes": 180107,
-      "scriptSha256": "0aba462687a743b28b7dbdd1ae00db195835ba1ac179e2468ec8358bcaf13a6b",
+      "scriptBytes": 232062,
+      "scriptSha256": "61c1ba939b78ea20ce024274f7300eb9177d825192ac0bf25a82388c557e502f",
       "sources": {
         "scripts": [
           "runtime-lifecycle-v15.js",
@@ -453,6 +459,10 @@
           "guest-layouts.js",
           "public-share-panel.js",
           "guest-journey.js",
+          "signup-sheets.js",
+          "polls.js",
+          "album.js",
+          "invitation-edit-history.js",
           "public-page.js",
           "ux-refine.js"
         ],
@@ -462,11 +472,12 @@
           "styles.css",
           "opening-scenes.css",
           "guest-layouts.css",
-          "guest-journey.css"
+          "guest-journey.css",
+          "guest-features-v54_1.css"
         ]
       },
-      "styleBytes": 66033,
-      "styleSha256": "9b68dbf400f721b97baacd4762bc238066eb864f84fe9c81a7e36aefc813f7f4",
+      "styleBytes": 74740,
+      "styleSha256": "5d99345ac5348f17a56b1ad57e498ace349f1e8a110f3ed8c120a55422a544a3",
       "stylesheet": "bundle-public-v15.css"
     },
     "reset.html": {
@@ -496,8 +507,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 186878,
-      "styleSha256": "bf1f859b7662d99ac1f2a258da26304415a22d1e0b4e25cffc49c384247d766d",
+      "styleBytes": 213328,
+      "styleSha256": "34cb94d1615f56a38b78f46324dd2f6f5bdb70edc137786b653380fe8a103d60",
       "stylesheet": "bundle-reset-v15.css"
     },
     "responses.html": {
@@ -530,8 +541,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 188641,
-      "styleSha256": "0eb293d6edec2c74413a28d65121f58af2cbf4b7364b15a6ec48edfdb1469a85",
+      "styleBytes": 216008,
+      "styleSha256": "c0297e860b307405b8dfb5101ae781dd88fa7d093883b044e8bff46cbb9717a5",
       "stylesheet": "bundle-responses-v15.css"
     },
     "templates.html": {
@@ -565,8 +576,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 219015,
-      "styleSha256": "400ae1e7b4d6b3274d4ff5d25c54c7b3c5c2c379c0358ee23b5cbd8426b09814",
+      "styleBytes": 246382,
+      "styleSha256": "4e394f5012926e65e6f3e028b0fff54897147687263fc72db266bf14c0b2ef39",
       "stylesheet": "bundle-templates-v15.css"
     },
     "verify.html": {
@@ -596,8 +607,8 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 186775,
-      "styleSha256": "0694b91134475a7f2acbf098d40a2677c95fb9cfabb9e5511f2d1f715e38e1a4",
+      "styleBytes": 213225,
+      "styleSha256": "bdd2c714b5c2dc47def6ff0d0faf8e679db53df54fd3dc3c467c2415aa88c444",
       "stylesheet": "bundle-verify-v15.css"
     }
   },

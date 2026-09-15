@@ -4,6 +4,7 @@ import contextlib,gc,os,shutil,signal,socket,subprocess,sys,tempfile,time,urllib
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+SERVER_PATH=ROOT/'src'/'python'/'server.py'
 
 def free_port():
     with socket.socket() as sock:
@@ -61,11 +62,11 @@ def temporary_data(prefix='einvite-v14-'):
 def app_server(extra_env=None):
     with temporary_data('einvite-live-v14-') as data:
         port=free_port();base=f'http://127.0.0.1:{port}'
-        env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_DEV_AUTH_TOKENS':'1','EINVITE_REQUIRE_EMAIL_VERIFICATION':'0'}
+        env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_DEV_AUTH_TOKENS':'1','EINVITE_REQUIRE_EMAIL_VERIFICATION':'0','PYTHONPATH':str(ROOT/'src'/'python')+':'+str(ROOT)}
         env.update(extra_env or {})
         log_path=data/'server-test.log'
         log_handle=log_path.open('w',encoding='utf-8',buffering=1)
-        process=subprocess.Popen([sys.executable,'-u','server.py','--host','127.0.0.1','--port',str(port)],cwd=ROOT,env=env,stdout=log_handle,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace')
+        process=subprocess.Popen([sys.executable,'-u',str(SERVER_PATH),'--host','127.0.0.1','--port',str(port)],cwd=ROOT,env=env,stdout=log_handle,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace')
         failed=False
         try:
             wait_http(base+'/api/health');yield process,base,data

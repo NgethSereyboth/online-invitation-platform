@@ -66,6 +66,110 @@ def verify_password(password: str, stored_hash: str, salt: str = "", algorithm: 
     return valid, bool(valid and ARGON2_AVAILABLE)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# V54.12 (sec-3 — P1-C) — MFA recovery codes
+#
+# Recovery codes let a user who has lost their authenticator (or whose
+# TOTP secret was wiped) prove identity by presenting one of N single-use
+# pre-generated codes. The codes are shown ONCE at enable time and only
+# their hashes are persisted, so a database read never reveals a usable
+# code. The same hashing primitives as ``hash_password`` are reused: Argon2id
+# when ``argon2-cffi`` is installed, otherwise PBKDF2-HMAC-SHA256 with
+# 310k iterations (the OWASP-recommended floor as of 2023).
+#
+# Code format: ``XXXX-XXXX-XXXX`` (12 chars from a 32-char alphabet that
+# excludes visually-ambiguous symbols 0/O/1/I/L). The 32-char alphabet has
+# ~5 bits/char → 60 bits of entropy per code (≈2^60 brute-force work), well
+# above the 2^32 ASVS L2 minimum for self-issued secrets.
+# ──────────────────────────────────────────────────────────────────────────
+
+# Crockford-style alphabet minus ambiguous chars (no 0/O, no 1/I, no L).
+_RECOVERY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+_RECOVERY_ALPHABET_LEN = len(_RECOVERY_ALPHABET)  # 32
+
+
+def _generate_one_recovery_code() -> str:
+    """Return a single ``XXXX-XXXX-XXXX`` recovery code (12 chars + 2 hyphens).
+
+    ``secrets.randbelow`` uses the OS CSPRNG. Since the alphabet length
+    (32) is an exact power of 2 and ``randbelow`` already performs rejection
+    sampling internally for arbitrary ranges, there is no modulo bias and no
+    further rejection loop is needed here.
+    """
+    needed = 12  # displayed as AAAA-AAAA-AAAA (14 chars on the wire incl. hyphens)
+    alphabet_len = _RECOVERY_ALPHABET_LEN  # 32 → power of 2 → bias-free
+    chars = [_RECOVERY_ALPHABET[secrets.randbelow(alphabet_len)] for _ in range(needed)]
+    raw = "".join(chars)
+    return f"{raw[0:4]}-{raw[4:8]}-{raw[8:12]}"
+
+
+def generate_recovery_codes(count: int = 10):
+    """Generate ``count`` recovery codes.
+
+    Returns a list of ``(plaintext, code_hash)`` tuples. The caller shows
+    the plaintext ONCE to the user and persists only ``code_hash``.
+    """
+    if count < 1 or count > 100:
+        raise ValueError("count must be between 1 and 100")
+    out = []
+    for _ in range(count):
+        plaintext = _generate_one_recovery_code()
+        out.append((plaintext, hash_recovery_code(plaintext)))
+    return out
+
+
+def hash_recovery_code(plaintext: str) -> str:
+    """Hash a recovery code.
+
+    Uses Argon2id (via ``argon2-cffi``) when available — same instance and
+    parameters as ``hash_password``. Falls back to PBKDF2-HMAC-SHA256 with
+    310k iterations and a fresh 32-byte salt (encoded as a ``pbkdf2_sha256$``-
+    prefixed self-describing string so verification can route correctly
+    without a separate algorithm column).
+    """
+    if ARGON2_AVAILABLE:
+        return _ARGON2.hash(plaintext)
+    salt = secrets.token_bytes(32)
+    digest = hashlib.pbkdf2_hmac("sha256", plaintext.encode(), salt, 310_000)
+    return f"pbkdf2_sha256${310_000}${salt.hex()}${digest.hex()}"
+
+
+def verify_recovery_code(plaintext: str, stored_hash: str) -> bool:
+    """Return True iff ``plaintext`` matches the stored hash.
+
+    Constant-time on both branches: ``argon2-cffi`` uses
+    ``_ARGON2.verify`` (constant-time internally), and the PBKDF2 fallback
+    uses ``hmac.compare_digest`` on the recomputed digest.
+    """
+    if not stored_hash:
+        return False
+    if stored_hash.startswith("$argon2"):
+        if not ARGON2_AVAILABLE:
+            return False
+        try:
+            return bool(_ARGON2.verify(stored_hash, plaintext))
+        except (VerifyMismatchError, InvalidHashError, ValueError):
+            return False
+    if stored_hash.startswith("pbkdf2_sha256$"):
+        parts = stored_hash.split("$")
+        # Expected shape: ['pbkdf2_sha256', '<iter>', '<salthex>', '<digesthex>']
+        if len(parts) != 4:
+            return False
+        _algo, iter_str, salt_hex, expected_hex = parts
+        try:
+            iterations = int(iter_str)
+            salt = bytes.fromhex(salt_hex)
+            expected = bytes.fromhex(expected_hex)
+        except (ValueError, TypeError):
+            return False
+        try:
+            actual = hashlib.pbkdf2_hmac("sha256", plaintext.encode(), salt, iterations)
+        except Exception:
+            return False
+        return hmac.compare_digest(actual, expected)
+    return False
+
+
 def b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
