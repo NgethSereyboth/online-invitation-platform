@@ -33,6 +33,10 @@ _HEALTH_DETAIL_CACHE: Optional[Dict[str, Any]] = None
 _HEALTH_DETAIL_AT: float = 0.0
 _HEALTH_DETAIL_TTL = 60.0
 
+_METRIC_TABLES = frozenset({"users", "invitations", "assets", "background_jobs"})
+_METRIC_DATE_COLUMNS = frozenset({"created_at"})
+_METRIC_SUM_COLUMNS = frozenset({"size"})
+
 
 def record_db_latency_ms(ms: float) -> None:
     """Record one DB round-trip latency observation."""
@@ -61,6 +65,8 @@ def db_p95_ms(window_seconds: float = 300.0) -> float:
 
 
 def _row_count(db, table: str) -> int:
+    if table not in _METRIC_TABLES:
+        raise ValueError("unsupported metric table")
     try:
         row = db.execute(f"SELECT COUNT(*) c FROM {table}").fetchone()
         return int(row["c"] if row else 0)
@@ -69,6 +75,8 @@ def _row_count(db, table: str) -> int:
 
 
 def _count_since(db, table: str, column: str, since_ms: int) -> int:
+    if table not in _METRIC_TABLES or column not in _METRIC_DATE_COLUMNS:
+        raise ValueError("unsupported metric identifier")
     try:
         row = db.execute(f"SELECT COUNT(*) c FROM {table} WHERE {column}>=?", (since_ms,)).fetchone()
         return int(row["c"] if row else 0)
@@ -77,6 +85,8 @@ def _count_since(db, table: str, column: str, since_ms: int) -> int:
 
 
 def _sum_since(db, table: str, column: str, since_ms: int) -> int:
+    if table not in _METRIC_TABLES or column not in _METRIC_SUM_COLUMNS:
+        raise ValueError("unsupported metric identifier")
     try:
         row = db.execute(f"SELECT COALESCE(SUM({column}),0) c FROM {table} WHERE {column}>=?", (since_ms,)).fetchone()
         return int(row["c"] if row else 0)

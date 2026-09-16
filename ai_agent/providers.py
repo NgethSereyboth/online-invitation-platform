@@ -6,6 +6,7 @@ import json
 import re
 import time
 import urllib.request
+from urllib.parse import urlsplit
 
 from .config import AgentConfig
 from .local_providers import LocalProviderManager, LocalProviderError
@@ -137,6 +138,10 @@ class ExternalProvider(ProviderAdapter):
     def generate(self, prompt: str, context: dict[str, Any], tools: list[dict[str, Any]], history: list[dict[str, Any]]) -> ProviderResult:
         if not self.config.endpoint:
             raise ProviderError("Connected provider is not configured", "provider_unavailable")
+        endpoint = str(self.config.endpoint).strip()
+        parsed_endpoint = urlsplit(endpoint)
+        if parsed_endpoint.scheme.lower() not in {"http", "https"} or not parsed_endpoint.netloc:
+            raise ProviderError("Connected provider endpoint must use http or https", "provider_unavailable")
         payload = {
             "version": "53.0",
             "model": self.config.model or None,
@@ -164,7 +169,7 @@ class ExternalProvider(ProviderAdapter):
         if self.config.api_key:
             headers["Authorization"] = f"Bearer {self.config.api_key}"
         try:
-            request = urllib.request.Request(self.config.endpoint, data=encoded, headers=headers, method="POST")
+            request = urllib.request.Request(endpoint, data=encoded, headers=headers, method="POST")
             with urllib.request.urlopen(request, timeout=self.config.timeout_seconds) as response:
                 raw = response.read(self.config.max_provider_bytes + 1)
         except Exception as exc:

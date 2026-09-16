@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from security_v13 import totp_code  # noqa: E402
+from core.auth import totp_code  # noqa: E402
 
 
 def free_port() -> int:

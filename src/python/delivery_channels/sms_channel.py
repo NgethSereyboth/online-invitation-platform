@@ -17,7 +17,7 @@ from __future__ import annotations
 import base64
 from typing import Any, Dict
 
-from .base import DeliveryChannel, SendResult, _env, _post_json
+from .base import DeliveryChannel, SendResult, _env, _post_json, _require_http_url
 
 
 class SmsChannel(DeliveryChannel):
@@ -52,7 +52,7 @@ class SmsChannel(DeliveryChannel):
         auth = base64.b64encode(f"{self.account_sid}:{self.auth_token}".encode()).decode()
         # Use _post_json's machinery but with a form body — implement inline.
         import urllib.request, urllib.error
-        req = urllib.request.Request(url, data=body.encode("utf-8"),
+        req = urllib.request.Request(_require_http_url(url), data=body.encode("utf-8"),
                                      headers={
                                          "Authorization": f"Basic {auth}",
                                          "Content-Type": "application/x-www-form-urlencoded",

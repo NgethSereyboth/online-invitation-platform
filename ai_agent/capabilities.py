@@ -248,8 +248,17 @@ def _row_value(row: Any, key: str, default: Any = None) -> Any:
 
 
 def _table_exists(db: Any, table: str) -> bool:
+    if table not in {
+        "agent_grants", "ai_routing_policies", "editor_workspace_profiles",
+        "ai_saved_workflows_v35", "marketplace_templates_v36",
+        "enterprise_protocols_v42", "animation_projects_v44",
+        "custom_domains_v45", "data_merge_sources_v47",
+        "data_merge_jobs_v47", "plugin_installations_v48",
+        "event_tasks_v52", "event_programs_v52",
+    }:
+        return False
     try:
-        db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()
+        db.execute(f"SELECT 1 FROM {table} LIMIT 1").fetchone()  # nosec B608 - table is checked against the fixed allowlist above
         return True
     except Exception:
         return False

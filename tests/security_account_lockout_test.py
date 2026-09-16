@@ -29,6 +29,7 @@ Acceptance: prints ``SECURITY_ACCOUNT_LOCKOUT_TEST_PASSED`` on success.
 from __future__ import annotations
 
 import json
+import contextlib
 import os
 import socket
 import sqlite3
@@ -76,10 +77,14 @@ def http_json(base, path, method='GET', body=None, token=None,
     return status, payload
 
 
-def open_db(data_dir: Path) -> sqlite3.Connection:
+@contextlib.contextmanager
+def open_db(data_dir: Path):
     db = sqlite3.connect(str(data_dir / DB_FILENAME))
     db.row_factory = sqlite3.Row
-    return db
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def fetch_user(db, email):

@@ -216,7 +216,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='einvite-sec4-notif-') as data_dir:
         os.environ['EINVITE_DATA_DIR'] = data_dir
         import server  # noqa: E402  (import after env vars are set)
-        import security_v13  # noqa: E402
+        from core import auth as security_v13  # noqa: E402
 
         sent_emails = []
 

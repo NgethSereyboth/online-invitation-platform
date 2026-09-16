@@ -10,6 +10,7 @@ import json
 import os
 import urllib.request
 import urllib.error
+from urllib.parse import urlsplit
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, Optional
 
@@ -142,6 +143,14 @@ def _env(name: str, default: str = "") -> str:
     return str(os.environ.get(name, default) or "").strip()
 
 
+def _require_http_url(url: str) -> str:
+    """Reject non-network URL schemes before passing a URL to urllib."""
+    parsed = urlsplit(str(url or ""))
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("delivery endpoint must use http or https")
+    return str(url)
+
+
 def _post_json(url: str, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None,
                timeout: float = 12.0) -> Dict[str, Any]:
     """POST JSON and return the parsed JSON response (or an error dict).
@@ -154,7 +163,7 @@ def _post_json(url: str, payload: Dict[str, Any], headers: Optional[Dict[str, st
     req_headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if headers:
         req_headers.update(headers)
-    req = urllib.request.Request(url, data=data, headers=req_headers, method="POST")
+    req = urllib.request.Request(_require_http_url(url), data=data, headers=req_headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             raw = response.read() or b"{}"

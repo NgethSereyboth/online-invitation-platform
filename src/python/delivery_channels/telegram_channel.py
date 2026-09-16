@@ -18,7 +18,7 @@ import urllib.request
 import urllib.error
 from typing import Any, Dict
 
-from .base import DeliveryChannel, SendResult, _env
+from .base import DeliveryChannel, SendResult, _env, _require_http_url
 
 
 class TelegramChannel(DeliveryChannel):
@@ -48,7 +48,7 @@ class TelegramChannel(DeliveryChannel):
             "disable_web_page_preview": bool(channel_config.get("disable_preview", False)),
         }
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(url, data=data,
+        req = urllib.request.Request(_require_http_url(url), data=data,
                                      headers={"Content-Type": "application/json"},
                                      method="POST")
         try:

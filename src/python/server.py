@@ -1,21 +1,22 @@
 """Credential-free development backend for E-invitation-website."""
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse, unquote, parse_qs, quote
+from urllib.parse import urlparse, unquote, parse_qs, quote, urlsplit
 from pathlib import Path
-import argparse, base64, hashlib, hmac, html, io, ipaddress, json, os, re, secrets, sqlite3, time, uuid, threading, smtplib, ssl, mimetypes, urllib.request, urllib.error, subprocess, shlex, shutil, warnings, zipfile, signal, sys
+import argparse, base64, hashlib, hmac, html, io, ipaddress, json, os, re, secrets, sqlite3, time, uuid, threading, smtplib, ssl, mimetypes, urllib.request, urllib.error, subprocess, shlex, shutil, warnings, zipfile, signal, sys  # nosec B404 - subprocess is used only with fixed argument lists and no shell input
 from http.cookies import SimpleCookie
 from html.parser import HTMLParser
 from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formatdate
-from security_v13 import (ARGON2_AVAILABLE, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
+from core.auth import (ARGON2_AVAILABLE, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
 from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_scanner, enforce_scanner_on_startup as v54_enforce_scanner_on_startup, scan_bytes as v54_scan_bytes, scan_file as v54_scan_file)
 # V54.33 (phase-4a — §4.4) — plugin marketplace CA for double-signature verification.
 from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured, marketplace_summary)
-from secrets_v54 import ensure_secret as v54_ensure_secret
+from features.secrets import ensure_secret as v54_ensure_secret
+from core.security_helpers import safe_set_clause
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
 from rich_text_document_model import normalize_document_rich_text
@@ -37,6 +38,14 @@ def platform_env(name, default=None):
     """Read the current EINVITE_* setting, with legacy SOVAN_* fallback."""
     legacy = name.replace("EINVITE_", "SOVAN_", 1)
     return os.environ.get(name, os.environ.get(legacy, default))
+
+
+def require_http_endpoint(value):
+    endpoint = str(value or "").strip()
+    parsed = urlsplit(endpoint)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("configured endpoint must use http or https")
+    return endpoint
 
 ROOT = Path(__file__).resolve().parent
 DATA = Path(platform_env("EINVITE_DATA_DIR", str(ROOT / "data"))).expanduser().resolve()
@@ -89,7 +98,7 @@ def persistent_data_secret(env_name, filename):
         if path.is_file():return path.read_text(encoding="utf-8").strip()
         value=secrets.token_urlsafe(48);path.write_text(value,encoding="utf-8")
         try:os.chmod(path,0o600)
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
         return value
     except OSError:
         return secrets.token_urlsafe(48)
@@ -234,6 +243,15 @@ BILLING_PLAN_PRICES = {
     "studio": max(0, int(platform_env("EINVITE_STUDIO_PRICE_MINOR", "2400"))),
 }
 JSON_LOGS = platform_env("EINVITE_JSON_LOGS", "0").lower() in {"1", "true", "yes"}
+
+# Phase B (B3): log best-effort cleanup failures instead of suppressing them.
+import logging as _logging_mod
+_log = _logging_mod.getLogger("einvite.server")
+if not _log.handlers:
+    _h = _logging_mod.StreamHandler()
+    _h.setFormatter(_logging_mod.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+    _log.addHandler(_h)
+    _log.setLevel(_logging_mod.DEBUG if JSON_LOGS else _logging_mod.WARNING)
 REDIS_URL = platform_env("EINVITE_REDIS_URL", "").strip()
 _REDIS_CLIENT = None
 DATABASE_URL = platform_env("EINVITE_DATABASE_URL", "").strip()
@@ -435,7 +453,7 @@ def stored_object_storage_key(path):
         with connect() as db:
             row=db.execute("SELECT storage_key FROM stored_objects WHERE path=? ORDER BY created_at DESC LIMIT 1",(clean,)).fetchone()
         if row and row["storage_key"]:return row["storage_key"]
-    except Exception:pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     return object_storage_key(clean)
 
 def object_storage_client():
@@ -484,7 +502,7 @@ def purge_derivative_cache(path, source_hash=""):
             target=IMAGE_CACHE/(key+suffix)
             try:
                 if target.is_file():target.unlink()
-            except OSError:pass
+            except OSError as exc: _log.debug("os cleanup failed: %s", exc)
 
 def delete_stored_asset(path, source_hash=""):
     clean=Path(str(path or "")).name
@@ -537,7 +555,7 @@ def windows_defender_cli():
         if platform_dir.is_dir():
             try:
                 candidates.extend((item/"MpCmdRun.exe" for item in sorted(platform_dir.iterdir(),reverse=True) if item.is_dir()))
-            except OSError:pass
+            except OSError as exc: _log.debug("os cleanup failed: %s", exc)
     program_files=os.environ.get("ProgramFiles","")
     if program_files:candidates.append(Path(program_files)/"Windows Defender"/"MpCmdRun.exe")
     discovered=shutil.which("MpCmdRun.exe")
@@ -570,7 +588,7 @@ def malware_scanner_status(probe=False):
             except (OSError,subprocess.SubprocessError):_MALWARE_SCANNER_PROBE=False
             finally:
                 try:temp.unlink(missing_ok=True)
-                except OSError:pass
+                except OSError as exc: _log.debug("os cleanup failed: %s", exc)
     return {"mode":mode,"ready":bool(_MALWARE_SCANNER_PROBE),"required":REQUIRE_MALWARE_SCAN}
 
 def scan_material_bytes(raw, mime, name="upload"):
@@ -629,7 +647,7 @@ def scan_material_bytes(raw, mime, name="upload"):
         raise ValueError("The configured malware scan timed out") from exc
     finally:
         try:temp.unlink(missing_ok=True)
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
 
 def scan_uploaded_file(path):
     """V54 hook: scan a single persisted upload file with the on-host scanner.
@@ -661,7 +679,7 @@ def cleanup_quarantine(max_age_seconds=24*60*60):
     for path in QUARANTINE.glob("*"):
         try:
             if path.is_file() and path.stat().st_mtime<cutoff:path.unlink();removed+=1
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
     return removed
 
 def evict_image_cache():
@@ -676,7 +694,7 @@ def evict_image_cache():
     for _,size,path in sorted(files):
         if len(files)-removed<=IMAGE_CACHE_MAX_FILES and total<=IMAGE_CACHE_MAX_BYTES:break
         try:path.unlink();removed+=1;total-=size
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
     return removed
 
 def safe_hex_color(value, fallback):
@@ -732,7 +750,7 @@ def image_font(size, khmer=False, bold=False):
         ]
         for candidate in candidates:
             try:return ImageFont.truetype(candidate,max(8,int(size)))
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
         return ImageFont.load_default()
     except Exception:return None
 
@@ -780,11 +798,11 @@ def dependency_status():
     try:
         import PIL  # noqa: F401
         status["pillow"]=True
-    except Exception:pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     try:
         import qrcode  # noqa: F401
         status["qrcode"]=True
-    except Exception:pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     status["qrReady"]=bool(status["pillow"] and status["qrcode"])
     scanner=malware_scanner_status(probe=True)
     status["malwareScanner"]=scanner["mode"]
@@ -799,7 +817,7 @@ def social_cache_path(invitation_id, version, fmt):
 def invalidate_social_cache(invitation_id):
     for candidate in SOCIAL_CACHE.glob(f"{invitation_id}-v*-*.png"):
         try:candidate.unlink()
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
 
 def render_social_card_png_bytes(invite_id, access_mode, document, fmt="og"):
     try:
@@ -815,7 +833,7 @@ def render_social_card_png_bytes(invite_id, access_mode, document, fmt="og"):
             with Image.open(io.BytesIO(photo)) as source:
                 source=ImageOps.exif_transpose(source).convert("RGB");canvas=ImageOps.fit(source,(w,h),method=Image.Resampling.LANCZOS,centering=(.5,.5));draw=ImageDraw.Draw(canvas,"RGBA")
             overlay=(0,0,0,118) if social.get("textVariant")=="light" else (255,248,242,170);draw.rectangle((0,0,w,h),fill=overlay)
-        except Exception:pass
+        except Exception as exc: _log.debug("cleanup failed: %s", exc)
     else:
         if social.get("textVariant")=="light":canvas.paste(tuple(int(accent[i:i+2],16) for i in (1,3,5)),(0,0,w,h));draw=ImageDraw.Draw(canvas,"RGBA")
         draw.ellipse((w*.78,-h*.25,w*1.18,h*.38),fill=(*tuple(int(accent[i:i+2],16) for i in (1,3,5)),28));draw.ellipse((-w*.18,h*.65,w*.32,h*1.18),fill=(*tuple(int(accent[i:i+2],16) for i in (1,3,5)),20))
@@ -853,7 +871,7 @@ def warm_social_card_cache(invitation_id, access_mode, version, document):
                 payload=render_social_card_png_bytes(invitation_id,access_mode,document,fmt)
                 if payload:
                     target=social_cache_path(invitation_id,version,fmt);tmp=target.with_suffix(".tmp");tmp.write_bytes(payload);tmp.replace(target)
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
     threading.Thread(target=worker,daemon=True,name=f"social-card-{invitation_id}").start()
 
 def make_qr_image(text, box_size=12, border=4):
@@ -1794,7 +1812,7 @@ def prune_studio_backups(owner_id, retention_count):
             name=Path(str(row["archive_name"] or "")).name
             if name:
                 try:(BACKUPS/name).unlink(missing_ok=True)
-                except OSError:pass
+                except OSError as exc: _log.debug("os cleanup failed: %s", exc)
             db.execute("DELETE FROM backup_runs WHERE id=? AND owner_id=?",(row["id"],owner_id))
 
 def studio_backup_lock(owner_id):
@@ -1887,7 +1905,7 @@ def acquire_stored_object(owner_id, asset_id, raw, mime, preferred_path=None, sc
         return {"id":object_id,"path":path,"sha256":digest,"mime":mime,"size":len(raw),**metadata,"duplicate":False,"scanStatus":scan.get("status","not-configured")}
     finally:
         try:quarantine.unlink(missing_ok=True)
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
 
 def register_existing_stored_object(owner_id, preferred_path, raw, mime, scan_name="upload"):
     """Validate and register a direct-uploaded object without uploading it twice."""
@@ -2161,7 +2179,7 @@ def generate_image_derivative(path, width, requested="webp"):
             # Generated derivatives intentionally omit original EXIF metadata by default.
             image.save(out,format=save_format,**kwargs);body=out.getvalue()
     try:cached.write_bytes(body);evict_image_cache()
-    except OSError:pass
+    except OSError as exc: _log.debug("os cleanup failed: %s", exc)
     return body,content_type,source_hash,time.time()
 
 def pre_generate_common_derivatives(path,mime,source_hash=""):
@@ -2179,15 +2197,15 @@ def cleanup_upload_sessions():
         db.execute("DELETE FROM upload_sessions WHERE expires_at<=?",(now,))
     for value in paths:
         try:(QUARANTINE/Path(str(value)).name).unlink(missing_ok=True)
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
     return len(paths)
 
 def cleanup_expired_security_rows():
     """Remove expired credentials, apply due schedules, old trash and account deletions."""
     try: process_scheduled_publications()
-    except Exception: pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     try: process_scheduled_campaigns()
-    except Exception: pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     now=int(time.time()*1000);purge=[];purged_users=0
     with connect() as db:
         sessions=db.execute("DELETE FROM sessions WHERE expires_at<=?",(now,)).rowcount
@@ -2231,7 +2249,7 @@ def cleanup_expired_security_rows():
             for name in backup_names:
                 if name:
                     try:(BACKUPS/name).unlink(missing_ok=True)
-                    except OSError:pass
+                    except OSError as exc: _log.debug("os cleanup failed: %s", exc)
             for table in ("sessions","auth_tokens","passkeys","auth_challenges","user_templates","user_page_templates","user_components","studio_resources","studio_releases","studio_governance","studio_backup_policies","studio_bulk_jobs","backup_runs"):
                 db.execute(f"DELETE FROM {table} WHERE user_id=?" if table in {"sessions","auth_tokens","passkeys","auth_challenges"} else f"DELETE FROM {table} WHERE owner_id=?",(user_id,))
             db.execute("UPDATE audit_events SET user_id=NULL WHERE user_id=?",(user_id,)) if DATABASE_KIND=="postgresql" else None
@@ -2298,9 +2316,9 @@ def _font_layout_metadata(font,table_tag):
     if not table or not getattr(table,"table",None):return set(),set()
     scripts=set();features=set()
     try:scripts={str(record.ScriptTag).strip() for record in table.table.ScriptList.ScriptRecord}
-    except Exception:pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     try:features={str(record.FeatureTag).strip() for record in table.table.FeatureList.FeatureRecord}
-    except Exception:pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
     return scripts,features
 
 
@@ -2426,7 +2444,7 @@ def optimize_custom_font(raw,filename="font.ttf",declared_mime="application/octe
         }
     finally:
         try:font.close()
-        except Exception:pass
+        except Exception as exc: _log.debug("cleanup failed: %s", exc)
 
 def clean_slug(value):
     value = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
@@ -2491,7 +2509,7 @@ def record_bandwidth_for_path(path,byte_count):
         with connect() as db:
             row=db.execute("SELECT owner_id FROM stored_objects WHERE path=?",(clean,)).fetchone()
             if row:db.execute("INSERT INTO bandwidth_events(id,owner_id,bytes,created_at) VALUES(?,?,?,?)",(str(uuid.uuid4()),row['owner_id'],max(0,int(byte_count)),int(time.time()*1000)))
-    except Exception:pass
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
 
 def bandwidth_usage_30d(owner_id,db=None):
     cutoff=int(time.time()*1000)-BANDWIDTH_WINDOW_MS
@@ -2542,7 +2560,7 @@ def send_message_provider(channel,recipient,message,metadata=None):
     payload=json.dumps({"channel":channel,"recipient":recipient,"message":message,"metadata":metadata}).encode('utf-8');headers={"Content-Type":"application/json"}
     if MESSAGING_WEBHOOK_SECRET:headers['Authorization']='Bearer '+MESSAGING_WEBHOOK_SECRET
     try:
-        req=urllib.request.Request(MESSAGING_WEBHOOK_ENDPOINT,data=payload,headers=headers,method='POST')
+        req=urllib.request.Request(require_http_endpoint(MESSAGING_WEBHOOK_ENDPOINT),data=payload,headers=headers,method='POST')
         with urllib.request.urlopen(req,timeout=12) as response:
             body=json.loads(response.read() or b'{}');return {"status":"sent","providerId":str(body.get('id','webhook'))}
     except Exception as exc:return {"status":"failed","error":str(exc)}
@@ -2706,7 +2724,7 @@ class Handler(SimpleHTTPRequestHandler):
         if JSON_LOGS:
             try:
                 print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":redact_request_path(format%args)},ensure_ascii=False),flush=True)
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
     def end_headers(self):
         request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID"))
         self.request_id=request_id
@@ -2919,7 +2937,7 @@ class Handler(SimpleHTTPRequestHandler):
         if PUBLIC_BASE_URL:
             try:
                 parsed=urlparse(PUBLIC_BASE_URL);allowed.add(f"{parsed.scheme}://{parsed.netloc}")
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
         if fetch_site in {"cross-site","same-site"}:
             self.json(403,{"error":"Cross-site request rejected","code":"csrf_rejected"});return False
         if origin and origin.rstrip("/") not in {x.rstrip("/") for x in allowed if x}:
@@ -2939,7 +2957,7 @@ class Handler(SimpleHTTPRequestHandler):
             header=(self.headers.get("X-CSRF-Token") or "").strip();cookie_value=""
             try:
                 cookie=SimpleCookie();cookie.load(self.headers.get("Cookie", ""));m=cookie.get("einvite_csrf");cookie_value=m.value if m else ""
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
             if not header or not cookie_value or not hmac.compare_digest(header,cookie_value):
                 self.json(403,{"error":"Missing or invalid CSRF token","code":"csrf_required"});return False
             token_hash=hashlib.sha256(session_token.encode()).hexdigest();csrf_hash=hashlib.sha256(header.encode()).hexdigest()
@@ -2968,7 +2986,7 @@ class Handler(SimpleHTTPRequestHandler):
             try:
                 cookie=SimpleCookie();cookie.load(raw_cookie);morsel=cookie.get(SESSION_COOKIE_NAME)
                 if morsel and morsel.value:return morsel.value
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
         return None
     def auth_tokens(self):
         values=[]
@@ -2992,7 +3010,7 @@ class Handler(SimpleHTTPRequestHandler):
                 row=db.execute("SELECT u.id,u.email,u.role,u.email_verified,u.plan,u.upload_enabled,u.mfa_enabled,u.deleted_at,s.created_at session_created_at,s.last_seen_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.deleted_at IS NULL",(token_hash,now)).fetchone()
                 if row:
                     try:db.execute("UPDATE sessions SET last_seen_at=? WHERE token_hash=? AND last_seen_at<?",(now,token_hash,now-60_000))
-                    except Exception:pass
+                    except Exception as exc: _log.debug("cleanup failed: %s", exc)
                     return row
         if self.cookie_token():self._expire_stale_session=True
         return None
@@ -3052,7 +3070,7 @@ class Handler(SimpleHTTPRequestHandler):
         headers={"Content-Type":"application/json","User-Agent":"E-invitation-website/1.0"}
         if BOT_PROTECTION_SECRET:headers["Authorization"]=f"Bearer {BOT_PROTECTION_SECRET}"
         try:
-            req=urllib.request.Request(BOT_PROTECTION_ENDPOINT,data=payload,headers=headers,method="POST")
+            req=urllib.request.Request(require_http_endpoint(BOT_PROTECTION_ENDPOINT),data=payload,headers=headers,method="POST")
             with urllib.request.urlopen(req,timeout=5) as response:result=json.loads(response.read(100000) or b"{}")
             return bool(result.get("success") or result.get("ok"))
         except Exception:return False
@@ -3071,7 +3089,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if count>limit:
                     self.json(429,{"error":"Too many requests. Please wait and try again."});return False
                 return True
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
         now=time.time()
         with RATE_LOCK:
             values=[stamp for stamp in RATE_BUCKETS.get(bucket_key,[]) if now-stamp<window_seconds]
@@ -3914,7 +3932,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(200);self.send_header("Content-Type","application/x-ndjson; charset=utf-8");self.send_header("Cache-Control","no-store, no-transform");self.send_header("X-Accel-Buffering","no");self.end_headers()
         if not self.safe_write(first):
             try:iterator.close()
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
             return
         try:
             self.wfile.flush()
@@ -3932,7 +3950,7 @@ class Handler(SimpleHTTPRequestHandler):
             except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):pass
         finally:
             try:iterator.close()
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
 
     def ai_agent_confirm_plan(self,invite_id,plan_id):
         user,role=self._ai_agent_access(invite_id,edit=True)
@@ -4343,7 +4361,7 @@ class Handler(SimpleHTTPRequestHandler):
             headers={"Content-Type":"application/json","User-Agent":"E-invitation-website/1.0"}
             if AI_API_KEY:headers["Authorization"]=f"Bearer {AI_API_KEY}"
             try:
-                request=urllib.request.Request(AI_ENDPOINT,data=payload,headers=headers,method="POST")
+                request=urllib.request.Request(require_http_endpoint(AI_ENDPOINT),data=payload,headers=headers,method="POST")
                 with urllib.request.urlopen(request,timeout=AI_TIMEOUT) as response:result=json.loads(response.read(2_000_000) or b"{}")
                 if not isinstance(result,dict):raise ValueError("Provider returned an invalid response shape")
                 output=result.get("text") or result.get("output") or result.get("output_text")
@@ -4396,7 +4414,7 @@ class Handler(SimpleHTTPRequestHandler):
         with connect() as db:
             db.execute("INSERT INTO billing_orders(id,user_id,plan,status,provider,amount_minor,currency,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",(order_id,user["id"],plan,"pending",BILLING_PROVIDER_NAME,amount_minor,BILLING_CURRENCY,now,now))
         try:
-            request=urllib.request.Request(BILLING_CHECKOUT_ENDPOINT,data=payload,headers=headers,method="POST")
+            request=urllib.request.Request(require_http_endpoint(BILLING_CHECKOUT_ENDPOINT),data=payload,headers=headers,method="POST")
             with urllib.request.urlopen(request,timeout=20) as response:result=json.loads(response.read(1_000_000) or b"{}")
             url=str(result.get("url") or result.get("checkoutUrl") or result.get("checkout_url") or "")
             if not re.match(r"^https://",url,re.I):raise ValueError("Billing provider returned an invalid checkout URL")
@@ -4932,7 +4950,7 @@ class Handler(SimpleHTTPRequestHandler):
             for item in collection:
                 if key in item:
                     try:item[key[:-5] if key.endswith('_json') else key]=json.loads(item.pop(key))
-                    except Exception:pass
+                    except Exception as exc: _log.debug("cleanup failed: %s", exc)
         for item in rsvps:
             try:item["answers"]=json.loads(item.pop("answers_json","{}") or "{}")
             except Exception:item["answers"]={}
@@ -7742,7 +7760,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not row or not self.can_edit_invitation(db,row["invitation_id"],user["id"]):return self.json(404,{"error":"Upload session not found"})
             db.execute("DELETE FROM upload_sessions WHERE id=?",(upload_id,))
         try:(QUARANTINE/Path(row["temp_path"]).name).unlink(missing_ok=True)
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
         self.json(200,{"cancelled":True})
 
     def presign_asset_upload(self, invite_id):
@@ -7989,12 +8007,12 @@ class Handler(SimpleHTTPRequestHandler):
         cache=social_cache_path(row["id"],row["version"],fmt)
         try:
             if cache.exists():return self.send_binary(200,cache.read_bytes(),"image/png","public,max-age=300,must-revalidate",f"{slug}-{fmt}-social-card.png")
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
         payload=render_social_card_png_bytes(row["id"],row["access_mode"],d,fmt)
         if payload is None:return self.social_card_svg(slug)
         try:
             tmp=cache.with_suffix(".tmp");tmp.write_bytes(payload);tmp.replace(cache)
-        except OSError:pass
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
         return self.send_binary(200,payload,"image/png","public,max-age=300,must-revalidate",f"{slug}-{fmt}-social-card.png")
 
     def public_qr_png(self, slug):
@@ -8267,9 +8285,8 @@ class Handler(SimpleHTTPRequestHandler):
             existing = db.execute("SELECT id FROM signup_sheets WHERE id=? AND invitation_id=? AND archived_at IS NULL",
                                    (sheet_id, invite_id)).fetchone()
             if not existing: return self.json(404, {"error": "Sign-up sheet not found"})
-            set_clause = ", ".join(f"{col}=?" for col in updates)
-            params = list(updates.values()) + [sheet_id, invite_id]
-            # nosec B608 — column names are from a hardcoded allowlist above (title, type, slots_json, deadline_ts); values are parameterized
+            set_clause, value_params = safe_set_clause(updates, frozenset({"title", "type", "slots_json", "deadline_ts"}))
+            params = [*value_params, sheet_id, invite_id]
             db.execute(f"UPDATE signup_sheets SET {set_clause} WHERE id=? AND invitation_id=?", params)
             row = db.execute("SELECT * FROM signup_sheets WHERE id=?", (sheet_id,)).fetchone()
         self.audit("signup_sheet.updated", "signup_sheet", sheet_id, {"invitationId": invite_id, "fields": list(updates.keys())})
@@ -8480,9 +8497,8 @@ class Handler(SimpleHTTPRequestHandler):
             existing = db.execute("SELECT id FROM polls WHERE id=? AND invitation_id=? AND archived_at IS NULL",
                                    (poll_id, invite_id)).fetchone()
             if not existing: return self.json(404, {"error": "Poll not found"})
-            set_clause = ", ".join(f"{col}=?" for col in updates)
-            params = list(updates.values()) + [poll_id, invite_id]
-            # nosec B608 — column names are from a hardcoded allowlist above (question, multi_select, visibility, options_json, deadline_ts); values are parameterized
+            set_clause, value_params = safe_set_clause(updates, frozenset({"question", "multi_select", "visibility", "options_json", "deadline_ts"}))
+            params = [*value_params, poll_id, invite_id]
             db.execute(f"UPDATE polls SET {set_clause} WHERE id=? AND invitation_id=?", params)
             row = db.execute("SELECT * FROM polls WHERE id=?", (poll_id,)).fetchone()
         self.audit("poll.updated", "poll", poll_id, {"invitationId": invite_id, "fields": list(updates.keys())})
@@ -8751,7 +8767,7 @@ class Handler(SimpleHTTPRequestHandler):
         # Best-effort delete of the underlying stored object.
         try:
             delete_stored_asset(storage_key, "")
-        except Exception: pass
+        except Exception as exc: _log.debug("cleanup failed: %s", exc)
         self.audit("album_photo.deleted", "album_photo", photo_id, {"invitationId": invite_id})
         self.json(200, {"deleted": True})
 
@@ -8969,7 +8985,7 @@ class Handler(SimpleHTTPRequestHandler):
             if row and row["access_mode"]!="password" and row["document_json"]:
                 try:
                     document=json.loads(row["document_json"]);fields=document.get("fields",{});title=str(fields.get("names") or "Invitation")[:120];description=str(fields.get("message") or "You are invited to a special event.")[:240]
-                except Exception:pass
+                except Exception as exc: _log.debug("cleanup failed: %s", exc)
             elif row and row["access_mode"]=="password":title="Private Invitation";description="A private invitation is waiting for you."
         image_format=available_social_image_format();image_path=f"/api/public/{quote(slug)}/social-card.{image_format}";public_path=f"/i/{quote(slug)}"
         # V54.9 (sec-1, P1-A from ASVS L2 gap analysis): every user-controlled
@@ -9599,9 +9615,9 @@ def ensure_frontend_assets():
     with a useful error instead of modifying a deployed application directory.
     """
     steps=[
-        ("editor bundle",[sys.executable,"build_editor_bundle.py","--check"],[sys.executable,"build_editor_bundle.py"]),
-        ("route bundles",[sys.executable,"build_route_bundles.py","--check"],[sys.executable,"build_route_bundles.py"]),
-        ("page manifest",[sys.executable,"build_page_manifests.py","--check"],[sys.executable,"build_page_manifests.py"]),
+        ("editor bundle",[sys.executable,"build/build_editor_bundle.py","--check"],[sys.executable,"build/build_editor_bundle.py"]),
+        ("route bundles",[sys.executable,"build/build_route_bundles.py","--check"],[sys.executable,"build/build_route_bundles.py"]),
+        ("page manifest",[sys.executable,"build/build_page_manifests.py","--check"],[sys.executable,"build/build_page_manifests.py"]),
     ]
     rebuilt=False
     for label,check,build in steps:
@@ -9664,7 +9680,7 @@ if __name__ == "__main__":
         def process_request(self,request,client_address):
             if not self.request_slots.acquire(blocking=False):
                 try:request.sendall(b"HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nContent-Length: 0\r\n\r\n")
-                except OSError:pass
+                except OSError as exc: _log.debug("os cleanup failed: %s", exc)
                 self.shutdown_request(request);return
             try:super().process_request(request,client_address)
             except Exception:
@@ -9698,5 +9714,5 @@ if __name__ == "__main__":
         server.server_close()
         if _PLATFORM_V32_SERVICE is not None:
             try:_PLATFORM_V32_SERVICE.jobs.shutdown(timeout=10)
-            except Exception:pass
+            except Exception as exc: _log.debug("cleanup failed: %s", exc)
         process_storage_delete_jobs(limit=100)

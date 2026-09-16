@@ -113,7 +113,7 @@ def run():
     with tempfile.TemporaryDirectory(prefix='einvite-sec3-mfa-') as data_dir:
         os.environ['EINVITE_DATA_DIR'] = data_dir
         import server  # noqa: E402  (import after env is set)
-        import security_v13
+        from core import auth as security_v13
 
         sent_emails = []
 

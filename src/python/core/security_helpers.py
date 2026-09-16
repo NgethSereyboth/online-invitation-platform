@@ -1,10 +1,11 @@
 """
 Centralized security helpers for the eInvite backend.
 
+This is the canonical location for safe_set_clause and safe_order_by
+(the duplicate sql_safety.py was removed in Phase B consolidation).
+
 Every fix in SECURITY-FIX-GUIDE.md references one of these functions.
 Do not duplicate the logic at call sites — import from here.
-
-See: docs/security/SECURITY-FIX-GUIDE.md §4.1
 """
 from __future__ import annotations
 

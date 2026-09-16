@@ -42,15 +42,18 @@ def stop_process(process,timeout=8):
         try:process.wait(timeout=3)
         except Exception:pass
 
-def cleanup_path(path,retries=12):
-    path=Path(path)
-    for attempt in range(retries):
+def _rmtree_with_retry(path, attempts=20, delay=.25):
+    path=Path(path);last_error=None
+    for _ in range(attempts):
         try:
-            if path.exists():shutil.rmtree(path)
-            return
-        except (PermissionError,OSError):
-            gc.collect();time.sleep(min(.08*(attempt+1),.75))
-    if path.exists():raise RuntimeError(f'Unable to clean temporary test directory: {path}')
+            if not path.exists():return
+            shutil.rmtree(path);return
+        except (PermissionError,OSError) as exc:
+            last_error=exc;gc.collect();time.sleep(delay)
+    raise RuntimeError(f'Unable to clean temporary test directory after {attempts} attempts: {last_error}')
+
+def cleanup_path(path,retries=20):
+    _rmtree_with_retry(path, attempts=retries)
 
 @contextlib.contextmanager
 def temporary_data(prefix='einvite-v14-'):
@@ -62,7 +65,7 @@ def temporary_data(prefix='einvite-v14-'):
 def app_server(extra_env=None):
     with temporary_data('einvite-live-v14-') as data:
         port=free_port();base=f'http://127.0.0.1:{port}'
-        env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_DEV_AUTH_TOKENS':'1','EINVITE_REQUIRE_EMAIL_VERIFICATION':'0','PYTHONPATH':str(ROOT/'src'/'python')+':'+str(ROOT)}
+        env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_DEV_AUTH_TOKENS':'1','EINVITE_REQUIRE_EMAIL_VERIFICATION':'0','PYTHONPATH':os.pathsep.join([str(ROOT/'src'/'python'),str(ROOT)])}
         env.update(extra_env or {})
         log_path=data/'server-test.log'
         log_handle=log_path.open('w',encoding='utf-8',buffering=1)
@@ -74,17 +77,7 @@ def app_server(extra_env=None):
             failed=True
             raise
         finally:
-            if process.poll() is None:
-                try:
-                    if os.name=='nt':
-                        subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=8)
-                    else:
-                        process.terminate()
-                except Exception:pass
-                try:process.wait(timeout=8)
-                except subprocess.TimeoutExpired:
-                    try:process.kill();process.wait(timeout=3)
-                    except Exception:pass
+            stop_process(process, timeout=8)
             try:log_handle.close()
             except Exception:pass
             if failed:

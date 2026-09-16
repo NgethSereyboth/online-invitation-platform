@@ -21,7 +21,7 @@ should pre-approve a WhatsApp template and use the dedicated template endpoint
 from __future__ import annotations
 from typing import Any, Dict
 
-from .base import DeliveryChannel, SendResult, _env
+from .base import DeliveryChannel, SendResult, _env, _require_http_url
 
 
 class WhatsAppChannel(DeliveryChannel):
@@ -53,7 +53,7 @@ class WhatsAppChannel(DeliveryChannel):
         }
         import urllib.request, urllib.error, json
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(url, data=data,
+        req = urllib.request.Request(_require_http_url(url), data=data,
                                      headers={
                                          "Authorization": f"Bearer {self.token}",
                                          "Content-Type": "application/json",

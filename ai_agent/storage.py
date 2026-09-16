@@ -105,13 +105,13 @@ def ensure_agent_schema(connect: Callable[[], Any]) -> None:
     with connect() as db:
         for statement in statements:
             db.execute(statement)
-        for column, definition in (
-            ("feedback_learning", "INTEGER NOT NULL DEFAULT 1"),
-            ("memory_enabled", "INTEGER NOT NULL DEFAULT 1"),
-            ("knowledge_enabled", "INTEGER NOT NULL DEFAULT 1"),
+        for statement in (
+            "ALTER TABLE ai_preferences ADD COLUMN feedback_learning INTEGER NOT NULL DEFAULT 1",
+            "ALTER TABLE ai_preferences ADD COLUMN memory_enabled INTEGER NOT NULL DEFAULT 1",
+            "ALTER TABLE ai_preferences ADD COLUMN knowledge_enabled INTEGER NOT NULL DEFAULT 1",
         ):
             try:
-                db.execute(f"ALTER TABLE ai_preferences ADD COLUMN {column} {definition}")
+                db.execute(statement)
             except Exception:
                 pass
 

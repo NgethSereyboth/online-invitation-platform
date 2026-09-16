@@ -36,10 +36,23 @@ def main():
     provider_port=port();provider=ThreadingHTTPServer(('127.0.0.1',provider_port),Provider);thread=threading.Thread(target=provider.serve_forever,daemon=True);thread.start()
     app_port=port();base=f'http://127.0.0.1:{app_port}'
     with tempfile.TemporaryDirectory(prefix='einvite-adapters-') as data:
-        env={**os.environ,'EINVITE_DATA_DIR':data,'EINVITE_AI_ENDPOINT':f'http://127.0.0.1:{provider_port}/ai','EINVITE_BILLING_CHECKOUT_ENDPOINT':f'http://127.0.0.1:{provider_port}/checkout','EINVITE_BILLING_WEBHOOK_SECRET':'adapter-webhook-secret','EINVITE_ADMIN_EMAIL':'adapter@example.com'}
-        proc=subprocess.Popen([sys.executable,'-u','server.py','--host','127.0.0.1','--port',str(app_port)],cwd=ROOT,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        env=os.environ.copy()
+        env.update({'EINVITE_DATA_DIR':str(data),'EINVITE_AI_ENDPOINT':f'http://127.0.0.1:{provider_port}/ai','EINVITE_BILLING_CHECKOUT_ENDPOINT':f'http://127.0.0.1:{provider_port}/checkout','EINVITE_BILLING_WEBHOOK_SECRET':'adapter-webhook-secret','EINVITE_ADMIN_EMAIL':'adapter@example.com','EINVITE_ALLOW_NO_SCANNER':'1'})
+        env['PYTHONPATH']=str(ROOT)+os.pathsep+str(ROOT/'src'/'python')
+        proc=subprocess.Popen([sys.executable,'-u',str(ROOT/'src'/'python'/'server.py'),'--host','127.0.0.1','--port',str(app_port)],cwd=str(ROOT),env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         try:
-            wait(base)
+            deadline=time.time()+15
+            while time.time()<deadline:
+                try:
+                    with urllib.request.urlopen(base+'/api/health',timeout=1) as response:
+                        if response.status==200:break
+                except Exception:time.sleep(.25)
+            else:
+                proc.terminate()
+                try:_,stderr=proc.communicate(timeout=3)
+                except subprocess.TimeoutExpired:
+                    proc.kill();_,stderr=proc.communicate()
+                raise RuntimeError(f"server did not start in 15s; stderr:\n{stderr.decode(errors='replace')}")
             _,reg=request(base,'/api/auth/register','POST',{'email':'adapter@example.com','password':'password123'},expected=201);token=reg['token']
             _,ai=request(base,'/api/ai/assist','POST',{'task':'romantic','prompt':'hello','context':{}},token);assert ai['provider']=='external' and ai['text'].startswith('External provider:')
             _,billing=request(base,'/api/billing/status',token=token);assert billing['configured'] and billing['paymentMethods']==['visa','mastercard']
