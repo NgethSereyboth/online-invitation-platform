@@ -10,7 +10,21 @@ CREATE TABLE IF NOT EXISTS users (
   role TEXT NOT NULL DEFAULT 'customer',
   email_verified INTEGER NOT NULL DEFAULT 0,
   plan TEXT NOT NULL DEFAULT 'free',
-  upload_enabled INTEGER NOT NULL DEFAULT 1
+  upload_enabled INTEGER NOT NULL DEFAULT 1,
+  -- Phase 5 (V54.8) — Hosted-tier columns. ``tier`` is parallel to the
+  -- legacy ``plan`` column (free/creator/studio → free/standard/pro).
+  -- See docs/hosted/STORAGE-TIERS.md §6 for the reconciliation policy.
+  tier TEXT NOT NULL DEFAULT 'free',
+  tier_expires_at BIGINT,
+  storage_used_bytes BIGINT NOT NULL DEFAULT 0,
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  -- V54.11 (sec-2) — Per-account login lockout (P1-B from ASVS L2 gap
+  -- analysis §2.2). Counter, sliding-window-start timestamp, and
+  -- lock-expiry timestamp. All three reset on successful login.
+  failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+  failed_login_first_at BIGINT,
+  locked_until BIGINT
 );
 
 CREATE TABLE IF NOT EXISTS billing_orders (
@@ -423,6 +437,52 @@ CREATE TABLE IF NOT EXISTS passkeys (
 );
 CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id,created_at DESC);
 
+-- V54.12 (sec-3 — P1-C) — MFA recovery codes.
+-- Plaintext codes are shown ONCE at MFA-enable time; only ``code_hash``
+-- (argon2id or ``pbkdf2_sha256$…``) is persisted. ``used_at`` flips from
+-- NULL → epoch-ms when a code is consumed by /api/auth/mfa/recover;
+-- each code is one-shot. Index on ``user_id`` for the per-user lookup the
+-- recovery endpoint performs.
+CREATE TABLE IF NOT EXISTS mfa_recovery_codes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code_hash TEXT NOT NULL,
+  used_at BIGINT,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_mfa_recovery_codes_user_id ON mfa_recovery_codes(user_id);
+
+-- V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
+-- Standing / session grants keyed by (user_id, resource_type,
+-- resource_id, action). ``resource_id = '*'`` is a wildcard — the
+-- grant covers any resource of the type. ``expires_at`` is NULL for
+-- standing grants; non-NULL for session/JIT grants. ``revoked_at``
+-- flips NULL → epoch-ms when the grant has been revoked (soft-delete —
+-- the row is retained for the audit trail). See
+-- docs/ai/RESOURCE-SCOPED-PERMISSIONS.md §4.1 for the design. The
+-- runtime loader in ai_agent/capabilities.py:build_access_snapshot
+-- filters by ``revoked_at IS NULL AND (expires_at IS NULL OR
+-- expires_at > now)`` so revoked / expired rows are ignored by the
+-- Stage 3 grant check.
+CREATE TABLE IF NOT EXISTS agent_grants (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  resource_type TEXT NOT NULL,
+  resource_id TEXT NOT NULL,           -- '*' for wildcard
+  action TEXT NOT NULL,
+  granted_by TEXT NOT NULL DEFAULT '' REFERENCES users(id) ON DELETE SET NULL,
+  granted_at BIGINT NOT NULL,
+  expires_at BIGINT,                   -- NULL = standing grant
+  revoked_at BIGINT,                   -- NULL = active
+  revoked_by TEXT NOT NULL DEFAULT '',
+  revoke_reason TEXT NOT NULL DEFAULT '',
+  reason TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_agent_grants_user
+  ON agent_grants(user_id, revoked_at, expires_at);
+CREATE INDEX IF NOT EXISTS idx_agent_grants_resource
+  ON agent_grants(resource_type, resource_id, action, revoked_at);
+
 CREATE TABLE IF NOT EXISTS deleted_items (
   id TEXT PRIMARY KEY,
   owner_id TEXT NOT NULL,
@@ -502,6 +562,11 @@ ALTER TABLE approval_requests ADD COLUMN IF NOT EXISTS decided_at BIGINT;
 -- V13 protected gallery access.
 ALTER TABLE invitations ADD COLUMN IF NOT EXISTS gallery_access_password_hash TEXT;
 ALTER TABLE invitations ADD COLUMN IF NOT EXISTS gallery_access_password_salt TEXT;
+-- V54.1 / V54.4 Phase 2a — post-send editing wedge: first dispatch timestamp
+-- and the timestamp of the first edit made AFTER that dispatch. Both stay
+-- NULL until the host delivers / edits the invitation.
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS sent_at BIGINT;
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS edited_after_send_at BIGINT;
 CREATE TABLE IF NOT EXISTS gallery_access_tokens (
   token_hash TEXT PRIMARY KEY,
   invitation_id TEXT NOT NULL,
@@ -551,6 +616,24 @@ CREATE TABLE IF NOT EXISTS collaboration_checkpoints(
   created_by TEXT NOT NULL,created_at BIGINT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_collab_checkpoint ON collaboration_checkpoints(invitation_id,document_epoch,created_at DESC);
+-- V54.7 (Phase 4b) — Y.js CRDT upgrade. Binary update BLOBs replace the
+-- JSON-encoded V31 rows. V31 tables stay alive during the Phase A/B/C
+-- migration (see docs/collab/CRDT-DESIGN.md §2). Additive — no DROP/ALTER.
+CREATE TABLE IF NOT EXISTS collaboration_updates_v52(
+  id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,
+  document_epoch INTEGER NOT NULL,client_id TEXT NOT NULL,logical_clock BIGINT NOT NULL,
+  update BYTEA NOT NULL,update_bytes INTEGER NOT NULL DEFAULT 0,
+  created_at BIGINT NOT NULL,revision BIGINT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_collab_v52_identity ON collaboration_updates_v52(invitation_id,document_epoch,client_id,logical_clock);
+CREATE INDEX IF NOT EXISTS idx_collab_v52_replay ON collaboration_updates_v52(invitation_id,document_epoch,revision);
+CREATE TABLE IF NOT EXISTS collaboration_snapshots_v52(
+  id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,
+  document_epoch INTEGER NOT NULL DEFAULT 1,publication_version INTEGER NOT NULL,
+  yjs_state_vector BYTEA NOT NULL,yjs_snapshot_bytes BYTEA NOT NULL,
+  fingerprint TEXT NOT NULL DEFAULT '',created_by TEXT NOT NULL,created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_collab_v52_snapshot_invitation ON collaboration_snapshots_v52(invitation_id,document_epoch,publication_version DESC);
 CREATE TABLE IF NOT EXISTS raster_edit_documents(
   id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,
   owner_id TEXT NOT NULL,source_asset_id TEXT NOT NULL,source_asset_version INTEGER NOT NULL DEFAULT 1,
@@ -705,3 +788,20 @@ CREATE TABLE IF NOT EXISTS ai_model_capabilities(
   health TEXT NOT NULL DEFAULT 'unknown', last_successful_check BIGINT NOT NULL DEFAULT 0,
   updated_at BIGINT NOT NULL, PRIMARY KEY(provider_id,model_id)
 );
+
+-- ── Phase 5 (V54.8) — Hosted-tier column migration ────────────────────────
+-- Additive ALTER TABLE statements for legacy PostgreSQL deployments that
+-- predate the V54.8 hosted-tier columns. New deployments get the columns
+-- directly from the CREATE TABLE block above; these ALTERs are idempotent
+-- (IF NOT EXISTS) for upgrades.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tier TEXT NOT NULL DEFAULT 'free';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tier_expires_at BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS storage_used_bytes BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+-- V54.11 (sec-2) — Per-account login lockout (P1-B from ASVS L2 gap
+-- analysis §2.2). Counter, sliding-window-start timestamp, and
+-- lock-expiry timestamp. All three reset on successful login.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_first_at BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until BIGINT;

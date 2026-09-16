@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://einvite.local/schemas/plugin-manifest-v1.json",
+  "title": "eInvite Plugin Manifest v1",
+  "description": "Canonical JSON Schema for eInvite marketplace plugin manifests (Phase 4a / V54.6). Companion to docs/plugins/PLUGIN-SPEC.md. Validated by plugins/sdk/validate_manifest.py.",
+  "type": "object",
+  "required": [
+    "schema_version", "name", "name_kh", "version", "description",
+    "description_kh", "author", "author_key_id", "permissions",
+    "extension_points", "entrypoint", "min_platform_version",
+    "content_security_policy", "signature", "marketplace_signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1, "description": "Manifest schema version. Must be 1 for Phase 4a (V54.6)." },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "name_kh": { "type": "string", "minLength": 1, "maxLength": 120, "description": "Khmer transliteration or translation (per ROADMAP ground rule 5)." },
+    "version": {
+      "type": "string",
+      "description": "SemVer 2.0.0 version string. Pre-release tags and build metadata are allowed.",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "description": { "type": "string", "minLength": 1, "maxLength": 280 },
+    "description_kh": { "type": "string", "minLength": 1, "maxLength": 420 },
+    "author": {
+      "type": "object",
+      "required": ["name", "email", "vendor_id"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "email": { "type": "string", "format": "email" },
+        "vendor_id": { "type": "string", "pattern": "^[a-z0-9-]{3,64}$", "description": "eInvite marketplace vendor identifier." }
+      }
+    },
+    "author_key_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Hex SHA-256 of the author's Ed25519 public key (32 bytes)."
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Resource-scoped grant, see PLUGIN-SPEC.md §3. Format: {resource_type}:{resource_id}:{action}[:{sub_resource}[:{sub_id}]]. resource_id may be {current} or a literal UUID; '*' (wildcard) is rejected.",
+        "pattern": "^(invitation|event|template|workspace|asset|plugin|guest|message|page|account):(\\{current\\}|\\{[a-f0-9-]+\\}|[a-f0-9-]+):[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*(?::[a-f0-9-]+)?)?$"
+      },
+      "maxItems": 64,
+      "uniqueItems": true
+    },
+    "extension_points": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/extension_point" },
+      "maxItems": 32
+    },
+    "entrypoint": {
+      "type": "string",
+      "description": "Relative path within the bundle to the plugin entry. Extension selects the execution mode: .html = UI plugin (iframe); .wasm or .js = logic plugin (Worker).",
+      "pattern": "^\\./[a-zA-Z0-9_./-]+\\.(html|wasm|js)$"
+    },
+    "min_platform_version": { "$ref": "#/$defs/semver" },
+    "max_platform_version": { "$ref": "#/$defs/semver" },
+    "content_security_policy": { "$ref": "#/$defs/csp" },
+    "signature": { "$ref": "#/$defs/signature", "description": "Author Ed25519 signature block. See PLUGIN-SIGNING.md §3." },
+    "marketplace_signature": { "$ref": "#/$defs/signature", "description": "Marketplace CA Ed25519 signature block. Populated by the marketplace at approval time. See PLUGIN-SIGNING.md §4." },
+    "homepage": { "type": "string", "pattern": "^https://" },
+    "repository": { "type": "string", "pattern": "^https://" },
+    "license": { "type": "string", "pattern": "^[A-Za-z0-9.+-]+$", "description": "SPDX identifier (MIT, OFL-1.1, Apache-2.0, ...)." },
+    "categories": {
+      "type": "array",
+      "items": { "enum": ["design", "delivery", "analytics", "payment", "ai", "calendar", "maps", "automation", "enterprise", "accessibility"] },
+      "maxItems": 5,
+      "uniqueItems": true
+    },
+    "icon_256": { "type": "string", "pattern": "^\\./[a-zA-Z0-9_./-]+\\.png$" },
+    "screenshots": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^\\./[a-zA-Z0-9_./-]+\\.png$" },
+      "maxItems": 4
+    },
+    "requested_quota": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "heap_mb": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "cpu_ms_per_call": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "storage_mb": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "supported_locales": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "compatibility_notes": { "type": "string", "maxLength": 500 }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)"
+    },
+    "extension_point": {
+      "type": "object",
+      "required": ["id", "point"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "point": {
+          "enum": [
+            "editor.panel", "content.block", "asset.provider",
+            "export.provider", "communication.provider", "payment.provider",
+            "analytics.provider", "storage.provider", "ai.provider",
+            "calendar.provider", "map.provider",
+            "template.provider", "automation.provider"
+          ],
+          "description": "One of the 13 eInvite extension points. The first 11 are inherited from V48; the last 2 are new in Phase 4a. See PLUGIN-SPEC.md §4."
+        },
+        "label": { "type": "string", "maxLength": 80 },
+        "label_kh": { "type": "string", "maxLength": 120 },
+        "schema": { "type": "object", "description": "JSON Schema for the extension point's input/output contract (free-form)." }
+      }
+    },
+    "csp": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_src": { "type": "array", "items": { "type": "string" } },
+        "script_src": { "type": "array", "items": { "type": "string" } },
+        "style_src": { "type": "array", "items": { "type": "string" } },
+        "img_src": { "type": "array", "items": { "type": "string" } },
+        "font_src": { "type": "array", "items": { "type": "string" } },
+        "connect_src": { "type": "array", "items": { "type": "string" } },
+        "frame_src": { "type": "array", "items": { "type": "string" } },
+        "object_src": { "type": "array", "items": { "type": "string" } },
+        "base_uri": { "type": "array", "items": { "type": "string" } },
+        "form_action": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "public_key", "sig", "signed_payload"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "public_key": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "sig": { "type": "string", "pattern": "^[a-f0-9]{128}$" },
+        "signed_payload": { "enum": ["manifest", "manifest+bundle"] },
+        "signed_at": { "type": "integer", "minimum": 0 },
+        "expires_at": { "type": "integer", "minimum": 0 },
+        "approved_permissions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Marketplace-only field: the approved subset of declared permissions. See PLUGIN-SIGNING.md §4.3."
+        },
+        "approved_extension_points": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Marketplace-only field: the approved subset of declared extension points."
+        },
+        "reviewer": { "type": "string" },
+        "review_ticket": { "type": "string" },
+        "revoked_at": { "type": "integer", "minimum": 0 },
+        "revocation_reason": { "type": "string" }
+      }
+    }
+  }
+}

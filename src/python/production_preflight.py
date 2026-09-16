@@ -250,7 +250,17 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         report = {"ok": False, "errors": [str(exc)], "warnings": [], "summary": {}, "dependencies": {}}
     if args.json:
-        print(json.dumps(report, ensure_ascii=False, separators=(",", ":")))
+        # Security: the report dict contains only boolean/dict metadata —
+        # no secret values are included. CodeQL py/clear-text-logging-sensitive-data
+        # is a false positive here, but we redact defensively.
+        import copy
+        safe_report = copy.deepcopy(report)
+        # Ensure no secret values leaked into errors/warnings (they shouldn't)
+        for key in ("errors", "warnings"):
+            for i, msg in enumerate(safe_report.get(key, [])):
+                if any(s in str(msg).lower() for s in ("secret", "key", "token", "password")):
+                    safe_report[key][i] = f"[redacted: contains sensitive keyword]"
+        print(json.dumps(safe_report, ensure_ascii=False, separators=(",", ":")))
     else:
         print("PRODUCTION_PREFLIGHT_PASSED" if report["ok"] else "PRODUCTION_PREFLIGHT_FAILED")
         for error in report.get("errors", []):

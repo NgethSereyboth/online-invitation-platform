@@ -1,7 +1,7 @@
 {
   "pages": {
     "account.html": {
-      "bytes": 267726,
+      "bytes": 297505,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 263365,
+      "bytes": 289815,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -27,7 +27,7 @@
       ]
     },
     "analytics.html": {
-      "bytes": 262046,
+      "bytes": 289413,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -40,7 +40,7 @@
       ]
     },
     "billing.html": {
-      "bytes": 260553,
+      "bytes": 287003,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -53,7 +53,7 @@
       ]
     },
     "checkin.html": {
-      "bytes": 91409,
+      "bytes": 96378,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -66,20 +66,21 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 448386,
+      "bytes": 577892,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
         "bundle-dashboard-v15.js"
       ],
-      "styleCount": 1,
+      "styleCount": 2,
       "styles": [
-        "bundle-dashboard-v15.css"
+        "bundle-dashboard-v15.css",
+        "toast.css"
       ]
     },
     "designer.html": {
-      "bytes": 281709,
+      "bytes": 308159,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -92,7 +93,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 270383,
+      "bytes": 297750,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -105,7 +106,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1503541,
+      "bytes": 1530908,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -118,7 +119,7 @@
       ]
     },
     "materials.html": {
-      "bytes": 337210,
+      "bytes": 364577,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -131,7 +132,7 @@
       ]
     },
     "privacy.html": {
-      "bytes": 74220,
+      "bytes": 100668,
       "scriptCount": 1,
       "scripts": [
         "theme-init.js"
@@ -142,7 +143,7 @@
       ]
     },
     "public.html": {
-      "bytes": 246140,
+      "bytes": 306802,
       "scriptCount": 1,
       "scripts": [
         "bundle-public-v15.js"
@@ -153,7 +154,7 @@
       ]
     },
     "reset.html": {
-      "bytes": 252444,
+      "bytes": 278894,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -166,7 +167,7 @@
       ]
     },
     "responses.html": {
-      "bytes": 265962,
+      "bytes": 293329,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -179,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 302623,
+      "bytes": 329990,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -192,7 +193,7 @@
       ]
     },
     "verify.html": {
-      "bytes": 251262,
+      "bytes": 277712,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -253,7 +254,8 @@
         "bundle-dashboard-v15.js"
       ],
       "styles": [
-        "bundle-dashboard-v15.css"
+        "bundle-dashboard-v15.css",
+        "toast.css"
       ]
     },
     "editor": {

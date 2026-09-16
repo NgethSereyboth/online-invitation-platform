@@ -1099,4 +1099,1707 @@ function init(){
  observeDialogs();new MutationObserver(observeDialogs).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();;/**
+ * Phase 2a (V54.1) — Multi-channel delivery host dialog.
+ *
+ * Loaded on the dashboard / host pages. Lets the host pick channels (email
+ * default, SMS / WhatsApp / Telegram when env-configured), select recipients
+ * from the guest list, and dispatch the invitation. Vanilla JS, bilingual
+ * EN + KH.
+ *
+ * Surface contract:
+ *   window.EInviteDeliveryDialog.open({ invitationId, document })
+ */
+(function () {
+  'use strict';
+
+  const STRINGS = {
+    title: { en: 'Send invitation', km: 'ផ្ញើការអញ្ជើញ' },
+    intro: {
+      en: 'Pick channels and recipients. Email is always available; SMS / WhatsApp / Telegram require configuration.',
+      km: 'ជ្រើសឆានែល និងអ្នកទទួល។ អ៊ីមែលអាចប្រើបានជានិច្ច; SMS / WhatsApp / Telegram ត្រូវការការកំណត់រចនាសម្ព័ន្ធ។',
+    },
+    channels: { en: 'Channels', km: 'ឆានែល' },
+    recipients: { en: 'Recipients', km: 'អ្នកទទួល' },
+    message: { en: 'Message (optional)', km: 'សារ (ស្រេចចិត្ត)' },
+    subject: { en: 'Subject', km: 'ប្រធានបទ' },
+    selectAll: { en: 'Select all', km: 'ជ្រើសទាំងអស់' },
+    send: { en: 'Send', km: 'ផ្ញើ' },
+    cancel: { en: 'Cancel', km: 'បោះបង់' },
+    sent: { en: 'sent', km: 'បានផ្ញើ' },
+    skipped: { en: 'skipped', km: 'រំលង' },
+    failed: { en: 'failed', km: 'បរាជ័យ' },
+    notConfigured: { en: 'Not configured', km: 'មិនបានកំណត់រចនាសម្ព័ន្ធ' },
+    close: { en: 'Close', km: 'បិទ' },
+  };
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const langText = (key, mode) => {
+    const en = STRINGS[key] ? STRINGS[key].en : key;
+    const km = STRINGS[key] ? STRINGS[key].km : key;
+    if (mode === 'km') return `<span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    if (mode === 'both') return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span>`;
+  };
+  const detectLang = () => (document.documentElement.lang === 'km' ? 'km' : 'en');
+
+  function open(opts) {
+    if (!opts || !opts.invitationId) return;
+    const invitationId = opts.invitationId;
+    const lang = detectLang();
+    const overlay = document.createElement('div');
+    overlay.className = 'delivery-dialog-overlay';
+    overlay.innerHTML = `
+      <div class="delivery-dialog" role="dialog" aria-modal="true" aria-label="${esc(STRINGS.title.en)}">
+        <header><h2>${langText('title', lang)}</h2><button type="button" data-close>&times;</button></header>
+        <p class="muted">${langText('intro', lang)}</p>
+        <form>
+          <fieldset>
+            <legend>${langText('channels', lang)}</legend>
+            <div class="channel-list state">…</div>
+          </fieldset>
+          <fieldset>
+            <legend>${langText('recipients', lang)}</legend>
+            <label><input type="checkbox" data-select-all> ${langText('selectAll', lang)}</label>
+            <div class="recipient-list state">…</div>
+          </fieldset>
+          <label>${langText('subject', lang)}<input type="text" name="subject" maxlength="200"></label>
+          <label>${langText('message', lang)}<textarea name="message" rows="3" maxlength="5000"></textarea></label>
+          <footer>
+            <button type="button" data-close>${langText('cancel', lang)}</button>
+            <button type="submit">${langText('send', lang)}</button>
+          </footer>
+        </form>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('[data-close]').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('.delivery-dialog').addEventListener('click', (ev) => ev.stopPropagation());
+    overlay.addEventListener('click', () => overlay.remove());
+
+    const channelList = overlay.querySelector('.channel-list');
+    const recipientList = overlay.querySelector('.recipient-list');
+    const selectAll = overlay.querySelector('[data-select-all]');
+    const form = overlay.querySelector('form');
+
+    // Load channels + recipients in parallel.
+    Promise.all([
+      fetch(`/api/invitations/${encodeURIComponent(invitationId)}/delivery-channels`).then((r) => r.json()),
+      fetch(`/api/invitations/${encodeURIComponent(invitationId)}/guests`).then((r) => r.json()),
+    ]).then(([channelData, guests]) => {
+      renderChannels(channelData.channels || []);
+      renderRecipients(guests || []);
+    }).catch((err) => {
+      channelList.innerHTML = `<p class="error">${esc(err.message)}</p>`;
+    });
+
+    selectAll.addEventListener('change', () => {
+      recipientList.querySelectorAll('input[type=checkbox]').forEach((cb) => { cb.checked = selectAll.checked; });
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submit = form.querySelector('button[type=submit]');
+      submit.disabled = true;
+      const channels = Array.from(channelList.querySelectorAll('input[type=checkbox]:checked')).map((cb) => cb.value);
+      const recipients = Array.from(recipientList.querySelectorAll('input[type=checkbox]:checked')).map((cb) => JSON.parse(cb.value));
+      const data = Object.fromEntries(new FormData(form));
+      if (!channels.length || !recipients.length) {
+        alert('Select at least one channel and one recipient');
+        submit.disabled = false;
+        return;
+      }
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/deliver`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channels,
+            recipients,
+            message: data.message || '',
+            subject: data.subject || '',
+          }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
+        const results = result.results || [];
+        const sent = results.filter((r) => r.status === 'sent').length;
+        const skipped = results.filter((r) => r.status === 'skipped').length;
+        const failed = results.filter((r) => r.status === 'failed').length;
+        alert(`${sent} ${STRINGS.sent.en}, ${skipped} ${STRINGS.skipped.en}, ${failed} ${STRINGS.failed.en}`);
+        overlay.remove();
+      } catch (err) {
+        alert(err.message);
+        submit.disabled = false;
+      }
+    });
+
+    function renderChannels(channels) {
+      channelList.innerHTML = channels.map((c) => `
+        <label>
+          <input type="checkbox" value="${esc(c.name)}" ${c.name === 'email' ? 'checked' : ''} ${c.available ? '' : 'disabled'}>
+          ${esc(c.label_en || c.name)}
+          ${c.available ? '' : `<span class="muted">(${langText('notConfigured', lang)})</span>`}
+        </label>`).join('');
+    }
+
+    function renderRecipients(guests) {
+      if (!guests.length) {
+        recipientList.innerHTML = `<p class="muted">No guests added yet.</p>`;
+        return;
+      }
+      recipientList.innerHTML = guests.map((g) => `
+        <label>
+          <input type="checkbox" value='${esc(JSON.stringify({ guestId: g.id, name: g.name, email: g.email || '', phone: g.phone || '' }))}'>
+          ${esc(g.name)} ${g.email ? `&lt;${esc(g.email)}&gt;` : ''} ${g.phone ? `(${esc(g.phone)})` : ''}
+        </label>`).join('');
+    }
+  }
+
+  window.EInviteDeliveryDialog = { open };
+})();;/**
+ * Phase 2a (V54.4) — Post-send editing badge + edit-history view.
+ *
+ * Two surfaces:
+ *
+ *   1. Public "Edited after sending" badge — mounted on the public
+ *      invitation page when the host has edited the invitation after
+ *      delivering it. The badge shows the timestamp of the first
+ *      post-send edit and is the wedge feature against Paperless Post
+ *      and Evite, both of which lock the invitation after send.
+ *
+ *   2. Host edit-history view — mounted on the dashboard, shows the
+ *      full diff history (added/changed/removed field paths) for every
+ *      post-send edit, plus a "Resend update notification" button that
+ *      triggers an "invitation updated" email to already-viewed guests.
+ *
+ * Bilingual EN + Khmer (KH) per ROADMAP ground rule 5.
+ *
+ * Surface contract:
+ *   window.EInviteEditHistory.mountBadge(root, { invitationId, mode, sentAt, editedAfterSendAt })
+ *   window.EInviteEditHistory.mountHistoryView(root, { invitationId, mode })
+ */
+(function () {
+  'use strict';
+
+  const STRINGS = {
+    badgeLabel: { en: 'Edited after sending', km: 'បានកែប្រែបន្ទាប់ពីផ្ញើ' },
+    badgeTitle: {
+      en: 'The host updated this invitation after it was sent. Tap to view what changed.',
+      km: 'ម្ចាស់កម្មវិធីបានកែប្រែការអញ្ជើញនេះបន្ទាប់ពីបានផ្ញើ។ ចុចដើម្បីមើលអ្វីដែលបានផ្លាស់ប្រែ។',
+    },
+    historyTitle: { en: 'Edit history', km: 'ប្រវត្តិកែប្រែ' },
+    historyIntro: {
+      en: 'Every change you made after the invitation was first sent is recorded here. Guests who already opened the invitation can be notified of the update.',
+      km: 'ការផ្លាស់ប្រែណាមួយដែលអ្នកបានធ្វើបន្ទាប់ពីការអញ្ជើញត្រូវបានផ្ញើជាលើកដំបូងត្រូវបានកត់ត្រានៅទីនេះ។ ភ្ញៀវដែលបានបើកការអញ្ជើញរួចហើយអាចត្រូវបានជូនដំណឹងអំពីការផ្លាស់ប្រែ។',
+    },
+    empty: { en: 'No edits have been made after sending yet.', km: 'មិនទាន់មានការកែប្រែណាមួយបន្ទាប់ពីផ្ញើនៅឡើយទេ។' },
+    resend: { en: 'Resend update notification', km: 'ផ្ញើការជូនដំណឹងបច្ចុប្បន្នភាពឡើងវិញ' },
+    resendDone: {
+      en: 'Notification sent to {sent} guest(s).',
+      km: 'បានផ្ញើការជូនដំណឹងទៅ {sent} ភ្ញៀវ។',
+    },
+    resendFailed: { en: 'Could not resend the notification. Please try again.', km: 'មិនអាចផ្ញើការជូនដំណឹងឡើងវិញបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    diffAdded: { en: 'Added', km: 'បានបន្ថែម' },
+    diffChanged: { en: 'Changed', km: 'បានផ្លាស់ប្រែ' },
+    diffRemoved: { en: 'Removed', km: 'បានលុប' },
+    reason: { en: 'Reason', km: 'មូលហេតុ' },
+    versionLabel: { en: 'Version', km: 'កំណែ' },
+    loading: { en: 'Loading edit history…', km: 'កំពុងផ្ទុកប្រវត្តិកែប្រែ…' },
+    error: { en: 'Could not load edit history.', km: 'មិនអាចផ្ទុកប្រវត្តិកែប្រែបានទេ។' },
+  };
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // V2-UX-5 (P1-B, WCAG 3.1.2): emit lang="km" / lang="en" on every text fragment
+  // so screen readers pick the correct pronunciation engine. The Khmer span keeps
+  // the existing `khmer-text` class for CSS targeting via :lang(km) / [lang="km"].
+  const langText = (key, mode) => {
+    const en = STRINGS[key] ? STRINGS[key].en : key;
+    const km = STRINGS[key] ? STRINGS[key].km : key;
+    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
+    if (mode === 'both') return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span>`;
+  };
+  const formatTs = (ts) => {
+    if (!ts) return '';
+    try {
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleString();
+    } catch { return ''; }
+  };
+
+  /**
+   * Mount the "Edited after sending" badge on the public invitation page.
+   *
+   * The badge is rendered above the main invitation content. Clicking it
+   * scrolls to a small dialog explaining that the host updated the
+   * invitation after sending it. The badge is only rendered when
+   * ``editedAfterSendAt`` is set (i.e., the host has actually edited).
+   */
+  function mountBadge(root, opts) {
+    if (!root || !opts || !opts.invitationId) return;
+    if (!opts.editedAfterSendAt) return;  // No post-send edits → no badge.
+    const mode = opts.mode || 'both';
+    const badge = document.createElement('aside');
+    badge.className = 'invitation-edit-badge reveal';
+    badge.setAttribute('role', 'status');
+    badge.setAttribute('aria-live', 'polite');
+    badge.setAttribute('title', STRINGS.badgeTitle.en);
+    const when = formatTs(opts.editedAfterSendAt);
+    badge.innerHTML = `
+      <span class="edit-badge-icon" aria-hidden="true">✎</span>
+      <span class="edit-badge-text">${langText('badgeLabel', mode)}${when ? ` · ${esc(when)}` : ''}</span>
+    `;
+    // Insert as the first child of the root, above the cover/hero.
+    root.insertBefore(badge, root.firstChild);
+  }
+
+  /**
+   * Mount the host's full edit-history view (dashboard side).
+   *
+   * Fetches ``GET /api/invitations/{id}/edit-history`` and renders a
+   * chronological list of edits with the diff (added/changed/removed
+   * field paths) plus a "Resend update notification" button.
+   */
+  function mountHistoryView(root, opts) {
+    if (!root || !opts || !opts.invitationId) return;
+    const invitationId = opts.invitationId;
+    const mode = opts.mode || 'both';
+    const section = document.createElement('section');
+    section.className = 'invitation-edit-history guest-feature';
+    section.setAttribute('aria-label', STRINGS.historyTitle.en);
+    section.innerHTML = `
+      <h2>${langText('historyTitle', mode)}</h2>
+      <p class="muted">${langText('historyIntro', mode)}</p>
+      <button class="resend-notification primary" type="button" disabled>${langText('resend', mode)}</button>
+      <p class="resend-status" role="status" aria-live="polite"></p>
+      <ol class="edit-history-list">${langText('loading', mode)}</ol>
+    `;
+    root.appendChild(section);
+
+    const list = section.querySelector('.edit-history-list');
+    const resendBtn = section.querySelector('.resend-notification');
+    const resendStatus = section.querySelector('.resend-status');
+
+    fetch(`/api/invitations/${encodeURIComponent(invitationId)}/edit-history`, {
+      headers: { Accept: 'application/json' },
+    }).then((r) => r.json()).then((data) => {
+      const entries = (data && data.history) || [];
+      if (!entries.length) {
+        list.innerHTML = `<li class="muted">${langText('empty', mode)}</li>`;
+      } else {
+        list.innerHTML = entries.map(renderEntry).join('');
+      }
+      // Enable the resend button only when there is at least one post-send edit.
+      const canResend = !!(data && data.sentAt && entries.length);
+      resendBtn.disabled = !canResend;
+    }).catch(() => {
+      list.innerHTML = `<li class="error">${langText('error', mode)}</li>`;
+    });
+
+    resendBtn.addEventListener('click', async () => {
+      if (resendBtn.disabled) return;
+      resendBtn.disabled = true;
+      resendStatus.textContent = '';
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/resend-notification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ onlyViewed: false }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload.error || 'HTTP ' + res.status);
+        const sent = (payload && payload.sent) || 0;
+        const msg = (STRINGS.resendDone.en).replace('{sent}', String(sent));
+        const msgKm = (STRINGS.resendDone.km).replace('{sent}', String(sent));
+        resendStatus.innerHTML = mode === 'km'
+          ? `<span class="khmer-text" lang="km">${esc(msgKm)}</span>`
+          : mode === 'both'
+            ? `<span lang="en">${esc(msg)}</span> <span class="khmer-text" lang="km">${esc(msgKm)}</span>`
+            : `<span lang="en">${esc(msg)}</span>`;
+      } catch (err) {
+        resendStatus.innerHTML = `<span class="error">${langText('resendFailed', mode)}</span>`;
+      } finally {
+        resendBtn.disabled = false;
+      }
+    });
+  }
+
+  function renderEntry(entry) {
+    const when = formatTs(entry.editedAt);
+    const reason = entry.reason || '';
+    const diffItems = (entry.diff || []).map((d) => {
+      const path = d.path || '?';
+      const before = d.before;
+      const after = d.after;
+      const beforeStr = before === undefined || before === null ? `<em>${langText('diffRemoved', 'en')}</em>` : `<code>${esc(JSON.stringify(before))}</code>`;
+      const afterStr = after === undefined || after === null ? `<em>${langText('diffRemoved', 'en')}</em>` : `<code>${esc(JSON.stringify(after))}</code>`;
+      return `<li><span class="diff-path">${esc(path)}</span>: ${beforeStr} → ${afterStr}</li>`;
+    }).join('');
+    return `
+      <li class="edit-history-entry">
+        <header>
+          <strong>${esc(when)}</strong>
+          <span class="muted">v${esc(entry.documentVersion)}</span>
+        </header>
+        ${reason ? `<p class="edit-reason">${langText('reason', 'en')}: ${esc(reason)}</p>` : ''}
+        ${diffItems ? `<ul class="edit-diff">${diffItems}</ul>` : ''}
+      </li>`;
+  }
+
+  window.EInviteEditHistory = { mountBadge, mountHistoryView };
+})();;/**
+ * V2-UX-1 (ROADMAP-V2 §3.1) — Host-side management UI for sign-up sheets.
+ *
+ * Mounts on the dashboard as a per-invitation panel. The host can list,
+ * create, edit, and delete sign-up sheets, expand "View claims" to see
+ * every claim's name + email (host-only PII), and watch the loading /
+ * empty / error states. Bilingual EN + Khmer per ROADMAP-V2 §3 ground
+ * rule "every user-facing string must have an EN and KH variant".
+ *
+ * Reuses the design tokens (`tokens.css`, `modern-ui.css`) and the
+ * existing Phase 2a-1 API contract that already powers the guest-side
+ * `signup-sheets.js`. No new design system; no framework.
+ *
+ * API contract (Phase 2a-1, frozen):
+ *   GET    /api/invitations/{id}/signup-sheets
+ *          → 200 [{id, invitationId, title, type, slots[], deadlineTs, createdAt, archivedAt}]
+ *          (host mode includes slot[].claims[] = {id, guestId, name, email, quantity, createdAt})
+ *   POST   /api/invitations/{id}/signup-sheets        {title, type, slots[], deadlineTs?}
+ *          → 201 {sheet}
+ *   PUT    /api/invitations/{id}/signup-sheets/{sid}  {title?, type?, slots?, deadlineTs?}
+ *          → 200 {sheet}
+ *   DELETE /api/invitations/{id}/signup-sheets/{sid}
+ *          → 200 {deleted:true}
+ *
+ * Surface contract:
+ *   window.EInviteHostSignupSheets.mount(root, { invitationId, lang })
+ *     - root: HTMLElement where the panel renders
+ *     - invitationId: required; the active invitation
+ *     - lang: optional 'en' | 'km' | 'both' (default 'both' for the host)
+ */
+(function () {
+  'use strict';
+
+  /** Bilingual strings — every label, button, and message. */
+  const STRINGS = {
+    panelTitle: { en: 'Sign-up sheets', km: 'តារាងចុះឈ្មោះ' },
+    panelIntro: {
+      en: 'Create sign-up sheets so guests can claim items or time slots. Guests see the same sheets on the live invitation page.',
+      km: 'បង្កើតតារាងចុះឈ្មោះ ដូច្នេះភ្ញៀវអាចចុះឈ្មោះធាតុ ឬទីតាំងពេលវេលា។ ភ្ញៀវឃើញតារាងដដែលនៅលើទំព័រការអញ្ជើញផ្ទាល់។',
+    },
+    create: { en: 'Create sheet', km: 'បង្កើតតារាង' },
+    edit: { en: 'Edit', km: 'កែប្រែ' },
+    delete: { en: 'Delete', km: 'លុប' },
+    cancel: { en: 'Cancel', km: 'បោះបង់' },
+    save: { en: 'Save', km: 'រក្សាទុក' },
+    viewClaims: { en: 'View claims', km: 'មើលការចុះឈ្មោះ' },
+    hideClaims: { en: 'Hide claims', km: 'លាក់ការចុះឈ្មោះ' },
+    loading: { en: 'Loading sign-up sheets…', km: 'កំពុងផ្ទុកតារាងចុះឈ្មោះ…' },
+    empty: { en: 'No sign-up sheets yet. Create one to let guests claim items or slots.', km: 'មិនទាន់មានតារាងចុះឈ្មោះនៅឡើយ។ បង្កើតមួយដើម្បីឱ្យភ្ញៀវអាចចុះឈ្មោះធាតុ ឬទីតាំង។' },
+    error: { en: 'Could not load sign-up sheets. Please try again.', km: 'មិនអាចផ្ទុកតារាងចុះឈ្មោះបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    noInvitation: { en: 'Select an invitation first to manage its sign-up sheets.', km: 'សូមជ្រើសការអញ្ជើញជាមុនសិនដើម្បីគ្រប់គ្រងតារាងចុះឈ្មោះរបស់វា។' },
+    // ux-6 structured empty / loading / error states (separate title + message + action)
+    emptyTitle: { en: 'No sign-up sheets yet', km: 'មិនទាន់មានសន្លឹកចុះឈ្មោះទេ' },
+    emptyMessage: { en: 'Create a sheet to let guests claim items or slots.', km: 'បង្កើតសន្លឹកដើម្បីឱ្យភ្ញៀវចុះឈ្មោះធាតុ ឬឈរ។' },
+    emptyAction: { en: 'Create sheet', km: 'បង្កើតសន្លឹក' },
+    errorTitle: { en: "Couldn't load sign-up sheets", km: 'មិនអាចផ្ទុកសន្លឹកចុះឈ្មោះបានទេ' },
+    errorMessage: { en: 'Something went wrong while loading. Please try again.', km: 'មានបញ្ហាកើតឡើងពេលផ្ទុក។ សូមព្យាយាមម្ដងទៀត។' },
+    errorNetwork: { en: 'Network error. Please check your connection.', km: 'កំហុសបណ្ដាញ។ សូមពិនិត្យការតភ្ជាប់របស់អ្នក។' },
+    retry: { en: 'Try again', km: 'ព្យាយាមម្ដងទៀត' },
+    skeletonAriaLabel: { en: 'Loading sign-up sheets', km: 'កំពុងផ្ទុកសន្លឹកចុះឈ្មោះ' },
+    // Modal labels
+    modalTitleCreate: { en: 'Create sign-up sheet', km: 'បង្កើតតារាងចុះឈ្មោះ' },
+    modalTitleEdit: { en: 'Edit sign-up sheet', km: 'កែប្រែតារាងចុះឈ្មោះ' },
+    titleLabel: { en: 'Title', km: 'ចំណងជើង' },
+    titlePlaceholder: { en: 'e.g. Potluck dishes, Bring-a-drink, Setup helpers', km: 'ឧ. ម្ហូបឆ្អិនរួមគ្នា, នាំយកភេសជ្ជៈ, ជួយរៀបចំ' },
+    descriptionLabel: { en: 'Description (optional)', km: 'ការពិពណ៌នា (ស្រេចចិត្ត)' },
+    descriptionPlaceholder: { en: 'Shown to guests above the slot list', km: 'បង្ហាញដល់ភ្ញៀវពីលើបញ្ជីទីតាំង' },
+    typeLabel: { en: 'Sheet type', km: 'ប្រភេទតារាង' },
+    typeItems: { en: 'Items (guests claim one of N items)', km: 'ធាតុ (ភ្ញៀវចុះឈ្មោះធាតុមួយក្នុងចំណោម N ធាតុ)' },
+    typeSlots: { en: 'Slots (guests claim a time/role slot)', km: 'ទីតាំង (ភ្ញៀវចុះឈ្មោះទីតាំងពេលវេលា/តួនាទី)' },
+    slotsLabel: { en: 'Slots / items', km: 'ទីតាំង / ធាតុ' },
+    slotLabel: { en: 'Label', km: 'ស្លាក' },
+    slotLabelPlaceholder: { en: 'e.g. Appetizer, Drinks, Setup crew', km: 'ឧ. ប្រអប់អាហារ, ភេសជ្ជៈ, ក្រុមរៀបចំ' },
+    slotCapacity: { en: 'Capacity', km: 'សមត្ថភាព' },
+    slotCapacityHint: { en: '0 = unlimited', km: '0 = គ្មានដែនកំណត់' },
+    slotDeadline: { en: 'Slot deadline (optional)', km: 'កាលបរិច្ឆេទកំណត់ទីតាំង (ស្រេចចិត្ត)' },
+    addSlot: { en: '+ Add slot', km: '+ បន្ថែមទីតាំង' },
+    removeSlot: { en: 'Remove', km: 'យកចេញ' },
+    deadlineLabel: { en: 'Sheet-wide deadline (optional)', km: 'កាលបរិច្ឆេទកំណត់សរុប (ស្រេចចិត្ត)' },
+    sheetDeadlineHint: { en: 'Closes all slots after this time', km: 'បិទទីតាំងទាំងអស់បន្ទាប់ពីពេលនេះ' },
+    // Validation + result messages
+    errTitleRequired: { en: 'Please enter a title.', km: 'សូមបញ្ចូលចំណងជើង។' },
+    errSlotLabelRequired: { en: 'Every slot needs a label.', km: 'ទីតាំងនីមួយៗត្រូវការស្លាក។' },
+    errSave: { en: 'Could not save the sheet. Please try again.', km: 'មិនអាចរក្សាទុកតារាងបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    errDelete: { en: 'Could not delete the sheet. Please try again.', km: 'មិនអាចលុបតារាងបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    errClaims: { en: 'Could not load claims for this sheet.', km: 'មិនអាចផ្ទុកការចុះឈ្មោះសម្រាប់តារាងនេះបានទេ។' },
+    confirmDelete: { en: 'Delete this sign-up sheet? Existing claims will be hidden from guests.', km: 'លុបតារាងចុះឈ្មោះនេះ? ការចុះឈ្មោះដែលមានស្រាប់នឹងត្រូវលាក់ពីភ្ញៀវ។' },
+    saved: { en: 'Saved.', km: 'បានរក្សាទុក។' },
+    deleted: { en: 'Sheet deleted.', km: 'តារាងបានលុប។' },
+    // List-view meta
+    typeBadgeItems: { en: 'Items', km: 'ធាតុ' },
+    typeBadgeSlots: { en: 'Slots', km: 'ទីតាំង' },
+    slotsCount: { en: 'slots', km: 'ទីតាំង' },
+    claimsCount: { en: 'claims', km: 'ការចុះឈ្មោះ' },
+    deadlineLabel2: { en: 'Deadline', km: 'កាលបរិច្ឆេទកំណត់' },
+    noDeadline: { en: 'No deadline', km: 'មិនមានកាលបរិច្ឆេទកំណត់' },
+    noClaims: { en: 'No claims yet.', km: 'មិនទាន់មានការចុះឈ្មោះនៅឡើយ។' },
+    claimName: { en: 'Name', km: 'ឈ្មោះ' },
+    claimEmail: { en: 'Email', km: 'អ៊ីមែល' },
+    claimQty: { en: 'Qty', km: 'ចំនួន' },
+    claimWhen: { en: 'Claimed at', km: 'បានចុះឈ្មោះនៅ' },
+  };
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const detectLang = () => {
+    if (window.EInviteLang) return window.EInviteLang;
+    const htmlLang = String(document.documentElement.lang || '').toLowerCase();
+    if (htmlLang === 'km' || htmlLang.startsWith('km-')) return 'km';
+    return 'both';
+  };
+  const langText = (key, mode) => {
+    const en = STRINGS[key] ? STRINGS[key].en : key;
+    const km = STRINGS[key] ? STRINGS[key].km : key;
+    if (mode === 'km') return `<span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    if (mode === 'both') return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span>`;
+  };
+  const formatTs = (ts) => {
+    if (!ts) return '';
+    try {
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleString();
+    } catch { return ''; }
+  };
+  const toDatetimeLocalValue = (ts) => {
+    if (!ts) return '';
+    try {
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch { return ''; }
+  };
+  const fromDatetimeLocalValue = (val) => {
+    if (!val) return null;
+    const t = Date.parse(val);
+    return isNaN(t) ? null : t;
+  };
+
+  function mount(root, opts) {
+    if (!root) return;
+    const invitationId = opts && opts.invitationId ? String(opts.invitationId) : '';
+    const lang = (opts && opts.lang) || detectLang();
+
+    const section = document.createElement('section');
+    section.className = 'guest-feature host-signup-sheets event-section';
+    section.setAttribute('data-event-section', 'signup-sheets');
+    section.setAttribute('aria-label', STRINGS.panelTitle.en);
+    section.innerHTML = `
+      <h2>${langText('panelTitle', lang)}</h2>
+      <p class="muted">${langText('panelIntro', lang)}</p>
+      <div class="host-signup-sheets-toolbar">
+        <button type="button" class="primary host-signup-create" hidden>${langText('create', lang)}</button>
+      </div>
+      <div class="host-signup-sheets-state" role="status" aria-live="polite">${langText('loading', lang)}</div>
+    `;
+    root.appendChild(section);
+
+    const stateEl = section.querySelector('.host-signup-sheets-state');
+    const createBtn = section.querySelector('.host-signup-create');
+
+    if (!invitationId) {
+      stateEl.innerHTML = `<p class="muted">${langText('noInvitation', lang)}</p>`;
+      return;
+    }
+    createBtn.hidden = false;
+    createBtn.addEventListener('click', () => openSheetModal(null));
+
+    refresh();
+
+    function renderLoading() {
+      // 3 skeleton rows shaped like the real host-signup-sheet-row so the
+      // user sees the actual layout (title bar + badge + slot count +
+      // actions) instead of generic grey boxes.
+      stateEl.setAttribute('aria-busy', 'true');
+      const row = () => `
+        <div class="skeleton skeleton--row" aria-hidden="true">
+          <div class="skeleton skeleton--row-head">
+            <span class="skeleton skeleton--title"></span>
+            <span class="skeleton skeleton--pill"></span>
+            <span class="skeleton skeleton--text-short"></span>
+          </div>
+          <div class="skeleton skeleton--row-actions">
+            <span class="skeleton skeleton--button"></span>
+            <span class="skeleton skeleton--button"></span>
+            <span class="skeleton skeleton--button"></span>
+          </div>
+        </div>`;
+      stateEl.innerHTML = `<div class="host-signup-skeletons" role="status" aria-label="${esc(STRINGS.skeletonAriaLabel[lang === 'km' ? 'km' : 'en'])}">${row()}${row()}${row()}</div>`;
+    }
+
+    function renderEmpty() {
+      stateEl.removeAttribute('aria-busy');
+      stateEl.innerHTML = `
+        <div class="empty-state" role="status">
+          <div class="empty-state__icon" aria-hidden="true">📋</div>
+          <div class="empty-state__title">${langText('emptyTitle', lang)}</div>
+          <div class="empty-state__message">${langText('emptyMessage', lang)}</div>
+          <div class="empty-state__action">
+            <button type="button" class="primary" data-empty-create>${langText('emptyAction', lang)}</button>
+          </div>
+        </div>`;
+      const btn = stateEl.querySelector('[data-empty-create]');
+      if (btn) btn.addEventListener('click', () => openSheetModal(null));
+    }
+
+    function renderError(err) {
+      stateEl.removeAttribute('aria-busy');
+      const isNetwork = err && (err instanceof TypeError || /fetch|network/i.test(err.message || ''));
+      const messageKey = isNetwork ? 'errorNetwork' : 'errorMessage';
+      stateEl.innerHTML = `
+        <div class="error-state" role="alert">
+          <div class="error-state__icon" aria-hidden="true">⚠️</div>
+          <div class="error-state__title">${langText('errorTitle', lang)}</div>
+          <div class="error-state__message">${langText(messageKey, lang)}${err && err.message && !isNetwork ? ` <code>${esc(err.message)}</code>` : ''}</div>
+          <div class="error-state__retry">
+            <button type="button" data-retry>${langText('retry', lang)}</button>
+          </div>
+        </div>`;
+      const btn = stateEl.querySelector('[data-retry]');
+      if (btn) btn.addEventListener('click', () => refresh());
+    }
+
+    async function refresh() {
+      renderLoading();
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const sheets = await res.json();
+        render(sheets || []);
+      } catch (err) {
+        renderError(err);
+      }
+    }
+
+    function render(sheets) {
+      if (!sheets.length) {
+        renderEmpty();
+        return;
+      }
+      stateEl.removeAttribute('aria-busy');
+      stateEl.innerHTML = `<ul class="host-signup-sheet-list">${sheets.map(renderRow).join('')}</ul>`;
+      stateEl.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => onEdit(b.dataset.edit)));
+      stateEl.querySelectorAll('[data-delete]').forEach((b) => b.addEventListener('click', () => onDelete(b.dataset.delete)));
+      stateEl.querySelectorAll('[data-claims]').forEach((b) => b.addEventListener('click', () => onToggleClaims(b)));
+    }
+
+    function renderRow(sheet) {
+      const slots = Array.isArray(sheet.slots) ? sheet.slots : [];
+      const slotCount = slots.length;
+      const claimCount = slots.reduce((acc, s) => acc + (s && Array.isArray(s.claims) ? s.claims.length : 0), 0);
+      const typeBadge = sheet.type === 'slots' ? langText('typeBadgeSlots', lang) : langText('typeBadgeItems', lang);
+      const deadline = sheet.deadlineTs ? `<span class="muted">${langText('deadlineLabel2', lang)}: ${esc(formatTs(sheet.deadlineTs))}</span>` : `<span class="muted">${langText('noDeadline', lang)}</span>`;
+      return `
+        <li class="host-signup-sheet-row" data-sheet-id="${esc(sheet.id)}">
+          <div class="host-signup-sheet-row-head">
+            <strong class="host-signup-sheet-title">${esc(sheet.title)}</strong>
+            <span class="badge">${typeBadge}</span>
+            <span class="muted">${slotCount} ${langText('slotsCount', lang)} · ${claimCount} ${langText('claimsCount', lang)}</span>
+            ${deadline}
+          </div>
+          <div class="host-signup-sheet-row-actions">
+            <button type="button" data-edit="${esc(sheet.id)}">${langText('edit', lang)}</button>
+            <button type="button" data-delete="${esc(sheet.id)}" class="danger">${langText('delete', lang)}</button>
+            <button type="button" data-claims="${esc(sheet.id)}" aria-expanded="false">${langText('viewClaims', lang)}</button>
+          </div>
+          <div class="host-signup-claims-region" data-claims-region="${esc(sheet.id)}" hidden></div>
+        </li>`;
+    }
+
+    // --- Modal -------------------------------------------------------------
+
+    function openSheetModal(existing) {
+      const isEdit = !!existing;
+      const overlay = document.createElement('div');
+      overlay.className = 'delivery-dialog-overlay host-signup-modal-overlay';
+      const initialSlots = isEdit && Array.isArray(existing.slots) && existing.slots.length
+        ? existing.slots.map((s) => ({ id: s.id || '', label: s.label || '', capacity: String(s.capacity || 0), description: s.description || '' }))
+        : [{ id: '', label: '', capacity: '0', description: '' }];
+      overlay.innerHTML = `
+        <div class="delivery-dialog host-signup-modal" role="dialog" aria-modal="true" aria-label="${esc(STRINGS.modalTitleCreate.en)}">
+          <header><h2>${isEdit ? langText('modalTitleEdit', lang) : langText('modalTitleCreate', lang)}</h2><button type="button" data-close>&times;</button></header>
+          <form>
+            <label>${langText('titleLabel', lang)}<input type="text" name="title" required maxlength="200" placeholder="${esc(STRINGS.titlePlaceholder.en)}" value="${esc(existing ? existing.title || '' : '')}"></label>
+            <label>${langText('descriptionLabel', lang)}<textarea name="description" rows="2" maxlength="1000" placeholder="${esc(STRINGS.descriptionPlaceholder.en)}">${esc(existing && existing.description ? existing.description : '')}</textarea></label>
+            <fieldset>
+              <legend>${langText('typeLabel', lang)}</legend>
+              <label class="host-signup-type-radio"><input type="radio" name="type" value="items" ${(!existing || existing.type !== 'slots') ? 'checked' : ''}> ${langText('typeItems', lang)}</label>
+              <label class="host-signup-type-radio"><input type="radio" name="type" value="slots" ${(existing && existing.type === 'slots') ? 'checked' : ''}> ${langText('typeSlots', lang)}</label>
+            </fieldset>
+            <fieldset>
+              <legend>${langText('slotsLabel', lang)}</legend>
+              <ol class="host-signup-slot-rows"></ol>
+              <button type="button" class="host-signup-add-slot">${langText('addSlot', lang)}</button>
+            </fieldset>
+            <label>${langText('deadlineLabel', lang)}<input type="datetime-local" name="deadlineTs" value="${esc(toDatetimeLocalValue(existing ? existing.deadlineTs : null))}"></label>
+            <p class="hint">${langText('sheetDeadlineHint', lang)}</p>
+            <p class="host-signup-modal-status" role="status" aria-live="polite"></p>
+            <footer>
+              <button type="button" data-close>${langText('cancel', lang)}</button>
+              <button type="submit" class="primary">${langText('save', lang)}</button>
+            </footer>
+          </form>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      const slotRows = overlay.querySelector('.host-signup-slot-rows');
+      const addSlotBtn = overlay.querySelector('.host-signup-add-slot');
+      const statusEl = overlay.querySelector('.host-signup-modal-status');
+      const form = overlay.querySelector('form');
+
+      function renderSlotRow(slot) {
+        const li = document.createElement('li');
+        li.className = 'host-signup-slot-row';
+        li.innerHTML = `
+          <label>${langText('slotLabel', lang)}<input type="text" name="slotLabel" required maxlength="200" placeholder="${esc(STRINGS.slotLabelPlaceholder.en)}" value="${esc(slot.label)}"></label>
+          <label>${langText('slotCapacity', lang)}<input type="number" name="slotCapacity" min="0" max="100000" value="${esc(slot.capacity || '0')}"><small class="hint">${langText('slotCapacityHint', lang)}</small></label>
+          <button type="button" class="host-signup-remove-slot danger" title="${esc(STRINGS.removeSlot.en)}">×</button>
+        `;
+        li.querySelector('.host-signup-remove-slot').addEventListener('click', () => {
+          if (slotRows.children.length > 1) li.remove();
+          else { li.querySelector('input[name=slotLabel]').value = ''; li.querySelector('input[name=slotCapacity]').value = '0'; }
+        });
+        return li;
+      }
+      initialSlots.forEach((s) => slotRows.appendChild(renderSlotRow(s)));
+      addSlotBtn.addEventListener('click', () => slotRows.appendChild(renderSlotRow({ id: '', label: '', capacity: '0' })));
+
+      function closeOverlay() { overlay.remove(); }
+      overlay.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeOverlay));
+      overlay.querySelector('.host-signup-modal').addEventListener('click', (ev) => ev.stopPropagation());
+      overlay.addEventListener('click', closeOverlay);
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const fd = new FormData(form);
+        const title = String(fd.get('title') || '').trim();
+        if (!title) { statusEl.innerHTML = `<span class="error">${langText('errTitleRequired', lang)}</span>`; return; }
+        const description = String(fd.get('description') || '').trim();
+        const sheetType = String(fd.get('type') || 'items');
+        const slots = Array.from(slotRows.children).map((li) => ({
+          label: String(li.querySelector('input[name=slotLabel]').value || '').trim(),
+          capacity: parseInt(li.querySelector('input[name=slotCapacity]').value || '0', 10) || 0,
+          description: '',
+        }));
+        if (slots.some((s) => !s.label)) { statusEl.innerHTML = `<span class="error">${langText('errSlotLabelRequired', lang)}</span>`; return; }
+        const deadlineTs = fromDatetimeLocalValue(String(fd.get('deadlineTs') || ''));
+        const payload = { title, type: sheetType, slots, deadlineTs };
+        const submit = form.querySelector('button[type=submit]');
+        submit.disabled = true;
+        try {
+          const url = isEdit
+            ? `/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets/${encodeURIComponent(existing.id)}`
+            : `/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`;
+          const res = await fetch(url, {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
+          closeOverlay();
+          await refresh();
+          // V2-UX-7 (§3.7): success toast for create/edit mutation.
+          if (window.EInviteToast) {
+            EInviteToast.show({
+              type: 'success',
+              message_en: STRINGS.saved.en,
+              message_km: STRINGS.saved.km,
+              duration: 4000
+            });
+          }
+        } catch (err) {
+          statusEl.innerHTML = `<span class="error">${langText('errSave', lang)} <code>${esc(err.message || '')}</code></span>`;
+          submit.disabled = false;
+          // V2-UX-7 (§3.7): also surface the failure as a toast so the host
+          // gets feedback even after closing the modal (the inline status is
+          // only visible while the modal is open).
+          if (window.EInviteToast) {
+            EInviteToast.show({
+              type: 'error',
+              message_en: STRINGS.errSave.en + (err && err.message ? ' (' + err.message + ')' : ''),
+              message_km: STRINGS.errSave.km + (err && err.message ? ' (' + err.message + ')' : ''),
+              duration: 6000
+            });
+          }
+        }
+      });
+    }
+
+    // --- Edit / Delete / Claims ------------------------------------------
+
+    async function onEdit(sheetId) {
+      // Re-fetch the list to get the latest sheet (claims included in host mode).
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        const sheets = await res.json();
+        const sheet = (sheets || []).find((s) => s.id === sheetId);
+        if (!sheet) return refresh();
+        openSheetModal(sheet);
+      } catch {
+        openSheetModal({ id: sheetId });
+      }
+    }
+
+    async function onDelete(sheetId) {
+      if (!confirm(STRINGS.confirmDelete.en + '\n' + STRINGS.confirmDelete.km)) return;
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets/${encodeURIComponent(sheetId)}`, {
+          method: 'DELETE', headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
+        await refresh();
+        // V2-UX-7 (§3.7): success toast for delete mutation.
+        if (window.EInviteToast) {
+          EInviteToast.show({
+            type: 'success',
+            message_en: STRINGS.deleted.en,
+            message_km: STRINGS.deleted.km,
+            duration: 4000
+          });
+        }
+      } catch (err) {
+        // V2-UX-7 (§3.7): replace the previous alert() with a bilingual
+        // error toast; auto-dismiss after 6s (longer than success).
+        if (window.EInviteToast) {
+          EInviteToast.show({
+            type: 'error',
+            message_en: err.message || STRINGS.errDelete.en,
+            message_km: err.message || STRINGS.errDelete.km,
+            duration: 6000
+          });
+        }
+      }
+    }
+
+    async function onToggleClaims(btn) {
+      const sheetId = btn.getAttribute('data-claims');
+      const region = stateEl.querySelector(`[data-claims-region="${cssEsc(sheetId)}"]`);
+      if (!region) return;
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        region.hidden = true;
+        region.innerHTML = '';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = STRINGS.viewClaims.en;
+        return;
+      }
+      btn.setAttribute('aria-expanded', 'true');
+      btn.textContent = STRINGS.hideClaims.en;
+      region.hidden = false;
+      region.innerHTML = `<p class="muted">${langText('loading', lang)}</p>`;
+      // Claims are already returned as part of the host-mode list response
+      // (see _signup_sheet_view include_claims=True). Re-fetch to be safe.
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        const sheets = await res.json();
+        const sheet = (sheets || []).find((s) => s.id === sheetId);
+        renderClaims(region, sheet || { slots: [] });
+      } catch (err) {
+        region.innerHTML = `<p class="error">${langText('errClaims', lang)}</p>`;
+      }
+    }
+
+    function renderClaims(region, sheet) {
+      const slots = Array.isArray(sheet.slots) ? sheet.slots : [];
+      if (!slots.length || !slots.some((s) => (s.claims || []).length)) {
+        region.innerHTML = `<p class="muted">${langText('noClaims', lang)}</p>`;
+        return;
+      }
+      const blocks = slots.map((slot) => {
+        const claims = Array.isArray(slot.claims) ? slot.claims : [];
+        if (!claims.length) return '';
+        const rows = claims.map((c) => `
+          <tr>
+            <td>${esc(c.name || '')}</td>
+            <td>${esc(c.email || '')}</td>
+            <td>${esc(c.quantity || 1)}</td>
+            <td>${esc(formatTs(c.createdAt))}</td>
+          </tr>`).join('');
+        return `
+          <div class="host-signup-claims-slot">
+            <strong>${esc(slot.label || '')}</strong>
+            <table class="host-signup-claims-table">
+              <thead><tr>
+                <th>${langText('claimName', lang)}</th>
+                <th>${langText('claimEmail', lang)}</th>
+                <th>${langText('claimQty', lang)}</th>
+                <th>${langText('claimWhen', lang)}</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`;
+      }).join('');
+      region.innerHTML = blocks || `<p class="muted">${langText('noClaims', lang)}</p>`;
+    }
+
+    function cssEsc(id) {
+      // Escape for querySelector — only [a-zA-Z0-9_-] are safe unquoted.
+      return String(id || '').replace(/[^a-zA-Z0-9_-]/g, (c) => `\\${c}`);
+    }
+  }
+
+  window.EInviteHostSignupSheets = { mount };
+})();;/**
+ * V2-UX-2 (ROADMAP-V2 §3.2) — Host-side management UI for polls.
+ *
+ * Mounts on the dashboard as a per-invitation panel placed immediately
+ * after the §3.1 sign-up-sheets panel (see dashboard.html). The host can
+ * list, create, edit, delete, and "close now" polls, and expand a per-poll
+ * "View results" region that draws a CSS bar chart plus the host-only voter
+ * email list. Bilingual EN + Khmer per ROADMAP-V2 §3 ground rule
+ * "every user-facing string must have an EN and KH variant".
+ *
+ * Reuses the design tokens (`tokens.css`, `modern-ui.css`) and the existing
+ * Phase 2a-1 API contract that already powers the guest-side `polls.js`.
+ * No new design system; no framework. Mirrors `host-signup-sheets.js` (§3.1)
+ * for IIFE shape, STRINGS pattern, modal pattern, and empty/loading/error
+ * states so the two panels feel like siblings.
+ *
+ * API contract (Phase 2a-1, frozen):
+ *   GET    /api/invitations/{id}/polls
+ *          → 200 [{id, invitationId, question, options[{id,label,description,votes}],
+ *                  visibility, multiSelect, deadlineTs, createdAt, archivedAt,
+ *                  closed, totalVotes, votes[{id,optionId,guestId,name,email,createdAt}]}]
+ *          (host mode includes options[].votes counts + votes[] voter PII)
+ *   POST   /api/invitations/{id}/polls          {question, options[{label,description?,id?}],
+ *                                                visibility, multiSelect, deadlineTs?}
+ *          → 201 {poll}
+ *   PUT    /api/invitations/{id}/polls/{pid}   {question?, options?, visibility?,
+ *                                                multiSelect?, deadlineTs?}
+ *          → 200 {poll}
+ *   DELETE /api/invitations/{id}/polls/{pid}   → 200 {deleted:true}
+ *   GET    /api/invitations/{id}/polls/{pid}/results → 200 {poll with show_results=true}
+ *
+ * "Close now" sets `deadlineTs = now - 1000` (just in the past) via PUT so
+ * the server's `closed = deadline_ts < now` check flips true on the next
+ * list refresh — the existing endpoint has no dedicated "close" verb.
+ *
+ * Surface contract:
+ *   window.EInviteHostPolls.mount(root, { invitationId, lang })
+ *     - root: HTMLElement where the panel renders
+ *     - invitationId: required; the active invitation
+ *     - lang: optional 'en' | 'km' | 'both' (default 'both' for the host)
+ */
+(function () {
+  'use strict';
+
+  /** Bilingual strings — every label, button, and message. */
+  const STRINGS = {
+    panelTitle: { en: 'Polls', km: 'ការស្ទង់មតិ' },
+    panelIntro: {
+      en: 'Create polls so guests can vote. Guests see the same polls on the live invitation page.',
+      km: 'បង្កើតការស្ទង់មតិ ដូច្នេះភ្ញៀវអាចបោះឆ្នោត។ ភ្ញៀវឃើញការស្ទង់មតិដដែលនៅលើទំព័រការអញ្ជើញផ្ទាល់។',
+    },
+    create: { en: 'Create poll', km: 'បង្កើតការស្ទង់មតិ' },
+    edit: { en: 'Edit', km: 'កែប្រែ' },
+    delete: { en: 'Delete', km: 'លុប' },
+    cancel: { en: 'Cancel', km: 'បោះបង់' },
+    save: { en: 'Save', km: 'រក្សាទុក' },
+    closeNow: { en: 'Close now', km: 'បិទឥឡូវនេះ' },
+    viewResults: { en: 'View results', km: 'មើលលទ្ធផល' },
+    hideResults: { en: 'Hide results', km: 'លាក់លទ្ធផល' },
+    loading: { en: 'Loading polls…', km: 'កំពុងផ្ទុកការស្ទង់មតិ…' },
+    empty: { en: 'No polls yet. Create one to let guests vote.', km: 'មិនទាន់មានការស្ទង់មតិនៅឡើយ។ បង្កើតមួយដើម្បីឱ្យភ្ញៀវអាចបោះឆ្នោត។' },
+    error: { en: 'Could not load polls. Please try again.', km: 'មិនអាចផ្ទុកការស្ទង់មតិបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    noInvitation: { en: 'Select an invitation first to manage its polls.', km: 'សូមជ្រើសការអញ្ជើញជាមុនសិនដើម្បីគ្រប់គ្រងការស្ទង់មតិរបស់វា។' },
+    // ux-6 structured empty / loading / error states (separate title + message + action)
+    emptyTitle: { en: 'No polls yet', km: 'មិនទាន់មានការស្ទង់មតិទេ' },
+    emptyMessage: { en: 'Create a poll to gather guest preferences.', km: 'បង្កើតការស្ទង់មតិដើម្បីប្រមូលចំណូលចិត្តភ្ញៀវ។' },
+    emptyAction: { en: 'Create poll', km: 'បង្កើតការស្ទង់មតិ' },
+    errorTitle: { en: "Couldn't load polls", km: 'មិនអាចផ្ទុកការស្ទង់មតិបានទេ' },
+    errorMessage: { en: 'Something went wrong while loading. Please try again.', km: 'មានបញ្ហាកើតឡើងពេលផ្ទុក។ សូមព្យាយាមម្ដងទៀត។' },
+    errorNetwork: { en: 'Network error. Please check your connection.', km: 'កំហុសបណ្ដាញ។ សូមពិនិត្យការតភ្ជាប់របស់អ្នក។' },
+    retry: { en: 'Try again', km: 'ព្យាយាមម្ដងទៀត' },
+    skeletonAriaLabel: { en: 'Loading polls', km: 'កំពុងផ្ទុកការស្ទង់មតិ' },
+    // Modal labels
+    modalTitleCreate: { en: 'Create poll', km: 'បង្កើតការស្ទង់មតិ' },
+    modalTitleEdit: { en: 'Edit poll', km: 'កែប្រែការស្ទង់មតិ' },
+    questionLabel: { en: 'Question', km: 'សំណួរ' },
+    questionPlaceholder: { en: 'e.g. Which date works best? Buffet or plated dinner?', km: 'ឧ. តើថ្ងៃណាសាកសម? បូហ្វេ ឬអាហារចាក់កែង?' },
+    optionsLabel: { en: 'Options (2–20)', km: 'ជម្រើស (២–២០)' },
+    optionLabel: { en: 'Option', km: 'ជម្រើស' },
+    optionPlaceholder: { en: 'e.g. Saturday, Sunday, Either is fine', km: 'ឧ. ថ្ងៃសៅរ៍, ថ្ងៃអាទិត្យ, ថ្ងៃណាក៏បាន' },
+    addOption: { en: '+ Add option', km: '+ បន្ថែមជម្រើស' },
+    removeOption: { en: 'Remove', km: 'យកចេញ' },
+    settingsLabel: { en: 'Settings', km: 'ការកំណត់' },
+    multiSelectLabel: { en: 'Allow multiple selections', km: 'អនុញ្ញាតឱ្យជ្រើសច្រើន' },
+    multiSelectHint: { en: 'Guests can pick more than one option', km: 'ភ្ញៀវអាចជ្រើសច្រើនជាងមួយជម្រើស' },
+    visibilityLabel: { en: 'Results visibility', km: 'ការមើលឃើញលទ្ធផល' },
+    visibilityLive: { en: 'Live — show counts as votes come in', km: 'ផ្ទាល់ — បង្ហាញចំនួនពេលភ្ញៀវបោះឆ្នោត' },
+    visibilityHidden: { en: 'Hidden — reveal only after the poll closes', km: 'លាក់ — បង្ហាញតែពេលការស្ទង់មតិបិទ' },
+    deadlineLabel: { en: 'Deadline (optional)', km: 'កាលបរិច្ឆេទកំណត់ (ស្រេចចិត្ត)' },
+    deadlineHint: { en: 'Closes the poll after this time', km: 'បិទការស្ទង់មតិបន្ទាប់ពីពេលនេះ' },
+    // Validation + result messages
+    errQuestionRequired: { en: 'Please enter a question.', km: 'សូមបញ្ចូលសំណួរ។' },
+    errOptionsRange: { en: 'A poll needs 2 to 20 options.', km: 'ការស្ទង់មតិត្រូវការជម្រើស ២ ដល់ ២០។' },
+    errOptionLabelRequired: { en: 'Every option needs a label.', km: 'ជម្រើសនីមួយៗត្រូវការស្លាក។' },
+    errSave: { en: 'Could not save the poll. Please try again.', km: 'មិនអាចរក្សាទុកការស្ទង់មតិបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    errDelete: { en: 'Could not delete the poll. Please try again.', km: 'មិនអាចលុបការស្ទង់មតិបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    errClose: { en: 'Could not close the poll. Please try again.', km: 'មិនអាចបិទការស្ទង់មតិបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
+    errResults: { en: 'Could not load results for this poll.', km: 'មិនអាចផ្ទុកលទ្ធផលសម្រាប់ការស្ទង់មតិនេះបានទេ។' },
+    confirmDelete: { en: 'Delete this poll? Existing votes will be hidden from guests.', km: 'លុបការស្ទង់មតិនេះ? ការបោះឆ្នោតដែលមានស្រាប់នឹងត្រូវលាក់ពីភ្ញៀវ។' },
+    confirmClose: { en: 'Close this poll now? Guests will no longer be able to vote.', km: 'បិទការស្ទង់មតិនេះឥឡូវនេះ? ភ្ញៀវនឹងមិនអាចបោះឆ្នោតបានទៀតទេ។' },
+    // V2-UX-7 (§3.7): success toasts.
+    saved: { en: 'Poll saved.', km: 'បានរក្សាទុកការស្ទង់មតិ។' },
+    deleted: { en: 'Poll deleted.', km: 'ការស្ទង់មតិបានលុប។' },
+    closed: { en: 'Poll closed.', km: 'ការស្ទង់មតិបានបិទ។' },
+    // List-view meta
+    statusOpen: { en: 'Open', km: 'បើក' },
+    statusClosed: { en: 'Closed', km: 'បិតហើយ' },
+    visibilityBadgeLive: { en: 'Live', km: 'ផ្ទាល់' },
+    visibilityBadgeHidden: { en: 'Hidden', km: 'លាក់' },
+    multiBadge: { en: 'Multi', km: 'ច្រើន' },
+    singleBadge: { en: 'Single', km: 'មួយ' },
+    votesCount: { en: 'votes', km: 'សន្លឹកឆ្នោត' },
+    optionsCount: { en: 'options', km: 'ជម្រើស' },
+    deadlineLabel2: { en: 'Deadline', km: 'កាលបរិច្ឆេទកំណត់' },
+    noDeadline: { en: 'No deadline', km: 'មិនមានកាលបរិច្ឆេទកំណត់' },
+    closedHint: { en: 'Closed — voting disabled', km: 'បិទ — បិទការបោះឆ្នោត' },
+    noVotes: { en: 'No votes yet.', km: 'មិនទាន់មានការបោះឆ្នោតនៅឡើយ។' },
+    voterName: { en: 'Voter', km: 'អ្នកបោះឆ្នោត' },
+    voterEmail: { en: 'Email', km: 'អ៊ីមែល' },
+    voterChoice: { en: 'Voted for', km: 'បានបោះឆ្នោតឱ្យ' },
+    voterWhen: { en: 'Voted at', km: 'បោះឆ្នោតនៅ' },
+    voterAnonymous: { en: 'Anonymous', km: 'អនាមិក' },
+    totalVotesLabel: { en: 'Total votes', km: 'សន្លឹកឆ្នោតសរុប' },
+  };
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const detectLang = () => {
+    if (window.EInviteLang) return window.EInviteLang;
+    const htmlLang = String(document.documentElement.lang || '').toLowerCase();
+    if (htmlLang === 'km' || htmlLang.startsWith('km-')) return 'km';
+    return 'both';
+  };
+  const langText = (key, mode) => {
+    const en = STRINGS[key] ? STRINGS[key].en : key;
+    const km = STRINGS[key] ? STRINGS[key].km : key;
+    if (mode === 'km') return `<span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    if (mode === 'both') return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span>`;
+  };
+  const formatTs = (ts) => {
+    if (!ts) return '';
+    try {
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleString();
+    } catch { return ''; }
+  };
+  const toDatetimeLocalValue = (ts) => {
+    if (!ts) return '';
+    try {
+      const d = new Date(Number(ts));
+      if (isNaN(d.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch { return ''; }
+  };
+  const fromDatetimeLocalValue = (val) => {
+    if (!val) return null;
+    const t = Date.parse(val);
+    return isNaN(t) ? null : t;
+  };
+  const cssEsc = (id) => String(id || '').replace(/[^a-zA-Z0-9_-]/g, (c) => `\\${c}`);
+
+  function mount(root, opts) {
+    if (!root) return;
+    const invitationId = opts && opts.invitationId ? String(opts.invitationId) : '';
+    const lang = (opts && opts.lang) || detectLang();
+
+    const section = document.createElement('section');
+    section.className = 'guest-feature host-polls event-section';
+    section.setAttribute('data-event-section', 'polls');
+    section.setAttribute('aria-label', STRINGS.panelTitle.en);
+    section.innerHTML = `
+      <h2>${langText('panelTitle', lang)}</h2>
+      <p class="muted">${langText('panelIntro', lang)}</p>
+      <div class="host-polls-toolbar">
+        <button type="button" class="primary host-polls-create" hidden>${langText('create', lang)}</button>
+      </div>
+      <div class="host-polls-state" role="status" aria-live="polite">${langText('loading', lang)}</div>
+    `;
+    root.appendChild(section);
+
+    const stateEl = section.querySelector('.host-polls-state');
+    const createBtn = section.querySelector('.host-polls-create');
+
+    if (!invitationId) {
+      stateEl.innerHTML = `<p class="muted">${langText('noInvitation', lang)}</p>`;
+      return;
+    }
+    createBtn.hidden = false;
+    createBtn.addEventListener('click', () => openPollModal(null));
+
+    refresh();
+
+    function renderLoading() {
+      // 3 skeleton rows shaped like the real host-poll-row so the user
+      // sees the actual layout (question + status badges + meta +
+      // actions) instead of generic grey boxes.
+      stateEl.setAttribute('aria-busy', 'true');
+      const row = () => `
+        <div class="skeleton skeleton--row" aria-hidden="true">
+          <div class="skeleton skeleton--row-head">
+            <span class="skeleton skeleton--title"></span>
+            <span class="skeleton skeleton--pill"></span>
+            <span class="skeleton skeleton--pill"></span>
+            <span class="skeleton skeleton--text-short"></span>
+          </div>
+          <div class="skeleton skeleton--row-actions">
+            <span class="skeleton skeleton--button"></span>
+            <span class="skeleton skeleton--button"></span>
+            <span class="skeleton skeleton--button"></span>
+            <span class="skeleton skeleton--button"></span>
+          </div>
+        </div>`;
+      stateEl.innerHTML = `<div class="host-polls-skeletons" role="status" aria-label="${esc(STRINGS.skeletonAriaLabel[lang === 'km' ? 'km' : 'en'])}">${row()}${row()}${row()}</div>`;
+    }
+
+    function renderEmpty() {
+      stateEl.removeAttribute('aria-busy');
+      stateEl.innerHTML = `
+        <div class="empty-state" role="status">
+          <div class="empty-state__icon" aria-hidden="true">📊</div>
+          <div class="empty-state__title">${langText('emptyTitle', lang)}</div>
+          <div class="empty-state__message">${langText('emptyMessage', lang)}</div>
+          <div class="empty-state__action">
+            <button type="button" class="primary" data-empty-create>${langText('emptyAction', lang)}</button>
+          </div>
+        </div>`;
+      const btn = stateEl.querySelector('[data-empty-create]');
+      if (btn) btn.addEventListener('click', () => openPollModal(null));
+    }
+
+    function renderError(err) {
+      stateEl.removeAttribute('aria-busy');
+      const isNetwork = err && (err instanceof TypeError || /fetch|network/i.test(err.message || ''));
+      const messageKey = isNetwork ? 'errorNetwork' : 'errorMessage';
+      stateEl.innerHTML = `
+        <div class="error-state" role="alert">
+          <div class="error-state__icon" aria-hidden="true">⚠️</div>
+          <div class="error-state__title">${langText('errorTitle', lang)}</div>
+          <div class="error-state__message">${langText(messageKey, lang)}${err && err.message && !isNetwork ? ` <code>${esc(err.message)}</code>` : ''}</div>
+          <div class="error-state__retry">
+            <button type="button" data-retry>${langText('retry', lang)}</button>
+          </div>
+        </div>`;
+      const btn = stateEl.querySelector('[data-retry]');
+      if (btn) btn.addEventListener('click', () => refresh());
+    }
+
+    async function refresh() {
+      renderLoading();
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const polls = await res.json();
+        render(polls || []);
+      } catch (err) {
+        renderError(err);
+      }
+    }
+
+    function render(polls) {
+      if (!polls.length) {
+        renderEmpty();
+        return;
+      }
+      stateEl.removeAttribute('aria-busy');
+      stateEl.innerHTML = `<ul class="host-poll-list">${polls.map(renderRow).join('')}</ul>`;
+      stateEl.querySelectorAll('[data-edit]').forEach((b) => b.addEventListener('click', () => onEdit(b.dataset.edit)));
+      stateEl.querySelectorAll('[data-delete]').forEach((b) => b.addEventListener('click', () => onDelete(b.dataset.delete)));
+      stateEl.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => onCloseNow(b.dataset.close)));
+      stateEl.querySelectorAll('[data-results]').forEach((b) => b.addEventListener('click', () => onToggleResults(b)));
+    }
+
+    function renderRow(poll) {
+      const options = Array.isArray(poll.options) ? poll.options : [];
+      const optionCount = options.length;
+      const totalVotes = typeof poll.totalVotes === 'number' ? poll.totalVotes
+        : options.reduce((acc, o) => acc + (typeof o.votes === 'number' ? o.votes : 0), 0);
+      const closed = !!poll.closed;
+      const statusBadge = closed
+        ? `<span class="badge badge-closed">${langText('statusClosed', lang)}</span>`
+        : `<span class="badge badge-open">${langText('statusOpen', lang)}</span>`;
+      const visibilityBadge = poll.visibility === 'live'
+        ? `<span class="badge badge-live">${langText('visibilityBadgeLive', lang)}</span>`
+        : `<span class="badge badge-hidden">${langText('visibilityBadgeHidden', lang)}</span>`;
+      const selectBadge = poll.multiSelect
+        ? `<span class="badge badge-multi">${langText('multiBadge', lang)}</span>`
+        : `<span class="badge badge-single">${langText('singleBadge', lang)}</span>`;
+      const deadline = poll.deadlineTs
+        ? `<span class="muted">${langText('deadlineLabel2', lang)}: ${esc(formatTs(poll.deadlineTs))}</span>`
+        : `<span class="muted">${langText('noDeadline', lang)}</span>`;
+      const closeBtn = closed
+        ? '' // Already closed — no "Close now" button.
+        : `<button type="button" data-close="${esc(poll.id)}" class="warning">${langText('closeNow', lang)}</button>`;
+      return `
+        <li class="host-poll-row" data-poll-id="${esc(poll.id)}">
+          <div class="host-poll-row-head">
+            <strong class="host-poll-question">${esc(poll.question)}</strong>
+            ${statusBadge}
+            ${visibilityBadge}
+            ${selectBadge}
+            <span class="muted">${optionCount} ${langText('optionsCount', lang)} · ${totalVotes} ${langText('votesCount', lang)}</span>
+            ${deadline}
+          </div>
+          <div class="host-poll-row-actions">
+            <button type="button" data-edit="${esc(poll.id)}">${langText('edit', lang)}</button>
+            <button type="button" data-delete="${esc(poll.id)}" class="danger">${langText('delete', lang)}</button>
+            ${closeBtn}
+            <button type="button" data-results="${esc(poll.id)}" aria-expanded="false">${langText('viewResults', lang)}</button>
+          </div>
+          <div class="host-poll-results-region" data-results-region="${esc(poll.id)}" hidden></div>
+        </li>`;
+    }
+
+    // --- Modal -------------------------------------------------------------
+
+    function openPollModal(existing) {
+      const isEdit = !!existing;
+      const overlay = document.createElement('div');
+      overlay.className = 'delivery-dialog-overlay host-polls-modal-overlay';
+      const initialOptions = isEdit && Array.isArray(existing.options) && existing.options.length
+        ? existing.options.map((o) => ({ id: o.id || '', label: o.label || '', description: o.description || '' }))
+        : [{ id: '', label: '', description: '' }, { id: '', label: '', description: '' }];
+      const visibility = existing ? (existing.visibility || 'hidden_until_close') : 'hidden_until_close';
+      const multiSelect = existing ? !!existing.multiSelect : false;
+      overlay.innerHTML = `
+        <div class="delivery-dialog host-polls-modal" role="dialog" aria-modal="true" aria-label="${esc(STRINGS.modalTitleCreate.en)}">
+          <header><h2>${isEdit ? langText('modalTitleEdit', lang) : langText('modalTitleCreate', lang)}</h2><button type="button" data-close>&times;</button></header>
+          <form>
+            <label>${langText('questionLabel', lang)}<input type="text" name="question" required maxlength="500" placeholder="${esc(STRINGS.questionPlaceholder.en)}" value="${esc(existing ? existing.question || '' : '')}"></label>
+            <fieldset>
+              <legend>${langText('optionsLabel', lang)}</legend>
+              <ol class="host-polls-option-rows"></ol>
+              <button type="button" class="host-polls-add-option">${langText('addOption', lang)}</button>
+            </fieldset>
+            <fieldset>
+              <legend>${langText('settingsLabel', lang)}</legend>
+              <label class="host-polls-multiselect">
+                <input type="checkbox" name="multiSelect" ${multiSelect ? 'checked' : ''}>
+                <span>${langText('multiSelectLabel', lang)}</span>
+                <small class="hint">${langText('multiSelectHint', lang)}</small>
+              </label>
+              <div class="host-polls-visibility" role="radiogroup" aria-label="${esc(STRINGS.visibilityLabel.en)}">
+                <label class="host-polls-visibility-radio">
+                  <input type="radio" name="visibility" value="live" ${visibility === 'live' ? 'checked' : ''}>
+                  ${langText('visibilityLive', lang)}
+                </label>
+                <label class="host-polls-visibility-radio">
+                  <input type="radio" name="visibility" value="hidden_until_close" ${visibility !== 'live' ? 'checked' : ''}>
+                  ${langText('visibilityHidden', lang)}
+                </label>
+              </div>
+            </fieldset>
+            <label>${langText('deadlineLabel', lang)}<input type="datetime-local" name="deadlineTs" value="${esc(toDatetimeLocalValue(existing ? existing.deadlineTs : null))}"></label>
+            <p class="hint">${langText('deadlineHint', lang)}</p>
+            <p class="host-polls-modal-status" role="status" aria-live="polite"></p>
+            <footer>
+              <button type="button" data-close>${langText('cancel', lang)}</button>
+              <button type="submit" class="primary">${langText('save', lang)}</button>
+            </footer>
+          </form>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      const optionRows = overlay.querySelector('.host-polls-option-rows');
+      const addOptionBtn = overlay.querySelector('.host-polls-add-option');
+      const statusEl = overlay.querySelector('.host-polls-modal-status');
+      const form = overlay.querySelector('form');
+
+      function renderOptionRow(opt) {
+        const li = document.createElement('li');
+        li.className = 'host-polls-option-row';
+        li.innerHTML = `
+          <input type="text" name="optionLabel" required maxlength="200" placeholder="${esc(STRINGS.optionPlaceholder.en)}" value="${esc(opt.label)}">
+          <button type="button" class="host-polls-remove-option danger" title="${esc(STRINGS.removeOption.en)}">×</button>
+        `;
+        li.querySelector('.host-polls-remove-option').addEventListener('click', () => {
+          // Keep at least 2 option rows so the 2–20 constraint is always visible.
+          if (optionRows.children.length > 2) li.remove();
+          else { li.querySelector('input[name=optionLabel]').value = ''; }
+        });
+        return li;
+      }
+      initialOptions.forEach((o) => optionRows.appendChild(renderOptionRow(o)));
+      addOptionBtn.addEventListener('click', () => {
+        if (optionRows.children.length >= 20) {
+          statusEl.innerHTML = `<span class="error">${langText('errOptionsRange', lang)}</span>`;
+          return;
+        }
+        optionRows.appendChild(renderOptionRow({ id: '', label: '', description: '' }));
+      });
+
+      function closeOverlay() { overlay.remove(); }
+      overlay.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeOverlay));
+      overlay.querySelector('.host-polls-modal').addEventListener('click', (ev) => ev.stopPropagation());
+      overlay.addEventListener('click', closeOverlay);
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const fd = new FormData(form);
+        const question = String(fd.get('question') || '').trim();
+        if (!question) { statusEl.innerHTML = `<span class="error">${langText('errQuestionRequired', lang)}</span>`; return; }
+        const existingMap = {};
+        if (isEdit && Array.isArray(existing.options)) {
+          existing.options.forEach((o) => { existingMap[String(o.label || '').toLowerCase()] = o.id || ''; });
+        }
+        const rawLabels = Array.from(optionRows.children).map((li) => String(li.querySelector('input[name=optionLabel]').value || '').trim());
+        const deduped = rawLabels.filter((l, i, arr) => l && arr.indexOf(l) === i);
+        if (deduped.length < 2 || deduped.length > 20) {
+          statusEl.innerHTML = `<span class="error">${langText('errOptionsRange', lang)}</span>`;
+          return;
+        }
+        if (rawLabels.some((l) => !l)) {
+          statusEl.innerHTML = `<span class="error">${langText('errOptionLabelRequired', lang)}</span>`;
+          return;
+        }
+        const options = deduped.map((label) => ({
+          id: existingMap[label.toLowerCase()] || '',
+          label,
+          description: '',
+        }));
+        const visibility = String(fd.get('visibility') || 'hidden_until_close');
+        const multiSelect = !!fd.get('multiSelect');
+        const deadlineTs = fromDatetimeLocalValue(String(fd.get('deadlineTs') || ''));
+        const payload = { question, options, visibility, multiSelect, deadlineTs };
+        const submit = form.querySelector('button[type=submit]');
+        submit.disabled = true;
+        try {
+          const url = isEdit
+            ? `/api/invitations/${encodeURIComponent(invitationId)}/polls/${encodeURIComponent(existing.id)}`
+            : `/api/invitations/${encodeURIComponent(invitationId)}/polls`;
+          const res = await fetch(url, {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
+          closeOverlay();
+          await refresh();
+          // V2-UX-7 (§3.7): success toast for create/edit mutation.
+          if (window.EInviteToast) {
+            EInviteToast.show({
+              type: 'success',
+              message_en: STRINGS.saved.en,
+              message_km: STRINGS.saved.km,
+              duration: 4000
+            });
+          }
+        } catch (err) {
+          statusEl.innerHTML = `<span class="error">${langText('errSave', lang)} <code>${esc(err.message || '')}</code></span>`;
+          submit.disabled = false;
+          // V2-UX-7 (§3.7): also surface the failure as a toast so the host
+          // gets feedback even after closing the modal.
+          if (window.EInviteToast) {
+            EInviteToast.show({
+              type: 'error',
+              message_en: STRINGS.errSave.en + (err && err.message ? ' (' + err.message + ')' : ''),
+              message_km: STRINGS.errSave.km + (err && err.message ? ' (' + err.message + ')' : ''),
+              duration: 6000
+            });
+          }
+        }
+      });
+    }
+
+    // --- Edit / Delete / Close / Results --------------------------------
+
+    async function onEdit(pollId) {
+      // Re-fetch the list to get the latest poll (votes included in host mode).
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        const polls = await res.json();
+        const poll = (polls || []).find((p) => p.id === pollId);
+        if (!poll) return refresh();
+        openPollModal(poll);
+      } catch {
+        openPollModal({ id: pollId });
+      }
+    }
+
+    async function onDelete(pollId) {
+      if (!confirm(STRINGS.confirmDelete.en + '\n' + STRINGS.confirmDelete.km)) return;
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls/${encodeURIComponent(pollId)}`, {
+          method: 'DELETE', headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
+        await refresh();
+        // V2-UX-7 (§3.7): success toast for delete mutation.
+        if (window.EInviteToast) {
+          EInviteToast.show({
+            type: 'success',
+            message_en: STRINGS.deleted.en,
+            message_km: STRINGS.deleted.km,
+            duration: 4000
+          });
+        }
+      } catch (err) {
+        // V2-UX-7 (§3.7): replace the previous alert() with a bilingual
+        // error toast; auto-dismiss after 6s (longer than success).
+        if (window.EInviteToast) {
+          EInviteToast.show({
+            type: 'error',
+            message_en: err.message || STRINGS.errDelete.en,
+            message_km: err.message || STRINGS.errDelete.km,
+            duration: 6000
+          });
+        }
+      }
+    }
+
+    async function onCloseNow(pollId) {
+      if (!confirm(STRINGS.confirmClose.en + '\n' + STRINGS.confirmClose.km)) return;
+      try {
+        // Set deadline to 1s in the past so the server's `deadline_ts < now`
+        // check flips `closed=true` on the next list refresh.
+        const past = Date.now() - 1000;
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls/${encodeURIComponent(pollId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ deadlineTs: past }),
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
+        await refresh();
+        // V2-UX-7 (§3.7): success toast for close-now mutation.
+        if (window.EInviteToast) {
+          EInviteToast.show({
+            type: 'success',
+            message_en: STRINGS.closed.en,
+            message_km: STRINGS.closed.km,
+            duration: 4000
+          });
+        }
+      } catch (err) {
+        // V2-UX-7 (§3.7): replace the previous alert() with a bilingual
+        // error toast; auto-dismiss after 6s (longer than success).
+        if (window.EInviteToast) {
+          EInviteToast.show({
+            type: 'error',
+            message_en: err.message || STRINGS.errClose.en,
+            message_km: err.message || STRINGS.errClose.km,
+            duration: 6000
+          });
+        }
+      }
+    }
+
+    async function onToggleResults(btn) {
+      const pollId = btn.getAttribute('data-results');
+      const region = stateEl.querySelector(`[data-results-region="${cssEsc(pollId)}"]`);
+      if (!region) return;
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        region.hidden = true;
+        region.innerHTML = '';
+        btn.setAttribute('aria-expanded', 'false');
+        // Match the host-signup-sheets sibling: restore the EN label on collapse.
+        btn.textContent = STRINGS.viewResults.en;
+        return;
+      }
+      btn.setAttribute('aria-expanded', 'true');
+      btn.textContent = STRINGS.hideResults.en;
+      region.hidden = false;
+      region.innerHTML = `<p class="muted">${langText('loading', lang)}</p>`;
+      try {
+        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls/${encodeURIComponent(pollId)}/results`, {
+          headers: { Accept: 'application/json' }, credentials: 'same-origin',
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        renderResults(region, data || {});
+      } catch (err) {
+        region.innerHTML = `<p class="error">${langText('errResults', lang)} <code>${esc(err.message || '')}</code></p>`;
+      }
+    }
+
+    function renderResults(region, poll) {
+      const options = Array.isArray(poll.options) ? poll.options : [];
+      const totalVotes = typeof poll.totalVotes === 'number' ? poll.totalVotes
+        : options.reduce((acc, o) => acc + (typeof o.votes === 'number' ? o.votes : 0), 0);
+      if (!totalVotes) {
+        region.innerHTML = `<p class="muted">${langText('noVotes', lang)}</p>`;
+        return;
+      }
+      const maxVotes = options.reduce((m, o) => Math.max(m, typeof o.votes === 'number' ? o.votes : 0), 0) || 1;
+      const barRows = options.map((opt) => {
+        const votes = typeof opt.votes === 'number' ? opt.votes : 0;
+        const pct = Math.round((votes / maxVotes) * 100);
+        return `
+          <li class="host-poll-result-bar-row">
+            <span class="host-poll-result-label">${esc(opt.label || '')}</span>
+            <div class="host-poll-result-bar-track"><div class="host-poll-result-bar-fill" style="width:${pct}%"></div></div>
+            <span class="host-poll-result-count">${votes}</span>
+          </li>`;
+      }).join('');
+      // Voter list — host-only PII (full emails per §3.2 acceptance).
+      const voters = Array.isArray(poll.votes) ? poll.votes : [];
+      const optionLabelMap = {};
+      options.forEach((o) => { optionLabelMap[String(o.id)] = o.label || ''; });
+      const voterRows = voters.map((v) => `
+        <tr>
+          <td>${esc(v.name || STRINGS.voterAnonymous.en)}</td>
+          <td>${esc(v.email || '')}</td>
+          <td>${esc(optionLabelMap[String(v.optionId)] || v.optionId || '')}</td>
+          <td>${esc(formatTs(v.createdAt))}</td>
+        </tr>`).join('');
+      const voterBlock = voters.length
+        ? `
+          <div class="host-poll-voters">
+            <table class="host-poll-voters-table">
+              <thead><tr>
+                <th>${langText('voterName', lang)}</th>
+                <th>${langText('voterEmail', lang)}</th>
+                <th>${langText('voterChoice', lang)}</th>
+                <th>${langText('voterWhen', lang)}</th>
+              </tr></thead>
+              <tbody>${voterRows}</tbody>
+            </table>
+          </div>`
+        : '';
+      region.innerHTML = `
+        <div class="host-poll-result-summary">
+          <span class="muted">${langText('totalVotesLabel', lang)}: <strong>${totalVotes}</strong></span>
+        </div>
+        <ul class="host-poll-result-bars">${barRows}</ul>
+        ${voterBlock}`;
+    }
+  }
+
+  window.EInviteHostPolls = { mount };
+})();;/**
+ * V2-UX-7 (ROADMAP-V2 §3.7) — Toast notification system.
+ *
+ * A tiny, dependency-free toast stack. Exposes a single global:
+ *
+ *     window.EInviteToast.show({ type, message_en, message_km, duration })
+ *
+ *   - type:        'success' | 'error' | 'info' | 'warning' (default 'info')
+ *   - message_en:  required English text
+ *   - message_km:  required Khmer text
+ *   - duration:    ms before auto-dismiss (default 4000; pass 6000 for errors)
+ *
+ * Layout: top-right fixed `#toast-stack` container (auto-created if missing).
+ * Stack semantics: newest at the top; max 5 visible; oldest is dismissed
+ * when a 6th would arrive.
+ *
+ * Accessibility:
+ *   - The container carries `aria-live="polite"` + `aria-atomic="false"` so
+ *     screen readers announce each new toast without stealing focus.
+ *   - Each toast is `role="status"`.
+ *   - The close button is a real `<button>` with a bilingual `aria-label`.
+ *   - Hover/focus pauses the auto-dismiss timer (a11y nicety).
+ *   - `@media (prefers-reduced-motion: reduce)` disables the slide-in.
+ *
+ * Design tokens: reuses `--app-bg`, `--app-surface`, `--app-text`,
+ * `--app-muted`, `--app-line`, `--danger`, `--app-good`, `--app-warn`,
+ * `--app-accent-2`, `--app-shadow`, `--app-radius`. If ux-9 ever defines a
+ * global `--info` token, the `.toast--info` border picks it up automatically;
+ * falls back to `--app-accent-2`.
+ *
+ * IIFE shape mirrors `host-signup-sheets.js` / `host-polls.js`. Idempotent:
+ * if the bundle is somehow loaded twice, the second IIFE no-ops.
+ */
+(function () {
+  'use strict';
+
+  if (window.EInviteToast) return; // idempotent — already defined
+
+  /** Bilingual strings for the toast chrome itself (close button label). */
+  var STRINGS = {
+    close: { en: 'Close', km: 'បិទ' }
+  };
+
+  var MAX_VISIBLE = 5;
+  var DEFAULT_DURATION = 4000;
+  var VALID_TYPES = { success: 1, error: 1, info: 1, warning: 1 };
+  var LEAVE_TIMEOUT_MS = 280; // matches the --leave transition in toast.css
+
+  /** Pick the active language: explicit window.EInviteLang, then <html lang>. */
+  function activeLang() {
+    if (window.EInviteLang === 'km') return 'km';
+    if (window.EInviteLang === 'en') return 'en';
+    var htmlLang = String(document.documentElement.lang || '').toLowerCase();
+    if (htmlLang === 'km' || htmlLang.indexOf('km-') === 0) return 'km';
+    return 'en';
+  }
+
+  /** Find or create the top-right `#toast-stack` container. */
+  function getStack() {
+    var stack = document.getElementById('toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.id = 'toast-stack';
+      stack.className = 'toast-stack';
+      stack.setAttribute('aria-live', 'polite');
+      stack.setAttribute('aria-atomic', 'false');
+      document.body.appendChild(stack);
+    }
+    return stack;
+  }
+
+  /** Bilingual close-button label. */
+  function closeLabel() {
+    var lang = activeLang();
+    return STRINGS.close[lang] || STRINGS.close.en;
+  }
+
+  /** Per-type icon glyph (no external icon font — kept inline). */
+  function iconFor(type) {
+    switch (type) {
+      case 'success': return '\u2713';        // ✓
+      case 'error':   return '\u26A0';        // ⚠
+      case 'warning': return '\u26A0';        // ⚠
+      case 'info':
+      default:        return '\u2139';        // ℹ
+    }
+  }
+
+  /**
+   * Show a toast.
+   *
+   * @param {object} opts
+   * @param {string} opts.type        'success' | 'error' | 'info' | 'warning'
+   * @param {string} opts.message_en  English message (required)
+   * @param {string} opts.message_km  Khmer message (required)
+   * @param {number} [opts.duration]  ms before auto-dismiss (default 4000)
+   * @returns {HTMLElement} the toast element (for testing)
+   */
+  function show(opts) {
+    opts = opts || {};
+    var type = VALID_TYPES[opts.type] ? opts.type : 'info';
+    var lang = activeLang();
+    var msg = (lang === 'km' ? opts.message_km : opts.message_en) ||
+              opts.message_en || opts.message_km || '';
+    var duration = Number(opts.duration) > 0 ? Number(opts.duration) : DEFAULT_DURATION;
+
+    var stack = getStack();
+
+    // Enforce max-visible: dismiss oldest from the top (stack is newest-first).
+    while (stack.children.length >= MAX_VISIBLE) {
+      var oldest = stack.lastElementChild;
+      if (!oldest) break;
+      dismiss(oldest);
+    }
+
+    var toast = document.createElement('div');
+    toast.className = 'toast toast--' + type + ' toast--enter';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('data-toast', '');
+
+    var icon = document.createElement('span');
+    icon.className = 'toast__icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = iconFor(type);
+
+    var message = document.createElement('span');
+    message.className = 'toast__message';
+    message.textContent = msg;
+    // Hint the language for screen readers + the :lang(km) rule (ux-5 §3.5).
+    message.lang = lang;
+
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'toast__close';
+    close.setAttribute('aria-label', closeLabel());
+    close.textContent = '\u00D7'; // ×
+    close.addEventListener('click', function () { dismiss(toast); });
+
+    toast.appendChild(icon);
+    toast.appendChild(message);
+    toast.appendChild(close);
+
+    // Insert at top (newest first), then promote to `--visible` on the next
+    // frame so the CSS transition runs (slide-in-from-right + fade).
+    stack.insertBefore(toast, stack.firstChild);
+    requestAnimationFrame(function () {
+      toast.classList.add('toast--visible');
+      toast.classList.remove('toast--enter');
+    });
+
+    // Auto-dismiss timer (stored on the element so manual close + hover-pause
+    // can cancel it).
+    toast._einviteToastTimer = setTimeout(function () { dismiss(toast); }, duration);
+
+    // Pause auto-dismiss on hover/focus; resume (with a short grace period)
+    // on leave/blur so keyboard users can read the toast at their own pace.
+    function pause() {
+      if (toast._einviteToastTimer) {
+        clearTimeout(toast._einviteToastTimer);
+        toast._einviteToastTimer = null;
+      }
+    }
+    function resume() {
+      pause();
+      toast._einviteToastTimer = setTimeout(function () { dismiss(toast); }, 1500);
+    }
+    toast.addEventListener('mouseenter', pause);
+    toast.addEventListener('mouseleave', resume);
+    toast.addEventListener('focus', pause);
+    toast.addEventListener('blur', resume);
+
+    return toast;
+  }
+
+  /** Animate out + remove a toast (idempotent). */
+  function dismiss(toast) {
+    if (!toast || !toast.parentNode) return;
+    if (toast._einviteToastDismissed) return;
+    toast._einviteToastDismissed = true;
+
+    if (toast._einviteToastTimer) {
+      clearTimeout(toast._einviteToastTimer);
+      toast._einviteToastTimer = null;
+    }
+
+    toast.classList.add('toast--leave');
+    toast.classList.remove('toast--visible');
+
+    var remove = function () {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    };
+    var fallback = setTimeout(remove, LEAVE_TIMEOUT_MS);
+    toast.addEventListener('transitionend', function handler(ev) {
+      if (ev.target !== toast) return;
+      clearTimeout(fallback);
+      toast.removeEventListener('transitionend', handler);
+      remove();
+    });
+  }
+
+  window.EInviteToast = { show: show };
 })();

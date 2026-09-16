@@ -183,6 +183,114 @@ class PlatformService:
         invitation,workspace_id,_=self.invitation_scope(invitation_id,user_id,'edit-design');document=self._loads(invitation['draft_json'],{});epoch=int(invitation.get('document_epoch') or 1);checkpoint_id=uid();fingerprint=str(data.get('fingerprint') or self._fingerprint(document))[:160];name=str(data.get('name') or 'Checkpoint').strip()[:120]
         with self.connect() as db:db.execute("INSERT INTO collaboration_checkpoints(id,workspace_id,invitation_id,document_epoch,name,document_json,fingerprint,state_vector_json,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",(checkpoint_id,workspace_id,invitation_id,epoch,name,json.dumps(document,ensure_ascii=False,separators=(',',':')),fingerprint,json.dumps(data.get('stateVector') or {},separators=(',',':')),user_id,now_ms()))
         self._audit(user_id,'collaboration.checkpoint','invitation',invitation_id,{'checkpointId':checkpoint_id,'epoch':epoch});return {'id':checkpoint_id,'epoch':epoch,'fingerprint':fingerprint,'createdAt':now_ms()}
+    # ─── V54.7 Phase 4b — Y.js CRDT (V52) endpoints ────────────────────────────
+    # The Y.js update is an opaque binary BLOB. The server stores it verbatim
+    # and does NOT decode it during Phase A (the V31 path remains authoritative
+    # for invitations.draft_json). Phase B will introduce a stdlib Y.js decoder.
+    # See docs/collab/CRDT-DESIGN.md §7 for the schema + endpoint contract.
+    V52_MAX_BATCH_BYTES=1_000_000          # 1 MB per POST (Y.js updates are compact; 1 MB > 5000 typical ops)
+    V52_MAX_UPDATES_PER_BATCH=200
+    V52_PRESENCE_TTL_S=10                  # grace window for missed heartbeats (ROADMAP §7.4b: 5–10s)
+    def collaboration_snapshot_v52(self,invitation_id,user_id):
+        invitation,workspace_id,_=self.invitation_scope(invitation_id,user_id,'read')
+        document=self._loads(invitation['draft_json'],{});epoch=int(invitation.get('document_epoch') or 1)
+        with self.connect() as db:
+            row=db.execute("SELECT yjs_state_vector,yjs_snapshot_bytes,fingerprint,created_at FROM collaboration_snapshots_v52 WHERE invitation_id=? AND document_epoch=? ORDER BY created_at DESC LIMIT 1",(invitation_id,epoch)).fetchone()
+            max_revision_row=db.execute("SELECT COALESCE(MAX(revision),0) max_revision FROM collaboration_updates_v52 WHERE invitation_id=? AND document_epoch=?",(invitation_id,epoch)).fetchone()
+            update_rows=db.execute("SELECT id,client_id,logical_clock,\"update\",update_bytes,created_at,revision FROM collaboration_updates_v52 WHERE invitation_id=? AND document_epoch=? ORDER BY revision DESC LIMIT ?",(invitation_id,epoch,self.config.collaboration_replay_limit)).fetchall()
+        revision=int(max_revision_row['max_revision'] or 0) if max_revision_row else 0
+        migrated_from=None
+        if row is None and not update_rows:migrated_from='v31'   # no V52 history yet — Phase A migration path
+        return {
+            'invitationId':invitation_id,'workspaceId':workspace_id,'epoch':epoch,'revision':revision,
+            'document':document,
+            'yjsStateVector':self._b64(row['yjs_state_vector']) if row else None,
+            'yjsSnapshot':self._b64(row['yjs_snapshot_bytes']) if row else None,
+            'updates':[self._v52_update_row(r,invitation_id,epoch) for r in reversed(update_rows)],
+            'presence':self._presence(invitation_id),
+            'migratedFrom':migrated_from,
+        }
+    def collaboration_updates_v52(self,invitation_id,user_id,since=0):
+        invitation,workspace_id,_=self.invitation_scope(invitation_id,user_id,'read');epoch=int(invitation.get('document_epoch') or 1)
+        with self.connect() as db:rows=db.execute("SELECT id,client_id,logical_clock,\"update\",update_bytes,created_at,revision FROM collaboration_updates_v52 WHERE invitation_id=? AND document_epoch=? AND revision>? ORDER BY revision LIMIT ?",(invitation_id,epoch,max(0,int(since)),self.config.collaboration_replay_limit)).fetchall()
+        return {'epoch':epoch,'revision':max([int(r['revision']) for r in rows] or [int(since)]),'updates':[self._v52_update_row(r,invitation_id,epoch) for r in rows],'presence':self._presence(invitation_id),'workspaceId':workspace_id}
+    def append_collaboration_update_v52(self,invitation_id,user_id,data):
+        invitation,workspace_id,membership=self.invitation_scope(invitation_id,user_id,'edit-content');epoch=int(invitation.get('document_epoch') or 1)
+        if int(data.get('epoch') or epoch)!=epoch:raise PlatformServiceError('Document epoch changed.','epoch_mismatch',409)
+        client_id=str(data.get('clientId') or data.get('actor') or '')[:160]
+        if not client_id:raise PlatformServiceError('Client identity is required.','invalid_client')
+        update_b64=str(data.get('update') or '')
+        if not update_b64:raise PlatformServiceError('Y.js binary update is required.','invalid_update')
+        update_bytes=self._b64decode(update_b64)
+        if not update_bytes:raise PlatformServiceError('Y.js update could not be decoded.','invalid_update')
+        if len(update_bytes)>self.V52_MAX_BATCH_BYTES:raise PlatformServiceError('Y.js update exceeds the configured byte limit.','update_too_large')
+        logical_clock=max(1,int(data.get('clock') or 1))
+        revision=0;update_id=str(data.get('id') or uid())[:160];dual_wrote=False
+        with self.connect() as db:
+            row=db.execute("SELECT COALESCE(MAX(revision),0) max_revision FROM collaboration_updates_v52 WHERE invitation_id=? AND document_epoch=?",(invitation_id,epoch)).fetchone();revision=int(row['max_revision'] or 0)
+            try:
+                revision+=1
+                db.execute("INSERT INTO collaboration_updates_v52(id,workspace_id,invitation_id,document_epoch,client_id,logical_clock,\"update\",update_bytes,created_at,revision) VALUES(?,?,?,?,?,?,?,?,?,?)",(update_id,workspace_id,invitation_id,epoch,client_id,logical_clock,update_bytes,len(update_bytes),now_ms(),revision))
+            except Exception:
+                # Idempotency: same (invitation,epoch,client,clock) → return existing revision.
+                existing=db.execute("SELECT id,revision FROM collaboration_updates_v52 WHERE invitation_id=? AND document_epoch=? AND client_id=? AND logical_clock=?",(invitation_id,epoch,client_id,logical_clock)).fetchone()
+                if existing:return {'acknowledged':False,'duplicate':True,'revision':int(existing['revision']),'epoch':epoch}
+                raise
+            # Phase A dual-write (opt-in via env var). Translates the Y.js
+            # binary update to a V31-style 'set' op that records the entire
+            # document snapshot. This is a coarse approximation — the real
+            # translator ships in Phase B. Off by default.
+            if self.config.collab_v52_dualwrite:
+                document=self._loads(invitation['draft_json'],{})
+                normalize_document_v32(document,strict=True,mutate=True)
+                db.execute("UPDATE invitations SET draft_json=?,document_version=COALESCE(document_version,0)+1,updated_at=? WHERE id=? AND document_epoch=?",(json.dumps(document,ensure_ascii=False,separators=(',',':')),now_ms(),invitation_id,epoch))
+                v31_update_id=uid()
+                db.execute("INSERT INTO collaboration_updates(id,workspace_id,invitation_id,document_epoch,actor_id,logical_clock,update_type,path_json,payload_json,update_bytes,created_at,revision) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(v31_update_id,workspace_id,invitation_id,epoch,client_id,logical_clock,'set','[]',json.dumps({'value':None,'yjsDualWrite':True},separators=(',',':')),len(update_bytes),now_ms(),revision))
+                dual_wrote=True
+        self.observability.increment('collaboration.v52_updates',1,{'role':membership['role']},workspace_id)
+        return {'acknowledged':True,'revision':revision,'epoch':epoch,'updateId':update_id,'dualWrite':dual_wrote}
+    def presence_update_v52(self,invitation_id,user_id,data):
+        invitation,workspace_id,membership=self.invitation_scope(invitation_id,user_id,'read');actor=str(data.get('actor') or '')[:160]
+        if not actor:raise PlatformServiceError('Actor identity is required.','invalid_actor')
+        item={'actor':actor,'userId':user_id,'name':str(data.get('name') or membership['role']).strip()[:100],'color':str(data.get('color') or '')[:64],'avatarUrl':str(data.get('avatarUrl') or '')[:256],'mode':str(data.get('mode') or 'viewing')[:40],'pageId':str(data.get('pageId') or 'hero')[:160],'selection':self._selection(data.get('selection')),'cursor':self._cursor(data.get('cursor')),'updatedAt':now_ms()}
+        with self.presence_lock:self.presence[(invitation_id,actor)]=item
+        return {'ok':True,'expiresInSeconds':self.V52_PRESENCE_TTL_S,'workspaceId':workspace_id}
+    def presence_list_v52(self,invitation_id,user_id):
+        self.invitation_scope(invitation_id,user_id,'read')
+        cutoff=now_ms()-(self.V52_PRESENCE_TTL_S*1000)
+        with self.presence_lock:
+            for key,item in list(self.presence.items()):
+                if item['updatedAt']<cutoff:self.presence.pop(key,None)
+            return [dict(item) for (iid,_),item in self.presence.items() if iid==invitation_id]
+    def save_collaboration_snapshot_v52(self,invitation_id,user_id,data):
+        invitation,workspace_id,_=self.invitation_scope(invitation_id,user_id,'publish');epoch=int(invitation.get('document_epoch') or 1)
+        state_vector_bytes=self._b64decode(str(data.get('yjsStateVector') or ''))
+        snapshot_bytes=self._b64decode(str(data.get('yjsSnapshot') or ''))
+        if not state_vector_bytes or not snapshot_bytes:raise PlatformServiceError('Both yjsStateVector and yjsSnapshot are required.','invalid_snapshot')
+        if len(snapshot_bytes)>5_000_000:raise PlatformServiceError('Y.js snapshot exceeds 5 MB.','snapshot_too_large')
+        publication_version=int(data.get('publicationVersion') or 0)
+        snapshot_id=uid();fingerprint=str(data.get('fingerprint') or self._fingerprint_bytes(snapshot_bytes))[:160]
+        with self.connect() as db:
+            db.execute("INSERT INTO collaboration_snapshots_v52(id,workspace_id,invitation_id,document_epoch,publication_version,yjs_state_vector,yjs_snapshot_bytes,fingerprint,created_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",(snapshot_id,workspace_id,invitation_id,epoch,publication_version,state_vector_bytes,snapshot_bytes,fingerprint,user_id,now_ms()))
+        self._audit(user_id,'collaboration.v52_snapshot','invitation',invitation_id,{'snapshotId':snapshot_id,'epoch':epoch,'publicationVersion':publication_version})
+        return {'id':snapshot_id,'epoch':epoch,'publicationVersion':publication_version,'fingerprint':fingerprint,'createdAt':now_ms()}
+    def _v52_update_row(self,row,invitation_id,epoch):
+        return {'id':row['id'],'documentId':invitation_id,'epoch':epoch,'clientId':row['client_id'],'clock':int(row['logical_clock']),'update':self._b64(row['update']),'updateBytes':int(row['update_bytes']),'timestamp':int(row['created_at']),'origin':'remote','revision':int(row['revision'])}
+    def _selection(self,value):
+        if not isinstance(value,list):return []
+        return [str(x)[:160] for x in value[:100] if x is not None]
+    @staticmethod
+    def _b64(data):
+        if data is None:return None
+        import base64
+        if isinstance(data,(bytes,bytearray,memoryview)):return base64.b64encode(bytes(data)).decode('ascii')
+        return None
+    @staticmethod
+    def _b64decode(value):
+        import base64
+        if not value or not isinstance(value,str):return b''
+        try:return base64.b64decode(value,validate=True)
+        except Exception:return b''
     def save_raster_document(self,invitation_id,user_id,data):
         invitation,workspace_id,_=self.invitation_scope(invitation_id,user_id,'assets');document=data.get('document') or {};encoded=json.dumps(document,ensure_ascii=False,separators=(',',':'))
         if len(encoded.encode())>2_000_000:raise PlatformServiceError('Raster edit document exceeds 2 MB.','document_too_large')
@@ -434,3 +542,9 @@ class PlatformService:
     def _slug(value):return ''.join(ch.lower() if ch.isalnum() else '-' for ch in str(value)).strip('-')[:60] or 'workspace'
     @staticmethod
     def _fingerprint(value):return hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    @staticmethod
+    def _fingerprint_bytes(value):
+        # SHA-256 over raw bytes — used for Y.js binary snapshots (no JSON encoding).
+        if value is None:return ''
+        if isinstance(value,(bytes,bytearray,memoryview)):return hashlib.sha256(bytes(value)).hexdigest()
+        return hashlib.sha256(str(value).encode()).hexdigest()

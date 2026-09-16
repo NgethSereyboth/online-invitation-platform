@@ -1,0 +1,114 @@
+name: Security Scan
+
+# ROADMAP-V2 §2.7 — ASVS L2 Chapter 10 tooling (SAST / SCA / SBOM / secret /
+# container scanning). Runs on every push to main + the security-ui refactor
+# branch, on every pull request into main, and on a weekly schedule to catch
+# new advisories published against pinned dependencies.
+#
+# See docs/security/CI-SECURITY.md for the full policy + how to waive
+# specific findings.
+
+on:
+  push:
+    branches:
+      - main
+      - v54-refactor-security-ui
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Every Monday 06:00 UTC — picks up new GHSA advisories against the
+    # pinned requirements + new gitleaks rules + new trivy DB.
+    - cron: '0 6 * * 1'
+  # Allow manual triggering from the Actions tab — useful for re-running
+  # after waiving a finding or upgrading a dependency.
+  workflow_dispatch:
+
+# Cancel in-flight runs when a new commit is pushed to the same ref —
+# avoids piling up back-to-back scan runs on a noisy PR.
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history for gitleaks. The local `--no-git` mode in
+          # scripts/security-scan.sh ignores history; CI keeps it for
+          # free in case a future iteration adds history-aware scans.
+          fetch-depth: 0
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: docs/requirements-production.txt
+
+      - name: Install Python scanning tools
+        # bandit    — SAST scanner (https://bandit.readthedocs.io)
+        # pip-audit — dependency vulnerability scanner (PyPA advisory DB)
+        # pip-requirements-parser — robust requirements.txt parser (used by
+        #                           pip-audit; pinned for reproducibility)
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit pip-audit pip-requirements-parser
+
+      - name: Install gitleaks
+        # gitleaks isn't on PyPI — install the pre-built binary from the
+        # GitHub release. Pinned to a specific tag for reproducibility.
+        run: |
+          GITLEAKS_VERSION=8.21.2
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+
+      - name: Install trivy
+        # trivy is installed via the official apt repo so it can pull the
+        # latest DB on each run.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq trivy
+          trivy --version
+
+      - name: Run security scan
+        # This is the single entrypoint — same script the developer runs
+        # locally. CI installs every tool above so no WARNs are expected.
+        run: bash scripts/security-scan.sh
+
+      - name: Upload SBOM artifact
+        # Always upload, even on failure — a failed scan that produced an
+        # SBOM is still useful for downstream consumers (and to audit which
+        # dependency versions were in the tree at the time of the failure).
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload gitleaks report
+        # gitleaks writes to /tmp/gitleaks-report.json (set in
+        # scripts/security-scan.sh). Move it into the workspace so the
+        # upload-artifact action can see it.
+        if: always()
+        run: |
+          if [ -f /tmp/gitleaks-report.json ]; then
+            mkdir -p ./gitleaks-output
+            cp /tmp/gitleaks-report.json ./gitleaks-output/gitleaks-report.json
+          fi
+
+      - name: Upload gitleaks report artifact
+        if: always() && hashFiles('gitleaks-output/gitleaks-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-output/gitleaks-report.json
+          if-no-files-found: ignore
+          retention-days: 30

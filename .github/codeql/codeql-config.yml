@@ -1,0 +1,18 @@
+# CodeQL configuration — scope CodeQL to ignore generated bundle files.
+# See: docs/security/SECURITY-FIX-GUIDE.md §13.2
+#
+# The bundles are the concatenated output of src/js/*.js, which is still
+# scanned. If you fix the source, the bundle is fixed. Ignoring the bundle
+# avoids duplicate findings.
+
+name: "eInvite CodeQL Config"
+
+paths-ignore:
+  - src/python/bundle-*.js
+  - src/python/bundle-*.css
+  - src/js/bundle-*-v15.js
+  - src/js/bundle-*-v15.css
+  - src/python/vendor/**
+  - vendor/**
+  - src/python/editor-suite.js
+  - src/python/editor-suite.css
