@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "name": "Confetti animation",
+  "name_kh": "អានីម៉េសិនផ្កាយរត់",
+  "version": "1.0.0",
+  "description": "Adds a celebratory confetti animation to the invitation page on RSVP confirm. Bilingual EN+KH. Minimal example plugin for the eInvite plugin SDK.",
+  "description_kh": "បន្ថែមអានីម៉េសិនផ្កាយរត់នៅពេលភ្ញៀវឆ្លើយឆ្លង។ គាំទ្រភាសាអង់គ្លេស និងខ្មែរ។ Plugin ឧទាហរណ៍សម្រាប់ eInvite plugin SDK។",
+  "author": {
+    "name": "eInvite community",
+    "email": "plugins@einvite.local",
+    "vendor_id": "einvite-community"
+  },
+  "author_key_id": "7a8d8e3c5f109b7251643662d1fae18569a207599bba8660289a397248cbba2c",
+  "permissions": [
+    "invitation:{current}:rsvp:read"
+  ],
+  "extension_points": [
+    {
+      "id": "confetti-overlay",
+      "point": "content.block",
+      "label": "Confetti overlay",
+      "label_kh": "ស្រទាប់ផ្កាយរត់",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "intensity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "title": "Intensity",
+            "description": "How many confetti particles per burst."
+          }
+        }
+      }
+    }
+  ],
+  "entrypoint": "./index.html",
+  "min_platform_version": "54.6.0",
+  "max_platform_version": "56.0.0",
+  "content_security_policy": {
+    "default_src": [
+      "'self'"
+    ],
+    "script_src": [
+      "'self'"
+    ],
+    "style_src": [
+      "'self'"
+    ],
+    "img_src": [
+      "'self'",
+      "data:"
+    ],
+    "connect_src": [
+      "'self'"
+    ],
+    "frame_src": [
+      "'none'"
+    ],
+    "object_src": [
+      "'none'"
+    ],
+    "base_uri": [
+      "'self'"
+    ],
+    "form_action": [
+      "'self'"
+    ]
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "public_key": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+    "sig": "9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c",
+    "signed_payload": "manifest+bundle",
+    "signed_at": 1789300000
+  },
+  "marketplace_signature": {
+    "algorithm": "ed25519",
+    "public_key": "ee1a0000000000000000000000000000000000000000000000000000000000e1",
+    "sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "signed_payload": "manifest",
+    "approved_permissions": [
+      "invitation:{current}:rsvp:read"
+    ],
+    "approved_extension_points": [
+      "content.block"
+    ],
+    "signed_at": 0,
+    "expires_at": 0
+  },
+  "homepage": "https://github.com/einvite-platform/example-confetti-plugin",
+  "repository": "https://github.com/einvite-platform/example-confetti-plugin",
+  "license": "MIT",
+  "categories": [
+    "design"
+  ],
+  "supported_locales": [
+    "en",
+    "km"
+  ],
+  "requested_quota": {
+    "heap_mb": 16,
+    "cpu_ms_per_call": 50,
+    "storage_mb": 0
+  },
+  "compatibility_notes": "Pure-render plugin; does not modify invitation state. Safe in any eInvite 54.6+ workspace."
+}

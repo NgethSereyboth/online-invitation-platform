@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="einvite-invitation-slug" content="__INVITATION_SLUG__">
   <title>__INVITATION_TITLE__</title>
   <meta name="description" content="__INVITATION_DESCRIPTION__">
@@ -24,12 +24,45 @@
 
 
 </head>
-<body data-page="public">
-<main id="publicRoot" class="guest"><p>Opening invitation…</p></main>
+<body data-page="public"><a class="skip-link" href="#publicRoot">Skip to content</a>
+<main id="publicRoot" class="guest" tabindex="-1"><p>Opening invitation…</p></main>
+<!--
+  V2-UX-5 (P1-D, WCAG 3.1.1): dynamic <html lang> for the guest invitation page.
+  The static fallback is lang="en" (declared on <html> above). After the invitation
+  document loads, public-page.js sets root.dataset.language to "km" or "en" and
+  also calls document.documentElement.lang = lang inside bindLanguageSwitch().
+  The MutationObserver below is a defence-in-depth: if a future change to
+  public-page.js drops that direct assignment, the <html lang> attribute will
+  still track the data-language value on #publicRoot. The server does not inject
+  __INVITATION_LANG__ (sec-1 owns serve_public and chose to escape user-controlled
+  values rather than add a new placeholder); the dynamic attribute is therefore
+  set client-side only. The script is placed BEFORE bundle-public-v15.js so the
+  observer is registered before the bundle's language-switcher first runs.
+-->
+<script>
+  (function () {
+    var root = document.getElementById('publicRoot');
+    if (!root) return;
+    var applyLang = function (value) {
+      var lang = value === 'km' ? 'km' : 'en';
+      if (document.documentElement.lang !== lang) {
+        document.documentElement.lang = lang;
+      }
+    };
+    if (root.dataset && root.dataset.language) applyLang(root.dataset.language);
+    if (typeof MutationObserver === 'function') {
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          if (records[i].attributeName === 'data-language') {
+            applyLang(root.getAttribute('data-language'));
+            return;
+          }
+        }
+      }).observe(root, { attributes: true, attributeFilter: ['data-language'] });
+    }
+  })();
+</script>
 <script src="bundle-public-v15.js"></script>
-
-
-
 
 
 

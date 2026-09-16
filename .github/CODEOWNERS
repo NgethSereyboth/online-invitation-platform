@@ -1,0 +1,42 @@
+# CODEOWNERS — eInvite platform
+#
+# GitHub uses this file to automatically request review from the listed
+# owners on any pull request that touches the matching paths.
+#
+# Replace `@maintainer` with the actual GitHub handle (or team slug, e.g.
+# `@einvite/security-team`) before enabling branch protection. Documented in
+# docs/security/CI-SECURITY.md §5 (CODEOWNERS policy).
+#
+# Syntax: <path-pattern> <owner1> <owner2> ...
+# Last-matching pattern wins (like .gitignore).
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# --- Security-critical Python paths ----------------------------------------
+# Any change to the backend, the AI agent, or the platform services must be
+# reviewed by the security maintainer — these paths touch auth, secrets,
+# file upload, malware scanning, and the delivery channels.
+src/python/                    @maintainer
+ai_agent/                      @maintainer
+platform_v32/                  @maintainer
+future_platform_v52/           @maintainer
+
+# --- Security module globs -------------------------------------------------
+# The platform's password / passkey / malware-scan / auto-secret helpers are
+# the highest-risk surface area. Explicitly listed so they don't slip through
+# under the broader `src/python/` rule.
+src/python/security_*.py        @maintainer
+src/python/secrets_*.py         @maintainer
+
+# --- Deploy + infra --------------------------------------------------------
+# Dockerfiles, compose files, Caddyfile, install scripts — all affect the
+# production blast radius. Owned by the security maintainer.
+deploy/                        @maintainer
+
+# --- CI / scripts ----------------------------------------------------------
+# Don't let a PR silently weaken the CI gate. Every change to the security
+# scan script, the SBOM generator, the CODEOWNERS file itself, or the CI
+# workflow file requires maintainer review.
+scripts/security-scan.sh       @maintainer
+scripts/generate-sbom.py      @maintainer
+.github/CODEOWNERS             @maintainer
+.github/workflows/security.yml @maintainer

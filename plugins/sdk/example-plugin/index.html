@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confetti animation plugin</title>
+  <style>
+    /* The host injects the manifest's CSP — this file does not override it.
+       Style is plain CSS (no preprocessor) per ROADMAP ground rule 4. */
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      padding: 8px;
+      font-family: system-ui, -apple-system, "Noto Sans Khmer", sans-serif;
+      font-size: 14px;
+      color: #1f2026;
+      background: transparent;
+    }
+    .confetti-stage {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      border: 1px dashed #8b465b;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(139, 70, 91, 0.04);
+    }
+    .confetti-particle {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    .label {
+      display: block;
+      margin: 4px 2px;
+      font-weight: 600;
+      color: #1f2026;
+    }
+    .intensity-row {
+      display: flex; align-items: center; gap: 8px;
+      margin: 6px 2px 10px;
+    }
+    .intensity-row input[type="range"] { flex: 1; }
+    button {
+      background: #8b465b; color: #fff; border: none; padding: 6px 12px;
+      border-radius: 6px; cursor: pointer; font: inherit;
+    }
+    button:hover { background: #6c3144; }
+    .hint { color: #646773; font-size: 12px; margin: 4px 2px; }
+  </style>
+</head>
+<body>
+  <label class="label" data-i18n="label">Confetti animation</label>
+  <div class="confetti-stage" id="stage"></div>
+  <div class="intensity-row">
+    <span data-i18n="intensity">Intensity</span>
+    <input type="range" id="intensity" min="1" max="100" value="50">
+    <span id="intensityValue">50</span>
+  </div>
+  <button id="burst" data-i18n="burst">Burst</button>
+  <p class="hint" data-i18n="hint">Triggers a confetti burst on RSVP confirm.</p>
+
+  <!-- The host injects a nonce into the script tag per PLUGIN-SANDBOX.md §3.1 -->
+  <script nonce="" src="../einvite-plugin.js"></script>
+  <script nonce="" src="./index.js"></script>
+</body>
+</html>

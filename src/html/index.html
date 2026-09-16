@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
-<head><script src="theme-init.js"></script><script src="backend-mode-v14.js"></script>
+<head><script src="core/theme.js"></script><script src="backend-mode-v14.js"></script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>E-invitation-website</title>
   <!--
     v54 editor architecture (see src/js/editor/ and src/css/editor/):
@@ -58,29 +58,45 @@
 
 
 </head>
-<body data-page="index">
+<body data-page="index"><a class="skip-link" href="#main">Skip to content</a>
+  <!--
+    V2-UX-8 (ROADMAP-V2 §3.8) — Mobile responsiveness pass.
+    The editor has a responsive contract (editor-responsive-contract-v27.css:
+    einvite-layout-mobile / einvite-layout-compact classes collapse the side
+    panels into drawers), but the dense toolbar + side panels are best used on
+    a desktop screen. This bilingual banner is hidden by default and shown only
+    on viewports ≤ 720px via the @media rule in modern-ui.css. It is purely
+    informational (no script, no blocking — the editor remains usable below).
+  -->
+  <aside class="mobile-desktop-hint" role="note" aria-label="Desktop recommended">
+    <span class="mobile-desktop-hint__icon" aria-hidden="true">🖥️</span>
+    <span class="mobile-desktop-hint__text">
+      <span class="i18n i18n-en">The editor works best on a desktop screen. Some tools may be unavailable on mobile.</span>
+      <span class="i18n i18n-km khmer-text" lang="km">កម្មវិធីនិពន្ធដំណើរការល្អបំផុតនៅលើផ្ទៃតាំង។ ឧបករណ៍មួយចំនួនអាចមិនមាននៅលើទូរស័ព្ទ។</span>
+    </span>
+  </aside>
   <header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link">Dashboard</a><span id="saveState">Saved locally</span><span id="serverState">Local mode</span><button id="backupBtn">Backup</button><button id="restoreBtn">Restore</button><input id="restoreFile" type="file" accept="application/json" hidden><button id="undoBtn" title="Undo (Ctrl+Z)">Undo</button><button id="redoBtn" title="Redo (Ctrl+Y)">Redo</button><button id="previewBtn">Guest preview</button><button id="publishBtn" class="primary">Publish snapshot</button></header>
-  <main>
+  <main id="main" tabindex="-1">
     <aside class="left">
       <h2>Content</h2>
       <label>Guest language mode<select id="languageMode"><option value="en">English only</option><option value="km">Khmer only</option><option value="both">Khmer + English</option></select></label>
       <label>Couple names — English<input id="names" value="Sophea & Dara"></label>
-      <label>Couple names — Khmer<input id="namesKm" class="khmer-text" value="សុភា & ដារ៉ា"></label>
+      <label>Couple names — Khmer<input id="namesKm" class="khmer-text" lang="km" value="សុភា & ដារ៉ា"></label>
       <label>Event date<input id="date" type="date" value="2026-12-27"></label>
       <label>Event time<input id="time" type="time" value="16:00"></label>
       <label>Date display<select id="dateFormat"><option value="both">Khmer lunar + Gregorian</option><option value="khmer">Khmer lunar only</option><option value="gregorian">Gregorian only</option></select></label>
-      <div id="khmerDatePreview" class="card khmer-text">Select a date to calculate its Khmer lunar date.</div>
+      <div id="khmerDatePreview" class="card khmer-text" lang="km">Select a date to calculate its Khmer lunar date.</div>
       <details class="khmer-picker"><summary>Select using Khmer lunar calendar</summary>
         <label>Lunar day<select id="khmerDay"></select></label>
-        <label>Moon phase<select id="khmerPhase"><option value="0">កើត</option><option value="1">រោច</option></select></label>
+        <label>Moon phase<select id="khmerPhase"><option value="0" lang="km">កើត</option><option value="1" lang="km">រោច</option></select></label>
         <label>Lunar month<select id="khmerMonth"></select></label>
         <label>Buddhist Era year<input id="khmerYear" type="number" min="2400" max="2700" value="2570"></label>
         <button id="useKhmerDate" type="button">Use this Khmer date</button>
       </details>
       <label>Venue — English<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
-      <label>Venue — Khmer<input id="venueKm" class="khmer-text" value="សាលពិធីមង្គលការ រាជធានីភ្នំពេញ"></label>
+      <label>Venue — Khmer<input id="venueKm" class="khmer-text" lang="km" value="សាលពិធីមង្គលការ រាជធានីភ្នំពេញ"></label>
       <label>Invitation message — English<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
-      <label>Invitation message — Khmer<textarea id="messageKm" class="khmer-text">ជាមួយនឹងក្រុមគ្រួសាររបស់យើង យើងខ្ញុំសូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរពិធីមង្គលការរបស់យើង។</textarea></label>
+      <label>Invitation message — Khmer<textarea id="messageKm" class="khmer-text" lang="km">ជាមួយនឹងក្រុមគ្រួសាររបស់យើង យើងខ្ញុំសូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរពិធីមង្គលការរបស់យើង។</textarea></label>
       <h2>Host contact</h2>
       <label><input id="contactEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show contact-host buttons</label>
       <label>Phone number<input id="contactPhone" type="tel" placeholder="+855 12 345 678"></label>
@@ -142,27 +158,27 @@ rsvp</textarea></label>
       <div id="savedPageTemplates" class="saved-page-templates"></div>
       <label><input id="countdownEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show live event countdown</label>
       <label>Countdown heading — English<input id="countdownTitle" value="Counting down to our celebration"></label>
-      <label>Countdown heading — Khmer<input id="countdownTitleKm" class="khmer-text" value="រាប់ថយក្រោយទៅកាន់ថ្ងៃដ៏ពិសេសរបស់យើង"></label>
+      <label>Countdown heading — Khmer<input id="countdownTitleKm" class="khmer-text" lang="km" value="រាប់ថយក្រោយទៅកាន់ថ្ងៃដ៏ពិសេសរបស់យើង"></label>
       <label>Countdown layout<select id="countdownLayout"><option value="cards">Number cards</option><option value="minimal">Minimal</option><option value="pill">Compact pills</option></select></label>
       <label><input id="scheduleEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show event schedule</label>
       <label>Schedule — English, one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
 5:00 PM | Wedding ceremony
 6:30 PM | Dinner reception</textarea></label>
-      <label>Schedule — Khmer, matching line order<textarea id="scheduleTextKm" class="khmer-text" placeholder="4:00 PM | ទទួលភ្ញៀវ&#10;5:00 PM | ពិធីមង្គលការ&#10;6:30 PM | ពិសាអាហារ">4:00 PM | ទទួលភ្ញៀវ
+      <label>Schedule — Khmer, matching line order<textarea id="scheduleTextKm" class="khmer-text" lang="km" placeholder="4:00 PM | ទទួលភ្ញៀវ&#10;5:00 PM | ពិធីមង្គលការ&#10;6:30 PM | ពិសាអាហារ">4:00 PM | ទទួលភ្ញៀវ
 5:00 PM | ពិធីមង្គលការ
 6:30 PM | ពិសាអាហារពេលល្ងាច</textarea></label>
       <label>Schedule layout<select id="scheduleLayout"><option value="timeline">Elegant timeline</option><option value="cards">Event cards</option><option value="minimal">Minimal list</option></select></label>
       <label><input id="venueEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show venue and map</label>
       <label>Map link<input id="mapUrl" type="url" placeholder="https://maps.google.com/..."></label>
       <label>Additional venues — English, one per line<textarea id="venuesText" placeholder="Reception | Hotel Ballroom | https://maps.google.com/..."></textarea></label>
-      <label>Additional venues — Khmer, matching line order<textarea id="venuesTextKm" class="khmer-text" placeholder="ពិធីទទួលភ្ញៀវ | សាលសណ្ឋាគារ | https://maps.google.com/..."></textarea></label>
+      <label>Additional venues — Khmer, matching line order<textarea id="venuesTextKm" class="khmer-text" lang="km" placeholder="ពិធីទទួលភ្ញៀវ | សាលសណ្ឋាគារ | https://maps.google.com/..."></textarea></label>
       <label>Venue layout<select id="venueLayout"><option value="cards">Venue cards</option><option value="stacked">Stacked details</option><option value="split">Split layout</option></select></label>
       <label><input id="galleryEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show photo gallery</label>
       <label>Gallery layout<select id="galleryStyle"><option value="grid">Elegant grid</option><option value="filmstrip">Horizontal film strip</option><option value="full">Full-width portraits</option></select></label>
       <h2>Materials</h2>
       <div class="asset-library-controls">
         <input id="assetSearch" type="search" placeholder="Search your material library…" aria-label="Search material library">
-        <select id="assetTypeFilter" aria-label="Filter materials"><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="favorites">Favorites</option><option value="all">All materials</option></select>
+        <label class="sr-only" for="assetTypeFilter">Filter materials / តម្រងសម្ភារៈ</label><select id="assetTypeFilter" aria-label="Filter materials"><option value="image">Images</option><option value="audio">Audio</option><option value="video">Video</option><option value="favorites">Favorites</option><option value="all">All materials</option></select>
       </div>
       <div class="asset-library-controls asset-library-secondary">
         <input id="assetFolderFilter" type="search" placeholder="Filter by folder…" aria-label="Filter materials by folder">
@@ -233,7 +249,7 @@ rsvp</textarea></label>
         <button data-device="390">Mobile</button><button data-device="760">Tablet</button><button data-device="1100">Desktop</button>
         <span class="toolbar-divider"></span>
         <button id="zoomOut" title="Zoom out">−</button>
-        <select id="zoomLevel" aria-label="Canvas zoom"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+        <label class="sr-only" for="zoomLevel">Canvas zoom / ពង្រីកផ្ទាំងគំរូ</label><select id="zoomLevel" aria-label="Canvas zoom"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>
         <button id="zoomIn" title="Zoom in">+</button><button id="fitCanvas">Fit</button>
         <button id="panToggle" aria-pressed="false" title="Pan canvas (or hold Space)">Hand</button>
         <button id="rulersToggle" aria-pressed="false">Rulers</button><button id="safeMarginToggle" aria-pressed="false">Safe margins</button><span class="toolbar-divider"></span><button id="copyObjects" title="Copy selected objects (Ctrl/Cmd+C)">Copy</button><button id="pasteObjects" title="Paste objects (Ctrl/Cmd+V)">Paste</button>
@@ -347,7 +363,7 @@ rsvp</textarea></label>
       <button id="wishesBtn" type="button">View guest wishes</button>
     </aside>
   </main>
-  <dialog id="modal"><button class="close" type="button" aria-label="Close guest preview">×</button><div id="modalBody"></div></dialog>
+  <dialog id="modal" aria-modal="true" aria-labelledby="modalHeading"><button class="close" type="button" aria-label="Close guest preview">×</button><div id="modalBody"></div><h2 id="modalHeading" class="sr-only">Guest preview</h2></dialog>
   <script src="bundle-index-v15.js"></script>
   
   

@@ -2,7 +2,7 @@ from __future__ import annotations
 import json,time,uuid
 from typing import Any,Callable
 
-SCHEMA_VERSION=18
+SCHEMA_VERSION=19
 
 def now_ms():return int(time.time()*1000)
 def uid():return str(uuid.uuid4())
@@ -68,6 +68,15 @@ def ensure_platform_schema(connect: Callable[[],Any]) -> None:
     """CREATE TABLE IF NOT EXISTS privacy_requests(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,user_id TEXT NOT NULL,kind TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'queued',scope_json TEXT NOT NULL DEFAULT '{}',result_json TEXT NOT NULL DEFAULT '{}',created_at INTEGER NOT NULL,completed_at INTEGER)""",
     """CREATE TABLE IF NOT EXISTS operational_metrics(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,value DOUBLE PRECISION NOT NULL,tags_json TEXT NOT NULL DEFAULT '{}',created_at INTEGER NOT NULL)""",
     "CREATE INDEX IF NOT EXISTS idx_operational_metrics_name ON operational_metrics(name,created_at DESC)",
+    # V54.7 (Phase 4b) — Y.js CRDT upgrade. Binary update BLOBs replace the
+    # JSON-encoded V31 update rows. V31 tables stay alive during the
+    # Phase A/B/C migration (see docs/collab/CRDT-DESIGN.md §2). These two
+    # tables are additive — no DROP/ALTER to existing tables.
+    """CREATE TABLE IF NOT EXISTS collaboration_updates_v52(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,document_epoch INTEGER NOT NULL,client_id TEXT NOT NULL,logical_clock INTEGER NOT NULL,"update" BLOB NOT NULL,update_bytes INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,revision INTEGER NOT NULL)""",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_collab_v52_identity ON collaboration_updates_v52(invitation_id,document_epoch,client_id,logical_clock)",
+    "CREATE INDEX IF NOT EXISTS idx_collab_v52_replay ON collaboration_updates_v52(invitation_id,document_epoch,revision)",
+    """CREATE TABLE IF NOT EXISTS collaboration_snapshots_v52(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,document_epoch INTEGER NOT NULL DEFAULT 1,publication_version INTEGER NOT NULL,yjs_state_vector BLOB NOT NULL,yjs_snapshot_bytes BLOB NOT NULL,fingerprint TEXT NOT NULL DEFAULT '',created_by TEXT NOT NULL,created_at INTEGER NOT NULL)""",
+    "CREATE INDEX IF NOT EXISTS idx_collab_v52_snapshot_invitation ON collaboration_snapshots_v52(invitation_id,document_epoch,publication_version DESC)",
     ]
     with connect() as db:
         for statement in statements:db.execute(statement)
@@ -101,4 +110,4 @@ def ensure_platform_schema(connect: Callable[[],Any]) -> None:
             for table in ('user_templates','user_page_templates','user_components','studio_resources','studio_releases'):
                 db.execute(f"UPDATE {table} SET workspace_id=? WHERE owner_id=? AND (workspace_id IS NULL OR workspace_id='')",(workspace_id,user['id']))
             db.execute("UPDATE backup_runs SET workspace_id=? WHERE owner_id=? AND (workspace_id IS NULL OR workspace_id='')",(workspace_id,user['id']))
-        db.execute("INSERT INTO platform_schema_migrations(version,name,applied_at,detail_json) VALUES(?,?,?,?) ON CONFLICT(version) DO UPDATE SET name=excluded.name,detail_json=excluded.detail_json",(SCHEMA_VERSION,'V29-V32 cumulative platform schema',now_ms(),json.dumps({'documentSchema':18,'milestones':['V29','V30','V31','V32']},separators=(',',':'))))
+        db.execute("INSERT INTO platform_schema_migrations(version,name,applied_at,detail_json) VALUES(?,?,?,?) ON CONFLICT(version) DO UPDATE SET name=excluded.name,detail_json=excluded.detail_json",(SCHEMA_VERSION,'V29-V32 + V54.7 Y.js CRDT cumulative platform schema',now_ms(),json.dumps({'documentSchema':19,'milestones':['V29','V30','V31','V32','V54.7']},separators=(',',':'))))

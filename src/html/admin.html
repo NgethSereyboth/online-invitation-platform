@@ -1,13 +1,57 @@
-<!doctype html><html lang="en"><head><script src="theme-init.js"></script><script src="backend-mode-v14.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Administration — E-invitation-website</title><link rel="stylesheet" href="bundle-admin-v15.css">  
+<!doctype html><html lang="en"><head><script src="core/theme.js"></script><script src="backend-mode-v14.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Administration — E-invitation-website</title><link rel="stylesheet" href="bundle-admin-v15.css">
 
 
 
 
+</head><body data-page="admin"><a class="skip-link" href="#main">Skip to content</a><header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link">Dashboard</a></header>
+<div id="impersonationBanner" class="ei-impersonation-banner" hidden>
+  <span data-i18n="en">You are impersonating</span>
+  <strong id="impersonationEmail">—</strong>.
+  <a href="#" id="impersonationStopLink" data-i18n="en">Click here to stop</a>.
+  <span data-i18n="km" lang="km">អ្នកកំពុងសាកល្បងក្នុងនាមអ្នកប្រើ</span>
+</div>
+<main id="main" class="admin-page" tabindex="-1">
+  <h1>Administration</h1>
+  <p data-i18n="en">Manage accounts, shared templates, and public invitation availability.</p>
+  <p data-i18n="km" lang="km">គ្រប់គ្រងគណនី ពិសិដ្ឋភ័ព្ផ និងការអញ្ជើញសាធារណៈ។</p>
 
+  <!-- v0.64.0 §5.1 — system status banner + stat-cards grid -->
+  <div id="systemStatusBanner" class="ei-system-status" data-status="loading">
+    <span class="ei-system-status-dot"></span>
+    <span class="ei-system-status-text" data-i18n="en">Checking system status…</span>
+    <span class="ei-system-status-text" data-i18n="km" lang="km">កំពុងពិនិត្យស្ថានភាពប្រព័ន្ធ…</span>
+  </div>
 
+  <div id="statCardsGrid" class="ei-stat-cards" aria-live="polite"></div>
 
-</head><body data-page="admin"><header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link">Dashboard</a></header><main class="admin-page"><h1>Administration</h1><p>Manage accounts, shared templates, and public invitation availability.</p><div id="adminMetrics" class="admin-metrics"></div><div class="admin-tabs"><button class="active" data-admin-tab="users">Users</button><button data-admin-tab="templates">Templates</button><button data-admin-tab="invitations">Invitations</button><button data-admin-tab="ai">AI providers</button></div><input id="adminSearch" class="admin-search" type="search" placeholder="Search this view…"><section id="usersPanel" class="admin-panel active"></section><section id="templatesPanel" class="admin-panel"></section><section id="invitationsPanel" class="admin-panel"></section><section id="aiPanel" class="admin-panel"></section></main><script src="bundle-admin-v15.js"></script>
-  
+  <div class="admin-tabs" role="tablist">
+    <button class="active" data-admin-tab="users" role="tab" data-i18n="en">Users</button>
+    <button data-admin-tab="templates" role="tab" data-i18n="en">Templates</button>
+    <button data-admin-tab="invitations" role="tab" data-i18n="en">Invitations</button>
+    <button data-admin-tab="feature-flags" role="tab" data-i18n="en">Feature flags</button>
+    <button data-admin-tab="audit-log" role="tab" data-i18n="en">Audit log</button>
+    <button data-admin-tab="system-health" role="tab" data-i18n="en">System health</button>
+    <button data-admin-tab="bulk-ops" role="tab" data-i18n="en">Bulk operations</button>
+    <button data-admin-tab="impersonate" role="tab" data-i18n="en">Impersonate</button>
+    <button data-admin-tab="reports" role="tab" data-i18n="en">Reports</button>
+    <button data-admin-tab="ai" role="tab" data-i18n="en">AI providers</button>
+  </div>
+
+  <input id="adminSearch" class="admin-search" type="search" placeholder="Search this view / ស្វែងរកទិដ្ឋភាពនេះ" aria-label="Search this view / ស្វែងរកទិដ្ឋភាពនេះ">
+
+  <section id="usersPanel" class="admin-panel active"></section>
+  <section id="templatesPanel" class="admin-panel"></section>
+  <section id="invitationsPanel" class="admin-panel"></section>
+  <section id="featureFlagsPanel" class="admin-panel"></section>
+  <section id="auditLogPanel" class="admin-panel"></section>
+  <section id="systemHealthPanel" class="admin-panel"></section>
+  <section id="bulkOpsPanel" class="admin-panel"></section>
+  <section id="impersonatePanel" class="admin-panel"></section>
+  <section id="reportsPanel" class="admin-panel"></section>
+  <section id="aiPanel" class="admin-panel"></section>
+</main>
+<script src="bundle-admin-v15.js"></script>
+
 
 
 </body></html>

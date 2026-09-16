@@ -1,0 +1,356 @@
+path,tree,size_bytes,lines,top_level_symbols,references_count
+src/css/accessibility-v12.css,css,1413,3,skip-link,0
+src/css/account-page-v13.css,css,708,1,account-page,0
+src/css/account-security-v13.css,css,1651,2,v13-security-grid,0
+src/css/adaptive-templates-v25.css,css,3357,1,v25-template-dialog,3
+src/css/advanced-public-renderer-v32.css,css,512,1,published-vector,2
+src/css/ai-assistant-loader-v27.css,css,1681,2,ei-ai-loader-card,2
+src/css/ai-assistant-pro.css,css,16519,44,ei-ai-loader-card; ei-ai-top-button; ei-ai-floating; ei-ai-drawer; ei-ai-drawer-head; ei-ai-brand; ei-ai-close; ei-ai-context; ei-ai-target-meta; ei-ai-selection-tools; ei-ai-tabs; ei-ai-drawer-scroll; ei-ai-quick; ei-ai-prompt-label; ei-ai-compose-row,0
+src/css/ai-creative-agent-v28.css,css,12441,5,ei-agent-panel; ei-agent-message-actions; ei-agent-feedback,1
+src/css/analytics-page-v13.css,css,1635,1,analytics,0
+src/css/asset-workflow-v23.css,css,5225,3,v23-asset-browser; v23-asset-load-more,3
+src/css/billing-page-v13.css,css,4534,1,billing-page,0
+src/css/brand-components-v24.css,css,3998,1,v24-brand-dialog,3
+src/css/bundle-account-v15.css,css,215350,909,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-admin-v15.css,css,215030,908,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-analytics-v15.css,css,215943,910,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-billing-v15.css,css,217526,908,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-checkin-v15.css,css,76014,109,skip-link; sr-only; checkin-notice; --accent:#9d4555;--ink:#2c2326;--panel:#fff;--line:#e8dfdc; --v22-control-min:44px,0
+src/css/bundle-dashboard-v15.css,css,259597,1166,skip-link; sr-only; create-dialog; template-choice-actions; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls,0
+src/css/bundle-designer-v15.css,css,242819,908,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-guests-v15.css,css,215433,910,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-index-v15.css,css,429704,1550,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-materials-v15.css,css,240433,910,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-privacy-v15.css,css,98904,566,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-public-v15.css,css,74740,394,skip-link; sr-only; guest-layout-content; guest; guest-language-km; event-journey; guest-consent-banner; gallery-locked; guest-studio-brand; event-actions; public-share-status; guest-feature; signup-sheet; poll; album-upload,0
+src/css/bundle-reset-v15.css,css,213328,908,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-responses-v15.css,css,216008,910,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-templates-v15.css,css,246382,910,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/bundle-verify-v15.css,css,213225,908,skip-link; sr-only; host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row,0
+src/css/canvas-plus.css,css,46151,349,ui-theme-menu; card; canvas-auth-badge; canvas-auth-visual; canvas-auth-bullets; canvas-auth-panel; canvas-auth-tabs; canvas-auth-actions; canvas-auth-note; canvas-auth-links; canvas-auth-status; canvas-pro-grid; canvas-ai-grid; canvas-ai-hint; canvas-header-status,4
+src/css/checkin-v13.css,css,2654,2,checkin-notice,1
+src/css/collaboration-live.css,css,1186,2,ei-live-sync-chip; ei-presence-stack,2
+src/css/collaboration-studio-v31.css,css,2254,1,v31-panel,2
+src/css/collaboration-v24.css,css,4941,1,v24-collaboration-dialog,3
+src/css/command-palette-v23.css,css,5153,1,v23-command-surface,3
+src/css/compact-theme-v0_52.css,css,1650,67,account-appearance-actions,0
+src/css/content-browser-v24.css,css,3465,3,v24-content-browser; v24-content-card,3
+src/css/creative-packs.css,css,651,1,ei-pack-panel,4
+src/css/custom-fonts-v22.css,css,2176,6,ei-font-upload; ei-font-badge; ei-font-card,1
+src/css/dashboard-page-v13.css,css,6924,5,dash; create-dialog; template-choice-actions,0
+src/css/designer-page-v13.css,css,914,1,designer-page,0
+src/css/direct-manipulation-v24.css,css,2418,6,v24-inline-toolbar,3
+src/css/editor-builders.css,css,3409,4,ei-raw-field; ei-builder,4
+src/css/editor-canvas-core.css,css,7111,310,editor-canvas-container; textbox-element; fabric-object--textbox; fabric-control; fabric-corner; editor-object; editor-ruler; editor-guide; editor-grid; snap-indicator; zoom-controls; zoom-button; zoom-level-display; pan-mode-active; layer-highlight,0
+src/css/editor-pro.css,css,4645,9,ei-context-toolbar; ei-rich-toolbar; ei-frame-placeholder; typography-v19-controls; canvas,5
+src/css/editor-responsive-contract-v27.css,css,6757,2,--einvite-rail-width:66px;--einvite-pane-width:304px;--einvite-left-width:370px;--einvite-inspector-width:330px;--einvite-drawer-z:90;--einvite-rail-z:96;--einvite-inspector-z:100,1
+src/css/editor-shared-styles-v13.css,css,1179,1,ei-shared-styles-v13,0
+src/css/editor-suite.css,css,60533,383,ui-theme-menu; card; canvas-auth-badge; canvas-auth-visual; canvas-auth-bullets; canvas-auth-panel; canvas-auth-tabs; canvas-auth-actions; canvas-auth-note; canvas-auth-links; canvas-auth-status; canvas-pro-grid; canvas-ai-grid; canvas-ai-hint; canvas-header-status,0
+src/css/editor-ui-layout.css,css,9567,439,editor-layout; editor-sidebar; editor-main; editor-properties; editor-toolbar; toolbar-tools; toolbar-button; toolbar-icon; toolbar-separator; sidebar-categories; sidebar-category; sidebar-category-icon; sidebar-category-label; context-toolbar-row; context-toolbar-item,0
+src/css/editor-ux-refinement-v0_52.css,css,2142,93,,0
+src/css/editor/editor-styles.css,css,33820,549,v54-canvas-hud; v54-zoom-menu; v54-selection-card; v54-hover-box; v54-context-hidden; v54-inspector-mode; v54-inspector-essential; object; v54-header-menu-section; v54-inspector-empty; v54-footer-tools; v54-footer-tools-trigger; v54-footer-tools-menu; v54-sidebar-collapse; v54-nav-text,2
+src/css/final-experience.css,css,13854,1,"--final-accent:#7c5cff;--final-accent-2:#d85aa2;--final-cyan:#42d7d7;--final-panel:color-mix(in srgb,var(--ui-surface,#fff) 94%,transparent);--final-ease:cubic-bezier(.2,.8,.2,1)",0
+src/css/final-polish.css,css,23713,1,"--fp-radius-xs:8px;--fp-radius-sm:12px;--fp-radius:16px;--fp-radius-lg:24px;--fp-shadow:0 12px 34px rgba(20,24,36,.08);--fp-shadow-lg:0 24px 70px rgba(20,24,36,.14);--fp-ease:cubic-bezier(.2,.8,.2,1)",0
+src/css/font-browser.css,css,2989,1,ei-font-launch,4
+src/css/future-public-renderer-v52.css,css,603,1,v52-public-block,2
+src/css/future-studio-v52.css,css,6840,5,v52-shell; v52-dialog,1
+src/css/graphics-runtime-v22.css,css,749,1,ei-gpu-scene-layer,0
+src/css/guest-features-v54_1.css,css,4818,243,guest-feature; signup-sheet; poll; album-upload; album-grid; album-photo; album; delivery-dialog-overlay; delivery-dialog,1
+src/css/guest-journey.css,css,3839,3,guest-journey,4
+src/css/guest-layouts.css,css,12194,40,guest-layout-content; guest; guest-language-km; event-journey; guest-consent-banner; gallery-locked; guest-studio-brand; event-actions; public-share-status,0
+src/css/materials-page-v13.css,css,2413,1,library-page,0
+src/css/modern-ui.css,css,52939,456,host-signup-sheets; host-signup-sheet-list; host-signup-sheet-row; host-signup-sheet-row-head; host-signup-sheet-row-actions; host-signup-claims-region; host-signup-claims-slot; host-signup-claims-table; host-signup-modal-overlay; host-signup-modal; host-polls; host-poll-list; host-poll-row; host-poll-row-head; host-poll-row-actions,5
+src/css/monitoring.css,css,851,1,ei-system-grid,1
+src/css/navigation-history-v23.css,css,3391,10,v23-target-mode; v23-page-tools; v23-page-view-switch; v22-page-manager; v23-checkpoint-dialog,4
+src/css/opening-scenes.css,css,1931,1,open-cover,0
+src/css/organized/admin-page-v13.css,css,1188,1,admin-page,0
+src/css/organized/bundle-checkin-v15.css,css,71045,3,checkin-notice; --accent:#9d4555;--ink:#2c2326;--panel:#fff;--line:#e8dfdc; --v22-control-min:44px,0
+src/css/organized/bundle-dashboard-v15.css,css,227573,430,create-dialog; template-choice-actions; account-appearance-actions; ui-theme-menu; card; canvas-auth-badge; canvas-auth-visual; canvas-auth-bullets; canvas-auth-panel; canvas-auth-tabs; canvas-auth-actions; canvas-auth-note; canvas-auth-links; canvas-auth-status; canvas-pro-grid,0
+src/css/organized/bundle-designer-v15.css,css,216369,416,account-appearance-actions; ui-theme-menu; card; canvas-auth-badge; canvas-auth-visual; canvas-auth-bullets; canvas-auth-panel; canvas-auth-tabs; canvas-auth-actions; canvas-auth-note; canvas-auth-links; canvas-auth-status; canvas-pro-grid; canvas-ai-grid; canvas-ai-hint,0
+src/css/organized/bundle-privacy-v15.css,css,72456,76,account-appearance-actions; privacy-page; privacy-back-link; --accent:#9d4555;--ink:#2c2326;--panel:#fff;--line:#e8dfdc; --v22-control-min:44px,0
+src/css/organized/bundle-responses-v15.css,css,188641,416,account-appearance-actions; ui-theme-menu; card; canvas-auth-badge; canvas-auth-visual; canvas-auth-bullets; canvas-auth-panel; canvas-auth-tabs; canvas-auth-actions; canvas-auth-note; canvas-auth-links; canvas-auth-status; canvas-pro-grid; canvas-ai-grid; canvas-ai-hint,0
+src/css/organized/collaboration.css,css,755,1,ei-collab-card,19
+src/css/organized/dashboard-empty-state.css,css,1522,3,dashboard-empty,0
+src/css/organized/editor-canva-v13.css,css,1048,1,ei-context-menu,0
+src/css/organized/editor-layout-stability.css,css,10731,1,"--stable-left-width:clamp(310px,22vw,380px);--stable-right-width:clamp(290px,20vw,350px);--stable-rail-width:72px;--stable-scroll-thumb:color-mix(in srgb,var(--app-muted,#757783) 46%,transparent);--stable-scroll-track:color-mix(in srgb,var(--app-surface-2,#f8f8fb) 78%,transparent)",0
+src/css/organized/export-quality-v24.css,css,4998,12,v24-quality-dialog; v24-quality-actions; v24-alt-dialog,3
+src/css/organized/guests-page-v13.css,css,1125,1,guest-admin,0
+src/css/organized/photo-editor-v13.css,css,2161,1,ei-photo-v13,0
+src/css/organized/professional-editor-v17.css,css,11019,1,,3
+src/css/organized/review-v23.css,css,8372,4,v23-review-drawer; v23-review-tabs,4
+src/css/organized/styles.css,css,53031,130,skip-link; sr-only; --accent:#9d4555;--ink:#2c2326;--panel:#fff;--line:#e8dfdc,90
+src/css/organized/workflow-continuity.css,css,7822,1,"--workflow-purple:#7c4dff;--workflow-panel-shadow:0 18px 48px rgba(20,24,38,.12)",2
+src/css/organized/workflow-creation-flow-v3.css,css,6358,28,workflow-page-dock; workflow-page-dock-track; workflow-quick-strip; workflow-canvas-welcome,3
+src/css/organized/workflow-final-audit-v7.css,css,11460,1,"--v7-focus:color-mix(in srgb,var(--app-accent,#8b465b) 82%,#4f7cff 18%);--v7-scroll-thumb:color-mix(in srgb,var(--app-muted,#747681) 42%,transparent)",2
+src/css/organized/workflow-refine.css,css,10131,1,--flow-purple:#7b47ff;--flow-purple-2:#a543ef;--flow-cyan:#21c6d7;--flow-radius:14px,0
+src/css/organized/workflow-ux-v5.css,css,4569,1,workflow-v5-status,3
+src/css/page-experience-v22.css,css,14069,40,v22-page-manager; v22-page-menu; v22-page-drag-handle; v22-mode-note; v22-page-card; v22-page-thumb; v22-quick-preview; v22-quick-object; v22-quick-text; v22-quick-image; v22-quick-shape; v22-quick-decoration; v22-quick-empty; workflow-page-chip; v22-dock-drag-handle,2
+src/css/photo-editor.css,css,3384,2,ei-photo-dialog,5
+src/css/photo-retouch-v13.css,css,2053,1,ei-retouch-open,0
+src/css/photo-style-library-v23.css,css,5120,3,v23-photo-style-dialog,3
+src/css/photo-workflow-v23.css,css,5969,3,v23-photo-workflow,3
+src/css/print-readiness-v25.css,css,2516,1,v25-print-dialog,3
+src/css/privacy-v13.css,css,716,9,privacy-page; privacy-back-link,0
+src/css/product-operations-v13.css,css,3790,1,,0
+src/css/production-readiness-v32.css,css,1824,1,v32-panel,1
+src/css/professional-layers-v29.css,css,4379,2,ei-advanced-launcher; v29-stage-links,1
+src/css/professional-workflow-v23.css,css,2035,6,v23-arrange-panel; v23-transform-mode; v23-guide-overlay; v23-transform-hud,4
+src/css/raster-workspace-v30.css,css,3583,1,v30-modal,1
+src/css/reset-page-v13.css,css,336,1,auth-page,0
+src/css/responses-page-v13.css,css,1700,1,response-admin,0
+src/css/rich-text-editing-v21.css,css,792,2,rt-toolbar-tools,2
+src/css/rich-text-renderer-v21.css,css,648,1,rt-document,4
+src/css/smart-layout-v24.css,css,3023,2,v24-layout-dialog,3
+src/css/social-card.css,css,1130,1,ei-social-preview,6
+src/css/stabilized-v14.css,css,17432,1,server-required-v14,0
+src/css/storyboard.css,css,1168,1,ei-storyboard-toolbar,5
+src/css/studio-automation-v27.css,css,5307,2,v27-automation-dialog; v27-audit-list,3
+src/css/studio-experience.css,css,28914,1,"--ui-bg:#f3f4f7;--ui-panel:#fff;--ui-panel-soft:#f8f8fb;--ui-ink:#1f2026;--ui-muted:#71717a;--ui-line:#e4e4e9;--ui-line-strong:#d7d7df;--ui-accent:#7d4052;--ui-accent-2:#aa6579;--ui-dark:#16171b;--ui-radius:14px;--ui-shadow:0 16px 45px rgba(30,24,28,.08)",65
+src/css/studio-governance-v25.css,css,3979,1,v25-governance-dialog,3
+src/css/studio-operations-v26.css,css,4382,1,v26-operations-dialog,3
+src/css/style-history-v23.css,css,4884,2,v23-style-kit-dialog,4
+src/css/style-kits.css,css,5323,1,ei-experience-launch,3
+src/css/template-bindings-v25.css,css,2509,1,v25-binding-dialog,3
+src/css/templates-page-v13.css,css,3161,1,studio,0
+src/css/theme-hardening.css,css,2095,1,,0
+src/css/timeline-v13.css,css,2295,1,ei-timeline-launch,0
+src/css/toast.css,css,5276,169,"toast-stack; toast; toast--visible; toast--leave; toast--success; toast--error; toast--warning; toast--info; 
+  --toast-info: var(--info, var(--app-accent-2, #3b82f6));
+",73
+src/css/tokens.css,css,1755,7,"--surface-0:#f5f6f8;--surface-1:#ffffff;--surface-2:#f8f8fb;--surface-3:#eff0f4;--text-1:#1f2026;--text-2:#646773;--text-3:#6c707a;--border-1:#e2e3e8;--border-2:#d3d5dc;--brand:#8b465b;--brand-2:#9c6cff;--brand-soft:#f5e8ed;--success:#2b9b68;--warning:#c98322;--danger:#c6404d;--shadow-1:0 2px 8px rgba(23,25,32,.06);--shadow-2:0 16px 46px rgba(23,25,32,.11);--shadow-3:0 32px 90px rgba(18,20,27,.2);--radius-sm:10px;--radius-md:14px;--radius-lg:20px;--radius-xl:28px;--app-bg:var(--surface-0);--app-surface:var(--surface-1);--app-surface-2:var(--surface-2);--app-surface-3:var(--surface-3);--app-text:var(--text-1);--app-muted:var(--text-2);--app-faint:var(--text-3);--app-line:var(--border-1);--app-line-2:var(--border-2);--app-accent:var(--brand);--app-accent-2:var(--brand-2);--app-accent-soft:var(--brand-soft);--app-good:var(--success);--app-warn:var(--warning)",11
+src/css/typography-fonts.css,css,1772,9,,1
+src/css/typography-system-v20.css,css,6788,1,--v20-focus:#275efe;--v20-warn:#9a5a00;--v20-error:#b3261e,0
+src/css/ui-dialogs.css,css,3566,1,--dialog-danger:#d74f5e;--dialog-good:#2c9a65,0
+src/css/ux-refine.css,css,30418,1,"--refine-sidebar:84px;--refine-panel:340px;--refine-inspector:318px;--refine-radius:16px;--refine-card:var(--app-surface,#fff);--refine-soft:var(--app-surface-2,#f7f7f9);--refine-line:var(--app-line,#e5e5ea);--refine-text:var(--app-text,#202127);--refine-muted:var(--app-muted,#737680);--refine-accent:var(--app-accent,#8b465b)",0
+src/css/verify-page-v13.css,css,233,1,verify-page,0
+src/css/workflow-creation-flow-v4.css,css,10917,1,workflow-page-dock,3
+src/css/workflow-pro-editor-v6.css,css,7184,1,workflow-v6-popover,2
+src/css/workspace-v21.css,css,1312,4,,3
+src/css/zoom-layout-pages-v22.css,css,1200,2,--v22-control-min:44px,0
+src/css/zoom-layout-v22.css,css,6062,1,--v22-control-min:44px;--v22-tab-font:12px;--v22-tab-gap:6px,20
+src/js/accessibility-polish.js,js,3739,18,syncPanel; trapDialogKey; observeDialogs; init; EInviteAccessibility,0
+src/js/account-security-v13.js,js,9074,40,credentialJSON; renderSessions; renderPasskeys; renderAudit; renderPrivacy; renderStudio,0
+src/js/account.js,js,5854,19,installAppearanceSetting,68
+src/js/adaptive-gpu-quality-v22.js,js,5762,19,initial; apply; setOverride; assess; snapshot; makePanel; row; updatePanel; onLost; onRestored; destroy; EInviteGraphicsDiagnostics,0
+src/js/adaptive-templates-v25.js,js,20768,64,field; text; shape; image; page; palette; heroImage; scheduleText; families; familyById; remapPages; applyFamilyPayload; applyFamily; captureCurrent; render,2
+src/js/admin.js,js,8528,23,matches; renderUsers; renderTemplates; renderInvitations; renderAI; render,48
+src/js/advanced-animation-v44.js,js,4772,9,render; timeline; activate; EInviteAdvancedAnimationV44,1
+src/js/advanced-editor-loader-v32.js,js,2996,14,add; script; button; click; init; destroy,2
+src/js/advanced-motion-runtime-v44.js,js,1450,1,,3
+src/js/advanced-public-loader-v32.js,js,3193,9,needsAdvanced; needsMotion; asset; script; EInviteAdvancedPublicLoader,0
+src/js/advanced-public-renderer-v32.js,js,5119,12,renderVector; objectMap; sanitizedImportedSvg; applyMask; enhance; EInviteAdvancedPublicRendererV32,2
+src/js/ai-agent-tool-registry-v28.js,js,36344,180,VERSION; throwIfAborted; invitationId; canvasId; targetIds; contextForPlan; currentDocument; brandKit; mapCall; selectedPlanEntries; authorizationHeaders; isServerMutation; summarizeObject; readProjectSummary; readPageSummary,1
+src/js/ai-assistant-loader-v27.js,js,4149,1,,2
+src/js/ai-assistant-pro.js,js,33588,104,VERSION; TASKS; TAB_TASKS; QUICK; on; toast; history; saveHistory; currentPageName; documentContext; localDesignReview; localAccessibilityReview; build; applyMode; inertBackground,0
+src/js/ai-creative-agent-v28.js,js,48270,93,VERSION; toast; on; cookieHeaders; isMobile; focusables; setBackgroundInert; restoreBackground; syncPattern; trap; ensureThread; openKeydown; installOpenKeyHandler; removeOpenKeyHandler; setInitializing,1
+src/js/ai-editor-action-extension-v53.js,js,8380,6,,1
+src/js/ai-editor-action-service-v27.js,js,38170,188,VERSION; PHOTO_PRESETS; canonical; stableString; fingerprint; invitationId; revision; canvasMap; safeId; objectType; plainText; targetSnapshot; selectionType; captureContext; permissionAllowed,0
+src/js/ai-production-v35.js,js,4598,9,card; render; EInviteAIProductionV35,1
+src/js/album.js,js,22776,420,STRINGS; PROGRESS_STYLE_ID; enhance; renderPhoto; onUpload; startUpload; resetProgressUI; showError; EInviteAlbum,7
+src/js/analytics.js,js,3599,7,last30Days; render,51
+src/js/app.js,js,247479,3386,V19_KHMER_TEXT_RE; sanitizeRichText; typographyFontStack; ensureTypographyFlow; typographyContentHTML; setTypographyContent; parseTypographyOverrides; pairingForFont; typographyObjectData; syncTypographyDataset; setTypographyOverrideDataset; applyTypographyLayout; syncTypographyLayoutResult; fitTextObject; scheduleTextFit,254
+src/js/asset-workflow-v23.js,js,24085,58,RECENT_KEY; on; esc; safeUrl; readJson; writeJson; activeMap; selectedImageId; selectedKind; ensureFeedback; recentIds; remember; assetId; assetName; assetHaystack,2
+src/js/backend-mode-v14.js,js,2223,26,emit; isAvailable; staticUrl; message; disable; EInviteBackend,2
+src/js/billing.js,js,5579,65,checkoutBanner,45
+src/js/brand-components-v24.js,js,20247,54,BRAND_KEY; read; write; activeMap; allMaps; builtins; normalizeBrand; customBrands; saveBrands; brands; currentBrand; uniqueName; saveCurrentBrand; deleteBrand; patchTypography,2
+src/js/builtin-templates.js,js,2925,10,EInviteBuiltinTemplates,0
+src/js/bundle-account-v15.js,js,74839,410,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; installAppearanceSetting; credentialJSON; renderSessions; renderPasskeys; renderAudit; renderPrivacy; renderStudio; currentMode; applyTheme,0
+src/js/bundle-admin-v15.js,js,70798,380,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; matches; renderUsers; renderTemplates; renderInvitations; renderAI; render; currentMode; applyTheme; installThemeControl,0
+src/js/bundle-analytics-v15.js,js,69483,399,LAST_KEY; TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; getInvitationId; remember; route; last30Days; render; currentMode; applyTheme; installThemeControl,0
+src/js/bundle-billing-v15.js,js,65490,417,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; checkoutBanner; currentMode; applyTheme; installThemeControl; installAppLauncher; setWidths; addToggle; resizer; selectOnly,0
+src/js/bundle-checkin-v15.js,js,16377,79,LAST_KEY; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; getInvitationId; remember; route; setNetwork; renderQueue; render; guestFromScanned; closeScanner; syncPanel,0
+src/js/bundle-dashboard-v15.js,js,309032,2805,DATA; MODEL_VERSION; KHMER_RE; STYLE_FIELDS; OVERRIDE_FIELDS; DEFAULT_STYLES; DEFAULT_ORDER; KHMER_MARK_RE; KHMER_COENG; STYLE_ORDER; RendererAdapters; LAST_KEY; $$; TOUR_VERSION; STRINGS,0
+src/js/bundle-designer-v15.js,js,61353,357,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; currentMode; applyTheme; installThemeControl; installAppLauncher; setWidths; addToggle; resizer; selectOnly; makeId,0
+src/js/bundle-guests-v15.js,js,78330,412,LAST_KEY; TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; getInvitationId; remember; route; esc; guestUrl; filtered; render; showQr,0
+src/js/bundle-index-v15.js,js,1097217,11016,PROFILE_KEY; OVERRIDE_KEY; DEFAULT_PROFILE; DATA; MODEL_VERSION; KHMER_RE; STYLE_FIELDS; OVERRIDE_FIELDS; DEFAULT_STYLES; DEFAULT_ORDER; KHMER_MARK_RE; KHMER_COENG; STYLE_ORDER; RendererAdapters; VERSION,0
+src/js/bundle-materials-v15.js,js,120157,812,RESUMABLE_THRESHOLD; DEFAULT_CHUNK_SIZE; LAST_KEY; TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; abortError; cookieValue; browserMutationHeaders; xhrRequest; fontMime; xhr,0
+src/js/bundle-privacy-v15.js,js,0,0,,0
+src/js/bundle-public-v15.js,js,232062,1595,DATA; MODEL_VERSION; KHMER_RE; STYLE_FIELDS; OVERRIDE_FIELDS; DEFAULT_STYLES; DEFAULT_ORDER; KHMER_MARK_RE; KHMER_COENG; STYLE_ORDER; RendererAdapters; VERSION; CURRENT_VERSION; MAX_DURATION; COPY,0
+src/js/bundle-reset-v15.js,js,61579,357,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; currentMode; applyTheme; installThemeControl; installAppLauncher; setWidths; addToggle; resizer; selectOnly; makeId,0
+src/js/bundle-responses-v15.js,js,73334,408,LAST_KEY; TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; getInvitationId; remember; route; customLabels; metrics; filteredResponses; renderResponses; renderWishes,0
+src/js/bundle-templates-v15.js,js,79621,413,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; setTemplateState; palette; strip; titleOf; thumb; filtered; render; previewPage; preview,0
+src/js/bundle-verify-v15.js,js,60500,354,TOUR_VERSION; toast; buildDialog; uiConfirm; uiPrompt; uiAlert; currentMode; applyTheme; installThemeControl; installAppLauncher; setWidths; addToggle; resizer; selectOnly; makeId,0
+src/js/canva-scale-v31.js,js,6545,22,intersects; pageVariants; duplicatePage; reorderPage; setPublicationVisibility; copyPackage; pastePackage; offset; parseCsv; mergeFields; buildPersonalizedJobs; fingerprint; virtualRange; disposePageResources; SpatialIndex,1
+src/js/canvas-plus.js,js,47856,439,wireAuthLayouts; enhanceMaterialsPage; editorEnhancements; textureImages; averageCorners; dist,4
+src/js/checkin-v13.js,js,6246,16,setNetwork; renderQueue; render; guestFromScanned; closeScanner,1
+src/js/collaboration-live.js,js,6140,29,ensureChip; receive; acceptLocal; startPolling; stopPolling; scheduleSseRetry; startSSE; ensurePresence; renderPresence; stop; __EInviteCollaborationLiveInit; EInviteCollaborationSync,2
+src/js/collaboration-presence-v52.js,js,14715,348,HEARTBEAT_INTERVAL_MS; GRACE_PERIOD_MS; IDLE_TIMEOUT_MS; CURSOR_THROTTLE_MS; PRESENCE_TTL_S; MAX_REMOTE_CURSORS; STRINGS; actorColor; initials; renderOverlay; PresenceChannel; EInviteCollaborationPresenceV52,1
+src/js/collaboration-studio-v31.js,js,12938,36,button; build; close; schedulePoll; editorCommand; queue; storageKey; persistQueue; restoreQueue; csrf; startPresence; renderPresence; renderRemoteCursors; initials; status,2
+src/js/collaboration-v24.js,js,17329,46,STORE_KEY; on; readAll; writeAll; localAssignments; assignmentMap; normalizeTask; saveAssignments; rootComments; assignmentFor; reviewers; pageName; threadStats; pageSummary; statusFor,2
+src/js/collaboration.js,js,3269,12,,19
+src/js/command-palette-v23.js,js,12950,72,build; query; matches; activeMap; commandItems; readList; loadAssets; contextualItems; rows; renderShortcuts; showConflicts; render; profileTitle; syncActive; runItem,3
+src/js/content-browser-v24.js,js,19476,58,on; esc; clone; read; write; remember; favorites; toggleFavorite; activeMap; uid; maxZ; normalizedObject; insertElement; insertPage; insertBlock,2
+src/js/crdt-adapter-v31.js,js,10619,38,VERSION; actorId; compareClock; step; getAt; setAt; deleteAt; createState; nextUpdate; apply; localSet; localDelete; localSequenceInsert; localSequenceMove; localRichText,1
+src/js/crdt-yjs-indexeddb.js,js,15467,359,DB_NAME; DB_VERSION; STORE_DOCUMENTS; STORE_UPDATES; STORE_META; COMPACT_INTERVAL_MS; COMPACT_UPDATE_THRESHOLD; MAX_PENDING_UPDATES; FALLBACK_QUEUE_KEY; STRINGS; openDB; txWrite; txRead; b64encode; b64decode,0
+src/js/crdt-yjs-rich-media.js,js,14457,313,Y_KEY_ID; Y_KEY_KIND; Y_KEY_ASSET_ID; Y_KEY_MIME; Y_KEY_TRANSFORM; Y_KEY_CROP; Y_KEY_PROVIDER; Y_KEY_VIDEO_ID; DEFAULT_TRANSFORM; RESIZE_RENDER_HZ; RESIZE_REPLICATE_HZ; MAX_TRANSFORM; STRINGS; assertY; clampNum,0
+src/js/crdt-yjs-undo.js,js,6648,155,DEFAULT_CAPTURE_TIMEOUT_MS; STRINGS; assertYjsLoaded; create; UndoManager; EInviteCRDTV52Undo,0
+src/js/creative-packs.js,js,4282,13,make,4
+src/js/custom-font-core-v22.js,js,6279,16,url; id; norm; meta; normalize; add; remove; list; EInviteCustomFonts,0
+src/js/custom-fonts-v22.js,js,14536,56,MAX_CUSTOM_FONTS; safeUrl; safeId; normalizeEntry; registerMetadata; canvasCoverage; verifyLoadedEntry; normalizeDocumentFonts; list; addToDocument; removeFromDocument; patchReady; EInviteCustomFonts,1
+src/js/dashboard-empty-state.js,js,1559,2,,0
+src/js/dashboard-enhancements.js,js,11899,110,readBuiltInFavorites; writeBuiltInFavorites; templateDoc; stripMarkup; templatePalette; templateTitle; liveThumbnail; allTemplateItemsEnhanced; previewObjectMarkup; previewPageMarkup; openTemplatePreview,0
+src/js/dashboard-polish.js,js,4433,82,$$; availableInvites; updateMetrics; decorateCards; applyFilter,0
+src/js/dashboard.js,js,42327,116,disconnectDashboardThumbnails; ensureDashboardRichTextRenderer; baseDocument; textObj; shapeObj; page; enrichBuiltin; builtInDocument; instantiateCustom; show; dashboardThumbnail; render; setAuthMode; allTemplateItems; renderTemplateChoices,76
+src/js/data-merge-v47.js,js,4458,7,render; EInviteDataMergeV47,1
+src/js/delivery-dialog.js,js,7737,158,STRINGS; open; renderChannels; renderRecipients; EInviteDeliveryDialog,7
+src/js/designer.js,js,1442,5,,45
+src/js/direct-manipulation-v24.js,js,10957,35,on; clone; clamp; activeMap; selected; announce; startInline; finishInline; ensureCropHud; positionCropHud; startCrop; previewCrop; beginCropDrag; moveCropDrag; endCropDrag,3
+src/js/document-schema-v32.js,js,12760,61,CURRENT_VERSION; baseFeatures; fromSceneTree; normalizeProfessionalScene; normalizeRaster; normalizeCollaboration; normalizeFuture; migrate; createRasterDocument; EInviteDocumentV32,1
+src/js/editor-builders.js,js,13521,83,parseSchedule; writeSchedule; parseVenues; writeVenues; parseSections; writeSections; builderShell; renderSchedule; renderVenues; labelForToken; renderSections; refreshAll,4
+src/js/editor-canva-v13.js,js,4977,11,close; ensureMenu; contextMenu; layerDnD; constraints; boot,0
+src/js/editor-command-system-v23.js,js,27708,150,PROFILE_KEY; OVERRIDE_KEY; DEFAULT_PROFILE; readJson; notify; normalizeCommand; register; registerMany; unregister; context; commandState; list; subscribe; canonicalKey; canonicalChord,3
+src/js/editor-commands-v13.js,js,5562,29,CLIP; STYLE_KEYS; canvasMap; execute; selected; getSelectedObjects; copySelection; pasteSelection; shift; copyStyle; pasteStyle; setProperty; toggle; setConstraints; saveBreakpoint,0
+src/js/editor-deferred-tools-bootstrap-v0_52.js,js,2370,1,,0
+src/js/editor-layout-stability.js,js,3536,68,clampPanelWidths; activeSection; applyLayout,0
+src/js/editor-pro.js,js,11720,44,setTool; canvasPoint; createTextAt; createShapeAt; createFrameAt; valueOf; selectOptions; renderContext; openInspector; wireContext; EInviteToolController,5
+src/js/editor-responsive-contract-v27.js,js,5359,1,,1
+src/js/editor-schema-v13.js,js,9744,59,VERSION; normalizeObject; compatibilityGroups; buildSceneGraph; migrate; syncLegacy; syncGraphToLegacy; stripGraphFields; validate; EInviteEditorSchema,0
+src/js/editor-shared-styles-v13.js,js,6318,24,STYLE_KEYS; bridge; selected; canvasMap; ensureStore; firstObject; status; render; escapeHtml; capture; save; apply; remove; install; boot,0
+src/js/editor-suite.js,js,85086,608,wireAuthLayouts; enhanceMaterialsPage; editorEnhancements; textureImages; averageCorners; dist; parseSchedule; writeSchedule; parseVenues; writeVenues; parseSections; writeSections; builderShell; renderSchedule; renderVenues,0
+src/js/editor/editor-core.js,js,48615,1141,$$; AutoFitGuard; on; esc; uid; activeMap; selectedElements; readableType; stageScale; selectionMetrics; set; suppressFor; patch; patchController; ensureHud,3
+src/js/editor/ui-components.js,js,5154,138,$$; NAV_SURFACE_SELECTORS; tagNavSurfaces; expandOverflowingCards; observeSurfaces; install; EInviteUiComponents,1
+src/js/editor/ui-layout.js,js,13998,329,$$; SIDEBAR_KEY; toolbar; ensureToolbarMore; populateToolbarMore; closeMoreAfterAction; keepActivePageVisible; keepActiveToolVisible; ensureContextRow; ensureDockOrder; onResize; sidebarCollapsed; setSidebarCollapsed; ensureSidebarCollapseButton; install,3
+src/js/enterprise-government-v42.js,js,4258,9,render; apply; EInviteEnterpriseGovernmentV42,1
+src/js/event-ecosystem-v52.js,js,8819,17,metric; render; programForm; vendorForm; incidentForm; automationForm; EInviteEventEcosystemV52,1
+src/js/experience-schema.js,js,6741,16,VERSION; copy; migrate; snapshotDefaults; applyKit; restoreDefaults; EInviteExperience,0
+src/js/export-quality-v24.js,js,27954,59,CRC_TABLE; on; activeMap; mapForPage; allEntries; parseHex; luminance; contrast; pageLabel; inspect; dedupe; counts; ensureAltDialog; editAltText; jump,2
+src/js/final-experience.js,js,33804,156,TOUR_VERSION; toast; selectOnly; makeId; refreshAdvancedControls; keyframesFor; previewObjects; refreshTimeline; stagePercentFrame; smartLayout; addCustomElement; filteredLibrary; renderLibrary; persistTourSeen; workspaceFocus,0
+src/js/final-polish.js,js,26603,121,dashboardFinal; buildPreview; decorateCard; materialsFinal; itemById; inviteName; ensureDialog; openPreview; decorate; editorFinal; addSvgAsset; renderFonts,0
+src/js/font-browser-loader-v22.js,js,1638,1,,2
+src/js/font-browser.js,js,10648,32,documentFonts; quality; fontList; syncSelect; announce; catsFor; replaceRemovedFont; render,3
+src/js/future-public-renderer-v52.js,js,2052,1,,2
+src/js/future-studio-loader-v52.js,js,8167,19,loadScript; setBackgroundInert; syncMode; build; close; click; keydown; destroy,1
+src/js/future-ui-v0_52.js,js,5934,20,liveRegion; notify; modalBase; confirmAction; promptText; parseJson; safeStoredJson; destroy; EInviteFutureUIV052,1
+src/js/gpu-loader-v22.js,js,357,1,,1
+src/js/gpu-projection-v22.js,js,6273,30,canvas2d; vectorInfo; ensureFramebuffer; disposeFramebuffer; colorFor; codeFor; markDirty; diagnostics; onLost; onRestored; destroy; EInviteGPUProjection,0
+src/js/gpu-texture-cache-v22.js,js,5356,29,defaultBudget; safeKey; powerOfTwo; TextureCache; EInviteGPUTextureCache,0
+src/js/guest-journey.js,js,8083,36,COPY; SECTION_LABELS; enhance; EInviteGuestJourney,4
+src/js/guest-layouts.js,js,3160,13,kitStyle; safeAmbientPhoto; apply; EInviteGuestLayouts,0
+src/js/guests.js,js,12446,20,esc; guestUrl; filtered; render; showQr; parseCsv,60
+src/js/host-polls.js,js,36477,641,STRINGS; mount; renderLoading; renderEmpty; renderError; render; renderRow; openPollModal; renderOptionRow; closeOverlay; renderResults; EInviteHostPolls,17
+src/js/host-signup-sheets.js,js,30223,514,STRINGS; mount; renderLoading; renderEmpty; renderError; render; renderRow; openSheetModal; renderSlotRow; closeOverlay; renderClaims; cssEsc; EInviteHostSignupSheets,18
+src/js/incremental-scene-renderer-v22.js,js,5284,22,mapFor; fingerprint; element; patchElement; updateIndexElement; rebuildIndex; applyDocument; queryRect; scheduleRebuild; snapshot; onStateApplied; destroy; GridIndex; EInviteIncrementalRenderer,2
+src/js/interaction-scheduler-v22.js,js,3275,21,eventSnapshot; flushFrame; scheduleRaf; scheduleFrame; pointer; flushIdle; scheduleIdleLoop; scheduleIdle; cancel; flush; pause; resume; stats; onVisibility; destroy,2
+src/js/invitation-context.js,js,2234,24,LAST_KEY; getInvitationId; remember; route; EInviteContext,0
+src/js/invitation-edit-history.js,js,10426,193,STRINGS; mountBadge; mountHistoryView; renderEntry; EInviteEditHistory,2
+src/js/materials.js,js,12610,81,typeOf; renderInvitationOptions; filtered; render; openEdit; uploadMaterialFiles,57
+src/js/mobile-editor-v14.js,js,8584,156,$$; fitMobileCanvas; setHiddenState; currentMode; sync; openMode; openAdvanced; closeAdvanced; __einviteMobileEditorV14,23
+src/js/modern-ui.js,js,11809,77,currentMode; applyTheme; installThemeControl; installAppLauncher; toast; setWidths; addToggle; resizer; EInviteThemeController; einviteToast,6
+src/js/monitoring.js,js,2359,6,fmtBytes,1
+src/js/navigation-history-v23.js,js,22093,94,MODE_KEY; PAGE_VIEW_KEY; DB; MAX_CHECKPOINTS; announce; activePage; activeMap; pageCountSummary; groups; descendants; topGroup; candidatesAtPoint; orderedFallback; selectObjectElement; cycleSelection,3
+src/js/opening-scenes.js,js,2427,10,MAX_DURATION; safeColor; safeImage; duration; cssUrl; coverMarkup; enhance; EInviteOpeningScenes,0
+src/js/page-experience-v22.js,js,57425,943,VERSION; MAX_THUMBS; EVENT_ROLES; ROLE_LABELS; EVENT_TEXT_SPECS; uid; pageMode; pageRole; activePage; pageListSignature; pageChromeSignature; activeInsertIndex; uniquePageName; roleLabel; fnvStep,1
+src/js/performance-loader-v22.js,js,1200,6,,0
+src/js/performance-observability-v22.js,js,5187,25,MAX; bucket; record; percentile; summary; begin; measure; pointerToken; pointerPainted; frame; resume; memory; benchmarkDocument; budgets; snapshot,2
+src/js/photo-editor-v13.js,js,14402,33,adjustmentLayers; setAdjustmentLayers; renderAdjustmentLayers; smartObject; sync; escapeHtml; apply; drawHistogram; paintHistogram,0
+src/js/photo-editor.js,js,7437,18,filter; apply; syncPreview; open,5
+src/js/photo-retouch-v13.js,js,10496,24,selectedImage; canvasMap; ensure; bind; updateHint; point; pushHistory; restoreHistory; colorDistance; magicErase; brushErase; cloneBrush; pointerDown; pointerMove; boot,0
+src/js/photo-style-library-v23.js,js,22398,139,VERSION; STORAGE_KEY; on; canvasMap; isImage; selectedImageIds; pageImageIds; targetIds; selectedSource; safeImageUrl; normalizeLook; normalizeStyle; builtinStyles; readStored; writeStored,3
+src/js/photo-worker-v13.js,js,1702,1,,2
+src/js/photo-workflow-v23.js,js,25384,197,VERSION; NUMBER_FIELDS; STRING_FIELDS; BOOLEAN_FIELDS; ADJUSTMENT_FIELDS; LOOK_FIELDS; PHOTO_FIELDS; PRESETS; BASIC_CONTROLS; ADVANCED_CONTROLS; on; canvasMap; selectedImageContext; defaultValue; normalizePhoto,3
+src/js/plugin-platform-v48.js,js,3792,7,render; EInvitePluginPlatformV48,1
+src/js/plugin-runtime-v48.js,js,4089,1,,1
+src/js/plugin_sandbox_host.js,js,9766,232,HEAP_LIMIT_MB; CPU_LIMIT_MS; BUNDLE_LIMIT_BYTES; HOST_METHODS; audit; isGranted; mount; destroy; EInvitePluginSandboxHost,1
+src/js/polls.js,js,7534,138,STRINGS; enhance; render; renderPoll; EInvitePolls,22
+src/js/print-readiness-v25.js,js,13193,33,KHMER; allObjects; objectText; usedFontRecords; fingerprintPayload; stable; markCurrent; download; render; ensureDialog; open; installLauncher; register; on; queueStaleCheck,2
+src/js/product-operations-v13.js,js,23645,27,ensureOrder; mutate; mount; renderEvents; eventRow; renderGuest; renderBrand,0
+src/js/production-readiness-v32.js,js,5132,17,button; build; close; render; card; jsonTable; csrf; destroy,1
+src/js/professional-editor-v17.js,js,68521,544,$$; CLIPBOARD; CLIPBOARD_VERSION; CLIPBOARD_MAX_OBJECTS; CLIPBOARD_MAX_BYTES; CLIPBOARD_ALLOWED_TYPES; SETTINGS; MIN_SIZE; readSettings; saveSettings; activeMap; groups; activeObjects; allObjectElements; selectedIds,3
+src/js/professional-layers-v29.js,js,26693,66,on; graph; activeCanvas; selectedNodeIds; selectNodes; button; build; open; close; render; toolbar; renderLayers; nodeMatches; renderTree; typeIcon,1
+src/js/professional-workflow-loader-v23.js,js,1683,9,loadScript; EInviteProfessionalWorkflowReady,0
+src/js/professional-workflow-v23.js,js,19613,103,activeMap; selectedIds; selectedElements; transformHud; updateTransformHud; announce; frameFromElement; applyPreview; startTransform; updateTransform; restorePreview; cancelTransform; commitTransform; nudgeTransform; resizeTransform,3
+src/js/public-page.js,js,53176,86,rsvpCustomFields; icsEscape; icsLocal; publicShareUrl; preloadOpeningAsset; downloadCalendarEntry; downloadCalendar; studioBrandMarkup; guestToast; sectionAnimationStyle; safeSectionImageUrl; safeSoundCloudUrl; featuredVideoMarkup; sectionVisualStyle; combinedSectionStyle,0
+src/js/public-share-panel.js,js,4556,14,clean; setOpen; enhance; EInvitePublicShare,3
+src/js/publishing-domains-v45.js,js,5257,11,render; activate; EInvitePublishingDomainsV45,1
+src/js/raster-model-v30.js,js,6292,26,documentMap; create; get; transact; addOperation; setAdjustment; addLayer; updateLayer; reorderLayer; addMask; crop; transform; checkpoint; fingerprint; cssFilter,1
+src/js/raster-worker-v30.js,js,3367,6,cssFilter; hash,1
+src/js/raster-workspace-v30.js,js,16952,34,selectedImage; button; build; close; loadImage; current; renderInspector; renderHistory; scheduleRender; renderCanvas; renderStrokes; renderMini; click; input; keydown,1
+src/js/render-worker-bridge-v22.js,js,5020,21,create; request; nodeFor; sceneNodes; scheduleSync; schedulePatch; onStateApplied; onIncremental; queryRect; destroy; loadGPU; EInviteRenderWorker,2
+src/js/renderer-core.js,js,18186,87,RendererAdapters; safeStyleValue; safeHref; cleanNode; sanitizeRichText; plainText; imageAdjustmentState; imageFilterStyle; imageTransformStyle; imageMaskStyle; objectDimension; animationName; advancedObjectStyle; advancedTextStyle; typographyProjection,3
+src/js/reset.js,js,1668,5,,90
+src/js/responses.js,js,7450,16,customLabels; metrics; filteredResponses; renderResponses; renderWishes; csvCell,43
+src/js/review-v23.js,js,40539,101,VERSION; setSurfaceHidden; announce; normalizeComment; normalizeApproval; normalizeNotification; pageName; anchorLabel; timestamp; eligibleRoots; ensureShell; ensurePinLayer; ensurePlacementBanner; unavailableMarkup; commentHeader,3
+src/js/rich-text-contract.js,js,1969,15,DATA; EInviteRichTextContract,4
+src/js/rich-text-document-model.js,js,20954,50,ID_RE; STYLE_RE; CONTROL_RE; KHMER_RE; LATIN_RE; DOC_KEYS; PARA_KEYS; RUN_KEYS; ENTITY_KEYS; MARK_KEYS; OVERRIDE_KEYS; LIST_KEYS; TAB_KEYS; byteLength; assertObject,2
+src/js/rich-text-editing-v21.js,js,21836,44,KHMER_ATTACH; canvasMap; contentInfo; locate; order; firstPos; lastPos; pointFromDom; domSelection; textPoint; restore; cleanRun; segmentRuns; normalizeRuns; deleteRange,2
+src/js/rich-text-renderer-v21.js,js,5410,18,fontStack; fontMeta; color; runStyle; runHtml; paragraphStyle; paragraphHtml; renderDocument; renderObject; text; setContent; RichTextRenderer,4
+src/js/runtime-lifecycle-v15.js,js,1186,14,add; interval; timeout; observer; controller; cleanup; EInviteLifecycle,0
+src/js/scene-graph-v29.js,js,16054,49,VERSION; graph; childList; validate; normalizeOrder; worldMatrix; multiply; inverse; localForWorld; descendants; transact; syncCompatibility; selection; select; rename,1
+src/js/scene-model-v22.js,js,6836,43,VERSION; stableId; node; legacyCanvases; fromLegacy; migrate; validate; syncToLegacy; rename; setState; reorder; EInviteSceneModel,0
+src/js/scene-render-worker-v22.js,js,3652,13,cellKeys; detach; setNode; removeNode; rebuild; patch; queryRect; ensureCanvas,1
+src/js/service-worker.js,js,1438,24,CACHE; PRECACHE; STATIC,2
+src/js/signup-sheets.js,js,10094,184,STRINGS; enhance; render; renderSheet; renderSlot; EInviteSignupSheets,22
+src/js/smart-layout-v24.js,js,13193,33,on; clone; clamp; activeMap; selected; percent; frames; transactFrames; stack; tidy; equalSize; anchorSelection; applyFormat; restoreFormat; diagnostics,2
+src/js/social-card.js,js,9790,41,SIZES; cleanUrl; fitImage; loadImage; wrap; cardText; download; render; EInviteSocialCard,5
+src/js/storage.js,js,2665,42,LocalRepository; IndexedAssetRepository; inviteStore; assetStore,32
+src/js/storyboard.js,js,7197,12,enabled; warning; flow; render; move; reorder; renderChecks; EInviteStoryboard,5
+src/js/studio-automation-v27.js,js,14516,32,fmtDate; fmtBytes; activeRelease; exportCsv; renderRemediation; renderBackups; renderAudit; render; ensureDialog; installLauncher; destroy,2
+src/js/studio-experience.js,js,39105,535,$$; text; button; buildTabbedSide; buildInspector; fire; setValue; setTextPreset; applyRecipe; selectedImageObjects; imageFilterCss; applyImageFiltersToSelection; refreshPhotoControls; primarySelected; copyObjectStyle,65
+src/js/studio-governance-v25.js,js,23048,50,LOCAL_RESOURCES; read; write; normalizeResource; localResources; saveLocal; normalizePolicy; currentBrandPayload; activeMap; insertComponent; patchTypography; applyBrand; allowedToApply; applyResource; referencedResources,2
+src/js/studio-operations-v26.js,js,17588,43,LOCAL_RELEASES; read; write; normalizeRelease; localReleases; saveLocal; approvedResources; releaseState; releaseIssues; releaseCard; renderReleases; renderAdoption; healthRows; renderDeployment; render,2
+src/js/style-history-v23.js,js,27337,73,KIT_KEY; announce; activePage; activeMap; selectionIds; allMaps; builtinKits; catalogFromExperienceKit; normalizeCatalog; normalizeKit; loadCustom; saveCustom; kitList; kitById; inferPalette,3
+src/js/style-kits.js,js,11565,38,applyAndSave; previewKit; keepPreview; cancelPreview; sceneOptions; stylePanel; openingPanel; renderExperience; bind; init,3
+src/js/template-bindings-v25.js,js,9114,29,maps; schedule; resolve; plainText; currentValue; setResolvedValue; syncSceneNode; inspect; refresh; setDetached; selectedBinding; render; ensureDialog; open; installLauncher,2
+src/js/template-marketplace-v36.js,js,3719,7,render; EInviteTemplateMarketplaceV36,1
+src/js/templates.js,js,13046,35,setTemplateState; palette; strip; titleOf; thumb; filtered; render; previewPage; preview; editMeta,65
+src/js/theme-init.js,js,1764,35,cookie; __einviteSecureFetch; fetch,2
+src/js/timeline-runtime-v13.js,js,2580,10,normalizedTrack; waapiFrames; play; seek; EInviteTimelineRuntime,0
+src/js/timeline-v13.js,js,12965,19,ensure; state; selected; trackFor; captureFrame; update; render; escapeHtml; selectFrame; highlight; preset; play; stop; bind; boot,0
+src/js/toast.js,js,7343,202,STRINGS; MAX_VISIBLE; DEFAULT_DURATION; VALID_TYPES; LEAVE_TIMEOUT_MS; activeLang; getStack; closeLabel; iconFor; show; pause; resume; dismiss; EInviteToast,73
+src/js/typography-contract.js,js,9521,19,DATA; finiteNumber; fontId; pairingId; stack; pairing; pairedFont; pairedStack; metadata; normalizeTypography; fitLargest; EInviteFontRegistry; EInviteTypography,2
+src/js/typography-document-model.js,js,18401,96,MODEL_VERSION; KHMER_RE; STYLE_FIELDS; OVERRIDE_FIELDS; DEFAULT_STYLES; DEFAULT_ORDER; normalizeStyle; defaultCatalog; inferStyleId; legacyProjection; normalizeOverrides; differences; normalizeObject; normalizeCatalog; normalizeDocument,0
+src/js/typography-editor-v20.js,js,30107,71,MODEL; canvasMap; selectedEntries; firstSelected; preserveViewport; command; applyLayout; labeled; button; currentStyleId; styleOptions; setStyle; setOverride; openForm; createStyle,0
+src/js/typography-layout-service.js,js,18013,85,KHMER_RE; KHMER_MARK_RE; KHMER_COENG; STYLE_ORDER; mergeKhmerSegments; segmentGraphemes; preservesKhmerClusters; styleObject; styleString; ensureFlow; applyStyles; applyToElement; availableSpace; measurement; fit,0
+src/js/ui-dialogs.js,js,4158,24,toast; buildDialog; uiConfirm; uiPrompt; uiAlert; uiToast; alert,0
+src/js/unified-editor-v34.js,js,4006,8,render; applyDocument; openMode; applyProfile; EInviteUnifiedEditorV34,1
+src/js/upload-client.js,js,10000,174,RESUMABLE_THRESHOLD; DEFAULT_CHUNK_SIZE; abortError; cookieValue; browserMutationHeaders; xhrRequest; fontMime; EInviteUpload,0
+src/js/upload-folder-client-v53.js,js,5060,47,xhr,1
+src/js/ux-refine.js,js,10140,99,dashboard; authState; materials; editor; activate; applyMode,0
+src/js/vector-model-v29.js,js,12299,39,safePaint; sanitizeSvg; point; defaultVector; vectorObject; create; pathFromPoints; normalizePath; pathData; updateVector; addNode; moveNodes; setNodeKind; reverse; deleteNodes,1
+src/js/verify.js,js,589,2,,46
+src/js/webgl-scene-backend-v22.js,js,15326,45,VERT; FRAG; shader; initialize; cssColor; transformInfo; objectNode; resize; uniform; uvFor; releasePrepared; draw; coreDraw; clear; previewLoop,0
+src/js/workflow-continuity.js,js,14331,239,VALID; CONTENT; COMPACT; validSection; activePane; pane; tab; rememberScroll; restoreScroll; emit; selected; selectionSig; setInspector; refreshCanvasSoon; clearPanelSearch,2
+src/js/workflow-creation-flow-v3.js,js,10557,136,selected; selectedOne; sig; typeOf; toast; fitSoon; activateTool; ensurePageDock; renderPageDock; beginInlineText; centerNewObject; afterInsertion; ensureQuickStrip; actionButton; renderQuickStrip,3
+src/js/workflow-creation-flow-v4.js,js,16657,229,selected; selectedOne; sig; typeOf; toast; fitSoon; activateTool; ensurePageDock; renderPageDock; beginInlineText; centerNewObject; afterInsertion; ensureCanvasWelcome; updateCanvasWelcome; clickFirst,3
+src/js/workflow-final-audit-v7.js,js,19281,255,DESIGN_SECTIONS; CONTENT_SECTIONS; VERSION; toast; currentCanvasId; captureView; restoreView; closeTransientUi; openFlow; ensureTextWorkspace; createText; applyFont; recentFonts; renderFonts; ensureFlowAffordances,1
+src/js/workflow-pro-editor-v6.js,js,24390,198,stageRect; rect; moveBy; alignToCanvas; alignSelectionV6; distribute; arrange; updatePositionStatus; openPosition; wireLayerDrag; wireInsertSources; canvasObjectIdsV6; repositionNew; pageForToken; tokenMeta,1
+src/js/workflow-refine.js,js,12328,221,FLOW_VERSION; iconSvg; ensureDesignHome; reorderRail; activePane; selectedObjects; setInspector; fitCanvasSoon; applyMode; activate; wireRail; wireDesignHome; addPaneBackButtons; wireObjectFlow; wireInsertFlow,0
+src/js/workflow-ux-v5.js,js,8791,97,selectionLabel; pageLabel; refreshStatus; setFocusMode; hideMenu; selectObject; menuItems; runAction; openMenu; revealActivePage; extendQuickAdd; showCoach; EInviteUXV5,3
+src/js/workspace-v21.js,js,3150,1,,2
+src/python/backup.py,python,1943,55,platform_env; main,45
+src/python/backup_restore.py,python,5771,93,data_dir; database_url; is_postgres; sha; create_backup; verify_backup; restore_backup; main,3
+src/python/build_editor_bundle.py,python,6145,171,resolve_js; resolve_css; bundle_text; expected_bundles; atomic_write; write_both; check; build; main,7
+src/python/build_page_manifests.py,python,7449,181,clean; resolve_asset; size; page_entry; atomic_write; build; main; Parser,3
+src/python/build_route_bundles.py,python,9419,231,resolve_js_source; resolve_css_source; read_js; read_css; js_bundle; css_bundle; encoded; digest; atomic_write; write_both; build; _manifest_text; main,4
+src/python/delivery_channels/__init__.py,python,2246,50,,6
+src/python/delivery_channels/base.py,python,6962,173,_env; _post_json; ChannelError; SendResult; DeliveryChannel,91
+src/python/delivery_channels/email_channel.py,python,2610,61,register_email_sender; EmailChannel,2
+src/python/delivery_channels/registry.py,python,2596,72,register_channel; get_channel; available_channels; channel_metadata,40
+src/python/delivery_channels/sms_channel.py,python,4072,87,SmsChannel,1
+src/python/delivery_channels/telegram_channel.py,python,3425,83,TelegramChannel,1
+src/python/delivery_channels/whatsapp_channel.py,python,3937,91,WhatsAppChannel,1
+src/python/dependency_preflight.py,python,4318,90,chromium_candidates; verify_chromium_launch; verify_woff2_decode; main,1
+src/python/document_schema_v32.py,python,19334,344,_finite; _text; _id; _matrix; _normalize_vector; _normalize_scene; _normalize_raster; _bounded_list; _normalize_future; normalize_document_v32,1
+src/python/generate_rich_text_contract.py,python,2715,27,,2
+src/python/generate_typography_contract.py,python,6785,41,,3
+src/python/media_worker.py,python,2014,46,_stop; run_job; main,1
+src/python/migrate_assets_to_object_storage.py,python,2921,69,platform_env; main,0
+src/python/migrate_sqlite_to_postgres.py,python,3728,86,platform_env; main,0
+src/python/platform_scheduler_v32.py,python,1550,20,request_stop,0
+src/python/platform_worker_v32.py,python,978,22,request_stop,0
+src/python/plugin_marketplace_ca.py,python,8080,204,_crl_path; _load_crl; check_revocation; _canonical_json; _verify_ed25519; verify_plugin_signature; is_ca_configured; marketplace_summary,1
+src/python/prepare_production_env.py,python,5259,119,validate_origin; generate_values; create_environment; main,0
+src/python/production_preflight.py,python,13048,264,truthy; valid_exact_host; _valid_proxy_ip; load_env_file; _url_error; _secret_error; audit_environment; validate_production_environment; main,3
+src/python/release_check.py,python,4065,54,configure_utf8_console; run; main,3
+src/python/release_check_v28.py,python,2004,40,run; main,0
+src/python/rich_text_contract.py,python,2184,27,,3
+src/python/rich_text_document_model.py,python,22024,429,_keys; _obj; _finite; _fnv; stable_id; _safe_id; _text; detect_locale; _locale; _direction; safe_url; _mark_seed; _marks; _overrides; _list,2
+src/python/run_review_checks.py,python,16863,153,configure_utf8_console; process_kwargs; stop_tree; cleanup; execute; main,1
+src/python/secrets_v54.py,python,6848,168,_is_placeholder; _read_env_file; _append_to_env_file; ensure_secret,1
+src/python/security_scanner_v54.py,python,17427,423,_clamd_instream; _windows_defender_cli; _defender_scan; detect_scanner; _detect_scanner_uncached; scan_file; scan_bytes; startup_preflight; enforce_scanner_on_startup; MalwareDetected,1
+src/python/security_v13.py,python,14140,346,hash_password; verify_password; _generate_one_recovery_code; generate_recovery_codes; hash_recovery_code; verify_recovery_code; b64url; b64url_decode; new_csrf_token; new_totp_secret; _totp_counter; totp_code; verify_totp; otpauth_uri; _read_uint,2
+src/python/server.py,python,739443,9780,platform_env; persistent_data_secret; current_presence; redis_client; send_platform_email; security_notification; send_security_notification; auth_action_url; object_storage_enabled; object_storage_key; stored_object_storage_key; object_storage_client; asset_public_url; responsive_asset_url; store_asset_bytes,143
+src/python/sync_frontend_assets.py,python,7098,168,_needs_copy; copy_file; sync_tree; sync_all; main,0
+src/python/typography_contract.py,python,8671,48,normalize_font_id; normalize_pairing_id; font_stack; paired_font; finite_number,7
+src/python/typography_document_model.py,python,14856,212,_number; _clean_name; _style_id; normalize_style; normalize_catalog; _pair_for_font; infer_style_id; _legacy_projection; normalize_overrides; normalize_object_typography; normalize_document_typography,2
+src/python/verify_v28_manifest.py,python,1094,21,main,1

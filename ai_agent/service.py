@@ -13,6 +13,7 @@ from .storage import AgentStore
 from .tools import ToolValidationError, get_tool, tool_catalog, validate_tool_calls
 from .capabilities import build_access_snapshot, filter_catalog, assert_calls_available, coverage_report, http_request_matches_tool
 from .design_blueprints import DesignBlueprintAnalyzer, DesignBlueprintError
+from .jit_elevation import JITElevationManager, is_jit_eligible
 
 
 class AgentServiceError(RuntimeError):
@@ -43,6 +44,12 @@ class AgentService:
         self._running: dict[str, set[str]] = {}
         self._tool_authorizations: dict[str, dict[str, Any]] = {}
         self._lock = threading.Lock()
+        # V54.13 (sec-5) — JIT elevation manager. The schema is created on
+        # first instantiation via ensure_jit_schema() (idempotent). All state
+        # transitions emit audit events through self.audit (the same callback
+        # used by AgentService._emit_audit, which writes to the hash-chained
+        # audit_events table per src/python/server.py:write_audit_event).
+        self.jit = JITElevationManager(connect, audit=audit)
 
     def _emit_audit(self, user_id: str, action: str, invitation_id: str, metadata: dict[str, Any]) -> None:
         if not self.audit:
@@ -428,6 +435,57 @@ class AgentService:
         if int(plan["documentRevision"] or 0) != int(current["invitation"]["revision"] or 0) or plan["documentFingerprint"] != current["invitation"]["fingerprint"]:
             self.store.update_plan_status(plan_id, invitation_id, user_id, "stale", {"reason":"revision_changed_before_operation"})
             raise AgentServiceError("The invitation changed before this operation could run", "stale_plan", 409)
+        tool_id = str(call.get("id") or "")
+        # V54.13 (sec-5, §2.5) — JIT elevation enforcement. For tools whose
+        # permission is "manage" or whose id starts with publish./delete./bulk_
+        # (the JIT_ELIGIBLE_TOOLS frozenset in ai_agent/jit_elevation.py), the
+        # caller must hold an ACTIVE 5-minute JIT grant before the 30-second
+        # one-shot authorization token is issued. If no grant is active,
+        # request_elevation() is called: auto-approval rules apply (owner or
+        # manager + publish.prepare → granted immediately); otherwise the
+        # request is queued for manual approval and a needsElevation response
+        # is returned to the client so the host can approve via
+        # POST /api/ai-agent/jit/approve.
+        if is_jit_eligible(tool_id):
+            invitation_row = current.get("invitation", {}) or {}
+            workspace_id = str(invitation_row.get("workspaceId") or invitation_row.get("workspace_id") or "")
+            call_args = call.get("arguments") if isinstance(call.get("arguments"), dict) else {}
+            action = str(call_args.get("action") or call_args.get("mode") or tool_id)[:80]
+            reason = str(data.get("jitReason") or data.get("reason") or f"JIT elevation required for {tool_id}")[:1000]
+            if not self.jit.evaluate(
+                user_id, tool_id,
+                resource_id=invitation_id, resource_type="invitation",
+                action=action, workspace_id=workspace_id, invitation_id=invitation_id,
+            ):
+                elevation = self.jit.request_elevation(
+                    user_id, tool_id, invitation_id, "invitation", reason,
+                    action=action, workspace_id=workspace_id, invitation_id=invitation_id,
+                    role=role, plan_id=plan_id, plan_index=index,
+                )
+                if elevation.get("status") != "granted":
+                    # Pending manual approval. The client must call
+                    # POST /api/ai-agent/jit/approve then retry this endpoint.
+                    return {
+                        "needsElevation": True,
+                        "toolId": tool_id,
+                        "ttlSeconds": self.jit.ttl_seconds,
+                        "requestId": elevation.get("id") or elevation.get("elevationId") or "",
+                        "status": elevation.get("status") or "requested",
+                        "autoEligible": bool(elevation.get("autoEligible")),
+                    }
+                # Auto-approved — re-evaluate to consume the new grant before
+                # issuing the one-shot authorization token. If the grant was
+                # revoked between request_elevation and this call (a race),
+                # surface a clear error rather than issuing an unauthorised token.
+                if not self.jit.evaluate(
+                    user_id, tool_id,
+                    resource_id=invitation_id, resource_type="invitation",
+                    action=action, workspace_id=workspace_id, invitation_id=invitation_id,
+                ):
+                    raise AgentServiceError(
+                        "JIT elevation was granted but could not be consumed (revoked or expired)",
+                        "jit_elevation_unavailable", 409,
+                    )
         token = secrets.token_urlsafe(32)
         now = time.time()
         with self._lock:
@@ -439,11 +497,11 @@ class AgentService:
                 "invitationId": invitation_id,
                 "planId": plan_id,
                 "index": index,
-                "toolId": str(call.get("id") or ""),
+                "toolId": tool_id,
                 "expiresAt": now + 30,
             }
-        self._emit_audit(user_id, "ai.tool_authorized", invitation_id, {"planId":plan_id,"index":index,"toolId":call.get("id")})
-        return {"authorized":True,"authorizationToken":token,"planId":plan_id,"index":index,"toolId":call.get("id"),"expiresInSeconds":30}
+        self._emit_audit(user_id, "ai.tool_authorized", invitation_id, {"planId":plan_id,"index":index,"toolId":tool_id})
+        return {"authorized":True,"authorizationToken":token,"planId":plan_id,"index":index,"toolId":tool_id,"expiresInSeconds":30}
 
     def consume_tool_authorization(self, token: str, invitation_id: str, user_id: str, tool_id: str, method: str = "", path: str = "") -> dict[str, Any]:
         """Consume one short-lived authorization issued for an exact planned tool."""

@@ -1,7 +1,7 @@
 {
   "earlyScripts": [
     "backend-mode-v14.js",
-    "theme-init.js"
+    "core/theme.js"
   ],
   "pages": {
     "account.html": {
@@ -33,6 +33,15 @@
       "scripts": [
         "ui-dialogs.js",
         "admin.js",
+        "pages/admin/admin.js",
+        "pages/admin/users.js",
+        "pages/admin/invitations.js",
+        "pages/admin/feature-flags.js",
+        "pages/admin/audit-log.js",
+        "pages/admin/system-health.js",
+        "pages/admin/bulk-operations.js",
+        "pages/admin/impersonate.js",
+        "pages/admin/reports.js",
         "modern-ui.js",
         "final-experience.js",
         "monitoring.js",
@@ -41,6 +50,7 @@
       "styles": [
         "styles.css",
         "admin-page-v13.css",
+        "pages/admin.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -58,6 +68,8 @@
       "scripts": [
         "ui-dialogs.js",
         "invitation-context.js",
+        "components/chart.js",
+        "pages/dashboard/analytics.js",
         "analytics.js",
         "modern-ui.js",
         "final-experience.js",
@@ -77,7 +89,8 @@
         "ux-refine.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "pages/dashboard.css"
       ]
     },
     "billing.html": {
@@ -136,7 +149,12 @@
         "ux-refine.js",
         "final-polish.js",
         "dashboard-empty-state.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "delivery-dialog.js",
+        "invitation-edit-history.js",
+        "host-signup-sheets.js",
+        "host-polls.js",
+        "components/toast.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -155,7 +173,8 @@
         "dashboard-empty-state.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "guest-features-v54_1.css"
       ]
     },
     "designer.html": {
@@ -164,7 +183,14 @@
         "designer.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "editor/chrome/layers.js",
+        "editor/chrome/pages.js",
+        "editor/chrome/command-palette.js",
+        "editor/chrome/shortcuts.js",
+        "editor/collab/presence.js",
+        "editor/collab/comments.js",
+        "editor/history/timeline.js"
       ],
       "styles": [
         "styles.css",
@@ -179,7 +205,8 @@
         "theme-hardening.css",
         "ux-refine.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "editor/chrome.css"
       ]
     },
     "guests.html": {
@@ -265,7 +292,25 @@
         "editor-responsive-contract-v27.js",
         "editor/editor-core.js",
         "editor/ui-layout.js",
-        "editor/ui-components.js"
+        "editor/ui-components.js",
+        "editor/canvas/guides.js",
+        "editor/canvas/snapping.js",
+        "editor/canvas/selection.js",
+        "editor/canvas/viewport.js",
+        "editor/chrome/context-menu.js",
+        "editor/text/inline-editor.js",
+        "editor/text/effects.js",
+        "editor/text/typography.js",
+        "editor/media/crop.js",
+        "editor/media/filters.js",
+        "editor/media/image.js",
+        "editor/chrome/layers.js",
+        "editor/chrome/pages.js",
+        "editor/chrome/command-palette.js",
+        "editor/chrome/shortcuts.js",
+        "editor/collab/presence.js",
+        "editor/collab/comments.js",
+        "editor/history/timeline.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -306,7 +351,9 @@
         "zoom-layout-v22.css",
         "graphics-runtime-v22.css",
         "editor-responsive-contract-v27.css",
-        "editor/editor-styles.css"
+        "editor/editor-styles.css",
+        "editor/canvas.css",
+        "editor/chrome.css"
       ]
     },
     "materials.html": {
@@ -365,6 +412,11 @@
         "guest-layouts.js",
         "public-share-panel.js",
         "guest-journey.js",
+        "signup-sheets.js",
+        "polls.js",
+        "album.js",
+        "invitation-edit-history.js",
+        "public/analytics-collector.js",
         "public-page.js",
         "ux-refine.js"
       ],
@@ -374,7 +426,8 @@
         "styles.css",
         "opening-scenes.css",
         "guest-layouts.css",
-        "guest-journey.css"
+        "guest-journey.css",
+        "guest-features-v54_1.css"
       ]
     },
     "reset.html": {
