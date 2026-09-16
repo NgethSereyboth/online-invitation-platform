@@ -81,9 +81,9 @@
    */
   function sanitize(html) {
     if (html == null) return '';
-    const wrapped = `<div id="root">${String(html)}</div>`;
-    const doc = new DOMParser().parseFromString(wrapped, 'text/html');
+    const doc = new DOMParser().parseFromString('<div id="root"></div>', 'text/html');
     const root = doc.getElementById('root') || doc.body;
+    root.textContent = String(html);
     return walk(root);
   }
 
