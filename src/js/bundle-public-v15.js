@@ -273,7 +273,14 @@ function cleanNode(node,doc){
 }
 function sanitizeRichText(html){
   const source=String(html??'');if(!source)return'';
-  if(typeof document==='undefined')return esc(source.replace(/<(?:script|style|iframe|object|embed|svg|math|template|noscript)\b[^>]*>[\s\S]*?<\/\s*(?:script|style|iframe|object|embed|svg|math|template|noscript)\s*>/gi,'').replace(/<[^>]+>/g,''));
+  if(typeof document==='undefined'){
+    let sanitized=source,previous;
+    do{
+      previous=sanitized;
+      sanitized=sanitized.replace(/<(?:script|style|iframe|object|embed|svg|math|template|noscript)\b[^>]*>[\s\S]*?<\/\s*(?:script|style|iframe|object|embed|svg|math|template|noscript)\s*>/gi,'');
+    }while(sanitized!==previous);
+    return esc(sanitized.replace(/<[^>]+>/g,''));
+  }
   const template=document.createElement('template');template.innerHTML=source;const out=document.createElement('div');[...template.content.childNodes].forEach(node=>out.append(cleanNode(node,document)));return out.innerHTML
 }
 function plainText(html){if(typeof document==='undefined')return String(html??'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();const div=document.createElement('div');div.innerHTML=sanitizeRichText(html);return div.textContent||''}
