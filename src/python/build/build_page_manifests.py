@@ -24,7 +24,7 @@ from pathlib import Path
 # so server.py can read it, AND mirrored to docs/ (repo source of truth).
 SCRIPT_DIR = Path(__file__).resolve().parent
 # REPO_ROOT = /home/z/my-project/einvite-platform
-REPO_ROOT = SCRIPT_DIR.parent.parent
+REPO_ROOT = SCRIPT_DIR.parent.parent.parent
 JS_DIR = REPO_ROOT / "src" / "js"
 CSS_DIR = REPO_ROOT / "src" / "css"
 CSS_ORG = CSS_DIR / "organized"

@@ -26,9 +26,9 @@ from pathlib import Path
 
 # --- Repo layout -----------------------------------------------------------
 # SCRIPT_DIR is src/python/ (the server ROOT). We copy runtime assets INTO here.
-SCRIPT_DIR = Path(__file__).resolve().parent
+SCRIPT_DIR = Path(__file__).resolve().parent.parent  # src/python/ (server ROOT)
 # REPO_ROOT = /home/z/my-project/einvite-platform (two parents up from src/python/).
-REPO_ROOT = SCRIPT_DIR.parent.parent
+REPO_ROOT = SCRIPT_DIR.parent.parent  # repo root (src/python/ -> src/ -> repo root)
 HTML_DIR = REPO_ROOT / "src" / "html"
 JS_DIR = REPO_ROOT / "src" / "js"
 CSS_DIR = REPO_ROOT / "src" / "css"

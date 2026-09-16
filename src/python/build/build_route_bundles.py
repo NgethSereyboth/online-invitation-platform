@@ -32,7 +32,7 @@ from pathlib import Path
 # also serves from here, so generated artifacts MUST be written here.
 SCRIPT_DIR = Path(__file__).resolve().parent
 # REPO_ROOT = /home/z/my-project/einvite-platform (two parents up from src/python/).
-REPO_ROOT = SCRIPT_DIR.parent.parent
+REPO_ROOT = SCRIPT_DIR.parent.parent.parent
 JS_DIR = REPO_ROOT / "src" / "js"
 CSS_DIR = REPO_ROOT / "src" / "css"
 CSS_ORG = CSS_DIR / "organized"

@@ -1,0 +1,88 @@
+/* v0.64.0–v0.66.0 — admin page styles (ROADMAP §5.1–§5.9)
+ *
+ * All selectors namespaced `ei-` so they don't conflict with the legacy
+ * admin-page-v13.css that still ships in the admin bundle.
+ */
+
+/* System status banner (§5.1) */
+.ei-system-status {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+  padding: .65rem 1rem; border-radius: .5rem; margin: .5rem 0 1rem;
+  background: #eef6ff; color: #1f3a57; border: 1px solid #b6d4f0;
+}
+.ei-system-status[data-status="green"]  { background: #e7f7ed; color: #14451f; border-color: #8fd9a6; }
+.ei-system-status[data-status="yellow"]{ background: #fff8e1; color: #6b4f00; border-color: #ffd56b; }
+.ei-system-status[data-status="red"]   { background: #fde7e7; color: #6b1414; border-color: #f1a0a0; }
+.ei-system-status[data-status="loading"]{ background: #f3f4f6; color: #4b5563; border-color: #d1d5db; }
+.ei-system-status-dot {
+  display: inline-block; width: .65rem; height: .65rem; border-radius: 9999px;
+  background: currentColor; box-shadow: 0 0 0 3px rgba(0,0,0,.05);
+}
+.ei-system-status[data-status="green"] .ei-system-status-dot  { background: #2ea44f; }
+.ei-system-status[data-status="yellow"] .ei-system-status-dot{ background: #d39a00; }
+.ei-system-status[data-status="red"] .ei-system-status-dot   { background: #c83131; }
+.ei-system-status[data-status="loading"] .ei-system-status-dot{ background: #9ca3af; }
+
+/* Stat cards grid (§5.1) */
+.ei-stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; margin: .5rem 0 1.5rem; }
+.ei-stat-card {
+  display: flex; flex-direction: column; gap: .25rem;
+  padding: .75rem 1rem; border: 1px solid #e5e7eb; border-radius: .5rem;
+  background: #fff; min-height: 80px;
+}
+.ei-stat-card-label { font-size: .75rem; color: #6b7280; text-transform: uppercase; letter-spacing: .03em; }
+.ei-stat-card-value { font-size: 1.4rem; font-weight: 600; color: #111827; }
+.ei-stat-card-delta { font-size: .7rem; color: #6b7280; }
+.ei-stat-card-delta::before { content: ""; }
+
+/* Impersonation banner (§5.8) */
+.ei-impersonation-banner {
+  position: sticky; top: 0; z-index: 50;
+  background: #b91c1c; color: #fff; padding: .5rem 1rem;
+  display: flex; flex-wrap: wrap; gap: .35rem .75rem; align-items: center;
+  font-size: .9rem;
+}
+.ei-impersonation-banner[hidden] { display: none; }
+.ei-impersonation-banner a { color: #ffe6e6; text-decoration: underline; }
+.ei-impersonation-banner a:hover { color: #fff; }
+
+/* Admin table shared style (all sections) */
+.ei-admin-table { width: 100%; border-collapse: collapse; margin: .5rem 0 1rem; font-size: .875rem; }
+.ei-admin-table th, .ei-admin-table td { padding: .5rem .65rem; text-align: left; vertical-align: top; border-bottom: 1px solid #e5e7eb; }
+.ei-admin-table th { font-weight: 600; background: #f9fafb; color: #374151; }
+.ei-admin-table tbody tr:hover { background: #f9fafb; }
+.ei-row-actions { white-space: nowrap; }
+.ei-row-actions button, .ei-row-actions .button-link { font-size: .75rem; margin-right: .25rem; padding: .2rem .5rem; }
+
+/* Tags */
+.ei-tag { display: inline-block; padding: .1rem .45rem; border-radius: 9999px; font-size: .7rem; background: #e5e7eb; color: #374151; }
+.ei-tag-ok { background: #d1fae5; color: #065f46; }
+.ei-tag-warn { background: #fef3c7; color: #92400e; }
+.ei-tag-fail { background: #fee2e2; color: #991b1b; }
+
+/* Pagination + help + error */
+.ei-pagination { display: flex; gap: .5rem; margin: .5rem 0; }
+.ei-help { color: #6b7280; font-size: .85rem; }
+.ei-error { color: #991b1b; }
+.ei-toggle { display: inline-flex; align-items: center; gap: .35rem; }
+.ei-audit-filters, .ei-bulk-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 1rem; }
+.ei-audit-filters input, .ei-audit-filters select, .ei-audit-filters label { font-size: .8rem; }
+
+/* Bulk operations confirmation dialog (§5.7) */
+.ei-dialog { border: 1px solid #d1d5db; border-radius: .5rem; padding: 0; max-width: 480px; }
+.ei-dialog::backdrop { background: rgba(0,0,0,.4); }
+.ei-dialog-card { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.ei-dialog-card h2 { font-size: 1rem; margin: 0 0 .25rem; }
+.ei-dialog-card label { display: flex; flex-direction: column; gap: .15rem; font-size: .85rem; }
+.ei-dialog-card input, .ei-dialog-card textarea { padding: .35rem .5rem; border: 1px solid #d1d5db; border-radius: .25rem; font: inherit; }
+.ei-dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .5rem; }
+
+/* Dark theme mirror (honour existing body.dark) */
+body.dark .ei-stat-card { background: #1f2937; border-color: #374151; }
+body.dark .ei-stat-card-value { color: #f9fafb; }
+body.dark .ei-stat-card-label, body.dark .ei-stat-card-delta, body.dark .ei-help { color: #9ca3af; }
+body.dark .ei-admin-table th { background: #1f2937; color: #d1d5db; }
+body.dark .ei-admin-table tbody tr:hover { background: #1f2937; }
+body.dark .ei-admin-table th, body.dark .ei-admin-table td { border-color: #374151; }
+body.dark .ei-tag { background: #374151; color: #d1d5db; }
+body.dark .ei-dialog { background: #1f2937; color: #f9fafb; border-color: #4b5563; }

@@ -8,9 +8,9 @@ import secrets
 from pathlib import Path
 from urllib.parse import quote, urlparse
 
-from production_preflight import audit_environment, load_env_file
+from core.preflight import audit_environment, load_env_file
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 TEMPLATE = ROOT / ".env.production.example"
 
 

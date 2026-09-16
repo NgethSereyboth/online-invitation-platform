@@ -24,9 +24,36 @@
   <p>Account holders can review active sessions, export their data, configure privacy preferences, and schedule account deletion. Deleted invitations use a recovery period before permanent purge where configured.</p>
   <h2>Storage and retention</h2>
   <p>Uploaded files can be stored locally or through a configured private object-storage provider. Production operators are responsible for configuring encryption, lifecycle policies, backups, legal retention requirements and their own public contact information.</p>
+  <h2>Creator analytics</h2>
+  <p>E-invitation-website provides first-party creator analytics so hosts can see how their invitations performed: how many people opened the invitation, how long they engaged, where they came from, and which device class they used. Analytics are <strong>enabled by default</strong>; the host may turn them off per invitation at any time.</p>
+  <p>What analytics collects (and what it does not):</p>
+  <ul>
+    <li><strong>Session id</strong> — a 128-bit random hex value stored in <code>sessionStorage</code>. Resets on tab close. Used only to group events from a single page visit.</li>
+    <li><strong>Invitation id</strong> — which invitation the visit belongs to.</li>
+    <li><strong>Recipient id</strong> — an opaque guest id (not an email), only when the visitor used a personalized guest link.</li>
+    <li><strong>Coarse country</strong> — derived from the IP address, then discarded. The IP address itself is never stored.</li>
+    <li><strong>Referrer domain</strong> — the bare hostname (e.g. <code>facebook.com</code>), not the full URL.</li>
+    <li><strong>Device class</strong> — <code>mobile</code> / <code>tablet</code> / <code>desktop</code> only, derived from the User-Agent.</li>
+    <li><strong>Engagement metrics</strong> — session duration (measured from page load to page unload), maximum scroll depth (0–100%), and a small set of event types (RSVP open, RSVP submit, gallery open, album upload, etc.).</li>
+  </ul>
+  <p>What analytics does <strong>not</strong> collect: IP addresses, cookies for tracking, advertising IDs, cross-site identifiers, precise location, email addresses, names, or any third-party tracker.</p>
+  <p>Analytics data is retained for a maximum of <code>EINVITE_ANALYTICS_RETENTION_DAYS</code> (default 365 days) and is automatically pruned thereafter. Hosts can export their raw data as CSV or JSON, and may purge all collected analytics data for an invitation at any time.</p>
+  <p>For the full event model and technical details, see <a href="/docs/analytics/EVENT-MODEL.md">Event Model</a> and <a href="/docs/analytics/PRIVACY.md">Analytics Privacy</a>.</p>
+  <h2>ភាសាខ្មែរ — ភាពឯកជន</h2>
+  <p>ការអញ្ជើញនេះផ្ដល់នូវស្ថិតិការអានិត្យកម្មប្រភេទទីមួយ ដូច្នេះអ្នកធ្វើបទបង្ហាញអាចឃើញថាការអញ្ជើញរបស់ពួកគេបានអនុវត្តយ៉ាងដូចម្តេច។ ស្ថិតិត្រូវបានបើកតាមលំនាំដើម អ្នកធ្វើបទបង្ហាញអាចបិទវាបានគ្រប់ពេល។</p>
+  <p>អ្វីដែលស្ថិតិប្រមូល (និងអ្វីដែលវាមិនប្រមូល):</p>
+  <ul>
+    <li><strong>លេខសម្គាល់សម័យ</strong> — តម្លៃ hex ចៃដន្យ 128-bit រក្សាទុកក្នុង <code>sessionStorage</code>។ កំណត់ឡើងវិញនៅពេលបិទថេប។ ប្រើដើម្បីបង្កើតក្រុមព្រឹត្តិកម្មពីការទស្សនាទំព័រតែមួយ។</li>
+    <li><strong>លេខសម្គាល់ការអញ្ជើញ</strong> — ការអញ្ជើញណាមួយដែលការទស្សនាជារបស់។</li>
+    <li><strong>លេខសម្គាល់អ្នកទទួល</strong> — លេខសម្គាល់ភ្ញៀវដែលមិនច្បាស់លាស់ (មិនមែនអ៊ីមែល) នៅពេលប្រើប្រាស់តំណភ្ញៀវផ្ទាល់ខ្លួន។</li>
+    <li><strong>ប្រទេសគ្រឹះ</strong> — ទាញយកពីអាសយដ្ឋាន IP បន្ទាប់មកបោះបង់។ អាសយដ្ឋាន IP ខ្លួនវាមិនដែលត្រូវបានរក្សាទុកទេ។</li>
+    <li><strong>ដែនអ្នកផ្ញើ</strong> — ឈ្មោះម៉ាស៊ីនតែមួយគត់ (ឧ. <code>facebook.com</code>) មិនមែន URL ពេញលេញទេ។</li>
+    <li><strong>ប្រភេទឧបករណ៍</strong> — <code>ទូរស័ព្ទ</code> / <code>ថេប្លេត</code> / <code>ដេស្គ topLevel</code> តែប៉ុណ្ណោះ។</li>
+  </ul>
+  <p>ទិន្នន័យស្ថិតិត្រូវបានរក្សាទុកអតិបរមា <code>EINVITE_ANALYTICS_RETENTION_DAYS</code> (លំនាំដើម 365 ថ្ងៃ) និងត្រូវបានកាត់ដោយស្វ័យប្រវត្តិបន្ទាប់ពីនោះ។</p>
   <p class="note">This project provides technical privacy controls. A production operator should replace or supplement this general notice with the legally appropriate policy for the jurisdiction, organization and services being used.</p>
   <p><a class="privacy-back-link" href="/dashboard.html">← Back to dashboard</a></p>
 </article></main>
-<script src="theme-init.js"></script>
+<script src="core/theme.js"></script>
 </body>
 </html>

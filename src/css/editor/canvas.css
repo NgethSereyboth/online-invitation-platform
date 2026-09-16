@@ -1,0 +1,518 @@
+/**
+ * canvas.css — Styles for the Part 3 editor UX layers (v56).
+ *
+ * Covers:
+ *   • Inline rich-text editor overlay (`src/js/editor/text/inline-editor.js`)
+ *   • Text effects inspector (`src/js/editor/text/effects.js`)
+ *   • Text-on-curve inspector (`src/js/editor/text/typography.js`)
+ *   • Image crop overlay + inspector (`src/js/editor/media/crop.js`)
+ *   • Image filters inspector (`src/js/editor/media/filters.js`)
+ *   • Image mask inspector (`src/js/editor/media/image.js`)
+ *
+ * Convention: every selector is namespaced with `.einvite-v56-…` or the
+ * module-specific class (`inline-editor`, `crop-overlay`, …) to avoid
+ * colliding with the legacy v54 / v55 editor chrome.
+ */
+
+/* =========================================================================
+   1. Inline rich text editor overlay
+   ========================================================================= */
+.inline-editor {
+  position: absolute;
+  z-index: 50;
+  /* Transparent layer — no background, no border. The underlying canvas text
+     is hidden via `.inline-editing-source` so there's no double rendering. */
+  background: transparent;
+  border: 1px dashed rgba(64, 132, 244, 0.6);
+  outline: none;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+  caret-color: currentColor;
+  /* Khmer-safe: never apply letter-spacing while editing (breaks shaping). */
+  letter-spacing: normal !important;
+  box-shadow: 0 0 0 9999px rgba(255, 255, 255, 0.0);
+  transition: box-shadow 0.15s ease;
+}
+
+.inline-editor:focus {
+  box-shadow: 0 0 0 2px rgba(64, 132, 244, 0.8), 0 0 0 9999px rgba(0, 0, 0, 0.18);
+}
+
+/* When a text node is being edited, hide its rendered content to avoid
+   double rendering. */
+.inline-editing-source {
+  visibility: hidden;
+}
+
+/* Khmer: explicit `:lang()` override (the module also forces `letter-spacing:
+   normal` inline, but the CSS rule survives if the inline style is cleared). */
+.inline-editor:lang(km),
+.inline-editor[data-lang="km"] {
+  letter-spacing: normal !important;
+  font-feature-settings: "kern" 1;
+}
+
+/* =========================================================================
+   2. Shared inspector-panel styles (effects / filters / crop / mask)
+   ========================================================================= */
+.text-effects-panel,
+.typography-curve-panel,
+.image-crop-panel,
+.image-filters-panel,
+.image-mask-panel {
+  padding: 12px;
+  border-top: 1px solid var(--border-color, #e2e2e2);
+  font-size: 13px;
+  color: var(--text-color, #1a1a1a);
+  background: var(--panel-bg, #ffffff);
+}
+
+.text-effects-panel h3,
+.typography-curve-panel h3,
+.image-crop-panel h3,
+.image-filters-panel h3,
+.image-mask-panel h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #6b6b6b);
+}
+
+.effect-group {
+  margin: 0 0 12px;
+  padding: 8px;
+  border: 1px solid var(--border-color, #ececec);
+  border-radius: 6px;
+  background: var(--panel-bg-soft, #f8f8f8);
+}
+
+.effect-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #6b6b6b);
+}
+
+.effect-control {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.effect-control-label {
+  font-size: 12px;
+  color: var(--text-color, #1a1a1a);
+}
+
+.effect-control input[type="range"] {
+  width: 100%;
+  height: 4px;
+  background: var(--range-track, #d0d0d0);
+  border-radius: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.effect-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent, #4084f4);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.effect-control input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--accent, #4084f4);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.effect-control input[type="color"] {
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-color, #d0d0d0);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.effect-reset {
+  margin-top: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  background: var(--panel-bg-soft, #f0f0f0);
+  border: 1px solid var(--border-color, #d0d0d0);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.effect-reset:hover {
+  background: var(--panel-bg-hover, #eaeaea);
+}
+
+.filter-readout,
+.curve-readout {
+  font-size: 11px;
+  color: var(--text-muted, #6b6b6b);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* =========================================================================
+   3. Gradient preset chips
+   ========================================================================= */
+.gradient-presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.gradient-chip {
+  height: 24px;
+  border: 1px solid var(--border-color, #d0d0d0);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.gradient-chip:hover {
+  transform: scale(1.05);
+  border-color: var(--accent, #4084f4);
+}
+
+/* =========================================================================
+   4. Curve warning
+   ========================================================================= */
+.curve-warning {
+  margin-top: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 4px;
+  color: #856404;
+}
+
+/* =========================================================================
+   5. Crop overlay + handles
+   ========================================================================= */
+.crop-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.crop-shade {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  /* The crop rect itself is "carved out" using a transparent box that sits
+     on top of the shade. For simplicity we render the handles only; the
+     shade is a single overlay outside the crop rect. */
+}
+
+.crop-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border: 1.5px solid var(--accent, #4084f4);
+  border-radius: 50%;
+  cursor: grab;
+  pointer-events: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.crop-handle:hover {
+  background: var(--accent, #4084f4);
+}
+
+.crop-handle:active {
+  cursor: grabbing;
+}
+
+.crop-handle-nw, .crop-handle-se { cursor: nwse-resize; }
+.crop-handle-ne, .crop-handle-sw { cursor: nesw-resize; }
+.crop-handle-n,  .crop-handle-s  { cursor: ns-resize; }
+.crop-handle-e,  .crop-handle-w  { cursor: ew-resize; }
+
+/* Crop ratio preset chips. */
+.crop-ratio-presets {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.crop-ratio-chip {
+  padding: 4px 6px;
+  font-size: 11px;
+  background: var(--panel-bg-soft, #f0f0f0);
+  border: 1px solid var(--border-color, #d0d0d0);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.crop-ratio-chip.active {
+  background: var(--accent, #4084f4);
+  color: #ffffff;
+  border-color: var(--accent, #4084f4);
+}
+
+/* =========================================================================
+   6. Mask preset chips
+   ========================================================================= */
+.mask-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.mask-preset-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: var(--panel-bg-soft, #f0f0f0);
+  border: 1px solid var(--border-color, #d0d0d0);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.mask-preset-chip.active {
+  border-color: var(--accent, #4084f4);
+  background: rgba(64, 132, 244, 0.1);
+}
+
+.mask-preset-chip .mask-preview {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #c1272d 50%, #fbb034 50%);
+  border-radius: 0;
+}
+
+.mask-preset-chip .mask-preview[style*="border-radius: 50%"] {
+  border-radius: 50%;
+}
+
+.mask-preset-chip .mask-label {
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-muted, #6b6b6b);
+}
+
+/* =========================================================================
+   7. Reduced-motion + high-contrast accessibility
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-chip,
+  .crop-ratio-chip,
+  .mask-preset-chip {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .inline-editor {
+    border-color: #000000;
+    border-width: 2px;
+  }
+  .crop-handle {
+    border-color: #000000;
+    border-width: 2px;
+  }
+}
+
+/* =========================================================================
+   8. Canvas interaction layer — alignment guides, marquee, context menu,
+   viewport HUD, grid overlay, snapping (ROADMAP §3.1, v0.56).
+   Appended by V3-PART3-CANVAS.
+   ========================================================================= */
+
+/* Alignment guides — pink for center, blue for edges, amber for margin.
+   Rendered as SVG <line> children of an overlay <svg> that spans the
+   canvas viewport. The overlay fades out 200ms after pointerup. */
+.alignment-guide-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 60;
+  overflow: visible;
+  opacity: 1;
+  transition: opacity 200ms linear;
+}
+.alignment-guide-overlay.is-fading { opacity: 0; }
+.alignment-guide-overlay[hidden] { display: none !important; }
+
+.alignment-guide {
+  stroke: #3b82f6;        /* blue (edges) — default */
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: crispEdges;
+  opacity: 0.95;
+}
+.alignment-guide.is-center { stroke: #ec4899; }   /* pink (centers) */
+.alignment-guide.is-margin {
+  stroke: #f59e0b;        /* amber (page-margin guides) */
+  stroke-dasharray: 4 3;
+  opacity: 0.85;
+}
+
+/* Grid overlay (8px default) — SVG pattern, not divs. */
+.einvite-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+}
+.einvite-grid-overlay[hidden] { display: none !important; }
+.einvite-grid-overlay line {
+  stroke: #64748b;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: crispEdges;
+}
+
+/* Marquee selection box. */
+.einvite-marquee {
+  position: absolute;
+  border: 1px dashed #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  pointer-events: none;
+  z-index: 55;
+  border-radius: 2px;
+}
+.einvite-marquee[hidden] { display: none !important; }
+
+/* Right-click context menu — `<div role="menu">` floating panel. */
+.einvite-context-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 220px;
+  max-width: 280px;
+  background: var(--ei-surface, #ffffff);
+  color: var(--ei-text, #0f172a);
+  border: 1px solid var(--ei-border, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+  padding: 4px 0;
+  font-size: 13px;
+  outline: none;
+}
+.einvite-context-menu[hidden] { display: none !important; }
+.einvite-context-menu .ei-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 6px 12px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  gap: 1px;
+}
+.einvite-context-menu .ei-menu-item:hover,
+.einvite-context-menu .ei-menu-item:focus-visible,
+.einvite-context-menu .ei-menu-item.is-focused {
+  background: var(--ei-accent-soft, rgba(59, 130, 246, 0.12));
+  outline: none;
+}
+.einvite-context-menu .ei-menu-item[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.einvite-context-menu .ei-menu-item .ei-menu-en {
+  font-weight: 500;
+  line-height: 1.2;
+}
+.einvite-context-menu .ei-menu-item .ei-menu-km {
+  font-size: 11px;
+  opacity: 0.78;
+  line-height: 1.2;
+  font-family: "Noto Sans Khmer", "Noto Serif Khmer", system-ui, sans-serif;
+}
+.einvite-context-menu .ei-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ei-border, #e2e8f0);
+  border: 0;
+}
+.einvite-context-menu .ei-menu-shortcut {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Viewport HUD — small overlay for zoom presets. */
+.einvite-viewport-hud {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--ei-surface-strong, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--ei-border, #e2e8f0);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  font-size: 12px;
+}
+.einvite-viewport-hud button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 4px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+}
+.einvite-viewport-hud button:hover,
+.einvite-viewport-hud button[aria-pressed="true"] {
+  background: var(--ei-accent-soft, rgba(59, 130, 246, 0.12));
+}
+.einvite-viewport-hud .ei-zoom-value {
+  min-width: 48px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* Body-wide state classes used by the interaction modules. */
+body.ei-canvas-dragging {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  cursor: default;
+}
+body.ei-pan-mode { cursor: grab !important; }
+body.ei-pan-mode.ei-panning { cursor: grabbing !important; }
+
+/* Reduced-motion: skip the guide fade animation. */
+@media (prefers-reduced-motion: reduce) {
+  .alignment-guide-overlay { transition: none !important; }
+}
