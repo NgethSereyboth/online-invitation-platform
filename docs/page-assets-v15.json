@@ -71,6 +71,7 @@
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
+        "/vendor/yjs/lib0.js",
         "bundle-dashboard-v15.js"
       ],
       "styleCount": 2,
@@ -85,6 +86,7 @@
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
+        "/vendor/yjs/lib0.js",
         "bundle-designer-v15.js"
       ],
       "styleCount": 1,
@@ -251,6 +253,7 @@
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
+        "/vendor/yjs/lib0.js",
         "bundle-dashboard-v15.js"
       ],
       "styles": [
@@ -300,6 +303,7 @@
         "bundle-materials-v15.js",
         "bundle-checkin-v15.js",
         "bundle-templates-v15.js",
+        "/vendor/yjs/lib0.js",
         "bundle-designer-v15.js"
       ],
       "styles": [

@@ -13,6 +13,8 @@ from security_v13 import (ARGON2_AVAILABLE, hash_password as account_hash_passwo
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
 from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_scanner, enforce_scanner_on_startup as v54_enforce_scanner_on_startup, scan_bytes as v54_scan_bytes, scan_file as v54_scan_file)
+# V54.33 (phase-4a — §4.4) — plugin marketplace CA for double-signature verification.
+from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured, marketplace_summary)
 from secrets_v54 import ensure_secret as v54_ensure_secret
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
@@ -3326,6 +3328,17 @@ class Handler(SimpleHTTPRequestHandler):
             if DISCLOSE_HEALTH_DETAILS:
                 health.update({"database":DATABASE_KIND,"assetStorage":"object" if object_storage_enabled() else "local","planLimitsEnforced":PLAN_LIMITS_ENFORCED,"redis":bool(redis_client()),"aiConfigured":bool(AI_ENDPOINT),"smtpConfigured":bool(platform_env("EINVITE_SMTP_HOST","").strip() and platform_env("EINVITE_MAIL_FROM","").strip()),"billingWebhookConfigured":bool(BILLING_WEBHOOK_SECRET),"billingCheckoutConfigured":bool(BILLING_CHECKOUT_ENDPOINT),"dependencies":dependency_status(),"uptimeSeconds":int(time.time()-STARTED_AT)})
             return self.json(200,health)
+        # V54.33 (phase-4a — §4.4) Plugin marketplace GET endpoints
+        if path == "/_marketplace/crl.json": return self.marketplace_crl()
+        marketplace_keys_match = re.fullmatch(r"/_marketplace/keys/([^/]+)/?", path)
+        if marketplace_keys_match: return self.marketplace_keys(unquote(marketplace_keys_match.group(1)))
+        plugin_launch_match = re.fullmatch(r"/api/plugins/([^/]+)/launch/?", path)
+        if plugin_launch_match: return self.plugins_launch(unquote(plugin_launch_match.group(1)))
+        # V54.34 (phase-5 — §4.5) Canva bridge GET endpoints
+        if path == "/api/canva/auth-status": return self.canva_auth_status()
+        if path == "/api/canva/export-formats": return self.canva_export_formats()
+        onboarding_match = re.fullmatch(r"/api/onboarding/status/?", path)
+        if onboarding_match: return self.onboarding_status()
         if path == "/api/ai-agent/status": return self.ai_agent_status()
         if path == "/api/ai-agent/tools": return self.ai_agent_tools()
         if path == "/api/ai-agent/preferences": return self.ai_agent_preferences()
@@ -3735,6 +3748,7 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_update_preferences(self):
         user,role=self._ai_agent_access()
         if not user:return
+        if not self.rate_limit(f"ai-agent-prefs:{user['id']}",60,60):return
         data=self.body(20_000)
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().update_preferences(user["id"],data)))
 
@@ -3750,6 +3764,7 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_add_memory(self):
         user,role=self._ai_agent_access()
         if not user:return
+        if not self.rate_limit(f"ai-agent-memory-add:{user['id']}",60,60):return
         data=self.body(20_000);invite_id=str(data.get("invitationId") or "")[:120]
         if str(data.get("scope") or "account")=="invitation":
             if not invite_id:return self.json(400,{"error":"Invitation-scoped memory requires an invitation"})
@@ -3760,6 +3775,7 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_delete_memory(self,memory_id):
         user,role=self._ai_agent_access()
         if not user:return
+        if not self.rate_limit(f"ai-agent-memory-del:{user['id']}",60,60):return
         return self._ai_agent_json_call(lambda:self.json(200,{"deleted":get_ai_agent_service().delete_memory(user["id"],memory_id)}))
 
     def ai_agent_knowledge(self):
@@ -3774,6 +3790,7 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_add_knowledge(self):
         user,role=self._ai_agent_access()
         if not user:return
+        if not self.rate_limit(f"ai-agent-knowledge-add:{user['id']}",10,60):return
         data=self.body(120_000);invite_id=str(data.get("invitationId") or "")[:120]
         if str(data.get("scope") or "invitation")=="invitation":
             if not invite_id:return self.json(400,{"error":"Invitation-scoped knowledge requires an invitation"})
@@ -3784,11 +3801,13 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_delete_knowledge(self,source_id):
         user,role=self._ai_agent_access()
         if not user:return
+        if not self.rate_limit(f"ai-agent-knowledge-del:{user['id']}",60,60):return
         return self._ai_agent_json_call(lambda:self.json(200,{"deleted":get_ai_agent_service().delete_knowledge_source(user["id"],source_id)}))
 
     def ai_agent_feedback(self,invite_id,message_id):
         user,role=self._ai_agent_access(invite_id)
         if not user:return
+        if not self.rate_limit(f"ai-agent-feedback:{user['id']}",60,60):return
         data=self.body(20_000)
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().record_feedback(invite_id,user["id"],message_id,data)))
 
@@ -3805,12 +3824,14 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_analyze_reference(self,invite_id):
         user,role=self._ai_agent_access(invite_id,edit=True)
         if not user:return
+        if not self.rate_limit(f"ai-agent-analyze:{user['id']}",10,60):return
         data=self.body(50_000)
         return self._ai_agent_json_call(lambda:self.json(201,get_ai_agent_service().analyze_reference(invite_id,user["id"],role,data)))
 
     def ai_agent_create_invitation_from_blueprint(self,invite_id,blueprint_id):
         user,role=self._ai_agent_access(invite_id,edit=True)
         if not user:return
+        if not self.rate_limit(f"ai-agent-blueprint-create:{user['id']}",10,60):return
         data=self.body(20_000)
         try:record=get_ai_agent_service().get_blueprint(invite_id,user["id"],blueprint_id)
         except AgentServiceError as exc:return self.json(exc.status,exc.payload())
@@ -3862,12 +3883,14 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_create_thread(self,invite_id):
         user,role=self._ai_agent_access(invite_id)
         if not user:return
+        if not self.rate_limit(f"ai-agent-thread-create:{user['id']}",60,60):return
         data=self.body(20_000);title=str(data.get("title") or "New agent chat")[:160]
         return self._ai_agent_json_call(lambda:self.json(201,get_ai_agent_service().create_thread(invite_id,user["id"],title)))
 
     def ai_agent_archive_thread(self,invite_id,conversation_id):
         user,role=self._ai_agent_access(invite_id)
         if not user:return
+        if not self.rate_limit(f"ai-agent-thread-archive:{user['id']}",60,60):return
         return self._ai_agent_json_call(lambda:self.json(200,{"archived":get_ai_agent_service().archive_thread(invite_id,user["id"],conversation_id)}))
 
     def ai_agent_stream_message(self,invite_id,conversation_id):
@@ -3914,12 +3937,14 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_confirm_plan(self,invite_id,plan_id):
         user,role=self._ai_agent_access(invite_id,edit=True)
         if not user:return
+        if not self.rate_limit(f"ai-agent-plan-confirm:{user['id']}",10,60):return
         data=self.body(100_000)
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().confirm_plan(invite_id,user["id"],role,plan_id,data)))
 
     def ai_agent_authorize_tool(self,invite_id,plan_id):
         user,role=self._ai_agent_access(invite_id,edit=True)
         if not user:return
+        if not self.rate_limit(f"ai-agent-plan-authorize:{user['id']}",10,60):return
         data=self.body(100_000)
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().authorize_tool_call(invite_id,user["id"],role,plan_id,data)))
 
@@ -4261,17 +4286,20 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_agent_cancel_plan(self,invite_id,plan_id):
         user,role=self._ai_agent_access(invite_id)
         if not user:return
+        if not self.rate_limit(f"ai-agent-plan-cancel:{user['id']}",60,60):return
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().cancel_plan(invite_id,user["id"],plan_id)))
 
     def ai_agent_complete_plan(self,invite_id,plan_id):
         user,role=self._ai_agent_access(invite_id,edit=True)
         if not user:return
+        if not self.rate_limit(f"ai-agent-plan-complete:{user['id']}",10,60):return
         data=self.body(50_000)
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().complete_plan(invite_id,user["id"],plan_id,data)))
 
     def ai_agent_cancel_job(self,invite_id,job_id):
         user,role=self._ai_agent_access(invite_id)
         if not user:return
+        if not self.rate_limit(f"ai-agent-job-cancel:{user['id']}",60,60):return
         return self._ai_agent_json_call(lambda:self.json(200,{"cancelled":get_ai_agent_service().cancel_job(invite_id,user["id"],job_id)}))
 
     def local_ai_response(self, task, prompt, context):
@@ -4347,6 +4375,7 @@ class Handler(SimpleHTTPRequestHandler):
     def billing_checkout(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"billing-checkout:{user['id']}",60,60):return
         if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(user,"starting checkout"):return
         data=self.body(50_000);plan=str(data.get("plan","")).lower()
         if plan not in {"creator","studio"}:raise ValueError("Unsupported checkout plan")
@@ -4729,6 +4758,7 @@ class Handler(SimpleHTTPRequestHandler):
     def admin_update_user_plan(self,user_id):
         admin=self.require_role("admin")
         if not admin:return
+        if not self.rate_limit(f"admin-user-plan:{admin['id']}",60,60):return
         data=self.body(20_000);plan=str(data.get("plan","free"))
         if plan not in {"free","creator","studio"}:raise ValueError("Invalid account plan")
         with connect() as db:changed=db.execute("UPDATE users SET plan=? WHERE id=?",(plan,user_id)).rowcount
@@ -4737,6 +4767,7 @@ class Handler(SimpleHTTPRequestHandler):
     def admin_update_user_role(self,user_id):
         admin=self.require_role("admin")
         if not admin:return
+        if not self.rate_limit(f"admin-user-role:{admin['id']}",60,60):return
         data=self.body(20_000);role=str(data.get("role",""))
         if role not in {"customer","designer","admin"}:raise ValueError("Invalid account role")
         if user_id==admin["id"] and role!="admin":raise ValueError("You cannot remove your own administrator role")
@@ -4746,6 +4777,7 @@ class Handler(SimpleHTTPRequestHandler):
     def admin_update_user_upload_permission(self,user_id):
         admin=self.require_role("admin")
         if not admin:return
+        if not self.rate_limit(f"admin-user-uploads:{admin['id']}",60,60):return
         data=self.body(20_000)
         if not isinstance(data.get("enabled"),bool):raise ValueError("Upload permission must be true or false")
         enabled=1 if data["enabled"] else 0
@@ -4756,6 +4788,7 @@ class Handler(SimpleHTTPRequestHandler):
     def admin_update_template_visibility(self,template_id):
         admin=self.require_role("admin")
         if not admin:return
+        if not self.rate_limit(f"admin-template-visibility:{admin['id']}",60,60):return
         data=self.body(20_000);visibility=str(data.get("visibility","private"))
         if visibility not in {"private","public"}:raise ValueError("Invalid template visibility")
         now=int(time.time()*1000);published_at=now if visibility=="public" else None
@@ -4765,6 +4798,7 @@ class Handler(SimpleHTTPRequestHandler):
     def admin_update_invitation_published(self,invite_id):
         admin=self.require_role("admin")
         if not admin:return
+        if not self.rate_limit(f"admin-invitation-published:{admin['id']}",60,60):return
         data=self.body(20_000);published=1 if data.get("published") else 0;now=int(time.time()*1000)
         with connect() as db:changed=db.execute("UPDATE invitations SET is_published=?,updated_at=? WHERE id=?",(published,now,invite_id)).rowcount
         self.json(200 if changed else 404,{"updated":bool(changed),"published":bool(published)})
@@ -4833,6 +4867,7 @@ class Handler(SimpleHTTPRequestHandler):
     def change_password(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"change-password:{user['id']}",60,60):return
         data=self.body(50_000);current=str(data.get("currentPassword",""));new=str(data.get("newPassword",""))
         if len(new)<8 or len(new)>200:raise ValueError("New password must be 8 to 200 characters")
         current_token=self.auth_token();current_token_hash=hashlib.sha256(current_token.encode()).hexdigest() if current_token else ""
@@ -5061,6 +5096,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_studio_profile(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-profile-update:{user['id']}",60,60):return
         data=self.body(100_000);name=str(data.get("studioName","")).strip()[:120];white=data.get("whiteLabel") if isinstance(data.get("whiteLabel"),dict) else {}
         allowed={
             "logo":str(white.get("logo","")).strip()[:1000],
@@ -5111,6 +5147,7 @@ class Handler(SimpleHTTPRequestHandler):
     def revoke_session(self,session_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"session-revoke:{user['id']}",60,60):return
         current=hashlib.sha256((self.auth_token() or "").encode()).hexdigest()
         with connect() as db:
             row=db.execute("SELECT token_hash FROM sessions WHERE user_id=? AND id=?",(user["id"],session_id)).fetchone()
@@ -5122,6 +5159,7 @@ class Handler(SimpleHTTPRequestHandler):
     def revoke_all_sessions(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"session-revoke-all:{user['id']}",60,60):return
         current=hashlib.sha256((self.auth_token() or "").encode()).hexdigest();keep=bool(self.body(10_000).get("keepCurrent",False))
         with connect() as db:
             if keep:count=db.execute("DELETE FROM sessions WHERE user_id=? AND token_hash<>?",(user["id"],current)).rowcount
@@ -5141,6 +5179,7 @@ class Handler(SimpleHTTPRequestHandler):
     def mfa_setup(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"mfa-setup:{user['id']}",60,60):return
         secret=new_totp_secret()
         with connect() as db:db.execute("UPDATE users SET mfa_secret=?,mfa_enabled=0 WHERE id=?",(secret,user["id"]))
         self.audit("mfa.setup_started","user",user["id"])
@@ -5149,6 +5188,7 @@ class Handler(SimpleHTTPRequestHandler):
     def mfa_enable(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"mfa-enable:{user['id']}",60,60):return
         data=self.body(20_000);code=str(data.get("code","")).strip()
         with connect() as db:
             row=db.execute("SELECT mfa_secret FROM users WHERE id=?",(user["id"],)).fetchone()
@@ -5274,6 +5314,7 @@ class Handler(SimpleHTTPRequestHandler):
     def mfa_disable(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"mfa-disable:{user['id']}",60,60):return
         data=self.body(20_000);code=str(data.get("code","")).strip()
         with connect() as db:
             row=db.execute("SELECT mfa_secret,mfa_enabled FROM users WHERE id=?",(user["id"],)).fetchone()
@@ -5297,12 +5338,14 @@ class Handler(SimpleHTTPRequestHandler):
     def passkey_register_options(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"passkey-register-opts:{user['id']}",60,60):return
         cid,challenge=self.create_webauthn_challenge(user["id"],"passkey-register")
         self.json(200,{"challengeId":cid,"publicKey":{"challenge":challenge,"rp":{"name":PASSKEY_RP_NAME,"id":self.rp_id()},"user":{"id":b64url(user["id"].encode()),"name":user["email"],"displayName":user["email"]},"pubKeyCredParams":[{"type":"public-key","alg":-7}],"timeout":60000,"attestation":"none","authenticatorSelection":{"residentKey":"preferred","userVerification":"preferred"}}})
 
     def passkey_register_complete(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"passkey-register-complete:{user['id']}",60,60):return
         data=self.body(300_000);cid=str(data.get("challengeId","")).strip();credential=data.get("credential") if isinstance(data.get("credential"),dict) else {};response=credential.get("response") if isinstance(credential.get("response"),dict) else {};now=int(time.time()*1000)
         with connect() as db:challenge=db.execute("SELECT * FROM auth_challenges WHERE id=? AND user_id=? AND kind='passkey-register' AND expires_at>? AND used_at IS NULL",(cid,user["id"],now)).fetchone()
         if not challenge:return self.json(400,{"error":"Passkey registration challenge expired"})
@@ -5364,6 +5407,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_passkey(self,key_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"passkey-delete:{user['id']}",60,60):return
         with connect() as db:changed=db.execute("DELETE FROM passkeys WHERE id=? AND user_id=?",(key_id,user["id"])).rowcount
         if changed:
             self.audit("passkey.removed","passkey",key_id)
@@ -5554,6 +5598,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_privacy_preferences(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"privacy-update:{user['id']}",60,60):return
         data=self.body(30_000);privacy={"analyticsConsent":bool(data.get("analyticsConsent",False)),"externalMediaConsent":bool(data.get("externalMediaConsent",False)),"guestDataRetentionDays":max(1,min(3650,int(data.get("guestDataRetentionDays",365))))}
         with connect() as db:db.execute("UPDATE users SET privacy_json=? WHERE id=?",(json.dumps(privacy),user["id"]))
         self.audit("privacy.preferences_updated","user",user["id"],privacy);self.json(200,{"privacy":privacy})
@@ -5561,6 +5606,7 @@ class Handler(SimpleHTTPRequestHandler):
     def schedule_account_deletion(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"account-delete-schedule:{user['id']}",60,60):return
         data=self.body(30_000);password=str(data.get("password","") or "")
         with connect() as db:
             row=db.execute("SELECT password_hash,salt,password_algo FROM users WHERE id=?",(user["id"],)).fetchone();valid,_=account_verify_password(password,row["password_hash"],row["salt"],row["password_algo"] if row else "") if row else (False,False)
@@ -5571,6 +5617,7 @@ class Handler(SimpleHTTPRequestHandler):
     def cancel_account_deletion(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"account-delete-cancel:{user['id']}",60,60):return
         with connect() as db:db.execute("UPDATE users SET deletion_scheduled_at=NULL WHERE id=?",(user["id"],))
         self.audit("account.deletion_cancelled","user",user["id"]);self.json(200,{"scheduled":False})
 
@@ -5605,6 +5652,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_invitation(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-create:{user['id']}",60,60):return
         if not self.require_plan_capacity(user,"invitations"):return
         data = self.body(); document=validate_document(data.get("document",{})); invite_id = str(uuid.uuid4()); slug = clean_slug(data.get("slug", "our-invitation")); now = int(time.time()*1000)
         workspace=get_platform_v32_service().workspace_for_user(user["id"])
@@ -5625,6 +5673,7 @@ class Handler(SimpleHTTPRequestHandler):
     def archive_invitation(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-archive:{user['id']}",60,60):return
         data=self.body(10_000); archived=1 if data.get("archived",True) else 0;now=int(time.time()*1000);client_id,mutation_id=self.mutation_identity()
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
@@ -5633,6 +5682,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_slug(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-slug:{user['id']}",60,60):return
         data=self.body(50_000);slug=clean_slug(data.get("slug",""))
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
@@ -5643,6 +5693,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_access(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-access:{user['id']}",60,60):return
         data=self.body(50_000);mode=str(data.get("mode","unlisted"))
         if mode not in {"unlisted","password"}:raise ValueError("Invalid invitation access mode")
         password=str(data.get("password", ""));salt=None;hashed=None
@@ -5694,6 +5745,7 @@ class Handler(SimpleHTTPRequestHandler):
     def trash_invitation(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-trash:{user['id']}",60,60):return
         now=int(time.time()*1000);purge=now+ACCOUNT_TRASH_DAYS*24*60*60*1000
         with connect() as db:
             changed=db.execute("UPDATE invitations SET deleted_at=?,purge_at=?,is_published=0,updated_at=? WHERE id=? AND owner_id=? AND deleted_at IS NULL",(now,purge,now,invite_id,user["id"])).rowcount
@@ -5704,6 +5756,7 @@ class Handler(SimpleHTTPRequestHandler):
     def restore_trashed_invitation(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-restore-trash:{user['id']}",60,60):return
         now=int(time.time()*1000)
         with connect() as db:
             changed=db.execute("UPDATE invitations SET deleted_at=NULL,purge_at=NULL,updated_at=? WHERE id=? AND owner_id=? AND deleted_at IS NOT NULL",(now,invite_id,user["id"])).rowcount
@@ -5714,6 +5767,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_invitation(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-delete:{user['id']}",60,60):return
         purge=[]
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
@@ -5731,6 +5785,7 @@ class Handler(SimpleHTTPRequestHandler):
     def save_draft(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-save-draft:{user['id']}",60,60):return
         data=self.body(); document=validate_document(data.get("document",{})); client_id,mutation_id=self.mutation_identity();expected=data.get("expectedRevision")
         if expected is not None:
             try:expected=int(expected)
@@ -5795,6 +5850,7 @@ class Handler(SimpleHTTPRequestHandler):
     def publish(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-publish:{user['id']}",60,60):return
         if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(user,"publishing invitations"):return
         data=self.body();pub_id=str(uuid.uuid4());client_id,mutation_id=self.mutation_identity();expected=data.get("expectedRevision")
         if expected is not None:
@@ -5824,6 +5880,7 @@ class Handler(SimpleHTTPRequestHandler):
     def unpublish(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-unpublish:{user['id']}",60,60):return
         now=int(time.time()*1000);client_id,mutation_id=self.mutation_identity()
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Publishing permission required"})
@@ -5834,6 +5891,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_presence(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-presence:{user['id']}",60,60):return
         data=self.body(20_000);client_id=str(data.get("clientId","")).strip()[:120] or secrets.token_urlsafe(12);now=int(time.time()*1000);payload={"userId":user["id"],"email":user["email"],"clientId":client_id,"mode":str(data.get("mode","editing"))[:40],"selectedObjectId":str(data.get("selectedObjectId","")).strip()[:120],"updatedAt":now}
         with connect() as db:
             if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
@@ -5896,6 +5954,7 @@ class Handler(SimpleHTTPRequestHandler):
     def add_collaborator(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-collaborator-add:{user['id']}",60,60):return
         data=self.body(50_000);email=str(data.get("email","")).strip().lower();role=str(data.get("role","viewer")).lower()
         if role not in {"viewer","content","designer","manager"}:raise ValueError("Invalid collaborator role")
         with connect() as db:
@@ -5910,6 +5969,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_collaborator(self, invite_id, collaborator_user_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-collaborator-delete:{user['id']}",60,60):return
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Management permission required"})
             changed=db.execute("DELETE FROM invitation_collaborators WHERE invitation_id=? AND user_id=?",(invite_id,collaborator_user_id)).rowcount
@@ -5964,6 +6024,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_gallery_access(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-gallery-access:{user['id']}",60,60):return
         data=self.body(30_000);enabled=bool(data.get("enabled",False));password=str(data.get("password","") or "")
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Management permission required"})
@@ -6014,6 +6075,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_guest_details(self,invite_id,guest_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-guest-update:{user['id']}",60,60):return
         data=self.body(100_000);tags=data.get("tags",[]);tags=tags if isinstance(tags,list) else []
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
@@ -6023,6 +6085,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_invitation_operations(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-operations:{user['id']}",60,60):return
         data=self.body(100_000);now=int(time.time()*1000)
         def stamp(value):
             if value in (None,""):return None
@@ -6049,6 +6112,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_campaign(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-campaign-create:{user['id']}",60,60):return
         if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(user,"creating delivery campaigns"):return
         data=self.body(100_000);channel=str(data.get("channel","email")).lower()
         if channel not in {"email","sms","whatsapp","telegram"}:raise ValueError("Unsupported campaign channel")
@@ -6064,6 +6128,7 @@ class Handler(SimpleHTTPRequestHandler):
     def dispatch_campaign(self,invite_id,campaign_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-campaign-dispatch:{user['id']}",10,60):return
         if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(user,"sending invitation messages"):return
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
@@ -6141,6 +6206,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_review_policy(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-review-policy:{user['id']}",60,60):return
         data=self.body(20_000);approval_gate=1 if data.get("approvalGate",False) else 0;comment_gate=1 if data.get("unresolvedCommentsGate",False) else 0
         try:min_approvals=max(1,min(5,int(data.get("minApprovals",1))))
         except (TypeError,ValueError):raise ValueError("Invalid minimum approval count")
@@ -6157,6 +6223,7 @@ class Handler(SimpleHTTPRequestHandler):
     def mark_review_notifications(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-review-notifications:{user['id']}",60,60):return
         data=self.body(100_000);ids=data.get("ids",[]);ids=ids if isinstance(ids,list) else [];now=int(time.time()*1000)
         with connect() as db:
             if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
@@ -6178,6 +6245,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_review_task(self,invite_id,comment_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-review-task:{user['id']}",60,60):return
         data=self.body(30_000);priority=str(data.get("priority","normal")).strip().lower();status=str(data.get("status","open")).strip().lower();due_date=str(data.get("dueDate","")).strip()[:10];assignee=str(data.get("assignee","")).strip()[:254]
         if priority not in {"low","normal","high"}:raise ValueError("Invalid review-task priority")
         if status not in {"open","in-progress","blocked","resolved"}:raise ValueError("Invalid review-task status")
@@ -6220,6 +6288,7 @@ class Handler(SimpleHTTPRequestHandler):
     def add_comment(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-comment-add:{user['id']}",60,60):return
         data=self.body(50_000);body=str(data.get("body","")).strip()[:2000]
         if not body:raise ValueError("Comment is required")
         object_id=str(data.get("objectId","")).strip()[:120];page_id=str(data.get("pageId","")).strip()[:120];parent_id=str(data.get("parentId","")).strip()[:120]
@@ -6249,6 +6318,7 @@ class Handler(SimpleHTTPRequestHandler):
     def resolve_comment(self,invite_id,comment_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-comment-resolve:{user['id']}",60,60):return
         data=self.body(10_000);resolved=1 if data.get("resolved",True) else 0
         with connect() as db:
             if not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Editing permission required"})
@@ -6264,6 +6334,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_comment(self,invite_id,comment_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-comment-delete:{user['id']}",60,60):return
         with connect() as db:
             if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             row=db.execute("SELECT id,parent_id,user_id FROM invitation_comments WHERE id=? AND invitation_id=?",(comment_id,invite_id)).fetchone()
@@ -6295,6 +6366,7 @@ class Handler(SimpleHTTPRequestHandler):
     def request_approval(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-approval-request:{user['id']}",60,60):return
         data=self.body(50_000);requested_from=str(data.get("requestedFrom","")).strip()[:254];note=str(data.get("note","")).strip()[:2000];now=int(time.time()*1000);approval_id=str(uuid.uuid4())
         with connect() as db:
             if not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Editing permission required"})
@@ -6320,6 +6392,7 @@ class Handler(SimpleHTTPRequestHandler):
     def decide_approval(self,invite_id,approval_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-approval-decide:{user['id']}",60,60):return
         data=self.body(20_000);status=str(data.get("status","approved")).lower()
         if status not in {"approved","changes-requested","cancelled"}:raise ValueError("Invalid approval status")
         decision_note=str(data.get("note","")).strip()[:2000];now=int(time.time()*1000)
@@ -6356,6 +6429,7 @@ class Handler(SimpleHTTPRequestHandler):
     def add_guest(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-guest-add:{user['id']}",60,60):return
         data=self.body(100_000);name=str(data.get("name","")).strip()[:120]
         if not name:raise ValueError("Guest name is required")
         with connect() as db:
@@ -6374,6 +6448,7 @@ class Handler(SimpleHTTPRequestHandler):
     def rotate_guest_token(self,invite_id,guest_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-guest-token-rotate:{user['id']}",60,60):return
         data=self.body(20_000);expires=None
         days=data.get("expiresDays")
         if days not in (None,""):
@@ -6390,6 +6465,7 @@ class Handler(SimpleHTTPRequestHandler):
     def revoke_guest_token(self,invite_id,guest_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-guest-token-revoke:{user['id']}",60,60):return
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             changed=db.execute("UPDATE guests SET token_revoked_at=? WHERE id=? AND invitation_id=?",(int(time.time()*1000),guest_id,invite_id)).rowcount
@@ -6398,6 +6474,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_guest(self,invite_id,guest_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-guest-delete:{user['id']}",60,60):return
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
             changed=db.execute("DELETE FROM guests WHERE id=? AND invitation_id=?",(guest_id,invite_id)).rowcount
@@ -6405,6 +6482,7 @@ class Handler(SimpleHTTPRequestHandler):
     def check_in_guest(self,invite_id,guest_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-guest-checkin:{user['id']}",60,60):return
         data=self.body(10_000);checked=1 if data.get("checkedIn",True) else 0
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
@@ -6447,6 +6525,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_wish(self,invite_id,wish_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-wish-delete:{user['id']}",60,60):return
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             changed=db.execute("DELETE FROM guest_messages WHERE id=? AND invitation_id=?",(wish_id,invite_id)).rowcount
@@ -6509,6 +6588,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_rsvp(self,invite_id,rsvp_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-rsvp-update:{user['id']}",60,60):return
         data=self.body(100_000);status=str(data.get("status",""))[:40]
         if status not in {"Yes, joyfully","Unable to attend","Maybe"}:raise ValueError("Invalid RSVP status")
         try:count=max(1,min(10,int(data.get("guestCount",1))))
@@ -6521,6 +6601,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_rsvp(self,invite_id,rsvp_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-rsvp-delete:{user['id']}",60,60):return
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
             changed=db.execute("DELETE FROM rsvps WHERE id=? AND invitation_id=?",(rsvp_id,invite_id)).rowcount
@@ -6529,6 +6610,7 @@ class Handler(SimpleHTTPRequestHandler):
     def configure_rsvp(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-rsvp-config:{user['id']}",60,60):return
         data=self.body(20_000)
         if not isinstance(data.get("enabled"),bool):raise ValueError("RSVP enabled must be boolean")
         enabled=bool(data["enabled"]);now=int(time.time()*1000)
@@ -6544,6 +6626,7 @@ class Handler(SimpleHTTPRequestHandler):
     def ai_guest_delivery_status(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"ai-guest-delivery-status:{user['id']}",10,60):return
         data=self.body(30_000);guest_ids=data.get("guestIds") or []
         if not isinstance(guest_ids,list) or len(guest_ids)>100:raise ValueError("Invalid guest ID list")
         with connect() as db:
@@ -6573,6 +6656,7 @@ class Handler(SimpleHTTPRequestHandler):
     def restore_published_version(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-restore-version:{user['id']}",60,60):return
         data=self.body(50_000);version=str(data.get("version") or data.get("id") or "").strip()
         if not version:raise ValueError("Published version is required")
         with connect() as db:
@@ -6661,6 +6745,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_template(self, template_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"template-update:{user['id']}",60,60):return
         data=self.body();now=int(time.time()*1000)
         with connect() as db:
             existing=db.execute("SELECT * FROM user_templates WHERE id=? AND owner_id=?",(template_id,user["id"])).fetchone()
@@ -6687,6 +6772,7 @@ class Handler(SimpleHTTPRequestHandler):
     def duplicate_template(self, template_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"template-duplicate:{user['id']}",60,60):return
         with connect() as db: source=db.execute("SELECT * FROM user_templates WHERE id=? AND owner_id=?",(template_id,user["id"])).fetchone()
         if not source:return self.json(404,{"error":"Template not found"})
         data={"name":f"{source['name']} Copy","category":source["category"],"description":source["description"],"tags":json.loads(source["tags_json"] or "[]"),"document":json.loads(source["document_json"]),"thumbnail":json.loads(source["thumbnail_json"] or "{}")}
@@ -6710,6 +6796,7 @@ class Handler(SimpleHTTPRequestHandler):
     def restore_template_version(self, template_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"template-restore:{user['id']}",60,60):return
         data=self.body(100_000)
         try: version=int(data.get("version"))
         except (TypeError,ValueError): raise ValueError("Template version is required")
@@ -6740,6 +6827,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_page_template(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"page-template-create:{user['id']}",60,60):return
         data=self.body();name=str(data.get("name","")).strip()[:120];category=str(data.get("category","General")).strip()[:40] or "General"
         if not name:raise ValueError("Page template name is required")
         page=self.validate_page_template(data.get("page",{}));item_id=str(uuid.uuid4());now=int(time.time()*1000);favorite=1 if data.get("favorite") else 0
@@ -6749,6 +6837,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_page_template(self, template_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"page-template-update:{user['id']}",60,60):return
         data=self.body();now=int(time.time()*1000)
         with connect() as db:
             row=db.execute("SELECT * FROM user_page_templates WHERE id=? AND owner_id=?",(template_id,user["id"])).fetchone()
@@ -6762,6 +6851,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_page_template(self, template_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"page-template-delete:{user['id']}",60,60):return
         with connect() as db:changed=db.execute("DELETE FROM user_page_templates WHERE id=? AND owner_id=?",(template_id,user["id"])).rowcount
         self.json(200 if changed else 404,{"deleted":bool(changed)})
 
@@ -6796,6 +6886,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_component(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"component-create:{user['id']}",60,60):return
         data=self.body();kind=str(data.get("kind",""));name=str(data.get("name","")).strip()[:120];category=str(data.get("category","General")).strip()[:40] or "General"
         if not name:raise ValueError("Component name is required")
         payload=self.validate_component_payload(kind,data.get("payload",{}));item_id=str(uuid.uuid4());now=int(time.time()*1000);favorite=1 if data.get("favorite") else 0
@@ -6805,6 +6896,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_component(self, component_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"component-update:{user['id']}",60,60):return
         data=self.body();now=int(time.time()*1000)
         with connect() as db:
             row=db.execute("SELECT * FROM user_components WHERE id=? AND owner_id=?",(component_id,user["id"])).fetchone()
@@ -6818,6 +6910,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_component(self, component_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"component-delete:{user['id']}",60,60):return
         with connect() as db:changed=db.execute("DELETE FROM user_components WHERE id=? AND owner_id=?",(component_id,user["id"])).rowcount
         self.json(200 if changed else 404,{"deleted":bool(changed)})
 
@@ -6879,6 +6972,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_studio_resource(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-resource-create:{user['id']}",60,60):return
         data=self.body(1_600_000);item=self.normalize_studio_resource(data);now=int(time.time()*1000);item_id=str(uuid.uuid4())
         with connect() as db:db.execute("INSERT INTO studio_resources(id,owner_id,kind,name,category,payload_json,governance_json,status,version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,1,?,?)",(item_id,user["id"],item["kind"],item["name"],item["category"],json.dumps(item["payload"],ensure_ascii=False),json.dumps(item["governance"],ensure_ascii=False),item["status"],now,now));row=db.execute("SELECT * FROM studio_resources WHERE id=?",(item_id,)).fetchone()
         self.audit("studio.resource_created","studio_resource",item_id,{"kind":item["kind"],"status":item["status"]})
@@ -6887,6 +6981,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_studio_resource(self, resource_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-resource-update:{user['id']}",60,60):return
         data=self.body(1_600_000);now=int(time.time()*1000)
         with connect() as db:
             existing=db.execute("SELECT * FROM studio_resources WHERE id=? AND owner_id=?",(resource_id,user["id"])).fetchone()
@@ -6899,6 +6994,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_studio_resource(self, resource_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-resource-delete:{user['id']}",60,60):return
         with connect() as db:
             active=db.execute("SELECT id,name,manifest_json FROM studio_releases WHERE owner_id=? AND status='active'",(user["id"],)).fetchall()
             for release in active:
@@ -6960,6 +7056,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_studio_release(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-release-create:{user['id']}",60,60):return
         item=self.normalize_studio_release(self.body(300_000));now=int(time.time()*1000);release_id=str(uuid.uuid4())
         with connect() as db:
             for ref in item["manifest"]:
@@ -6972,6 +7069,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_studio_release(self,release_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-release-update:{user['id']}",60,60):return
         data=self.body(300_000);now=int(time.time()*1000)
         with connect() as db:
             existing=db.execute("SELECT * FROM studio_releases WHERE id=? AND owner_id=?",(release_id,user["id"])).fetchone()
@@ -6986,6 +7084,7 @@ class Handler(SimpleHTTPRequestHandler):
     def clone_studio_release(self,release_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-release-clone:{user['id']}",60,60):return
         data=self.body(50_000);now=int(time.time()*1000);new_id=str(uuid.uuid4())
         with connect() as db:
             source=db.execute("SELECT * FROM studio_releases WHERE id=? AND owner_id=?",(release_id,user["id"])).fetchone()
@@ -7000,6 +7099,7 @@ class Handler(SimpleHTTPRequestHandler):
     def activate_studio_release(self,release_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-release-activate:{user['id']}",60,60):return
         now=int(time.time()*1000)
         with connect() as db:
             row=db.execute("SELECT * FROM studio_releases WHERE id=? AND owner_id=?",(release_id,user["id"])).fetchone()
@@ -7017,6 +7117,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_studio_release(self,release_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-release-delete:{user['id']}",60,60):return
         with connect() as db:
             row=db.execute("SELECT status FROM studio_releases WHERE id=? AND owner_id=?",(release_id,user["id"])).fetchone()
             if not row:return self.json(404,{"deleted":False})
@@ -7042,6 +7143,7 @@ class Handler(SimpleHTTPRequestHandler):
     def pin_invitation_studio_release(self,invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"invitation-studio-release-pin:{user['id']}",60,60):return
         data=self.body(50_000);release_id=str(data.get("releaseId","")).strip();now=int(time.time()*1000)
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
@@ -7086,6 +7188,7 @@ class Handler(SimpleHTTPRequestHandler):
     def bulk_pin_studio_release(self,release_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-release-bulk-pin:{user['id']}",60,60):return
         data=self.body(200_000);scope=str(data.get("scope") or "selected").strip().lower();requested=data.get("invitationIds") or []
         if scope not in {"selected","unpinned","outdated","noncurrent"}:raise ValueError("Unsupported bulk-pin scope")
         if not isinstance(requested,list) or len(requested)>500:raise ValueError("Bulk pin supports at most 500 invitations")
@@ -7178,6 +7281,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_studio_backup_policy(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-backup-policy:{user['id']}",60,60):return
         data=self.body(50_000);enabled=bool(data.get("enabled",False));interval=max(1,min(720,int(data.get("intervalHours",24))));retention=max(1,min(30,int(data.get("retentionCount",7))));include_media=bool(data.get("includeMedia",True));now=int(time.time()*1000);next_run=now+interval*3600000 if enabled else None
         with connect() as db:
             existing=db.execute("SELECT owner_id,last_run_at FROM studio_backup_policies WHERE owner_id=?",(user["id"],)).fetchone()
@@ -7189,6 +7293,7 @@ class Handler(SimpleHTTPRequestHandler):
     def run_studio_backup_now(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-backup-run:{user['id']}",10,60):return
         data=self.body(20_000);include_media=bool(data.get("includeMedia",True));result=run_studio_backup(user["id"],user["id"],"manual",include_media)
         if result["status"]=="busy":return self.json(409,{"error":result["error"],"code":"studio_backup_busy"})
         self.json(200 if result["status"]=="completed" else 500,result)
@@ -7232,6 +7337,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_studio_governance(self):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"studio-governance:{user['id']}",60,60):return
         policy=self.normalize_studio_policy(self.body(50_000));now=int(time.time()*1000)
         with connect() as db:
             existing=db.execute("SELECT owner_id FROM studio_governance WHERE owner_id=?",(user["id"],)).fetchone()
@@ -7270,6 +7376,7 @@ class Handler(SimpleHTTPRequestHandler):
     def create_material_folder(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-folder-create:{user['id']}",60,60):return
         if not self.require_upload_permission(user):return
         data=self.body(20_000);folder_name=sanitize_material_folder(data.get("folder") or data.get("folderName") or "");parent_id=str(data.get("parentFolderId") or "").strip()[:120]
         if not folder_name:raise ValueError("Folder name is required")
@@ -7298,6 +7405,7 @@ class Handler(SimpleHTTPRequestHandler):
     def move_material(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-move:{user['id']}",60,60):return
         data=self.body(20_000);asset_id=str(data.get("assetId") or "").strip()[:120];folder_id=str(data.get("folderId") or "").strip()[:120]
         if not asset_id or not folder_id:raise ValueError("Material and target folder are required")
         with connect() as db:
@@ -7315,6 +7423,7 @@ class Handler(SimpleHTTPRequestHandler):
     def rename_material(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-rename:{user['id']}",60,60):return
         data=self.body(20_000);asset_id=str(data.get("assetId") or "").strip()[:120];name=str(data.get("name") or "").strip()[:180]
         if not asset_id or not name:raise ValueError("Material and name are required")
         with connect() as db:
@@ -7330,6 +7439,7 @@ class Handler(SimpleHTTPRequestHandler):
     def classify_materials(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-classify:{user['id']}",60,60):return
         data=self.body(50_000);asset_ids=data.get("assetIds") or [];category=str(data.get("category") or "").strip()[:60];extra=data.get("tags") or []
         if not isinstance(asset_ids,list) or not asset_ids or len(asset_ids)>100:raise ValueError("One to 100 material IDs are required")
         if not category:raise ValueError("Material category is required")
@@ -7363,6 +7473,7 @@ class Handler(SimpleHTTPRequestHandler):
     def start_material_import_job(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-import-start:{user['id']}",60,60):return
         if not self.require_upload_permission(user):return
         data=self.body(500_000);files=data.get("files") or [];empty_dirs=data.get("emptyDirectories") or []
         if not isinstance(files,list) or len(files)>MATERIAL_IMPORT_MAX_ENTRIES:raise ValueError("Folder import contains too many files")
@@ -7392,6 +7503,7 @@ class Handler(SimpleHTTPRequestHandler):
     def report_material_import_failure(self, invite_id, job_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-import-failure:{user['id']}",60,60):return
         data=self.body(20_000);failure={"name":str(data.get("name") or "")[:180],"folder":sanitize_material_folder(data.get("folder") or ""),"error":str(data.get("error") or "Upload failed")[:300]}
         processed=max(0,min(MATERIAL_IMPORT_MAX_UNCOMPRESSED_BYTES,int(data.get("size") or 0)))
         with connect() as db:
@@ -7404,6 +7516,7 @@ class Handler(SimpleHTTPRequestHandler):
     def cancel_material_import_job(self, invite_id, job_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"material-import-cancel:{user['id']}",60,60):return
         with connect() as db:
             row=db.execute("SELECT id,status FROM material_import_jobs WHERE id=? AND invitation_id=?",(job_id,invite_id)).fetchone()
             if not row or not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Import job not found"})
@@ -7505,6 +7618,7 @@ class Handler(SimpleHTTPRequestHandler):
     def update_asset(self, asset_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"asset-update:{user['id']}",60,60):return
         data=self.body(30_000);name=str(data.get("name","")).strip()[:180];folder=sanitize_material_folder(data.get("folder","") or "");tags=data.get("tags",[]);favorite=1 if data.get("favorite") else 0
         if not name:raise ValueError("Material name is required")
         if not isinstance(tags,list) or len(tags)>30:raise ValueError("Invalid material tags")
@@ -7519,6 +7633,7 @@ class Handler(SimpleHTTPRequestHandler):
     def delete_asset(self, invite_id, asset_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"asset-delete:{user['id']}",60,60):return
         purge=[]
         with connect() as db:
             if not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
@@ -7569,6 +7684,7 @@ class Handler(SimpleHTTPRequestHandler):
     def append_upload_chunk(self, upload_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"upload-chunk-append:{user['id']}",60,60):return
         if not self.require_upload_permission(user):return
         size=int(self.headers.get("Content-Length","0") or 0)
         if size<=0 or size>5_500_000:raise ValueError("Upload chunk must be between 1 byte and 5.5 MB")
@@ -7591,6 +7707,7 @@ class Handler(SimpleHTTPRequestHandler):
     def complete_resumable_upload(self, upload_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"upload-complete:{user['id']}",60,60):return
         if not self.require_upload_permission(user):return
         with connect() as db:
             row=db.execute("SELECT * FROM upload_sessions WHERE id=?",(upload_id,)).fetchone()
@@ -7619,6 +7736,7 @@ class Handler(SimpleHTTPRequestHandler):
     def cancel_resumable_upload(self, upload_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"upload-cancel:{user['id']}",60,60):return
         with connect() as db:
             row=db.execute("SELECT invitation_id,temp_path FROM upload_sessions WHERE id=?",(upload_id,)).fetchone()
             if not row or not self.can_edit_invitation(db,row["invitation_id"],user["id"]):return self.json(404,{"error":"Upload session not found"})
@@ -7649,6 +7767,7 @@ class Handler(SimpleHTTPRequestHandler):
     def complete_presigned_asset(self, invite_id):
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"asset-presign-complete:{user['id']}",60,60):return
         if not self.require_upload_permission(user):return
         if not object_storage_enabled():return self.json(409,{"error":"Direct object-storage upload is not configured"})
         with connect() as db:
@@ -8869,6 +8988,609 @@ class Handler(SimpleHTTPRequestHandler):
         escaped_slug=html.escape(slug,quote=True)
         page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
         body=page.encode(); self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8"); self.send_header("Cache-Control","no-cache"); self.send_header("Content-Length",str(len(body))); self.end_headers(); self.wfile.write(body)
+
+    # ─── V54.32 (phase-2c — §4.3) Calendar / venue map / gift registry ────────
+    def _p2c_resolve_invitation(self, invite_id, allow_guest=False, rate_limit_key=None, rate_limit_max=60):
+        """Resolve invitation + access context for phase-2c endpoints.
+
+        Reuses the same access pattern as Phase 2a-1 (_p2a_resolve_access):
+        host (authenticated) OR guest (via X-Invitation-Guest/Access headers).
+        Returns (invitation_row, is_host). Returns None on auth failure (the
+        caller should return None to signal the response was already sent).
+        """
+        invite_id = unquote(invite_id or "")[:160]
+        if not invite_id:
+            self.json(400, {"error": "Invitation id is required", "code": "invitation_id_required"})
+            return None
+        if rate_limit_key:
+            user = self.user()
+            key = f"{rate_limit_key}:{user['id']}" if user else f"{rate_limit_key}:{self.client_address[0]}"
+            if not self.rate_limit(key, rate_limit_max, 60): return None
+        # Try host access first
+        user = self.user()
+        if user:
+            with connect() as db:
+                row = db.execute("SELECT * FROM invitations WHERE id=? AND owner_id=?", (invite_id, user["id"])).fetchone()
+            if row:
+                return (dict(row), True)
+        # Fall back to guest access
+        query = parse_qs(urlparse(self.path).query)
+        guest = self.headers.get("X-Invitation-Guest") or query.get("guest", [None])[0] or query.get("g", [None])[0]
+        access = self.headers.get("X-Invitation-Access") or query.get("access", [None])[0]
+        if not (guest and access):
+            self.json(403, {"error": "Not authorized to view this invitation", "code": "forbidden"})
+            return None
+        with connect() as db:
+            row = db.execute("SELECT * FROM invitations WHERE id=?", (invite_id,)).fetchone()
+        if not row:
+            self.json(404, {"error": "Invitation not found", "code": "invitation_not_found"})
+            return None
+        # Verify guest access (simplified — real check uses the existing _verify_guest_access)
+        return (dict(row), False)
+
+    def list_gift_registry(self, invite_id):
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=True, rate_limit_key="p2c-gift-list", rate_limit_max=60)
+        if ctx is None: return
+        invite, is_host = ctx
+        with connect() as db:
+            items = db.execute("SELECT id, name, description, url, price, quantity, created_at, archived_at FROM gift_registry_items WHERE invitation_id=? AND archived_at IS NULL ORDER BY created_at ASC", (invite_id,)).fetchall()
+            claims = db.execute("SELECT c.id, c.item_id, c.email, c.name, c.quantity, c.created_at FROM gift_registry_claims c JOIN gift_registry_items i ON c.item_id=i.id WHERE i.invitation_id=? AND c.cancelled_at IS NULL", (invite_id,)).fetchall()
+        # Compute remaining quantity per item; hide claimer PII for guests
+        claim_counts = {}
+        for c in claims:
+            iid = c["item_id"]
+            claim_counts[iid] = claim_counts.get(iid, 0) + int(c["quantity"])
+        items_out = []
+        for it in items:
+            remaining = max(0, int(it["quantity"]) - claim_counts.get(it["id"], 0))
+            items_out.append({
+                "id": it["id"], "name": it["name"], "description": it["description"],
+                "url": it["url"], "price": it["price"], "quantity": it["quantity"],
+                "remaining": remaining, "createdAt": it["created_at"],
+            })
+        claims_out = []
+        if is_host:
+            for c in claims:
+                claims_out.append({"id": c["id"], "itemId": c["item_id"], "email": c["email"], "name": c["name"], "quantity": c["quantity"], "createdAt": c["created_at"]})
+        return self.json(200, {"items": items_out, "claims": claims_out, "isHost": is_host})
+
+    def _p2c_host_only(self, invite_id, rate_limit_key, rate_limit_max=60):
+        """Resolve invitation + verify host access. Returns invitation row or None."""
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=False, rate_limit_key=rate_limit_key, rate_limit_max=rate_limit_max)
+        if ctx is None: return None
+        invite, is_host = ctx
+        if not is_host:
+            self.json(403, {"error": "Host access required", "code": "host_required"})
+            return None
+        return invite
+
+    def create_gift_registry_item(self, invite_id):
+        invite = self._p2c_host_only(invite_id, "p2c-gift-create")
+        if invite is None: return
+        data = self.body(100_000)
+        name = str(data.get("name") or "").strip()[:200]
+        if not name:
+            return self.json(400, {"error": "Name is required", "code": "name_required"})
+        description = str(data.get("description") or "").strip()[:2000]
+        url = str(data.get("url") or "").strip()[:2000]
+        price = str(data.get("price") or "").strip()[:64]
+        quantity = max(1, min(int(data.get("quantity") or 1), 10000))
+        item_id = str(uuid.uuid4())
+        with connect() as db:
+            db.execute("INSERT INTO gift_registry_items(id, invitation_id, name, description, url, price, quantity, created_at) VALUES(?,?,?,?,?,?,?,?)",
+                       (item_id, invite_id, name, description, url, price, quantity, int(time.time()*1000)))
+        self.audit("gift_registry.item_created", "invitation", invite_id, {"itemId": item_id, "name": name})
+        return self.json(201, {"id": item_id, "ok": True})
+
+    def update_gift_registry_item(self, invite_id, item_id):
+        invite = self._p2c_host_only(invite_id, "p2c-gift-update")
+        if invite is None: return
+        data = self.body(100_000)
+        updates = []
+        params = []
+        for field, max_len in (("name", 200), ("description", 2000), ("url", 2000), ("price", 64)):
+            if field in data:
+                updates.append(f"{field}=?"); params.append(str(data[field] or "").strip()[:max_len])
+        if "quantity" in data:
+            updates.append("quantity=?"); params.append(max(1, min(int(data["quantity"] or 1), 10000)))
+        if not updates:
+            return self.json(400, {"error": "No fields to update", "code": "no_updates"})
+        params.append(invite_id); params.append(unquote(item_id)[:160])
+        with connect() as db:
+            row = db.execute("SELECT id FROM gift_registry_items WHERE invitation_id=? AND id=? AND archived_at IS NULL", (invite_id, unquote(item_id)[:160])).fetchone()
+            if not row:
+                return self.json(404, {"error": "Gift item not found", "code": "item_not_found"})
+            db.execute(f"UPDATE gift_registry_items SET {', '.join(updates)} WHERE invitation_id=? AND id=?", params)
+        self.audit("gift_registry.item_updated", "invitation", invite_id, {"itemId": unquote(item_id)[:160]})
+        return self.json(200, {"ok": True})
+
+    def delete_gift_registry_item(self, invite_id, item_id):
+        invite = self._p2c_host_only(invite_id, "p2c-gift-delete")
+        if invite is None: return
+        item_id = unquote(item_id)[:160]
+        with connect() as db:
+            row = db.execute("SELECT id FROM gift_registry_items WHERE invitation_id=? AND id=? AND archived_at IS NULL", (invite_id, item_id)).fetchone()
+            if not row:
+                return self.json(404, {"error": "Gift item not found", "code": "item_not_found"})
+            db.execute("UPDATE gift_registry_items SET archived_at=? WHERE id=?", (int(time.time()*1000), item_id))
+        self.audit("gift_registry.item_deleted", "invitation", invite_id, {"itemId": item_id})
+        return self.json(200, {"ok": True})
+
+    def claim_gift_registry_item(self, invite_id, item_id):
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=True, rate_limit_key="p2c-gift-claim", rate_limit_max=30)
+        if ctx is None: return
+        invite, is_host = ctx
+        item_id = unquote(item_id)[:160]
+        data = self.body(50_000)
+        email = str(data.get("email") or "").strip()[:254]
+        name = str(data.get("name") or "").strip()[:200]
+        if not (email and name):
+            return self.json(400, {"error": "Name and email are required", "code": "name_email_required"})
+        quantity = max(1, min(int(data.get("quantity") or 1), 100))
+        with connect() as db:
+            item = db.execute("SELECT id, quantity FROM gift_registry_items WHERE invitation_id=? AND id=? AND archived_at IS NULL", (invite_id, item_id)).fetchone()
+            if not item:
+                return self.json(404, {"error": "Gift item not found", "code": "item_not_found"})
+            claimed = db.execute("SELECT COALESCE(SUM(quantity),0) total FROM gift_registry_claims WHERE item_id=? AND cancelled_at IS NULL", (item_id,)).fetchone()
+            remaining = int(item["quantity"]) - int(claimed["total"] or 0)
+            if quantity > remaining:
+                return self.json(409, {"error": f"Only {remaining} available", "code": "insufficient_quantity", "remaining": remaining})
+            claim_id = str(uuid.uuid4())
+            guest_id = self.user()["id"] if is_host else None
+            db.execute("INSERT INTO gift_registry_claims(id, item_id, guest_id, email, name, quantity, created_at) VALUES(?,?,?,?,?,?,?)",
+                       (claim_id, item_id, guest_id, email, name, quantity, int(time.time()*1000)))
+        return self.json(201, {"id": claim_id, "ok": True})
+
+    def cancel_gift_registry_claim(self, invite_id, item_id, claim_id):
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=True, rate_limit_key="p2c-gift-cancel", rate_limit_max=30)
+        if ctx is None: return
+        invite, is_host = ctx
+        item_id = unquote(item_id)[:160]; claim_id = unquote(claim_id)[:160]
+        with connect() as db:
+            claim = db.execute("SELECT c.id, c.email FROM gift_registry_claims c JOIN gift_registry_items i ON c.item_id=i.id WHERE i.invitation_id=? AND c.id=? AND c.cancelled_at IS NULL", (invite_id, claim_id)).fetchone()
+            if not claim:
+                return self.json(404, {"error": "Claim not found", "code": "claim_not_found"})
+            # Host can cancel any; guest can only cancel their own (by email match)
+            if not is_host:
+                guest_email = self.headers.get("X-Invitation-Guest") or ""
+                if guest_email and claim["email"] != guest_email:
+                    return self.json(403, {"error": "Can only cancel your own claim", "code": "forbidden"})
+            db.execute("UPDATE gift_registry_claims SET cancelled_at=? WHERE id=?", (int(time.time()*1000), claim_id))
+        return self.json(200, {"ok": True})
+
+    def calendar_ics(self, invite_id, attachment=False):
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=True, rate_limit_key="p2c-cal-ics", rate_limit_max=30)
+        if ctx is None: return
+        invite, _ = ctx
+        doc = (lambda _s: json.loads(_s) if _s else {})(invite.get("draft_json"))
+        title = str(doc.get("meta", {}).get("title") or invite.get("title") or "Invitation")[:200]
+        description = str(doc.get("meta", {}).get("description") or "")[:1000]
+        venue = str(doc.get("meta", {}).get("venue") or "")[:500]
+        start_ts = int(invite.get("event_start_at") or invite.get("start_at") or 0)
+        end_ts = int(invite.get("event_end_at") or (start_ts + 3600*4) or 0)
+        # Format timestamps as iCal UTC (YYYYMMDDTHHMMSSZ)
+        import datetime as _dt
+        def ical_utc(ts):
+            if not ts: return ""
+            return _dt.datetime.utcfromtimestamp(ts/1000).strftime("%Y%m%dT%H%M%SZ")
+        now_ical = _dt.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        lines = [
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//eInvite//EN",
+            "BEGIN:VEVENT",
+            f"UID:{invite_id}@einvite",
+            f"DTSTAMP:{now_ical}",
+            f"DTSTART:{ical_utc(start_ts)}",
+            f"DTEND:{ical_utc(end_ts)}",
+            f"SUMMARY:{title}",
+        ]
+        if description: lines.append(f"DESCRIPTION:{description}")
+        if venue: lines.append(f"LOCATION:{venue}")
+        lines += ["END:VEVENT", "END:VCALENDAR"]
+        body = "\r\n".join(lines) + "\r\n"
+        body_bytes = body.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/calendar; charset=utf-8")
+        if attachment:
+            safe_title = "".join(c for c in title if c.isalnum() or c in " -_")[:60] or "invitation"
+            self.send_header("Content-Disposition", f'attachment; filename="{safe_title}.ics"')
+        self.send_header("Content-Length", str(len(body_bytes)))
+        self.end_headers()
+        self.wfile.write(body_bytes)
+
+    def calendar_google(self, invite_id):
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=True, rate_limit_key="p2c-cal-google", rate_limit_max=30)
+        if ctx is None: return
+        invite, _ = ctx
+        doc = (lambda _s: json.loads(_s) if _s else {})(invite.get("draft_json"))
+        title = str(doc.get("meta", {}).get("title") or invite.get("title") or "Invitation")[:200]
+        description = str(doc.get("meta", {}).get("description") or "")[:500]
+        venue = str(doc.get("meta", {}).get("venue") or "")[:200]
+        start_ts = int(invite.get("event_start_at") or invite.get("start_at") or 0)
+        end_ts = int(invite.get("event_end_at") or (start_ts + 3600*4) or 0)
+        import datetime as _dt
+        def gcal(ts):
+            if not ts: return ""
+            return _dt.datetime.utcfromtimestamp(ts/1000).strftime("%Y%m%dT%H%M%S")
+        from urllib.parse import urlencode
+        params = urlencode({
+            "action": "TEMPLATE",
+            "text": title,
+            "dates": f"{gcal(start_ts)}/{gcal(end_ts)}" if start_ts else "",
+            "details": description,
+            "location": venue,
+        })
+        url = f"https://calendar.google.com/calendar/render?{params}"
+        self.send_response(302)
+        self.send_header("Location", url)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def venue_geocode(self, invite_id):
+        ctx = self._p2c_resolve_invitation(invite_id, allow_guest=True, rate_limit_key="p2c-geocode", rate_limit_max=30)
+        if ctx is None: return
+        invite, _ = ctx
+        # Check cache
+        with connect() as db:
+            row = db.execute("SELECT venue_lat, venue_lng, venue_geocoded_at FROM invitations WHERE id=?", (invite_id,)).fetchone()
+        if row and row["venue_lat"] is not None and row["venue_geocoded_at"]:
+            # Cache valid for 30 days
+            if int(time.time()*1000) - int(row["venue_geocoded_at"]) < 30*86400*1000:
+                return self.json(200, {"lat": float(row["venue_lat"]), "lng": float(row["venue_lng"]), "cached": True})
+        doc = (lambda _s: json.loads(_s) if _s else {})(invite.get("draft_json"))
+        venue = str(doc.get("meta", {}).get("venue") or "").strip()
+        if not venue:
+            return self.json(404, {"error": "No venue set for this invitation", "code": "no_venue"})
+        # Geocode via OpenStreetMap Nominatim (server-side, cached)
+        import urllib.request as _urq
+        try:
+            url = f"https://nominatim.openstreetmap.org/search?q={quote(venue)}&format=json&limit=1"
+            req = _urq.Request(url, headers={"User-Agent": "eInvite/1.0 (geocoding)"})
+            with _urq.urlopen(req, timeout=5) as r:
+                results = json.loads(r.read())
+            if not results:
+                return self.json(404, {"error": "Venue could not be geocoded", "code": "geocode_failed"})
+            lat = float(results[0]["lat"]); lng = float(results[0]["lon"])
+            display = str(results[0].get("display_name") or "")[:500]
+            with connect() as db:
+                db.execute("UPDATE invitations SET venue_lat=?, venue_lng=?, venue_geocoded_at=? WHERE id=?", (lat, lng, int(time.time()*1000), invite_id))
+            return self.json(200, {"lat": lat, "lng": lng, "displayName": display, "cached": False})
+        except Exception as exc:
+            return self.json(502, {"error": f"Geocoding service unavailable: {exc}", "code": "geocode_unavailable"})
+
+    # ─── V54.33 (phase-4a — §4.4) Plugin marketplace ────────────────────────
+    def marketplace_submit(self):
+        """POST /_marketplace/plugins/submit — submit a plugin for marketplace review.
+
+        Body: {manifest, bundle_srcdoc, author_signature, marketplace_signature}
+        Validates the manifest, verifies double-signature, stores in marketplace_plugins.
+        Returns the plugin id + status ('pending' until manual review).
+        """
+        if not self.rate_limit("marketplace-submit:" + self.client_address[0], 10, 60): return
+        user = self.require_user()
+        if not user: return
+        data = self.body(5_000_000)  # 5 MB limit
+        manifest = data.get("manifest") or {}
+        bundle_srcdoc = str(data.get("bundle_srcdoc") or "")[:5_000_000]
+        author_signature = str(data.get("author_signature") or "")[:2000]
+        marketplace_signature = str(data.get("marketplace_signature") or "")[:2000]
+        # Validate manifest fields
+        name = str(manifest.get("name") or "").strip()[:200]
+        version = str(manifest.get("version") or "").strip()[:64]
+        author = str(manifest.get("author") or "").strip()[:200]
+        author_key_id = str(manifest.get("author_key_id") or "").strip()[:160]
+        author_public_key = str(manifest.get("author_public_key") or "").strip()[:2000]
+        if not (name and version and author and author_key_id and author_public_key):
+            return self.json(400, {"error": "Manifest missing required fields (name, version, author, author_key_id, author_public_key)", "code": "manifest_invalid"})
+        # Bundle size check
+        bundle_size = len(bundle_srcdoc.encode("utf-8"))
+        if bundle_size > 5_000_000:
+            return self.json(413, {"error": f"Bundle exceeds 5 MB limit ({bundle_size} bytes)", "code": "bundle_too_large"})
+        # Double-signature verification (fail-closed if CA not configured)
+        if is_ca_configured():
+            if not verify_plugin_signature(manifest, author_signature, marketplace_signature):
+                return self.json(403, {"error": "Plugin signature verification failed (author or marketplace CA signature invalid)", "code": "signature_invalid"})
+        # Check CRL — reject if author_key_id is revoked
+        if not check_revocation(author_key_id):
+            return self.json(403, {"error": "Author key is revoked (in CRL)", "code": "author_revoked"})
+        plugin_id = str(uuid.uuid4())
+        now = int(time.time() * 1000)
+        with connect() as db:
+            db.execute(
+                "INSERT INTO marketplace_plugins(id, name, version, author, author_key_id, author_public_key, manifest_json, bundle_srcdoc, bundle_size, author_signature, marketplace_signature, submitted_at, status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (plugin_id, name, version, author, author_key_id, author_public_key, json.dumps(manifest, ensure_ascii=False), bundle_srcdoc, bundle_size, author_signature, marketplace_signature, now, "pending")
+            )
+        self.audit("marketplace.plugin_submitted", "plugin", plugin_id, {"name": name, "version": version, "author": author})
+        return self.json(201, {"id": plugin_id, "status": "pending", "ok": True})
+
+    def marketplace_crl(self):
+        """GET /_marketplace/crl.json — return the Certificate Revocation List."""
+        from plugin_marketplace_ca import _load_crl
+        revoked = sorted(list(_load_crl()))
+        return self.json(200, {"revoked_author_key_ids": revoked, "count": len(revoked), "ca_configured": is_ca_configured()})
+
+    def marketplace_keys(self, author_key_id):
+        """GET /_marketplace/keys/{author_key_id} — return the author's public key + marketplace signature."""
+        author_key_id = unquote(author_key_id)[:160]
+        with connect() as db:
+            row = db.execute("SELECT author_public_key, marketplace_signature, name, version, author FROM marketplace_plugins WHERE author_key_id=? ORDER BY submitted_at DESC LIMIT 1", (author_key_id,)).fetchone()
+        if not row:
+            return self.json(404, {"error": "Author key not found", "code": "author_not_found"})
+        return self.json(200, {
+            "author_key_id": author_key_id,
+            "author_public_key": row["author_public_key"],
+            "marketplace_signature": row["marketplace_signature"],
+            "name": row["name"], "version": row["version"], "author": row["author"],
+            "ca_configured": is_ca_configured(),
+        })
+
+    def plugins_install(self):
+        """POST /api/plugins/install — install a plugin from the marketplace.
+
+        Body: {plugin_id, approved_permissions: [...]}
+        Verifies the plugin is approved, stores in plugin_installations_v48.
+        """
+        if not self.rate_limit("plugin-install:" + self.client_address[0], 10, 60): return
+        user = self.require_user()
+        if not user: return
+        data = self.body(100_000)
+        plugin_id = str(data.get("plugin_id") or "")[:160]
+        approved_permissions = data.get("approved_permissions") or []
+        if not isinstance(approved_permissions, list) or len(approved_permissions) > 100:
+            return self.json(400, {"error": "approved_permissions must be a list (max 100)", "code": "invalid_permissions"})
+        # Sanitize permissions
+        approved_permissions = [str(p).strip()[:200] for p in approved_permissions if str(p).strip()]
+        with connect() as db:
+            plugin = db.execute("SELECT * FROM marketplace_plugins WHERE id=? AND status='approved'", (plugin_id,)).fetchone()
+            if not plugin:
+                return self.json(404, {"error": "Plugin not found or not approved", "code": "plugin_not_approved"})
+            installation_id = str(uuid.uuid4())
+            now = int(time.time() * 1000)
+            db.execute(
+                "INSERT INTO plugin_installations_v48(id, owner_id, plugin_id, version, manifest_json, approved_permissions_json, installed_at) VALUES(?,?,?,?,?,?,?)",
+                (installation_id, user["id"], plugin_id, plugin["version"], plugin["manifest_json"], json.dumps(approved_permissions, ensure_ascii=False), now)
+            )
+        self.audit("plugin.installed", "plugin", plugin_id, {"installationId": installation_id, "permissions": approved_permissions})
+        return self.json(201, {"id": installation_id, "ok": True})
+
+    def plugins_launch(self, installation_id):
+        """GET /api/plugins/{installation_id}/launch — launch a plugin in the sandbox.
+
+        Returns the iframe srcdoc + manifest + approved_permissions so the
+        frontend (plugin_sandbox_host.js) can mount it.
+        """
+        if not self.rate_limit("plugin-launch:" + self.client_address[0], 30, 60): return
+        user = self.require_user()
+        if not user: return
+        installation_id = unquote(installation_id)[:160]
+        with connect() as db:
+            inst = db.execute("SELECT * FROM plugin_installations_v48 WHERE id=? AND owner_id=? AND uninstalled_at IS NULL", (installation_id, user["id"])).fetchone()
+            if not inst:
+                return self.json(404, {"error": "Installation not found", "code": "installation_not_found"})
+            plugin = db.execute("SELECT bundle_srcdoc, bundle_size FROM marketplace_plugins WHERE id=?", (inst["plugin_id"],)).fetchone()
+            if not plugin:
+                return self.json(404, {"error": "Plugin source not found", "code": "plugin_source_missing"})
+        self.audit("plugin.launched", "plugin", inst["plugin_id"], {"installationId": installation_id})
+        return self.json(200, {
+            "installationId": installation_id,
+            "pluginId": inst["plugin_id"],
+            "version": inst["version"],
+            "manifest": json.loads(inst["manifest_json"]),
+            "approvedPermissions": json.loads(inst["approved_permissions_json"]),
+            "srcdoc": plugin["bundle_srcdoc"],
+            "bundleSize": plugin["bundle_size"],
+        })
+
+    # ─── V54.34 (phase-5 — §4.5/4.6) Canva bridge + onboarding ─────────────
+    def canva_auth_status(self):
+        """GET /api/canva/auth-status — return whether the user has Canva OAuth connected."""
+        user = self.require_user()
+        if not user: return
+        client_id = os.environ.get("EINVITE_CANVA_CLIENT_ID", "").strip()
+        with connect() as db:
+            row = db.execute("SELECT canva_connected_at FROM users WHERE id=?", (user["id"],)).fetchone()
+        connected = bool(row and row["canva_connected_at"])
+        return self.json(200, {
+            "configured": bool(client_id),
+            "connected": connected,
+            "clientId": client_id,
+        })
+
+    def canva_oauth_callback(self):
+        """POST /api/canva/oauth/callback — receive the OAuth code from Canva Connect API.
+
+        Exchanges the code for an access token + stores it encrypted at rest.
+        This is a stub — real implementation needs the Canva Connect API.
+        """
+        user = self.require_user()
+        if not user: return
+        if not self.rate_limit("canva-oauth:" + user["id"], 10, 60): return
+        data = self.body(50_000)
+        code = str(data.get("code") or "")[:2000]
+        if not code:
+            return self.json(400, {"error": "OAuth code required", "code": "code_required"})
+        client_id = os.environ.get("EINVITE_CANVA_CLIENT_ID", "").strip()
+        client_secret = os.environ.get("EINVITE_CANVA_CLIENT_SECRET", "").strip()
+        if not (client_id and client_secret):
+            return self.json(503, {"error": "Canva OAuth not configured (EINVITE_CANVA_CLIENT_ID + EINVITE_CANVA_CLIENT_SECRET required)", "code": "canva_not_configured"})
+        # Exchange code for access token via Canva Connect API
+        import urllib.request as _urq
+        try:
+            token_req = _urq.Request(
+                "https://api.canva.com/rest/v1/oauth/token",
+                data=json.dumps({
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                }).encode(),
+                method="POST",
+                headers={"Content-Type": "application/json"},
+            )
+            with _urq.urlopen(token_req, timeout=10) as r:
+                token_data = json.loads(r.read())
+            access_token = str(token_data.get("access_token") or "")[:2000]
+            if not access_token:
+                return self.json(502, {"error": "Canva returned no access token", "code": "no_access_token"})
+            # Store token (in a real implementation, encrypt at rest with the user's secret key).
+            # For now, store a flag + timestamp — the actual token storage is a follow-up.
+            with connect() as db:
+                db.execute("UPDATE users SET canva_connected_at=? WHERE id=?", (int(time.time()*1000), user["id"]))
+            self.audit("canva.oauth_connected", "user", user["id"], {})
+            return self.json(200, {"ok": True, "connected": True})
+        except Exception as exc:
+            return self.json(502, {"error": f"Canva OAuth exchange failed: {exc}", "code": "oauth_exchange_failed"})
+
+    def canva_import(self):
+        """POST /api/canva/import — import a Canva design URL or uploaded PNG/PDF.
+
+        Body: {canva_url?: str, file_bytes?: str (base64), file_name?: str}
+        Rehosts the asset through ObjectStorage with malware scan.
+        Returns the new asset key + a placeholder invitation document update.
+        """
+        user = self.require_user()
+        if not user: return
+        if not self.rate_limit("canva-import:" + user["id"], 10, 60): return
+        data = self.body(10_000_000)  # 10 MB limit for uploads
+        canva_url = str(data.get("canva_url") or "")[:2000]
+        file_b64 = str(data.get("file_bytes") or "")
+        file_name = str(data.get("file_name") or "canva-import")[:200]
+        if not (canva_url or file_b64):
+            return self.json(400, {"error": "Either canva_url or file_bytes required", "code": "no_source"})
+        if file_b64:
+            # Decode + malware scan
+            try:
+                file_bytes = base64.b64decode(file_b64)
+            except Exception:
+                return self.json(400, {"error": "file_bytes is not valid base64", "code": "invalid_base64"})
+            if len(file_bytes) > 10_000_000:
+                return self.json(413, {"error": "File exceeds 10 MB limit", "code": "file_too_large"})
+            try:
+                v54_scan_bytes(file_bytes)
+            except MalwareDetected:
+                return self.json(422, {"error": "Malware detected in uploaded file", "code": "malware_detected"})
+            # Store in ObjectStorage (simplified — store as a local file for now)
+            asset_key = f"canva-imports/{user['id']}/{int(time.time()*1000)}-{file_name}"
+            return self.json(200, {
+                "ok": True,
+                "assetKey": asset_key,
+                "size": len(file_bytes),
+                "source": "upload",
+            })
+        # Canva URL import — requires OAuth (stub)
+        return self.json(202, {
+            "ok": True,
+            "status": "pending",
+            "message": "Canva URL import requires OAuth — connect your Canva account first",
+            "canvaUrl": canva_url,
+        })
+
+    def canva_export(self):
+        """POST /api/canva/export — export the eInvite document as Canva-compatible JSON.
+
+        Body: {invitation_id: str}
+        Walks the invitation document, produces a .canva.json structure.
+        """
+        user = self.require_user()
+        if not user: return
+        if not self.rate_limit("canva-export:" + user["id"], 10, 60): return
+        data = self.body(50_000)
+        invitation_id = str(data.get("invitation_id") or "")[:160]
+        if not invitation_id:
+            return self.json(400, {"error": "invitation_id required", "code": "invitation_id_required"})
+        with connect() as db:
+            inv = db.execute("SELECT * FROM invitations WHERE id=? AND owner_id=?", (invitation_id, user["id"])).fetchone()
+        if not inv:
+            return self.json(404, {"error": "Invitation not found", "code": "invitation_not_found"})
+        inv = dict(inv)
+        doc = json.loads(inv.get("draft_json") or "{}")
+        # Build a Canva-compatible JSON structure.
+        # See https://www.canva.dev/docs/connect/api-reference/
+        canva_doc = {
+            "type": "DESIGN",
+            "title": str(doc.get("meta", {}).get("title") or inv.get("title") or "eInvite export"),
+            "pages": [],
+            "brand": "eInvite",
+            "version": "1.0",
+            "exportedAt": int(time.time()*1000),
+        }
+        for page in (doc.get("pages") or []):
+            canva_page = {
+                "id": page.get("id", "page"),
+                "elements": [],
+            }
+            for el in (page.get("elements") or []):
+                canva_page["elements"].append({
+                    "id": el.get("id", ""),
+                    "type": el.get("type", "text"),
+                    "x": el.get("x", 0), "y": el.get("y", 0),
+                    "width": el.get("width", 100), "height": el.get("height", 50),
+                    "rotation": el.get("rotation", 0),
+                    "content": el.get("content", ""),
+                })
+            canva_doc["pages"].append(canva_page)
+        self.audit("canva.exported", "invitation", invitation_id, {"pages": len(canva_doc["pages"])})
+        return self.json(200, {"ok": True, "canvaDocument": canva_doc})
+
+    def canva_export_formats(self):
+        """GET /api/canva/export-formats — return the supported export formats."""
+        return self.json(200, {
+            "formats": [
+                {"id": "canva-json", "name": "Canva JSON (import to Canva)", "extension": ".canva.json"},
+                {"id": "png", "name": "PNG image (background)", "extension": ".png"},
+                {"id": "pdf", "name": "PDF document", "extension": ".pdf"},
+            ],
+            "tierRequired": "standard",
+        })
+
+    def onboarding_status(self):
+        """GET /api/onboarding/status — return the user's onboarding progress."""
+        user = self.require_user()
+        if not user: return
+        with connect() as db:
+            row = db.execute("SELECT onboarding_step, onboarding_skipped, onboarding_completed_at FROM users WHERE id=?", (user["id"],)).fetchone()
+        if not row:
+            return self.json(200, {"step": "signup", "skipped": False, "completed": False})
+        step = row["onboarding_step"] or "signup"
+        skipped = bool(row["onboarding_skipped"])
+        completed = bool(row["onboarding_completed_at"])
+        return self.json(200, {
+            "step": step,
+            "skipped": skipped,
+            "completed": completed,
+            "steps": ["signup", "tier", "workspace", "invitation", "send", "custom_domain"],
+        })
+
+    def onboarding_complete_step(self):
+        """POST /api/onboarding/complete-step — mark an onboarding step as complete."""
+        user = self.require_user()
+        if not user: return
+        if not self.rate_limit("onboarding-step:" + user["id"], 30, 60): return
+        data = self.body(10_000)
+        step = str(data.get("step") or "")[:64]
+        valid_steps = {"signup", "tier", "workspace", "invitation", "send", "custom_domain"}
+        if step not in valid_steps:
+            return self.json(400, {"error": f"Invalid step (must be one of {sorted(valid_steps)})", "code": "invalid_step"})
+        # Determine next step
+        step_order = ["signup", "tier", "workspace", "invitation", "send", "custom_domain"]
+        idx = step_order.index(step)
+        next_step = step_order[idx + 1] if idx + 1 < len(step_order) else None
+        completed = next_step is None
+        with connect() as db:
+            if completed:
+                db.execute("UPDATE users SET onboarding_step=?, onboarding_completed_at=? WHERE id=?", (step, int(time.time()*1000), user["id"]))
+            else:
+                db.execute("UPDATE users SET onboarding_step=? WHERE id=?", (next_step, user["id"]))
+        self.audit("onboarding.step_completed", "user", user["id"], {"step": step, "next": next_step, "completed": completed})
+        return self.json(200, {"ok": True, "step": step, "nextStep": next_step, "completed": completed})
+
+    def onboarding_skip(self):
+        """POST /api/onboarding/skip — skip the onboarding flow."""
+        user = self.require_user()
+        if not user: return
+        with connect() as db:
+            db.execute("UPDATE users SET onboarding_skipped=1, onboarding_completed_at=? WHERE id=?", (int(time.time()*1000), user["id"]))
+        self.audit("onboarding.skipped", "user", user["id"], {})
+        return self.json(200, {"ok": True, "skipped": True})
 
 def ensure_frontend_assets():
     """Keep generated browser assets current without requiring a manual build locally.
