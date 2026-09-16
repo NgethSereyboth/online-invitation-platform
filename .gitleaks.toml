@@ -1,0 +1,18 @@
+# Gitleaks configuration — allowlist for confirmed-safe test fixtures.
+# See: docs/security/SECURITY-FIX-GUIDE.md §5.3 Step 4
+
+[allowlist]
+description = "Known safe test fixtures and example files"
+
+paths = [
+  '''tests/.*\.py$''',
+  '''deploy/\.env\.example$''',
+  '''deploy/\.env\.production\.example$''',
+  '''docs/.*\.sha256$''',
+]
+
+# Example AWS key pattern used in documentation — not a real key
+regexes = [
+  '''AKIAIOSFODNN7EXAMPLE''',   # AWS example access key from docs
+  '''wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY''',  # AWS example secret key
+]

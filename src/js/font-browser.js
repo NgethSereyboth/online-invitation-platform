@@ -1,5 +1,10 @@
 (()=>{
 'use strict';
+/* Phase 2b: The runtime font registry is window.EInviteFontRegistry.data.fonts, populated
+   by the inlined typography-contract.js (generated from docs/typography-contract.json by
+   src/python/generate_typography_contract.py). The contributor-facing manifest at
+   assets/fonts/registry.json mirrors the same data and documents each font's Khmer OpenType
+   shaping features, OFL-1.1 license, and SHA-256 — see docs/i18n/KHMER-TYPOGRAPHY.md §3. */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 if(!$('#font')||!$('#stage')||!window.EInviteTypography)return;
 const select=$('#font'),bridge=()=>window.EInviteEditorBridge,custom=()=>window.EInviteCustomFonts;

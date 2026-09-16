@@ -1,0 +1,37 @@
+# Pre-commit hooks for security scanning.
+# See: docs/security/SECURITY-FIX-GUIDE.md §5.3 Step 4
+#
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
+        args: [--config, .gitleaks.toml]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: [-r, src/python/, -lll, -x, tests/]
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: bilingual-check
+        name: Bilingual consistency check (EN+KH)
+        entry: python3 scripts/check-bilingual-consistency.py
+        language: system
+        pass_filenames: false
+      - id: rate-limit-check
+        name: Rate-limit coverage check
+        entry: python3 scripts/check-rate-limit-coverage.py
+        language: system
+        pass_filenames: false
+      - id: bundle-check
+        name: Route bundle integrity check
+        entry: python3 src/python/build_route_bundles.py --check
+        language: system
+        pass_filenames: false

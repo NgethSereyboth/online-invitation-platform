@@ -1,0 +1,243 @@
+/* Phase 2a (V54.1) — Guest features styles (sign-up sheets, polls, album, delivery dialog). */
+
+.guest-feature {
+  margin: 32px auto;
+  padding: 24px;
+  max-width: 720px;
+  border-radius: 12px;
+  background: var(--surface, #fff);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.guest-feature h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.guest-feature .muted {
+  color: var(--text-muted, #666);
+  font-size: 14px;
+  margin: 4px 0 16px;
+}
+
+.guest-feature .error {
+  color: #b00020;
+}
+
+.guest-feature .badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #eee;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+.guest-feature .badge-full { background: #fee; color: #b00020; }
+.guest-feature .badge-mine { background: #efe; color: #060; }
+.guest-feature .badge-closed { background: #fee; color: #b00020; }
+.guest-feature .badge-pending { background: #ffd; color: #650; }
+.guest-feature .badge-approved { background: #efe; color: #060; }
+.guest-feature .badge-hidden { background: #eee; color: #888; }
+
+/* Sign-up sheets */
+.signup-sheet {
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.signup-sheet h3 { margin: 0 0 8px; }
+.signup-sheet .slot-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.signup-sheet .slot {
+  border-top: 1px solid #eee;
+  padding: 12px 0;
+}
+.signup-sheet .slot-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.signup-sheet form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-top: 8px;
+}
+.signup-sheet form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.signup-sheet form input {
+  padding: 6px;
+  font-size: 14px;
+}
+
+/* Polls */
+.poll {
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.poll h3 { margin: 0 0 8px; }
+.poll .poll-options {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+.poll .option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid #eee;
+  position: relative;
+}
+.poll .option .label { flex: 1; }
+.poll .option .bar {
+  background: var(--accent, #9d4555);
+  height: 6px;
+  border-radius: 3px;
+  min-width: 2px;
+}
+.poll .option .vote-count {
+  font-size: 12px;
+  color: #666;
+}
+.poll form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.poll form input[type=text], .poll form input[type=email] {
+  padding: 6px;
+  font-size: 14px;
+}
+
+/* Album */
+.album-upload {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+.album-upload label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+.album-photo {
+  margin: 0;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+.album-photo img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.album-photo figcaption {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #444;
+}
+.album-photo button {
+  margin: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.album .load-more {
+  display: block;
+  margin: 16px auto;
+  padding: 8px 16px;
+}
+
+/* Delivery dialog */
+.delivery-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.delivery-dialog {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.delivery-dialog header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.delivery-dialog fieldset {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.delivery-dialog .channel-list,
+.delivery-dialog .recipient-list {
+  display: grid;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.delivery-dialog label {
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+.delivery-dialog input[type=text],
+.delivery-dialog textarea {
+  padding: 6px;
+  font-size: 14px;
+}
+.delivery-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.delivery-dialog footer button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #f8f8f8;
+  cursor: pointer;
+}
+.delivery-dialog footer button[type=submit] {
+  background: var(--accent, #9d4555);
+  color: #fff;
+  border-color: var(--accent, #9d4555);
+}

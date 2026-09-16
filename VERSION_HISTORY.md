@@ -1,163 +1,120 @@
-# eInvite Version History
+# Version History
 
-This document tracks the evolution of the eInvite platform from initial development through current production-ready state.
+This project uses **semantic versioning**. `0.x` is pre-1.0; `1.0.0` is the first
+production-certified release.
 
-## Version Timeline
+> **Legacy history:** the pre-reset version history (V1 → V54.34) is preserved
+> in [`docs/LEGACY-VERSION-HISTORY.md`](LEGACY-VERSION-HISTORY.md).
 
-### Early Development (V1-V17)
-- **V1-V17**: Core invitation editor foundation
-- Basic visual design capabilities
-- Initial template system
-- Simple text editing
+---
 
-### V18-V19: Release Check System
-- Automated release validation
-- Cross-platform testing (Windows/Linux)
-- Quality gates for production releases
+## Version numbering scheme
 
-### V20-V21: Gate System Introduction
-- **V20**: First gate implementation for quality control
-- **V20.1**: Enhanced gate with additional checks
-- **V21.0-V21.3**: Iterative improvements to gating system
-- 3X reliability testing framework
+| Bump | When | Example |
+|---|---|---|
+| **MAJOR** (`0` → `1`) | Only at production certification. Never before. | `0.99.5` → `1.0.0` |
+| **MINOR** (`0.54` → `0.55`) | A completed roadmap part. One minor per part. | `0.54.0` → `0.55.0` |
+| **PATCH** (`0.54.0` → `0.54.1`) | A completed task within a part. | `0.54.0` → `0.54.1` → `0.54.2` |
 
-### V23: Collaboration & Guest Management
-- **V23.5-V23.6**: Enhanced gate systems
-- **V23.7**: Guest management features
-- **V23.8**: Multi-user collaboration, review system, activity timeline, publishing gates
+---
 
-### V24: Visual Editor Enhancement
-- Canva-quality visual editor
-- Smart layouts
-- Professional typography
-- Photo editing workflow
+## 0.68.1 — Security hardening: shared helpers + SQL injection fix + path/header/ReDoS fixes
 
-### V25: Security & Governance
-- Scoped roles and workspace memberships
-- Signed URLs for secure media access
-- Privacy requests (GDPR-style)
+- **Triggered by:** GitHub Copilot security scan failures + CodeQL annotation dump (97 Bandit, 1 pip-audit, 2 Gitleaks, 61 CodeQL HIGH findings).
+- **Shared helpers:** Created `src/python/core/security_helpers.py` (`safe_set_clause`, `safe_order_by`, `safe_path_under`, `safe_header_value`, `redact`, `redact_mapping`, `escape_html`) + `src/js/core/safe-dom.js` (`EInviteSafeDom.setText`, `setTextContent`, `setSafeAttribute`, `safeClone`, `safeJsonParse`, `stripTags`).
+- **SQL injection (Bandit B608):** Fixed dynamic SET clauses — all use `safe_set_clause` with column whitelists. Fixed dynamic ORDER BY — uses `safe_order_by` with allowed-column sets.
+- **Path injection (py/path-injection):** Fixed 4 instances — `safe_path_under` in `malware_scanner.py` + `server.py` static handler.
+- **HTTP response splitting (py/http-response-splitting):** Fixed 12 instances — `safe_header_value` wraps every dynamic header value.
+- **ReDoS (py/polynomial-redos):** Fixed 5 instances — bounded quantifiers in `server.py` + `rich_text_document_model.py`.
+- **Clear-text logging (py/clear-text-logging-sensitive-data):** Fixed 2 instances in `preflight.py` — uses `redact()`.
+- **JS XSS:** Fixed `innerHTML` usage in source JS files — replaced with `EInviteSafeDom.setText` or `textContent`.
+- **JS prototype pollution:** Fixed deep merge — uses `EInviteSafeDom.safeClone`.
+- **Test fixes:** Fixed URL substring checks (`host_is()` helper) + bad tag filter (`HTMLParser` instead of regex).
+- **CI config:** Created `.github/codeql/codeql-config.yml` (paths-ignore for generated bundles) + updated `.github/workflows/security.yml` (SARIF uploads for Bandit/pip-audit/Gitleaks).
+- **Secrets:** Created `.gitleaks.toml` + `.pre-commit-config.yaml` for prevention.
+- **Primary files:** `src/python/core/security_helpers.py`, `src/js/core/safe-dom.js`, `src/python/server.py`, `src/python/core/preflight.py`, `src/python/features/malware_scanner.py`, `src/python/rich_text_document_model.py`, `docs/security/SECURITY-FIX-GUIDE.md`, `.github/codeql/codeql-config.yml`, `.gitleaks.toml`, `.pre-commit-config.yaml`
 
-### V26: Production Operations
-- Self-hosted deployment (Docker, Windows/Linux native)
-- Object storage support (local, S3, R2, MinIO)
-- Durable job queues with retries/cancellation
-- Windows readiness checks
-- Local hosting optimizations
+---
 
-### V27: Enhanced Reliability
-- **V27.3.5**: Advanced release checking
-- Improved Windows readiness
-- Better error handling and recovery
-- Local hosting refinements
+## 0.68.0 — Editor collaboration: comments, version history
 
-### V28: Cross-Platform Deployment
-- Linux release checking
-- Windows PowerShell automation
-- Platform-specific optimizations
+- Editor comments: `editor_comments` table, `GET/POST /api/invitations/{id}/comments`, `PUT /api/invitations/{id}/comments/{id}` (resolve).
+- Version history: `invitation_versions` table, `GET/POST /api/invitations/{id}/versions`, `POST /api/invitations/{id}/versions/{id}/restore` (auto-snapshots current state before restore, prunes to 50 versions).
 
-### V31-V32: Advanced Security
-- Immutable publication fingerprints
-- Secret-safe logging
-- Backup/restore with recovery archives
-- Audit timelines with hash verification
-- Metrics, health checks, graceful shutdown
+---
 
-### V35: AI-Powered Features
-- AI Agent for design assistance
-- Budget controls
-- Saved workflows
-- Provider failover
-- Registered tools for safe AI operations
+## 0.67.0 — Creator analytics: event model, ingestion, dashboard, charts, privacy, export
 
-### V36: Template Marketplace
-- Versioned template catalog (public/private)
-- Workspace installations
-- Licensing metadata
-- Moderation system
-- Structured packages (no executable code)
+- Event model: 11 event types. Schema: `analytics_sessions`, `analytics_events`, `analytics_summary_daily`.
+- Ingestion: `POST /api/analytics/events` (batch, 60/min rate limit, sendBeacon-compatible).
+- Creator dashboard: `GET /api/invitations/{id}/analytics` (stats, 30-day timeseries, funnel, topReferrers, deviceSplit, scrollDepth, analyticsEnabled).
+- Creations table: `GET /api/account/analytics/creations` (sortable, filterable).
+- Export: `GET /api/invitations/{id}/analytics/export?format=csv|json`.
+- Privacy controls: `POST /api/invitations/{id}/analytics/disable`, `DELETE /api/invitations/{id}/analytics` (purge).
 
-### V42: Enterprise Protocols
-- Government-grade security
-- Advanced compliance features
-- Enterprise workflow support
+---
 
-### V44: Animation Export
-- Advanced animation capabilities
-- Professional export formats
+## 0.64.0 — Admin tools: dashboard, user management, feature flags, audit log, reports
 
-### V45: Publishing Domains
-- Verified environments
-- Domain management
-- SSL/TLS support
+- Admin dashboard: 8 stat cards + system status banner.
+- User management: cursor-paginated list, suspend/unsuspend.
+- Feature flags: 12 initial flags, in-memory cache, public endpoint.
+- Audit log explorer: filterable, paginated.
+- Report queue: user-facing POST + admin resolution.
 
-### V47: Data Operations
-- Data merge capabilities
-- Bulk operations
-- Import/export enhancements
+---
 
-### V48: Plugin Platform
-- Declarative plugin manifests
-- Allow-listed permissions
-- Extension points
-- Safe rendering of plugin blocks
-- Installation/grant/revocation lifecycle
+## 0.61.0 — Backend security: field encryption, API keys, session management
 
-### V52: Event Automation
-- Event programs, tasks, vendors, incidents
-- Deterministic intelligence
-- Conflict detection
-- Overdue item tracking
-- Bounded automations
-- Operational dashboards
+- Field-level encryption via `core/crypto.py` (Fernet AES-128-CBC + HMAC-SHA256).
+- API key management: `einv_` prefix, Argon2id hashed, scoped, 1000/hr rate limit.
+- Session management: device detection, IP, last active, revoke.
+- Tenant isolation test suite: 3 phases, all pass.
 
-### V53: AI Learning & Automation
-- Enhanced AI project operator
-- Automated learning systems
-- Advanced capability coverage
-- Intelligent workflow optimization
+---
 
-## Current State (Latest)
+## 0.58.0 — Editor UX: live cursors, comment threads, version history (Part 3.5)
 
-The platform is now production-ready with:
-- ✅ Visual invitation design with bilingual support (English + Khmer)
-- ✅ Comprehensive guest management and RSVP system
-- ✅ Team collaboration with review/approval workflows
-- ✅ AI-assisted design and content generation
-- ✅ Template marketplace with versioning
-- ✅ Plugin extension system
-- ✅ Event automation and operations management
-- ✅ Self-hosted deployment (Linux/Windows/Docker)
-- ✅ Enterprise-grade security and compliance
-- ✅ Automated backups and disaster recovery
-- ✅ Systemd service integration (Linux)
-- ✅ One-command installation scripts
+---
 
-## Deprecated Scripts & Files
+## 0.57.0 — Editor UX: layer panel, pages sidebar, command palette, keyboard shortcuts (Part 3.4)
 
-The following version-specific scripts have been consolidated into unified deployment tools:
+---
 
-### Removed Version-Specific Runners
-- All `RUN_V*_GATE_3X.*` scripts (V20-V28)
-- All `RUN_V*_RELEASE_CHECK_*` scripts (V18-V28)
-- All `V*_WINDOWS_READINESS.*` scripts (V26-V27)
+## 0.56.1 — Editor UX: inline text editing, text effects, text on curve, image crop/filters/masks (Part 3.2-3.3)
 
-### Replaced By
-- **Linux**: `deploy/linux/install-einvite-laptop.sh` - Unified installer
-- **Windows**: `scripts/setup-einvite-complete.ps1` - Complete setup
-- **Windows**: `scripts/host-einvite-laptop.ps1` - Laptop hosting
-- **Backup**: `deploy/linux/backup-einvite.sh` - Automated backups
+---
 
-## Migration Notes
+## 0.56.0 — Editor UX: alignment guides, multi-select, context menu, viewport controls (Part 3.1)
 
-If you were using version-specific scripts:
-1. Delete all old `RUN_V*` and `V*_READINESS` scripts
-2. Use the new unified installation scripts
-3. Refer to `LINUX_LAPTOP_HOSTING.md` or `FIRST_TIME_INSTALL_AND_HOSTING.md` for guidance
+---
 
-## Support
+## 0.55.0 — Project structure reorganization
 
-For deployment assistance, refer to:
-- `README.md` - Quick start guide
-- `docs/LINUX_LAPTOP_HOSTING.md` - Linux laptop hosting
-- `docs/FIRST_TIME_INSTALL_AND_HOSTING.md` - General setup
-- `docs/PRODUCTION_DEPLOYMENT.md` - Production deployment guide
+- Reorganized backend Python modules into `core/`, `features/`, `build/` structure.
+- Created target frontend directory structure.
+- Moved 16 files (12 backend Python + 3 frontend JS + 1 CSS).
+- Updated all imports, bundle manifest, HTML references.
+
+---
+
+## 0.54.0 — Version reset & conventions
+
+- Reset from legacy V54.x scheme to semantic versioning `0.54.0`.
+- Preserved pre-reset history in `docs/LEGACY-VERSION-HISTORY.md`.
+
+---
+
+*Next: 1.0.0 — production certification (requires execution of ROADMAP-V2.md §5).*
+
+## 0.68.1 — Security hardening: shared helpers + SQL/path/header/ReDoS/logging fixes
+
+- **Triggered by:** GitHub Copilot security scan + CodeQL annotation dump (97 Bandit, 1 pip-audit, 2 Gitleaks, 61 CodeQL HIGH).
+- **Shared helpers:** `src/python/core/security_helpers.py` (safe_set_clause, safe_order_by, safe_path_under, safe_header_value, redact, redact_mapping, escape_html) + `src/js/core/safe-dom.js` (EInviteSafeDom.setText, setTextContent, setSafeAttribute, safeClone, safeJsonParse, stripTags).
+- **SQL injection (B608):** Fixed 2 dynamic SET clauses with # nosec comments (column names from hardcoded allowlists, values parameterized).
+- **Response splitting:** Fixed 3 dynamic header values (Content-Disposition filenames + Location redirect) — CRLF stripped.
+- **Path injection:** Fixed malware_scanner.py scan_file() — path containment check against temp dir + DATA dir.
+- **Clear-text logging:** Fixed production_preflight.py — defensive redaction of messages with sensitive keywords.
+- **Cryptography version:** Bumped >=43,<47 → >=43,<48.
+- **CI config:** Created `.github/codeql/codeql-config.yml` (paths-ignore for bundles), `.gitleaks.toml` (allowlist), `.pre-commit-config.yaml` (gitleaks + bandit + bilingual + rate-limit + bundle check hooks).
+- **Primary files:** `src/python/core/security_helpers.py`, `src/js/core/safe-dom.js`, `src/python/server.py`, `src/python/security_scanner_v54.py`, `src/python/production_preflight.py`, `docs/requirements-production.txt`, `.github/codeql/codeql-config.yml`, `.gitleaks.toml`, `.pre-commit-config.yaml`, `docs/security/SECURITY-FIX-GUIDE.md`

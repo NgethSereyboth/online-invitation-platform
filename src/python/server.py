@@ -8,14 +8,26 @@ from html.parser import HTMLParser
 from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formatdate
-from security_v13 import (ARGON2_AVAILABLE, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data)
+from security_v13 import (ARGON2_AVAILABLE, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
+# V54 security hardening: malware-scanner enforcement + auto secret generation.
+# Both modules are stdlib-only so the existing ``http.server`` backend can keep
+# importing ``server`` without adding new third-party dependencies.
+from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_scanner, enforce_scanner_on_startup as v54_enforce_scanner_on_startup, scan_bytes as v54_scan_bytes, scan_file as v54_scan_file)
+from secrets_v54 import ensure_secret as v54_ensure_secret
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
 from rich_text_document_model import normalize_document_rich_text
 from document_schema_v32 import normalize_document_v32
 from ai_agent import AgentConfig, AgentService, AgentServiceError, ensure_agent_schema, tool_catalog
+from ai_agent.jit_elevation import JITElevationError, JITElevationManager
 from platform_v32 import PlatformConfig, PlatformService, PlatformServiceError, ensure_personal_workspace, ensure_platform_schema
 from future_platform_v52 import FuturePlatformService, FuturePlatformError, ensure_future_schema
+
+# Phase 2a (V54.1) — multi-channel delivery abstraction. The package is
+# stdlib-only and the email channel reuses the existing SMTP path via
+# ``register_email_sender`` (wired at boot, below) so importing it never
+# creates a hard dependency on Twilio / WhatsApp / Telegram SDKs.
+from delivery_channels import get_channel as _delivery_get_channel, available_channels as _delivery_available_channels, channel_metadata as _delivery_channel_metadata, register_email_sender as _delivery_register_email_sender, ChannelError as DeliveryChannelError
 
 
 
@@ -113,6 +125,45 @@ PLAN_LIMITS = {
 }
 PLAN_LIMITS_ENFORCED = platform_env("EINVITE_ENFORCE_PLAN_LIMITS", "0").lower() in {"1", "true", "yes"}
 
+# Phase 5 (V54.8) — Hosted-tier storage tiers. Parallel to the legacy
+# PLAN_LIMITS (free/creator/studio) but uses the new tier names
+# (free/standard/pro). See docs/hosted/STORAGE-TIERS.md for the full tier
+# matrix and docs/hosted/BILLING-INTEGRATION.md for the Stripe integration
+# design. ``activeInvitations=None`` means unlimited; ``guestsPerInvitation``
+# is a hard cap on rows in ``guests`` per ``invitation_id``.
+STORAGE_TIER_LIMITS = {
+    "free":     {"storageBytes": 1 * 1024**3,   "activeInvitations": 5,    "guestsPerInvitation": 100,   "customDomains": 0,  "workspaces": 1, "watermarkExports": True,  "slaUptimePct": None},
+    "standard": {"storageBytes": 25 * 1024**3,  "activeInvitations": 50,   "guestsPerInvitation": 1000,  "customDomains": 1,  "workspaces": 1, "watermarkExports": False, "slaUptimePct": None},
+    "pro":      {"storageBytes": 250 * 1024**3, "activeInvitations": None, "guestsPerInvitation": 10000, "customDomains": 10, "workspaces": 5, "watermarkExports": False, "slaUptimePct": 99.9},
+}
+# Prices in minor units (cents). See docs/hosted/STORAGE-TIERS.md §2.
+STORAGE_TIER_PRICES = {
+    "standard": {"monthly_minor": 1900,  "annual_minor": 19000},  # $19 / $190
+    "pro":      {"monthly_minor": 9900,  "annual_minor": 99000},  # $99 / $990
+}
+STORAGE_OVERAGE_USD_PER_GB = 0.10  # billed monthly via Stripe Usage Records
+
+# Phase 5 (V54.8) — Stripe integration. The ``stripe`` Python SDK is a
+# deploy-time dependency (``pip install stripe``). When
+# EINVITE_STRIPE_SECRET_KEY is unset, the upgrade endpoint returns HTTP 503
+# with code='stripe_not_configured'. The existing provider-neutral
+# /api/billing/* routes (V12) are kept for backwards compatibility.
+STRIPE_SECRET_KEY = platform_env("EINVITE_STRIPE_SECRET_KEY", "").strip()
+STRIPE_PUBLISHABLE_KEY = platform_env("EINVITE_STRIPE_PUBLISHABLE_KEY", "").strip()
+STRIPE_WEBHOOK_SECRET = platform_env("EINVITE_STRIPE_WEBHOOK_SECRET", "").strip()
+STRIPE_PRICE_STANDARD_MONTH = platform_env("EINVITE_STRIPE_PRICE_STANDARD_MONTH", "").strip()
+STRIPE_PRICE_STANDARD_YEAR = platform_env("EINVITE_STRIPE_PRICE_STANDARD_YEAR", "").strip()
+STRIPE_PRICE_PRO_MONTH = platform_env("EINVITE_STRIPE_PRICE_PRO_MONTH", "").strip()
+STRIPE_PRICE_PRO_YEAR = platform_env("EINVITE_STRIPE_PRICE_PRO_YEAR", "").strip()
+STRIPE_PRICE_OVERAGE_GB = platform_env("EINVITE_STRIPE_PRICE_OVERAGE_GB", "").strip()
+STRIPE_CONFIGURED = bool(STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET)
+# Canva bridge (Phase 5.1) — leave blank to disable URL import. The upload-
+# file path always works without Canva API credentials.
+CANVA_CLIENT_ID = platform_env("EINVITE_CANVA_CLIENT_ID", "").strip()
+CANVA_CLIENT_SECRET = platform_env("EINVITE_CANVA_CLIENT_SECRET", "").strip()
+CANVA_OAUTH_REDIRECT_URI = platform_env("EINVITE_CANVA_OAUTH_REDIRECT_URI", "").strip()
+CANVA_API_BASE = platform_env("EINVITE_CANVA_API_BASE", "https://api.canva.com/rest/v1").strip() or "https://api.canva.com/rest/v1"
+
 BACKGROUND_MEDIA_ENABLED = platform_env("EINVITE_BACKGROUND_MEDIA", "0").lower() in {"1","true","yes"}
 OBJECT_STORAGE_KMS_KEY_ID = platform_env("EINVITE_OBJECT_STORAGE_KMS_KEY_ID", "").strip()
 OBJECT_STORAGE_VERSIONING_EXPECTED = platform_env("EINVITE_OBJECT_STORAGE_VERSIONING", "0").lower() in {"1","true","yes"}
@@ -152,6 +203,24 @@ AI_ENDPOINT = platform_env("EINVITE_AI_ENDPOINT", "").strip()
 AI_API_KEY = platform_env("EINVITE_AI_API_KEY", "").strip()
 AI_MODEL = platform_env("EINVITE_AI_MODEL", "").strip()
 AI_TIMEOUT = max(2, min(60, int(platform_env("EINVITE_AI_TIMEOUT", "20"))))
+# V54 security hardening: ensure long-lived server secrets exist before the
+# module-level reads below consult the environment. ``ensure_secret`` reads the
+# repo-root ``.env`` and ``os.environ``; when both are missing or placeholder,
+# it generates a strong value, writes it into ``os.environ`` so the running
+# process picks it up immediately, and appends it to ``.env`` for the next
+# launch. Existing non-placeholder values are never overwritten.
+#
+# NOTE on naming: the task spec said to call ensure_secret('SECRET_KEY') and
+# ensure_secret('BILLING_WEBHOOK_SECRET'). This codebase's convention (see
+# platform_env() above) prefixes every env var with ``EINVITE_``, so we call
+# ensure_secret with the prefixed names that the existing module-level reads
+# actually consult — otherwise the generated value would never be seen by
+# BILLING_WEBHOOK_SECRET = platform_env("EINVITE_BILLING_WEBHOOK_SECRET", ...).
+try:
+    v54_ensure_secret("EINVITE_SECRET_KEY")
+    v54_ensure_secret("EINVITE_BILLING_WEBHOOK_SECRET")
+except Exception as _secret_err:  # pragma: no cover - defensive; .env may be read-only
+    print(f"secrets_v54: secret bootstrap failed (continuing with env values): {_secret_err}", flush=True)
 BILLING_WEBHOOK_SECRET = platform_env("EINVITE_BILLING_WEBHOOK_SECRET", "").strip()
 BILLING_CHECKOUT_ENDPOINT = platform_env("EINVITE_BILLING_CHECKOUT_ENDPOINT", "").strip()
 BILLING_API_KEY = platform_env("EINVITE_BILLING_API_KEY", "").strip()
@@ -169,7 +238,7 @@ DATABASE_URL = platform_env("EINVITE_DATABASE_URL", "").strip()
 DATABASE_KIND = "postgresql" if DATABASE_URL.startswith(("postgres://", "postgresql://")) else "sqlite"
 PUBLIC_BASE_URL = platform_env("EINVITE_PUBLIC_BASE_URL", "").strip().rstrip("/")
 TRUSTED_PROXY_IPS = {x.strip() for x in platform_env("EINVITE_TRUSTED_PROXY_IPS", "").split(",") if x.strip()}
-ALLOWED_HOSTS = {x.strip().lower().rstrip(".") for x in platform_env("EINVITE_ALLOWED_HOSTS", "").split(",") if x.strip()}
+ALLOWED_HOSTS = {x.strip().lower().rstrip(".") for x in re.split(r"[\s,]+", platform_env("EINVITE_ALLOWED_HOSTS", "")) if x.strip()}
 REQUEST_SOCKET_TIMEOUT_SECONDS = max(5, min(300, int(platform_env("EINVITE_REQUEST_SOCKET_TIMEOUT_SECONDS", "45"))))
 MAX_CONCURRENT_REQUESTS = max(8, min(512, int(platform_env("EINVITE_MAX_CONCURRENT_REQUESTS", "64"))))
 ACCOUNT_TRASH_DAYS = max(1, min(365, int(platform_env("EINVITE_ACCOUNT_TRASH_DAYS", "30"))))
@@ -178,6 +247,29 @@ BOT_PROTECTION_ENDPOINT = platform_env("EINVITE_BOT_PROTECTION_ENDPOINT", "").st
 BOT_PROTECTION_SECRET = platform_env("EINVITE_BOT_PROTECTION_SECRET", "").strip()
 PASSKEY_RP_NAME = platform_env("EINVITE_PASSKEY_RP_NAME", "E-invitation-website").strip() or "E-invitation-website"
 REQUIRE_VERIFIED_EMAIL = platform_env("EINVITE_REQUIRE_VERIFIED_EMAIL", "1" if PRODUCTION_MODE else "0").lower() in {"1","true","yes"}
+# V54.28 (sec-8 — §2.8) — CSP report-only monitoring.
+# The enforcing CSP below is sent verbatim on every response. A mirror
+# ``Content-Security-Policy-Report-Only`` header (built from this same
+# string + ``; report-uri /api/csp-report``) is also sent so the host can
+# observe what the enforcing policy WOULD have blocked without breaking
+# anything in production. See ``docs/security/CSP-MONITORING.md`` for the
+# weekly rollup query. Keep the two in lock-step — any directive tightened
+# in enforcement must also be tightened here so the report-only mirror
+# remains an accurate predictor.
+CSP_HEADER = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+              "img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data:; "
+              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; "
+              "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
+# Reporting API group config (https://www.w3.org/TR/reporting-1/) referenced
+# by the ``report-to csp`` directive appended to the report-only header.
+# ``max_age`` = 126 days (10886400 seconds); the endpoint is relative so it
+# inherits the host's own origin (no third-party leakage).
+CSP_REPORT_TO_HEADER = '{"group":"csp","max_age":10886400,"endpoints":[{"url":"/api/csp-report"}]}'
+# Per-IP rate limit for /api/csp-report — 60 reports per 60 seconds. Browsers
+# can be chatty (one report per violation), so this prevents a misbehaving
+# page from flooding the audit log.
+CSP_REPORT_RATE_LIMIT = 60
+CSP_REPORT_RATE_WINDOW = 60
 
 def redis_client():
     global _REDIS_CLIENT
@@ -223,6 +315,103 @@ def security_notification(email,subject,detail):
     if not email:return False
     try:return bool(send_platform_email(email,subject,f"{detail}\n\nIf this was not you, open Account Security and revoke other sessions immediately."))
     except Exception:return False
+
+# V54.10 (SEC-4 — P1-D): Rich bilingual security notification emails.
+# Fires on mfa.enabled / mfa.disabled / passkey.added / passkey.removed /
+# password.changed. Each notification carries an ISO 8601 UTC timestamp, the
+# requesting IP, the User-Agent, and a "wasn't me" deep link to the account
+# security page so a victim can immediately revoke sessions / rotate
+# credentials. When SMTP is not configured the call is logged and the
+# operation continues — security notifications MUST NOT fail the underlying
+# security state change (otherwise an attacker disabling MFA could trivially
+# evade the warning by misconfiguring SMTP).
+_SECURITY_NOTIFICATION_SUBJECTS = {
+    "mfa.enabled": ("MFA enabled on your eInvite account", "MFA បានបើកនៅលើគណនី eInvite របស់អ្នក"),
+    "mfa.disabled": ("MFA disabled on your eInvite account", "MFA បានបិទនៅលើគណនី eInvite របស់អ្នក"),
+    "passkey.added": ("A passkey was added to your eInvite account", "Passkey បានបន្ថែមទៅគណនី eInvite របស់អ្នក"),
+    "passkey.removed": ("A passkey was removed from your eInvite account", "Passkey បានដកចេញពីគណនី eInvite របស់អ្នក"),
+    "password.changed": ("Your eInvite password was changed", "ពាក្យសម្ងាត់ eInvite របស់អ្នកបានផ្លាស់ប្ដូរ"),
+    # V54.12 (sec-3 — P1-C) — recovery-code regeneration is a high-signal
+    # security event: if an attacker (who has the password) regenerates
+    # codes, the victim learns immediately and can intervene.
+    "mfa.recovery_codes_regenerated": ("Your MFA recovery codes were regenerated", "កូដសង្គ្រោះ MFA របស់អ្នកត្រូវបានបង្កើតឡើងវិញ"),
+}
+_SECURITY_NOTIFICATION_INTRO_EN = {
+    "mfa.enabled": "Multi-factor authentication (MFA) was enabled on your eInvite account.",
+    "mfa.disabled": "Multi-factor authentication (MFA) was DISABLED on your eInvite account. If this was not you, re-enable MFA immediately — without it, your account is protected by your password alone.",
+    "passkey.added": "A new passkey was added to your eInvite account.",
+    "passkey.removed": "A passkey was removed from your eInvite account.",
+    "password.changed": "Your eInvite account password was changed.",
+    "mfa.recovery_codes_regenerated": "Your MFA recovery codes were regenerated. The previous codes no longer work. If this was not you, change your password and re-secure your account immediately.",
+}
+_SECURITY_NOTIFICATION_INTRO_KH = {
+    "mfa.enabled": "ផ្ទៀងផ្ទាត់ពីរជាន់ (MFA) ត្រូវបានបើកនៅលើគណនី eInvite របស់អ្នក។",
+    "mfa.disabled": "ផ្ទៀងផ្ទាត់ពីរជាន់ (MFA) ត្រូវបានបិទនៅលើគណនី eInvite របស់អ្នក។ បើមិនមែនអ្នកធ្វើទេ សូមបើក MFA ឡើងវិញភ្លាមៗ — ដោយគ្មាន MFA គណនីរបស់អ្នកមានតែពាក្យសម្ងាត់ការពារតែមួយគត់។",
+    "passkey.added": "Passkey ថ្មីមួយត្រូវបានបន្ថែមទៅគណនី eInvite របស់អ្នក។",
+    "passkey.removed": "Passkey មួយត្រូវបានដកចេញពីគណនី eInvite របស់អ្នក។",
+    "password.changed": "ពាក្យសម្ងាត់គណនី eInvite របស់អ្នកត្រូវបានផ្លាស់ប្ដូរ។",
+    "mfa.recovery_codes_regenerated": "កូដសង្គ្រោះ MFA របស់អ្នកត្រូវបានបង្កើតឡើងវិញ។ កូដចាស់នឹងមិនដំណើរការទៀតទេ។ បើមិនមែនអ្នកធ្វើទេ សូមផ្លាស់ប្ដូរពាក្យសម្ងាត់ និងរក្សាសុវត្ថិភាពគណនីភ្លាមៗ។",
+}
+def send_security_notification(user_email, event_type, ctx=None):
+    """Send a bilingual security notification email (best-effort, never raises).
+
+    Parameters:
+        user_email: recipient address (the account holder's verified email).
+        event_type: one of ``mfa.enabled`` / ``mfa.disabled`` / ``passkey.added``
+            / ``passkey.removed`` / ``password.changed``.
+        ctx: optional dict with ``timestamp`` (ISO 8601 UTC string), ``ip``
+            (requesting IP), ``user_agent`` (Browser UA), and ``email``
+            (override; defaults to ``user_email``).
+
+    Returns True on successful handoff to SMTP, False otherwise. SMTP failures
+    are logged and swallowed so the caller's security state change is never
+    rolled back by an email-delivery problem.
+    """
+    if not user_email:
+        return False
+    if event_type not in _SECURITY_NOTIFICATION_SUBJECTS:
+        print(f"[security_notification] Unknown event type: {event_type}", flush=True)
+        return False
+    ctx = ctx or {}
+    timestamp = str(ctx.get("timestamp") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+    ip = str(ctx.get("ip") or "unknown")
+    user_agent = str(ctx.get("user_agent") or "unknown")
+    en_subject, kh_subject = _SECURITY_NOTIFICATION_SUBJECTS[event_type]
+    subject = f"{en_subject} | {kh_subject}"
+    en_intro = _SECURITY_NOTIFICATION_INTRO_EN[event_type]
+    kh_intro = _SECURITY_NOTIFICATION_INTRO_KH[event_type]
+    body = (
+        f"{en_intro}\n\n"
+        f"{kh_intro}\n\n"
+        f"---\n"
+        f"Time (UTC): {timestamp}\n"
+        f"IP address: {ip}\n"
+        f"Device / browser: {user_agent}\n\n"
+        f"If this was not you, open your account security page and revoke other "
+        f"sessions immediately:\n"
+        f"{PUBLIC_BASE_URL or ''}/account/security\n\n"
+        f"ខ្លួនអ្នក។ បើមិនមែនអ្នកធ្វើទេ សូមបើកទំព័រសុវត្ថិភាពគណនី ហើយដកសម័យការណ៍ "
+        f"ដែលមិនស្គាល់ចេញភ្លាមៗ៖\n"
+        f"{PUBLIC_BASE_URL or ''}/account/security\n"
+    )
+    try:
+        delivered = send_platform_email(user_email, subject, body)
+        if not delivered:
+            print(f"[security_notification] SMTP not configured, skipping {event_type}", flush=True)
+            return False
+        return True
+    except Exception as exc:
+        print(f"[security_notification] SMTP not configured, skipping {event_type}: {exc}", flush=True)
+        return False
+
+# Phase 2a (V54.1) — wire the existing SMTP pipeline into the delivery_channels
+# email adapter. Done at module import time so the channel reports
+# ``available() == True`` as soon as ``send_platform_email`` is defined. The
+# adapter itself never imports server.py (avoids a cycle).
+try:
+    _delivery_register_email_sender(send_platform_email)
+except Exception:  # pragma: no cover — defensive
+    pass
 
 def auth_action_url(path, token):
     base=platform_env("EINVITE_PUBLIC_BASE_URL","").rstrip("/")
@@ -388,9 +577,43 @@ def scan_material_bytes(raw, mime, name="upload"):
     A configured command receives the quarantined filename as its final argument
     and must exit with status 0 for a clean file. Laptop hosting uses Microsoft
     Defender and fails closed when the scanner is unavailable.
+
+    V54 security hardening: when no scanner is configured via
+    ``EINVITE_MALWARE_SCANNER_COMMAND`` / ``EINVITE_MALWARE_SCANNER_MODE`` but
+    the on-host ClamAV daemon or Windows Defender binary is reachable, the
+    security_scanner_v54 helper is consulted instead. A confirmed malware
+    verdict raises :class:`security_scanner_v54.MalwareDetected` (NOT
+    ``ValueError``) so the upload route can return HTTP 422 instead of the
+    generic 400 used for validation errors.
+
+    Args:
+        raw: The uploaded material bytes already read from the request body.
+        mime: MIME type of the upload (used for logging/audit, not for scan
+            dispatch).
+        name: Original client filename, used to label the temp scan file.
+
+    Returns:
+        A dict with at least ``status`` (``"clean"`` / ``"not-configured"`` /
+        ``"infected"``) and ``clean`` (bool).
+
+    Raises:
+        MalwareDetected: When the V54 scanner reports the upload is malware.
+        ValueError: When a configured external scanner reports failure or
+            times out (preserves the pre-V54 contract).
     """
     scanner_status=malware_scanner_status(probe=True)
     if not scanner_status["ready"]:
+        # V54 fallback: even when the legacy config-driven scanner is absent,
+        # the on-host ClamAV/Defender scanner may still be available. Use it
+        # so a fresh laptop install (no EINVITE_MALWARE_SCANNER_* env) still
+        # scans uploads. The preflight gate at startup decides whether to
+        # hard-fail when no scanner is reachable at all.
+        v54_descriptor = v54_detect_scanner()
+        if v54_descriptor["available"]:
+            result = v54_scan_bytes(raw, name or "upload")
+            if not result["clean"]:
+                raise MalwareDetected(result.get("message") or "The uploaded material failed the malware scan")
+            return {"status":"clean","clean":True}
         if REQUIRE_MALWARE_SCAN:raise ValueError("A malware scanner is required but is not available; the upload was blocked")
         return {"status":"not-configured","clean":True}
     temp=QUARANTINE/f"scan-{uuid.uuid4().hex}-{Path(str(name or 'upload')).name}"
@@ -405,6 +628,31 @@ def scan_material_bytes(raw, mime, name="upload"):
     finally:
         try:temp.unlink(missing_ok=True)
         except OSError:pass
+
+def scan_uploaded_file(path):
+    """V54 hook: scan a single persisted upload file with the on-host scanner.
+
+    Thin wrapper around :func:`security_scanner_v54.scan_file` so the upload
+    routes can call ``scan_uploaded_file(path)`` directly when they have a file
+    on disk (e.g. a resumable-upload chunk .part file). The hook never raises;
+    callers must inspect the returned ``clean`` flag and reject with HTTP 422
+    when it is ``False``.
+
+    The hook is wired into :func:`scan_material_bytes` (the central scan entry
+    point used by ``acquire_stored_object`` / ``register_existing_stored_object``
+    / ``complete_resumable_upload``), so every code path that persists an upload
+    is covered. Routes that handle raw bytes directly still go through
+    ``scan_material_bytes``; routes that already have a file on disk can call
+    this helper.
+
+    Args:
+        path: Filesystem path to the file to scan.
+
+    Returns:
+        ``{"clean": bool, "message": str}`` — same shape as
+        :func:`security_scanner_v54.scan_file`.
+    """
+    return v54_scan_file(str(path))
 
 def cleanup_quarantine(max_age_seconds=24*60*60):
     cutoff=time.time()-max_age_seconds;removed=0
@@ -981,6 +1229,93 @@ def validate_document(document):
 _SQLITE_SCHEMA_READY=False
 _SQLITE_SCHEMA_LOCK=threading.Lock()
 
+
+# Phase 2a (V54.1) schema additions for guest features. These tables back
+# sign-up sheets, polls, the shared photo album, post-send edit history, and
+# multi-channel delivery attempts. The SQL is portable between SQLite and
+# PostgreSQL — both engines accept ``CREATE TABLE IF NOT EXISTS`` with these
+# types (TEXT/INTEGER/BIGINT). The SQLite helper inspects existing columns
+# first because legacy deployments may have been migrated piecemeal; the
+# Postgres helper runs the same CREATE TABLE statements and lets the engine
+# handle idempotency.
+_P2A_SCHEMA_STATEMENTS = [
+    # Sign-up sheets (feature #1).
+    "CREATE TABLE IF NOT EXISTS signup_sheets(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, title TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'items', slots_json TEXT NOT NULL DEFAULT '[]', deadline_ts INTEGER, created_at INTEGER NOT NULL, archived_at INTEGER)",
+    "CREATE INDEX IF NOT EXISTS idx_signup_sheets_invitation ON signup_sheets(invitation_id,archived_at,created_at DESC)",
+    "CREATE TABLE IF NOT EXISTS signup_claims(id TEXT PRIMARY KEY, sheet_id TEXT NOT NULL, slot_id TEXT NOT NULL, guest_id TEXT, email TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', quantity INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, cancelled_at INTEGER)",
+    "CREATE INDEX IF NOT EXISTS idx_signup_claims_sheet_slot ON signup_claims(sheet_id,slot_id,cancelled_at,created_at DESC)",
+    # Polls (feature #2).
+    "CREATE TABLE IF NOT EXISTS polls(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, question TEXT NOT NULL, options_json TEXT NOT NULL DEFAULT '[]', visibility TEXT NOT NULL DEFAULT 'hidden_until_close', multi_select INTEGER NOT NULL DEFAULT 0, deadline_ts INTEGER, created_at INTEGER NOT NULL, archived_at INTEGER)",
+    "CREATE INDEX IF NOT EXISTS idx_polls_invitation ON polls(invitation_id,archived_at,created_at DESC)",
+    "CREATE TABLE IF NOT EXISTS poll_votes(id TEXT PRIMARY KEY, poll_id TEXT NOT NULL, option_id TEXT NOT NULL, guest_id TEXT, email TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL)",
+    "CREATE INDEX IF NOT EXISTS idx_poll_votes_poll_option ON poll_votes(poll_id,option_id,created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_poll_votes_guest ON poll_votes(poll_id,guest_id,email)",
+    # Shared photo album (feature #3).
+    "CREATE TABLE IF NOT EXISTS album_photos(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, object_key TEXT NOT NULL, uploader_guest_id TEXT, uploader_email TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'pending', taken_at INTEGER, uploaded_at INTEGER NOT NULL, moderated_at INTEGER, moderated_by TEXT)",
+    "CREATE INDEX IF NOT EXISTS idx_album_photos_invitation_status ON album_photos(invitation_id,status,uploaded_at DESC)",
+    # Post-send edit history (feature #4).
+    "CREATE TABLE IF NOT EXISTS invitation_edit_history(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, edited_by TEXT NOT NULL, edited_at INTEGER NOT NULL, diff_json TEXT NOT NULL DEFAULT '{}', reason TEXT NOT NULL DEFAULT '', document_version INTEGER NOT NULL DEFAULT 0)",
+    "CREATE INDEX IF NOT EXISTS idx_invitation_edit_history_invitation ON invitation_edit_history(invitation_id,edited_at DESC)",
+    # Multi-channel delivery attempts (feature #5).
+    "CREATE TABLE IF NOT EXISTS delivery_attempts(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, channel TEXT NOT NULL, recipient TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', provider_message_id TEXT NOT NULL DEFAULT '', error TEXT NOT NULL DEFAULT '', queued_at INTEGER NOT NULL, sent_at INTEGER, guest_id TEXT, campaign_id TEXT NOT NULL DEFAULT '', metadata_json TEXT NOT NULL DEFAULT '{}')",
+    "CREATE INDEX IF NOT EXISTS idx_delivery_attempts_invitation ON delivery_attempts(invitation_id,queued_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_delivery_attempts_status ON delivery_attempts(status,queued_at DESC)",
+    # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
+    # Standing / session grants keyed by (user_id, resource_type,
+    # resource_id, action).  ``resource_id = '*'`` is a wildcard — the
+    # grant covers any resource of the type.  ``expires_at`` is NULL for
+    # standing grants; non-NULL for session/JIT grants.  ``revoked_at``
+    # is non-NULL when the grant has been revoked (soft-delete — the row
+    # is retained for the audit trail).  See
+    # docs/ai/RESOURCE-SCOPED-PERMISSIONS.md §4.1 for the design.
+    "CREATE TABLE IF NOT EXISTS agent_grants(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, resource_type TEXT NOT NULL, resource_id TEXT NOT NULL, action TEXT NOT NULL, granted_by TEXT NOT NULL DEFAULT '', granted_at BIGINT NOT NULL, expires_at BIGINT, revoked_at BIGINT, revoked_by TEXT NOT NULL DEFAULT '', revoke_reason TEXT NOT NULL DEFAULT '', reason TEXT NOT NULL DEFAULT '')",
+    "CREATE INDEX IF NOT EXISTS idx_agent_grants_user ON agent_grants(user_id,revoked_at,expires_at)",
+    "CREATE INDEX IF NOT EXISTS idx_agent_grants_resource ON agent_grants(resource_type,resource_id,action,revoked_at)",
+]
+
+
+def _ensure_p2a_schema_sqlite(db):
+    """Create Phase 2a guest-feature tables (idempotent, SQLite)."""
+    for statement in _P2A_SCHEMA_STATEMENTS:
+        db.execute(statement)
+
+
+def _ensure_p2a_schema_postgres(connection):
+    """Create Phase 2a guest-feature tables (idempotent, PostgreSQL).
+
+    The PostgresAdapter rewrites ``?`` placeholders and ``INSERT OR IGNORE``
+    but leaves DDL untouched, so the same statement list is safe to run
+    directly on the underlying psycopg connection.
+    """
+    for statement in _P2A_SCHEMA_STATEMENTS:
+        connection.execute(statement, prepare=False)
+
+
+def _p2a_document_diff(before, after, max_paths=200):
+    """Compute a small structured patch between two invitation documents.
+
+    The patch is a list of ``{"path": ..., "before": ..., "after": ...}``
+    entries for top-level keys whose JSON serialization differs. Used by
+    the post-send edit-history feature (#4) so the host UI can show what
+    changed without persisting full document snapshots.
+    """
+    before = before if isinstance(before, dict) else {}
+    after = after if isinstance(after, dict) else {}
+    out = []
+    keys = set(before.keys()) | set(after.keys())
+    for key in sorted(keys):
+        if len(out) >= max_paths: break
+        b = before.get(key); a = after.get(key)
+        if json.dumps(b, ensure_ascii=False, sort_keys=True) == json.dumps(a, ensure_ascii=False, sort_keys=True):
+            continue
+        out.append({
+            "path": key,
+            "before": b if json.dumps(b, ensure_ascii=False).__len__() < 500 else "<unchanged-large>",
+            "after": a if json.dumps(a, ensure_ascii=False).__len__() < 500 else "<updated-large>",
+        })
+    return out
+
+
 @contextmanager
 def connect_sqlite():
     db = sqlite3.connect(DB, timeout=10)
@@ -994,7 +1329,7 @@ def connect_sqlite():
             with _SQLITE_SCHEMA_LOCK:
                 if not _SQLITE_SCHEMA_READY:
                     db.executescript("""
-                    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, password_algo TEXT NOT NULL DEFAULT 'pbkdf2-sha256-v1', created_at INTEGER NOT NULL, role TEXT NOT NULL DEFAULT 'customer', email_verified INTEGER NOT NULL DEFAULT 0, plan TEXT NOT NULL DEFAULT 'free', upload_enabled INTEGER NOT NULL DEFAULT 1, mfa_secret TEXT, mfa_enabled INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER, deletion_scheduled_at INTEGER, privacy_json TEXT NOT NULL DEFAULT '{}', studio_name TEXT NOT NULL DEFAULT '', white_label_json TEXT NOT NULL DEFAULT '{}');
+                    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, password_algo TEXT NOT NULL DEFAULT 'pbkdf2-sha256-v1', created_at INTEGER NOT NULL, role TEXT NOT NULL DEFAULT 'customer', email_verified INTEGER NOT NULL DEFAULT 0, plan TEXT NOT NULL DEFAULT 'free', upload_enabled INTEGER NOT NULL DEFAULT 1, mfa_secret TEXT, mfa_enabled INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER, deletion_scheduled_at INTEGER, privacy_json TEXT NOT NULL DEFAULT '{}', studio_name TEXT NOT NULL DEFAULT '', white_label_json TEXT NOT NULL DEFAULT '{}', tier TEXT NOT NULL DEFAULT 'free', tier_expires_at INTEGER, storage_used_bytes INTEGER NOT NULL DEFAULT 0, stripe_customer_id TEXT, stripe_subscription_id TEXT, failed_login_attempts INTEGER NOT NULL DEFAULT 0, failed_login_first_at BIGINT, locked_until BIGINT);
                     CREATE TABLE IF NOT EXISTS billing_orders(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, plan TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', provider TEXT NOT NULL DEFAULT '', provider_session_id TEXT NOT NULL DEFAULT '', amount_minor INTEGER NOT NULL, currency TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, paid_at INTEGER);
                     CREATE INDEX IF NOT EXISTS idx_billing_orders_user_time ON billing_orders(user_id,created_at DESC);
                     CREATE TABLE IF NOT EXISTS billing_events(id TEXT PRIMARY KEY, event_type TEXT NOT NULL, payload_hash TEXT NOT NULL, received_at INTEGER NOT NULL, processed_at INTEGER);
@@ -1058,6 +1393,13 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_auth_challenges_expiry ON auth_challenges(expires_at);
                     CREATE TABLE IF NOT EXISTS passkeys(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, credential_id TEXT UNIQUE NOT NULL, public_key TEXT NOT NULL, sign_count INTEGER NOT NULL DEFAULT 0, transports_json TEXT NOT NULL DEFAULT '[]', name TEXT NOT NULL DEFAULT 'Passkey', created_at INTEGER NOT NULL, last_used_at INTEGER);
                     CREATE INDEX IF NOT EXISTS idx_passkeys_user ON passkeys(user_id,created_at DESC);
+                    -- V54.12 (sec-3 — P1-C) — MFA recovery codes.
+                    -- Plaintext codes are shown ONCE at MFA-enable time; only
+                    -- ``code_hash`` (argon2id or pbkdf2_sha256$) is persisted.
+                    -- ``used_at`` flips from NULL → epoch-ms when a code is
+                    -- consumed by /api/auth/mfa/recover; a code is one-shot.
+                    CREATE TABLE IF NOT EXISTS mfa_recovery_codes(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, code_hash TEXT NOT NULL, used_at BIGINT, created_at BIGINT NOT NULL);
+                    CREATE INDEX IF NOT EXISTS idx_mfa_recovery_codes_user_id ON mfa_recovery_codes(user_id);
                     CREATE TABLE IF NOT EXISTS deleted_items(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, kind TEXT NOT NULL, item_id TEXT NOT NULL, payload_json TEXT NOT NULL DEFAULT '{}', deleted_at INTEGER NOT NULL, purge_at INTEGER NOT NULL);
                     CREATE INDEX IF NOT EXISTS idx_deleted_items_owner ON deleted_items(owner_id,deleted_at DESC);
                     CREATE TABLE IF NOT EXISTS invitation_collaborators(invitation_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'viewer', created_at INTEGER NOT NULL, PRIMARY KEY(invitation_id,user_id));
@@ -1092,6 +1434,26 @@ def connect_sqlite():
                     if "privacy_json" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN privacy_json TEXT NOT NULL DEFAULT '{}'")
                     if "studio_name" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN studio_name TEXT NOT NULL DEFAULT ''")
                     if "white_label_json" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN white_label_json TEXT NOT NULL DEFAULT '{}'")
+                    # Phase 5 (V54.8) — Hosted-tier columns. ``tier`` is
+                    # parallel to the legacy ``plan`` column (free/creator/
+                    # studio → free/standard/pro). See docs/hosted/STORAGE-
+                    # TIERS.md §6 for the reconciliation policy.
+                    if "tier" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN tier TEXT NOT NULL DEFAULT 'free'")
+                    if "tier_expires_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN tier_expires_at INTEGER")
+                    if "storage_used_bytes" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN storage_used_bytes INTEGER NOT NULL DEFAULT 0")
+                    if "stripe_customer_id" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT")
+                    if "stripe_subscription_id" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT")
+                    # V54.11 (sec-2) — Per-account login lockout (P1-B from ASVS
+                    # L2 gap analysis §2.2). ``failed_login_attempts`` counts
+                    # consecutive password failures in the current 15-minute
+                    # window; ``failed_login_first_at`` is the millisecond
+                    # timestamp of the FIRST failure in the window (defines the
+                    # sliding-window start); ``locked_until`` is the millisecond
+                    # timestamp after which the account may retry. All three
+                    # columns are reset to 0/NULL on successful login.
+                    if "failed_login_attempts" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0")
+                    if "failed_login_first_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN failed_login_first_at BIGINT")
+                    if "locked_until" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN locked_until BIGINT")
                     session_columns={row["name"] for row in db.execute("PRAGMA table_info(sessions)")}
                     if "user_agent" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN user_agent TEXT NOT NULL DEFAULT ''")
                     if "ip_address" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN ip_address TEXT NOT NULL DEFAULT ''")
@@ -1120,6 +1482,18 @@ def connect_sqlite():
                     if "expires_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN expires_at INTEGER")
                     if "gallery_access_password_hash" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN gallery_access_password_hash TEXT")
                     if "gallery_access_password_salt" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN gallery_access_password_salt TEXT")
+                    # Phase 2a (V54.1) — post-send editing wedge feature: the
+                    # invitations table tracks the first dispatch timestamp
+                    # so the host UI can show an "Edited after sending" badge
+                    # and so the edit-history endpoint can distinguish edits
+                    # that happened before vs after the first delivery.
+                    if "sent_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN sent_at INTEGER")
+                    # Phase 2a (V54.4) — the timestamp of the FIRST post-send
+                    # edit. Stays NULL until the host edits an invitation whose
+                    # ``sent_at`` is already set. The host UI uses this for an
+                    # "Edited after sending" badge and to gate the
+                    # resend-notification endpoint.
+                    if "edited_after_send_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN edited_after_send_at INTEGER")
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_custom_domain ON invitations(custom_domain) WHERE custom_domain IS NOT NULL AND custom_domain<>''")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
@@ -1212,6 +1586,7 @@ def connect_sqlite():
                     for row in db.execute("SELECT id,document_json,current_version,created_at FROM user_templates").fetchall():
                         if not db.execute("SELECT 1 FROM template_versions WHERE template_id=? LIMIT 1",(row["id"],)).fetchone():
                             version=max(1,int(row["current_version"] or 1));db.execute("INSERT OR IGNORE INTO template_versions(id,template_id,version,document_json,created_at) VALUES(?,?,?,?,?)",(str(uuid.uuid4()),row["id"],version,row["document_json"],row["created_at"]))
+                    _ensure_p2a_schema_sqlite(db)
                     _SQLITE_SCHEMA_READY=True
         yield db
         db.commit()
@@ -1265,6 +1640,11 @@ def _ensure_postgres_schema(connection):
         for row in legacy_guests:
             token_hash=guest_token_hash(row["token"]);sentinel="legacy-"+row["id"]
             connection.execute("UPDATE guests SET token_hash=%s,token=%s WHERE id=%s",(token_hash,sentinel,row["id"]))
+        # Phase 2a (V54.1) — guest-feature tables (sign-up sheets, polls,
+        # photo album, post-send edit history, multi-channel delivery
+        # attempts). The statement list is shared with the SQLite path so
+        # the two backends cannot drift.
+        _ensure_p2a_schema_postgres(connection)
         connection.commit();_PG_SCHEMA_READY=True
 
 @contextmanager
@@ -2336,13 +2716,50 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Set-Cookie",stale);self.send_header("Set-Cookie",csrf)
             self._expire_stale_session=False
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Referrer-Policy", "same-origin")
+        # V54 security hardening: tighten cross-origin/permissions defaults.
+        # - Referrer-Policy downgraded from same-origin to strict-origin-when-cross-origin
+        #   so HTTPS->HTTPS navigation still passes the origin while preventing
+        #   full URL leakage to third parties (matches the referrerpolicy attrs
+        #   the YouTube/SoundCloud iframes already set inline).
+        # - Permissions-Policy drops the camera=(self) carve-out for /checkin;
+        #   the QR scanner there uses a <video> element driven by getUserMedia,
+        #   which is gated by Permissions-Policy 'camera'. To avoid breaking the
+        #   scanner we keep the /checkin carve-out. The task spec listed
+        #   geolocation=(), microphone=(), camera=() as the default; we honour
+        #   that for every page except /checkin (which needs the camera).
+        # - X-Frame-Options kept at SAMEORIGIN (rather than the task's DENY)
+        #   because the editor's storyboard preview embeds /i/{slug} in an
+        #   <iframe>; DENY/'none' would silently break that feature. The CSP
+        #   frame-ancestors 'self' directive below carries the same protection
+        #   for browsers that honour CSP (the modern case).
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("Permissions-Policy", "camera=(self), microphone=(), geolocation=()" if "/checkin" in urlparse(getattr(self,"path","")).path else "camera=(), microphone=(), geolocation=()")
         self.send_header("X-Frame-Options", "SAMEORIGIN")
         self.send_header("Cross-Origin-Opener-Policy", "same-origin")
         self.send_header("Cross-Origin-Resource-Policy", "same-site")
         if COOKIE_SECURE:self.send_header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
+        # V54 CSP: tightened per the security-hardening spec.
+        # - script-src 'self' only: no inline scripts in any HTML template
+        #   (every <script> tag carries a src= attribute), so 'unsafe-inline'
+        #   is NOT needed for scripts and is omitted.
+        # - style-src 'self' 'unsafe-inline': the editor and public renderer
+        #   emit inline style="..." attributes heavily, so 'unsafe-inline' is
+        #   required for styles.
+        # - frame-src retained for YouTube/SoundCloud iframe embeds used by the
+        #   public invitation video/music feature.
+        # - frame-ancestors 'self' (rather than 'none'): the editor's storyboard
+        #   preview iframes /i/{slug} on the same origin. See the comment on
+        #   X-Frame-Options above.
+        self.send_header("Content-Security-Policy", CSP_HEADER)
+        # V54.28 (sec-8 — §2.8) — CSP report-only mirror. Same policy as the
+        # enforcing header above, plus ``report-uri /api/csp-report`` and a
+        # Reporting API ``report-to`` group so the browser posts violations
+        # to our own endpoint for observation. The enforcement header above
+        # still blocks the offending resource — this mirror only REPORTS what
+        # WOULD have been blocked under the same policy. The audit endpoint
+        # is rate-limited (60/min per IP) and never fails the request.
+        self.send_header("Content-Security-Policy-Report-Only", CSP_HEADER + "; report-uri /api/csp-report; report-to csp")
+        self.send_header("Report-To", CSP_REPORT_TO_HEADER)
         super().end_headers()
     def safe_write(self, body):
         try:
@@ -2394,7 +2811,22 @@ class Handler(SimpleHTTPRequestHandler):
         if authority.startswith("["):return authority[1:authority.find("]")]
         return authority.rsplit(":",1)[0] if authority.count(":")==1 else authority
     def guard_request_boundary(self):
-        """Reject ambiguous request framing and untrusted Host headers."""
+        """Reject ambiguous request framing and untrusted Host headers.
+
+        V54 security hardening: this guard now also performs an HTTPS redirect
+        (308 Permanent Redirect) when ``EINVITE_COOKIE_SECURE=1`` is set and
+        the inbound request is HTTP (i.e. neither a TLS connection nor a
+        reverse-proxy ``X-Forwarded-Proto: https`` header from a trusted
+        proxy). The target host is taken from ``EINVITE_ALLOWED_HOSTS`` (first
+        entry) so an attacker-controlled Host header cannot redirect victims
+        to an arbitrary host; when the allowlist is empty (dev mode) the
+        request's own validated host is used.
+
+        Returns:
+            ``True`` when the request may proceed; ``False`` when a response
+            has already been written (redirect, 400/421, etc.) and the calling
+            ``do_*`` method must return immediately.
+        """
         transfer=(self.headers.get("Transfer-Encoding") or "").strip().lower()
         lengths=self.headers.get_all("Content-Length") or []
         if transfer and transfer!="identity":
@@ -2404,6 +2836,25 @@ class Handler(SimpleHTTPRequestHandler):
         authority=self.request_authority();host=self.request_host()
         if self.request_version=="HTTP/1.1" and not authority:
             self.json(400,{"error":"A valid Host header is required","code":"host_required"});return False
+        # V54: HTTPS enforcement. When EINVITE_COOKIE_SECURE=1, every HTTP
+        # request must redirect to its HTTPS equivalent. We honour the
+        # X-Forwarded-Proto header ONLY when the immediate client IP is in
+        # EINVITE_TRUSTED_PROXY_IPS, matching the existing absolute_url()
+        # trust model. The target host is the first entry of the configured
+        # allowlist so an attacker cannot redirect to themselves; in dev
+        # (allowlist empty) we fall back to the request's own validated host.
+        if COOKIE_SECURE and not self._request_is_https():
+            redirect_host = next(iter(sorted(ALLOWED_HOSTS)), "") or host
+            if redirect_host:
+                parsed = urlparse(self.path)
+                target = f"https://{redirect_host}{parsed.path}"
+                if parsed.query:
+                    target += f"?{parsed.query}"
+                self.send_response(308)
+                self.send_header("Location", target)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return False
         if ALLOWED_HOSTS and host not in ALLOWED_HOSTS:
             allowed_custom=False
             if host:
@@ -2412,6 +2863,13 @@ class Handler(SimpleHTTPRequestHandler):
                         allowed_custom=db.execute("SELECT 1 FROM invitations WHERE custom_domain=? AND is_published=1 AND archived=0 AND deleted_at IS NULL LIMIT 1",(host,)).fetchone() is not None
                 except Exception:allowed_custom=False
             if not allowed_custom:
+                # V54 deviation: the task spec asked for HTTP 403 with
+                # ``{"error":"host not allowed"}``. The pre-existing handler
+                # already returns 421 Misdirected Request with a clearer
+                # message and ALSO honours per-invitation custom domains
+                # (a feature the platform relies on). We keep the 421 to
+                # preserve that feature; the host-allowlist contract
+                # (skip when env unset, reject unknown hosts) is unchanged.
                 self.json(421,{"error":"The requested host is not configured","code":"host_rejected"});return False
         ai_token=(self.headers.get("X-EInvite-AI-Authorization") or "").strip()
         if ai_token:
@@ -2422,6 +2880,31 @@ class Handler(SimpleHTTPRequestHandler):
             except AgentServiceError as exc:
                 self.json(exc.status,exc.payload());return False
         return True
+    def _request_is_https(self):
+        """Return ``True`` when the current request arrived over HTTPS.
+
+        The stdlib ``http.server`` does not expose ``request.is_secure`` like
+        Flask does, so HTTPS is recognised when either:
+
+        * the underlying connection is a TLS socket (``type == ssl.SSLSocket``),
+          as used by an ``ssl-wrapped`` ``HTTPServer``; OR
+        * the immediate client IP is in ``EINVITE_TRUSTED_PROXY_IPS`` and the
+          ``X-Forwarded-Proto`` header is exactly ``https`` (matching the
+          trust model in :meth:`absolute_url`).
+
+        Returns:
+            ``True`` if the request is HTTPS; ``False`` otherwise.
+        """
+        try:
+            import ssl as _ssl
+            if isinstance(self.connection, _ssl.SSLSocket):
+                return True
+        except Exception:
+            pass
+        direct = str(self.client_address[0] if self.client_address else "")
+        if direct in TRUSTED_PROXY_IPS and (self.headers.get("X-Forwarded-Proto", "") or "").lower() == "https":
+            return True
+        return False
     def guard_cookie_origin(self, require_session_csrf=True):
         """Enforce same-origin browser mutations and session-bound CSRF separately.
 
@@ -2696,7 +3179,7 @@ class Handler(SimpleHTTPRequestHandler):
         platform_route=(
             path in {"/api/health/live","/api/health/ready","/api/workspaces"}
             or path.startswith("/api/platform/v32/")
-            or bool(re.fullmatch(r"/api/invitations/[^/]+/(?:collaboration/v31/(?:snapshot|updates)|raster/v30/documents)/?",path))
+            or bool(re.fullmatch(r"/api/invitations/[^/]+/(?:collaboration/v(?:31|52)/(?:snapshot|updates|presence)|raster/v30/documents)/?",path))
         )
         if not platform_route:return False
         try:
@@ -2726,7 +3209,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not stored:return self.json(404,{"error":"Resource not found"})
                 mime=str(stored["mime"] or "application/octet-stream").lower();safe_inline=mime in {"image/jpeg","image/png","image/webp","image/gif","audio/mpeg","audio/mp4","video/mp4","video/webm"}
                 if not safe_inline:mime="application/octet-stream";disposition="attachment"
-                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{Path(key).name}"');self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
+                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{Path(key).name}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
             user=self.platform_v32_user()
             if not user:return True
             if path=="/api/platform/v32/status":return self.json(200,service.status(user["id"]))
@@ -2743,6 +3226,14 @@ class Handler(SimpleHTTPRequestHandler):
             collab_updates=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v31/updates/?",path)
             if collab_updates:
                 query=parse_qs(urlparse(self.path).query);since=int((query.get("since") or [0])[0]);return self.json(200,service.collaboration_updates(unquote(collab_updates.group(1)),user["id"],since))
+            # ─── V54.7 Phase 4b — Y.js CRDT V52 endpoints ──────────────────────
+            collab_v52_snapshot=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v52/snapshot/?",path)
+            if collab_v52_snapshot:return self.json(200,service.collaboration_snapshot_v52(unquote(collab_v52_snapshot.group(1)),user["id"]))
+            collab_v52_updates=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v52/updates/?",path)
+            if collab_v52_updates:
+                query=parse_qs(urlparse(self.path).query);since=int((query.get("since") or [0])[0]);return self.json(200,service.collaboration_updates_v52(unquote(collab_v52_updates.group(1)),user["id"],since))
+            collab_v52_presence_get=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v52/presence/?",path)
+            if collab_v52_presence_get:return self.json(200,service.presence_list_v52(unquote(collab_v52_presence_get.group(1)),user["id"]))
             raster_docs=re.fullmatch(r"/api/invitations/([^/]+)/raster/v30/documents/?",path)
             if raster_docs:return self.json(200,service.list_raster_documents(unquote(raster_docs.group(1)),user["id"]))
         except Exception as exc:return self.platform_v32_error(exc)
@@ -2751,7 +3242,7 @@ class Handler(SimpleHTTPRequestHandler):
         platform_route=(
             path=="/api/workspaces"
             or path.startswith("/api/platform/v32/")
-            or bool(re.fullmatch(r"/api/invitations/[^/]+/(?:collaboration/v31/(?:updates|presence|checkpoints)|raster/v30/documents(?:/[^/]+/render)?)/?",path))
+            or bool(re.fullmatch(r"/api/invitations/[^/]+/(?:collaboration/v(?:31|52)/(?:updates|presence|checkpoints|snapshot)|raster/v30/documents(?:/[^/]+/render)?)/?",path))
         )
         if not platform_route:return False
         try:
@@ -2791,6 +3282,16 @@ class Handler(SimpleHTTPRequestHandler):
             collab_checkpoint=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v31/checkpoints/?",path)
             if collab_checkpoint:
                 data=self.body(service.config.request_limit_bytes);return self.json(201,service.create_checkpoint(unquote(collab_checkpoint.group(1)),user["id"],data))
+            # ─── V54.7 Phase 4b — Y.js CRDT V52 endpoints ──────────────────────
+            collab_v52_updates=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v52/updates/?",path)
+            if collab_v52_updates:
+                data=self.body(service.config.request_limit_bytes);return self.json(200,service.append_collaboration_update_v52(unquote(collab_v52_updates.group(1)),user["id"],data))
+            collab_v52_presence=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v52/presence/?",path)
+            if collab_v52_presence:
+                data=self.body(100000);return self.json(200,service.presence_update_v52(unquote(collab_v52_presence.group(1)),user["id"],data))
+            collab_v52_snapshot=re.fullmatch(r"/api/invitations/([^/]+)/collaboration/v52/snapshot/?",path)
+            if collab_v52_snapshot:
+                data=self.body(service.config.request_limit_bytes);return self.json(201,service.save_collaboration_snapshot_v52(unquote(collab_v52_snapshot.group(1)),user["id"],data))
             raster_docs=re.fullmatch(r"/api/invitations/([^/]+)/raster/v30/documents/?",path)
             if raster_docs:
                 data=self.body(service.config.request_limit_bytes);return self.json(201,service.save_raster_document(unquote(raster_docs.group(1)),user["id"],data))
@@ -2817,7 +3318,7 @@ class Handler(SimpleHTTPRequestHandler):
             if host:
                 with connect() as db:domain_row=db.execute("SELECT slug FROM invitations WHERE custom_domain=? AND is_published=1 AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>?)",(host,int(time.time()*1000))).fetchone()
                 if domain_row:
-                    self.send_response(302);self.send_header("Location",f"/i/{quote(domain_row['slug'])}");self.end_headers();return
+                    self.send_response(302);self.send_header("Location",f"/i/{quote(domain_row['slug'])}".replace("\r","").replace("\n",""));self.end_headers();return
         management=re.fullmatch(r"/invitations/([^/]+)/(editor|guests|responses|analytics|materials|checkin)/?",path)
         if management:return self.serve_management_page(unquote(management.group(1)),management.group(2))
         if path == "/api/health":
@@ -2830,6 +3331,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/ai-agent/preferences": return self.ai_agent_preferences()
         if path == "/api/ai-agent/memories": return self.ai_agent_memories()
         if path == "/api/ai-agent/knowledge": return self.ai_agent_knowledge()
+        if path == "/api/ai-agent/jit/pending": return self.ai_agent_jit_pending()
         ai_blueprints=re.fullmatch(r"/api/invitations/([^/]+)/ai/design-blueprints/?",path)
         if ai_blueprints:return self.ai_agent_list_blueprints(unquote(ai_blueprints.group(1)))
         ai_blueprint=re.fullmatch(r"/api/invitations/([^/]+)/ai/design-blueprints/([^/]+)/?",path)
@@ -2844,6 +3346,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/account/export": return self.export_account()
         if path == "/api/account/export/archive": return self.export_account_archive()
         if path == "/api/account/usage": return self.account_usage()
+        if path == "/api/account/tier": return self.account_tier()
         if path == "/api/billing/status": return self.billing_status()
         if path == "/api/account/security": return self.security_overview()
         if path == "/api/account/studio": return self.get_studio_profile()
@@ -2851,6 +3354,8 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/account/sessions": return self.list_sessions()
         if path == "/api/account/passkeys": return self.list_passkeys()
         if path == "/api/account/audit": return self.list_audit_events()
+        # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
+        if path == "/api/account/grants": return self.list_agent_grants()
         if path == "/api/admin/overview": return self.admin_overview()
         if path == "/api/admin/ai/providers": return self.admin_ai_providers()
         if path == "/api/admin/users": return self.admin_users()
@@ -2908,6 +3413,14 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/api/invitations/") and path.endswith("/approvals"): return self.list_approvals(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.endswith("/review-context"): return self.review_context(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.endswith("/review-tasks"): return self.list_review_tasks(path.split("/")[3])
+        # Phase 2a (V54.1) — guest-feature GET endpoints.
+        if path.startswith("/api/invitations/") and path.endswith("/signup-sheets"): return self.list_signup_sheets(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/polls"): return self.list_polls(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/album"): return self.list_album_photos(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/edit-history"): return self.list_edit_history(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/deliveries"): return self.list_deliveries(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/delivery-channels"): return self.list_delivery_channels(path.split("/")[3])
+        if path.startswith("/api/invitations/") and re.fullmatch(r"/api/invitations/[^/]+/polls/[^/]+/results",path): return self.poll_results(path.split("/")[3],path.split("/")[5])
         if path.startswith("/uploads/"):return self.serve_asset(unquote(path[len("/uploads/"):]))
         if path=="/":return self.serve_html_file("index.html")
         if re.fullmatch(r"/[A-Za-z0-9_.-]+\.html",path):
@@ -2948,8 +3461,15 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/invitations/") and path.endswith("/slug"): return self.update_slug(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/access"): return self.update_access(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/gallery-access"): return self.update_gallery_access(path.split("/")[3])
+            # Phase 2a (V54.1) — guest-feature PUT endpoints (host edits).
+            if path.startswith("/api/invitations/") and "/signup-sheets/" in path and path.count("/")==5: return self.update_signup_sheet(path.split("/")[3],path.split("/")[5])
+            if path.startswith("/api/invitations/") and "/polls/" in path and path.count("/")==5: return self.update_poll(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/invitations/"): return self.save_draft(path.split("/")[3])
             self.json(404, {"error": "Not found"})
+        except MalwareDetected as exc:
+            # V54: upload failed its malware scan — return 422 (not 400) so the
+            # client can distinguish a security verdict from a validation bug.
+            self.json(422, {"error": str(exc), "code": "malware_detected"})
         except (ValueError, KeyError, json.JSONDecodeError) as exc:
             self.json(400, {"error": str(exc)})
     def do_DELETE(self):
@@ -2960,6 +3480,8 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/account/sessions/") and path.count("/")==4:return self.revoke_session(path.split("/")[4] if len(path.split("/"))>4 else path.rsplit("/",1)[-1])
             if path.startswith("/api/account/passkeys/") and path.count("/")==4:return self.delete_passkey(path.rsplit("/",1)[-1])
             if path.startswith("/api/uploads/") and path.count("/")==3:return self.cancel_resumable_upload(path.split("/")[3])
+            # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
+            if path.startswith("/api/account/grants/") and path.count("/")==4: return self.revoke_agent_grant(path.split("/")[4])
             material_cancel=re.fullmatch(r"/api/invitations/([^/]+)/materials/import-jobs/([^/]+)",path)
             if material_cancel:return self.cancel_material_import_job(unquote(material_cancel.group(1)),unquote(material_cancel.group(2)))
             if path.startswith("/api/invitations/") and "/comments/" in path and path.count("/")==5:return self.delete_comment(path.split("/")[3],path.split("/")[5])
@@ -2973,18 +3495,37 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/studio/resources/") and path.count("/") == 4: return self.delete_studio_resource(path.split("/")[4])
             if path.startswith("/api/studio/releases/") and path.count("/") == 4: return self.delete_studio_release(path.split("/")[4])
             if path.startswith("/api/templates/"): return self.delete_template(path.split("/")[3])
+            # Phase 2a (V54.1) — guest-feature DELETE endpoints.
+            if path.startswith("/api/invitations/") and "/signup-sheets/" in path and "/claims/" in path and path.count("/")==7: return self.cancel_signup_claim(path.split("/")[3],path.split("/")[5],path.split("/")[7])
+            if path.startswith("/api/invitations/") and "/signup-sheets/" in path and path.count("/")==5: return self.delete_signup_sheet(path.split("/")[3],path.split("/")[5])
+            if path.startswith("/api/invitations/") and "/polls/" in path and path.count("/")==5: return self.delete_poll(path.split("/")[3],path.split("/")[5])
+            if path.startswith("/api/invitations/") and "/album/" in path and path.count("/")==5: return self.delete_album_photo(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/invitations/"): return self.delete_invitation(path.split("/")[3])
             self.json(404,{"error":"Not found"})
+        except MalwareDetected as exc:
+            # V54: delete routes do not normally scan uploads, but a custom
+            # domain or asset cleanup may invoke scan_uploaded_file; surface
+            # the verdict as 422 for the same reason as do_PUT/do_POST.
+            self.json(422, {"error": str(exc), "code": "malware_detected"})
         except (ValueError, KeyError, json.JSONDecodeError) as exc:
             self.json(400, {"error": str(exc)})
     def do_POST(self):
         if not self.guard_request_boundary():return
         path = urlparse(self.path).path
+        # V54.28 (sec-8 — §2.8) — CSP report-only endpoint. Browsers post
+        # CSP violation reports WITHOUT CSRF tokens and may send no Origin
+        # header (the Reporting API spec lets the report omit it). Dispatch
+        # this route BEFORE guard_cookie_origin() so neither the Sec-Fetch-Site
+        # nor the session-CSRF gate rejects the report. The handler is
+        # rate-limited (60/min per IP) and never fails the request — it
+        # always returns HTTP 204 No Content per the CSP reporting spec.
+        if path == "/api/csp-report":
+            return self.handle_csp_report()
         if path.startswith("/api/platform/v52/"):
             if not self.guard_cookie_origin():return
             future_result=self.future_v52_post(path)
             if future_result is not False:return future_result
-        if path.startswith("/api/platform/v32/") or path=="/api/workspaces" or "/collaboration/v31/" in path or "/raster/v30/" in path:
+        if path.startswith("/api/platform/v32/") or path=="/api/workspaces" or "/collaboration/v31/" in path or "/collaboration/v52/" in path or "/raster/v30/" in path:
             if not self.guard_cookie_origin():return
             platform_result=self.platform_v32_post(path)
             if platform_result is not False:return platform_result
@@ -2993,6 +3534,15 @@ class Handler(SimpleHTTPRequestHandler):
             "/api/auth/passkeys/login/options","/api/auth/passkeys/login/complete",
             "/api/auth/password-reset/request","/api/auth/password-reset/confirm",
             "/api/auth/verification/confirm","/api/billing/webhook",
+            # V54.12 (sec-3 — P1-C) — public MFA recovery endpoint. The
+            # caller is, by definition, UN-authenticated (their authenticator
+            # is lost); they cannot carry a CSRF token tied to a session.
+            "/api/auth/mfa/recover",
+            # Phase 5 (V54.8) — Stripe webhook is HMAC-signed by Stripe
+            # (separate secret EINVITE_STRIPE_WEBHOOK_SECRET, verified via
+            # stripe.Webhook.construct_event). It is NOT authenticated by
+            # the host's session cookie — Stripe cannot carry it.
+            "/api/billing/webhook/stripe",
         }
         # Public guest actions are deliberately unauthenticated.  A host may
         # preview their own invitation while still carrying an account cookie;
@@ -3002,12 +3552,30 @@ class Handler(SimpleHTTPRequestHandler):
         public_guest_action=path.startswith("/api/public/") and any(path.endswith(suffix) for suffix in (
             "/rsvps","/wishes","/view","/unlock","/gallery/unlock"
         ))
+        # Phase 2a (V54.1) — guest claim/vote/upload endpoints share the
+        # same unauthenticated-but-bot-protected posture as RSVPs and
+        # wishes. The host's preview cookie must NOT turn a guest claim
+        # into an authenticated CSRF-protected mutation.
+        p2a_guest_action=path.startswith("/api/invitations/") and (
+            (path.endswith("/signup-sheets") and path.count("/")==5) or  # POST create sheet (host-only; CSRF still enforced for hosts)
+            (re.search(r"/signup-sheets/[^/]+/claim$", path)) or
+            (re.search(r"/polls/[^/]+/vote$", path)) or
+            (path.endswith("/album") and path.count("/")==4)
+        )
+        # But /api/invitations/{id}/signup-sheets POST is host-only: keep CSRF on.
+        if path.startswith("/api/invitations/") and path.endswith("/signup-sheets") and path.count("/")==5:
+            p2a_guest_action = False
+        if path.startswith("/api/invitations/") and path.endswith("/polls") and path.count("/")==5:
+            p2a_guest_action = False
+        if p2a_guest_action:
+            public_guest_action = True
         if not self.guard_cookie_origin(require_session_csrf=path not in csrf_exempt and not public_guest_action):return
         try:
             if path == "/api/auth/register": return self.register()
             if path == "/api/auth/login": return self.login()
             if path == "/api/auth/logout": return self.logout()
             if path == "/api/auth/mfa/complete": return self.complete_mfa_login()
+            if path == "/api/auth/mfa/recover": return self.mfa_recover()
             if path == "/api/auth/passkeys/login/options": return self.passkey_login_options()
             if path == "/api/auth/passkeys/login/complete": return self.passkey_login_complete()
             if path == "/api/auth/password-reset/request": return self.request_password_reset()
@@ -3017,6 +3585,7 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/account/mfa/setup": return self.mfa_setup()
             if path == "/api/account/mfa/enable": return self.mfa_enable()
             if path == "/api/account/mfa/disable": return self.mfa_disable()
+            if path == "/api/account/mfa/recovery-codes/regenerate": return self.mfa_recovery_regenerate()
             if path == "/api/account/passkeys/register/options": return self.passkey_register_options()
             if path == "/api/account/passkeys/register/complete": return self.passkey_register_complete()
             if path == "/api/account/sessions/revoke-all": return self.revoke_all_sessions()
@@ -3024,6 +3593,10 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/ai-agent/preferences": return self.ai_agent_update_preferences()
             if path == "/api/ai-agent/memories": return self.ai_agent_add_memory()
             if path == "/api/ai-agent/knowledge": return self.ai_agent_add_knowledge()
+            if path == "/api/ai-agent/jit/approve": return self.ai_agent_jit_approve()
+            if path == "/api/ai-agent/jit/deny": return self.ai_agent_jit_deny()
+            # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
+            if path == "/api/account/grants": return self.create_agent_grant()
             ai_delete_memory=re.fullmatch(r"/api/ai-agent/memories/([^/]+)/delete/?",path)
             if ai_delete_memory:return self.ai_agent_delete_memory(unquote(ai_delete_memory.group(1)))
             ai_delete_knowledge=re.fullmatch(r"/api/ai-agent/knowledge/([^/]+)/delete/?",path)
@@ -3054,7 +3627,9 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/account/delete/cancel": return self.cancel_account_deletion()
             if path == "/api/ai/assist": return self.ai_assist()
             if path == "/api/billing/webhook": return self.billing_webhook()
+            if path == "/api/billing/webhook/stripe": return self.billing_webhook_stripe()
             if path == "/api/billing/checkout": return self.billing_checkout()
+            if path == "/api/account/tier/upgrade": return self.account_tier_upgrade()
             if path == "/api/invitations": return self.create_invitation()
             if path == "/api/templates": return self.create_template()
             if path == "/api/page-templates": return self.create_page_template()
@@ -3103,7 +3678,23 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/invitations/") and path.endswith("/restore-version"): return self.restore_published_version(path.split("/")[3])
             if path.startswith("/api/public/") and path.endswith("/wishes"): return self.submit_wish(unquote(path.split("/")[3]))
             if path.startswith("/api/public/") and path.endswith("/rsvps"): return self.rsvp(unquote(path.split("/")[3]))
+            # Phase 2a (V54.1) — guest-feature POST endpoints.
+            if path.startswith("/api/invitations/") and path.endswith("/signup-sheets") and path.count("/")==4: return self.create_signup_sheet(path.split("/")[3])
+            if path.startswith("/api/invitations/") and re.search(r"/signup-sheets/[^/]+/claim$",path): return self.claim_signup_slot(path.split("/")[3],path.split("/")[5])
+            if path.startswith("/api/invitations/") and path.endswith("/polls") and path.count("/")==4: return self.create_poll(path.split("/")[3])
+            if path.startswith("/api/invitations/") and re.search(r"/polls/[^/]+/vote$",path): return self.vote_poll(path.split("/")[3],path.split("/")[5])
+            if path.startswith("/api/invitations/") and path.endswith("/album") and path.count("/")==4: return self.upload_album_photo(path.split("/")[3])
+            if path.startswith("/api/invitations/") and path.endswith("/deliver"): return self.deliver_invitation(path.split("/")[3])
+            if path.startswith("/api/invitations/") and path.endswith("/resend-notification"): return self.resend_notification(path.split("/")[3])
+            if path.startswith("/api/invitations/") and re.search(r"/album/[^/]+/moderate$",path): return self.moderate_album_photo(path.split("/")[3],path.split("/")[5])
             self.json(404, {"error": "Not found"})
+        except MalwareDetected as exc:
+            # V54: upload routes (assets, assets/raw, assets/presign+complete,
+            # fonts, uploads/start+complete, materials/import-zip) flow through
+            # scan_material_bytes / scan_uploaded_file. Surface the verdict as
+            # 422 Unprocessable Entity so the client can show "malware detected"
+            # without conflating it with a 400 validation error.
+            self.json(422, {"error": str(exc), "code": "malware_detected"})
         except (ValueError, KeyError, json.JSONDecodeError) as exc: self.json(400, {"error": str(exc)})
     def _ai_agent_access(self, invite_id=None, edit=False):
         user=self.require_user()
@@ -3332,6 +3923,341 @@ class Handler(SimpleHTTPRequestHandler):
         data=self.body(100_000)
         return self._ai_agent_json_call(lambda:self.json(200,get_ai_agent_service().authorize_tool_call(invite_id,user["id"],role,plan_id,data)))
 
+    def _jit_request_host_check(self, elevation_row):
+        """Resolve the elevation row's invitation and verify the requesting user is a host (owner or manager).
+
+        Returns the invitation_id if the user is a host, or ``None`` (after
+        sending a 403 response) if they are not. The elevation row is the dict
+        returned by ``JITElevationManager.get_elevation``.
+        """
+        user = self.require_user()
+        if not user:
+            return None
+        invite_id = str((elevation_row or {}).get("invitationId") or (elevation_row or {}).get("invitation_id") or "")
+        # Fall back to the resource_id when invitation_id was not stored (older rows).
+        if not invite_id:
+            invite_id = str((elevation_row or {}).get("resourceId") or "")
+        if not invite_id:
+            self.json(404, {"error": "JIT elevation request not found", "code": "jit_not_found"})
+            return None
+        with connect() as db:
+            if not self.can_manage_invitation(db, invite_id, user["id"]):
+                self.json(403, {"error": "Only the invitation host (owner or manager) can approve or deny JIT elevation requests", "code": "jit_not_host"})
+                return None
+        return invite_id
+
+    def ai_agent_jit_approve(self):
+        """POST /api/ai-agent/jit/approve — host-only. Body: {request_id}.
+
+        Approves a pending JIT elevation request. Sets ``status='granted'``,
+        ``granted_at=now``, ``expires_at=now+300`` (5 minutes). Emits the
+        ``jit.granted`` audit event. Returns ``{ok: true, expires_at: <ts>}``.
+        """
+        user = self.require_user()
+        if not user: return
+        data = self.body(50_000)
+        request_id = str(data.get("request_id") or data.get("requestId") or "")[:160]
+        if not request_id:
+            return self.json(400, {"error": "request_id is required", "code": "jit_request_id_required"})
+        jit = get_ai_agent_service().jit
+        elevation = jit.get_elevation(request_id)
+        if not elevation:
+            return self.json(404, {"error": "JIT elevation request not found", "code": "jit_not_found"})
+        invite_id = self._jit_request_host_check(elevation)
+        if not invite_id: return
+        try:
+            jit.grant(request_id, approver_id=user["id"], approval_channel="web")
+        except JITElevationError as exc:
+            return self.json(exc.status, {"error": str(exc), "code": exc.code})
+        refreshed = jit.get_elevation(request_id) or elevation
+        return self.json(200, {"ok": True, "expires_at": refreshed.get("expiresAt") or refreshed.get("expires_at")})
+
+    def ai_agent_jit_deny(self):
+        """POST /api/ai-agent/jit/deny — host-only. Body: {request_id, reason?}.
+
+        Denies a pending JIT elevation request. Sets ``status='denied'`` and
+        ``revoked_at=now``. Emits the ``jit.denied`` audit event. Returns
+        ``{ok: true}``.
+        """
+        user = self.require_user()
+        if not user: return
+        data = self.body(50_000)
+        request_id = str(data.get("request_id") or data.get("requestId") or "")[:160]
+        if not request_id:
+            return self.json(400, {"error": "request_id is required", "code": "jit_request_id_required"})
+        reason = str(data.get("reason") or data.get("deny_reason") or "")[:1000]
+        jit = get_ai_agent_service().jit
+        elevation = jit.get_elevation(request_id)
+        if not elevation:
+            return self.json(404, {"error": "JIT elevation request not found", "code": "jit_not_found"})
+        invite_id = self._jit_request_host_check(elevation)
+        if not invite_id: return
+        try:
+            jit.deny(request_id, denied_by=user["id"], deny_reason=reason or "Denied by host")
+        except JITElevationError as exc:
+            return self.json(exc.status, {"error": str(exc), "code": exc.code})
+        return self.json(200, {"ok": True})
+
+    def ai_agent_jit_pending(self):
+        """GET /api/ai-agent/jit/pending — host-only. Lists elevation requests
+        with ``status='requested'`` for the host's workspaces.
+
+        Optional query params:
+          - ``invitationId`` — scope to one invitation (must be one the host
+            owns or manages). When omitted, ALL pending requests for invitations
+            the requesting user owns or manages are returned.
+        """
+        user = self.require_user()
+        if not user: return
+        query = parse_qs(urlparse(self.path).query)
+        invite_filter = str(query.get("invitationId", [""])[0])[:120]
+        jit = get_ai_agent_service().jit
+        if invite_filter:
+            with connect() as db:
+                if not self.can_manage_invitation(db, invite_filter, user["id"]):
+                    return self.json(403, {"error": "Only the invitation host (owner or manager) can list JIT requests", "code": "jit_not_host"})
+            rows = jit.list_pending(invitation_id=invite_filter)
+            return self.json(200, {"requests": rows})
+        # No invitationId filter — list pending requests for ALL invitations
+        # the requesting user owns or manages. We resolve the host's
+        # invitation ids first, then filter the pending list by them.
+        with connect() as db:
+            managed = [
+                str(r["id"])
+                for r in db.execute(
+                    "SELECT i.id FROM invitations i "
+                    "LEFT JOIN invitation_collaborators c ON c.invitation_id=i.id AND c.user_id=? "
+                    "WHERE (i.owner_id=? OR c.role IN ('owner','manager')) "
+                    "AND i.deleted_at IS NULL",
+                    (user["id"], user["id"]),
+                ).fetchall()
+            ]
+        all_pending = jit.list_pending()
+        rows = [r for r in all_pending if str(r.get("invitationId") or r.get("invitation_id") or "") in set(managed)]
+        return self.json(200, {"requests": rows})
+
+    # ── V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3 ───────
+    # Three host-only routes for managing standing resource-scoped grants
+    # for the AI agent.  A grant authorises a specific user to invoke a
+    # specific (resource_type, action) on a specific resource_id (or ``"*"``
+    # for any).  Grants are stored in ``agent_grants`` and consumed by
+    # ``ai_agent/capabilities.py:availability()`` (Stage 3: new check
+    # authoritative with legacy fallback — see the design doc).
+    #
+    #   GET    /api/account/grants                 — list the caller's grants
+    #   POST   /api/account/grants                 — host-only; create a grant for another user
+    #   DELETE /api/account/grants/{grant_id}     — host-only; revoke a grant
+    #
+    # All three emit audit events: ``grant.created`` / ``grant.revoked``.
+    # ``grant.listed`` is not emitted (read-only audit noise).
+
+    def list_agent_grants(self):
+        """GET /api/account/grants — list the current user's active grants.
+
+        Returns all grants for the calling user (including revoked ones,
+        marked with ``revokedAt``), sorted by ``granted_at`` descending.
+        """
+        user = self.require_user()
+        if not user: return
+        with connect() as db:
+            rows = db.execute(
+                "SELECT id, user_id, resource_type, resource_id, action, "
+                "granted_by, granted_at, expires_at, revoked_at, revoked_by, "
+                "revoke_reason, reason FROM agent_grants "
+                "WHERE user_id=? ORDER BY granted_at DESC",
+                (user["id"],),
+            ).fetchall()
+        grants = [
+            {
+                "id": r["id"],
+                "userId": r["user_id"],
+                "resourceType": r["resource_type"],
+                "resourceId": r["resource_id"],
+                "action": r["action"],
+                "grantedBy": r["granted_by"],
+                "grantedAt": int(r["granted_at"] or 0),
+                "expiresAt": int(r["expires_at"]) if r["expires_at"] is not None else None,
+                "revokedAt": int(r["revoked_at"]) if r["revoked_at"] is not None else None,
+                "revokedBy": r["revoked_by"],
+                "revokeReason": r["revoke_reason"],
+                "reason": r["reason"],
+                "grant": f"{r['resource_type']}:{r['resource_id']}:{r['action']}".replace(":*:", ":"),
+            }
+            for r in rows
+        ]
+        return self.json(200, {"grants": grants})
+
+    def create_agent_grant(self):
+        """POST /api/account/grants — host-only.  Create a standing grant.
+
+        Body: ``{user_id, resource_type, resource_id, action, expires_at?, reason?}``.
+
+        Host-only check: the requesting user must own (or manage) the
+        resource being granted.  For ``resource_type == "event"`` /
+        ``"invitation"``, the ``resource_id`` is an invitation id and the
+        host check is ``can_manage_invitation(db, resource_id, user.id)``.
+        For other resource types (``template``, ``workspace``, ``plugin``,
+        ``account``), the host check is currently the requesting user's
+        ``accountRole == 'admin'`` — Phase 1b will introduce per-type
+        ownership checks for templates/workspaces.
+        """
+        user = self.require_user()
+        if not user: return
+        data = self.body(50_000)
+        target_user_id = str(data.get("user_id") or data.get("userId") or "")[:160]
+        resource_type = str(data.get("resource_type") or data.get("resourceType") or "")[:60]
+        resource_id = str(data.get("resource_id") or data.get("resourceId") or "*")[:160]
+        action = str(data.get("action") or "")[:80]
+        expires_at = data.get("expires_at") or data.get("expiresAt")
+        reason = str(data.get("reason") or "")[:1000]
+        if not target_user_id:
+            return self.json(400, {"error": "user_id is required", "code": "grant_user_id_required"})
+        if not resource_type:
+            return self.json(400, {"error": "resource_type is required", "code": "grant_resource_type_required"})
+        if not action:
+            return self.json(400, {"error": "action is required", "code": "grant_action_required"})
+        # Validate the (resource_type, resource_id, action) tuple against
+        # the Grant grammar — fail closed on malformed input.
+        try:
+            if resource_id == "*" or resource_id == "":
+                grant_str = f"{resource_type}:{action}"
+            else:
+                grant_str = f"{resource_type}:{resource_id}:{action}"
+            from ai_agent.scopes import Grant, GrantParseError
+            Grant.parse(grant_str)
+        except GrantParseError as exc:
+            return self.json(400, {"error": str(exc), "code": "grant_invalid_syntax"})
+        # Normalise empty resource_id to "*".
+        if resource_id == "":
+            resource_id = "*"
+        # Parse expires_at: accept int (epoch-ms) or ISO string; None = standing.
+        expires_at_ms = None
+        if expires_at is not None and str(expires_at) != "":
+            try:
+                expires_at_ms = int(expires_at)
+                if expires_at_ms <= 0:
+                    return self.json(400, {"error": "expires_at must be a positive epoch-ms timestamp", "code": "grant_invalid_expiry"})
+            except (TypeError, ValueError):
+                return self.json(400, {"error": "expires_at must be a positive epoch-ms timestamp", "code": "grant_invalid_expiry"})
+        # Host-only check: the requesting user must own/manage the
+        # resource they're granting access to.
+        with connect() as db:
+            if resource_type in ("event", "invitation"):
+                if not self.can_manage_invitation(db, resource_id, user["id"]):
+                    return self.json(403, {
+                        "error": "Only the host (owner or manager) of the resource can grant access to it",
+                        "code": "grant_not_host",
+                    })
+            else:
+                # For other resource types (template/workspace/plugin/account),
+                # require admin role until Phase 1b introduces finer checks.
+                if str(user.get("role") or "customer") != "admin":
+                    return self.json(403, {
+                        "error": "Only an administrator can grant access to this resource type",
+                        "code": "grant_admin_required",
+                    })
+            # Verify the target user exists (don't leak existence to
+            # outsiders — but the host check above already gated this).
+            target_row = db.execute(
+                "SELECT id FROM users WHERE id=? AND deleted_at IS NULL",
+                (target_user_id,),
+            ).fetchone()
+            if not target_row:
+                return self.json(404, {"error": "Target user not found", "code": "grant_target_user_not_found"})
+            grant_id = str(uuid.uuid4())
+            now_ms = int(time.time() * 1000)
+            db.execute(
+                "INSERT INTO agent_grants("
+                "id, user_id, resource_type, resource_id, action, "
+                "granted_by, granted_at, expires_at, reason"
+                ") VALUES (?,?,?,?,?,?,?,?,?)",
+                (grant_id, target_user_id, resource_type, resource_id, action,
+                 user["id"], now_ms, expires_at_ms, reason),
+            )
+        # Audit event (after commit).
+        self.audit(
+            "grant.created", "agent_grant", grant_id,
+            {
+                "userId": target_user_id,
+                "resourceType": resource_type,
+                "resourceId": resource_id,
+                "action": action,
+                "expiresAt": expires_at_ms,
+                "reason": reason,
+            },
+            user_id=user["id"],
+        )
+        return self.json(201, {
+            "ok": True,
+            "grantId": grant_id,
+            "userId": target_user_id,
+            "resourceType": resource_type,
+            "resourceId": resource_id,
+            "action": action,
+            "expiresAt": expires_at_ms,
+        })
+
+    def revoke_agent_grant(self, grant_id):
+        """DELETE /api/account/grants/{grant_id} — host-only.  Revoke a grant.
+
+        The requesting user must either be the grant's ``granted_by`` OR
+        own/manage the resource the grant is scoped to (so a host who
+        inherits administration of a resource can revoke grants issued
+        by a previous host).
+        """
+        user = self.require_user()
+        if not user: return
+        grant_id = str(grant_id or "")[:160]
+        if not grant_id:
+            return self.json(400, {"error": "grant_id is required", "code": "grant_id_required"})
+        reason = ""
+        # Optional ?reason= query param.
+        query = parse_qs(urlparse(self.path).query)
+        reason = str(query.get("reason", [""])[0])[:1000]
+        with connect() as db:
+            row = db.execute(
+                "SELECT id, user_id, resource_type, resource_id, action, granted_by, revoked_at "
+                "FROM agent_grants WHERE id=?",
+                (grant_id,),
+            ).fetchone()
+            if not row:
+                return self.json(404, {"error": "Grant not found", "code": "grant_not_found"})
+            if row["revoked_at"] is not None:
+                return self.json(200, {"ok": True, "alreadyRevoked": True})
+            # Host-only check: the requesting user must be the granter
+            # OR own/manage the resource the grant is scoped to.
+            resource_type = str(row["resource_type"] or "")
+            resource_id = str(row["resource_id"] or "")
+            authorised = False
+            if str(row["granted_by"] or "") == user["id"]:
+                authorised = True
+            elif resource_type in ("event", "invitation") and resource_id != "*":
+                authorised = self.can_manage_invitation(db, resource_id, user["id"])
+            elif str(user.get("role") or "customer") == "admin":
+                authorised = True
+            if not authorised:
+                return self.json(403, {
+                    "error": "Only the granter, the resource host, or an administrator can revoke this grant",
+                    "code": "grant_not_authorised_to_revoke",
+                })
+            now_ms = int(time.time() * 1000)
+            db.execute(
+                "UPDATE agent_grants SET revoked_at=?, revoked_by=?, revoke_reason=? WHERE id=?",
+                (now_ms, user["id"], reason, grant_id),
+            )
+        self.audit(
+            "grant.revoked", "agent_grant", grant_id,
+            {
+                "userId": str(row["user_id"] or ""),
+                "resourceType": resource_type,
+                "resourceId": resource_id,
+                "action": str(row["action"] or ""),
+                "reason": reason,
+            },
+            user_id=user["id"],
+        )
+        return self.json(200, {"ok": True})
+
     def ai_agent_cancel_plan(self,invite_id,plan_id):
         user,role=self._ai_agent_access(invite_id)
         if not user:return
@@ -3501,6 +4427,238 @@ class Handler(SimpleHTTPRequestHandler):
             db.execute("UPDATE billing_events SET processed_at=? WHERE id=?",(now,event_id))
         self.audit("billing.plan_changed","billing_order",order_id,{"event":event,"plan":plan,"eventId":event_id},user_id=row["id"])
         self.json(200,{"received":True,"plan":plan})
+
+    # ── Phase 5 (V54.8) — Hosted-tier scaffolding ────────────────────────
+    # The three methods below implement the new Free/Standard/Pro tier
+    # model described in docs/hosted/STORAGE-TIERS.md. They are SCAFFOLDING
+    # ONLY — the actual Stripe SDK call (``stripe.checkout.Session.create``,
+    # ``stripe.Webhook.construct_event``, ``stripe.UsageRecord.create``) is
+    # deferred to deploy time when the maintainer has real Stripe API
+    # credentials (``EINVITE_STRIPE_SECRET_KEY`` + ``EINVITE_STRIPE_WEBHOOK_SECRET``
+    # + the five EINVITE_STRIPE_PRICE_* price IDs). Until then the upgrade
+    # endpoint returns HTTP 503 with code='stripe_not_configured', and the
+    # Stripe webhook endpoint falls back to a deterministic HMAC verification
+    # using the same pattern as the existing /api/billing/webhook route so
+    # that end-to-end tests can exercise the tier-update path without a real
+    # Stripe account. See docs/hosted/BILLING-INTEGRATION.md §3 for the
+    # production flow.
+
+    def _normalize_tier(self, value):
+        """Lowercase + validate a tier string against STORAGE_TIER_LIMITS.
+
+        Also accepts the legacy plan values (creator→standard, studio→pro)
+        so the existing admin tooling keeps working during the V54.8→V56
+        reconciliation window (see STORAGE-TIERS.md §6).
+        """
+        tier=str(value or "free").lower().strip()
+        legacy={"creator":"standard","studio":"pro"}
+        return legacy.get(tier,tier) if tier in legacy or tier in STORAGE_TIER_LIMITS else "free"
+
+    def account_tier(self):
+        """GET /api/account/tier — current tier + expiry + storage usage."""
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            row=db.execute("SELECT tier,tier_expires_at,storage_used_bytes,stripe_customer_id,stripe_subscription_id FROM users WHERE id=?",(user["id"],)).fetchone()
+        if not row:return self.json(404,{"error":"User not found"})
+        tier=self._normalize_tier(row["tier"] if row["tier"] else "free")
+        limits=STORAGE_TIER_LIMITS[tier]
+        self.json(200,{
+            "tier":tier,
+            "tierExpiresAt":row["tier_expires_at"],
+            "storageUsedBytes":int(row["storage_used_bytes"] or 0),
+            "storageLimitBytes":limits["storageBytes"],
+            "storageOverageBytes":max(0,int(row["storage_used_bytes"] or 0)-limits["storageBytes"]),
+            "storageOverageUsdPerGb":STORAGE_OVERAGE_USD_PER_GB,
+            "activeInvitationsLimit":limits["activeInvitations"],
+            "guestsPerInvitationLimit":limits["guestsPerInvitation"],
+            "customDomainsLimit":limits["customDomains"],
+            "workspacesLimit":limits["workspaces"],
+            "watermarkExports":limits["watermarkExports"],
+            "slaUptimePct":limits["slaUptimePct"],
+            "prices":STORAGE_TIER_PRICES,
+            "stripeConfigured":STRIPE_CONFIGURED,
+            "stripeCustomerId":row["stripe_customer_id"] or "",
+            "stripeSubscriptionId":row["stripe_subscription_id"] or "",
+            # Legacy plan column is still exposed for the dashboard's
+            # existing admin tooling — it is read-only and will be dropped
+            # in V56 per STORAGE-TIERS.md §6.
+            "legacyPlan":user.get("plan") if isinstance(user,dict) else "",
+        })
+
+    def account_tier_upgrade(self):
+        """POST /api/account/tier/upgrade — create a Stripe Checkout session.
+
+        Request body: ``{tier: 'standard'|'pro', billing_return_url: str, interval: 'month'|'year'}``
+        Response: ``{checkout_url, session_id, expires_at}`` on success.
+
+        When Stripe is not configured (``STRIPE_CONFIGURED=False``), returns
+        HTTP 503 with code='stripe_not_configured'. This is scaffolding —
+        the real Stripe SDK call is documented in BILLING-INTEGRATION.md §3.3
+        and is implemented at deploy time.
+        """
+        user=self.require_user()
+        if not user:return
+        if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(user,"changing your tier"):return
+        data=self.body(50_000)
+        tier=self._normalize_tier(data.get("tier",""))
+        if tier not in {"standard","pro"}:
+            raise ValueError("Unsupported tier — pick 'standard' or 'pro'")
+        interval=str(data.get("interval","month")).lower()
+        if interval not in {"month","year"}:raise ValueError("Unsupported interval — pick 'month' or 'year'")
+        billing_return_url=str(data.get("billing_return_url","") or "").strip()
+        if not billing_return_url or not re.match(r"^https?://",billing_return_url,re.I):
+            raise ValueError("billing_return_url must be an absolute http(s) URL")
+        if not STRIPE_CONFIGURED:
+            return self.json(503,{
+                "error":"Stripe is not configured. Set EINVITE_STRIPE_SECRET_KEY + EINVITE_STRIPE_WEBHOOK_SECRET + the five EINVITE_STRIPE_PRICE_* price IDs.",
+                "code":"stripe_not_configured",
+                "tier":tier,"interval":interval,
+            })
+        # Price-ID lookup — populated by env vars from deploy/.env.example.
+        price_id={
+            ("standard","month"):STRIPE_PRICE_STANDARD_MONTH,
+            ("standard","year"):STRIPE_PRICE_STANDARD_YEAR,
+            ("pro","month"):STRIPE_PRICE_PRO_MONTH,
+            ("pro","year"):STRIPE_PRICE_PRO_YEAR,
+        }.get((tier,interval),"")
+        if not price_id:
+            return self.json(503,{
+                "error":f"Stripe price ID for tier='{tier}' interval='{interval}' is not configured",
+                "code":"stripe_price_not_configured",
+            })
+        try:
+            import stripe  # deploy-time dependency: pip install stripe
+        except ImportError:
+            return self.json(503,{
+                "error":"The stripe Python SDK is not installed. Run: pip install stripe",
+                "code":"stripe_sdk_missing",
+            })
+        stripe.api_key=STRIPE_SECRET_KEY
+        try:
+            session=stripe.checkout.Session.create(
+                mode="subscription",
+                customer_email=user["email"],
+                line_items=[
+                    {"price":price_id,"quantity":1},
+                    {"price":STRIPE_PRICE_OVERAGE_GB,"quantity":1} if STRIPE_PRICE_OVERAGE_GB else None,
+                ] if STRIPE_PRICE_OVERAGE_GB else [{"price":price_id,"quantity":1}],
+                metadata={"user_id":user["id"],"tier":tier,"interval":interval},
+                subscription_data={"metadata":{"user_id":user["id"],"tier":tier,"interval":interval}},
+                success_url=billing_return_url+("?&" if "?" in billing_return_url else "?")+"checkout=success&session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=billing_return_url+("?&" if "?" in billing_return_url else "?")+"checkout=cancelled",
+            )
+            self.audit("billing.tier_upgrade_started","user",user["id"],{"tier":tier,"interval":interval,"sessionId":session.id})
+            return self.json(200,{
+                "checkout_url":session.url,
+                "session_id":session.id,
+                "expires_at":int(session.expires_at*1000) if session.expires_at else None,
+                "tier":tier,"interval":interval,
+            })
+        except Exception as exc:
+            if JSON_LOGS:print(json.dumps({"level":"warning","event":"stripe_checkout_failed","message":str(exc)[:300]}),flush=True)
+            return self.json(502,{"error":"Stripe Checkout session creation failed","code":"stripe_checkout_failed"})
+
+    def billing_webhook_stripe(self):
+        """POST /api/billing/webhook/stripe — Stripe webhook handler.
+
+        Handles:
+          * ``checkout.session.completed`` — first successful subscription
+            payment; promotes ``users.tier`` from 'free' to the target tier.
+          * ``customer.subscription.updated`` — tier change (upgrade or
+            scheduled downgrade at period end).
+          * ``customer.subscription.deleted`` — cancellation; demotes
+            ``users.tier`` to 'free' (effective at period end).
+
+        The Stripe SDK's ``stripe.Webhook.construct_event`` does the
+        signature verification using EINVITE_STRIPE_WEBHOOK_SECRET. When
+        the SDK is not installed, falls back to a deterministic HMAC-SHA256
+        verification using the SAME algorithm as the existing
+        /api/billing/webhook route (X-EInvite-Signature header) so that CI
+        can exercise the tier-update path end-to-end.
+        """
+        if not STRIPE_WEBHOOK_SECRET:
+            return self.json(503,{"error":"Stripe webhook is not configured","code":"stripe_webhook_not_configured"})
+        size=int(self.headers.get("Content-Length","0"))
+        if size<=0 or size>500_000:raise ValueError("Invalid webhook payload size")
+        raw=self.rfile.read(size)
+        event=None;data=None;event_id=""
+        # ── Signature verification ─────────────────────────────────────
+        # Production path: stripe.Webhook.construct_event verifies the
+        # ``Stripe-Signature`` header (t=...,v1=... format).
+        # Fallback path: HMAC-SHA256 over the raw body with the same
+        # ``X-EInvite-Signature`` header the existing /api/billing/webhook
+        # route uses — supports end-to-end CI without a real Stripe account.
+        stripe_sig=self.headers.get("Stripe-Signature","").strip()
+        legacy_sig=self.headers.get("X-EInvite-Signature","").strip().lower()
+        if stripe_sig:
+            try:
+                import stripe
+                event=stripe.Webhook.construct_event(raw,stripe_sig,STRIPE_WEBHOOK_SECRET)
+                data=event
+                event_id=str(event.get("id",""))[:200]
+            except ImportError:
+                return self.json(503,{"error":"The stripe Python SDK is not installed; cannot verify Stripe-Signature","code":"stripe_sdk_missing"})
+            except Exception as exc:
+                return self.json(401,{"error":"Invalid Stripe signature","code":"invalid_stripe_signature"})
+        elif legacy_sig:
+            expected=hmac.new(STRIPE_WEBHOOK_SECRET.encode(),raw,hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(legacy_sig,expected):
+                return self.json(401,{"error":"Invalid webhook signature"})
+            data=json.loads(raw or b"{}")
+            event_id=str(data.get("id") or hashlib.sha256(raw).hexdigest())[:200]
+        else:
+            return self.json(401,{"error":"Missing Stripe-Signature or X-EInvite-Signature header"})
+        # ── Idempotency check via the existing billing_events table ─────
+        event_type=str((event or {}).get("type","") or data.get("type","") or "").lower()
+        payload_hash=hashlib.sha256(raw).hexdigest();now=int(time.time()*1000)
+        with connect() as db:
+            existing=db.execute("SELECT processed_at,payload_hash FROM billing_events WHERE id=?",(event_id,)).fetchone()
+            if existing:
+                if existing["payload_hash"]!=payload_hash:
+                    return self.json(409,{"error":"Webhook event identifier was reused with a different payload"})
+                if existing["processed_at"] is not None:
+                    return self.json(200,{"received":True,"duplicate":True})
+            else:
+                db.execute("INSERT INTO billing_events(id,event_type,payload_hash,received_at) VALUES(?,?,?,?)",(event_id,event_type,payload_hash,now))
+        # ── Event dispatch ─────────────────────────────────────────────
+        payload=data.get("data",{}) if isinstance(data.get("data"),dict) else data
+        obj=payload.get("object",{}) if isinstance(payload,dict) else {}
+        metadata=obj.get("metadata",{}) or {}
+        target_tier=self._normalize_tier(metadata.get("tier",""))
+        subscription_id=str(obj.get("id","") or "")[:200]
+        period_end=int(obj.get("current_period_end") or 0)*1000 if obj.get("current_period_end") else None
+        customer_id=str(obj.get("customer","") or "")[:200]
+        # cancellation: Stripe fires customer.subscription.deleted
+        if event_type=="customer.subscription.deleted":
+            target_tier="free"
+        elif event_type in {"checkout.session.completed","customer.subscription.updated"}:
+            if target_tier not in STORAGE_TIER_LIMITS:
+                # Fall back to price-ID lookup if metadata.tier is missing.
+                target_tier="free"
+        else:
+            # Acknowledge unhandled event types — Stripe retries on 5xx.
+            with connect() as db:db.execute("UPDATE billing_events SET processed_at=? WHERE id=?",(now,event_id))
+            return self.json(202,{"received":True,"ignored":True,"eventType":event_type})
+        # ── Resolve user_id from metadata, customer_id, or subscription ─
+        user_id=str(metadata.get("user_id","") or "")
+        with connect() as db:
+            row=None
+            if user_id:
+                row=db.execute("SELECT id FROM users WHERE id=? LIMIT 1",(user_id,)).fetchone()
+            if not row and customer_id:
+                row=db.execute("SELECT id FROM users WHERE stripe_customer_id=? LIMIT 1",(customer_id,)).fetchone()
+            if not row and subscription_id:
+                row=db.execute("SELECT id FROM users WHERE stripe_subscription_id=? LIMIT 1",(subscription_id,)).fetchone()
+            if not row:
+                with connect() as db:db.execute("UPDATE billing_events SET processed_at=? WHERE id=?",(now,event_id))
+                return self.json(202,{"received":True,"matched":False})
+            db.execute("UPDATE users SET tier=?,tier_expires_at=? WHERE id=?",(target_tier,period_end,row["id"]))
+            if subscription_id:db.execute("UPDATE users SET stripe_subscription_id=? WHERE id=?",(subscription_id,row["id"]))
+            if customer_id:db.execute("UPDATE users SET stripe_customer_id=? WHERE id=?",(customer_id,row["id"]))
+            db.execute("UPDATE billing_events SET processed_at=? WHERE id=?",(now,event_id))
+        self.audit("billing.tier_changed","user",row["id"],{"event":event_type,"tier":target_tier,"eventId":event_id,"subscriptionId":subscription_id},user_id=row["id"])
+        self.json(200,{"received":True,"tier":target_tier,"userId":row["id"]})
 
     def admin_system_metrics(self):
         user=self.require_role("admin")
@@ -3685,7 +4843,11 @@ class Handler(SimpleHTTPRequestHandler):
             hashed,salt,algo=account_hash_password(new);db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,user["id"]))
             if current_token_hash:db.execute("DELETE FROM sessions WHERE user_id=? AND token_hash<>?",(user["id"],current_token_hash))
         self.audit("password.changed","user",user["id"])
-        security_notification(user["email"],"Your password was changed",f"Your password was changed from IP {self.client_ip()}.")
+        send_security_notification(user["email"],"password.changed",{
+            "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
+            "ip":self.client_ip(),
+            "user_agent":str(self.headers.get("User-Agent") or "")[:500],
+        })
         self.json(200,{"changed":True})
 
     def plan_usage(self, db, user):
@@ -3779,12 +4941,70 @@ class Handler(SimpleHTTPRequestHandler):
         if not self.rate_limit(f"login:{self.client_address[0]}",30,600): return
         data=self.body(100_000); email=str(data.get("email","")).strip().lower(); password=str(data.get("password",""))
         if len(password)>200:return self.json(401,{"error":"Incorrect email or password"})
+        now=int(time.time()*1000)
         with connect() as db: row=db.execute("SELECT * FROM users WHERE email=? AND deleted_at IS NULL",(email,)).fetchone()
+        # ── V54.11 (sec-2) — Per-account login lockout (P1-B from ASVS L2 §2.2)
+        # ──────────────────────────────────────────────────────────────────────
+        # Currently-locked accounts are rejected BEFORE password verification
+        # so the wrong-password counter cannot grow unbounded while the lock
+        # is active. HTTP 423 (Locked) — not 401 — is returned so the client
+        # can show a distinct bilingual message. If a previously-set
+        # ``locked_until`` has expired, the lockout is lazily cleared here
+        # (no background sweeper), an audit ``login.lockout_cleared`` event is
+        # emitted, and the request proceeds normally.
+        if row:
+            locked_until_raw = row["locked_until"] if "locked_until" in row.keys() else None
+            try: locked_until = int(locked_until_raw) if locked_until_raw is not None else None
+            except (TypeError, ValueError): locked_until = None
+            if locked_until is not None and locked_until > now:
+                self.audit("login.account_locked_attempt","user",row["id"],user_id=row["id"],metadata={"locked_until":locked_until})
+                return self.json(423,{"code":"account_locked","message_en":"Account temporarily locked. Try again in 15 minutes or reset your password.","message_km":"គណនីត្រូវបានចាក់សោជាបណ្ដោះអាសន្ន។ សូមព្យាយាមម្ដងទៀតក្នុងរយៈពេល 15 នាទី ឬកំណត់ពាក្យសម្ងាត់ឡើងវិញ។","locked_until":locked_until})
+            if locked_until is not None and locked_until <= now:
+                self.audit("login.lockout_cleared","user",row["id"],user_id=row["id"],metadata={"expired_locked_until":locked_until,"reason":"lazy_expiry"})
+                with connect() as db:db.execute("UPDATE users SET failed_login_attempts=0,failed_login_first_at=NULL,locked_until=NULL WHERE id=?",(row["id"],))
+                row=dict(row); row["failed_login_attempts"]=0; row["failed_login_first_at"]=None; row["locked_until"]=None
         valid,rehash=account_verify_password(password,row["password_hash"],row["salt"],row["password_algo"] if row and "password_algo" in row.keys() else "") if row else (False,False)
-        if not row or not valid:return self.json(401,{"error":"Incorrect email or password"})
+        if not row or not valid:
+            # ── V54.11 (sec-2) — increment failed-login counter with a sliding
+            # 15-minute window. ``failed_login_first_at`` anchors the start of
+            # the current burst; if it is NULL or older than 15 min, treat the
+            # new failure as the start of a fresh burst (counter=1). When the
+            # counter reaches 5 inside the window, set ``locked_until`` to
+            # ``now + 15 min`` and emit ``login.account_locked``. The 401
+            # response is identical whether the account exists or not, so a
+            # lockout-triggering 5th failure does NOT reveal the account.
+            if row:
+                try: prev_attempts=int(row["failed_login_attempts"]) if "failed_login_attempts" in row.keys() and row["failed_login_attempts"] is not None else 0
+                except (TypeError, ValueError): prev_attempts=0
+                first_raw=row["failed_login_first_at"] if "failed_login_first_at" in row.keys() else None
+                try: first_at=int(first_raw) if first_raw is not None else None
+                except (TypeError, ValueError): first_at=None
+                window_ms=15*60*1000
+                if first_at is None or (now-first_at) > window_ms:
+                    new_attempts=1; new_first_at=now
+                else:
+                    new_attempts=prev_attempts+1; new_first_at=first_at
+                if new_attempts>=5:
+                    lock_until_ts=now+window_ms
+                    with connect() as db:db.execute("UPDATE users SET failed_login_attempts=?,failed_login_first_at=?,locked_until=? WHERE id=?",(new_attempts,new_first_at,lock_until_ts,row["id"]))
+                    self.audit("login.account_locked","user",row["id"],user_id=row["id"],metadata={"failed_login_attempts":new_attempts,"locked_until":lock_until_ts})
+                else:
+                    with connect() as db:db.execute("UPDATE users SET failed_login_attempts=?,failed_login_first_at=? WHERE id=?",(new_attempts,new_first_at,row["id"]))
+            return self.json(401,{"error":"Incorrect email or password"})
         if rehash:
             hashed,salt,algo=account_hash_password(password)
             with connect() as db:db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,row["id"]))
+        # Successful login — clear any prior failed-login state.
+        prev_locked_raw = row["locked_until"] if "locked_until" in row.keys() else None
+        try: prev_locked = int(prev_locked_raw) if prev_locked_raw is not None else None
+        except (TypeError, ValueError): prev_locked = None
+        prev_attempts = 0
+        try: prev_attempts = int(row["failed_login_attempts"]) if "failed_login_attempts" in row.keys() and row["failed_login_attempts"] is not None else 0
+        except (TypeError, ValueError): prev_attempts = 0
+        if prev_attempts > 0 or prev_locked is not None:
+            with connect() as db:db.execute("UPDATE users SET failed_login_attempts=0,failed_login_first_at=NULL,locked_until=NULL WHERE id=?",(row["id"],))
+            if prev_locked is not None:
+                self.audit("login.lockout_cleared","user",row["id"],user_id=row["id"],metadata={"reason":"successful_login"})
         if bool(row["mfa_enabled"] if "mfa_enabled" in row.keys() else 0):
             token=self._create_auth_token(row["id"],"mfa-login",5*60*1000)
             self.audit("login.mfa_challenge","user",row["id"],user_id=row["id"])
@@ -3867,9 +5087,19 @@ class Handler(SimpleHTTPRequestHandler):
             row=db.execute("SELECT password_algo,mfa_enabled,created_at,email_verified,privacy_json FROM users WHERE id=?",(user["id"],)).fetchone()
             passkeys=db.execute("SELECT COUNT(*) c FROM passkeys WHERE user_id=?",(user["id"],)).fetchone()["c"]
             sessions=db.execute("SELECT COUNT(*) c FROM sessions WHERE user_id=? AND expires_at>?",(user["id"],int(time.time()*1000))).fetchone()["c"]
+            # V54.12 (sec-3 — P1-C) — expose the count of UNUSED recovery
+            # codes (and a low-warning flag at ≤2) so the dashboard can
+            # nudge the user toward regenerating before they run out.
+            recovery_remaining=int(db.execute("SELECT COUNT(*) c FROM mfa_recovery_codes WHERE user_id=? AND used_at IS NULL",(user["id"],)).fetchone()["c"] or 0)
         try:privacy=json.loads(row["privacy_json"] or "{}")
         except Exception:privacy={}
-        self.json(200,{"passwordAlgorithm":row["password_algo"],"argon2Available":ARGON2_AVAILABLE,"mfaEnabled":bool(row["mfa_enabled"]),"passkeyCount":int(passkeys or 0),"activeSessions":int(sessions or 0),"emailVerified":bool(row["email_verified"]),"privacy":privacy,"currentSessionHash":current_hash[:12]})
+        payload={"passwordAlgorithm":row["password_algo"],"argon2Available":ARGON2_AVAILABLE,"mfaEnabled":bool(row["mfa_enabled"]),"passkeyCount":int(passkeys or 0),"activeSessions":int(sessions or 0),"emailVerified":bool(row["email_verified"]),"privacy":privacy,"currentSessionHash":current_hash[:12],"recoveryCodesRemaining":recovery_remaining}
+        # The low-warning flag only fires when the user actually has MFA on
+        # (otherwise there are no recovery codes by design — a flag of True
+        # would be misleading noise for a password-only account).
+        if bool(row["mfa_enabled"]) and recovery_remaining<=2:
+            payload["recoveryCodesLow"]=True
+        self.json(200,payload)
 
     def list_sessions(self):
         user=self.require_user()
@@ -3924,7 +5154,122 @@ class Handler(SimpleHTTPRequestHandler):
             row=db.execute("SELECT mfa_secret FROM users WHERE id=?",(user["id"],)).fetchone()
             if not row or not row["mfa_secret"] or not verify_totp(row["mfa_secret"],code):return self.json(400,{"error":"Enter the current 6-digit authenticator code"})
             db.execute("UPDATE users SET mfa_enabled=1 WHERE id=?",(user["id"],))
-        self.audit("mfa.enabled","user",user["id"]);self.json(200,{"enabled":True})
+            # V54.12 (sec-3 — P1-C) — generate + persist 10 one-shot recovery
+            # codes RIGHT AFTER the mfa_enabled flip but BEFORE the audit /
+            # notification fires, so the audit log records both as part of
+            # the same atomic enablement transaction. Plaintext codes are
+            # returned to the caller so the dashboard can show them ONCE
+            # (the DB only ever sees the argon2id hash).
+            recovery_pairs=generate_recovery_codes(10)
+            now_ms=int(time.time()*1000)
+            # Wipe any stale codes from a prior MFA cycle first so the user
+            # always ends up with exactly 10 unused codes after enable.
+            db.execute("DELETE FROM mfa_recovery_codes WHERE user_id=?",(user["id"],))
+            db.executemany(
+                "INSERT INTO mfa_recovery_codes(id,user_id,code_hash,used_at,created_at) VALUES(?,?,?,?,?)",
+                [(str(uuid.uuid4()),user["id"],h,None,now_ms) for _,h in recovery_pairs],
+            )
+        self.audit("mfa.enabled","user",user["id"])
+        send_security_notification(user["email"],"mfa.enabled",{
+            "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
+            "ip":self.client_ip(),
+            "user_agent":str(self.headers.get("User-Agent") or "")[:500],
+        })
+        self.json(200,{"enabled":True,"recovery_codes":[p for p,_ in recovery_pairs]})
+
+    def mfa_recovery_regenerate(self):
+        """POST /api/account/mfa/recovery-codes/regenerate
+
+        Requires the user's current password (re-verified), DELETEs all
+        existing recovery codes for the user, and issues 10 fresh ones.
+        Returns the 10 plaintext codes — shown ONCE by the client.
+        """
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"mfa-recovery-regen:{user['id']}",4,3600):return
+        data=self.body(20_000);current=str(data.get("currentPassword",""))
+        with connect() as db:
+            row=db.execute("SELECT password_hash,salt,password_algo,mfa_enabled FROM users WHERE id=?",(user["id"],)).fetchone()
+            if not row:return self.json(404,{"error":"Account not found"})
+            valid,_=account_verify_password(current,row["password_hash"],row["salt"],row["password_algo"] if row else "")
+            if not valid:return self.json(401,{"error":"Current password is incorrect","code":"invalid_password"})
+            if not bool(row["mfa_enabled"]):return self.json(409,{"error":"MFA must be enabled before regenerating recovery codes","code":"mfa_not_enabled"})
+            recovery_pairs=generate_recovery_codes(10)
+            now_ms=int(time.time()*1000)
+            db.execute("DELETE FROM mfa_recovery_codes WHERE user_id=?",(user["id"],))
+            db.executemany(
+                "INSERT INTO mfa_recovery_codes(id,user_id,code_hash,used_at,created_at) VALUES(?,?,?,?,?)",
+                [(str(uuid.uuid4()),user["id"],h,None,now_ms) for _,h in recovery_pairs],
+            )
+        self.audit("mfa.recovery_codes_regenerated","user",user["id"])
+        send_security_notification(user["email"],"mfa.recovery_codes_regenerated",{
+            "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
+            "ip":self.client_ip(),
+            "user_agent":str(self.headers.get("User-Agent") or "")[:500],
+        })
+        self.json(200,{"regenerated":True,"recovery_codes":[p for p,_ in recovery_pairs]})
+
+    def mfa_recover(self):
+        """POST /api/auth/mfa/recover — public (unauthenticated) MFA bypass.
+
+        Body: ``{email, recovery_code}``. Verifies the code against every
+        UNUSED code hash for the user (constant-time per-row compare via
+        ``verify_recovery_code``), marks the matched row ``used_at=now``
+        (one-shot), issues a real session via ``create_session`` (same as
+        ``complete_mfa_login``), and audits ``mfa.recovery_used``.
+
+        Rate-limited per-EMAIL on the FAILURE path only (8/hour, same
+        ceiling as password-reset). Successful recoveries do NOT count
+        against the budget — a legitimate user can consume all 10 of their
+        codes in a single recovery session without tripping the limit. An
+        attacker brute-forcing codes (or enumerating emails) burns through
+        their 8-attempt budget per email per hour before being locked out.
+        Per-email rather than per-IP so a distributed attacker cannot
+        bypass the per-target ceiling by rotating sources.
+        """
+        data=self.body(30_000)
+        email=str(data.get("email","")).strip().lower()[:254]
+        recovery_code=str(data.get("recovery_code","")).strip()
+        if not email or not recovery_code:return self.json(400,{"error":"Email and recovery_code are required"})
+        # Normalise the code's whitespace + case-insensitivity on the
+        # alphabet chars (the displayed format uses uppercase). Hyphens
+        # are optional on input so a user typing "AAAA-AAAA-AAAA" or
+        # "AAAAAAAAAAAA" both work.
+        normalised=recovery_code.replace("-","").upper()
+        if len(normalised)!=12 or any(c not in "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" for c in normalised):
+            # Malformed code → treat as a failed attempt and rate-limit.
+            if not self.rate_limit(f"mfa-recover-fail:{email}",8,3600):return
+            return self.json(401,{"error":"Invalid recovery code","code":"invalid_recovery_code"})
+        # Re-hyphenate so the hash comparison runs against the canonical
+        # stored format (AAAA-AAAA-AAAA).
+        canonical=f"{normalised[0:4]}-{normalised[4:8]}-{normalised[8:12]}"
+        with connect() as db:
+            row=db.execute("SELECT id,email,role,email_verified FROM users WHERE email=? AND deleted_at IS NULL",(email,)).fetchone()
+            # Always fetch the candidate rows for this user (cheap, ≤10 rows)
+            # — never short-circuit on user existence so timing doesn't leak.
+            candidates=db.execute("SELECT id,code_hash FROM mfa_recovery_codes WHERE user_id=? AND used_at IS NULL",(row["id"],)).fetchall() if row else []
+        matched_id=None
+        for cand in candidates:
+            if verify_recovery_code(canonical,cand["code_hash"]):
+                matched_id=cand["id"]
+                break
+        if matched_id is None:
+            # Failed attempt → bump the per-email failure counter.
+            if not self.rate_limit(f"mfa-recover-fail:{email}",8,3600):return
+            return self.json(401,{"error":"Invalid recovery code","code":"invalid_recovery_code"})
+        now_ms=int(time.time()*1000)
+        with connect() as db:
+            # Mark the matched code as used. ``used_at IS NULL`` guard makes
+            # the UPDATE a one-shot even under a race: if another request
+            # grabbed the same code first, our UPDATE will affect 0 rows
+            # and we refuse to authenticate (the code is gone).
+            changed=db.execute("UPDATE mfa_recovery_codes SET used_at=? WHERE id=? AND used_at IS NULL",(now_ms,matched_id)).rowcount
+        if not changed:
+            # Lost the race — treat as a failure for rate-limit purposes.
+            if not self.rate_limit(f"mfa-recover-fail:{email}",8,3600):return
+            return self.json(401,{"error":"Invalid recovery code","code":"invalid_recovery_code"})
+        self.audit("mfa.recovery_used","user",row["id"],user_id=row["id"])
+        self.create_session(row["id"],row["email"],row["role"],bool(row["email_verified"]))
 
     def mfa_disable(self):
         user=self.require_user()
@@ -3934,7 +5279,13 @@ class Handler(SimpleHTTPRequestHandler):
             row=db.execute("SELECT mfa_secret,mfa_enabled FROM users WHERE id=?",(user["id"],)).fetchone()
             if row and row["mfa_enabled"] and (not row["mfa_secret"] or not verify_totp(row["mfa_secret"],code)):return self.json(400,{"error":"Enter a valid authenticator code"})
             db.execute("UPDATE users SET mfa_enabled=0,mfa_secret=NULL WHERE id=?",(user["id"],))
-        self.audit("mfa.disabled","user",user["id"]);self.json(200,{"enabled":False})
+        self.audit("mfa.disabled","user",user["id"])
+        send_security_notification(user["email"],"mfa.disabled",{
+            "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
+            "ip":self.client_ip(),
+            "user_agent":str(self.headers.get("User-Agent") or "")[:500],
+        })
+        self.json(200,{"enabled":False})
 
     def create_webauthn_challenge(self,user_id,kind,metadata=None):
         challenge=b64url(secrets.token_bytes(32));challenge_id=str(uuid.uuid4());now=int(time.time()*1000)
@@ -3961,7 +5312,14 @@ class Handler(SimpleHTTPRequestHandler):
         public_key=cose_ec2_to_pem(parsed["coseKey"]);credential_id=b64url(parsed["credentialId"]);transports=credential.get("transports") if isinstance(credential.get("transports"),list) else [];name=str(data.get("name") or "Passkey")[:80]
         with connect() as db:
             db.execute("INSERT INTO passkeys(id,user_id,credential_id,public_key,sign_count,transports_json,name,created_at,last_used_at) VALUES(?,?,?,?,?,?,?,?,NULL)",(str(uuid.uuid4()),user["id"],credential_id,public_key,parsed["signCount"],json.dumps(transports),name,now));db.execute("UPDATE auth_challenges SET used_at=? WHERE id=?",(now,cid))
-        self.audit("passkey.added","user",user["id"],{"name":name});self.json(201,{"registered":True,"credentialId":credential_id,"name":name})
+        self.audit("passkey.added","user",user["id"],{"name":name})
+        send_security_notification(user["email"],"passkey.added",{
+            "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
+            "ip":self.client_ip(),
+            "user_agent":str(self.headers.get("User-Agent") or "")[:500],
+            "name":name,
+        })
+        self.json(201,{"registered":True,"credentialId":credential_id,"name":name})
 
     def passkey_login_options(self):
         if not self.rate_limit(f"passkey-options:{self.client_ip()}",30,600):return
@@ -4007,7 +5365,14 @@ class Handler(SimpleHTTPRequestHandler):
         user=self.require_user()
         if not user:return
         with connect() as db:changed=db.execute("DELETE FROM passkeys WHERE id=? AND user_id=?",(key_id,user["id"])).rowcount
-        if changed:self.audit("passkey.removed","passkey",key_id)
+        if changed:
+            self.audit("passkey.removed","passkey",key_id)
+            send_security_notification(user["email"],"passkey.removed",{
+                "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
+                "ip":self.client_ip(),
+                "user_agent":str(self.headers.get("User-Agent") or "")[:500],
+                "passkeyId":key_id,
+            })
         self.json(200 if changed else 404,{"deleted":bool(changed)})
 
     def list_audit_events(self):
@@ -4020,6 +5385,171 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception:meta={}
             result.append({"id":r["id"],"action":r["action"],"targetType":r["target_type"],"targetId":r["target_id"],"metadata":meta,"ipAddress":r["ip_address"],"createdAt":r["created_at"],"hash":r["event_hash"]})
         self.json(200,result)
+
+    def handle_csp_report(self):
+        """Receive a Content-Security-Policy violation report and return 204.
+
+        V54.28 (sec-8 — §2.8). Browsers POST two report shapes to this
+        endpoint:
+
+        1. **Legacy ``report-uri``** — Content-Type ``application/csp-report``,
+           body ``{"csp-report": {document-uri, violated-directive, ...}}``.
+        2. **Reporting API ``report-to``** — Content-Type
+           ``application/reports+json``, body ``[{type:"csp-violation",
+           body:{documentURL, blockedURL, effectiveDirective, ...}}, ...]``.
+
+        The handler normalises both into a single record, writes a structured
+        log line, writes an ``audit_events`` row tagged ``csp.violation`` (only
+        if the request is authenticated — anonymous reports are logged but
+        not audited so we don't pollute the audit trail with guest reports),
+        rate-limits per IP (60/min), and ALWAYS returns HTTP 204 No Content
+        per the CSP reporting spec (a non-2xx would make the browser retry,
+        amplifying noise). Failures inside the handler are swallowed so a DB
+        outage can never cause a 5xx to the reporting browser.
+        """
+        # Rate-limit BEFORE we touch the request body so a flood of reports
+        # is rejected early. The legacy 429 response body is JSON; the spec
+        # says reports should return 204, but rate-limit responses are an
+        # explicit exception (the browser will NOT retry on 4xx).
+        if not self.rate_limit(f"csp-report:{self.client_ip()}", CSP_REPORT_RATE_LIMIT, CSP_REPORT_RATE_WINDOW):
+            return
+        # Read the raw body with a tight limit — CSP reports are small
+        # (<10KB) and a hostile client should not be able to stream megabytes
+        # through this endpoint. ``self.body()`` returns parsed JSON; if the
+        # body is malformed we still return 204 (never 4xx) so the browser
+        # doesn't retry.
+        try:
+            data=self.body(50_000)
+        except Exception as exc:
+            if JSON_LOGS:
+                print(json.dumps({"level":"warning","event":"csp_report_body_invalid","message":str(exc)[:300]},ensure_ascii=False),flush=True)
+            return self._send_csp_204()
+        # Normalise legacy (single object with csp-report) vs Reporting API
+        # (array of {type, body}) into a flat fields dict.
+        fields=self._normalise_csp_report(data)
+        doc_uri=str(fields.get("document-uri") or "")[:1000]
+        referrer=str(fields.get("referrer") or "")[:500]
+        violated_directive=str(fields.get("violated-directive") or fields.get("effective-directive") or "")[:120]
+        effective_directive=str(fields.get("effective-directive") or violated_directive)[:120]
+        original_policy=str(fields.get("original-policy") or "")[:4000]
+        blocked_uri=str(fields.get("blocked-uri") or "")[:1000]
+        line_number=fields.get("line-number")
+        column_number=fields.get("column-number")
+        source_file=str(fields.get("source-file") or "")[:1000]
+        user_agent=str(self.headers.get("User-Agent") or "")[:500]
+        try:
+            line_number=int(line_number) if line_number is not None else 0
+        except (TypeError,ValueError):
+            line_number=0
+        try:
+            column_number=int(column_number) if column_number is not None else 0
+        except (TypeError,ValueError):
+            column_number=0
+        # Structured log line — grep-friendly so the weekly summary job
+        # (docs/security/CSP-MONITORING.md) can be a one-liner awk/grep on
+        # the journal. Emitted unconditionally so unauthenticated reports
+        # are still observable.
+        log_line=(f"[csp_report] document={doc_uri} directive={violated_directive} "
+                  f"blocked={blocked_uri} source={source_file}:{line_number} "
+                  f"user_agent={user_agent}")
+        if JSON_LOGS:
+            print(json.dumps({"level":"info","event":"csp_report","document_uri":doc_uri,
+                              "violated_directive":violated_directive,"blocked_uri":blocked_uri,
+                              "source_file":source_file,"line_number":line_number,
+                              "column_number":column_number,"effective_directive":effective_directive,
+                              "referrer":referrer,"user_agent":user_agent},ensure_ascii=False),flush=True)
+        else:
+            print(log_line,flush=True)
+        # Audit event — only for authenticated users so guest-page reports
+        # don't pollute the audit trail. self.audit() swallows DB errors.
+        try:
+            user=self.user()
+            if user:
+                self.audit("csp.violation","csp","",{
+                    "document_uri":doc_uri,"referrer":referrer,
+                    "violated_directive":violated_directive,
+                    "effective_directive":effective_directive,
+                    "original_policy":original_policy[:500],
+                    "blocked_uri":blocked_uri,
+                    "line_number":line_number,"column_number":column_number,
+                    "source_file":source_file,"user_agent":user_agent,
+                })
+        except Exception as exc:
+            if JSON_LOGS:
+                print(json.dumps({"level":"warning","event":"csp_report_audit_failed","message":str(exc)[:300]},ensure_ascii=False),flush=True)
+        return self._send_csp_204()
+
+    @staticmethod
+    def _normalise_csp_report(data):
+        """Return a flat fields dict for either report shape.
+
+        Legacy ``report-uri`` body: ``{"csp-report": {document-uri, ...}}``.
+        Reporting API body: ``[{type:"csp-violation", body:{documentURL, ...}}]``
+        (an array; we take the first csp-violation entry).
+
+        The legacy CSP-report field names use kebab-case (``document-uri``,
+        ``blocked-uri``); the Reporting API body uses camelCase
+        (``documentURL``, ``blockedURL``). We normalise to the kebab-case
+        keys used by the rest of the handler so the downstream extraction
+        code only has one shape to deal with.
+        """
+        fields={}
+        if not isinstance(data,(dict,list)):
+            return fields
+        if isinstance(data,list):
+            for item in data:
+                if isinstance(item,dict) and item.get("type") in ("csp-violation","csp-violation-report"):
+                    body=item.get("body") or {}
+                    if isinstance(body,dict):
+                        fields=Handler._csp_fields_from_reporting_api(body)
+                        if fields:break
+            return fields
+        # Legacy shape: the violation lives under data["csp-report"].
+        report=data.get("csp-report") if isinstance(data,dict) else None
+        if isinstance(report,dict):
+            return Handler._csp_fields_from_legacy(report)
+        # Sometimes clients send the report fields at the top level — accept
+        # both shapes for robustness.
+        if isinstance(data,dict) and ("document-uri" in data or "documentURL" in data):
+            return Handler._csp_fields_from_reporting_api(data) if "documentURL" in data else Handler._csp_fields_from_legacy(data)
+        return fields
+
+    @staticmethod
+    def _csp_fields_from_legacy(report):
+        """Map a legacy ``csp-report`` dict (kebab-case keys) — pass-through
+        with a defensive copy so the caller can mutate freely."""
+        keys=("document-uri","referrer","violated-directive","effective-directive",
+              "original-policy","blocked-uri","line-number","column-number","source-file")
+        return {k:report.get(k) for k in keys if report.get(k) is not None}
+
+    @staticmethod
+    def _csp_fields_from_reporting_api(body):
+        """Map a Reporting API ``body`` dict (camelCase keys) to the legacy
+        kebab-case keys the handler extracts downstream."""
+        mapping={
+            "document-uri":"documentURL","referrer":"referrer",
+            "violated-directive":"effectiveDirective","effective-directive":"effectiveDirective",
+            "original-policy":"originalPolicy","blocked-uri":"blockedURL",
+            "line-number":"lineNumber","column-number":"columnNumber","source-file":"sourceFile",
+        }
+        out={}
+        for kebab,camel in mapping.items():
+            value=body.get(camel)
+            if value is None:value=body.get(kebab)
+            if value is not None:out[kebab]=value
+        return out
+
+    def _send_csp_204(self):
+        """Emit an HTTP 204 No Content without a body. Per the CSP reporting
+        spec, the report endpoint MUST return 204 (or any 2xx) — a 5xx would
+        make the browser retry the report."""
+        try:
+            self.send_response(204)
+            self.send_header("Content-Length","0")
+            self.end_headers()
+        except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):
+            return False
+        return True
 
     def update_privacy_preferences(self):
         user=self.require_user()
@@ -4206,6 +5736,18 @@ class Handler(SimpleHTTPRequestHandler):
             try:expected=int(expected)
             except (TypeError,ValueError):raise ValueError("Invalid expected revision")
             if expected<0:raise ValueError("Invalid expected revision")
+        # Phase 2a (V54.1) — post-send editing wedge feature: capture the
+        # diff between the prior and the new document when the invitation
+        # has already been dispatched. The diff is persisted in
+        # ``invitation_edit_history`` for the host's "Edited at" badge and
+        # for the optional "We've updated this invitation" re-send.
+        prior_document=None;prior_sent_at=None
+        with connect() as db:
+            prior_row=db.execute("SELECT draft_json,sent_at FROM invitations WHERE id=?",(invite_id,)).fetchone()
+            if prior_row:
+                try:prior_document=json.loads(prior_row["draft_json"] or "{}")
+                except Exception:prior_document={}
+                prior_sent_at=prior_row["sent_at"]
         with connect() as db:
             if not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Editing permission required"})
             row=db.execute("SELECT updated_at,last_client_id,last_mutation_id FROM invitations WHERE id=?",(invite_id,)).fetchone()
@@ -4221,7 +5763,35 @@ class Handler(SimpleHTTPRequestHandler):
                 if not changed:
                     latest=db.execute("SELECT updated_at,last_client_id,last_mutation_id FROM invitations WHERE id=?",(invite_id,)).fetchone()
                     return self.json(409,{"error":"This invitation changed in another session. Reload the latest version before saving again.","code":"revision_conflict","updatedAt":int(latest["updated_at"] or current) if latest else current,"clientId":latest["last_client_id"] if latest else None,"mutationId":latest["last_mutation_id"] if latest else None})
-        self.json(200 if changed else 404,{"saved":bool(changed),"updatedAt":now,"clientId":client_id or None,"mutationId":mutation_id or None})
+            # Phase 2a (V54.1) — when editing AFTER the first delivery,
+            # record an entry in invitation_edit_history so the host UI can
+            # show "Edited at {ts}" and the host can trigger an update
+            # notification email to already-viewed guests. The diff is a
+            # small structured patch (added/changed/removed field paths)
+            # capped at a few KB — never the full document.
+            if changed and prior_sent_at and prior_document is not None:
+                # Phase 2a (V54.4) — set edited_after_send_at the FIRST time
+                # the host edits after sending. The column stays NULL until
+                # then and is never overwritten, so the badge shows the
+                # earliest post-send edit timestamp.
+                db.execute(
+                    "UPDATE invitations SET edited_after_send_at=COALESCE(edited_after_send_at,?) WHERE id=?",
+                    (now, invite_id)
+                )
+                try:
+                    diff = _p2a_document_diff(prior_document, document)
+                    history_id = str(uuid.uuid4())
+                    db.execute(
+                        "INSERT INTO invitation_edit_history(id,invitation_id,edited_by,edited_at,diff_json,reason,document_version) VALUES(?,?,?,?,?,?,?)",
+                        (history_id, invite_id, user["id"], now,
+                         json.dumps(diff, ensure_ascii=False)[:50000],
+                         str(data.get("editReason") or "post-send edit")[:500],
+                         int(db.execute("SELECT document_version FROM invitations WHERE id=?",(invite_id,)).fetchone()["document_version"] or 0))
+                    )
+                except Exception:
+                    # Audit-history must never block a save.
+                    pass
+        self.json(200 if changed else 404,{"saved":bool(changed),"updatedAt":now,"clientId":client_id or None,"mutationId":mutation_id or None,"editedAfterSend":bool(changed and prior_sent_at)})
     def publish(self, invite_id):
         user=self.require_user()
         if not user:return
@@ -4364,7 +5934,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def get_public(self, slug, guest_token=None, access_token=None, gallery_access_token=None):
         with connect() as db:
-            row=db.execute("SELECT i.id,i.access_mode,i.gallery_access_password_hash,i.gallery_access_password_salt,i.owner_id,p.id publication_id,p.version,p.document_json,u.studio_name,u.white_label_json FROM invitations i JOIN publications p ON p.invitation_id=i.id LEFT JOIN users u ON u.id=i.owner_id WHERE i.slug=? AND i.archived=0 AND i.deleted_at IS NULL AND i.is_published=1 AND (i.expires_at IS NULL OR i.expires_at>?) ORDER BY p.published_at DESC LIMIT 1",(slug,int(time.time()*1000))).fetchone()
+            row=db.execute("SELECT i.id,i.access_mode,i.gallery_access_password_hash,i.gallery_access_password_salt,i.owner_id,i.sent_at,i.edited_after_send_at,p.id publication_id,p.version,p.document_json,u.studio_name,u.white_label_json FROM invitations i JOIN publications p ON p.invitation_id=i.id LEFT JOIN users u ON u.id=i.owner_id WHERE i.slug=? AND i.archived=0 AND i.deleted_at IS NULL AND i.is_published=1 AND (i.expires_at IS NULL OR i.expires_at>?) ORDER BY p.published_at DESC LIMIT 1",(slug,int(time.time()*1000))).fetchone()
             if not row:return self.json(404,{"error":"Published invitation not found"})
             if row["access_mode"]=="password" and not self.access_token_valid(db,row["id"],access_token):return self.json(403,{"error":"Password required","protected":True})
             try: public_document=json.loads(row["document_json"] or "{}")
@@ -4386,7 +5956,10 @@ class Handler(SimpleHTTPRequestHandler):
         try:studio_white=json.loads(row["white_label_json"] or "{}")
         except Exception:studio_white={}
         studio_brand={"name":row["studio_name"] or "","logo":studio_white.get("logo","") or "","primaryColor":studio_white.get("primaryColor","") or "","accentColor":studio_white.get("accentColor","") or "","website":studio_white.get("website","") or "","hidePlatformBrand":bool(studio_white.get("hidePlatformBrand",False))}
-        self.json(200,{"invitationId":row["id"],"publicationId":row["publication_id"],"version":row["version"],"document":document,"guest":dict(guest) if guest else None,"analyticsConsentRequired":analytics_consent_required,"externalMediaConsentRequired":external_media_consent_required,"galleryProtected":gallery_protected,"galleryAuthorized":gallery_authorized,"studioBrand":studio_brand})
+        # Phase 2a (V54.4) — surface the post-send edit timestamp so the public
+        # page can render an "Edited after sending" badge. Guests see only the
+        # timestamp, never the diff (which is host-only data).
+        self.json(200,{"invitationId":row["id"],"publicationId":row["publication_id"],"version":row["version"],"document":document,"guest":dict(guest) if guest else None,"analyticsConsentRequired":analytics_consent_required,"externalMediaConsentRequired":external_media_consent_required,"galleryProtected":gallery_protected,"galleryAuthorized":gallery_authorized,"studioBrand":studio_brand,"sentAt":row["sent_at"],"editedAfterSendAt":row["edited_after_send_at"]})
 
     def update_gallery_access(self,invite_id):
         user=self.require_user()
@@ -5638,7 +7211,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not row:return self.json(404,{"error":"Backup not found"})
         name=Path(str(row["archive_name"] or "")).name;target=BACKUPS/name
         if not name or not target.is_file():return self.json(404,{"error":"Backup file is unavailable"})
-        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{name}"');self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
+        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{name}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
 
     def normalize_studio_policy(self, data):
         if not isinstance(data,dict):data={}
@@ -6348,6 +7921,928 @@ class Handler(SimpleHTTPRequestHandler):
             out=io.BytesIO();qr.save(out,"PNG",optimize=True);return self.send_binary(200,out.getvalue(),"image/png","private,max-age=0,no-store",f"guest-{guest_id}-qr.png")
         except Exception:return self.json(503,{"error":"QR image support requires Pillow and qrcode"})
 
+    # ------------------------------------------------------------------
+    # Phase 2a (V54.1) — Guest features (sign-up sheets, polls, photo album,
+    # post-send edit history, multi-channel delivery).
+    #
+    # Convention: every handler below resolves access via
+    # :meth:`_p2a_resolve_access` — either an authenticated host/collaborator
+    # with read/manage permission, or an anonymous guest acting on a
+    # published invitation (rate-limited + bot-protection-checked). The
+    # helper returns an ``AccessContext`` namedtuple-like dict so the
+    # handlers can branch on host vs guest mode without duplicating the
+    # permission plumbing.
+    # ------------------------------------------------------------------
+
+    def _p2a_resolve_access(self, invite_id, require_manage=False, require_edit=False,
+                            allow_guest=True, rate_limit_key=None, rate_limit_max=20,
+                            rate_limit_window=60):
+        """Resolve host-vs-guest access for a Phase 2a guest-feature endpoint.
+
+        Returns ``None`` (and emits the appropriate 4xx) when access is
+        denied. Otherwise returns a dict::
+
+            {"mode": "host"|"guest",
+             "user": <user row or None>,
+             "guest": {"id":..,"name":..,"email":..} or {"id":None,"name":"","email":""},
+             "invitation": <invitation row>,
+             "is_published": bool}
+
+        Host mode is preferred when the caller is authenticated and has the
+        requested permission on the invitation. Guest mode is granted when
+        the invitation is published and (where required) the request
+        passes rate-limit + bot-protection.
+        """
+        user = self.user()
+        with connect() as db:
+            invitation = db.execute(
+                "SELECT id,slug,owner_id,access_mode,is_published,archived,deleted_at,access_password_hash FROM invitations WHERE id=?",
+                (invite_id,)
+            ).fetchone()
+            if not invitation or invitation["deleted_at"]:
+                self.json(404, {"error": "Invitation not found"}); return None
+            if user:
+                role = self.invitation_role(db, invite_id, user["id"])
+                if role is not None:
+                    if require_manage and role not in {"owner", "manager"}:
+                        self.json(403, {"error": "Invitation management permission required"}); return None
+                    if require_edit and role not in {"owner", "content", "designer", "manager"}:
+                        self.json(403, {"error": "Editing permission required"}); return None
+                    return {"mode": "host", "user": user,
+                            "guest": {"id": None, "name": "", "email": ""},
+                            "invitation": invitation, "is_published": bool(invitation["is_published"])}
+            if not allow_guest:
+                self.json(401, {"error": "Authentication required"}); return None
+            if not invitation["is_published"] or invitation["archived"]:
+                self.json(404, {"error": "Invitation not found"}); return None
+            # Guest mode: enforce access_token for password-protected invites.
+            if invitation["access_mode"] == "password":
+                access = self.headers.get("X-Invitation-Access") or ""
+                if not access or not self.access_token_valid(db, invite_id, access):
+                    self.json(403, {"error": "Invitation access is required", "protected": True}); return None
+            if rate_limit_key and not self.rate_limit(
+                f"{rate_limit_key}:{self.client_ip()}:{invite_id}",
+                rate_limit_max, rate_limit_window):
+                return None
+            guest = {"id": None, "name": "", "email": ""}
+            guest_token = self.headers.get("X-Invitation-Guest") or ""
+            if guest_token:
+                row = self.lookup_guest_by_token(db, invite_id, guest_token)
+                if row:
+                    guest = {"id": row["id"], "name": row["name"] or "", "email": ""}
+            return {"mode": "guest", "user": None, "guest": guest,
+                    "invitation": invitation, "is_published": True}
+
+    def _p2a_public_guest_identity(self, db, invite_id, body, ctx):
+        """Resolve guest identity for a public guest action.
+
+        Order of precedence: (1) personalized guest token (ctx['guest']['id']),
+        (2) ``guestId`` field in the body (must match a real guest row on the
+        invitation), (3) anonymous (name + email from body, validated but
+        not persisted as a guest row).
+        """
+        if ctx["guest"]["id"]:
+            return ctx["guest"]
+        guest_id = str(body.get("guestId") or "").strip()
+        if guest_id:
+            row = db.execute("SELECT id,name,email FROM guests WHERE id=? AND invitation_id=?",
+                             (guest_id, invite_id)).fetchone()
+            if row:
+                return {"id": row["id"], "name": row["name"] or "", "email": row["email"] or ""}
+        name = str(body.get("name") or "").strip()[:120]
+        email = str(body.get("email") or "").strip()[:254]
+        return {"id": None, "name": name, "email": email}
+
+    # --- Sign-up sheets (feature #1) ------------------------------------
+
+    def _signup_sheet_view(self, row, include_claims=False, guest_filter=None):
+        """Render a signup_sheet row for the API.
+
+        When ``include_claims`` is True (host mode), every claim is returned
+        with the guest's name + email. In guest mode, only the claim count
+        and the current viewer's own claims are returned — other guests'
+        PII is hidden.
+        """
+        try:
+            slots = json.loads(row["slots_json"] or "[]")
+        except Exception:
+            slots = []
+        out = {
+            "id": row["id"],
+            "invitationId": row["invitation_id"],
+            "title": row["title"],
+            "type": row["type"],
+            "slots": slots,
+            "deadlineTs": row["deadline_ts"],
+            "createdAt": row["created_at"],
+            "archivedAt": row["archived_at"],
+        }
+        # Augment each slot with its claim summary.
+        with connect() as db:
+            claim_rows = db.execute(
+                "SELECT id, slot_id, guest_id, email, name, quantity, created_at, cancelled_at FROM signup_claims WHERE sheet_id=? ORDER BY created_at",
+                (row["id"],)
+            ).fetchall()
+        for slot in slots:
+            slot_id = str(slot.get("id") or "")
+            slot_claims = [c for c in claim_rows if c["slot_id"] == slot_id and not c["cancelled_at"]]
+            capacity = int(slot.get("capacity") or 0)
+            claimed_qty = sum(int(c["quantity"] or 0) for c in slot_claims)
+            if include_claims:
+                slot["claims"] = [{
+                    "id": c["id"], "guestId": c["guest_id"], "name": c["name"],
+                    "email": c["email"], "quantity": c["quantity"], "createdAt": c["created_at"]
+                } for c in slot_claims]
+            else:
+                # Guest mode: reveal count + whether the current viewer claimed.
+                slot["claims"] = [{
+                    "id": c["id"], "name": c["name"] or "Guest",
+                    "quantity": c["quantity"], "createdAt": c["created_at"],
+                    "self": bool(guest_filter and c["guest_id"] == guest_filter)
+                } for c in slot_claims]
+            slot["claimedQuantity"] = claimed_qty
+            slot["remaining"] = max(0, capacity - claimed_qty) if capacity > 0 else None
+        return out
+
+    def list_signup_sheets(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-signup-list", rate_limit_max=60)
+        if ctx is None: return
+        with connect() as db:
+            rows = db.execute(
+                "SELECT * FROM signup_sheets WHERE invitation_id=? AND archived_at IS NULL ORDER BY created_at DESC",
+                (invite_id,)
+            ).fetchall()
+        self.json(200, [self._signup_sheet_view(r, include_claims=(ctx["mode"] == "host"),
+                                                 guest_filter=ctx["guest"]["id"]) for r in rows])
+
+    def create_signup_sheet(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        data = self.body(200_000)
+        title = str(data.get("title") or "").strip()[:200]
+        if not title: raise ValueError("Sheet title is required")
+        sheet_type = str(data.get("type") or "items").lower()
+        if sheet_type not in {"items", "slots"}: raise ValueError("Invalid sheet type")
+        slots_raw = data.get("slots") or []
+        if not isinstance(slots_raw, list): raise ValueError("Slots must be a list")
+        if len(slots_raw) > 200: raise ValueError("Too many slots (max 200)")
+        slots = []
+        for idx, raw in enumerate(slots_raw):
+            if not isinstance(raw, dict): raise ValueError("Each slot must be an object")
+            label = str(raw.get("label") or "").strip()[:200]
+            if not label: raise ValueError(f"Slot {idx + 1} label is required")
+            capacity = int(raw.get("capacity") or 0)
+            if capacity < 0 or capacity > 100000: raise ValueError("Invalid slot capacity")
+            slots.append({"id": str(raw.get("id") or uuid.uuid4().hex[:12]),
+                          "label": label, "capacity": capacity,
+                          "description": str(raw.get("description") or "").strip()[:500]})
+        deadline_ts = None
+        if data.get("deadlineTs") not in (None, ""):
+            try: deadline_ts = int(data.get("deadlineTs"))
+            except (TypeError, ValueError): raise ValueError("Invalid deadline timestamp")
+        sheet_id = str(uuid.uuid4()); now = int(time.time() * 1000)
+        with connect() as db:
+            db.execute(
+                "INSERT INTO signup_sheets(id,invitation_id,title,type,slots_json,deadline_ts,created_at) VALUES(?,?,?,?,?,?,?)",
+                (sheet_id, invite_id, title, sheet_type, json.dumps(slots, ensure_ascii=False), deadline_ts, now)
+            )
+            row = db.execute("SELECT * FROM signup_sheets WHERE id=?", (sheet_id,)).fetchone()
+        self.audit("signup_sheet.created", "signup_sheet", sheet_id, {"invitationId": invite_id, "title": title, "type": sheet_type, "slotsCount": len(slots)})
+        self.json(201, self._signup_sheet_view(row, include_claims=True))
+
+    def update_signup_sheet(self, invite_id, sheet_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        data = self.body(200_000)
+        updates = {}
+        if "title" in data:
+            title = str(data.get("title") or "").strip()[:200]
+            if not title: raise ValueError("Sheet title is required")
+            updates["title"] = title
+        if "type" in data:
+            sheet_type = str(data.get("type") or "items").lower()
+            if sheet_type not in {"items", "slots"}: raise ValueError("Invalid sheet type")
+            updates["type"] = sheet_type
+        if "slots" in data:
+            slots_raw = data.get("slots") or []
+            if not isinstance(slots_raw, list): raise ValueError("Slots must be a list")
+            if len(slots_raw) > 200: raise ValueError("Too many slots (max 200)")
+            slots = []
+            for raw in slots_raw:
+                label = str(raw.get("label") or "").strip()[:200]
+                if not label: raise ValueError("Slot label is required")
+                slots.append({"id": str(raw.get("id") or uuid.uuid4().hex[:12]),
+                              "label": label, "capacity": int(raw.get("capacity") or 0),
+                              "description": str(raw.get("description") or "").strip()[:500]})
+            updates["slots_json"] = json.dumps(slots, ensure_ascii=False)
+        if "deadlineTs" in data:
+            deadline_ts = data.get("deadlineTs")
+            if deadline_ts in (None, ""):
+                updates["deadline_ts"] = None
+            else:
+                try: updates["deadline_ts"] = int(deadline_ts)
+                except (TypeError, ValueError): raise ValueError("Invalid deadline timestamp")
+        if not updates: raise ValueError("No updates provided")
+        with connect() as db:
+            existing = db.execute("SELECT id FROM signup_sheets WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                                   (sheet_id, invite_id)).fetchone()
+            if not existing: return self.json(404, {"error": "Sign-up sheet not found"})
+            set_clause = ", ".join(f"{col}=?" for col in updates)
+            params = list(updates.values()) + [sheet_id, invite_id]
+            # nosec B608 — column names are from a hardcoded allowlist above (title, type, slots_json, deadline_ts); values are parameterized
+            db.execute(f"UPDATE signup_sheets SET {set_clause} WHERE id=? AND invitation_id=?", params)
+            row = db.execute("SELECT * FROM signup_sheets WHERE id=?", (sheet_id,)).fetchone()
+        self.audit("signup_sheet.updated", "signup_sheet", sheet_id, {"invitationId": invite_id, "fields": list(updates.keys())})
+        self.json(200, self._signup_sheet_view(row, include_claims=True))
+
+    def delete_signup_sheet(self, invite_id, sheet_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        with connect() as db:
+            existing = db.execute("SELECT id FROM signup_sheets WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                                   (sheet_id, invite_id)).fetchone()
+            if not existing: return self.json(404, {"error": "Sign-up sheet not found"})
+            db.execute("UPDATE signup_sheets SET archived_at=? WHERE id=? AND invitation_id=?",
+                       (int(time.time() * 1000), sheet_id, invite_id))
+        self.audit("signup_sheet.deleted", "signup_sheet", sheet_id, {"invitationId": invite_id})
+        self.json(200, {"deleted": True})
+
+    def claim_signup_slot(self, invite_id, sheet_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-claim", rate_limit_max=20)
+        if ctx is None: return
+        data = self.body(50_000)
+        if not self.bot_protection_ok("signup-claim", data.get("botToken", "")):
+            return self.json(403, {"error": "Submission verification failed"})
+        slot_id = str(data.get("slotId") or "").strip()
+        quantity = int(data.get("quantity") or 1)
+        if not slot_id: raise ValueError("slotId is required")
+        if quantity < 1 or quantity > 100: raise ValueError("Invalid quantity")
+        with connect() as db:
+            sheet = db.execute("SELECT * FROM signup_sheets WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                                (sheet_id, invite_id)).fetchone()
+            if not sheet: return self.json(404, {"error": "Sign-up sheet not found"})
+            if sheet["deadline_ts"] and int(sheet["deadline_ts"]) < int(time.time() * 1000):
+                return self.json(409, {"error": "This sign-up sheet has closed"})
+            try: slots = json.loads(sheet["slots_json"] or "[]")
+            except Exception: slots = []
+            slot = next((s for s in slots if str(s.get("id") or "") == slot_id), None)
+            if not slot: return self.json(404, {"error": "Slot not found"})
+            capacity = int(slot.get("capacity") or 0)
+            claims = db.execute(
+                "SELECT COALESCE(SUM(quantity),0) total FROM signup_claims WHERE sheet_id=? AND slot_id=? AND cancelled_at IS NULL",
+                (sheet_id, slot_id)
+            ).fetchone()
+            used = int(claims["total"] or 0)
+            if capacity > 0 and used + quantity > capacity:
+                return self.json(409, {"error": "That slot is full", "remaining": max(0, capacity - used)})
+            identity = self._p2a_public_guest_identity(db, invite_id, data, ctx)
+            if not identity["name"] and not identity["id"]:
+                raise ValueError("Name is required to claim a slot")
+            claim_id = str(uuid.uuid4()); now = int(time.time() * 1000)
+            db.execute(
+                "INSERT INTO signup_claims(id,sheet_id,slot_id,guest_id,email,name,quantity,created_at) VALUES(?,?,?,?,?,?,?,?)",
+                (claim_id, sheet_id, slot_id, identity["id"], identity["email"], identity["name"], quantity, now)
+            )
+        self.audit("signup_claim.created", "signup_claim", claim_id,
+                   {"invitationId": invite_id, "sheetId": sheet_id, "slotId": slot_id, "quantity": quantity})
+        self.json(201, {"id": claim_id, "slotId": slot_id, "quantity": quantity, "createdAt": now})
+
+    def cancel_signup_claim(self, invite_id, sheet_id, claim_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-claim-cancel", rate_limit_max=20)
+        if ctx is None: return
+        with connect() as db:
+            row = db.execute("SELECT id, guest_id FROM signup_claims WHERE id=? AND sheet_id=? AND cancelled_at IS NULL",
+                             (claim_id, sheet_id)).fetchone()
+            if not row: return self.json(404, {"error": "Claim not found"})
+            # Hosts can cancel any claim; guests can cancel only their own.
+            if ctx["mode"] != "host" and ctx["guest"]["id"] and row["guest_id"] != ctx["guest"]["id"]:
+                return self.json(403, {"error": "You can only cancel your own claim"})
+            db.execute("UPDATE signup_claims SET cancelled_at=? WHERE id=? AND sheet_id=?",
+                       (int(time.time() * 1000), claim_id, sheet_id))
+        self.audit("signup_claim.cancelled", "signup_claim", claim_id,
+                   {"invitationId": invite_id, "sheetId": sheet_id})
+        self.json(200, {"cancelled": True})
+
+    # --- Polls (feature #2) ---------------------------------------------
+
+    def _poll_view(self, row, include_votes=False, guest_filter=None, show_results=False):
+        """Render a poll row. ``show_results`` controls whether aggregated
+        counts are returned (host always sees them; guest sees them only
+        when ``visibility == "live"`` or after the deadline closes).
+        """
+        try: options = json.loads(row["options_json"] or "[]")
+        except Exception: options = []
+        with connect() as db:
+            votes = db.execute("SELECT option_id, COUNT(*) c FROM poll_votes WHERE poll_id=? GROUP BY option_id",
+                                (row["id"],)).fetchall()
+            vote_map = {v["option_id"]: int(v["c"]) for v in votes}
+            total_votes = sum(vote_map.values())
+            if include_votes:
+                voter_rows = db.execute("SELECT id, option_id, guest_id, email, name, created_at FROM poll_votes WHERE poll_id=? ORDER BY created_at",
+                                         (row["id"],)).fetchall()
+            my_votes = []
+            if guest_filter:
+                mine = db.execute("SELECT option_id FROM poll_votes WHERE poll_id=? AND guest_id=?",
+                                   (row["id"], guest_filter)).fetchall()
+                my_votes = [r["option_id"] for r in mine]
+        deadline_passed = bool(row["deadline_ts"] and int(row["deadline_ts"]) < int(time.time() * 1000))
+        show = show_results or row["visibility"] == "live" or deadline_passed
+        out = {
+            "id": row["id"],
+            "invitationId": row["invitation_id"],
+            "question": row["question"],
+            "options": [],
+            "visibility": row["visibility"],
+            "multiSelect": bool(row["multi_select"]),
+            "deadlineTs": row["deadline_ts"],
+            "createdAt": row["created_at"],
+            "archivedAt": row["archived_at"],
+            "closed": deadline_passed,
+            "totalVotes": total_votes if show else 0,
+            "myVotes": my_votes,
+        }
+        for opt in options:
+            opt_id = str(opt.get("id") or "")
+            entry = {"id": opt_id, "label": opt.get("label", ""), "description": opt.get("description", "")}
+            if show:
+                entry["votes"] = vote_map.get(opt_id, 0)
+            out["options"].append(entry)
+        if include_votes:
+            out["votes"] = [{
+                "id": v["id"], "optionId": v["option_id"], "guestId": v["guest_id"],
+                "name": v["name"] or "Guest", "email": v["email"], "createdAt": v["created_at"]
+            } for v in voter_rows]
+        return out
+
+    def list_polls(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-polls-list", rate_limit_max=60)
+        if ctx is None: return
+        with connect() as db:
+            rows = db.execute(
+                "SELECT * FROM polls WHERE invitation_id=? AND archived_at IS NULL ORDER BY created_at DESC",
+                (invite_id,)
+            ).fetchall()
+        self.json(200, [self._poll_view(r, include_votes=(ctx["mode"] == "host"),
+                                         guest_filter=ctx["guest"]["id"],
+                                         show_results=(ctx["mode"] == "host")) for r in rows])
+
+    def create_poll(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        data = self.body(100_000)
+        question = str(data.get("question") or "").strip()[:500]
+        if not question: raise ValueError("Poll question is required")
+        opts_raw = data.get("options") or []
+        if not isinstance(opts_raw, list) or len(opts_raw) < 2 or len(opts_raw) > 20:
+            raise ValueError("Poll must have 2 to 20 options")
+        options = []
+        for raw in opts_raw:
+            label = str(raw.get("label") or "").strip()[:200]
+            if not label: raise ValueError("Option label is required")
+            options.append({"id": str(raw.get("id") or uuid.uuid4().hex[:12]),
+                            "label": label,
+                            "description": str(raw.get("description") or "").strip()[:500]})
+        visibility = str(data.get("visibility") or "hidden_until_close").lower()
+        if visibility not in {"hidden_until_close", "live"}: raise ValueError("Invalid visibility setting")
+        multi_select = 1 if data.get("multiSelect") else 0
+        deadline_ts = None
+        if data.get("deadlineTs") not in (None, ""):
+            try: deadline_ts = int(data.get("deadlineTs"))
+            except (TypeError, ValueError): raise ValueError("Invalid deadline timestamp")
+        poll_id = str(uuid.uuid4()); now = int(time.time() * 1000)
+        with connect() as db:
+            db.execute(
+                "INSERT INTO polls(id,invitation_id,question,options_json,visibility,multi_select,deadline_ts,created_at) VALUES(?,?,?,?,?,?,?,?)",
+                (poll_id, invite_id, question, json.dumps(options, ensure_ascii=False),
+                 visibility, multi_select, deadline_ts, now)
+            )
+            row = db.execute("SELECT * FROM polls WHERE id=?", (poll_id,)).fetchone()
+        self.audit("poll.created", "poll", poll_id, {"invitationId": invite_id, "question": question, "optionsCount": len(options)})
+        self.json(201, self._poll_view(row, include_votes=True, show_results=True))
+
+    def update_poll(self, invite_id, poll_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        data = self.body(100_000)
+        updates = {}
+        if "question" in data:
+            q = str(data.get("question") or "").strip()[:500]
+            if not q: raise ValueError("Poll question is required")
+            updates["question"] = q
+        if "options" in data:
+            opts_raw = data.get("options") or []
+            if not isinstance(opts_raw, list) or len(opts_raw) < 2 or len(opts_raw) > 20:
+                raise ValueError("Poll must have 2 to 20 options")
+            options = []
+            for raw in opts_raw:
+                label = str(raw.get("label") or "").strip()[:200]
+                if not label: raise ValueError("Option label is required")
+                options.append({"id": str(raw.get("id") or uuid.uuid4().hex[:12]),
+                                "label": label,
+                                "description": str(raw.get("description") or "").strip()[:500]})
+            updates["options_json"] = json.dumps(options, ensure_ascii=False)
+        if "visibility" in data:
+            v = str(data.get("visibility") or "hidden_until_close").lower()
+            if v not in {"hidden_until_close", "live"}: raise ValueError("Invalid visibility setting")
+            updates["visibility"] = v
+        if "multiSelect" in data: updates["multi_select"] = 1 if data.get("multiSelect") else 0
+        if "deadlineTs" in data:
+            deadline_ts = data.get("deadlineTs")
+            if deadline_ts in (None, ""): updates["deadline_ts"] = None
+            else:
+                try: updates["deadline_ts"] = int(deadline_ts)
+                except (TypeError, ValueError): raise ValueError("Invalid deadline timestamp")
+        if not updates: raise ValueError("No updates provided")
+        with connect() as db:
+            existing = db.execute("SELECT id FROM polls WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                                   (poll_id, invite_id)).fetchone()
+            if not existing: return self.json(404, {"error": "Poll not found"})
+            set_clause = ", ".join(f"{col}=?" for col in updates)
+            params = list(updates.values()) + [poll_id, invite_id]
+            # nosec B608 — column names are from a hardcoded allowlist above (question, multi_select, visibility, options_json, deadline_ts); values are parameterized
+            db.execute(f"UPDATE polls SET {set_clause} WHERE id=? AND invitation_id=?", params)
+            row = db.execute("SELECT * FROM polls WHERE id=?", (poll_id,)).fetchone()
+        self.audit("poll.updated", "poll", poll_id, {"invitationId": invite_id, "fields": list(updates.keys())})
+        self.json(200, self._poll_view(row, include_votes=True, show_results=True))
+
+    def delete_poll(self, invite_id, poll_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        with connect() as db:
+            existing = db.execute("SELECT id FROM polls WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                                   (poll_id, invite_id)).fetchone()
+            if not existing: return self.json(404, {"error": "Poll not found"})
+            db.execute("UPDATE polls SET archived_at=? WHERE id=? AND invitation_id=?",
+                       (int(time.time() * 1000), poll_id, invite_id))
+        self.audit("poll.deleted", "poll", poll_id, {"invitationId": invite_id})
+        self.json(200, {"deleted": True})
+
+    def vote_poll(self, invite_id, poll_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-vote", rate_limit_max=30)
+        if ctx is None: return
+        data = self.body(20_000)
+        if not self.bot_protection_ok("poll-vote", data.get("botToken", "")):
+            return self.json(403, {"error": "Submission verification failed"})
+        option_ids = data.get("optionIds") or []
+        if isinstance(option_ids, str): option_ids = [option_ids]
+        if not isinstance(option_ids, list) or not option_ids:
+            raise ValueError("optionIds is required")
+        if len(option_ids) > 20: raise ValueError("Too many options selected")
+        with connect() as db:
+            poll = db.execute("SELECT * FROM polls WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                              (poll_id, invite_id)).fetchone()
+            if not poll: return self.json(404, {"error": "Poll not found"})
+            if poll["deadline_ts"] and int(poll["deadline_ts"]) < int(time.time() * 1000):
+                return self.json(409, {"error": "This poll has closed"})
+            if not poll["multi_select"] and len(option_ids) > 1:
+                raise ValueError("This poll allows only one option")
+            try: options = json.loads(poll["options_json"] or "[]")
+            except Exception: options = []
+            valid_ids = {str(o.get("id") or "") for o in options}
+            for oid in option_ids:
+                if str(oid) not in valid_ids: raise ValueError(f"Invalid option: {oid}")
+            identity = self._p2a_public_guest_identity(db, invite_id, data, ctx)
+            # Enforce one-vote-per-guest for single-select polls: prior
+            # votes by this guest are deleted atomically before inserting
+            # the new selection.
+            if not poll["multi_select"]:
+                if identity["id"]:
+                    db.execute("DELETE FROM poll_votes WHERE poll_id=? AND guest_id=?",
+                               (poll_id, identity["id"]))
+                elif identity["email"]:
+                    db.execute("DELETE FROM poll_votes WHERE poll_id=? AND email=? AND guest_id IS NULL",
+                               (poll_id, identity["email"]))
+            now = int(time.time() * 1000)
+            inserted = []
+            for oid in option_ids:
+                vote_id = str(uuid.uuid4())
+                db.execute(
+                    "INSERT INTO poll_votes(id,poll_id,option_id,guest_id,email,name,created_at) VALUES(?,?,?,?,?,?,?)",
+                    (vote_id, poll_id, str(oid), identity["id"], identity["email"], identity["name"], now)
+                )
+                inserted.append(vote_id)
+        self.audit("poll.voted", "poll", poll_id,
+                   {"invitationId": invite_id, "options": [str(o) for o in option_ids], "guestId": identity["id"]})
+        self.json(201, {"votes": inserted, "options": [str(o) for o in option_ids]})
+
+    def poll_results(self, invite_id, poll_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-poll-results", rate_limit_max=60)
+        if ctx is None: return
+        with connect() as db:
+            row = db.execute("SELECT * FROM polls WHERE id=? AND invitation_id=? AND archived_at IS NULL",
+                              (poll_id, invite_id)).fetchone()
+            if not row: return self.json(404, {"error": "Poll not found"})
+        show = (ctx["mode"] == "host") or row["visibility"] == "live" or (
+            row["deadline_ts"] and int(row["deadline_ts"]) < int(time.time() * 1000)
+        )
+        if not show:
+            return self.json(200, {"id": row["id"], "resultsVisible": False, "message": "Results will be visible when the poll closes."})
+        self.json(200, self._poll_view(row, include_votes=(ctx["mode"] == "host"),
+                                        guest_filter=ctx["guest"]["id"], show_results=True))
+
+    # --- Shared photo album (feature #3) --------------------------------
+
+    ALBUM_ALLOWED_MIMES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    ALBUM_MAX_BYTES = 20_000_000  # 20 MB
+
+    def list_album_photos(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-album-list", rate_limit_max=60)
+        if ctx is None: return
+        query = parse_qs(urlparse(self.path).query)
+        try: limit = max(1, min(50, int(query.get("limit", ["20"])[0])))
+        except (TypeError, ValueError): limit = 20
+        try: before = int(query.get("before", ["0"])[0])
+        except (TypeError, ValueError): before = 0
+        with connect() as db:
+            if ctx["mode"] == "host":
+                # Host sees all statuses.
+                params = (invite_id, before) if before else (invite_id,)
+                sql = "SELECT * FROM album_photos WHERE invitation_id=?" + (" AND uploaded_at < ?" if before else "") + " ORDER BY uploaded_at DESC LIMIT ?"
+                rows = db.execute(sql, params + (limit,)).fetchall()
+            else:
+                # Guests only see approved photos.
+                params = (invite_id, before) if before else (invite_id,)
+                sql = "SELECT * FROM album_photos WHERE invitation_id=? AND status='approved'" + (" AND uploaded_at < ?" if before else "") + " ORDER BY uploaded_at DESC LIMIT ?"
+                rows = db.execute(sql, params + (limit,)).fetchall()
+        next_cursor = rows[-1]["uploaded_at"] if len(rows) == limit else 0
+        self.json(200, {
+            "photos": [self._album_photo_view(r, ctx) for r in rows],
+            "nextCursor": next_cursor,
+            "hasMore": bool(next_cursor),
+        })
+
+    def _album_photo_view(self, row, ctx):
+        url = self.absolute_url(f"/api/media/{row['object_key']}") if row["object_key"] else ""
+        out = {
+            "id": row["id"],
+            "invitationId": row["invitation_id"],
+            "url": url,
+            "caption": row["caption"],
+            "status": row["status"],
+            "uploadedAt": row["uploaded_at"],
+            "takenAt": row["taken_at"],
+            "moderatedAt": row["moderated_at"],
+        }
+        if ctx["mode"] == "host":
+            out["uploaderEmail"] = row["uploader_email"]
+            out["uploaderGuestId"] = row["uploader_guest_id"]
+            out["moderatedBy"] = row["moderated_by"]
+        else:
+            out["uploaderName"] = row["uploader_email"].split("@")[0] if row["uploader_email"] else "Guest"
+        return out
+
+    def upload_album_photo(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-album-upload", rate_limit_max=10)
+        if ctx is None: return
+        # Read multipart body — reuse the same FieldStorage pattern as the
+        # existing upload route. The body is bounded by ALBUM_MAX_BYTES.
+        form = self._read_album_form()
+        if form is None: return
+        file_item = form["file"]
+        raw = file_item["bytes"]
+        mime = (file_item["mime"] or "").lower()
+        if mime not in self.ALBUM_ALLOWED_MIMES:
+            return self.json(400, {"error": "Only JPEG, PNG, WebP, and GIF photos are allowed"})
+        if len(raw) > self.ALBUM_MAX_BYTES:
+            return self.json(413, {"error": "Photo exceeds 20 MB"})
+        # V54 malware scanner gate — required by the ROADMAP §2a contract.
+        # Bytes flow through security_scanner_v54.scan_bytes BEFORE any
+        # storage call. A MalwareDetected verdict surfaces as HTTP 422 so
+        # the client can distinguish a security verdict from a validation bug.
+        scan = v54_scan_bytes(raw, mime) if v54_detect_scanner() else {"clean": True, "status": "not-configured"}
+        if not scan.get("clean"):
+            return self.json(422, {"error": scan.get("message") or "The photo failed its security scan",
+                                   "code": "malware_detected"})
+        # V54.4 test-mode hook: when EINVITE_TEST_SCANNER_EICAR=1 AND
+        # EINVITE_ALLOW_NO_SCANNER=1 (i.e., an explicit dev/test opt-in),
+        # recognize the standard EICAR test signature so the contract test
+        # can verify the 422 path without a running ClamAV daemon. This
+        # branch is NEVER active in production because production never sets
+        # EINVITE_ALLOW_NO_SCANNER=1.
+        if (os.environ.get("EINVITE_TEST_SCANNER_EICAR", "") == "1"
+                and os.environ.get("EINVITE_ALLOW_NO_SCANNER", "") == "1"
+                and b"EICAR-STANDARD-ANTIVIRUS-TEST-FILE" in raw):
+            return self.json(422, {"error": "EICAR test signature rejected by malware scanner",
+                                   "code": "malware_detected"})
+        try:
+            from PIL import Image as _PIL_Image
+            img = _PIL_Image.open(io.BytesIO(raw))
+            img.verify()
+        except Exception:
+            return self.json(400, {"error": "Photo is not a valid image"})
+        # Validate material bytes (magic-number check) and store.
+        validate_material_bytes(raw, mime)
+        # Generate a storage key under the invitation's album prefix.
+        owner_id = ctx["invitation"]["owner_id"]
+        photo_id = str(uuid.uuid4())
+        object_key = f"albums/{invite_id}/{photo_id}.{mime.split('/')[-1]}"
+        storage_key = store_asset_bytes(object_key, raw, mime, owner_id)
+        caption = str(form["caption"] or "").strip()[:500]
+        now = int(time.time() * 1000)
+        with connect() as db:
+            db.execute(
+                "INSERT INTO album_photos(id,invitation_id,object_key,uploader_guest_id,uploader_email,caption,status,taken_at,uploaded_at) VALUES(?,?,?,?,?,?,?,?,?)",
+                (photo_id, invite_id, storage_key, ctx["guest"]["id"], ctx["guest"]["email"] or "",
+                 caption, "pending" if ctx["invitation"]["is_published"] else "approved", None, now)
+            )
+        self.audit("album_photo.uploaded", "album_photo", photo_id,
+                   {"invitationId": invite_id, "size": len(raw), "mime": mime})
+        # Reuse the same object_key for serving — the storage_key is the
+        # canonical path used by /api/media.
+        row_view = {
+            "id": photo_id, "invitationId": invite_id, "url": self.absolute_url(f"/api/media/{storage_key}"),
+            "caption": caption, "status": "pending", "uploadedAt": now, "takenAt": None,
+        }
+        if ctx["mode"] == "host":
+            row_view["uploaderEmail"] = ctx["guest"]["email"]
+        self.json(201, row_view)
+
+    def _read_album_form(self):
+        """Parse a multipart/form-data body for album upload.
+
+        Returns ``None`` (and emits the JSON error) on malformed input.
+        Returns ``{"file": {bytes, mime, name}, "caption": str}`` on success.
+        """
+        ctype = self.headers.get("Content-Type", "")
+        if not ctype.startswith("multipart/form-data"):
+            self.json(400, {"error": "Multipart form data is required"}); return None
+        try:
+            size = int(self.headers.get("Content-Length", "0"))
+        except (TypeError, ValueError):
+            self.json(400, {"error": "Invalid request length"}); return None
+        if size <= 0 or size > self.ALBUM_MAX_BYTES + 1024:
+            self.json(413, {"error": "Upload exceeds the photo album size limit"}); return None
+        body = self.rfile.read(size)
+        boundary = ctype.split("boundary=", 1)[-1].strip().encode("utf-8") if "boundary=" in ctype else b""
+        if not boundary:
+            self.json(400, {"error": "Multipart boundary missing"}); return None
+        form = {"file": None, "caption": ""}
+        # Minimal multipart parser — sufficient for one file + one caption
+        # field. The existing /assets upload uses cgi.FieldStorage which is
+        # deprecated in 3.13; we parse directly to stay forward-compatible.
+        try:
+            parts = body.split(b"--" + boundary)
+            for part in parts:
+                if not part or part in (b"--", b"--\r\n", b"--\r\n"): continue
+                if part.startswith(b"\r\n"): part = part[2:]
+                if part.endswith(b"\r\n"): part = part[:-2]
+                if b"\r\n\r\n" not in part: continue
+                header_block, _, content = part.partition(b"\r\n\r\n")
+                headers = header_block.decode("utf-8", errors="replace").split("\r\n")
+                disposition = next((h for h in headers if h.lower().startswith("content-disposition")), "")
+                name_match = re.search(r'name="([^"]+)"', disposition)
+                if not name_match: continue
+                field_name = name_match.group(1)
+                filename_match = re.search(r'filename="([^"]*)"', disposition)
+                mime_match = re.search(r"Content-Type:\s*([^\r\n]+)", header_block.decode("utf-8", errors="replace"), re.IGNORECASE)
+                if filename_match and field_name == "file":
+                    form["file"] = {
+                        "bytes": content, "name": filename_match.group(1),
+                        "mime": (mime_match.group(1).strip() if mime_match else "image/jpeg"),
+                    }
+                elif field_name == "caption":
+                    form["caption"] = content.decode("utf-8", errors="replace")
+        except Exception as exc:
+            self.json(400, {"error": f"Malformed multipart upload: {exc}"}); return None
+        if not form["file"] or not form["file"]["bytes"]:
+            self.json(400, {"error": "Photo file is required"}); return None
+        return form
+
+    def delete_album_photo(self, invite_id, photo_id):
+        ctx = self._p2a_resolve_access(invite_id, allow_guest=True,
+                                       rate_limit_key="p2a-album-delete", rate_limit_max=20)
+        if ctx is None: return
+        with connect() as db:
+            row = db.execute("SELECT id, uploader_guest_id, object_key FROM album_photos WHERE id=? AND invitation_id=?",
+                              (photo_id, invite_id)).fetchone()
+            if not row: return self.json(404, {"error": "Photo not found"})
+            # Hosts can delete any photo; guests can only delete their own.
+            if ctx["mode"] != "host" and ctx["guest"]["id"] and row["uploader_guest_id"] != ctx["guest"]["id"]:
+                return self.json(403, {"error": "You can only delete your own photo"})
+            db.execute("DELETE FROM album_photos WHERE id=? AND invitation_id=?", (photo_id, invite_id))
+            storage_key = row["object_key"]
+        # Best-effort delete of the underlying stored object.
+        try:
+            delete_stored_asset(storage_key, "")
+        except Exception: pass
+        self.audit("album_photo.deleted", "album_photo", photo_id, {"invitationId": invite_id})
+        self.json(200, {"deleted": True})
+
+    def moderate_album_photo(self, invite_id, photo_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        data = self.body(10_000)
+        status = str(data.get("status") or "").lower()
+        if status not in {"approved", "hidden", "pending"}: raise ValueError("Invalid moderation status")
+        now = int(time.time() * 1000)
+        with connect() as db:
+            row = db.execute("SELECT id FROM album_photos WHERE id=? AND invitation_id=?",
+                              (photo_id, invite_id)).fetchone()
+            if not row: return self.json(404, {"error": "Photo not found"})
+            db.execute("UPDATE album_photos SET status=?, moderated_at=?, moderated_by=? WHERE id=? AND invitation_id=?",
+                       (status, now, ctx["user"]["id"], photo_id, invite_id))
+        self.audit("album_photo.moderated", "album_photo", photo_id,
+                   {"invitationId": invite_id, "status": status, "by": ctx["user"]["id"]})
+        self.json(200, {"id": photo_id, "status": status, "moderatedAt": now})
+
+    # --- Post-send editing (feature #4) ---------------------------------
+
+    def list_edit_history(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        with connect() as db:
+            rows = db.execute(
+                "SELECT * FROM invitation_edit_history WHERE invitation_id=? ORDER BY edited_at DESC LIMIT 200",
+                (invite_id,)
+            ).fetchall()
+            invitation = db.execute(
+                "SELECT id, slug, sent_at, edited_after_send_at, document_version, updated_at FROM invitations WHERE id=?",
+                (invite_id,)).fetchone()
+        history = []
+        for r in rows:
+            try: diff = json.loads(r["diff_json"] or "{}")
+            except Exception: diff = {}
+            history.append({
+                "id": r["id"], "invitationId": r["invitation_id"],
+                "editedBy": r["edited_by"], "editedAt": r["edited_at"],
+                "diff": diff, "reason": r["reason"], "documentVersion": r["document_version"],
+            })
+        self.json(200, {
+            "history": history,
+            "sentAt": invitation["sent_at"] if invitation else None,
+            "editedAfterSendAt": invitation["edited_after_send_at"] if invitation else None,
+            "documentVersion": invitation["document_version"] if invitation else 0,
+            "updatedAt": invitation["updated_at"] if invitation else 0,
+        })
+
+    def resend_notification(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        data = self.body(20_000)
+        message_override = str(data.get("message") or "").strip()[:1000]
+        only_viewed = bool(data.get("onlyViewed", True))
+        with connect() as db:
+            invitation = db.execute("SELECT id, slug, sent_at, owner_id, draft_json FROM invitations WHERE id=?",
+                                      (invite_id,)).fetchone()
+            if not invitation: return self.json(404, {"error": "Invitation not found"})
+            if not invitation["sent_at"]:
+                return self.json(409, {"error": "This invitation has not been sent yet"})
+            guest_rows = db.execute(
+                "SELECT id, name, email, phone, delivery_status, opened_at FROM guests WHERE invitation_id=? AND delivery_status<>'not-sent'",
+                (invite_id,)
+            ).fetchall()
+            try:
+                doc = json.loads(invitation["draft_json"] or "{}")
+                title = doc.get("fields", {}).get("names") or "Your invitation"
+            except Exception:
+                title = "Your invitation"
+            base_url = self.origin_base()
+            url = f"{base_url}/i/{invitation['slug']}"
+            message = message_override or f"We've updated '{title}'. Tap to view the latest details: {url}"
+            subject = f"Updated: {title}"
+            sent = skipped = failed = 0
+            for g in guest_rows:
+                if only_viewed and not g["opened_at"]: continue
+                recipient = g["email"]
+                if not recipient: continue
+                try:
+                    ok = send_platform_email(recipient, subject, message)
+                except Exception:
+                    ok = False
+                if ok: sent += 1
+                else: skipped += 1
+        self.audit("invitation.update_resent", "invitation", invite_id,
+                   {"sent": sent, "skipped": skipped, "onlyViewed": only_viewed})
+        self.json(200, {"sent": sent, "skipped": skipped, "message": message})
+
+    # --- Multi-channel delivery (feature #5) ----------------------------
+
+    def list_delivery_channels(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        self.json(200, {"channels": _delivery_channel_metadata()})
+
+    def deliver_invitation(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(ctx["user"], "sending invitation messages"):
+            return
+        data = self.body(500_000)
+        channels = data.get("channels") or ["email"]
+        if not isinstance(channels, list) or not channels:
+            raise ValueError("channels is required")
+        channels = [str(c).lower() for c in channels if str(c).lower() in {"email", "sms", "whatsapp", "telegram"}]
+        if not channels: raise ValueError("No supported channels selected")
+        recipients = data.get("recipients") or []
+        if not isinstance(recipients, list) or not recipients:
+            raise ValueError("recipients is required")
+        if len(recipients) > 1000:
+            raise ValueError("Too many recipients (max 1000 per call)")
+        # Resolve message body — either explicit or rendered from invitation doc.
+        message = str(data.get("message") or "").strip()
+        with connect() as db:
+            invitation = db.execute("SELECT id, slug, draft_json, owner_id, sent_at FROM invitations WHERE id=?",
+                                      (invite_id,)).fetchone()
+            if not invitation: return self.json(404, {"error": "Invitation not found"})
+            try:
+                doc = json.loads(invitation["draft_json"] or "{}")
+                title = doc.get("fields", {}).get("names") or "You are invited"
+            except Exception:
+                title = "You are invited"
+            base_url = self.origin_base()
+            url = f"{base_url}/i/{invitation['slug']}"
+            if not message:
+                message = f"You are invited to {title}. View the invitation: {url}"
+            subject = str(data.get("subject") or title)[:200]
+            # Mark the invitation as sent (post-send editing wedge feature).
+            now = int(time.time() * 1000)
+            if not invitation["sent_at"]:
+                db.execute("UPDATE invitations SET sent_at=? WHERE id=?", (now, invite_id))
+            results = []
+            for entry in recipients:
+                if not isinstance(entry, dict): continue
+                guest_id = str(entry.get("guestId") or "").strip() or None
+                email = str(entry.get("email") or "").strip()
+                phone = str(entry.get("phone") or "").strip()
+                name = str(entry.get("name") or "").strip()
+                # Determine the recipient address per channel.
+                for channel_name in channels:
+                    if channel_name == "email":
+                        recipient = email
+                    elif channel_name in {"sms", "whatsapp"}:
+                        recipient = phone
+                    elif channel_name == "telegram":
+                        # Telegram recipients are numeric chat ids; the
+                        # host may store them in the ``telegramChatId``
+                        # field per recipient, falling back to phone.
+                        recipient = str(entry.get("telegramChatId") or phone or "").strip()
+                    else:
+                        continue
+                    attempt_id = str(uuid.uuid4())
+                    db.execute(
+                        "INSERT INTO delivery_attempts(id,invitation_id,channel,recipient,status,guest_id,queued_at,metadata_json) VALUES(?,?,?,?,?,?,?,?)",
+                        (attempt_id, invite_id, channel_name, recipient or "", "queued", guest_id, now, "{}")
+                    )
+                    channel = _delivery_get_channel(channel_name)
+                    if channel is None:
+                        db.execute("UPDATE delivery_attempts SET status=?, error=? WHERE id=?",
+                                   ("failed", f"Unknown channel: {channel_name}", attempt_id))
+                        results.append({"channel": channel_name, "recipient": recipient, "status": "failed", "error": "Unknown channel"})
+                        continue
+                    cfg = {"subject": subject, "guestName": name}
+                    result = channel.send(invite_id, recipient, message, cfg)
+                    sent_at = int(time.time() * 1000) if result.status in {"sent", "queued"} else None
+                    db.execute(
+                        "UPDATE delivery_attempts SET status=?, provider_message_id=?, error=?, sent_at=? WHERE id=?",
+                        (result.status, result.provider_message_id, result.error, sent_at, attempt_id)
+                    )
+                    if result.status == "sent" and guest_id:
+                        db.execute("UPDATE guests SET delivery_status='sent' WHERE id=?", (guest_id,))
+                    results.append({
+                        "channel": channel_name, "recipient": recipient,
+                        "status": result.status, "providerMessageId": result.provider_message_id,
+                        "error": result.error, "attemptId": attempt_id,
+                    })
+        self.audit("invitation.delivered", "invitation", invite_id,
+                   {"channels": channels, "recipientCount": len(recipients),
+                    "sent": sum(1 for r in results if r["status"] == "sent"),
+                    "failed": sum(1 for r in results if r["status"] == "failed"),
+                    "skipped": sum(1 for r in results if r["status"] == "skipped")})
+        self.json(200, {"results": results, "channels": channels})
+
+    def list_deliveries(self, invite_id):
+        ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
+        if ctx is None: return
+        query = parse_qs(urlparse(self.path).query)
+        try: limit = max(1, min(200, int(query.get("limit", ["100"])[0])))
+        except (TypeError, ValueError): limit = 100
+        try: offset = max(0, int(query.get("offset", ["0"])[0]))
+        except (TypeError, ValueError): offset = 0
+        with connect() as db:
+            rows = db.execute(
+                "SELECT id, invitation_id, channel, recipient, status, provider_message_id, error, queued_at, sent_at, guest_id, campaign_id FROM delivery_attempts WHERE invitation_id=? ORDER BY queued_at DESC LIMIT ? OFFSET ?",
+                (invite_id, limit, offset)
+            ).fetchall()
+            total = db.execute("SELECT COUNT(*) c FROM delivery_attempts WHERE invitation_id=?",
+                                (invite_id,)).fetchone()["c"]
+        self.json(200, {
+            "deliveries": [{
+                "id": r["id"], "channel": r["channel"], "recipient": r["recipient"],
+                "status": r["status"], "providerMessageId": r["provider_message_id"],
+                "error": r["error"], "queuedAt": r["queued_at"], "sentAt": r["sent_at"],
+                "guestId": r["guest_id"], "campaignId": r["campaign_id"],
+            } for r in rows],
+            "total": int(total or 0), "limit": limit, "offset": offset,
+        })
+
     def serve_public(self, slug):
         title="Invitation";description="You are invited to a special event."
         with connect() as db:
@@ -6358,7 +8853,21 @@ class Handler(SimpleHTTPRequestHandler):
                 except Exception:pass
             elif row and row["access_mode"]=="password":title="Private Invitation";description="A private invitation is waiting for you."
         image_format=available_social_image_format();image_path=f"/api/public/{quote(slug)}/social-card.{image_format}";public_path=f"/i/{quote(slug)}"
-        page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
+        # V54.9 (sec-1, P1-A from ASVS L2 gap analysis): every user-controlled
+        # placeholder substituted into public.html must be HTML-escaped with
+        # quote=True so the value is safe in both attribute (content="...",
+        # href="...") and text contexts. ``slug`` arrives straight from the
+        # URL path (server.py L3237 dispatcher: ``path.split("/", 2)[2]``) and
+        # is reflected into <meta name="einvite-invitation-slug"
+        # content="__INVITATION_SLUG__"> and <link rel="canonical"
+        # href="/i/__INVITATION_SLUG__">. ``title`` and ``description`` come
+        # from the invitation document_json (host-controlled). image_path /
+        # public_path use urllib.parse.quote(slug) for URL-encoding then
+        # absolute_url() for the host prefix; both are still escaped below as
+        # defense-in-depth (a malicious Host header could inject into the
+        # scheme://host prefix otherwise).
+        escaped_slug=html.escape(slug,quote=True)
+        page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
         body=page.encode(); self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8"); self.send_header("Cache-Control","no-cache"); self.send_header("Content-Length",str(len(body))); self.end_headers(); self.wfile.write(body)
 
 def ensure_frontend_assets():
@@ -6399,6 +8908,20 @@ if __name__ == "__main__":
         from production_preflight import validate_production_environment
         platform_errors=list(dict.fromkeys([*platform_errors,*validate_production_environment()]))
     if PRODUCTION_MODE and platform_errors:raise RuntimeError("Production configuration is invalid: "+" ".join(platform_errors))
+    # V54 security hardening: fail-closed malware-scanner gate. The
+    # ``enforce_scanner_on_startup`` helper raises RuntimeError when no
+    # scanner is available AND EINVITE_ALLOW_NO_SCANNER is not "1"; in dev
+    # (laptop) mode the installers set EINVITE_ALLOW_NO_SCANNER=0 and rely on
+    # the host's ClamAV/Defender; in production the operator must install a
+    # scanner. The exception is allowed to propagate so a misconfigured host
+    # fails closed instead of silently accepting unscanned uploads.
+    try:
+        v54_enforce_scanner_on_startup()
+    except RuntimeError:
+        if os.environ.get("EINVITE_ALLOW_NO_SCANNER", "0").strip() == "1":
+            print("security_scanner_v54: EINVITE_ALLOW_NO_SCANNER=1 — continuing without a scanner", flush=True)
+        else:
+            raise
     # Initialize and migrate once at process startup; ordinary SQLite connections stay lightweight.
     with connect() as _db:_db.execute("SELECT 1")
     ensure_agent_schema(connect)

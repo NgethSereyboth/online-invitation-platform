@@ -1,11 +1,13 @@
 {
   "earlyScripts": [
+    "core/safe-dom.js",
     "backend-mode-v14.js",
     "theme-init.js"
   ],
   "pages": {
     "account.html": {
       "scripts": [
+        "core/safe-dom.js",
         "ui-dialogs.js",
         "account.js",
         "account-security-v13.js",
@@ -136,7 +138,12 @@
         "ux-refine.js",
         "final-polish.js",
         "dashboard-empty-state.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "delivery-dialog.js",
+        "invitation-edit-history.js",
+        "host-signup-sheets.js",
+        "host-polls.js",
+        "toast.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -155,7 +162,8 @@
         "dashboard-empty-state.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "guest-features-v54_1.css"
       ]
     },
     "designer.html": {
@@ -261,9 +269,11 @@
         "timeline-v13.js",
         "product-operations-v13.js",
         "mobile-editor-v14.js",
-        "windows-ui-v16.js",
         "professional-editor-v17.js",
-        "editor-responsive-contract-v27.js"
+        "editor-responsive-contract-v27.js",
+        "editor/editor-core.js",
+        "editor/ui-layout.js",
+        "editor/ui-components.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -299,12 +309,12 @@
         "timeline-v13.css",
         "product-operations-v13.css",
         "stabilized-v14.css",
-        "windows-ui-v16.css",
         "editor-ux-refinement-v0_52.css",
         "professional-editor-v17.css",
         "zoom-layout-v22.css",
         "graphics-runtime-v22.css",
-        "editor-responsive-contract-v27.css"
+        "editor-responsive-contract-v27.css",
+        "editor/editor-styles.css"
       ]
     },
     "materials.html": {
@@ -363,6 +373,10 @@
         "guest-layouts.js",
         "public-share-panel.js",
         "guest-journey.js",
+        "signup-sheets.js",
+        "polls.js",
+        "album.js",
+        "invitation-edit-history.js",
         "public-page.js",
         "ux-refine.js"
       ],
@@ -372,7 +386,8 @@
         "styles.css",
         "opening-scenes.css",
         "guest-layouts.css",
-        "guest-journey.css"
+        "guest-journey.css",
+        "guest-features-v54_1.css"
       ]
     },
     "reset.html": {

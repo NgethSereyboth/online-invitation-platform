@@ -1,0 +1,303 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:2614108c-7cc6-4917-8954-94e8bdb62e09",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-09-15T04:57:46Z",
+    "tools": [
+      {
+        "vendor": "eInvite",
+        "name": "generate-sbom.py",
+        "version": "1.0.0"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "pkg:generic/einvite-platform",
+      "name": "einvite-platform",
+      "version": "v54"
+    },
+    "properties": [
+      {
+        "name": "einvite:requirements-source",
+        "value": "docs/requirements-production.txt"
+      },
+      {
+        "name": "einvite:pypi-resolved",
+        "value": "true"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/boto3@1.43.94",
+      "name": "boto3",
+      "version": "1.43.94",
+      "purl": "pkg:pypi/boto3@1.43.94",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2534bf331acd2f448b9cf8317f4eed453c65d9e0b7de254e77c99d390ac57aec"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/ab/7a/046ba99f6bac067e73272930ba806f2860c50495b8f271f5fb2363f69d2b/boto3-1.43.94-py3-none-any.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/boto/boto3"
+        }
+      ],
+      "description": "The AWS SDK for Python",
+      "licenses": [
+        {
+          "license": {
+            "id": "Apache-2.0"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/psycopg@3.3.5",
+      "name": "psycopg",
+      "version": "3.3.5",
+      "purl": "pkg:pypi/psycopg@3.3.5",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ce5aa5cdb4f9379f00f487590e5890bfa7df9a164648c969ffa628505e21af4e"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/3d/2e/d0a645bcaadde68bd6d93c43f02f14b0191bdda367ce3f7722abe3da744a/psycopg-3.3.5-py3-none-any.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://pypi.org/project/psycopg/"
+        }
+      ],
+      "description": "PostgreSQL database adapter for Python"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/redis@8.1.0",
+      "name": "redis",
+      "version": "8.1.0",
+      "purl": "pkg:pypi/redis@8.1.0",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a4fe1aac3d3b3cc791d4b3d5931c5a956045dc951ee74d1c913ee3ac4d2ee9fb"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/66/9d/c5731f6e3608663d4d3656fd8d3aecee8b509c3082818f5a13eae925baea/redis-8.1.0-py3-none-any.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://pypi.org/project/redis/"
+        }
+      ],
+      "description": "Python client for Redis database and key-value store"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/qrcode@8.2",
+      "name": "qrcode",
+      "version": "8.2",
+      "purl": "pkg:pypi/qrcode@8.2",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "16e64e0716c14960108e85d853062c9e8bba5ca8252c0b4d0231b9df4060ff4f"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/dd/b8/d2d6d731733f51684bbf76bf34dab3b70a9148e8f2cef2bb544fccec681a/qrcode-8.2-py3-none-any.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/lincolnloop/python-qrcode"
+        }
+      ],
+      "description": "QR Code image generator",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/pillow@12.3.0",
+      "name": "pillow",
+      "version": "12.3.0",
+      "purl": "pkg:pypi/pillow@12.3.0",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6c0016e7b354317c4e9e525b937ac8596c38d2d232b419529b9cd7a1cd46e39a"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/25/c2/669d88644cddb1485bd9534e63e8cf476c8e51cb3c3a1297677023505c0e/pillow-12.3.0-cp310-cp310-macosx_10_10_x86_64.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://pypi.org/project/pillow/"
+        }
+      ],
+      "description": "Python Imaging Library (fork)"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/argon2-cffi@25.1.0",
+      "name": "argon2-cffi",
+      "version": "25.1.0",
+      "purl": "pkg:pypi/argon2-cffi@25.1.0",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fdc8b074db390fccb6eb4a3604ae7231f219aa669a2652e0f20e16ba513d5741"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/4f/d3/a8b22fa575b297cd6e3e3b0155c7e25db170edf1c74783d6a31a2490b8d9/argon2_cffi-25.1.0-py3-none-any.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://pypi.org/project/argon2-cffi/"
+        }
+      ],
+      "description": "Argon2 for Python"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/cryptography@50.0.1",
+      "name": "cryptography",
+      "version": "50.0.1",
+      "purl": "pkg:pypi/cryptography@50.0.1",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/ba/19/797e2aaac9df6a66f1550f49979dc1b1e39ecd2077501c30efa81e8d5d67/cryptography-50.0.1-cp311-abi3-macosx_11_0_arm64.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://pypi.org/project/cryptography/"
+        }
+      ],
+      "description": "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/fonttools@4.65.0",
+      "name": "fonttools",
+      "version": "4.65.0",
+      "purl": "pkg:pypi/fonttools@4.65.0",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "93a73af2075036d36d7fbf856779c56a1b3b86ffcdae6abede7596604c42c156"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/53/d9/1caaa015dd207da7ccd3feba87289997bd88334ea3e74a367cdc7b0e50a3/fonttools-4.65.0-cp310-cp310-macosx_10_9_universal2.whl"
+        },
+        {
+          "type": "website",
+          "url": "http://github.com/fonttools/fonttools"
+        }
+      ],
+      "description": "Tools to manipulate font files",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/brotli@1.2.0",
+      "name": "brotli",
+      "version": "1.2.0",
+      "purl": "pkg:pypi/brotli@1.2.0",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "99cfa69813d79492f0e5d52a20fd18395bc82e671d5d40bd5a91d13e75e468e8"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/18/53/e89399a54323d1606abf616fdc053139eff83a16f7641a40b0fb9e838e67/brotli-1.2.0-cp27-cp27m-macosx_10_9_x86_64.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/google/brotli"
+        }
+      ],
+      "description": "Python bindings for the Brotli compression library",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:generic/einvite-platform",
+      "dependsOn": [
+        "pkg:pypi/boto3@1.43.94",
+        "pkg:pypi/psycopg@3.3.5",
+        "pkg:pypi/redis@8.1.0",
+        "pkg:pypi/qrcode@8.2",
+        "pkg:pypi/pillow@12.3.0",
+        "pkg:pypi/argon2-cffi@25.1.0",
+        "pkg:pypi/cryptography@50.0.1",
+        "pkg:pypi/fonttools@4.65.0",
+        "pkg:pypi/brotli@1.2.0"
+      ]
+    }
+  ]
+}
