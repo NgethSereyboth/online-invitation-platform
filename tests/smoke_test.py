@@ -94,6 +94,9 @@ def run() -> None:
             "EINVITE_DATA_DIR": data_dir,
             "EINVITE_ADMIN_EMAIL": admin_email,
             "EINVITE_DEV_AUTH_TOKENS": "1",
+            "EINVITE_MALWARE_SCANNER_COMMAND": "",
+            "EINVITE_MALWARE_SCANNER_MODE": "",
+            "EINVITE_REQUIRE_MALWARE_SCAN": "0",
         }
         process = subprocess.Popen(
             [sys.executable, "-u", str(ROOT / "server.py"), "--host", "127.0.0.1", "--port", str(port)],

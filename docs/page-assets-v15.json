@@ -1,7 +1,7 @@
 {
   "pages": {
     "account.html": {
-      "bytes": 297505,
+      "bytes": 295767,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 289815,
+      "bytes": 288077,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -27,7 +27,7 @@
       ]
     },
     "analytics.html": {
-      "bytes": 289413,
+      "bytes": 287675,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -40,7 +40,7 @@
       ]
     },
     "billing.html": {
-      "bytes": 287003,
+      "bytes": 285265,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -53,7 +53,7 @@
       ]
     },
     "checkin.html": {
-      "bytes": 96378,
+      "bytes": 94640,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -66,12 +66,11 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 577892,
+      "bytes": 576323,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
-        "/vendor/yjs/lib0.js",
         "bundle-dashboard-v15.js"
       ],
       "styleCount": 2,
@@ -81,12 +80,11 @@
       ]
     },
     "designer.html": {
-      "bytes": 308159,
+      "bytes": 306421,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
-        "/vendor/yjs/lib0.js",
         "bundle-designer-v15.js"
       ],
       "styleCount": 1,
@@ -95,7 +93,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 297750,
+      "bytes": 296012,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -108,10 +106,10 @@
       ]
     },
     "index.html": {
-      "bytes": 1530908,
+      "bytes": 1530969,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-index-v15.js"
       ],
@@ -121,10 +119,10 @@
       ]
     },
     "materials.html": {
-      "bytes": 364577,
+      "bytes": 364638,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-materials-v15.js"
       ],
@@ -134,10 +132,10 @@
       ]
     },
     "privacy.html": {
-      "bytes": 100668,
+      "bytes": 100703,
       "scriptCount": 1,
       "scripts": [
-        "theme-init.js"
+        "core/theme.js"
       ],
       "styleCount": 1,
       "styles": [
@@ -156,7 +154,7 @@
       ]
     },
     "reset.html": {
-      "bytes": 278894,
+      "bytes": 277156,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -169,7 +167,7 @@
       ]
     },
     "responses.html": {
-      "bytes": 293329,
+      "bytes": 291591,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -182,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 329990,
+      "bytes": 328252,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -195,7 +193,7 @@
       ]
     },
     "verify.html": {
-      "bytes": 277712,
+      "bytes": 275974,
       "scriptCount": 3,
       "scripts": [
         "theme-init.js",
@@ -230,7 +228,8 @@
         "bundle-admin-v15.js",
         "bundle-billing-v15.js",
         "bundle-verify-v15.js",
-        "bundle-reset-v15.js"
+        "bundle-reset-v15.js",
+        "core/theme.js"
       ],
       "styles": [
         "bundle-account-v15.css",
@@ -253,7 +252,6 @@
       "scripts": [
         "theme-init.js",
         "backend-mode-v14.js",
-        "/vendor/yjs/lib0.js",
         "bundle-dashboard-v15.js"
       ],
       "styles": [
@@ -271,7 +269,7 @@
         "index.html"
       ],
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-index-v15.js"
       ],
@@ -300,10 +298,10 @@
         "bundle-guests-v15.js",
         "bundle-responses-v15.js",
         "bundle-analytics-v15.js",
+        "core/theme.js",
         "bundle-materials-v15.js",
         "bundle-checkin-v15.js",
         "bundle-templates-v15.js",
-        "/vendor/yjs/lib0.js",
         "bundle-designer-v15.js"
       ],
       "styles": [

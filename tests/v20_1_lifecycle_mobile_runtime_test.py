@@ -21,7 +21,7 @@ def main():
   assert state['docW']<=391,state
   assert state['closedFocusable']==0 and not state['barVisible'],state
   assert state['handle']['w'] in ('9px','10px','12px','14px') or float(state['handle']['w'].replace('px','') or 0)<=14,state
-  assert 'inset:-18px' in (ROOT/'typography-system-v20.css').read_text(),state
+  assert 'inset:-18px' in (ROOT / "src" / "css" / "typography-system-v20.css").read_text(encoding='utf-8'),state
   assert state['canvas']>=250,state
   churn=page.evaluate("""()=>{let created=0,disconnected=0;const Old=window.ResizeObserver;window.ResizeObserver=class{constructor(){created++}observe(){}disconnect(){disconnected++}};const root=document.createElement('div');Object.assign(root.style,{width:'120px',height:'160px',position:'fixed',left:'-9999px'});document.body.append(root);const doc={typography:TypographyDocumentModel.defaultCatalog(),palette:{text:'#111',heading:'#222'},objects:{x:{type:'text',html:'Hello',textStyleId:'body',typographyModelVersion:1,fontPairing:'sans-modern',font:'noto-sans',fontSize:18,left:'0%',top:'0%',width:'100%',height:'80px'}},designPages:[]};const c1=EInviteTypographyRendererAdapters.renderThumbnail(root,doc,doc.objects,{width:390,height:844});c1.disconnect();root.replaceChildren();const c2=EInviteTypographyRendererAdapters.renderThumbnail(root,doc,doc.objects,{width:390,height:844});c2.disconnect();window.ResizeObserver=Old;root.remove();return{created,disconnected,children:root.childElementCount}}""")
   assert churn['created']==2 and churn['disconnected']==2,churn

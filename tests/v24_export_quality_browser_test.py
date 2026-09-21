@@ -11,11 +11,11 @@ def main()->int:
   browser=launch_chromium(p);page=browser.new_page(viewport={'width':1280,'height':900});errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000);page.wait_for_timeout(900)
-  page.add_style_tag(path=str(ROOT/'export-quality-v24.css'));page.add_script_tag(path=str(ROOT/'export-quality-v24.js'));page.wait_for_timeout(80)
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "organized" / "export-quality-v24.css"));page.add_script_tag(path=str(ROOT / "src" / "js" / "export-quality-v24.js"));page.wait_for_timeout(80)
   with page.expect_download(timeout=30000) as info:page.evaluate("()=>EInviteCommandRegistry.execute('export.currentSvg')")
   svg=Path(info.value.path());assert svg.read_text(errors='ignore').lstrip().startswith('<svg')
   with page.expect_download(timeout=30000) as info:page.evaluate("()=>EInviteCommandRegistry.execute('export.projectBackup')")
-  backup=Path(info.value.path()).read_text();assert '"schemaVersion": 24' in backup and '"document"' in backup
+  backup=Path(info.value.path()).read_text(encoding='utf-8');assert '"schemaVersion": 24' in backup and '"document"' in backup
   with page.expect_download(timeout=60000) as info:page.evaluate("()=>EInviteCommandRegistry.execute('export.allPng')")
   archive=Path(info.value.path());assert zipfile.is_zipfile(archive)
   with zipfile.ZipFile(archive) as z:

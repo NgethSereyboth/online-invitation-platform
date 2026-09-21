@@ -2,10 +2,11 @@
   "pages": {
     "account.html": {
       "javascript": "bundle-account-v15.js",
-      "scriptBytes": 74839,
-      "scriptSha256": "8d7a6745874fdb31c5d8b7c9ac02424bc9624f0c83372868ab8e4a854834d018",
+      "scriptBytes": 78168,
+      "scriptSha256": "60a316436f386a6bb1f0e1f959ae6793c9de0eaecfc71fdfeb357511253657b7",
       "sources": {
         "scripts": [
+          "core/safe-dom.js",
           "ui-dialogs.js",
           "account.js",
           "account-security-v13.js",
@@ -35,21 +36,12 @@
     },
     "admin.html": {
       "javascript": "bundle-admin-v15.js",
-      "scriptBytes": 126903,
-      "scriptSha256": "1be1ee456febc2e43a17a031798dd388dc220a966be5e6fa81781543cb38261e",
+      "scriptBytes": 70798,
+      "scriptSha256": "d52cf51eb471a16c7882fb8655eaeb4e18df7885b0203125d14ecbf424ee0e3e",
       "sources": {
         "scripts": [
           "ui-dialogs.js",
           "admin.js",
-          "pages/admin/admin.js",
-          "pages/admin/users.js",
-          "pages/admin/invitations.js",
-          "pages/admin/feature-flags.js",
-          "pages/admin/audit-log.js",
-          "pages/admin/system-health.js",
-          "pages/admin/bulk-operations.js",
-          "pages/admin/impersonate.js",
-          "pages/admin/reports.js",
           "modern-ui.js",
           "final-experience.js",
           "monitoring.js",
@@ -58,7 +50,6 @@
         "styles": [
           "styles.css",
           "admin-page-v13.css",
-          "pages/admin.css",
           "modern-ui.css",
           "compact-theme-v0_52.css",
           "final-experience.css",
@@ -72,20 +63,18 @@
           "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 219681,
-      "styleSha256": "f93493a37e6968092b865940b8ea9e589ddab6b1723ece0841630011668b0dfa",
+      "styleBytes": 215030,
+      "styleSha256": "8c77f8fb698e33538651e2efd47420630d4fb993b64e923448584e19e35ae328",
       "stylesheet": "bundle-admin-v15.css"
     },
     "analytics.html": {
       "javascript": "bundle-analytics-v15.js",
-      "scriptBytes": 104888,
-      "scriptSha256": "0540a28ffd59679332dc4f5177b8a84e0fcf6e2f7930af0593b8f6415b5fdd74",
+      "scriptBytes": 69483,
+      "scriptSha256": "dad50dfcce7f35bd5d69032733e67fd0e5c154630644a5e32beb281fb4e82a7a",
       "sources": {
         "scripts": [
           "ui-dialogs.js",
           "invitation-context.js",
-          "components/chart.js",
-          "pages/dashboard/analytics.js",
           "analytics.js",
           "modern-ui.js",
           "final-experience.js",
@@ -105,12 +94,11 @@
           "ux-refine.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css",
-          "pages/dashboard.css"
+          "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 221773,
-      "styleSha256": "a68585f9b6c1f4050e35807d8d549933343704ecd295ea6006844d8ba53d55bd",
+      "styleBytes": 215943,
+      "styleSha256": "ff8783aacb53a9b564f09234386d07407f350867eec5316e782452f312945939",
       "stylesheet": "bundle-analytics-v15.css"
     },
     "billing.html": {
@@ -194,7 +182,7 @@
           "invitation-edit-history.js",
           "host-signup-sheets.js",
           "host-polls.js",
-          "components/toast.js"
+          "toast.js"
         ],
         "styles": [
           "typography-fonts.css",
@@ -223,22 +211,15 @@
     },
     "designer.html": {
       "javascript": "bundle-designer-v15.js",
-      "scriptBytes": 166023,
-      "scriptSha256": "579cd5e24193e8a4c45bc1f03f80388a10933fd139480a67248ef5427a0354e3",
+      "scriptBytes": 61353,
+      "scriptSha256": "c28c65ad59bfb845681cbdec1f933e075630f3d7b2e394083a0d35658dff228c",
       "sources": {
         "scripts": [
           "ui-dialogs.js",
           "designer.js",
           "modern-ui.js",
           "final-experience.js",
-          "ux-refine.js",
-          "editor/chrome/layers.js",
-          "editor/chrome/pages.js",
-          "editor/chrome/command-palette.js",
-          "editor/chrome/shortcuts.js",
-          "editor/collab/presence.js",
-          "editor/collab/comments.js",
-          "editor/history/timeline.js"
+          "ux-refine.js"
         ],
         "styles": [
           "styles.css",
@@ -253,12 +234,11 @@
           "theme-hardening.css",
           "ux-refine.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css",
-          "editor/chrome.css"
+          "zoom-layout-pages-v22.css"
         ]
       },
-      "styleBytes": 256784,
-      "styleSha256": "f678110c121e803f0aceac4406e01ebbabc68a9629c24f8ca21723415deb0e5d",
+      "styleBytes": 242819,
+      "styleSha256": "49026bf85fb2f752ed3f500bad88dd52056d2ccbfe09acf7bb2b2ed6807d874b",
       "stylesheet": "bundle-designer-v15.css"
     },
     "guests.html": {
@@ -297,8 +277,8 @@
     },
     "index.html": {
       "javascript": "bundle-index-v15.js",
-      "scriptBytes": 1336474,
-      "scriptSha256": "c3860effea6dbd1d194128a4b99b2b1d6b711f59d7e43de89fc39cb5f03cd7f3",
+      "scriptBytes": 1097217,
+      "scriptSha256": "915624c9897f1c04c274caa712153c2149fccf1ef6a64b6ecffb52d83dc17761",
       "sources": {
         "scripts": [
           "runtime-lifecycle-v15.js",
@@ -356,25 +336,7 @@
           "editor-responsive-contract-v27.js",
           "editor/editor-core.js",
           "editor/ui-layout.js",
-          "editor/ui-components.js",
-          "editor/canvas/guides.js",
-          "editor/canvas/snapping.js",
-          "editor/canvas/selection.js",
-          "editor/canvas/viewport.js",
-          "editor/chrome/context-menu.js",
-          "editor/text/inline-editor.js",
-          "editor/text/effects.js",
-          "editor/text/typography.js",
-          "editor/media/crop.js",
-          "editor/media/filters.js",
-          "editor/media/image.js",
-          "editor/chrome/layers.js",
-          "editor/chrome/pages.js",
-          "editor/chrome/command-palette.js",
-          "editor/chrome/shortcuts.js",
-          "editor/collab/presence.js",
-          "editor/collab/comments.js",
-          "editor/history/timeline.js"
+          "editor/ui-components.js"
         ],
         "styles": [
           "typography-fonts.css",
@@ -415,13 +377,11 @@
           "zoom-layout-v22.css",
           "graphics-runtime-v22.css",
           "editor-responsive-contract-v27.css",
-          "editor/editor-styles.css",
-          "editor/canvas.css",
-          "editor/chrome.css"
+          "editor/editor-styles.css"
         ]
       },
-      "styleBytes": 453451,
-      "styleSha256": "4f96a0d9a26b740139a138c8e3d072b5d7d14f9d284e45d5a936cafc38b22c34",
+      "styleBytes": 429704,
+      "styleSha256": "0bd77f314d87d50d2e6034c726e9033f12d71b5f7aa1f43a5c4f37eba54f0d05",
       "stylesheet": "bundle-index-v15.css"
     },
     "materials.html": {
@@ -482,8 +442,8 @@
     },
     "public.html": {
       "javascript": "bundle-public-v15.js",
-      "scriptBytes": 240615,
-      "scriptSha256": "8b94c1f2203f98f57d32e1df993a0cebe107727d45cad4a85876a034fcd877fe",
+      "scriptBytes": 232062,
+      "scriptSha256": "61c1ba939b78ea20ce024274f7300eb9177d825192ac0bf25a82388c557e502f",
       "sources": {
         "scripts": [
           "runtime-lifecycle-v15.js",
@@ -504,7 +464,6 @@
           "polls.js",
           "album.js",
           "invitation-edit-history.js",
-          "public/analytics-collector.js",
           "public-page.js",
           "ux-refine.js"
         ],

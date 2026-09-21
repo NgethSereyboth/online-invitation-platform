@@ -30,12 +30,9 @@ function wireAuthLayouts(){
         </div>`;
       const formWrap=document.createElement('div');
       formWrap.innerHTML=`<div class="canvas-auth-tabs"><button type="button" data-mode="signin" class="active">Sign in</button><button type="button" data-mode="register">Create account</button></div>
-        <div><h2 class="canvas-auth-title"></h2><p class="canvas-auth-intro"></p></div>
+        <div><h2>${title}</h2><p>${intro}</p></div>
         <div class="canvas-auth-form"></div>
         <div class="canvas-auth-status"></div>`;
-      const titleEl=$('.canvas-auth-title',formWrap), introEl=$('.canvas-auth-intro',formWrap);
-      if(titleEl) titleEl.textContent=title;
-      if(introEl) introEl.textContent=intro;
       const formHost=$('.canvas-auth-form',formWrap), status=$('.canvas-auth-status',formWrap);
       const confirmWrap=document.createElement('label'); confirmWrap.hidden=true; confirmWrap.innerHTML='Confirm password<input id="confirmPasswordRegister" type="password" autocomplete="new-password" minlength="8">';
       const options=document.createElement('div'); options.className='canvas-auth-actions';

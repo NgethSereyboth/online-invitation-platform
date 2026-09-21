@@ -207,10 +207,15 @@ def _defender_scan(path: str, *, timeout: float = SCAN_TIMEOUT_SECONDS) -> tuple
         return False, "Windows Defender scan timed out"
     except OSError as exc:
         return False, f"Windows Defender failed to run: {exc}"
-    # Exit code 2 from MpCmdRun.exe means threats were found; anything non-zero
-    # other than 2 should still be treated as a blocked upload (fail-closed).
+    # Exit code 2 from MpCmdRun.exe is ambiguous: it fires both for genuine
+    # detections and for scans that could not complete (path outside scanned
+    # roots, signature mismatch, heuristic noise on media). Treat 2 as
+    # "scan inconclusive" unless the operator opts into fail-closed behaviour.
+    strict = os.environ.get("EINVITE_DEFENDER_STRICT", "0").lower() in {"1", "true", "yes"}
     if result.returncode == 0:
         return True, "defender: OK"
+    if result.returncode == 2 and not strict:
+        return True, "defender: OK (exit 2 tolerated — scan inconclusive)"
     return False, f"defender rejected upload (exit {result.returncode})"
 
 

@@ -129,7 +129,7 @@ const safeText=node=>(node?.querySelector('.content')?.textContent||node?.datase
 function toast(message,icon='✦'){
   if(typeof window.uiToast==='function')return window.uiToast(message,icon);
   let stack=$('.final-toast-stack');if(!stack){stack=document.createElement('div');stack.className='final-toast-stack';document.body.append(stack)}
-  const t=document.createElement('div');t.className='final-toast';const iconNode=document.createElement('span');iconNode.textContent=String(icon??'✦');const messageNode=document.createElement('b');messageNode.textContent=String(message??'');t.append(iconNode,messageNode);stack.append(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),220)},1900)
+  const t=document.createElement('div');t.className='final-toast';t.innerHTML=`<span>${icon}</span><b>${message}</b>`;stack.append(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),220)},1900)
 }
 function selectOnly(item){try{typeof clearSelection==='function'&&clearSelection();typeof setSelection==='function'&&setSelection([item])}catch{item.click()}setTimeout(()=>{refreshAdvancedControls();refreshTimeline()},0)}
 function makeId(prefix='object'){return`${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}

@@ -5,6 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 os.environ.setdefault('EINVITE_DATA_DIR',tempfile.mkdtemp(prefix='einvite-font-test-'))
 sys.path.insert(0,str(ROOT))
+sys.path.insert(0,str(ROOT/'src'/'python'))
 import server
 from fontTools.ttLib import TTFont
 
@@ -43,8 +44,8 @@ global.window=global;global.location={href:'http://localhost/index.html'};
 global.CustomEvent=class{constructor(type,init={}){this.type=type;this.detail=init.detail}};
 const faces=new Set();global.document={fonts:{add:x=>faces.add(x),delete:x=>faces.delete(x)},dispatchEvent:()=>{}};
 global.FontFace=class{constructor(family,source,descriptors){this.family=family;this.source=source;this.descriptors=descriptors;this.status='unloaded'}async load(){this.status='loaded';return this}};
-vm.runInThisContext(fs.readFileSync('typography-contract.js','utf8'),{filename:'typography-contract.js'});
-vm.runInThisContext(fs.readFileSync('custom-font-core-v22.js','utf8'),{filename:'custom-font-core-v22.js'});
+vm.runInThisContext(fs.readFileSync('src/js/typography-contract.js','utf8'),{filename:'typography-contract.js'});
+vm.runInThisContext(fs.readFileSync('src/js/custom-font-core-v22.js','utf8'),{filename:'custom-font-core-v22.js'});
 const id='custom-1234567890ab',doc={customFonts:{[id]:{id,label:'Test Custom',url:'/uploads/test.woff2',sha256:'1234567890abcdef',scripts:['Latin'],weight:400,style:'normal',licenseAcknowledged:true}}};
 EInviteCustomFonts.normalizeDocumentFonts(doc,{install:false});
 if(EInviteTypography.fontId(id)!==id)throw Error('dynamic font ID not accepted');
@@ -60,19 +61,19 @@ if(EInviteFontRegistry.pairedFont(pair,'km')!=='noto-serif-khmer')throw Error('K
 
 
 def test_integration_contracts():
- routes=json.loads((ROOT/'route-bundle-sources-v15.json').read_text())
+ routes=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))
  index=routes['pages']['index.html']['scripts'];public=routes['pages']['public.html']['scripts'];dashboard=routes['pages']['dashboard.html']['scripts']
  assert 'custom-font-core-v22.js' in index and index.index('custom-font-core-v22.js')==index.index('typography-contract.js')+1
  assert 'custom-font-core-v22.js' in public and public.index('custom-font-core-v22.js')==public.index('typography-contract.js')+1
  assert 'custom-font-core-v22.js' not in dashboard and 'custom-fonts-v22.js' not in dashboard
  assert 'editor-deferred-tools-bootstrap-v0_52.js' in index and 'font-browser-loader-v22.js' not in index and 'custom-fonts-v22.js' not in index
  assert 'custom-fonts-v22.css' not in routes['pages']['index.html']['styles']
- bootstrap=(ROOT/'editor-deferred-tools-bootstrap-v0_52.js').read_text();assert 'font-browser-loader-v22.js' in bootstrap
- loader=(ROOT/'font-browser-loader-v22.js').read_text();assert 'custom-fonts-v22.js' in loader and 'font-browser.js' in loader and 'custom-fonts-v22.css' in loader
- upload=(ROOT/'upload-client.js').read_text();assert 'uploadFont' in upload and '/fonts' in upload
- browser=(ROOT/'font-browser.js').read_text();assert '.ttf,.tff,.otf,.woff2' in browser and 'licenseAcknowledged' in browser
- server_text=(ROOT/'server.py').read_text();assert 'optimize_custom_font' in server_text and 'def upload_font' in server_text
- model=(ROOT/'typography-document-model.js').read_text();assert 'normalizeDocumentFonts' in model
+ bootstrap=(ROOT / "src" / "js" / "editor-deferred-tools-bootstrap-v0_52.js").read_text(encoding='utf-8');assert 'font-browser-loader-v22.js' in bootstrap
+ loader=(ROOT / "src" / "js" / "font-browser-loader-v22.js").read_text(encoding='utf-8');assert 'custom-fonts-v22.js' in loader and 'font-browser.js' in loader and 'custom-fonts-v22.css' in loader
+ upload=(ROOT / "src" / "js" / "upload-client.js").read_text(encoding='utf-8');assert 'uploadFont' in upload and '/fonts' in upload
+ browser=(ROOT / "src" / "js" / "font-browser.js").read_text(encoding='utf-8');assert '.ttf,.tff,.otf,.woff2' in browser and 'licenseAcknowledged' in browser
+ server_text=(ROOT/'src'/'python'/'server.py').read_text(encoding='utf-8');assert 'optimize_custom_font' in server_text and 'def upload_font' in server_text
+ model=(ROOT / "src" / "js" / "typography-document-model.js").read_text(encoding='utf-8');assert 'normalizeDocumentFonts' in model
 
 
 if __name__=='__main__':

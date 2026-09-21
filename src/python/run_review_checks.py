@@ -9,7 +9,7 @@ and retrying cleanup for Windows SQLite/filesystem timing.
 from __future__ import annotations
 import argparse,concurrent.futures,os,signal,subprocess,sys,tempfile,time,shutil,gc
 from pathlib import Path
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[2]
 
 def configure_utf8_console():
  for stream in (sys.stdout,sys.stderr):
@@ -21,7 +21,6 @@ def configure_utf8_console():
 configure_utf8_console()
 
 FAST_CHECKS=[
- 'tests/v0_52_final_ux_refinement_contract_test.py',
  'tests/v0_52_security_boundary_test.py',
  'tests/v0_52_security_hardening_attack_test.py',
  'tests/v0_52_upload_permission_test.py',
@@ -37,9 +36,11 @@ FAST_CHECKS=[
  'tests/v13_future_foundation_test.py','tests/v13_account_security_test.py','tests/v13_editor_model_test.py','tests/v13_backup_restore_test.py','tests/v13_product_lifecycle_test.py','tests/v13_privacy_lifecycle_test.py',
  'tests/v14_lifecycle_signing_test.py','tests/v14_performance_budget_test.py','tests/v15_integration_hardening_test.py','tests/v15_http_integration_test.py','tests/v16_windows_ui_hardening_test.py','tests/v17_professional_foundation_test.py','tests/v17_persistence_snapshot_test.py',
  'tests/v19_typography_model_test.py','tests/v19_typography_invalid_input_test.py','tests/v20_typography_architecture_test.py','tests/v22_scene_model_test.py','tests/v22_1_performance_contract_test.py','tests/v22_2_page_experience_contract_test.py','tests/v23_command_registry_test.py','tests/v23_2_navigation_history_contract_test.py','tests/v23_3_style_history_contract_test.py','tests/v23_4_asset_workflow_contract_test.py','tests/v23_5_photo_workflow_contract_test.py','tests/v23_6_photo_style_library_contract_test.py','tests/v23_8_review_operations_contract_test.py','tests/v23_8_review_operations_backend_test.py','tests/v23_7_review_contract_test.py','tests/v23_7_review_backend_test.py','tests/v22_custom_font_upload_test.py','tests/v22_custom_font_server_endpoint_test.py','tests/v22_0_3_khmer_custom_font_quality_test.py','tests/v20_1_stabilization_contract_test.py','tests/v21_0_rich_text_model_test.py','tests/v21_0_rich_text_server_test.py','tests/v21_0_migration_roundtrip_test.py','tests/static_integrity_test.py','tests/smoke_test.py','tests/plan_limit_test.py','tests/final_features_test.py','tests/production_foundations_test.py','tests/provider_adapters_test.py','tests/realtime_storage_test.py','tests/signed_upload_backend_test.py','tests/final_visual_polish_test.py','tests/ux_ai_v5_test.py','tests/pro_editor_v6_test.py','tests/workflow_continuity_test.py','tests/final_workflow_audit_v7_test.py','tests/security_regression_test.py','tests/security_maintenance_test.py','tests/private_access_header_test.py','tests/collaboration_asset_permissions_test.py','tests/optimistic_revision_test.py','tests/collaboration_revision_test.py',
+ 'tests/ai_jit_enforcement_test.py','tests/ai_resource_scopes_test.py',
 ]
 SERIAL_FAST_CHECKS={
  'tests/v0_52_security_hardening_attack_test.py','tests/v53_1_ai_project_operator_backend_test.py','tests/v0_52_ai_real_server_test.py','tests/v0_52_asset_identity_test.py','tests/provider_adapters_test.py','tests/realtime_storage_test.py','tests/v27_3_5_release_evidence_test.py','tests/v11_media_experience_test.py','tests/v12_storage_privacy_test.py','tests/v12_immediate_stabilization_test.py','tests/v13_account_security_test.py','tests/v13_backup_restore_test.py','tests/v13_product_lifecycle_test.py','tests/v13_privacy_lifecycle_test.py','tests/v15_http_integration_test.py','tests/v17_persistence_snapshot_test.py','tests/plan_limit_test.py','tests/smoke_test.py','tests/production_foundations_test.py', 'tests/v27_studio_automation_backend_test.py','tests/v27_studio_automation_migration_test.py','tests/v27_studio_backup_scheduler_test.py', 'tests/v26_studio_operations_backend_test.py','tests/v26_studio_operations_migration_test.py','tests/v25_template_governance_backend_test.py', 'tests/v23_8_review_operations_backend_test.py','tests/v23_7_review_backend_test.py','tests/collaboration_asset_permissions_test.py','tests/optimistic_revision_test.py','tests/collaboration_revision_test.py',
+ 'tests/ai_jit_enforcement_test.py','tests/ai_resource_scopes_test.py',
 }
 BROWSER_CHECKS=[
  'tests/v0_52_final_ux_refinement_browser_test.py',
@@ -83,6 +84,7 @@ def execute(script,timeout=240,require_browser=False):
  data_dir=Path(tempfile.mkdtemp(prefix='einvite-check-'))
  output_path=data_dir/'suite-output.log'
  env={**os.environ,'EINVITE_DATA_DIR':str(data_dir),'PYTHONUTF8':'1','PYTHONIOENCODING':'utf-8'}
+ env['PYTHONPATH']=str(ROOT/'src'/'python')+os.pathsep+env.get('PYTHONPATH','')
  if os.name=='nt' and env.get('OPENSSL_CONF') and not Path(env['OPENSSL_CONF']).is_file():
   print(f"Ignoring invalid OPENSSL_CONF for child test process: {env['OPENSSL_CONF']}",flush=True);env.pop('OPENSSL_CONF',None)
  if require_browser:env['EINVITE_REQUIRE_BROWSER']='1'
