@@ -805,3 +805,52 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_first_at BIGINT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until BIGINT;
+
+-- ── Analytics schema (ROADMAP §6.1, §6.2) — idempotent additive statements ──
+-- Mirrors src/python/features/analytics/model.py SCHEMA_STATEMENTS
+-- Postgres dialect: TEXT for IDs, BIGINT for epoch-ms timestamps,
+-- INTEGER for counters/flags, BIGSERIAL for AUTOINCREMENT
+
+CREATE TABLE IF NOT EXISTS analytics_sessions(
+  id TEXT PRIMARY KEY,
+  invitation_id TEXT NOT NULL,
+  recipient_id TEXT,
+  started_at BIGINT NOT NULL,
+  ended_at BIGINT,
+  duration_ms BIGINT,
+  max_scroll_pct INTEGER,
+  country_code TEXT,
+  referrer_domain TEXT,
+  device_type TEXT,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_invitation ON analytics_sessions(invitation_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_sessions_recipient ON analytics_sessions(recipient_id);
+
+CREATE TABLE IF NOT EXISTS analytics_events(
+  id BIGSERIAL PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  invitation_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  payload_json TEXT,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_session ON analytics_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_invitation_type ON analytics_events(invitation_id, event_type, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS analytics_summary_daily(
+  invitation_id TEXT NOT NULL,
+  day TEXT NOT NULL,
+  unique_sessions INTEGER NOT NULL,
+  total_views INTEGER NOT NULL,
+  avg_duration_ms BIGINT NOT NULL,
+  p95_duration_ms BIGINT NOT NULL,
+  rsvp_submitted INTEGER NOT NULL,
+  rsvp_abandoned INTEGER NOT NULL,
+  gallery_opens INTEGER NOT NULL,
+  album_uploads INTEGER NOT NULL,
+  PRIMARY KEY (invitation_id, day)
+);
+
+-- Per-invitation analytics enablement flag (added by this version)
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS analytics_enabled INTEGER NOT NULL DEFAULT 1;
