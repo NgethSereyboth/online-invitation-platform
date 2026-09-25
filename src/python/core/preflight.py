@@ -203,6 +203,45 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
     if not trusted:
         warnings.append("No trusted reverse-proxy IPs are configured; forwarded headers will be ignored.")
 
+    # Admin IP allowlist (ROADMAP §4.2a)
+    admin_allowlist_raw = env.get("EINVITE_ADMIN_IP_ALLOWLIST", "").strip()
+    if production:
+        if not admin_allowlist_raw:
+            errors.append(
+                "EINVITE_ADMIN_IP_ALLOWLIST must be set in production "
+                "(comma-separated CIDRs/IPs, e.g. '10.0.0.0/8,192.168.1.5')"
+            )
+        else:
+            try:
+                # Reuse the same parsing logic as the runtime
+                import ipaddress
+                entries = [e.strip() for e in admin_allowlist_raw.split(",") if e.strip()]
+                for entry in entries:
+                    network = ipaddress.ip_network(entry, strict=False)
+                    if network.prefixlen == 0:
+                        errors.append(
+                            "EINVITE_ADMIN_IP_ALLOWLIST contains a /0 network which "
+                            "allows all IPs and defeats the purpose of the allowlist"
+                        )
+            except ValueError as exc:
+                errors.append(f"EINVITE_ADMIN_IP_ALLOWLIST contains invalid CIDR/IP: {exc}")
+    elif admin_allowlist_raw:
+        # Non-production: validate syntax but allow empty
+        try:
+            import ipaddress
+            entries = [e.strip() for e in admin_allowlist_raw.split(",") if e.strip()]
+            for entry in entries:
+                network = ipaddress.ip_network(entry, strict=False)
+                if network.prefixlen == 0:
+                    warnings.append(
+                        "EINVITE_ADMIN_IP_ALLOWLIST contains a /0 network which "
+                        "allows all IPs and defeats the purpose of the allowlist"
+                    )
+        except ValueError as exc:
+            errors.append(f"EINVITE_ADMIN_IP_ALLOWLIST contains invalid CIDR/IP: {exc}")
+    else:
+        warnings.append("EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)")
+
     dependencies: dict[str, bool] = {}
     if check_dependencies:
         required = {"psycopg": bool(database_url), "redis": bool(redis_url), "boto3": provider != "local"}

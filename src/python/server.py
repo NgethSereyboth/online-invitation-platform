@@ -17,6 +17,7 @@ from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_
 from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured, marketplace_summary)
 from features.secrets import ensure_secret as v54_ensure_secret
 from core.security_helpers import safe_set_clause
+from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
 from rich_text_document_model import normalize_document_rich_text
@@ -4708,6 +4709,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,{"received":True,"tier":target_tier,"userId":row["id"]})
 
     def admin_system_metrics(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/metrics", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         user=self.require_role("admin")
         if not user:return
         with connect() as db:
@@ -4723,6 +4731,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,metrics)
 
     def admin_ai_providers(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/ai/providers", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         user=self.require_role("admin")
         if not user:return
         try:
@@ -4733,6 +4748,13 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception:self.json(503,{"error":"AI provider status is temporarily unavailable","code":"ai_provider_status_unavailable"})
 
     def admin_overview(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/overview", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         user=self.require_role("admin")
         if not user:return
         with connect() as db:
@@ -4748,6 +4770,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,counts)
 
     def admin_users(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/users", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         user=self.require_role("admin")
         if not user:return
         with connect() as db:
@@ -4755,6 +4784,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,[{"id":r["id"],"email":r["email"],"role":r["role"],"plan":r["plan"],"uploadEnabled":bool(r["upload_enabled"]),"createdAt":r["created_at"],"invitationCount":r["invitation_count"],"templateCount":r["template_count"]} for r in rows])
 
     def admin_templates(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/templates", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         user=self.require_role("admin")
         if not user:return
         with connect() as db:
@@ -4762,6 +4798,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,[{**self.template_payload(r),"ownerEmail":r["owner_email"]} for r in rows])
 
     def admin_invitations(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/invitations", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         user=self.require_role("admin")
         if not user:return
         with connect() as db:
@@ -4774,6 +4817,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,result)
 
     def admin_update_user_plan(self,user_id):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/plan", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         admin=self.require_role("admin")
         if not admin:return
         if not self.rate_limit(f"admin-user-plan:{admin['id']}",60,60):return
@@ -4783,6 +4833,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"plan":plan})
 
     def admin_update_user_role(self,user_id):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/role", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         admin=self.require_role("admin")
         if not admin:return
         if not self.rate_limit(f"admin-user-role:{admin['id']}",60,60):return
@@ -4793,6 +4850,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"role":role})
 
     def admin_update_user_upload_permission(self,user_id):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/uploads", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         admin=self.require_role("admin")
         if not admin:return
         if not self.rate_limit(f"admin-user-uploads:{admin['id']}",60,60):return
@@ -4804,6 +4868,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"uploadEnabled":bool(enabled)})
 
     def admin_update_template_visibility(self,template_id):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, f"/api/admin/templates/{template_id}/visibility", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         admin=self.require_role("admin")
         if not admin:return
         if not self.rate_limit(f"admin-template-visibility:{admin['id']}",60,60):return
@@ -4814,6 +4885,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"visibility":visibility})
 
     def admin_update_invitation_published(self,invite_id):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, f"/api/admin/invitations/{invite_id}/published", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
         admin=self.require_role("admin")
         if not admin:return
         if not self.rate_limit(f"admin-invitation-published:{admin['id']}",60,60):return
@@ -9643,9 +9721,24 @@ if __name__ == "__main__":
     platform_config=PlatformConfig.from_environment()
     platform_errors=list(platform_config.validate())
     if PRODUCTION_MODE:
-        from production_preflight import validate_production_environment
+        from core.preflight import validate_production_environment
         platform_errors=list(dict.fromkeys([*platform_errors,*validate_production_environment()]))
     if PRODUCTION_MODE and platform_errors:raise RuntimeError("Production configuration is invalid: "+" ".join(platform_errors))
+
+    # Initialize admin IP allowlist (ROADMAP §4.2a)
+    try:
+        admin_allowlist_raw = platform_env("EINVITE_ADMIN_IP_ALLOWLIST", "").strip()
+        init_admin_ip_allowlist(admin_allowlist_raw)
+        if not admin_allowlist_raw and not PRODUCTION_MODE:
+            print("WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)", flush=True)
+        elif admin_allowlist_raw:
+            # Check for /0 network warning
+            from core.admin_ip_allowlist import get_admin_ip_allowlist
+            allowlist = get_admin_ip_allowlist()
+            if allowlist.has_wildcard():
+                print("WARNING: EINVITE_ADMIN_IP_ALLOWLIST contains a /0 network which allows all IPs and defeats the purpose of the allowlist", flush=True)
+    except ValueError as exc:
+        raise RuntimeError(f"Invalid EINVITE_ADMIN_IP_ALLOWLIST: {exc}") from exc
     # V54 security hardening: fail-closed malware-scanner gate. The
     # ``enforce_scanner_on_startup`` helper raises RuntimeError when no
     # scanner is available AND EINVITE_ALLOW_NO_SCANNER is not "1"; in dev
