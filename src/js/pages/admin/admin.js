@@ -41,7 +41,12 @@
   };
 
   function locale(){ return (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; }
-  function t(key){ const l = locale(); return (STRINGS[l] && STRINGS[l][key]) || STRINGS.en[key] || key; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   function formatNumber(n){
@@ -108,11 +113,11 @@
     if (!banner) return;
     const level = (payload && payload.level) || 'green';
     banner.dataset.status = level;
-    const text = (payload && payload.messages && payload.messages[0]) || t('noData');
-    const el = banner.querySelector('[data-i18n="en"]');
-    if (el) el.textContent = text;
-    const km = banner.querySelector('[data-i18n="km"]');
-    if (km) km.textContent = text;
+    const serverMsg = (payload && payload.messages && payload.messages[0]) || null;
+    const enEl = banner.querySelector('.i18n-en') || banner.querySelector('[data-i18n="en"]');
+    if (enEl) enEl.textContent = serverMsg || STRINGS.en.noData;
+    const kmEl = banner.querySelector('.i18n-km') || banner.querySelector('[data-i18n="km"]');
+    if (kmEl) kmEl.textContent = serverMsg || STRINGS.km.noData;
   }
 
   function showImpersonationBanner(){
@@ -136,9 +141,11 @@
   }
 
   let pollTimer = null;
+  let lastMetrics = null, lastStatus = null;
   async function pollOnce(){
     try {
       const [metrics, status] = await Promise.all([api.get('/api/admin/metrics-v2'), api.get('/api/admin/system-status')]);
+       lastMetrics = metrics; lastStatus = status;
       renderStatCards(metrics);
       renderSystemStatus(status);
     } catch(e) {
@@ -172,6 +179,8 @@
     });
   }
 
+  const mountedTabs = new Set();
+
   function mountModule(tab){
     const map = {
       'users':         () => window.EInviteAdminUsers,
@@ -186,8 +195,8 @@
     const getter = map[tab];
     if (!getter) return;
     const mod = getter();
-    if (mod && typeof mod.mount === 'function' && !mod._mounted) {
-      mod._mounted = true;
+    if (mod && typeof mod.mount === 'function' && !mountedTabs.has(tab)) {
+      mountedTabs.add(tab);
       try { mod.mount(); } catch(e) { console.warn('[admin] module mount failed', tab, e); }
     }
   }
@@ -199,6 +208,13 @@
     startPolling();
     // Lazy-mount the default tab (users).
     mountModule('users');
+    // Re-render stat cards + system status on language switch (cached payload, no refetch).
+    if (window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
+      window.EInviteI18n.subscribe(function () {
+        if (lastMetrics) renderStatCards(lastMetrics);
+        if (lastStatus) renderSystemStatus(lastStatus);
+      });
+    }
   }
 
   window.EInviteAdminShell = Object.freeze({

@@ -264,9 +264,17 @@
   /**
    * Inject a collapse toggle button into the tool rail header so the user can
    * switch between "full labels" and "icon-only" modes. Idempotent.
+   * If the button already exists in the HTML (pre-rendered for first paint),
+   * just wire up its click handler and sync its state.
    */
   function ensureSidebarCollapseButton() {
-    if ($('#v54SidebarCollapse')) return;
+    const existing = $('#v54SidebarCollapse');
+    if (existing) {
+      // Wire up the click handler on the pre-rendered button.
+      existing.onclick = () => setSidebarCollapsed(!body.classList.contains('sidebar-collapsed'));
+      setSidebarCollapsed(sidebarCollapsed());  // sync aria/title
+      return;
+    }
     const rail = $('.studio-tool-rail');
     if (!rail) return;
     const button = document.createElement('button');

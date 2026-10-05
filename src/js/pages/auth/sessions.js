@@ -82,11 +82,11 @@
     var lang = (document.documentElement.lang || "en").toLowerCase();
     return lang.indexOf("km") === 0 ? "km" : "en";
   }
-  function t(key, vars) {
-    var dict = STRINGS[locale()] || STRINGS.en;
-    var s = dict[key] || STRINGS.en[key] || key;
-    if (vars) for (var k in vars) s = s.split("{" + k + "}").join(vars[k]);
-    return s;
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
   }
   function fmtDevice(session) {
     var pua = session.parsedUserAgent || {};

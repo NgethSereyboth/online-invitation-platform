@@ -1,12 +1,13 @@
 {
   "earlyScripts": [
     "core/safe-dom.js",
-    "backend-mode-v14.js",
-    "theme-init.js"
+    "core/i18n.js",
+    "backend-mode-v14.js"
   ],
   "pages": {
     "account.html": {
       "scripts": [
+        "core/i18n.js",
         "core/safe-dom.js",
         "ui-dialogs.js",
         "account.js",
@@ -33,8 +34,17 @@
     },
     "admin.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
-        "admin.js",
+        "pages/admin/admin.js",
+        "pages/admin/users.js",
+        "pages/admin/invitations.js",
+        "pages/admin/feature-flags.js",
+        "pages/admin/audit-log.js",
+        "pages/admin/system-health.js",
+        "pages/admin/bulk-operations.js",
+        "pages/admin/impersonate.js",
+        "pages/admin/reports.js",
         "modern-ui.js",
         "final-experience.js",
         "monitoring.js",
@@ -58,6 +68,7 @@
     },
     "analytics.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "invitation-context.js",
         "analytics.js",
@@ -84,6 +95,7 @@
     },
     "billing.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "billing.js",
         "modern-ui.js",
@@ -107,6 +119,7 @@
     },
     "checkin.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "invitation-context.js",
         "checkin-v13.js",
@@ -124,6 +137,7 @@
     },
     "dashboard.html": {
       "scripts": [
+        "core/i18n.js",
         "typography-contract.js",
         "typography-document-model.js",
         "typography-layout-service.js",
@@ -168,6 +182,7 @@
     },
     "designer.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "designer.js",
         "modern-ui.js",
@@ -192,6 +207,7 @@
     },
     "guests.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "invitation-context.js",
         "guests.js",
@@ -218,6 +234,7 @@
     },
     "index.html": {
       "scripts": [
+        "core/i18n.js",
         "runtime-lifecycle-v15.js",
         "performance-loader-v22.js",
         "editor-command-system-v23.js",
@@ -319,6 +336,7 @@
     },
     "materials.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "upload-client.js",
         "upload-folder-client-v53.js",
@@ -348,7 +366,9 @@
       ]
     },
     "privacy.html": {
-      "scripts": [],
+      "scripts": [
+        "core/i18n.js"
+      ],
       "styles": [
         "styles.css",
         "modern-ui.css",
@@ -359,6 +379,7 @@
     },
     "public.html": {
       "scripts": [
+        "core/i18n.js",
         "runtime-lifecycle-v15.js",
         "typography-contract.js",
         "custom-font-core-v22.js",
@@ -392,6 +413,7 @@
     },
     "reset.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "reset.js",
         "modern-ui.js",
@@ -415,6 +437,7 @@
     },
     "responses.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "invitation-context.js",
         "responses.js",
@@ -441,6 +464,7 @@
     },
     "templates.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "builtin-templates.js",
         "templates.js",
@@ -468,6 +492,7 @@
     },
     "verify.html": {
       "scripts": [
+        "core/i18n.js",
         "ui-dialogs.js",
         "verify.js",
         "modern-ui.js",

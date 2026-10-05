@@ -15,8 +15,44 @@ python generate_typography_contract.py
 The bundled Noto assets are distributed under the **SIL Open Font License 1.1**. The included license text is:
 
 - `licenses/fonts/Noto-OFL-1.1.txt`
+- `licenses/fonts/Inter-OFL-1.1.txt` (app-chrome Inter, see [App-chrome fonts](#app-chrome-fonts))
 
 The registry records copyright metadata for each bundled family. The OFL permits bundling, embedding, redistribution, and modification subject to its terms. This document is an engineering inventory, not a substitute for legal review.
+
+## App-chrome fonts
+
+The app's own chrome (headings, body, buttons, panels on the dashboard, admin,
+materials, templates, analytics, responses, billing, account, reset, verify,
+designer, and index pages) uses the CSS variable stacks
+
+```text
+--canvas-font:    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+--canvas-display: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+```
+
+defined in `src/css/canvas-plus.css` (and its `editor-suite.css` source twin).
+`Inter` is **self-hosted** as WOFF2 so headings never depend on a host-installed
+font: on a host without Inter the stack would degrade to the OS generic, and some
+Linux/fontconfig configurations resolve that generic to a cursive face, which is
+exactly the "cursive headings" symptom observed on machines lacking Inter.
+
+Inter is **not** part of the invitation-document font registry above (it never
+shapes invitation content), so it has no stable ID / pairing and is declared
+directly by `src/css/canvas-plus.css` via `@font-face` rather than through
+`typography-contract.json`.
+
+| Family | Source | License | Weights | Asset (SHA-256) |
+|---|---|---|---:|---|
+| `Inter` | Bundled WOFF2 (Inter v4.1 static, subset to Latin `U+0000-024F,U+1E00-1EFF,U+2000-206F`) | SIL OFL 1.1 — `licenses/fonts/Inter-OFL-1.1.txt` | 400 | `assets/fonts/inter-latin-400.woff2` (`97edcf8a67cc43159561cc9d9373e571dba4e070adbcd6cbac2399edd202e5b3`) |
+| `Inter` | same | same | 700 | `assets/fonts/inter-latin-700.woff2` (`3ca84b5dc6300eb808da36bdb85f93e42d41127ef93e29168a3930f8cc153f85`) |
+| `Inter` | same | same | 800 | `assets/fonts/inter-latin-800.woff2` (`6760ea85f41cf656a4241ba7d56a0102f0660f402bfe0daba13ca41725617e89`) |
+
+The `@font-face` rules use `font-display:swap` and the same `unicode-range` as the
+bundled Noto Latin faces, so Inter is only requested for Latin script; Khmer
+rendering continues to come from the bundled Noto Khmer faces. These assets are
+synced into the served mirror `src/python/assets/fonts/` by
+`src/python/build/sync_frontend_assets.py` and into each route bundle that loads
+`canvas-plus.css` by `src/python/build/build_route_bundles.py`.
 
 ## Stable font registry
 

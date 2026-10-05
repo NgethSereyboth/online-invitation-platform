@@ -228,6 +228,14 @@
     function set(value, reason) {
       suppressed = !!value;
       document.body.classList.toggle('ei-suppress-autofit', suppressed);
+      // Always sync --ei-font-size from each element's data-font-size attribute
+      // (runs whether or not AutoFitGuard is suppressing): the CSS rule that
+      // reads --ei-font-size is gated on body.ei-suppress-autofit, so setting the
+      // var unconditionally is a no-op when not suppressing and guarantees the
+      // var(--ei-font-size, inherit) backstop never falls through to the parent size.
+      document.querySelectorAll('[data-font-size]').forEach(function(el) {
+        el.style.setProperty('--ei-font-size', el.getAttribute('data-font-size') + 'px');
+      });
       if (reason && window.__EINVITE_DEBUG_AUTOFIT) {
         // eslint-disable-next-line no-console
         console.debug('[AutoFitGuard]', reason, suppressed ? 'suppressed' : 'released');
@@ -268,19 +276,23 @@
       patched = true;
       if (typeof svc.fit === 'function' && !svc.__v54FitPatched) {
         const originalFit = svc.fit.bind(svc);
-        svc.fit = function fit(...rest) {
-          if (suppressed) return null;
-          return originalFit(...rest);
-        };
-        svc.__v54FitPatched = true;
+        try {
+          svc.fit = function fit(...rest) {
+            if (suppressed) return null;
+            return originalFit(...rest);
+          };
+          svc.__v54FitPatched = true;
+        } catch (e) { /* fit is read-only — skip patching */ }
       }
       if (typeof svc.fitAndDiagnose === 'function' && !svc.__v54FitDiagnosePatched) {
         const originalFitDiag = svc.fitAndDiagnose.bind(svc);
-        svc.fitAndDiagnose = function fitAndDiagnose(...rest) {
-          if (suppressed) return null;
-          return originalFitDiag(...rest);
-        };
-        svc.__v54FitDiagnosePatched = true;
+        try {
+          svc.fitAndDiagnose = function fitAndDiagnose(...rest) {
+            if (suppressed) return null;
+            return originalFitDiag(...rest);
+          };
+          svc.__v54FitDiagnosePatched = true;
+        } catch (e) { /* read-only — skip patching */ }
       }
     }
 
@@ -466,6 +478,138 @@
   }
 
   /**
+   * renderContextPanel (B2/B4) — "click first, edit second".
+   *
+   * Dispatches on the selected element's type and shows only the relevant
+   * property controls in the right context panel.  When nothing is selected,
+   * the empty-state placeholder is shown and all type-specific sections are
+   * hidden.
+   *
+   * Type dispatch:
+   *   text-object     → text content + typography controls + animation
+   *   image-object    → image controls + appearance
+   *   rectangle|circle|line → shape controls + appearance
+   *   (unknown)       → appearance only
+   *
+   * @param {{elements: Element[], type: string|null}} selection
+   */
+  function renderContextPanel(selection) {
+    const pane = document.querySelector('[data-inspector-pane="object"]');
+    if (!pane) return;
+
+    const properties = $('#properties');
+    if (!properties) return;
+
+    const selected = selection.elements || [];
+    const hasSelection = selected.length > 0;
+
+    // Show/hide the "no selection" placeholder.
+    const placeholder = pane.querySelector('.v54-inspector-placeholder');
+    if (placeholder) placeholder.style.display = hasSelection ? 'none' : 'grid';
+
+    if (!hasSelection) {
+      // Hide all type-specific control groups.  No !important: none of these
+      // sections carry a competing !important display rule in the CSS, so a
+      // plain inline style reliably beats the author declaration.
+      ['#typographyControls', '#shapeControls', '#imageControls',
+       '#alignment-grid', '#textContentLabel'].forEach(sel => {
+        const el = pane.querySelector(sel);
+        if (el) el.style.display = 'none';
+      });
+      // Hide Appearance / Fine position sub-headings.
+      pane.querySelectorAll('h2').forEach(h => {
+        const txt = (h.textContent || '').toLowerCase();
+        if (txt.includes('appearance') || txt.includes('fine position')) h.style.display = 'none';
+      });
+      return;
+    }
+
+    // Determine the primary type from the first selected element.
+    const first = selected[0];
+    const type = first?.dataset?.objectType || first?.className || '';
+
+    // Helper: show a section, hide another.  No !important is needed: the
+    // `#typographyControls` rule in ux-refine.css no longer carries !important,
+    // so a plain inline `display:none` (reinforced by el.hidden + the UA
+    // `[hidden]` rule) reliably overrides the author `display:grid`.
+    const show = (sel) => { const el = pane.querySelector(sel); if (el) { el.hidden = false; el.style.removeProperty('display'); } };
+    const hide = (sel) => { const el = pane.querySelector(sel); if (el) { el.hidden = true; el.style.display = 'none'; } };
+
+    // Selection summary is always visible when something is selected.
+    const summary = pane.querySelector('.selection-summary');
+    if (summary) { summary.hidden = false; summary.style.removeProperty('display'); }
+
+    // Dispatch by type.
+    let isText = false, isImage = false, isShape = false;
+
+    if (type.includes('text')) {
+      isText = true;
+    } else if (type.includes('image')) {
+      isImage = true;
+    } else if (type.includes('rectangle') || type.includes('circle') || type.includes('line') || type.includes('shape')) {
+      isShape = true;
+    } else {
+      // Unknown — show appearance only.
+      isText = isImage = isShape = false;
+    }
+
+    if (isText) {
+      show('#textContentLabel');
+      show('#typographyControls');
+      show('#animationControls');
+      hide('#shapeControls');
+      hide('#imageControls');
+    } else if (isImage) {
+      show('#imageControls');
+      show('#textContentLabel');  // images can have alt-text
+      hide('#typographyControls');
+      hide('#shapeControls');
+    } else if (isShape) {
+      show('#shapeControls');
+      show('#textContentLabel');  // shapes can have labels
+      hide('#typographyControls');
+      hide('#imageControls');
+    } else {
+      // Generic — show appearance controls only.
+      hide('#textContentLabel');
+      hide('#typographyControls');
+      hide('#shapeControls');
+      hide('#imageControls');
+    }
+
+    // Alignment grid always available for movable objects.
+    if (type.includes('text') || type.includes('image') || type.includes('rectangle') || type.includes('circle') || type.includes('line')) {
+      show('#alignment-grid');
+      show('h2[align-group="position"]');  // alignment is always shown
+    }
+
+    // Appearance / Fine position sections are shown for all selectable objects.
+    pane.querySelectorAll('h2').forEach(h => {
+      const txt = (h.textContent || '').toLowerCase();
+      if (txt.includes('appearance') || txt.includes('fine position')) h.style.removeProperty('display');
+    });
+
+    // Dispatch event so other modules can react.
+    const evt = new window.CustomEvent('einvite:context-panel-rendered', {
+      detail: { type, elementCount: selected.length },
+      bubbles: true,
+    });
+    if (evt) pane.dispatchEvent(evt);
+  }
+
+  /**
+   * Build the current selection descriptor and delegate to renderContextPanel.
+   */
+  function refreshContextPanel() {
+    const selected = selectedElements();
+    renderContextPanel({
+      elements: selected,
+      type: selected.length === 1 ? (selected[0].dataset?.objectType || null) : (selected.length > 1 ? 'multi' : null),
+    });
+  }
+
+
+  /**
    * Coalesce update work into a single macrotask so rapid selection/mutation
    * bursts do not thrash layout.
    */
@@ -474,6 +618,7 @@
     raf = setTimeout(() => {
       raf = 0;
       updateSelectionState();
+      refreshContextPanel();
       updateSelectionCard();
       updateZoomLabel();
       // NOTE: layoutContextToolbar / header / footer organisation deliberately
@@ -1097,6 +1242,8 @@
     window.EInviteEditorCore = Object.freeze({
       ...api,
       refresh: scheduleUpdate,
+      renderContextPanel,
+      refreshContextPanel,
       zoomToSelection: () => controller.zoomToSelection(),
       AutoFitGuard,
       get hud() { return hud; }

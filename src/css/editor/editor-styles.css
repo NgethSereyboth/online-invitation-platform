@@ -359,7 +359,7 @@ body.workspace-experience-v54 .studio-inspector-tab small { max-width: 100%; ove
 .v54-inspector-empty > strong { font-size: 13px; }
 .v54-inspector-empty > p { max-width: 230px; margin: 0; color: var(--app-muted, #8a8085); font-size: 10px; line-height: 1.55; }
 .v54-inspector-empty > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-.v54-inspector-empty button { min-height: 33px !important; padding: 6px 9px !important; border-radius: 9px !important; font-size: 9px !important; }
+.v54-inspector-empty button { min-height: 44px !important; padding: 8px 9px !important; border-radius: 9px !important; font-size: 9px !important; }
 
 body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not(.studio-inspector-heading):not(.v54-inspector-empty) { display: none !important; }
 body.workspace-experience-v54.v54-inspector-essential.v54-has-selection [data-inspector-pane="object"] > .v54-advanced-control { display: none !important; }
@@ -539,11 +539,281 @@ body.sidebar-collapsed.studio-experience .studio-rail-button .studio-nav-icon { 
 body.ei-suppress-autofit .object[data-text-auto-fit="fit"] .content,
 body.ei-suppress-autofit .object[data-typography-model-version] .content {
   /* Defer to the element's configured font size; disallow the auto-fit
-     computed override while the user is actively resizing/selecting. */
-  font-size: var(--ei-font-size, attr(data-font-size)) !important;
+     computed override while the user is actively resizing/selecting.
+     --ei-font-size is set in JS (editor-core.js AutoFitGuard.set) from the
+     element's data-font-size attribute. The `inherit` fallback is a
+     cross-browser-safe backstop: attr() for non-content properties is
+     Chromium-only (invalid in Firefox/Safari). */
+  font-size: var(--ei-font-size, inherit) !important;
   transition: none !important;
 }
 /* When suppressing, hide any "text refitted" status toast so the user is not
    misled into thinking the font was changed. */
 body.ei-suppress-autofit [id$="TypographyState"],
 body.ei-suppress-autofit #typographyV19State { opacity: .35; }
+
+/* =========================================================================
+   Canva-like editor shell redesign (B1-B5)
+   ========================================================================= */
+
+/* ——— Studio top bar (Canva-like) ——— */
+body[data-page="index"].studio-experience > header.studio-topbar {
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--panel, #fff);
+  border-bottom: 1px solid var(--line, #e8dfdc);
+  box-shadow: 0 1px 3px #0000000a;
+}
+body[data-page="index"].studio-experience > header.studio-topbar .studio-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body[data-page="index"].studio-experience > header.studio-topbar .studio-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+body[data-page="index"].studio-experience > header.studio-topbar .studio-document-title {
+  font-size: 13px;
+  color: var(--muted, #766);
+  margin: 0;
+}
+body[data-page="index"].studio-experience > header.studio-topbar .button-link strong {
+  font-size: 18px;
+  font-family: Georgia, serif;
+  color: var(--accent, #9d4555);
+  text-decoration: none;
+}
+
+/* ——— Left rail: 68px collapsed / 280px expanded ——— */
+body[data-page="index"].studio-experience > main {
+  display: grid;
+  grid-template-columns: 280px minmax(420px, 1fr) 260px;
+  grid-template-rows: 1fr;
+  height: calc(100vh - 56px);
+  gap: 0;
+}
+body[data-page="index"].studio-experience.sidebar-collapsed > main {
+  grid-template-columns: 68px minmax(420px, 1fr) 260px;
+}
+body[data-page="index"].studio-experience > main > aside.left {
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  background: var(--panel, #fff);
+  border-right: 1px solid var(--line, #e8dfdc);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+body[data-page="index"].studio-experience.sidebar-collapsed > main > aside.left {
+  width: 68px;
+  min-width: 68px;
+  max-width: 68px;
+}
+
+/* Tool rail navigation inside the left sidebar */
+body[data-page="index"].studio-experience aside.left .left-rail-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 4px;
+}
+body[data-page="index"].studio-experience.sidebar-collapsed aside.left .left-rail-nav span,
+body[data-page="index"].studio-experience.sidebar-collapsed aside.left .left-rail-nav h2 {
+  display: none;
+}
+body[data-page="index"].studio-experience.sidebar-collapsed aside.left .left-rail-nav button {
+  justify-content: center;
+  padding: 10px 6px;
+  font-size: 18px;
+}
+
+/* ——— Canvas stage (center) ——— */
+body[data-page="index"].studio-experience > main > section.stage-wrap {
+  background: var(--v54-canvas, #eceff1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+body[data-page="index"].studio-experience > main > section.stage-wrap .toolbar {
+  min-height: 44px;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--panel, #fff) 94%, transparent);
+  border-bottom: 1px solid var(--line, #e8dfdc);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+/* ——— Right context panel: empty by default, shows controls on selection ——— */
+body[data-page="index"].studio-experience > main > aside.right {
+  width: 260px;
+  min-width: 260px;
+  max-width: 260px;
+  background: var(--panel, #fff);
+  border-left: 1px solid var(--line, #e8dfdc);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  box-sizing: border-box;
+}
+body[data-page="index"].studio-experience > aside.right > :not([data-inspector-pane]) {
+  /* Non-context sections (Layers, Publishing, etc.) collapsed by default */
+  display: none;
+}
+body[data-page="index"].studio-experience.v54-has-selection > aside.right > :not([data-inspector-pane]) {
+  display: block;
+  margin-top: 16px;
+}
+
+/* Inspector pane: hide property controls when nothing selected */
+body[data-page="index"].studio-experience:not(.v54-has-selection) [data-inspector-pane="object"] > :not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder) {
+  display: none;
+}
+body[data-page="index"].studio-experience.v54-has-selection .v54-inspector-placeholder,
+body[data-page="index"].studio-experience.v54-has-selection .v54-inspector-empty {
+  display: none;
+}
+
+/* Inspector heading */
+body[data-page="index"].studio-experience .studio-inspector-heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted, #766);
+  margin: 0 0 12px;
+}
+body[data-page="index"].studio-experience .studio-inspector-heading span {
+  display: none;
+}
+body[data-page="index"].studio-experience .studio-inspector-heading .i18n-en {
+  display: inline;
+}
+
+/* Empty state (no selection) — Canva-like */
+body[data-page="index"].studio-experience .v54-inspector-empty {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  margin: 32px 2px;
+  padding: 28px 16px;
+  border: 1px dashed color-mix(in srgb, var(--accent, #9d4555) 28%, var(--line, #e8dfdc));
+  border-radius: 16px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent, #9d4555) 6%, var(--panel, #fff)), var(--panel, #fff));
+  text-align: center;
+}
+body[data-page="index"].studio-experience .v54-inspector-empty > span {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent, #9d4555) 12%, transparent);
+  color: var(--accent, #9d4555);
+  font-size: 22px;
+}
+body[data-page="index"].studio-experience .v54-inspector-empty > strong {
+  font-size: 13px;
+  color: var(--ink, #2c2326);
+}
+body[data-page="index"].studio-experience .v54-inspector-empty > p {
+  font-size: 10px;
+  color: var(--muted, #766);
+  line-height: 1.55;
+  max-width: 200px;
+}
+body[data-page="index"].studio-experience .v54-inspector-empty button {
+  min-height: 36px;
+  padding: 7px 12px;
+  font-size: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line, #e8dfdc);
+  background: var(--panel, #fff);
+}
+
+/* Sidebar collapse toggle button */
+body[data-page="index"].studio-experience .v54-sidebar-collapse {
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid var(--line, #d1c8d0);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink, #2c2326) 6%, transparent);
+  color: var(--ink, #2c2326);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+body[data-page="index"].studio-experience .v54-sidebar-collapse:hover {
+  background: color-mix(in srgb, var(--ink, #2c2326) 12%, transparent);
+}
+
+/* Canvas device buttons — Canva-like circular pills */
+body[data-page="index"].studio-experience .toolbar [data-device] {
+  border: 1px solid var(--line, #e8dfdc);
+  border-radius: 8px;
+  background: var(--panel, #fff);
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* Inspector mode toggle */
+body[data-page="index"].studio-experience .v54-inspector-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 7px 8px;
+  border: 1px solid var(--line, #e8dfdc);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent, #9d4555) 6%, transparent);
+}
+body[data-page="index"].studio-experience .v54-inspector-mode span {
+  font-size: 11px;
+  color: var(--muted, #766);
+}
+body[data-page="index"].studio-experience .v54-inspector-mode button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+/* Properties panel controls — Canva-like density */
+body[data-page="index"].studio-experience #properties label {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 11px;
+  color: var(--ink, #2c2326);
+}
+body[data-page="index"].studio-experience #properties label input[type="range"] {
+  width: 100%;
+}
+body[data-page="index"].studio-experience #properties .selection-summary {
+  margin: 0 0 14px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--ink, #2c2326) 3%, transparent);
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+/* Hide the legacy .mobile-desktop-hint when desktop editor is active */
+body[data-page="index"].studio-experience .mobile-desktop-hint {
+  display: none;
+}

@@ -10,7 +10,12 @@
     en: { title:'Invitations', search:'Search by slug or owner email', preview:'Preview', unpublish:'Unpublish', flag:'Flag', transfer:'Transfer', confirmUnpublish:'Unpublish this invitation? The owner will be notified by email.', confirmFlag:'Flag this invitation for review? Add a reason.', flagReason:'Reason for flagging', transferPrompt:'Enter the new owner user id:', noInvitations:'No invitations found.', slug:'Slug', owner:'Owner', created:'Created', published:'Published', views:'Views', rsvps:'RSVPs', status:'Status', actions:'Actions' },
     km: { title:'ការអញ្ជើញ', search:'ស្វែងរកតាម slug ឬអ៊ីមែលម្ចាស់', preview:'មើល', unpublish:'ឈប់ផ្សាយ', flag:'សម្គាល់', transfer:'ផ្ទេរម្ចាស់', confirmUnpublish:'ឈប់ផ្សាយការអញ្ជើញនេះ? ម្ចាស់នឹងត្រូវបានជូនដំណឹងតាមអ៊ីមែល។', confirmFlag:'សម្គាល់ការអញ្ជើញនេះសម្រាប់ពិនិត្យ? បន្ថែមមូលហេតុ។', flagReason:'មូលហេតុនៃការសម្គាល់', transferPrompt:'បញ្ចូលលេខសម្គាល់អ្នកប្រើម្ចាស់ថ្មី៖', noInvitations:'រកមិនឃើញការអញ្ជើញ។', slug:'Slug', owner:'ម្ចាស់', created:'បង្កើត', published:'ផ្សាយ', views:'មើល', rsvps:'RSVPs', status:'ស្ថានភាព', actions:'សកម្មភាព' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { items: [], q: '', status: '' };
 
   async function load(){

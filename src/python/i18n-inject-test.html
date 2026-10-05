@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="core/i18n.js"></script>
+</head>
+<body>
+<header style="background:#333;color:white;padding:10px">
+  <strong>Test Header</strong>
+  <span class="i18n i18n-en">Dashboard</span>
+  <span class="i18n i18n-km khmer-text">ផ្ទៃគ្រប់វង់ស្វេង</span>
+</header>
+<main>
+  <p class="i18n i18n-en">Hello World</p>
+  <p class="i18n i18n-km khmer-text">សួស្តីពិភពលោក</p>
+</main>
+<script>
+// Directly trigger boot() by dispatching the event i18n.js listens for
+var ev = new Event('einvite:lang-changed', { bubbles: true });
+ev.lang = 'en';
+document.dispatchEvent(ev);
+
+// Now check if switch was injected
+var sw = document.querySelector('.language-switch');
+var kmBtn = document.querySelector('#lang-km');
+var enBtn = document.querySelector('#lang-en');
+var htmlLang = document.documentElement.lang;
+
+// Draw status squares - 60x60 at y=0
+// RED = false/not found, GREEN = true/found, BLUE = info
+var info = [
+  [htmlLang==='en'?255:0, htmlLang==='en'?0:htmlLang==='km'?255:0, 0],          // v0: html lang (red=en green=km)
+  [sw?0:255, sw?255:0, 0],                                                       // v1: switch found
+  [enBtn?0:255, enBtn?255:0, 0],                                                 // v2: en button exists
+  [kmBtn?0:255, kmBtn?255:0, 0],                                                 // v3: km button exists
+  [htmlLang?255:0, htmlLang?0:255, htmlLang?0:0],                                // v4: html has lang
+  [0, 0, 255],                                                                    // v5: ready marker (blue=js ran)
+];
+
+for (var i = 0; i < info.length; i++) {
+  var div = document.createElement('div');
+  div.style.position = 'fixed';
+  div.style.top = '0';
+  div.style.left = (i*70) + 'px';
+  div.style.width = '60px';
+  div.style.height = '60px';
+  div.style.zIndex = '99999999';
+  div.style.border = '3px solid white';
+  div.style.boxSizing = 'border-box';
+  div.style.background = 'rgb(' + info[i][0] + ',' + info[i][1] + ',' + info[i][2] + ')';
+  document.body.appendChild(div);
+}
+
+// Now click KM button and check again
+if (kmBtn) {
+  kmBtn.click();
+  ev = new Event('einvite:lang-changed', { bubbles: true });
+  ev.lang = 'km';
+  document.dispatchEvent(ev);
+  
+  var htmlLang2 = document.documentElement.lang;
+  var enPressed = enBtn.getAttribute('aria-pressed');
+  var kmPressed = kmBtn.getAttribute('aria-pressed');
+  
+  // Draw post-click state at y=70
+  var info2 = [
+    [htmlLang2==='km'?0:255, htmlLang2==='km'?255:0, 0],                        // v0: html lang km
+    [htmlLang2==='km'?0:255, htmlLang2==='km'?255:0, 0],                        // v1: same (km)
+    [enPressed==='true'?255:0, enPressed==='true'?0:0, 0],                    // v2: en NOT active (red)
+    [kmPressed==='true'?0:255, kmPressed==='true'?255:0, 0],                    // v3: km active (green)
+    [0, 128, 0],                                                                // v4: clicked (green)
+    [0, 0, 255],                                                                // v5: ready (blue)
+  ];
+  
+  for (var i = 0; i < info2.length; i++) {
+    var div2 = document.createElement('div');
+    div2.style.position = 'fixed';
+    div2.style.top = '70px';
+    div2.style.left = (i*70) + 'px';
+    div2.style.width = '60px';
+    div2.style.height = '60px';
+    div2.style.zIndex = '99999999';
+    div2.style.border = '3px solid white';
+    div2.style.boxSizing = 'border-box';
+    div2.style.background = 'rgb(' + info2[i][0] + ',' + info2[i][1] + ',' + info2[i][2] + ')';
+    document.body.appendChild(div2);
+  }
+} else {
+  // Draw error (magenta) at y=70
+  var err = document.createElement('div');
+  err.style.position = 'fixed'; err.style.top = '70px'; err.style.left = '0';
+  err.style.width = '60px'; err.style.height = '60px';
+  err.style.zIndex = '99999999'; err.style.border = '3px solid white';
+  err.style.background = 'rgb(255,0,255)';
+  document.body.appendChild(err);
+}
+</script>
+</body>
+</html>

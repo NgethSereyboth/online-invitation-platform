@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>i18n Switch Test</title>
+<style>body{font-family:Arial,sans-serif;margin:20px;background:#f5f1ef}iframe{border:2px solid #9d4555;width:100%;height:600px}iframe{border:2px solid #9d4555}pre{background:#fff;border:1px solid #e8dfdc;padding:12px;overflow:auto;font-size:12px}</style>
+</head><body>
+<h2>i18n Switch Test</h2>
+<iframe id="dash" src="dashboard.html"></iframe>
+<h3>Results:</h3>
+<pre id="results">Loading...</pre>
+<script>
+(function(){
+  var iframe = document.getElementById('dash');
+  var results = document.getElementById('results');
+  var iframeDoc = null;
+  
+  function checkDoc(doc, label) {
+    if (!doc) { results.textContent += label + ': doc not ready\n'; return; }
+    var html = doc.documentElement;
+    var htmlLang = html.lang || html.getAttribute('lang') || '(none)';
+    var switchEl = doc.querySelector('.language-switch');
+    var enBtn = doc.querySelector('#lang-en');
+    var kmBtn = doc.querySelector('#lang-km');
+    var enPressed = enBtn ? enBtn.getAttribute('aria-pressed') : '(not found)';
+    var kmPressed = kmBtn ? kmBtn.getAttribute('aria-pressed') : '(not found)';
+    var hasEnSpans = doc.querySelectorAll('.i18n-en').length;
+    var hasKmSpans = doc.querySelectorAll('.i18n-km').length;
+    var visibleEn = doc.querySelectorAll('.i18n-en').length > 0;
+    results.textContent = label + ': htmlLang=' + htmlLang + ', switch=' + (switchEl ? 'visible' : 'missing') + ', en_pressed=' + enPressed + ', km_pressed=' + kmPressed + ', en_spans=' + hasEnSpans + ', km_spans=' + hasKmSpans;
+  }
+  
+  iframe.addEventListener('load', function() {
+    // First, check English state
+    checkDoc(iframe.contentDocument, 'After load (EN)');
+    
+    // Wait for i18n.js to inject the switch (it runs on DOMContentLoaded)
+    setTimeout(function() {
+      checkDoc(iframe.contentDocument, 'After 1s (EN)');
+      
+      // Click the Khmer button to switch language
+      var kmBtn = iframe.contentDocument.querySelector('#lang-km');
+      if (kmBtn) {
+        kmBtn.click();
+        results.textContent += '\nClick: #lang-km clicked\n';
+        setTimeout(function() {
+          checkDoc(iframe.contentDocument, 'After click (KM)');
+        }, 300);
+      } else {
+        results.textContent += '\nClick: #lang-km NOT found\n';
+      }
+    }, 1500);
+  });
+})();
+</script>
+</body></html>

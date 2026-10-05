@@ -10,7 +10,12 @@
     en: { title:'Reports queue', description:'Users can report abusive invitations or users. Resolve each report with an audit-logged action.', noReports:'No reports in this view.', reporterId:'Reporter', target:'Target', reason:'Reason', body:'Body', status:'Status', createdAt:'Created', resolve:'Resolve', resolutionNote:'Resolution note', statusOpen:'open', statusInvestigating:'investigating', statusActioned:'resolved (actioned)', statusNoAction:'resolved (no action)', statusDuplicate:'duplicate', loadMore:'Load more', submitTestReport:'Submit a test report', targetTypeInvitation:'invitation', targetTypeUser:'user', reasonSpam:'spam', reasonHarassment:'harassment', reasonImpersonation:'impersonation', reasonIllegal:'illegal content', reasonOther:'other', targetId:'Target id' },
     km: { title:'ជួររាយការណ៍', description:'អ្នកប្រើអាចរាយការណ៍អំពីការអញ្ជើញឬអ្នកប្រើបំពាន។ ដោះស្រាយរាយការណ៍នីមួយៗជាមួយសកម្មភាពដែលបានកត់ត្រាសវនកម្ម។', noReports:'មិនមានរាយការណ៍ក្នុងទិដ្ឋភាពនេះ។', reporterId:'អ្នករាយការណ៍', target:'គោលដៅ', reason:'មូលហេតុ', body:'ខ្លឹងសារ', status:'ស្ថានភាព', createdAt:'បង្កើត', resolve:'ដោះស្រាយ', resolutionNote:'កំណត់ត្រាដោះស្រាយ', statusOpen:'បើក', statusInvestigating:'កំពុងពិនិត្យ', statusActioned:'ដោះស្រាយ (បានអនុវត្ត)', statusNoAction:'ដោះស្រាយ (មិនអនុវត្ត)', statusDuplicate:'ស្ទួន', loadMore:'ផ្ទុកបន្ថែម', submitTestReport:'ដាក់ស្នើរាយការណ៍សាកល្បង', targetTypeInvitation:'ការអញ្ជើញ', targetTypeUser:'អ្នកប្រើ', reasonSpam:'ស្ពាម', reasonHarassment:'ការបំពាន', reasonImpersonation:'ការបន្លំ', reasonIllegal:'មាតិកាមិនស្របច្បាប់', reasonOther:'ផ្សេងទៀត', targetId:'លេខសម្គាល់គោលដៅ' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { items: [], nextCursor: null, hasMore: false, statusFilter: '' };
 
   async function load(append=false){

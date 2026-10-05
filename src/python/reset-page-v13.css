@@ -1,0 +1,1 @@
+.auth-page{max-width:480px;margin:70px auto;padding:28px;background:#fff;border:1px solid var(--line);border-radius:18px}.auth-page h1{font:34px Georgia,serif;color:var(--accent)}.auth-page form{display:grid;gap:12px}.auth-page label{display:grid;gap:6px}.auth-page .status{min-height:24px;color:#655}.auth-page .success{color:#176443}

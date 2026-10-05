@@ -10,7 +10,12 @@
     en: { title:'Users', search:'Search by email, role, or plan', prev:'Previous', next:'Next', suspend:'Suspend', unsuspend:'Unsuspend', resetPw:'Reset password', forceMfa:'Force MFA', impersonate:'Impersonate', confirmSuspend:'Suspend this user? Active sessions will be invalidated.', confirmResetPw:'Send a password-reset email to this user?', confirmForceMfa:'Force this user to re-enroll MFA on next login?', confirmImpersonate:'Start an impersonation session as this user? You will be logged in as them for 30 minutes.', suspendReason:'Reason', noUsers:'No users found.', role:'Role', plan:'Plan', created:'Created', lastActive:'Last active', invitations:'Invitations', status:'Status', actions:'Actions', tipStepUp:'Super-admin (step-up) required' },
     km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះ? សessianសកម្មនឹងត្រូវបោះបង់។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលឡុកអិន下一次?', confirmImpersonate:'ចាប់ផ្ដើមសessianសាកល្បងក្នុងនាមអ្នកប្រើនេះ? អ្នកនឹងត្រូវបានឡុកអិនក្នុងនាមពួកគេរយៈពេល ៣០ នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការ super-admin (step-up)' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { items: [], nextCursor: null, q: '', hasMore: false };
 
   async function load(){
@@ -102,9 +107,14 @@
     }
   }
 
+  let _langUnsub = null;
   async function mount(){
     try { await load(); } catch(e) { /* not authorized */ }
     render();
+    // Re-render on language switch (cached data, no refetch).
+    if (!_langUnsub && window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
+      _langUnsub = window.EInviteI18n.subscribe(render);
+    }
   }
 
   window.EInviteAdminUsers = Object.freeze({ version: 64, mount, render, load });

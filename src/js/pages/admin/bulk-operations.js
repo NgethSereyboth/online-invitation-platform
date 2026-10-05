@@ -12,7 +12,12 @@
     en: { title:'Bulk operations', danger:'These actions are irreversible. Each operation runs as a background job.', confirm:'Type CONFIRM to proceed', cancel:'Cancel', run:'Run', bulkEmail:'Bulk email', bulkSuspend:'Bulk suspend', bulkExport:'Bulk export', bulkPrune:'Bulk prune', subject:'Subject', body:'Body', userIds:'User IDs (comma-separated)', reason:'Reason', what:'What', format:'Format', days:'Days', jobStarted:'Job started', jobId:'Job id', status:'Status', refresh:'Refresh jobs', requireSuperAdmin:'Super-admin access required.', jobsTrackedBelow:'Recently enqueued jobs are listed below; use the job id to track progress.' },
     km: { title:'ប្រតិបត្តិការច្រើន', danger:'សកម្មភាពទាំងនេះមិនអាចបញ្ច្រាសបានទេ។ ប្រតិបត្តិការនីមួយៗដំណើរការជាការងារផ្ទៃខាងក្រោយ។', confirm:'វាយ CONFIRM ដើម្បីបន្ត', cancel:'បោះបង់', run:'ដំណើរការ', bulkEmail:'អ៊ីមែលច្រើន', bulkSuspend:'ផ្អាកច្រើន', bulkExport:'នាំចេញច្រើន', bulkPrune:'កាត់ច្រើន', subject:'ប្រធានបទ', body:'ខ្លឹងសារ', userIds:'លេខសម្គាល់អ្នកប្រើ (ផ្ដាច់ដោយក្បៀស)', reason:'មូលហេតុ', what:'អ្វី', format:'ទម្រង់', days:'ថ្ងៃ', jobStarted:'ការងារបានចាប់ផ្ដើម', jobId:'លេខសម្គាល់ការងារ', status:'ស្ថានភាព', refresh:'ធ្វើបច្ចុប្បន្នភាព', requireSuperAdmin:'ត្រូវការ super-admin។', jobsTrackedBelow:'ការងារដែលបានដាក់បញ្ជូនថ្មីៗបង្ហាញខាងក្រោម; ប្រើលេខសម្គាល់ការងារដើម្បីតាមដាន។' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { jobs: [] };
 
   function confirmDialog(message, fields=[]){

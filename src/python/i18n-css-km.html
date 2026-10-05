@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<style>
+body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+header { background: #333; color: white; padding: 10px; margin-bottom: 20px; }
+.content { padding: 20px; background: white; }
+h1 { font-size: 24px; margin: 0 0 10px 0; }
+.item { padding: 8px; margin: 4px 0; background: #e8e8e8; }
+/* The actual i18n toggle CSS rules (from bundle-dashboard-v15.css) */
+[lang="en"] .i18n-km { display: none; }
+[lang="km"] .i18n-en { display: none; }
+[lang="km"] .i18n-km { display: inline; }
+[lang="en"] .i18n-en { display: inline; }
+[lang="km"] { font-family: "Noto Sans Khmer", sans-serif; line-height: 1.6; }
+.test-bar { height: 20px; margin: 5px 0; }
+.status-en { background: #4CAF50; } /* green = EN visible */
+.status-km { background: #2196F3; } /* blue = KM visible */
+</style>
+</head>
+<body>
+<header>
+  <h1 class="i18n i18n-en">Edit History</h1>
+  <h1 class="i18n i18n-km">ប្រវត្តិកែសម្រួល</h1>
+  <div class="test-bar status-en"></div>
+  <div class="test-bar status-km"></div>
+</header>
+<div class="content">
+  <div class="item i18n i18n-en">Edit history</div>
+  <div class="item i18n i18n-km">ប្រវត្តិកែសម្រួល</div>
+  <div class="item i18n i18n-en">Guest list</div>
+  <div class="item i18n i18n-km">បញ្ជីភ្ញើគិត្តជន</div>
+  <div class="item i18n i18n-en">Settings</div>
+  <div class="item i18n i18n-km">ការកំនត់តែង</div>
+</div>
+</body>
+</html>

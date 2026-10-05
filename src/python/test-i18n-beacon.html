@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>i18n Switch Test</title>
+<style>body{font-family:Arial,sans-serif;margin:0;background:#f5f1ef}p{margin:4px}</style>
+</head><body>
+<p>Test running…</p>
+<iframe id="target" src="dashboard.html" style="width:100%;height:600px;border:1px solid #ccc"></iframe>
+<pre id="status" style="background:#fff;border:1px solid #ccc;padding:12px;font-size:14px"></pre>
+<script>
+(function(){
+  var BEACON = 'http://127.0.0.1:8099/beacon';
+  function beacon(label, data) {
+    var img = new Image();
+    img.src = BEACON + '?' + label + '=' + encodeURIComponent(JSON.stringify(data));
+  }
+  function status(msg) {
+    document.getElementById('status').textContent += msg + '\n';
+  }
+  
+  var iframe = document.getElementById('target');
+  var attempts = 0;
+  
+  function waitForSwitch(doc, callback, maxWait) {
+    var count = 0;
+    var interval = setInterval(function() {
+      var sw = doc.querySelector('.language-switch');
+      var kmBtn = doc.querySelector('#lang-km');
+      if (sw && kmBtn) {
+        clearInterval(interval);
+        callback();
+      }
+      count++;
+      if (count > maxWait) {
+        clearInterval(interval);
+        status('TIMEOUT: switch not found after ' + maxWait + ' attempts');
+        callback();
+      }
+    }, 200);
+  }
+  
+  function getDomState(doc) {
+    var html = doc.documentElement;
+    var htmlLang = html.getAttribute('lang') || html.lang || '(none)';
+    var hasSwitch = !!doc.querySelector('.language-switch');
+    var enActive = !!doc.querySelector('#lang-en[aria-pressed="true"]');
+    var kmActive = !!doc.querySelector('#lang-km[aria-pressed="true"]');
+    var enSpans = doc.querySelectorAll('.i18n-en').length;
+    var kmSpans = doc.querySelectorAll('.i18n-km').length;
+    var headerText = doc.querySelector('header') ? doc.querySelector('header').textContent.slice(0, 100) : '(no header)';
+    return {
+      htmlLang: htmlLang,
+      hasSwitch: hasSwitch,
+      enActive: enActive,
+      kmActive: kmActive,
+      enSpans: enSpans,
+      kmSpans: kmSpans,
+      headerPreview: headerText
+    };
+  }
+  
+  iframe.onload = function() {
+    status('iframe loaded');
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    
+    waitForSwitch(doc, function() {
+      status('switch found, checking EN state');
+      
+      var enState = getDomState(doc);
+      beacon('en_state', enState);
+      status('EN: ' + JSON.stringify(enState));
+      
+      // Click the Khmer button
+      var kmBtn = doc.querySelector('#lang-km');
+      if (kmBtn) {
+        status('clicking #lang-km');
+        kmBtn.click();
+        
+        setTimeout(function() {
+          var kmState = getDomState(doc);
+          beacon('km_state', kmState);
+          status('KM: ' + JSON.stringify(kmState));
+          
+          // Reload the iframe
+          status('reloading iframe');
+          iframe.src = iframe.src;
+          
+          iframe.onload = function() {
+            status('iframe reloaded');
+            waitForSwitch(doc, function() {
+              var reloadState = getDomState(doc);
+              beacon('reload_state', reloadState);
+              status('RELOAD: ' + JSON.stringify(reloadState));
+              status('DONE');
+            }, 50);
+          };
+        }, 800);
+      } else {
+        status('ERROR: #lang-km not found');
+        beacon('error', {message: 'lang-km not found'});
+      }
+    }, 50);
+  };
+})();
+</script>
+</body></html>

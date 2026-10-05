@@ -119,7 +119,12 @@
     return (l || "en").toLowerCase().indexOf("km") === 0 ? "km" : "en";
   }
 
-  function t(key) { return (STRINGS[locale()] || STRINGS.en)[key] || key; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
 
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"]/g, function (c) {

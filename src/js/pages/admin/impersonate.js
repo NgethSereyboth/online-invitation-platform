@@ -11,7 +11,12 @@
     en: { title:'Impersonation', description:'Start an impersonation session as another user. The session expires after 30 minutes and every action is audit-logged.', userId:'User id to impersonate', start:'Start impersonation', stop:'Stop impersonation', confirmStart:'Start impersonation session? You will be logged in as this user for 30 minutes. Every action will be audit-logged.', notActive:'No active impersonation session.', requireSuperAdmin:'Super-admin access required.', current:'Current session', adminOriginId:'Original admin id' },
     km: { title:'ការសាកល្បងក្នុងនាម', description:'ចាប់ផ្ដើមសessianក្នុងនាមអ្នកប្រើផ្សេងទៀត។ សessianនឹងផុតកំណត់បន្ទាប់ពី ៣០ នាទី ហើយសកម្មភាពនីមួយៗត្រូវបានកត់ត្រាសវនកម្ម។', userId:'លេខសម្គាល់អ្នកប្រើដែលត្រូវសាកល្បង', start:'ចាប់ផ្ដើម', stop:'បញ្ឈប់', confirmStart:'ចាប់ផ្ដើមសessian? អ្នកនឹងត្រូវបានឡុកអិនក្នុងនាមអ្នកប្រើនេះរយៈពេល ៣០ នាទី។', notActive:'មិនមានសessianសកម្មទេ។', requireSuperAdmin:'ត្រូវការ super-admin។', current:'សessianបច្ចុប្បន្ន', adminOriginId:'លេខសម្គាល់អ្នកគ្រប់គ្រងដើម' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { current: null };
 
   async function loadCurrent(){

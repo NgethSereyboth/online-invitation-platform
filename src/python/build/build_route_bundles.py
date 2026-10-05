@@ -28,11 +28,12 @@ import re
 from pathlib import Path
 
 # --- Repo layout -----------------------------------------------------------
-# SCRIPT_DIR is the directory this file lives in (src/python/). The HTTP server
-# also serves from here, so generated artifacts MUST be written here.
+# SCRIPT_DIR is the directory this file lives in (src/python/build/).
+# SERVER_DIR is src/python/ where the HTTP server serves from.
 SCRIPT_DIR = Path(__file__).resolve().parent
-# REPO_ROOT = /home/z/my-project/einvite-platform (two parents up from src/python/).
-REPO_ROOT = SCRIPT_DIR.parent.parent.parent
+SERVER_DIR = SCRIPT_DIR.parent
+# REPO_ROOT = <repo root> (two parents up from src/python/).
+REPO_ROOT = SERVER_DIR.parent.parent
 JS_DIR = REPO_ROOT / "src" / "js"
 CSS_DIR = REPO_ROOT / "src" / "css"
 CSS_ORG = CSS_DIR / "organized"
@@ -43,7 +44,7 @@ DOCS_DIR = REPO_ROOT / "docs"
 # Source manifest (repo source of truth) lives in docs/, NOT src/python/.
 SOURCES = DOCS_DIR / "route-bundle-sources-v15.json"
 # Output manifest is mirrored to both locations.
-MANIFEST_SERVER = SCRIPT_DIR / "route-bundles-v15.json"
+MANIFEST_SERVER = SERVER_DIR / "route-bundles-v15.json"
 MANIFEST_DOCS = DOCS_DIR / "route-bundles-v15.json"
 
 
@@ -174,8 +175,8 @@ def build(write: bool) -> dict:
         css = css_bundle(entry["styles"])
         if write:
             # JS bundles mirror into src/js/ (repo truth); CSS bundles into src/css/.
-            write_both(js_name, js, [SCRIPT_DIR, JS_DIR])
-            write_both(css_name, css, [SCRIPT_DIR, CSS_DIR])
+            write_both(js_name, js, [SERVER_DIR, JS_DIR])
+            write_both(css_name, css, [SERVER_DIR, CSS_DIR])
         result["pages"][page] = {
             "javascript": js_name,
             "stylesheet": css_name,
@@ -215,7 +216,7 @@ def main(argv=None) -> int:
             for key, hash_key in (("javascript", "scriptSha256"), ("stylesheet", "styleSha256")):
                 name = item[key]
                 mirror_dir = JS_DIR if name.endswith(".js") else CSS_DIR
-                for location in (SCRIPT_DIR, mirror_dir):
+                for location in (SERVER_DIR, mirror_dir):
                     p = location / name
                     if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != item[hash_key]:
                         print(f"ROUTE_BUNDLE_OUT_OF_DATE {page} {location/name}")

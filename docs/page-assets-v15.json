@@ -1,10 +1,10 @@
 {
   "pages": {
     "account.html": {
-      "bytes": 295767,
+      "bytes": 313500,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-account-v15.js"
       ],
@@ -14,10 +14,10 @@
       ]
     },
     "admin.html": {
-      "bytes": 288077,
+      "bytes": 358911,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-admin-v15.js"
       ],
@@ -27,10 +27,10 @@
       ]
     },
     "analytics.html": {
-      "bytes": 287675,
+      "bytes": 304331,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-analytics-v15.js"
       ],
@@ -40,10 +40,10 @@
       ]
     },
     "billing.html": {
-      "bytes": 285265,
+      "bytes": 302182,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-billing-v15.js"
       ],
@@ -53,10 +53,10 @@
       ]
     },
     "checkin.html": {
-      "bytes": 94640,
+      "bytes": 110990,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-checkin-v15.js"
       ],
@@ -66,10 +66,10 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 576323,
+      "bytes": 598620,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-dashboard-v15.js"
       ],
@@ -80,10 +80,10 @@
       ]
     },
     "designer.html": {
-      "bytes": 306421,
+      "bytes": 322798,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-designer-v15.js"
       ],
@@ -93,10 +93,10 @@
       ]
     },
     "guests.html": {
-      "bytes": 296012,
+      "bytes": 314632,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-guests-v15.js"
       ],
@@ -106,7 +106,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1530969,
+      "bytes": 1558135,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -119,7 +119,7 @@
       ]
     },
     "materials.html": {
-      "bytes": 364638,
+      "bytes": 379087,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -132,9 +132,12 @@
       ]
     },
     "privacy.html": {
-      "bytes": 100703,
-      "scriptCount": 1,
+      "bytes": 119035,
+      "scriptCount": 4,
       "scripts": [
+        "core/safe-dom.js",
+        "core/i18n.js",
+        "backend-mode-v14.js",
         "core/theme.js"
       ],
       "styleCount": 1,
@@ -143,7 +146,7 @@
       ]
     },
     "public.html": {
-      "bytes": 306802,
+      "bytes": 319564,
       "scriptCount": 1,
       "scripts": [
         "bundle-public-v15.js"
@@ -154,10 +157,10 @@
       ]
     },
     "reset.html": {
-      "bytes": 277156,
+      "bytes": 293183,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-reset-v15.js"
       ],
@@ -167,10 +170,10 @@
       ]
     },
     "responses.html": {
-      "bytes": 291591,
+      "bytes": 307758,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-responses-v15.js"
       ],
@@ -180,10 +183,10 @@
       ]
     },
     "templates.html": {
-      "bytes": 328252,
+      "bytes": 345778,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-templates-v15.js"
       ],
@@ -193,10 +196,10 @@
       ]
     },
     "verify.html": {
-      "bytes": 275974,
+      "bytes": 291630,
       "scriptCount": 3,
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-verify-v15.js"
       ],
@@ -222,14 +225,15 @@
         "privacy.html"
       ],
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-account-v15.js",
         "bundle-admin-v15.js",
         "bundle-billing-v15.js",
         "bundle-verify-v15.js",
         "bundle-reset-v15.js",
-        "core/theme.js"
+        "core/safe-dom.js",
+        "core/i18n.js"
       ],
       "styles": [
         "bundle-account-v15.css",
@@ -250,7 +254,7 @@
         "dashboard.html"
       ],
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-dashboard-v15.js"
       ],
@@ -293,12 +297,11 @@
         "designer.html"
       ],
       "scripts": [
-        "theme-init.js",
+        "core/theme.js",
         "backend-mode-v14.js",
         "bundle-guests-v15.js",
         "bundle-responses-v15.js",
         "bundle-analytics-v15.js",
-        "core/theme.js",
         "bundle-materials-v15.js",
         "bundle-checkin-v15.js",
         "bundle-templates-v15.js",

@@ -16,6 +16,9 @@ from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_
 # V54.33 (phase-4a — §4.4) — plugin marketplace CA for double-signature verification.
 from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured, marketplace_summary)
 from features.secrets import ensure_secret as v54_ensure_secret
+from features import settings
+from features.settings import get_setting_int, list_settings, set_setting
+from features.feature_flags import list_flags, set_flag, ensure_schema as ensure_feature_flags_schema, DEFAULT_FLAGS
 from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from typography_contract import normalize_font_id, finite_number
@@ -209,6 +212,7 @@ def current_presence(invite_id):
     dedup={f"{x.get('userId')}:{x.get('clientId')}":x for x in items}
     return list(dedup.values())
 SESSION_COOKIE_NAME = platform_env("EINVITE_SESSION_COOKIE_NAME", "einvite_session").strip() or "einvite_session"
+ADMIN_SESSION_IDLE_MS = 30 * 60 * 1000  # 30 minutes — ROADMAP §4.2(b)
 COOKIE_SECURE = platform_env("EINVITE_COOKIE_SECURE", "0").lower() in {"1", "true", "yes"}
 DEV_AUTH_TOKENS_ENABLED = platform_env("EINVITE_DEV_AUTH_TOKENS", "0").lower() in {"1", "true", "yes"}
 AI_ENDPOINT = platform_env("EINVITE_AI_ENDPOINT", "").strip()
@@ -1475,6 +1479,9 @@ def connect_sqlite():
                     if "failed_login_attempts" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0")
                     if "failed_login_first_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN failed_login_first_at BIGINT")
                     if "locked_until" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN locked_until BIGINT")
+                    if "session_never_expires" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN session_never_expires INTEGER NOT NULL DEFAULT 0")
+                    settings.ensure_schema(db)
+                    ensure_feature_flags_schema(db)
                     session_columns={row["name"] for row in db.execute("PRAGMA table_info(sessions)")}
                     if "user_agent" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN user_agent TEXT NOT NULL DEFAULT ''")
                     if "ip_address" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN ip_address TEXT NOT NULL DEFAULT ''")
@@ -3006,10 +3013,17 @@ class Handler(SimpleHTTPRequestHandler):
         if not tokens:return None
         now=int(time.time()*1000)
         with connect() as db:
+            non_admin_days=get_setting_int(db,"session_idle_days_nonadmin",7)
+            non_admin_idle=non_admin_days*24*60*60*1000
             for token in tokens:
                 token_hash=hashlib.sha256(token.encode()).hexdigest()
-                row=db.execute("SELECT u.id,u.email,u.role,u.email_verified,u.plan,u.upload_enabled,u.mfa_enabled,u.deleted_at,s.created_at session_created_at,s.last_seen_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.deleted_at IS NULL",(token_hash,now)).fetchone()
+                row=db.execute("SELECT u.id,u.email,u.role,u.email_verified,u.plan,u.upload_enabled,u.mfa_enabled,u.deleted_at,u.session_never_expires,s.created_at session_created_at,s.last_seen_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.deleted_at IS NULL",(token_hash,now)).fetchone()
                 if row:
+                    if not row["session_never_expires"]:
+                        idle_limit=ADMIN_SESSION_IDLE_MS if row["role"]=="admin" else non_admin_idle
+                        if now-int(row["last_seen_at"] or 0)>idle_limit:
+                            self._expire_stale_session=True
+                            return None
                     try:db.execute("UPDATE sessions SET last_seen_at=? WHERE token_hash=? AND last_seen_at<?",(now,token_hash,now-60_000))
                     except Exception as exc: _log.debug("cleanup failed: %s", exc)
                     return row
@@ -3061,6 +3075,8 @@ class Handler(SimpleHTTPRequestHandler):
             uid=user_id
             if uid is None:
                 current=self.user();uid=current["id"] if current else None
+            if (getattr(self,"path","") or "").split("?",1)[0].startswith("/api/admin/"):
+                metadata={**(metadata or {}),"admin":True}
             write_audit_event(uid,action,target_type,target_id,metadata,self.client_ip())
         except Exception as exc:
             if JSON_LOGS:print(json.dumps({"level":"warning","event":"audit_write_failed","message":str(exc)}),flush=True)
@@ -3136,7 +3152,7 @@ class Handler(SimpleHTTPRequestHandler):
         # Root JSON files are release/build evidence rather than browser assets.
         # Serving arbitrary *.json here disclosed architecture and audit metadata.
         allowed_root_suffixes={".js",".css",".webmanifest",".png",".jpg",".jpeg",".webp",".gif",".svg",".ico",".woff",".woff2",".ttf",".otf",".wasm"}
-        allowed_nested_roots={"assets","vendor","licenses"}
+        allowed_nested_roots={"assets","vendor","licenses","core"}
         allowed_nested_suffixes=allowed_root_suffixes|{".txt"}
         suffix=Path(parts[-1]).suffix.lower()
         if len(parts)==1:
@@ -3391,8 +3407,10 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/admin/overview": return self.admin_overview()
         if path == "/api/admin/ai/providers": return self.admin_ai_providers()
         if path == "/api/admin/users": return self.admin_users()
+        if path == "/api/admin/settings": return self.admin_settings()
         if path == "/api/admin/templates": return self.admin_templates()
         if path == "/api/admin/invitations": return self.admin_invitations()
+        if path == "/api/admin/feature-flags": return self.admin_feature_flags()
         if path == "/api/invitations": return self.list_invitations()
         if path == "/api/trash": return self.list_trash()
         if path == "/api/template-marketplace": return self.list_marketplace_templates()
@@ -3475,8 +3493,11 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/admin/users/") and path.endswith("/role"): return self.admin_update_user_role(path.split("/")[4])
             if path.startswith("/api/admin/users/") and path.endswith("/plan"): return self.admin_update_user_plan(path.split("/")[4])
             if path.startswith("/api/admin/users/") and path.endswith("/uploads"): return self.admin_update_user_upload_permission(path.split("/")[4])
+            if path.startswith("/api/admin/users/") and path.endswith("/session-policy"): return self.admin_update_user_session_policy(path.split("/")[4])
+            if path == "/api/admin/settings/session-idle-days-nonadmin": return self.admin_update_session_idle_setting()
             if path.startswith("/api/admin/templates/") and path.endswith("/visibility"): return self.admin_update_template_visibility(path.split("/")[4])
             if path.startswith("/api/admin/invitations/") and path.endswith("/published"): return self.admin_update_invitation_published(path.split("/")[4])
+            if path == "/api/admin/feature-flags": return self.admin_update_feature_flags()
             if "/guests/" in path and path.endswith("/check-in"): return self.check_in_guest(path.split("/")[3],path.split("/")[5])
             if "/rsvps/" in path: return self.update_rsvp(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/templates/") and path.count("/") == 3: return self.update_template(path.split("/")[3])
@@ -4830,6 +4851,7 @@ class Handler(SimpleHTTPRequestHandler):
         data=self.body(20_000);plan=str(data.get("plan","free"))
         if plan not in {"free","creator","studio"}:raise ValueError("Invalid account plan")
         with connect() as db:changed=db.execute("UPDATE users SET plan=? WHERE id=?",(plan,user_id)).rowcount
+        if changed:self.audit("admin.user_plan_changed","user",user_id,{"plan":plan},user_id=admin["id"])
         self.json(200 if changed else 404,{"updated":bool(changed),"plan":plan})
 
     def admin_update_user_role(self,user_id):
@@ -4847,6 +4869,7 @@ class Handler(SimpleHTTPRequestHandler):
         if role not in {"customer","designer","admin"}:raise ValueError("Invalid account role")
         if user_id==admin["id"] and role!="admin":raise ValueError("You cannot remove your own administrator role")
         with connect() as db:changed=db.execute("UPDATE users SET role=? WHERE id=?",(role,user_id)).rowcount
+        if changed:self.audit("admin.user_role_changed","user",user_id,{"role":role},user_id=admin["id"])
         self.json(200 if changed else 404,{"updated":bool(changed),"role":role})
 
     def admin_update_user_upload_permission(self,user_id):
@@ -4867,6 +4890,60 @@ class Handler(SimpleHTTPRequestHandler):
         if changed:self.audit("account.upload_permission_changed","user",user_id,{"enabled":bool(enabled)},user_id=admin["id"])
         self.json(200 if changed else 404,{"updated":bool(changed),"uploadEnabled":bool(enabled)})
 
+    def admin_settings(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/settings", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
+        user=self.require_role("admin")
+        if not user:return
+        with connect() as db:
+            items=list_settings(db)
+        self.json(200,{"settings":items})
+
+    def admin_update_session_idle_setting(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/settings/session-idle-days-nonadmin", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
+        admin=self.require_role("admin")
+        if not admin:return
+        if not self.rate_limit(f"admin-settings:{admin['id']}",60,60):return
+        data=self.body(20_000);days=int(data.get("days",7))
+        if days not in {7,15,30}:raise ValueError("session_idle_days_nonadmin must be 7, 15, or 30")
+        with connect() as db:
+            set_setting(db,"session_idle_days_nonadmin",str(days),admin["id"])
+        self.audit("admin.setting_changed","setting","session_idle_days_nonadmin",{"days":days},user_id=admin["id"])
+        self.json(200,{"key":"session_idle_days_nonadmin","value":days})
+
+    def admin_update_user_session_policy(self,user_id):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/session-policy", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
+        admin=self.require_role("admin")
+        if not admin:return
+        if not self.rate_limit(f"admin-user-session-policy:{admin['id']}",60,60):return
+        data=self.body(20_000)
+        if not isinstance(data.get("neverExpires"),bool):raise ValueError("neverExpires must be true or false")
+        never=1 if data["neverExpires"] else 0;now=int(time.time()*1000)
+        with connect() as db:
+            changed=db.execute("UPDATE users SET session_never_expires=? WHERE id=?",(never,user_id)).rowcount
+            if changed:
+                if never:db.execute("UPDATE sessions SET expires_at=? WHERE user_id=? AND expires_at>?",(now+36500*24*60*60*1000,user_id,now))
+                else:db.execute("DELETE FROM sessions WHERE user_id=?",(user_id,))
+        if changed:self.audit("admin.user_session_policy_changed","user",user_id,{"neverExpires":bool(never)},user_id=admin["id"])
+        self.json(200 if changed else 404,{"updated":bool(changed),"neverExpires":bool(never)})
+
     def admin_update_template_visibility(self,template_id):
         # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
         client_ip = self.client_ip()
@@ -4882,6 +4959,7 @@ class Handler(SimpleHTTPRequestHandler):
         if visibility not in {"private","public"}:raise ValueError("Invalid template visibility")
         now=int(time.time()*1000);published_at=now if visibility=="public" else None
         with connect() as db:changed=db.execute("UPDATE user_templates SET visibility=?,published_at=?,marketplace_status=?,updated_at=? WHERE id=?",(visibility,published_at,"approved" if visibility=="public" else "rejected",now,template_id)).rowcount
+        if changed:self.audit("admin.template_visibility_changed","template",template_id,{"visibility":visibility},user_id=admin["id"])
         self.json(200 if changed else 404,{"updated":bool(changed),"visibility":visibility})
 
     def admin_update_invitation_published(self,invite_id):
@@ -4897,7 +4975,93 @@ class Handler(SimpleHTTPRequestHandler):
         if not self.rate_limit(f"admin-invitation-published:{admin['id']}",60,60):return
         data=self.body(20_000);published=1 if data.get("published") else 0;now=int(time.time()*1000)
         with connect() as db:changed=db.execute("UPDATE invitations SET is_published=?,updated_at=? WHERE id=?",(published,now,invite_id)).rowcount
+        if changed:self.audit("admin.invitation_published_changed","invitation",invite_id,{"published":bool(published)},user_id=admin["id"])
         self.json(200 if changed else 404,{"updated":bool(changed),"published":bool(published)})
+
+    def _format_feature_flags(self, flags):
+        """Strip internal-only fields and convert epoch-ms timestamps to ISO-8601 UTC."""
+        import datetime as _dt
+        result = []
+        for f in flags:
+            ts = f.get("updatedAt", 0) or 0
+            result.append({
+                "key": f["key"],
+                "description": f.get("description", ""),
+                "value": f["value"],
+                "tier": f.get("tier"),
+                "updatedAt": _dt.datetime.fromtimestamp(ts / 1000, tz=_dt.timezone.utc).isoformat() if ts > 0 else None,
+                "updatedBy": f.get("updatedBy") or None,
+            })
+        return result
+
+    def admin_feature_flags(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/feature-flags", "GET")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
+        user=self.require_role("admin")
+        if not user:return
+        with connect() as db:
+            ensure_feature_flags_schema(db)
+            flags=list_flags(db)
+        self.json(200,{"flags":self._format_feature_flags(flags)})
+
+    def admin_update_feature_flags(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/feature-flags", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
+        admin=self.require_role("admin")
+        if not admin:return
+        data=self.body(20_000)
+        # 1. Validate body shape.
+        if not isinstance(data, dict) or not isinstance(data.get("updates"), list):
+            self.json(400, {"error": "Invalid request body: 'updates' must be a list"})
+            return
+        updates=data["updates"]
+        changed_flags=[]  # (key, old_value, new_value) for audit emission
+        with connect() as db:
+            ensure_feature_flags_schema(db)
+            current_flags={f["key"]: f for f in list_flags(db)}
+            latest_values={k: f["value"] for k, f in current_flags.items()}
+            # 2 & 3. Validate every key + type before applying any (no partial application).
+            for u in updates:
+                if not isinstance(u, dict) or "key" not in u:
+                    self.json(400, {"error": "Each update must be an object with a 'key' field"})
+                    return
+                key=u["key"]
+                value=u.get("value")
+                if key not in DEFAULT_FLAGS:
+                    self.json(400, {"error": f"Unknown feature flag key: {key}"})
+                    return
+                declared_type=type(DEFAULT_FLAGS[key]["value"])
+                if not isinstance(value, declared_type):
+                    self.json(400, {"error": f"Flag '{key}' expects {declared_type.__name__}, got {type(value).__name__}"})
+                    return
+            # 4. Apply all updates in a single transaction (all-or-nothing via connect()).
+            for u in updates:
+                key=u["key"]
+                value=u["value"]
+                old_value=latest_values.get(key)
+                if old_value != value:
+                    set_flag(db, key, value, admin["id"])
+                    changed_flags.append((key, bool(old_value), bool(value)))
+                    latest_values[key]=value
+            # Refresh the full snapshot after all writes committed in this transaction.
+            flags=list_flags(db)
+        # 5. Emit one audit row per changed flag (audit uses a separate transaction).
+        #    "admin": true is appended automatically by self.audit() because the path
+        #    starts with /api/admin/.
+        for key, old_value, new_value in changed_flags:
+            self.audit("admin.feature_flag_set", "feature_flag", key, {"oldValue": old_value, "newValue": new_value, "key": key}, user_id=admin["id"])
+        # 6. Respond 200 with the same body shape as the GET, post-update.
+        self.json(200, {"updated": len(changed_flags), "flags": self._format_feature_flags(flags)})
 
     def _create_auth_token(self,user_id,kind,lifetime_ms):
         token=secrets.token_urlsafe(36);now=int(time.time()*1000);token_hash=hashlib.sha256(token.encode()).hexdigest()
@@ -5148,8 +5312,9 @@ class Handler(SimpleHTTPRequestHandler):
         token=secrets.token_urlsafe(32);csrf=new_csrf_token();now=int(time.time()*1000);expires=now+30*24*60*60*1000;session_id=str(uuid.uuid4())
         user_agent=str(self.headers.get("User-Agent") or "")[:500];device_name=(user_agent.split(" ",1)[0] or "Browser")[:80]
         with connect() as db:
-            row=db.execute("SELECT email_verified,plan,upload_enabled,mfa_enabled FROM users WHERE id=?",(user_id,)).fetchone()
+            row=db.execute("SELECT email_verified,plan,upload_enabled,mfa_enabled,session_never_expires FROM users WHERE id=?",(user_id,)).fetchone()
             if email_verified is False:email_verified=bool(row["email_verified"]) if row else False
+            if row and row["session_never_expires"]:expires=now+36500*24*60*60*1000
             plan=row["plan"] if row and "plan" in row.keys() else "free"
             db.execute("INSERT INTO sessions(token_hash,id,user_id,expires_at,created_at,user_agent,ip_address,last_seen_at,device_name,csrf_hash) VALUES(?,?,?,?,?,?,?,?,?,?)",(hashlib.sha256(token.encode()).hexdigest(),session_id,user_id,expires,now,user_agent,self.client_ip(),now,device_name,hashlib.sha256(csrf.encode()).hexdigest()))
         cookie=f"{SESSION_COOKIE_NAME}={token}; Path=/; Max-Age={30*24*60*60}; HttpOnly; SameSite=Lax"

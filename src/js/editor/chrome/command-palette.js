@@ -62,8 +62,11 @@
     const lang = window.EInviteI18N?.getLocale?.() || document.documentElement.lang || 'en';
     return String(lang).toLowerCase().startsWith('km') ? 'km' : 'en';
   }
-  function t(key) {
-    return (STRINGS[locale()] || STRINGS.en)[key] || key;
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
   }
 
   const $ = (sel, root = document) => root.querySelector(sel);

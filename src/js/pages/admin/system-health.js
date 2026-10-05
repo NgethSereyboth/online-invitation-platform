@@ -10,7 +10,12 @@
     en: { title:'System health', refresh:'Refresh', cached:'60s cache — values may be up to 60s old', ok:'OK', fail:'FAIL', warn:'WARN', howToFix:'How to fix', subsystem:'Subsystem', detail:'Detail', uptime:'Uptime', computedAt:'Computed at', loadFailed:'Failed to load health detail' },
     km: { title:'សុខភាពប្រព័ន្ធ', refresh:'ធ្វើបច្ចុប្បន្នភាព', cached:'ឃ្លាំងសម្ងាត់ ៦០ វិ — តម្លៃអាចចាស់រហូតដល់ ៦០ វិ', ok:'ល្អ', fail:'បរាជ័យ', warn:'ព្រមាន', howToFix:'របៀបជួសជុល', subsystem:'ប្រព័ន្ធរង', detail:'លម្អិត', uptime:'ពេលវេលាដំណើរការ', computedAt:'គណនានៅ', loadFailed:'បរាជ័យក្នុងការផ្ទុកសុខភាពលម្អិត' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { payload: null };
 
   async function load(){

@@ -10,7 +10,12 @@
     en: { title:'Audit log', search:'Filter by user, action, target', user:'User', action:'Action', targetType:'Target type', targetId:'Target id', ip:'IP', adminOnly:'Admin only', since:'Since (ms)', until:'Until (ms)', exportCsv:'Export CSV', loadMore:'Load more', noEvents:'No audit events match the filters.', timestamp:'Timestamp', metadata:'Metadata', expand:'Expand', immutable:'The audit log is immutable — this view is read-only.' },
     km: { title:'កំណត់ហេតុសវនកម្ម', search:'តម្រងតាមអ្នកប្រើ សកម្មភាព គោលដៅ', user:'អ្នកប្រើ', action:'សកម្មភាព', targetType:'ប្រភេទគោលដៅ', targetId:'លេខសម្គាល់គោលដៅ', ip:'IP', adminOnly:'អ្នកគ្រប់គ្រងប៉ុណ្ណោះ', since:'ចាប់ពី (ms)', until:'រហូតដល់ (ms)', exportCsv:'នាំចេញ CSV', loadMore:'ផ្ទុកបន្ថែម', noEvents:'មិនមានព្រឹត្តិការណ៍សវនកម្មត្រូវគ្នាទេ។', timestamp:'ពេលវេលា', metadata:'ទិន្នន័យមេតា', expand:'ពង្រីក', immutable:'កំណត់ហេតុសវនកម្មមិនអាចកែប្រែបាន — ទិដ្ឋភាពនេះគ្រាន់តែអាន។' }
   };
-  function t(k){ const l = (document.documentElement.lang || 'en').startsWith('km') ? 'km' : 'en'; return (STRINGS[l] && STRINGS[l][k]) || STRINGS.en[k] || k; }
+  function t(key, ...args) {
+    var out = window.EInviteI18n
+      ? window.EInviteI18n.t(key, STRINGS, ...args)
+      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
+    return typeof out === 'function' ? out(...args) : out;
+  }
   let state = { items: [], nextCursor: null, hasMore: false, filters: {} };
 
   async function load(append=false){
