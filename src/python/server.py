@@ -262,7 +262,32 @@ _REDIS_CLIENT = None
 DATABASE_URL = platform_env("EINVITE_DATABASE_URL", "").strip()
 DATABASE_KIND = "postgresql" if DATABASE_URL.startswith(("postgres://", "postgresql://")) else "sqlite"
 PUBLIC_BASE_URL = platform_env("EINVITE_PUBLIC_BASE_URL", "").strip().rstrip("/")
-TRUSTED_PROXY_IPS = {x.strip() for x in platform_env("EINVITE_TRUSTED_PROXY_IPS", "").split(",") if x.strip()}
+# Parse EINVITE_TRUSTED_PROXY_IPS as CIDR ranges (e.g. "10.0.0.0/8") or bare
+# IPv4/IPv6 addresses.  Bare addresses are auto-suffixed to "/32" so operators
+# can mix exact-IP and CIDR entries.  Using cidr-based matching (rather than a
+# plain string set) is required for PaaS deployments like Render, where the
+# reverse-proxy address belongs to a private subnet (10.x/172.16.x) and must
+# be matched without enumerating every individual IP.
+_TRUSTED_PROXY_NETWORKS: list = []
+for _tpe in platform_env("EINVITE_TRUSTED_PROXY_IPS", "").split(","):
+    _tpe = _tpe.strip()
+    if not _tpe:
+        continue
+    try:
+        _TRUSTED_PROXY_NETWORKS.append(ipaddress.ip_network(_tpe, strict=False))
+    except ValueError:
+        try:
+            _TRUSTED_PROXY_NETWORKS.append(ipaddress.ip_network(_tpe + "/32", strict=False))
+        except ValueError:
+            pass
+def _is_trusted_proxy(addr: str) -> bool:
+    """Return True when *addr* falls inside any CIDR in ``_TRUSTED_PROXY_NETWORKS``."""
+    try:
+        _ip = ipaddress.ip_address(str(addr).rsplit("%", 1)[0])
+        return any(_ip in _net for _net in _TRUSTED_PROXY_NETWORKS)
+    except (ValueError, TypeError):
+        return False
+TRUSTED_PROXY_IPS = _TRUSTED_PROXY_NETWORKS  # backward-compat alias
 ALLOWED_HOSTS = {x.strip().lower().rstrip(".") for x in re.split(r"[\s,]+", platform_env("EINVITE_ALLOWED_HOSTS", "")) if x.strip()}
 REQUEST_SOCKET_TIMEOUT_SECONDS = max(5, min(300, int(platform_env("EINVITE_REQUEST_SOCKET_TIMEOUT_SECONDS", "45"))))
 MAX_CONCURRENT_REQUESTS = max(8, min(512, int(platform_env("EINVITE_MAX_CONCURRENT_REQUESTS", "64"))))
@@ -2946,7 +2971,7 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception:
             pass
         direct = str(self.client_address[0] if self.client_address else "")
-        if direct in TRUSTED_PROXY_IPS and (self.headers.get("X-Forwarded-Proto", "") or "").lower() == "https":
+        if _is_trusted_proxy(direct) and (self.headers.get("X-Forwarded-Proto", "") or "").lower() == "https":
             return True
         return False
     def guard_cookie_origin(self, require_session_csrf=True):
@@ -3075,7 +3100,7 @@ class Handler(SimpleHTTPRequestHandler):
         return db.execute("SELECT u.id,u.email,u.role,u.email_verified,u.plan FROM invitations i JOIN users u ON u.id=i.owner_id WHERE i.id=?",(invite_id,)).fetchone()
     def client_ip(self):
         direct=str(self.client_address[0] if self.client_address else "")
-        if direct in TRUSTED_PROXY_IPS:
+        if _is_trusted_proxy(direct):
             forwarded=(self.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
             if forwarded:return forwarded[:80]
         return direct[:80]
@@ -8144,7 +8169,7 @@ class Handler(SimpleHTTPRequestHandler):
         host=self.request_authority()
         if not host:return path
         direct=str(self.client_address[0] if self.client_address else "")
-        forwarded_https=direct in TRUSTED_PROXY_IPS and self.headers.get("X-Forwarded-Proto","").lower()=="https"
+        forwarded_https=_is_trusted_proxy(direct) and self.headers.get("X-Forwarded-Proto","").lower()=="https"
         scheme="https" if COOKIE_SECURE or forwarded_https else "http"
         return f"{scheme}://{host}{path if path.startswith('/') else '/'+path}"
 
@@ -10052,6 +10077,17 @@ def create_app():
 
         host = environ.get("HTTP_HOST", "localhost")
         header_lines.append(f"Host: {host}")
+
+        # waitress strips X-Forwarded-* headers from the WSGI environ when
+        # ``trusted_proxy`` is not configured (which it cannot be on Render's
+        # free tier, where the proxy IP is an opaque private address).  Behind
+        # a TLS-terminating edge proxy like Render's, inject
+        # X-Forwarded-Proto: https so SEC-04 HTTPS-redirect gate in
+        # ``guard_request_boundary()`` recognises the request as HTTPS and
+        # avoids a 308 → 308 redirect loop.  Only injected when COOKIE_SECURE
+        # is set and the header is not already present (no duplicates).
+        if COOKIE_SECURE and not any(h.lower().startswith("x-forwarded-proto") for h in header_lines):
+            header_lines.append("X-Forwarded-Proto: https")
 
         request_text = (
             f"{method} {raw_uri} HTTP/1.1\r\n"

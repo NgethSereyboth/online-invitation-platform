@@ -39,5 +39,12 @@ services:
       # the security-status ledger as a known free-tier limitation).
       - key: EINVITE_ALLOW_NO_SCANNER
         value: "1"
+      # Trust Render's internal reverse-proxy so the SEC-04 HTTPS redirect
+      # (server.py §2890) honours X-Forwarded-Proto: https instead of
+      # looping.  Render's edge terminates TLS and forwards plain HTTP to the
+      # app container; without this the app sees an HTTP request, redirects to
+      # HTTPS, and the redirect target (same host) loops → 308 loop.
+      - key: EINVITE_TRUSTED_PROXY_IPS
+        value: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8"
     healthCheckPath: /
     autoDeploy: true
