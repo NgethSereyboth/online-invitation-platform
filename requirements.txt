@@ -1,0 +1,5 @@
+# Root-level requirements entry point.
+# All production pins live in docs/requirements-production.txt (the single
+# authoritative file scanned by scripts/security-scan.sh and pip-audit).
+# Deploy targets that look for ./requirements.txt will resolve this file.
+-r docs/requirements-production.txt

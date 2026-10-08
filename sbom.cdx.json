@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:2614108c-7cc6-4917-8954-94e8bdb62e09",
+  "serialNumber": "urn:uuid:49b81d3e-bf75-46f0-9563-72510118e426",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-15T04:57:46Z",
+    "timestamp": "2026-10-08T09:32:05Z",
     "tools": [
       {
         "vendor": "eInvite",
@@ -32,28 +32,53 @@
   "components": [
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/boto3@1.43.94",
-      "name": "boto3",
-      "version": "1.43.94",
-      "purl": "pkg:pypi/boto3@1.43.94",
+      "bom-ref": "pkg:pypi/waitress@3.0.2",
+      "name": "waitress",
+      "version": "3.0.2",
+      "purl": "pkg:pypi/waitress@3.0.2",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "2534bf331acd2f448b9cf8317f4eed453c65d9e0b7de254e77c99d390ac57aec"
+          "content": "c56d67fd6e87c2ee598b76abdd4e96cfad1f24cacdea5078d382b1f9d7b5ed2e"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/ab/7a/046ba99f6bac067e73272930ba806f2860c50495b8f271f5fb2363f69d2b/boto3-1.43.94-py3-none-any.whl"
+          "url": "https://files.pythonhosted.org/packages/8d/57/a27182528c90ef38d82b636a11f606b0cbb0e17588ed205435f8affe3368/waitress-3.0.2-py3-none-any.whl"
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/Pylons/waitress"
+        }
+      ],
+      "description": "Waitress WSGI server"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/boto3@1.43.108",
+      "name": "boto3",
+      "version": "1.43.108",
+      "purl": "pkg:pypi/boto3@1.43.108",
+      "properties": [],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "19e9da95ef0c494e27052049a42137550e66730509bb613e76eaa30ddf9a7170"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://files.pythonhosted.org/packages/74/e4/7e88c40e9f61888e12dac0de41a5fddc2bcd1c3992d9b28e17d915cce0df/boto3-1.43.108-py3-none-any.whl"
         },
         {
           "type": "website",
           "url": "https://github.com/boto/boto3"
         }
       ],
-      "description": "The AWS SDK for Python",
+      "description": "The AWS SDK for Python (Boto3)",
       "licenses": [
         {
           "license": {
@@ -64,21 +89,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/psycopg@3.3.5",
+      "bom-ref": "pkg:pypi/psycopg@3.3.6",
       "name": "psycopg",
-      "version": "3.3.5",
-      "purl": "pkg:pypi/psycopg@3.3.5",
+      "version": "3.3.6",
+      "purl": "pkg:pypi/psycopg@3.3.6",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ce5aa5cdb4f9379f00f487590e5890bfa7df9a164648c969ffa628505e21af4e"
+          "content": "a1db9f7148b06a28606767efaca51fa6f9398c5c0a3810519be69d7000bdb631"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/3d/2e/d0a645bcaadde68bd6d93c43f02f14b0191bdda367ce3f7722abe3da744a/psycopg-3.3.5-py3-none-any.whl"
+          "url": "https://files.pythonhosted.org/packages/4e/de/748bd7609c71cae5d737f0ba9192f19329f70180ecda8fff3cac02c5abe3/psycopg-3.3.6-py3-none-any.whl"
         },
         {
           "type": "website",
@@ -147,7 +172,7 @@
     {
       "type": "library",
       "bom-ref": "pkg:pypi/pillow@12.3.0",
-      "name": "pillow",
+      "name": "Pillow",
       "version": "12.3.0",
       "purl": "pkg:pypi/pillow@12.3.0",
       "properties": [],
@@ -196,21 +221,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/cryptography@50.0.1",
+      "bom-ref": "pkg:pypi/cryptography@50.0.2",
       "name": "cryptography",
-      "version": "50.0.1",
-      "purl": "pkg:pypi/cryptography@50.0.1",
+      "version": "50.0.2",
+      "purl": "pkg:pypi/cryptography@50.0.2",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"
+          "content": "fa8f5efb344d6908a1ce62f4a24e2e5780f825d6f53f5f50ec5ffacac72936cb"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/ba/19/797e2aaac9df6a66f1550f49979dc1b1e39ecd2077501c30efa81e8d5d67/cryptography-50.0.1-cp311-abi3-macosx_11_0_arm64.whl"
+          "url": "https://files.pythonhosted.org/packages/e5/56/d194340cc4a57535e82e1bee9e89667ac4b7c13b5d3f59686deae3094dd5/cryptography-50.0.2-cp311-abi3-macosx_11_0_arm64.whl"
         },
         {
           "type": "website",
@@ -221,21 +246,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/fonttools@4.65.0",
+      "bom-ref": "pkg:pypi/fonttools@4.66.1",
       "name": "fonttools",
-      "version": "4.65.0",
-      "purl": "pkg:pypi/fonttools@4.65.0",
+      "version": "4.66.1",
+      "purl": "pkg:pypi/fonttools@4.66.1",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "93a73af2075036d36d7fbf856779c56a1b3b86ffcdae6abede7596604c42c156"
+          "content": "d4f76868aea9cc4ce47fdbeaa904c02ee7d85dd0ad095071ae77f0bda6e62cf5"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/53/d9/1caaa015dd207da7ccd3feba87289997bd88334ea3e74a367cdc7b0e50a3/fonttools-4.65.0-cp310-cp310-macosx_10_9_universal2.whl"
+          "url": "https://files.pythonhosted.org/packages/0a/2e/2c6d3daaa5152bbb2fc2b44037399366af7eb5fb2fbf7d9a236813753f77/fonttools-4.66.1-cp311-cp311-macosx_10_9_universal2.whl"
         },
         {
           "type": "website",
@@ -254,7 +279,7 @@
     {
       "type": "library",
       "bom-ref": "pkg:pypi/brotli@1.2.0",
-      "name": "brotli",
+      "name": "Brotli",
       "version": "1.2.0",
       "purl": "pkg:pypi/brotli@1.2.0",
       "properties": [],
@@ -288,14 +313,15 @@
     {
       "ref": "pkg:generic/einvite-platform",
       "dependsOn": [
-        "pkg:pypi/boto3@1.43.94",
-        "pkg:pypi/psycopg@3.3.5",
+        "pkg:pypi/waitress@3.0.2",
+        "pkg:pypi/boto3@1.43.108",
+        "pkg:pypi/psycopg@3.3.6",
         "pkg:pypi/redis@8.1.0",
         "pkg:pypi/qrcode@8.2",
         "pkg:pypi/pillow@12.3.0",
         "pkg:pypi/argon2-cffi@25.1.0",
-        "pkg:pypi/cryptography@50.0.1",
-        "pkg:pypi/fonttools@4.65.0",
+        "pkg:pypi/cryptography@50.0.2",
+        "pkg:pypi/fonttools@4.66.1",
         "pkg:pypi/brotli@1.2.0"
       ]
     }

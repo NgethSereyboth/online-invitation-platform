@@ -2727,6 +2727,22 @@ class Handler(SimpleHTTPRequestHandler):
     def setup(self):
         super().setup()
         self.connection.settimeout(REQUEST_SOCKET_TIMEOUT_SECONDS)
+    def list_directory(self, path):
+        """Disable directory listing (SEC-02 §1C hardening — defense in-depth).
+
+        ``SimpleHTTPRequestHandler.send_head()`` calls ``list_directory()`` when
+        the request path maps to a directory.  Our ``public_static_path()``
+        guard already ensures only file paths reach ``super().do_GET()``, so
+        this override is belt-and-suspenders: if any future code path
+        delegates to ``send_head()`` without the guard, the response is a
+        403 instead of an HTML directory index that could leak file names or
+        enable traversal-based information disclosure.
+        """
+        self.send_response(403)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+        return None
     def log_message(self, format, *args):
         # Keep request handling independent from a terminal that may be closed.
         if JSON_LOGS:
@@ -5019,6 +5035,7 @@ class Handler(SimpleHTTPRequestHandler):
             return
         admin=self.require_role("admin")
         if not admin:return
+        if not self.rate_limit(f"admin-feature-flags:{admin['id']}",60,60):return
         data=self.body(20_000)
         # 1. Validate body shape.
         if not isinstance(data, dict) or not isinstance(data.get("updates"), list):
@@ -9345,21 +9362,23 @@ class Handler(SimpleHTTPRequestHandler):
         invite = self._p2c_host_only(invite_id, "p2c-gift-update")
         if invite is None: return
         data = self.body(100_000)
-        updates = []
-        params = []
+        updates = {}
         for field, max_len in (("name", 200), ("description", 2000), ("url", 2000), ("price", 64)):
             if field in data:
-                updates.append(f"{field}=?"); params.append(str(data[field] or "").strip()[:max_len])
+                updates[field] = str(data[field] or "").strip()[:max_len]
         if "quantity" in data:
-            updates.append("quantity=?"); params.append(max(1, min(int(data["quantity"] or 1), 10000)))
+            updates["quantity"] = max(1, min(int(data["quantity"] or 1), 10000))
         if not updates:
             return self.json(400, {"error": "No fields to update", "code": "no_updates"})
-        params.append(invite_id); params.append(unquote(item_id)[:160])
+        set_clause, value_params = safe_set_clause(
+            updates, frozenset({"name", "description", "url", "price", "quantity"})
+        )
+        params = [*value_params, invite_id, unquote(item_id)[:160]]
         with connect() as db:
             row = db.execute("SELECT id FROM gift_registry_items WHERE invitation_id=? AND id=? AND archived_at IS NULL", (invite_id, unquote(item_id)[:160])).fetchone()
             if not row:
                 return self.json(404, {"error": "Gift item not found", "code": "item_not_found"})
-            db.execute(f"UPDATE gift_registry_items SET {', '.join(updates)} WHERE invitation_id=? AND id=?", params)
+            db.execute(f"UPDATE gift_registry_items SET {set_clause} WHERE invitation_id=? AND id=?", params)  # nosec B608 — set_clause derived from safe_set_clause() with explicit column allowlist {"name","description","url","price","quantity"}; values are parameterized
         self.audit("gift_registry.item_updated", "invitation", invite_id, {"itemId": unquote(item_id)[:160]})
         return self.json(200, {"ok": True})
 
@@ -9872,6 +9891,244 @@ def ensure_frontend_assets():
         subprocess.run(build,cwd=ROOT,check=True)
         rebuilt=True
     if rebuilt:print("Frontend generated assets refreshed.",flush=True)
+
+
+def create_app():
+    """WSGI application factory — bridges WSGI requests to ``Handler``.
+
+    Each WSGI request is synthesised into a raw HTTP/1.1 request on a fake
+    socket, dispatched through a ``Handler`` instance (a
+    ``SimpleHTTPRequestHandler`` subclass), and the resulting HTTP response
+    is parsed back into WSGI ``(status, headers, body)``.
+
+    This allows ``src/python/serve.py`` to serve the application via
+    *waitress* — a production-grade WSGI server — instead of the
+    single-threaded ``http.server`` dev server.  The handler code runs
+    completely unmodified.
+
+    Security headers (§1B) are injected at the WSGI layer so every
+    response — including edge-case error paths — carries the required
+    security posture.  The handler itself also sets these headers in
+    ``end_headers()`` (belt and suspenders).
+    """
+    from io import BytesIO
+
+    # §1B — security headers applied as WSGI middleware so they are present
+    # on *every* response, even if the handler does not reach end_headers().
+    # Values match the Handler's end_headers() (see comments there for
+    # justification of SAMEORIGIN / same-site deviations from the strict
+    # template defaults).
+    _SECURITY_HEADERS = {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Cross-Origin-Opener-Policy": "same-origin",
+        "Cross-Origin-Resource-Policy": "same-site",
+        "Content-Security-Policy": CSP_HEADER,
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    }
+
+    # Headers that the WSGI server (waitress) manages — skip these in the
+    # adapter so the server can set them without duplicates.
+    _WSGI_MANAGED_HEADERS = {
+        "transfer-encoding", "connection", "keep-alive",
+        "content-length", "server", "date",
+    }
+
+    class _NullServer:
+        """Minimal stand-in for ``ThreadingHTTPServer`` under WSGI.
+
+        The Handler never references ``self.server`` (confirmed by code
+        audit), so a stub suffices.
+        """
+        server_address = ("127.0.0.1", 8000)
+        RequestHandlerClass = Handler
+        RequestQueueSize = 64
+
+    class _WSGISocket:
+        """Fake socket: serves a pre-built HTTP request, captures response.
+
+        ``BaseHTTPRequestHandler`` reads from ``self.rfile`` (created via
+        ``makefile('rb')``) and writes to ``self.wfile`` (via
+        ``makefile('wb')``).  This wrapper provides BytesIO buffers for
+        both directions.
+        """
+
+        def __init__(self, request_bytes, response_buf):
+            self._read_buf = BytesIO(request_bytes)
+            self._write_buf = response_buf
+
+        def makefile(self, mode="rb", buffering=None, /, **kw):
+            if "r" in mode:
+                return self._read_buf
+            return self._write_buf
+
+        def sendall(self, data):
+            self._write_buf.write(data)
+
+        def send(self, data, flags=0):
+            self._write_buf.write(data)
+            return len(data)
+
+        def sendto(self, data, *args):
+            self._write_buf.write(data)
+            return len(data)
+
+        def close(self):
+            pass
+
+        def settimeout(self, value):
+            pass  # waitress manages timeouts
+
+        def gettimeout(self):
+            return None
+
+        def fileno(self):
+            raise OSError("fileno() not available in WSGI mode")
+
+        def getpeername(self):
+            return ("127.0.0.1", 0)
+
+        def getsockname(self):
+            return ("127.0.0.1", 0)
+
+        def setsockopt(self, *args, **kwargs):
+            pass
+
+        def shutdown(self, *args):
+            pass
+
+    def _inject_security_headers(headers):
+        """Append any §1B security header that the response is missing."""
+        existing = {name.lower() for name, _ in headers}
+        for name, value in _SECURITY_HEADERS.items():
+            if name.lower() not in existing:
+                headers.append((name, value))
+        return headers
+
+    def wsgi_app(environ, start_response):
+        # Wrap start_response so that security headers are added to *every*
+        # response — including error paths where the Handler may not reach
+        # end_headers().
+        def _start_response(status, headers, exc_info=None):
+            return start_response(status, _inject_security_headers(headers), exc_info)
+
+        # --- Build raw HTTP request from WSGI environ ----------------
+        try:
+            content_length = int(environ.get("CONTENT_LENGTH") or 0)
+        except (TypeError, ValueError):
+            content_length = 0
+
+        if content_length < 0:
+            _start_response(
+                "400 Bad Request",
+                [("Content-Type", "text/plain; charset=utf-8")],
+            )
+            return [b"Invalid Content-Length"]
+
+        body = (
+            environ["wsgi.input"].read(content_length)
+            if content_length > 0
+            else b""
+        )
+
+        method = environ["REQUEST_METHOD"]
+        path_info = environ.get("PATH_INFO", "/")
+        query_string = environ.get("QUERY_STRING", "")
+        raw_uri = path_info
+        if query_string:
+            raw_uri += "?" + query_string
+
+        header_lines = []
+        for key, value in environ.items():
+            if key.startswith("HTTP_"):
+                name = "-".join(w.capitalize() for w in key[5:].split("_"))
+                header_lines.append(f"{name}: {value}")
+        if environ.get("CONTENT_TYPE"):
+            header_lines.append(f"Content-Type: {environ['CONTENT_TYPE']}")
+        if content_length > 0:
+            header_lines.append(f"Content-Length: {content_length}")
+
+        host = environ.get("HTTP_HOST", "localhost")
+        header_lines.append(f"Host: {host}")
+
+        request_text = (
+            f"{method} {raw_uri} HTTP/1.1\r\n"
+            + "\r\n".join(header_lines)
+            + "\r\n\r\n"
+        )
+        request_bytes = request_text.encode("latin-1") + body
+
+        client_ip = environ.get("REMOTE_ADDR", "127.0.0.1")
+        client_port = int(environ.get("REMOTE_PORT", "0") or 0)
+
+        response_buf = BytesIO()
+        sock = _WSGISocket(request_bytes, response_buf)
+        server = _NullServer()
+
+        # --- Process the request through the Handler -------------------
+        try:
+            Handler(sock, (client_ip, client_port), server)
+        except Exception:
+            _start_response(
+                "500 Internal Server Error",
+                [("Content-Type", "text/plain; charset=utf-8")],
+            )
+            return [b"Internal Server Error"]
+
+        # --- Parse HTTP response into WSGI format ----------------------
+        response_data = response_buf.getvalue()
+        if not response_data:
+            _start_response(
+                "500 Internal Server Error",
+                [("Content-Type", "text/plain; charset=utf-8")],
+            )
+            return [b"Internal Server Error"]
+
+        header_end = response_data.find(b"\r\n\r\n")
+        if header_end < 0:
+            _start_response(
+                "500 Internal Server Error",
+                [("Content-Type", "text/plain; charset=utf-8")],
+            )
+            return [response_data]
+
+        header_block = response_data[:header_end].decode("latin-1")
+        response_body = response_data[header_end + 4:]
+
+        lines = header_block.split("\r\n")
+        status_code = 500
+        status_text = "Internal Server Error"
+        if lines and lines[0].startswith("HTTP/"):
+            parts = lines[0].split(" ", 2)
+            if len(parts) >= 2:
+                status_code = int(parts[1])
+                if len(parts) > 2:
+                    status_text = parts[2]
+
+        headers_out = []
+        seen = set()
+        # Copy headers from the handler response, skipping WSGI-managed
+        # and already-injected security headers.
+        for line in lines[1:]:
+            if line and ":" in line:
+                name, _, value = line.partition(":")
+                name = name.strip()
+                value = value.strip()
+                lower = name.lower()
+                if lower in _WSGI_MANAGED_HEADERS:
+                    continue
+                if lower in seen:
+                    continue
+                seen.add(lower)
+                headers_out.append((name, value))
+
+        _start_response(f"{status_code} {status_text}", headers_out)
+        return [response_body]
+
+    return wsgi_app
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the E-invitation-website development server.")

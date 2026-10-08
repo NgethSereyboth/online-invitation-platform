@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
@@ -13,3 +13,38 @@ venv/
 .DS_Store
 tests.bak/
 .glm-staging/
+node_modules/
+
+# ---------------------------------------------------------------------------
+# Ephemeral editor test artifacts.
+# `.ff_screenshots/` lives at the repo root and holds throwaway diagnostic
+# scripts (take_screenshots.js, test_ff.js, verify_editor.js) plus their
+# generated outputs (PNGs, ff_results.json, editor_context_panel_results.json,
+# cascade_check_results.json). These are scratch outputs for the local
+# browser-based layout/audit checks, are large (~6 MB of PNGs) and host-specific,
+# so they are kept out of git rather than committed.
+# ---------------------------------------------------------------------------
+.ff_screenshots/
+
+# ---------------------------------------------------------------------------
+# SEC-02 hardening additions.
+# ---------------------------------------------------------------------------
+
+# TLS / private-key material.
+*.pem
+*.key
+
+# Playwright browser binaries and verification scripts.
+.pw-browsers/
+pw_verify*.js
+
+# Dispatch review / audit artifacts.
+docs/SESSION-LOG-*.md
+docs/UX-AUDIT-*.md
+
+# Local environment override.
+.env.local
+
+# SEC-04 session artifacts (temporary audit scripts, pip caches, scan outputs).
+.sec04-tmp/
+sec04_behavior_test.py

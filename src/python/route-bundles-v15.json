@@ -293,8 +293,8 @@
     },
     "index.html": {
       "javascript": "bundle-index-v15.js",
-      "scriptBytes": 1116129,
-      "scriptSha256": "8d0facc87368bbe5c95c3fbcd459fd7ddf7fd612762eba4f99e447bcba3676ff",
+      "scriptBytes": 1116149,
+      "scriptSha256": "e9c1a8e12054d4b212fbcd8f40050455eb2f19197ef51713bf62a806f7ba2d6e",
       "sources": {
         "scripts": [
           "core/i18n.js",

@@ -1,0 +1,9 @@
+.git
+.github
+docs/reviews
+*.md
+tests
+node_modules
+.pw-browsers
+.ff_screenshots
+screenshots

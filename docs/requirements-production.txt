@@ -1,12 +1,30 @@
-# Optional production integrations. The core local app still starts without them;
-# enhanced social-card, QR, and responsive-image features use Pillow/qrcode.
-boto3>=1.35,<2
-psycopg[binary]>=3.2,<4
-redis>=5,<6
-qrcode[pil]>=8,<9
-Pillow>=11,<13
-argon2-cffi>=23.1,<26
-cryptography>=50.0.0,<51
-# Required for validated custom-font uploads and deterministic TTF/OTF -> WOFF2 optimization.
-fonttools[woff]>=4.58,<5
-Brotli>=1.1,<2
+# Production Python dependencies — pinned to exact versions.
+# Consolidated from src/python/requirements.txt (Phase 1 Q2 decision)
+# and docs/requirements-production.txt (SEC-01).  This is the
+# single authoritative production requirements file.
+#
+# The core server (src/python/server.py) uses only the Python standard
+# library. The packages below are optional integrations that are
+# activated by environment variables at run-time:
+#
+#   - boto3          S3 / S3-compatible object storage (EINVITE_OBJECT_STORAGE_*)
+#   - psycopg        PostgreSQL backend   (EINVITE_DATABASE_URL=postgresql://...)
+#   - cryptography   AES upload-at-rest encryption keys
+#   - Pillow         Server-side image processing / QR generation
+#   - qrcode         QR-code generation for check-in and sharing
+#   - redis          Distributed rate-limit store (EINVITE_REDIS_URL)
+#   - argon2-cffi    Password hashing (if not using stdlib fallback)
+#   - fonttools      Font subsetting for PDF export
+#   - brotli         Brotli content compression for static assets
+#   - waitress       Production WSGI server (required — no fallback)
+
+waitress==3.0.2
+boto3==1.43.108
+psycopg[binary,c]==3.3.6
+redis==8.1.0
+qrcode[pil]==8.2
+Pillow==12.3.0
+argon2-cffi==25.1.0
+cryptography==50.0.2
+fonttools[woff]==4.66.1
+Brotli==1.2.0

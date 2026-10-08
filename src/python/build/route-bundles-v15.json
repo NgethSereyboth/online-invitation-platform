@@ -36,12 +36,20 @@
     },
     "admin.html": {
       "javascript": "bundle-admin-v15.js",
-      "scriptBytes": 70798,
-      "scriptSha256": "d52cf51eb471a16c7882fb8655eaeb4e18df7885b0203125d14ecbf424ee0e3e",
+      "scriptBytes": 122391,
+      "scriptSha256": "107c282333cdff6e2363ea51b621f8ba7f7636101f1e67f7ffb592047839c728",
       "sources": {
         "scripts": [
           "ui-dialogs.js",
-          "admin.js",
+          "pages/admin/admin.js",
+          "pages/admin/users.js",
+          "pages/admin/invitations.js",
+          "pages/admin/feature-flags.js",
+          "pages/admin/audit-log.js",
+          "pages/admin/system-health.js",
+          "pages/admin/bulk-operations.js",
+          "pages/admin/impersonate.js",
+          "pages/admin/reports.js",
           "modern-ui.js",
           "final-experience.js",
           "monitoring.js",

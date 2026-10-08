@@ -136,7 +136,7 @@ def list_reports(db, status: Optional[str] = None, target_type: Optional[str] = 
     params.append(limit)
     rows = db.execute(
         f"SELECT id,reporter_id,target_type,target_id,reason,body,status,resolved_by,resolved_at,resolution_note,created_at "
-        f"FROM reports{where} ORDER BY created_at DESC LIMIT ?",
+        f"FROM reports{where} ORDER BY created_at DESC LIMIT ?",  # nosec B608 — clauses is a static list built from literal strings ("status=?","target_type=?","created_at<?"); where is composed of these fixed fragments only; all user-supplied values are bound as ? parameters
         tuple(params),
     ).fetchall()
     items = [_row_to_dict(r) for r in rows]

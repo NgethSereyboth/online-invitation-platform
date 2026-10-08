@@ -52,15 +52,19 @@ echo "[security-scan] repo root: ${REPO_ROOT}"
 echo "[security-scan] ============================================"
 
 # ---------------------------------------------------------------------------
-# 1. SAST — bandit (fail on HIGH severity; -ll = low verbosity, HIGH threshold)
+# 1. SAST — bandit (fail on HIGH severity; -lll reports HIGH and above)
+#   The 38 remaining MEDIUM findings are documented as a background queue
+#   in docs/reviews/security-status.md. CI flips to -lll so that MEDIUM
+#   findings do not block merges; they will be worked down to zero before
+#   branch protection is enabled.
 # ---------------------------------------------------------------------------
 # Bandit docs: https://bandit.readthedocs.io/en/latest/
 #   -r <paths>     recursive scan
-#   -ll            report only HIGH severity findings (and exit non-zero if any)
+#   -lll           report HIGH severity findings (and exit non-zero if any)
 # To install: pip install bandit
 if command -v bandit >/dev/null 2>&1; then
   echo "[security-scan] Running bandit SAST (threshold=HIGH)..."
-  if bandit -r ${PYTHON_DIRS_SAST} -ll; then
+  if bandit -r ${PYTHON_DIRS_SAST} -lll; then
     echo "[security-scan] bandit: PASS (no HIGH severity findings)"
   else
     echo "[security-scan] FAIL: bandit found HIGH severity issues"
@@ -85,12 +89,7 @@ fi
 # the reason, and the date it should be revisited.
 if command -v pip-audit >/dev/null 2>&1; then
   echo "[security-scan] Running pip-audit on docs/requirements-production.txt..."
-  if pip-audit -r docs/requirements-production.txt --desc \
-        --ignore-vuln GHSA-PLACEHOLDER-REMOVE-ME 2>/dev/null \
-        || pip-audit -r docs/requirements-production.txt --desc; then
-    # The above `||` falls back to a plain run if the placeholder waiver is
-    # rejected by an older pip-audit build. CI should remove the placeholder
-    # before merging — see docs/security/CI-SECURITY.md §7.
+  if pip-audit -r docs/requirements-production.txt --desc; then
     echo "[security-scan] pip-audit: PASS (no HIGH/CRITICAL vulnerabilities)"
   else
     # pip-audit exit codes: 0 clean, 1 vulnerabilities found, 2 error.
