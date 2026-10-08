@@ -462,3 +462,36 @@ Commit `b3ecc43d0cfc3094680c6bdd9fd3da47b9c2e5c7`, pushed 2026-10-08 10:06 UTC
 to `origin/main`. Local SHA equals remote SHA (verified via
 `git rev-parse HEAD` and `git ls-remote origin main`). See
 [`deploy-02-linux.md`](./deploy-02-linux.md) for the full deployment report.
+
+## Render (live)
+
+- **URL**: https://einvite-platform.onrender.com
+- **Commit**: `553e12f` (HEAD = origin/main, pushed 2026-10-08)
+- **Deployed**: 2026-10-08 via Render Blueprint (`render.yaml`, `autoDeploy: true`)
+- **Cold start**: <pending measurement — see deploy-03-render.md>
+- **Verification** (curl, GET):
+  - `GET /` → 200 (40 890 bytes HTML, English locale, bundles vendored)
+  - `GET /admin` → 404 (not 500)
+  - `GET /api/ai-agent/status` → 401 (auth required)
+  - `GET /api/admin/settings` → 401 (auth required)
+  - `GET /nonexistent` → 404
+- **Security headers present**: CSP (default-src 'self'), CSP-Report-Only, HSTS
+  (`max-age=31536000; includeSubDomains`), X-Frame-Options: SAMEORIGIN,
+  X-Content-Type-Options: nosniff, Referrer-Policy:
+  strict-origin-when-cross-origin, COOP: same-origin, CORP: same-site
+- **Server header**: `cloudflare` (Render edge) with
+  `x-render-origin-server: Einvite` — no `Server: waitress` info-disclosure
+- **Hardening applied for Render free tier**:
+  - `EINVITE_ALLOW_NO_SCANNER=1` — ClamAV unavailable; uploads not malware-scanned
+  - `EINVITE_TRUSTED_PROXY_IPS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.0/8` —
+    trust Render's internal reverse-proxy for the SEC-04 HTTPS-redirect gate
+  - WSGI adapter re-injects `X-Forwarded-Proto: https` when `COOKIE_SECURE` is set
+    (waitress strips this header when `trusted_proxy` is unconfigured)
+  - `psycopg[binary]` (binary wheel with C extension, no `pg_config`/`libpq-dev`)
+- **Known limitations**:
+  - SQLite writes ephemeral (free-tier filesystem reset on container restart)
+  - 15-minute idle spin-down (~30s cold start on wake)
+  - trivy container scan never run
+  - End-user IP appears as proxy IP (waitress `trusted_proxy` unset; `X-Forwarded-For`
+    stripped by waitress when `trusted_proxy` is unconfigured — acceptable for rate
+    limiting and audit logs on free tier)
