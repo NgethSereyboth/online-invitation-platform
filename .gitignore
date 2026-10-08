@@ -48,3 +48,11 @@ docs/UX-AUDIT-*.md
 # SEC-04 session artifacts (temporary audit scripts, pip caches, scan outputs).
 .sec04-tmp/
 sec04_behavior_test.py
+
+# ---------------------------------------------------------------------------
+# DEPLOY-03 loose-end cleanup.
+# Ephemeral test fixtures and scratch files left over from prior dispatches.
+# These are not referenced by any test suite and are kept out of git.
+# ---------------------------------------------------------------------------
+src/python/*-test-*.html
+src/python/lang-km.html.bak
