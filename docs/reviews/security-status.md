@@ -468,7 +468,8 @@ to `origin/main`. Local SHA equals remote SHA (verified via
 - **URL**: https://einvite-platform.onrender.com
 - **Commit**: `553e12f` (HEAD = origin/main, pushed 2026-10-08)
 - **Deployed**: 2026-10-08 via Render Blueprint (`render.yaml`, `autoDeploy: true`)
-- **Cold start**: <pending measurement — see deploy-03-render.md>
+- **Cold start**: 1.13s (HTTP 200, 40 890 bytes) — measured after 15-min
+  idle; warm requests average 0.45s.  See `deploy-03-render.md` §3e.
 - **Verification** (curl, GET):
   - `GET /` → 200 (40 890 bytes HTML, English locale, bundles vendored)
   - `GET /admin` → 404 (not 500)

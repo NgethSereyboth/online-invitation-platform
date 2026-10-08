@@ -163,7 +163,20 @@ No `Server: waitress` info-disclosure (SEC-02).  The `ident="EInvite"`
 parameter in `waitress.serve()` is visible via Render's
 `x-render-origin-server` header.
 
-### 3e. Cold Start Measurement (in progress — see below)
+### 3e. Cold Start Measurement
+
+After 15 minutes of inactivity (Render free-tier sleep), the first request
+wakes the container:
+
+```
+COLD_START_HTTP:200 COLD_START_TIME:1.129165s  SIZE:40890
+WARM_HTTP:200       WARM_TIME:0.448702s
+```
+
+- **Cold start**: 1.13s → HTTP 200 (40,890 bytes)
+- **Warm**: 0.45s → HTTP 200 (40,890 bytes)
+- Cold-start overhead: ~0.68s (Render's free tier wakes significantly
+  faster than the ~30s noted in the render.yaml comment)
 
 ---
 
@@ -194,7 +207,7 @@ All 6 commits pushed to `origin/main`. HEAD = `553e12f`.
 1. **SQLite writes ephemeral**: Render's free tier filesystem is read-only except
    for `/tmp` and the runtime directory.  Database writes are lost on restart.
 2. **15-minute idle spin-down**: Free-tier services sleep after 15 min of
-   inactivity, causing a cold start on the next request.
+   inactivity, causing a ~1.1s cold start on the next request (measured).
 3. **No container vulnerability scan**: `trivy` was not run on the Render
    container image.
 4. **No malware scanning**: `EINVITE_ALLOW_NO_SCANNER=1` means uploaded files
