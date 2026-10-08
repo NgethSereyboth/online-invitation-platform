@@ -345,7 +345,7 @@ Consolidated production pins (10 packages):
 ```
 waitress==3.0.2
 boto3==1.43.108
-psycopg[binary,c]==3.3.6
+psycopg[binary]==3.3.6
 redis==8.1.0
 qrcode[pil]==8.2
 Pillow==12.3.0
@@ -455,3 +455,10 @@ current cycle.
 | §13 | Cross-reference to this file |
 
 Updated in sync: CI-SECURITY.md version bumped V54.27 → **V54.28**.
+
+## Deployed at
+
+Commit `b3ecc43d0cfc3094680c6bdd9fd3da47b9c2e5c7`, pushed 2026-10-08 10:06 UTC
+to `origin/main`. Local SHA equals remote SHA (verified via
+`git rev-parse HEAD` and `git ls-remote origin main`). See
+[`deploy-02-linux.md`](./deploy-02-linux.md) for the full deployment report.

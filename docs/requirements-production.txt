@@ -20,7 +20,7 @@
 
 waitress==3.0.2
 boto3==1.43.108
-psycopg[binary,c]==3.3.6
+psycopg[binary]==3.3.6
 redis==8.1.0
 qrcode[pil]==8.2
 Pillow==12.3.0
