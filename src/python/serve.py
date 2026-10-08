@@ -37,7 +37,21 @@ import sys
 from waitress import serve
 
 # Import the WSGI application factory from the handler module.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Under Render's Blueprint (rootDir removed) the whole repository is the
+# build context.  ``server.py`` lives in this directory (src/python) and
+# imports ``ai_agent``, ``platform_v32``, and ``future_platform_v52`` from
+# the repository root.  Both ``src/python`` and the repo root must be on
+# ``sys.path`` for the import chain to resolve at runtime.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = _HERE
+for _ in range(10):                                           # walk up to find repo root
+    _parent = os.path.dirname(_REPO_ROOT)
+    if _parent == _REPO_ROOT or os.path.isdir(os.path.join(_parent, "ai_agent")):
+        _REPO_ROOT = _parent
+        break
+    _REPO_ROOT = _parent
+sys.path.insert(0, _HERE)                                      # src/python  (server.py, core/)
+sys.path.append(_REPO_ROOT)                                    # repo root   (ai_agent/, platform_v32/)
 
 from server import create_app  # noqa: E402
 
@@ -71,6 +85,7 @@ if __name__ == "__main__":
         host=args.host,
         port=args.port,
         threads=args.threads,
+        ident="EInvite",  # suppress "Server: waitress" header (SEC-02 info-disclosure)
         # 10 MB ceiling — the Handler.body() default is 20 MB but per-endpoint
         # limits are far smaller (login: 100 KB, admin settings: 20 KB). 10 MB
         # accommodates authenticated uploads while preventing trivial DoS.
