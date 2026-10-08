@@ -31,5 +31,13 @@ services:
         value: "3.13.5"
       - key: PYTHONIOENCODING
         value: utf-8
+      # Render's free tier does not include ClamAV/clamd.  The server's
+      # SEC-04 fail-closed scanner gate (server.py §10172) raises
+      # RuntimeError when no scanner is available and this env var is unset.
+      # Setting it to "1" allows the service to boot without a scanner —
+      # uploads will be accepted without malware scanning (documented in
+      # the security-status ledger as a known free-tier limitation).
+      - key: EINVITE_ALLOW_NO_SCANNER
+        value: "1"
     healthCheckPath: /
     autoDeploy: true
