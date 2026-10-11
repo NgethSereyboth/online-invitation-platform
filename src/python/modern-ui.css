@@ -181,7 +181,7 @@ html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-m
    V2-UX-8 (ROADMAP-V2 §3.8) — Mobile responsiveness pass.
    Universal overrides for viewports ≤ 540px. modern-ui.css is loaded by every
    page EXCEPT public.html + checkin.html (which use guest-features-v54_1.css +
-   checkin-v13.css respectively — those have their own @media blocks already).
+   checkin.css respectively — those have their own @media blocks already).
    The rules below are ADDITIVE — they don't override existing page-specific
    responsive breakpoints; they fill gaps and apply universal mobile UX rules
    (touch targets, dialog full-screen, header wrapping, font-size floor).
