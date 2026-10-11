@@ -14,7 +14,8 @@
         "account-security-v13.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -29,13 +30,15 @@
         "ux-refine.css",
         "account-security-v13.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "admin.html": {
       "scripts": [
         "core/i18n.js",
         "ui-dialogs.js",
+        "toast.js",
         "pages/admin/admin.js",
         "pages/admin/users.js",
         "pages/admin/invitations.js",
@@ -48,7 +51,8 @@
         "modern-ui.js",
         "final-experience.js",
         "monitoring.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -63,7 +67,8 @@
         "theme-hardening.css",
         "ux-refine.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "analytics.html": {
@@ -75,7 +80,8 @@
         "modern-ui.js",
         "final-experience.js",
         "ux-refine.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -90,7 +96,8 @@
         "ux-refine.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "billing.html": {
@@ -100,7 +107,8 @@
         "billing.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -114,7 +122,8 @@
         "theme-hardening.css",
         "ux-refine.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "checkin.html": {
@@ -123,7 +132,8 @@
         "ui-dialogs.js",
         "invitation-context.js",
         "checkin-v13.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -132,7 +142,8 @@
         "accessibility-v12.css",
         "checkin-v13.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "dashboard.html": {
@@ -157,7 +168,8 @@
         "invitation-edit-history.js",
         "host-signup-sheets.js",
         "host-polls.js",
-        "toast.js"
+        "toast.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -177,7 +189,8 @@
         "accessibility-v12.css",
         "stabilized-v14.css",
         "zoom-layout-pages-v22.css",
-        "guest-features-v54_1.css"
+        "guest-features-v54_1.css",
+        "app-shell-v55.css"
       ]
     },
     "designer.html": {
@@ -187,7 +200,8 @@
         "designer.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -202,7 +216,8 @@
         "theme-hardening.css",
         "ux-refine.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "guests.html": {
@@ -214,7 +229,8 @@
         "modern-ui.js",
         "final-experience.js",
         "ux-refine.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -229,7 +245,8 @@
         "ux-refine.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "index.html": {
@@ -290,7 +307,8 @@
         "editor-responsive-contract-v27.js",
         "editor/editor-core.js",
         "editor/ui-layout.js",
-        "editor/ui-components.js"
+        "editor/ui-components.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -331,7 +349,8 @@
         "zoom-layout-v22.css",
         "graphics-runtime-v22.css",
         "editor-responsive-contract-v27.css",
-        "editor/editor-styles.css"
+        "editor/editor-styles.css",
+        "app-shell-v55.css"
       ]
     },
     "materials.html": {
@@ -346,7 +365,8 @@
         "final-experience.js",
         "ux-refine.js",
         "final-polish.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -362,19 +382,23 @@
         "final-polish.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "privacy.html": {
       "scripts": [
-        "core/i18n.js"
+        "core/i18n.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "privacy-v13.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "tokens.css",
+        "app-shell-v55.css"
       ]
     },
     "public.html": {
@@ -399,7 +423,8 @@
         "album.js",
         "invitation-edit-history.js",
         "public-page.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -408,7 +433,9 @@
         "opening-scenes.css",
         "guest-layouts.css",
         "guest-journey.css",
-        "guest-features-v54_1.css"
+        "guest-features-v54_1.css",
+        "tokens.css",
+        "app-shell-v55.css"
       ]
     },
     "reset.html": {
@@ -418,7 +445,8 @@
         "reset.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -432,7 +460,8 @@
         "theme-hardening.css",
         "ux-refine.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "responses.html": {
@@ -444,7 +473,8 @@
         "modern-ui.js",
         "final-experience.js",
         "ux-refine.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -459,7 +489,8 @@
         "ux-refine.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "templates.html": {
@@ -471,7 +502,8 @@
         "modern-ui.js",
         "final-experience.js",
         "ux-refine.js",
-        "accessibility-polish.js"
+        "accessibility-polish.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -487,7 +519,8 @@
         "ux-refine.css",
         "accessibility-v12.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     },
     "verify.html": {
@@ -497,7 +530,8 @@
         "verify.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js"
+        "ux-refine.js",
+        "ui/app-shell.js"
       ],
       "styles": [
         "styles.css",
@@ -511,7 +545,8 @@
         "theme-hardening.css",
         "ux-refine.css",
         "stabilized-v14.css",
-        "zoom-layout-pages-v22.css"
+        "zoom-layout-pages-v22.css",
+        "app-shell-v55.css"
       ]
     }
   },

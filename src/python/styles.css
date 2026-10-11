@@ -117,9 +117,9 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
   body[data-page="index"]>header #backupBtn,
   body[data-page="index"]>header #restoreBtn,
   body[data-page="index"]>header #undoBtn,
-  body[data-page="index"]>header #redoBtn{display:none!important}
+  body[data-page="index"]>header #redoBtn{display:none}
   body[data-page="index"]>header #saveState,
-  body[data-page="index"]>header #serverState{font-size:11px!important;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body[data-page="index"]>header #serverState{font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
 /* Very narrow (≤ 380px) — even tighter. */

@@ -27,7 +27,11 @@
       sessionPolicySave:'Save idle window',
       sessionPolicyConfirm:'Change the non-admin session idle window to {days} days?',
       sessionPolicySaved:'Idle window updated to {days} days.',
-      sessionPolicyError:'Failed to update idle window: {error}'
+      sessionPolicyError:'Failed to update idle window: {error}',
+      /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
+         the English fallback (repo convention: commit c2ec627). */
+      flagSaved:'Saved {key}.',
+      saveFailed:'Could not save the change. Try again.'
     },
     km: {
       title:'ទងជម្រើសមុខងារ',
@@ -48,7 +52,11 @@
       sessionPolicySave:'Save idle window',
       sessionPolicyConfirm:'Change the non-admin session idle window to {days} days?',
       sessionPolicySaved:'Idle window updated to {days} days.',
-      sessionPolicyError:'Failed to update idle window: {error}'
+      sessionPolicyError:'Failed to update idle window: {error}',
+      /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
+         the English fallback (repo convention: commit c2ec627). */
+      flagSaved:'Saved {key}.',
+      saveFailed:'Could not save the change. Try again.'
     }
   };
   function t(key, ...args) {
@@ -106,6 +114,24 @@
     if (saveBtn) saveBtn.addEventListener('click', handleSaveSessionIdle);
   }
 
+  /*
+   * Flag changes confirm through the toast system, never through alert()
+   * (dispatch §3 Group 6). alert() blocks the page, cannot be styled, and is
+   * announced without context; the toast is announced politely by toast.js and
+   * carries both languages.
+   */
+  function notify(message, type){
+    const text = String(message || '').trim();
+    if (!text) return;
+    const allowed = { success: 1, error: 1, info: 1, warning: 1 };
+    if (window.EInviteToast && typeof window.EInviteToast.show === 'function') {
+      window.EInviteToast.show({ type: allowed[type] ? type : 'info', message_en: text, message_km: '' });
+      return;
+    }
+    const fallback = shell().toast;
+    if (typeof fallback === 'function') fallback(text, type);
+  }
+
   async function handleSave(btn){
     const row = btn.closest('[data-flag-key]');
     const key = row && row.dataset.flagKey;
@@ -116,7 +142,8 @@
     try {
       await api.send('/api/admin/feature-flags', 'PUT', { updates: [{ key, value: checkbox.checked }] });
       await load(); render();
-    } catch(e) { alert(e.message || 'Save failed'); }
+      notify(t('flagSaved', { key }), 'success');
+    } catch(e) { notify(t('saveFailed'), 'error'); }
   }
 
   async function handleSaveSessionIdle(){
@@ -129,9 +156,9 @@
     try {
       await api.send('/api/admin/settings/session-idle-days-nonadmin', 'PUT', { days });
       await load(); render();
-      alert(t('sessionPolicySaved', { days: String(days) }));
+      notify(t('sessionPolicySaved', { days: String(days) }), 'success');
     } catch(e) {
-      alert(t('sessionPolicyError', { error: e.message || 'Save failed' }));
+      notify(t('sessionPolicyError', { error: e.message || 'Save failed' }), 'error');
     }
   }
 

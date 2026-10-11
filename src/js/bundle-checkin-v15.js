@@ -313,7 +313,8 @@ const queue=()=>{try{return JSON.parse(localStorage.getItem(queueKey)||'[]')}cat
 function setNetwork(){const online=navigator.onLine;$('#networkState').textContent=online?_txt('Online','Online'):_txt('Offline','Offline');$('#networkState').classList.toggle('offline',!online);renderQueue()}
 function renderQueue(){const q=queue(),el=$('#pendingQueue');el.hidden=!q.length;const en=`${q.length} ${q.length===1?'check-in change':'check-in changes'} waiting to sync when the connection returns.`;el.innerHTML=q.length?`<span class="i18n i18n-en">${en}</span><span class="i18n i18n-km khmer-text" lang="km">${en}</span>`:''}
 function render(){const q=$('#guestSearch').value.trim().toLowerCase(),filtered=guests.filter(g=>`${g.name} ${g.phone||''} ${g.group_name||''} ${g.table_name||''}`.toLowerCase().includes(q)),checked=guests.filter(g=>g.checked_in).length;$('#checkinSummary').innerHTML=`${checked} of ${guests.length} <span class="i18n i18n-en">guests checked in</span><span class="i18n i18n-km khmer-text" lang="km">guests checked in</span>`;$('#checkinStats').innerHTML=`<span class="checkin-stat"><strong>${checked}</strong> <span class="i18n i18n-en">in</span><span class="i18n i18n-km khmer-text" lang="km">in</span></span><span class="checkin-stat"><strong>${guests.length-checked}</strong> <span class="i18n i18n-en">remaining</span><span class="i18n i18n-km khmer-text" lang="km">remaining</span></span>`;$('#checkinList').innerHTML=filtered.map(g=>`<article class="checkin-person ${g.checked_in?'checked':''}" data-guest-id="${esc(g.id)}"><div><strong>${esc(g.name)}</strong><small>${[g.group_name,g.table_name&&`${_txt('Table','Table')} ${g.table_name}`,g.seat_label&&`${_txt('Seat','Seat')} ${g.seat_label}`,g.phone].filter(Boolean).map(esc).join(' · ')}</small></div><button data-check-id="${esc(g.id)}" class="${g.checked_in?'':'primary'}">${g.checked_in?_txt('Undo check-in','Undo check-in'):_txt('Check in','Check in')}</button></article>`).join('')||'<p class="empty-state"><span class="i18n i18n-en">No matching guests.</span><span class="i18n i18n-km khmer-text" lang="km">No matching guests.</span></p>';document.querySelectorAll('[data-check-id]').forEach(b=>b.onclick=()=>toggle(b.dataset.checkId))}
-async function load(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){window.EInviteBackend.message($('#checkinList'),'<span class="i18n i18n-en">Guest check-in synchronization requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km">Guest check-in synchronization requires the full application server.</span>');$('#scanQrBtn').disabled=true;return}try{invitation=await api(`/api/invitations/${encodeURIComponent(inviteId)}`);guests=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document?.fields?.names||'Guest check-in')+'</span><span class="i18n i18n-km khmer-text" lang="km">'+(invitation.document?.fields?.names||'Guest check-in')+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();await flushQueue()}catch(e){$('#checkinList').innerHTML=`<p><span class="i18n i18n-en">Could not load this guest list: </span><span class="i18n i18n-km khmer-text" lang="km">Could not load this guest list: </span>${esc(e.message)}</p>`}}
+function seedGuests(){const rows=[['Sokha Chann','012 345 678','Family','Table 1',true],['Dara Meas','098 765 432','Family','Table 1',false],['Bopha Sok','011 222 333','Friends','Table 2',false],['Vibol Pen','016 888 999','Friends','Table 2',false],['Chenda Long','070 444 555','Colleagues','Table 3',false],['Rithy Nou','081 777 111','Colleagues','Table 3',false]];return rows.map((r,i)=>({id:`demo-guest-${i+1}`,name:r[0],phone:r[1],group_name:r[2],table_name:r[3],checked_in:r[4],checked_in_at:null,token:'demo'}))}
+async function load(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){invitation={document:{fields:{names:'Sokha & Dara — Wedding'}}};guests=seedGuests();$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document.fields.names)+'</span><span class="i18n i18n-km khmer-text" lang="km">'+(invitation.document.fields.names)+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();$('#scanQrBtn').disabled=true;return}try{invitation=await api(`/api/invitations/${encodeURIComponent(inviteId)}`);guests=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document?.fields?.names||'Guest check-in')+'</span><span class="i18n i18n-km khmer-text" lang="km">'+(invitation.document?.fields?.names||'Guest check-in')+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();await flushQueue()}catch(e){$('#checkinList').innerHTML=`<p><span class="i18n i18n-en">Could not load this guest list: </span><span class="i18n i18n-km khmer-text" lang="km">Could not load this guest list: </span>${esc(e.message)}</p>`}}
 async function toggle(id,explicit){const g=guests.find(x=>x.id===id);if(!g)return;const checked=explicit??!g.checked_in;g.checked_in=checked;g.checked_in_at=checked?Date.now():null;render();if(!navigator.onLine){const q=queue().filter(x=>x.guestId!==id);q.push({guestId:id,checkedIn:checked,createdAt:Date.now()});saveQueue(q);renderQueue();return}try{const result=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(id)}/check-in`,{method:'PUT',body:JSON.stringify({checkedIn:checked})});if(result.alreadyCheckedIn){const notice=$('#checkinNotice');notice.textContent=`${g.name} ${_txt('was already checked in.','was already checked in.')}`;setTimeout(()=>{if(notice.textContent.includes(g.name))notice.textContent=''},3500)}}catch(e){const q=queue().filter(x=>x.guestId!==id);q.push({guestId:id,checkedIn:checked,createdAt:Date.now()});saveQueue(q);renderQueue()}}
 async function flushQueue(){if(!navigator.onLine)return;let q=queue(),remaining=[];for(const item of q){try{await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(item.guestId)}/check-in`,{method:'PUT',body:JSON.stringify({checkedIn:item.checkedIn})})}catch{remaining.push(item)}}saveQueue(remaining);renderQueue();if(q.length&&!remaining.length){guests=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);render()}}
 function guestFromScanned(value){let text=String(value||'');try{const u=new URL(text,location.origin),token=u.searchParams.get('g')||u.searchParams.get('guest');if(token)return guests.find(g=>g.token===token)}catch{}return guests.find(g=>g.id===text)}
@@ -338,4 +339,135 @@ function init(){
  observeDialogs();new MutationObserver(observeDialogs).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();;/**
+ * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ *
+ * Deliberately tiny and dependency-free. It owns exactly three things:
+ *
+ *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
+ *      (persisted in localStorage['einvite-rail-collapsed']).
+ *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
+ *      toggles `body.rail-open`, which is also closed on Escape, on an outside
+ *      click, and on hashchange.
+ *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
+ *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
+ *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
+ *
+ * Accessibility: the toggle buttons carry aria-expanded and the rail is a
+ * landmark; nothing here traps focus or blocks pointer events when closed.
+ */
+(function () {
+  'use strict';
+  if (window.EInviteShell && window.EInviteShell.version >= 55) return;
+
+  var body = document.body;
+  var html = document.documentElement;
+  var RAIL_KEY = 'einvite-rail-collapsed';
+  var THEME_KEY = 'einvite-theme-mode';
+
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
+
+  /* --- 1. Rail collapse -------------------------------------------------- */
+  function applyRailCollapsed(collapsed) {
+    body.classList.toggle('rail-collapsed', !!collapsed);
+    document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      var glyph = btn.querySelector('[data-rail-glyph]');
+      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+    });
+  }
+  function applyRailOpen(open) {
+    body.classList.toggle('rail-open', !!open);
+    document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  }
+
+  /* --- 2. Current page --------------------------------------------------- */
+  function markCurrentPage() {
+    var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+    document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
+      var target = link.getAttribute('href').split('#')[0].split('?')[0].toLowerCase();
+      if (target && target === here) link.setAttribute('aria-current', 'page');
+    });
+  }
+
+  /*
+   * Pages that show a signed-out flow (dashboard) hide their rail until the
+   * signed-in view is revealed, so the login card gets the full canvas. The
+   * same flag flips the topbar down to Skeleton B (brand + language + theme).
+   */
+  function syncAutoRail() {
+    var autoRail = document.querySelector('.app-rail[data-rail-auto]');
+    var signedIn = document.getElementById('dashboardView');
+    var signedInVisible = !signedIn || !signedIn.hidden;
+    if (autoRail) autoRail.hidden = !signedInVisible;
+    if (signedIn) body.classList.toggle('auth-mode', !signedInVisible);
+  }
+
+  function watchAutoRail() {
+    var signedIn = document.getElementById('dashboardView');
+    if (!signedIn || typeof MutationObserver !== 'function') return;
+    new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* --- 3. Appearance ----------------------------------------------------- */
+  function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyTheme(next) {
+    html.dataset.theme = next;
+    html.dataset.themeMode = next;
+    html.style.colorScheme = next;
+    write(THEME_KEY, next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(next === 'dark'));
+      btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
+      var glyph = btn.querySelector('[data-theme-glyph]');
+      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+    });
+  }
+
+  /* --- Wiring ------------------------------------------------------------ */
+  document.addEventListener('click', function (event) {
+    var railToggle = event.target.closest('[data-rail-toggle]');
+    if (railToggle) {
+      var collapsed = !body.classList.contains('rail-collapsed');
+      applyRailCollapsed(collapsed);
+      write(RAIL_KEY, collapsed ? '1' : '0');
+      return;
+    }
+    var drawerToggle = event.target.closest('[data-drawer-toggle]');
+    if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
+    var themeToggle = event.target.closest('[data-theme-toggle]');
+    if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
+    /* Outside click closes the mobile drawer but never the desktop rail. */
+    if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('rail-open')) applyRailOpen(false);
+  });
+  window.addEventListener('hashchange', function () { applyRailOpen(false); });
+  window.addEventListener('resize', function () { if (innerWidth > 768) applyRailOpen(false); });
+
+  function init() {
+    markCurrentPage();
+    applyRailCollapsed(read(RAIL_KEY) === '1');
+    applyRailOpen(false);
+    syncAutoRail();
+    watchAutoRail();
+    applyTheme(read(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+
+  window.EInviteShell = Object.freeze({
+    version: 55,
+    collapseRail: applyRailCollapsed,
+    openRail: applyRailOpen,
+    syncAutoRail: syncAutoRail,
+    setTheme: applyTheme
+  });
 })();

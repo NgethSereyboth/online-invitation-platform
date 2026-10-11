@@ -279,6 +279,207 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
+})();;/**
+ * V2-UX-7 (ROADMAP-V2 §3.7) — Toast notification system.
+ *
+ * A tiny, dependency-free toast stack. Exposes a single global:
+ *
+ *     window.EInviteToast.show({ type, message_en, message_km, duration })
+ *
+ *   - type:        'success' | 'error' | 'info' | 'warning' (default 'info')
+ *   - message_en:  required English text
+ *   - message_km:  required Khmer text
+ *   - duration:    ms before auto-dismiss (default 4000; pass 6000 for errors)
+ *
+ * Layout: top-right fixed `#toast-stack` container (auto-created if missing).
+ * Stack semantics: newest at the top; max 5 visible; oldest is dismissed
+ * when a 6th would arrive.
+ *
+ * Accessibility:
+ *   - The container carries `aria-live="polite"` + `aria-atomic="false"` so
+ *     screen readers announce each new toast without stealing focus.
+ *   - Each toast is `role="status"`.
+ *   - The close button is a real `<button>` with a bilingual `aria-label`.
+ *   - Hover/focus pauses the auto-dismiss timer (a11y nicety).
+ *   - `@media (prefers-reduced-motion: reduce)` disables the slide-in.
+ *
+ * Design tokens: reuses `--app-bg`, `--app-surface`, `--app-text`,
+ * `--app-muted`, `--app-line`, `--danger`, `--app-good`, `--app-warn`,
+ * `--app-accent-2`, `--app-shadow`, `--app-radius`. If ux-9 ever defines a
+ * global `--info` token, the `.toast--info` border picks it up automatically;
+ * falls back to `--app-accent-2`.
+ *
+ * IIFE shape mirrors `host-signup-sheets.js` / `host-polls.js`. Idempotent:
+ * if the bundle is somehow loaded twice, the second IIFE no-ops.
+ */
+(function () {
+  'use strict';
+
+  if (window.EInviteToast) return; // idempotent — already defined
+
+  /** Bilingual strings for the toast chrome itself (close button label). */
+  var STRINGS = {
+    close: { en: 'Close', km: 'បិទ' }
+  };
+
+  var MAX_VISIBLE = 5;
+  var DEFAULT_DURATION = 4000;
+  var VALID_TYPES = { success: 1, error: 1, info: 1, warning: 1 };
+  var LEAVE_TIMEOUT_MS = 280; // matches the --leave transition in toast.css
+
+  /** Pick the active language: explicit window.EInviteLang, then <html lang>. */
+  function activeLang() {
+    if (window.EInviteLang === 'km') return 'km';
+    if (window.EInviteLang === 'en') return 'en';
+    var htmlLang = String(document.documentElement.lang || '').toLowerCase();
+    if (htmlLang === 'km' || htmlLang.indexOf('km-') === 0) return 'km';
+    return 'en';
+  }
+
+  /** Find or create the top-right `#toast-stack` container. */
+  function getStack() {
+    var stack = document.getElementById('toast-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.id = 'toast-stack';
+      stack.className = 'toast-stack';
+      stack.setAttribute('aria-live', 'polite');
+      stack.setAttribute('aria-atomic', 'false');
+      document.body.appendChild(stack);
+    }
+    return stack;
+  }
+
+  /** Bilingual close-button label. */
+  function closeLabel() {
+    var lang = activeLang();
+    return STRINGS.close[lang] || STRINGS.close.en;
+  }
+
+  /** Per-type icon glyph (no external icon font — kept inline). */
+  function iconFor(type) {
+    switch (type) {
+      case 'success': return '\u2713';        // ✓
+      case 'error':   return '\u26A0';        // ⚠
+      case 'warning': return '\u26A0';        // ⚠
+      case 'info':
+      default:        return '\u2139';        // ℹ
+    }
+  }
+
+  /**
+   * Show a toast.
+   *
+   * @param {object} opts
+   * @param {string} opts.type        'success' | 'error' | 'info' | 'warning'
+   * @param {string} opts.message_en  English message (required)
+   * @param {string} opts.message_km  Khmer message (required)
+   * @param {number} [opts.duration]  ms before auto-dismiss (default 4000)
+   * @returns {HTMLElement} the toast element (for testing)
+   */
+  function show(opts) {
+    opts = opts || {};
+    var type = VALID_TYPES[opts.type] ? opts.type : 'info';
+    var lang = activeLang();
+    var msg = (lang === 'km' ? opts.message_km : opts.message_en) ||
+              opts.message_en || opts.message_km || '';
+    var duration = Number(opts.duration) > 0 ? Number(opts.duration) : DEFAULT_DURATION;
+
+    var stack = getStack();
+
+    // Enforce max-visible: dismiss oldest from the top (stack is newest-first).
+    while (stack.children.length >= MAX_VISIBLE) {
+      var oldest = stack.lastElementChild;
+      if (!oldest) break;
+      dismiss(oldest);
+    }
+
+    var toast = document.createElement('div');
+    toast.className = 'toast toast--' + type + ' toast--enter';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('data-toast', '');
+
+    var icon = document.createElement('span');
+    icon.className = 'toast__icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = iconFor(type);
+
+    var message = document.createElement('span');
+    message.className = 'toast__message';
+    message.textContent = msg;
+    // Hint the language for screen readers + the :lang(km) rule (ux-5 §3.5).
+    message.lang = lang;
+
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'toast__close';
+    close.setAttribute('aria-label', closeLabel());
+    close.textContent = '\u00D7'; // ×
+    close.addEventListener('click', function () { dismiss(toast); });
+
+    toast.appendChild(icon);
+    toast.appendChild(message);
+    toast.appendChild(close);
+
+    // Insert at top (newest first), then promote to `--visible` on the next
+    // frame so the CSS transition runs (slide-in-from-right + fade).
+    stack.insertBefore(toast, stack.firstChild);
+    requestAnimationFrame(function () {
+      toast.classList.add('toast--visible');
+      toast.classList.remove('toast--enter');
+    });
+
+    // Auto-dismiss timer (stored on the element so manual close + hover-pause
+    // can cancel it).
+    toast._einviteToastTimer = setTimeout(function () { dismiss(toast); }, duration);
+
+    // Pause auto-dismiss on hover/focus; resume (with a short grace period)
+    // on leave/blur so keyboard users can read the toast at their own pace.
+    function pause() {
+      if (toast._einviteToastTimer) {
+        clearTimeout(toast._einviteToastTimer);
+        toast._einviteToastTimer = null;
+      }
+    }
+    function resume() {
+      pause();
+      toast._einviteToastTimer = setTimeout(function () { dismiss(toast); }, 1500);
+    }
+    toast.addEventListener('mouseenter', pause);
+    toast.addEventListener('mouseleave', resume);
+    toast.addEventListener('focus', pause);
+    toast.addEventListener('blur', resume);
+
+    return toast;
+  }
+
+  /** Animate out + remove a toast (idempotent). */
+  function dismiss(toast) {
+    if (!toast || !toast.parentNode) return;
+    if (toast._einviteToastDismissed) return;
+    toast._einviteToastDismissed = true;
+
+    if (toast._einviteToastTimer) {
+      clearTimeout(toast._einviteToastTimer);
+      toast._einviteToastTimer = null;
+    }
+
+    toast.classList.add('toast--leave');
+    toast.classList.remove('toast--visible');
+
+    var remove = function () {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    };
+    var fallback = setTimeout(remove, LEAVE_TIMEOUT_MS);
+    toast.addEventListener('transitionend', function handler(ev) {
+      if (ev.target !== toast) return;
+      clearTimeout(fallback);
+      toast.removeEventListener('transitionend', handler);
+      remove();
+    });
+  }
+
+  window.EInviteToast = { show: show };
 })();;/* v0.64.0 — admin shell (ROADMAP-v0.54-to-v1.0 §5.1)
  *
  * Orchestrates the admin page: stat cards grid + system status banner +
@@ -483,6 +684,16 @@ window.alert=(message)=>{uiAlert(message)};
   }
 
   async function init(){
+    // Static mode: every admin panel is server-backed, so gate the whole console
+    // behind the backend probe instead of firing 404s from the shell, the
+    // impersonation probe and the lazily-mounted modules (G8).
+    if (window.EInviteBackend?.ready) { try { await window.EInviteBackend.ready; } catch (e) { /* ignore */ } }
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) {
+      window.EInviteBackend.message(
+        document.querySelector('.admin-page') || document.querySelector('main') || document.body,
+        '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km">The administration console requires the full application server.</span>');
+      return;
+    }
     initTabs();
     showImpersonationBanner();
     await pollOnce();
@@ -763,7 +974,11 @@ window.alert=(message)=>{uiAlert(message)};
       sessionPolicySave:'Save idle window',
       sessionPolicyConfirm:'Change the non-admin session idle window to {days} days?',
       sessionPolicySaved:'Idle window updated to {days} days.',
-      sessionPolicyError:'Failed to update idle window: {error}'
+      sessionPolicyError:'Failed to update idle window: {error}',
+      /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
+         the English fallback (repo convention: commit c2ec627). */
+      flagSaved:'Saved {key}.',
+      saveFailed:'Could not save the change. Try again.'
     },
     km: {
       title:'ទងជម្រើសមុខងារ',
@@ -784,7 +999,11 @@ window.alert=(message)=>{uiAlert(message)};
       sessionPolicySave:'Save idle window',
       sessionPolicyConfirm:'Change the non-admin session idle window to {days} days?',
       sessionPolicySaved:'Idle window updated to {days} days.',
-      sessionPolicyError:'Failed to update idle window: {error}'
+      sessionPolicyError:'Failed to update idle window: {error}',
+      /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
+         the English fallback (repo convention: commit c2ec627). */
+      flagSaved:'Saved {key}.',
+      saveFailed:'Could not save the change. Try again.'
     }
   };
   function t(key, ...args) {
@@ -842,6 +1061,24 @@ window.alert=(message)=>{uiAlert(message)};
     if (saveBtn) saveBtn.addEventListener('click', handleSaveSessionIdle);
   }
 
+  /*
+   * Flag changes confirm through the toast system, never through alert()
+   * (dispatch §3 Group 6). alert() blocks the page, cannot be styled, and is
+   * announced without context; the toast is announced politely by toast.js and
+   * carries both languages.
+   */
+  function notify(message, type){
+    const text = String(message || '').trim();
+    if (!text) return;
+    const allowed = { success: 1, error: 1, info: 1, warning: 1 };
+    if (window.EInviteToast && typeof window.EInviteToast.show === 'function') {
+      window.EInviteToast.show({ type: allowed[type] ? type : 'info', message_en: text, message_km: '' });
+      return;
+    }
+    const fallback = shell().toast;
+    if (typeof fallback === 'function') fallback(text, type);
+  }
+
   async function handleSave(btn){
     const row = btn.closest('[data-flag-key]');
     const key = row && row.dataset.flagKey;
@@ -852,7 +1089,8 @@ window.alert=(message)=>{uiAlert(message)};
     try {
       await api.send('/api/admin/feature-flags', 'PUT', { updates: [{ key, value: checkbox.checked }] });
       await load(); render();
-    } catch(e) { alert(e.message || 'Save failed'); }
+      notify(t('flagSaved', { key }), 'success');
+    } catch(e) { notify(t('saveFailed'), 'error'); }
   }
 
   async function handleSaveSessionIdle(){
@@ -865,9 +1103,9 @@ window.alert=(message)=>{uiAlert(message)};
     try {
       await api.send('/api/admin/settings/session-idle-days-nonadmin', 'PUT', { days });
       await load(); render();
-      alert(t('sessionPolicySaved', { days: String(days) }));
+      notify(t('sessionPolicySaved', { days: String(days) }), 'success');
     } catch(e) {
-      alert(t('sessionPolicyError', { error: e.message || 'Save failed' }));
+      notify(t('sessionPolicyError', { error: e.message || 'Save failed' }), 'error');
     }
   }
 
@@ -1627,43 +1865,12 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-function dashboard(){
-  const view=$('#dashboardView'),login=$('#loginView');if(!view)return;
-  view.classList.add('dashboard-home');
-  const rail=document.createElement('nav');rail.className='dashboard-home-rail';rail.innerHTML=`
-    <button type="button" class="rail-create" title="Create invitation"><span>＋</span>Create</button>
-    <a href="dashboard.html" class="active"><span>⌂</span>Home</a>
-    <a href="templates.html"><span>▣</span>Templates</a>
-    <a href="materials.html"><span>▧</span>Materials</a>
-    <a href="billing.html"><span>◉</span>Plans</a>
-    <div class="rail-spacer"></div>
-    <a href="account.html"><span>◌</span>Account</a>`;
-  document.body.append(rail);
-  $('.rail-create',rail).onclick=()=>$('#newBtn')?.click();
-  const hero=document.createElement('section');hero.className='dashboard-home-hero';hero.innerHTML=`
-    <h1>What will you create today?</h1>
-    <label class="dashboard-home-search"><span>⌕</span><input type="search" placeholder="Search your invitations"></label>
-    <div class="dashboard-quick-create">
-      <button type="button" class="create"><i>＋</i><span>Create</span></button>
-      <a href="templates.html" class="template"><i>▣</i><span>Templates</span></a>
-      <button type="button" class="wedding"><i>♡</i><span>Wedding</span></button>
-      <button type="button" class="birthday"><i>✦</i><span>Birthday</span></button>
-      <button type="button" class="business"><i>◇</i><span>Business</span></button>
-      <a href="materials.html" class="upload"><i>⇧</i><span>Uploads</span></a>
-    </div>`;
-  view.prepend(hero);
-  const createByType=(type)=>{const btn=$('#newBtn');btn?.click();setTimeout(()=>{const typeEl=$('#newType');if(typeEl){typeEl.value=type;typeEl.dispatchEvent(new Event('change',{bubbles:true}))}},40)};
-  $('.create',hero).onclick=()=>$('#newBtn')?.click();$('.wedding',hero).onclick=()=>createByType('Wedding');$('.birthday',hero).onclick=()=>createByType('Birthday');$('.business',hero).onclick=()=>createByType('Business');
-  const homeSearch=$('.dashboard-home-search input',hero);
-  homeSearch.oninput=()=>{const old=$('#dashboardSearch');if(old){old.value=homeSearch.value;old.dispatchEvent(new Event('input',{bubbles:true}))}else{$$('.invite-card','#inviteGrid').forEach(card=>card.hidden=!card.textContent.toLowerCase().includes(homeSearch.value.toLowerCase()))}};
-  const recent=document.createElement('div');recent.className='dashboard-recent-head';recent.innerHTML='<h2>Recent invitations</h2>';
-  const filter=$('.dashboard-filter-tabs');if(filter)recent.append(filter);
-  const grid=$('#inviteGrid');grid?.before(recent);
-  grid?.addEventListener('click',e=>{const cover=e.target.closest('.invite-cover');if(!cover)return;const card=cover.closest('.invite-card');card?.querySelector('[data-edit]')?.click()});
-  const header=$('body>header');
-  function authState(){const signed=view.hidden===false;rail.hidden=!signed;if(header){header.querySelectorAll('a[href="materials.html"],a[href="billing.html"],a[href="account.html"]').forEach(a=>a.hidden=!signed);const logout=$('#logoutBtn');if(logout)logout.hidden=!signed}}
-  new MutationObserver(authState).observe(view,{attributes:true,attributeFilter:['hidden']});authState();
-}
+/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
+   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
+   field and an English-only quick-create row, and it hid the real .dash-head. The shell
+   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
+   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
   const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;
@@ -1720,4 +1927,135 @@ function editor(){
 if(page==='dashboard')dashboard();
 if(page==='materials')materials();
 if(page==='index')setTimeout(editor,0);
+})();;/**
+ * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ *
+ * Deliberately tiny and dependency-free. It owns exactly three things:
+ *
+ *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
+ *      (persisted in localStorage['einvite-rail-collapsed']).
+ *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
+ *      toggles `body.rail-open`, which is also closed on Escape, on an outside
+ *      click, and on hashchange.
+ *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
+ *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
+ *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
+ *
+ * Accessibility: the toggle buttons carry aria-expanded and the rail is a
+ * landmark; nothing here traps focus or blocks pointer events when closed.
+ */
+(function () {
+  'use strict';
+  if (window.EInviteShell && window.EInviteShell.version >= 55) return;
+
+  var body = document.body;
+  var html = document.documentElement;
+  var RAIL_KEY = 'einvite-rail-collapsed';
+  var THEME_KEY = 'einvite-theme-mode';
+
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
+
+  /* --- 1. Rail collapse -------------------------------------------------- */
+  function applyRailCollapsed(collapsed) {
+    body.classList.toggle('rail-collapsed', !!collapsed);
+    document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      var glyph = btn.querySelector('[data-rail-glyph]');
+      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+    });
+  }
+  function applyRailOpen(open) {
+    body.classList.toggle('rail-open', !!open);
+    document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  }
+
+  /* --- 2. Current page --------------------------------------------------- */
+  function markCurrentPage() {
+    var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+    document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
+      var target = link.getAttribute('href').split('#')[0].split('?')[0].toLowerCase();
+      if (target && target === here) link.setAttribute('aria-current', 'page');
+    });
+  }
+
+  /*
+   * Pages that show a signed-out flow (dashboard) hide their rail until the
+   * signed-in view is revealed, so the login card gets the full canvas. The
+   * same flag flips the topbar down to Skeleton B (brand + language + theme).
+   */
+  function syncAutoRail() {
+    var autoRail = document.querySelector('.app-rail[data-rail-auto]');
+    var signedIn = document.getElementById('dashboardView');
+    var signedInVisible = !signedIn || !signedIn.hidden;
+    if (autoRail) autoRail.hidden = !signedInVisible;
+    if (signedIn) body.classList.toggle('auth-mode', !signedInVisible);
+  }
+
+  function watchAutoRail() {
+    var signedIn = document.getElementById('dashboardView');
+    if (!signedIn || typeof MutationObserver !== 'function') return;
+    new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* --- 3. Appearance ----------------------------------------------------- */
+  function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyTheme(next) {
+    html.dataset.theme = next;
+    html.dataset.themeMode = next;
+    html.style.colorScheme = next;
+    write(THEME_KEY, next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(next === 'dark'));
+      btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
+      var glyph = btn.querySelector('[data-theme-glyph]');
+      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+    });
+  }
+
+  /* --- Wiring ------------------------------------------------------------ */
+  document.addEventListener('click', function (event) {
+    var railToggle = event.target.closest('[data-rail-toggle]');
+    if (railToggle) {
+      var collapsed = !body.classList.contains('rail-collapsed');
+      applyRailCollapsed(collapsed);
+      write(RAIL_KEY, collapsed ? '1' : '0');
+      return;
+    }
+    var drawerToggle = event.target.closest('[data-drawer-toggle]');
+    if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
+    var themeToggle = event.target.closest('[data-theme-toggle]');
+    if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
+    /* Outside click closes the mobile drawer but never the desktop rail. */
+    if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('rail-open')) applyRailOpen(false);
+  });
+  window.addEventListener('hashchange', function () { applyRailOpen(false); });
+  window.addEventListener('resize', function () { if (innerWidth > 768) applyRailOpen(false); });
+
+  function init() {
+    markCurrentPage();
+    applyRailCollapsed(read(RAIL_KEY) === '1');
+    applyRailOpen(false);
+    syncAutoRail();
+    watchAutoRail();
+    applyTheme(read(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+
+  window.EInviteShell = Object.freeze({
+    version: 55,
+    collapseRail: applyRailCollapsed,
+    openRail: applyRailOpen,
+    syncAutoRail: syncAutoRail,
+    setTheme: applyTheme
+  });
 })();

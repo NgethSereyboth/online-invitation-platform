@@ -3,6 +3,7 @@
 <head><script>(function(){try{var e=document.documentElement,v=localStorage.getItem("einvite-lang");if(!v){var n=navigator.language||(navigator.languages&&navigator.languages[0])||"";v=n.toLowerCase().indexOf("km")===0?"km":"en"}e.lang=v}catch(x){}})();</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <meta name="einvite-invitation-slug" content="__INVITATION_SLUG__">
   <title>__INVITATION_TITLE__</title>
   <meta name="description" content="__INVITATION_DESCRIPTION__">
@@ -21,11 +22,23 @@
   <link rel="canonical" href="/i/__INVITATION_SLUG__">
   <link rel="stylesheet" href="bundle-public-v15.css">
 
-
-
+  <script src="backend-mode-v14.js"></script>
 </head>
-<body data-page="public"><a class="skip-link" href="#publicRoot">Skip to content</a>
+<body data-shell="b" data-page="public"><!--
+  Minimal topbar (§2.1 Skeleton B): brand left, invitation language right.
+  No navigation, no marketing copy, no "powered by" footer, and no appearance
+  toggle — the invitation's own template is the visual, not the chrome around it.
+-->
+<header class="guest-topbar">
+  <a class="app-brand" href="/"><strong>E-invitation-website</strong></a>
+  <div class="guest-topbar__lang" role="group" aria-label="Invitation language">
+    <button type="button" data-guest-lang-proxy="en" aria-pressed="true" class="active">EN</button>
+    <button type="button" data-guest-lang-proxy="km" aria-pressed="false">ខ្មែរ</button>
+  </div>
+</header>
+<a class="skip-link" href="#publicRoot"><span class="i18n i18n-en">Skip to content</span><span class="i18n i18n-km khmer-text" lang="km">Skip to content</span></a>
 <main id="publicRoot" class="guest" tabindex="-1"><p>Opening invitation…</p></main>
+<span class="guest-demo-badge" role="status"><span class="status-dot" aria-hidden="true"></span><span class="i18n i18n-en">Demo mode — sample data</span><span class="i18n i18n-km khmer-text" lang="km"></span></span>
 <!--
   V2-UX-5 (P1-D, WCAG 3.1.1): dynamic <html lang> for the guest invitation page.
   The static fallback is lang="en" (declared on <html> above). After the invitation
@@ -49,17 +62,44 @@
         document.documentElement.lang = lang;
       }
     };
-    if (root.dataset && root.dataset.language) applyLang(root.dataset.language);
+    /* The guest topbar is outside #publicRoot — the only place public-page.js
+       looks for [data-guest-lang] buttons — so the topbar delegates to the
+       renderer's own switch instead of duplicating the language logic or moving
+       the brand inside the invitation. */
+    var syncTopbar = function (lang) {
+      var buttons = document.querySelectorAll('[data-guest-lang-proxy]');
+      for (var i = 0; i < buttons.length; i++) {
+        var active = buttons[i].getAttribute('data-guest-lang-proxy') === lang;
+        buttons[i].classList.toggle('active', active);
+        buttons[i].setAttribute('aria-pressed', String(active));
+      }
+    };
+    if (root.dataset && root.dataset.language) { applyLang(root.dataset.language); syncTopbar(root.dataset.language); }
+    document.querySelectorAll('[data-guest-lang-proxy]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var lang = button.getAttribute('data-guest-lang-proxy');
+        var real = root.querySelector('.language-switch [data-guest-lang="' + lang + '"]');
+        if (real) real.click();
+        else { root.dataset.language = lang; applyLang(lang); syncTopbar(lang); }
+      });
+    });
     if (typeof MutationObserver === 'function') {
       new MutationObserver(function (records) {
         for (var i = 0; i < records.length; i++) {
           if (records[i].attributeName === 'data-language') {
-            applyLang(root.getAttribute('data-language'));
+            var lang = root.getAttribute('data-language');
+            applyLang(lang);
+            syncTopbar(lang === 'km' ? 'km' : 'en');
             return;
           }
         }
       }).observe(root, { attributes: true, attributeFilter: ['data-language'] });
     }
+    /* The renderer creates its language switch asynchronously, so reflect its
+       state once it lands (and keep the topbar in sync afterwards). */
+    window.addEventListener('load', function () {
+      syncTopbar(root.dataset.language === 'km' ? 'km' : 'en');
+    });
   })();
 </script>
 <script src="bundle-public-v15.js"></script>

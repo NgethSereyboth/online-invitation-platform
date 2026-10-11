@@ -524,7 +524,6 @@ if(window.EInviteUpload&&!Object.isFrozen(window.EInviteUpload))Object.assign(wi
 })();;const $=s=>document.querySelector(s);localStorage.removeItem('sovan-auth-token');const contextInviteId=window.EInviteContext?.getInvitationId({allowRemembered:false})||'';let materials=[],invitations=[];
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
 const _txt=(en,km)=>_isKm()?(km!=null?km:en):en;
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const b=(en,km)=>`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${esc(km!=null?km:en)}</span>`;
 async function api(path,options={}){const response=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',...(options.headers||{})}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw Error(payload.error||'Request failed');return payload}
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -842,43 +841,12 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-function dashboard(){
-  const view=$('#dashboardView'),login=$('#loginView');if(!view)return;
-  view.classList.add('dashboard-home');
-  const rail=document.createElement('nav');rail.className='dashboard-home-rail';rail.innerHTML=`
-    <button type="button" class="rail-create" title="Create invitation"><span>＋</span>Create</button>
-    <a href="dashboard.html" class="active"><span>⌂</span>Home</a>
-    <a href="templates.html"><span>▣</span>Templates</a>
-    <a href="materials.html"><span>▧</span>Materials</a>
-    <a href="billing.html"><span>◉</span>Plans</a>
-    <div class="rail-spacer"></div>
-    <a href="account.html"><span>◌</span>Account</a>`;
-  document.body.append(rail);
-  $('.rail-create',rail).onclick=()=>$('#newBtn')?.click();
-  const hero=document.createElement('section');hero.className='dashboard-home-hero';hero.innerHTML=`
-    <h1>What will you create today?</h1>
-    <label class="dashboard-home-search"><span>⌕</span><input type="search" placeholder="Search your invitations"></label>
-    <div class="dashboard-quick-create">
-      <button type="button" class="create"><i>＋</i><span>Create</span></button>
-      <a href="templates.html" class="template"><i>▣</i><span>Templates</span></a>
-      <button type="button" class="wedding"><i>♡</i><span>Wedding</span></button>
-      <button type="button" class="birthday"><i>✦</i><span>Birthday</span></button>
-      <button type="button" class="business"><i>◇</i><span>Business</span></button>
-      <a href="materials.html" class="upload"><i>⇧</i><span>Uploads</span></a>
-    </div>`;
-  view.prepend(hero);
-  const createByType=(type)=>{const btn=$('#newBtn');btn?.click();setTimeout(()=>{const typeEl=$('#newType');if(typeEl){typeEl.value=type;typeEl.dispatchEvent(new Event('change',{bubbles:true}))}},40)};
-  $('.create',hero).onclick=()=>$('#newBtn')?.click();$('.wedding',hero).onclick=()=>createByType('Wedding');$('.birthday',hero).onclick=()=>createByType('Birthday');$('.business',hero).onclick=()=>createByType('Business');
-  const homeSearch=$('.dashboard-home-search input',hero);
-  homeSearch.oninput=()=>{const old=$('#dashboardSearch');if(old){old.value=homeSearch.value;old.dispatchEvent(new Event('input',{bubbles:true}))}else{$$('.invite-card','#inviteGrid').forEach(card=>card.hidden=!card.textContent.toLowerCase().includes(homeSearch.value.toLowerCase()))}};
-  const recent=document.createElement('div');recent.className='dashboard-recent-head';recent.innerHTML='<h2>Recent invitations</h2>';
-  const filter=$('.dashboard-filter-tabs');if(filter)recent.append(filter);
-  const grid=$('#inviteGrid');grid?.before(recent);
-  grid?.addEventListener('click',e=>{const cover=e.target.closest('.invite-cover');if(!cover)return;const card=cover.closest('.invite-card');card?.querySelector('[data-edit]')?.click()});
-  const header=$('body>header');
-  function authState(){const signed=view.hidden===false;rail.hidden=!signed;if(header){header.querySelectorAll('a[href="materials.html"],a[href="billing.html"],a[href="account.html"]').forEach(a=>a.hidden=!signed);const logout=$('#logoutBtn');if(logout)logout.hidden=!signed}}
-  new MutationObserver(authState).observe(view,{attributes:true,attributeFilter:['hidden']});authState();
-}
+/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
+   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
+   field and an English-only quick-create row, and it hid the real .dash-head. The shell
+   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
+   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
   const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;
@@ -1072,4 +1040,135 @@ function init(){
  observeDialogs();new MutationObserver(observeDialogs).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+})();;/**
+ * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ *
+ * Deliberately tiny and dependency-free. It owns exactly three things:
+ *
+ *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
+ *      (persisted in localStorage['einvite-rail-collapsed']).
+ *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
+ *      toggles `body.rail-open`, which is also closed on Escape, on an outside
+ *      click, and on hashchange.
+ *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
+ *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
+ *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
+ *
+ * Accessibility: the toggle buttons carry aria-expanded and the rail is a
+ * landmark; nothing here traps focus or blocks pointer events when closed.
+ */
+(function () {
+  'use strict';
+  if (window.EInviteShell && window.EInviteShell.version >= 55) return;
+
+  var body = document.body;
+  var html = document.documentElement;
+  var RAIL_KEY = 'einvite-rail-collapsed';
+  var THEME_KEY = 'einvite-theme-mode';
+
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
+
+  /* --- 1. Rail collapse -------------------------------------------------- */
+  function applyRailCollapsed(collapsed) {
+    body.classList.toggle('rail-collapsed', !!collapsed);
+    document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      var glyph = btn.querySelector('[data-rail-glyph]');
+      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+    });
+  }
+  function applyRailOpen(open) {
+    body.classList.toggle('rail-open', !!open);
+    document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  }
+
+  /* --- 2. Current page --------------------------------------------------- */
+  function markCurrentPage() {
+    var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+    document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
+      var target = link.getAttribute('href').split('#')[0].split('?')[0].toLowerCase();
+      if (target && target === here) link.setAttribute('aria-current', 'page');
+    });
+  }
+
+  /*
+   * Pages that show a signed-out flow (dashboard) hide their rail until the
+   * signed-in view is revealed, so the login card gets the full canvas. The
+   * same flag flips the topbar down to Skeleton B (brand + language + theme).
+   */
+  function syncAutoRail() {
+    var autoRail = document.querySelector('.app-rail[data-rail-auto]');
+    var signedIn = document.getElementById('dashboardView');
+    var signedInVisible = !signedIn || !signedIn.hidden;
+    if (autoRail) autoRail.hidden = !signedInVisible;
+    if (signedIn) body.classList.toggle('auth-mode', !signedInVisible);
+  }
+
+  function watchAutoRail() {
+    var signedIn = document.getElementById('dashboardView');
+    if (!signedIn || typeof MutationObserver !== 'function') return;
+    new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* --- 3. Appearance ----------------------------------------------------- */
+  function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyTheme(next) {
+    html.dataset.theme = next;
+    html.dataset.themeMode = next;
+    html.style.colorScheme = next;
+    write(THEME_KEY, next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(next === 'dark'));
+      btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
+      var glyph = btn.querySelector('[data-theme-glyph]');
+      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+    });
+  }
+
+  /* --- Wiring ------------------------------------------------------------ */
+  document.addEventListener('click', function (event) {
+    var railToggle = event.target.closest('[data-rail-toggle]');
+    if (railToggle) {
+      var collapsed = !body.classList.contains('rail-collapsed');
+      applyRailCollapsed(collapsed);
+      write(RAIL_KEY, collapsed ? '1' : '0');
+      return;
+    }
+    var drawerToggle = event.target.closest('[data-drawer-toggle]');
+    if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
+    var themeToggle = event.target.closest('[data-theme-toggle]');
+    if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
+    /* Outside click closes the mobile drawer but never the desktop rail. */
+    if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('rail-open')) applyRailOpen(false);
+  });
+  window.addEventListener('hashchange', function () { applyRailOpen(false); });
+  window.addEventListener('resize', function () { if (innerWidth > 768) applyRailOpen(false); });
+
+  function init() {
+    markCurrentPage();
+    applyRailCollapsed(read(RAIL_KEY) === '1');
+    applyRailOpen(false);
+    syncAutoRail();
+    watchAutoRail();
+    applyTheme(read(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+
+  window.EInviteShell = Object.freeze({
+    version: 55,
+    collapseRail: applyRailCollapsed,
+    openRail: applyRailOpen,
+    syncAutoRail: syncAutoRail,
+    setTheme: applyTheme
+  });
 })();

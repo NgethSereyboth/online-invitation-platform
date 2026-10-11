@@ -3,6 +3,7 @@
 <head><script src="core/theme.js"></script><script>(function(){try{var e=document.documentElement,v=localStorage.getItem('einvite-lang');if(!v){var n=navigator.language||(navigator.languages&&navigator.languages[0])||"";v=n.toLowerCase().indexOf("km")===0?"km":"en"}e.lang=v}catch(x){}})();</script><script src="backend-mode-v14.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <title>E-invitation-website</title>
   <!--
     v54 editor architecture (see src/js/editor/ and src/css/editor/):
@@ -58,7 +59,7 @@
 
 
 </head>
-<body data-page="index" class="studio-experience"><a class="skip-link" href="#main">Skip to content</a>
+<body data-shell="a" data-page="index" class="studio-experience"><a class="skip-link" href="#main">Skip to content</a>
   <!--
     V2-UX-8 (ROADMAP-V2 §3.8) — Mobile responsiveness pass.
     The editor has a responsive contract (editor-responsive-contract-v27.css:
@@ -77,9 +78,9 @@
   </aside>
   <header class="studio-topbar">
     <div class="studio-topbar-left">
-      <button id="v54SidebarCollapse" class="v54-sidebar-collapse" type="button" title="Toggle sidebar" aria-label="Toggle sidebar">≡</button>
+      <button id="v54SidebarCollapse" class="v54-sidebar-collapse app-rail-toggle" type="button" title="Toggle sidebar" aria-label="Toggle sidebar"><span data-rail-glyph aria-hidden="true">«</span></button>
       <a href="dashboard.html" class="button-link"><strong>E-invitation-website</strong></a>
-      <span class="studio-document-title" id="documentTitle">Untitled design</span>
+      <span class="studio-document-title" id="documentTitle"><span class="i18n i18n-en">Untitled design</span><span class="i18n i18n-km khmer-text" lang="km">Untitled design</span></span>
     </div>
     <div class="canvas-header-more"><summary><span class="i18n i18n-en">More</span><span class="i18n i18n-km khmer-text" lang="km">More</span></summary></div>
     <div class="studio-topbar-right">
@@ -91,6 +92,7 @@
       <button id="publishBtn" class="primary"><span class="i18n i18n-en">Publish snapshot</span><span class="i18n i18n-km khmer-text" lang="km">Publish snapshot</span></button>
       <button id="eiAiTopButton" class="primary">AI</button>
       <button id="studioCommandBtn" title="Command palette">⌘K</button>
+      <button id="v54InspectorDrawer" class="app-drawer-toggle" type="button" title="Inspector" aria-label="Toggle inspector" aria-expanded="false"><span aria-hidden="true">▤</span></button>
     </div>
     <div class="canvas-header-more-menu">
       <div class="v54-header-menu-section v54-header-menu-project"><strong>Project</strong>
@@ -298,7 +300,7 @@ rsvp</textarea></label>
     <aside class="right">
       <div data-inspector-pane="object">
         <h2 class="studio-inspector-heading"><span class="i18n i18n-en">Style & motion</span><span class="i18n i18n-km khmer-text" lang="km">Style & motion</span></h2>
-        <div id="noSelection" class="empty v54-inspector-placeholder"><span class="i18n i18n-en">Select an object on the canvas to edit its properties.</span><span class="i18n i18n-km khmer-text" lang="km">Select an object on the canvas to edit its properties.</span></div>
+        <div id="noSelection" class="empty v54-inspector-placeholder"><span class="i18n i18n-en">Select an object on the canvas to edit its properties.</span><span class="i18n i18n-km khmer-text" lang="km">ជ្រើសវត្ថុនៅលើផ្ទាំងគំរូ ដើម្បីកែប្រែលក្ខណៈសម្បត្តិរបស់វា។</span></div>
         <div id="properties">
           <div class="selection-summary"><strong id="selectionCount">1 selected</strong><span>Shift/Ctrl-click to select more</span></div>
         <label id="textContentLabel">Text content<textarea id="textContent" rows="3"></textarea></label>

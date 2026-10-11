@@ -5,3 +5,60 @@
    but only 4.00:1 on #292b34 surface-3, failing AA-normal). Bumped to #90939f (5.66:1 on #191a21,
    4.61:1 on #292b34 — passes AA-normal on every dark surface). See §11 of the audit doc. */
 html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202129;--surface-3:#292b34;--text-1:#f3f4f8;--text-2:#b2b4be;--text-3:#90939f;--border-1:#2f313b;--border-2:#3c3f4b;--brand:#e18aa5;--brand-2:#a98cff;--brand-soft:#38252e;--success:#69d095;--warning:#f2b65c;--danger:#ff7883;--shadow-1:0 2px 10px rgba(0,0,0,.22);--shadow-2:0 18px 50px rgba(0,0,0,.34);--shadow-3:0 36px 100px rgba(0,0,0,.55)}
+
+/* ============================================================================
+   V55 design system — Canva-derived scale (dispatch §1).
+   Tokens only; no component rules here. Component/shell rules live in
+   src/css/app-shell-v55.css, which is loaded LAST in every page bundle.
+   ========================================================================= */
+:root{
+  /* --- Font families (self-hosted only; CSP font-src 'self' data:) --------- */
+  --font-latin:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-khmer:"EInvite Noto Sans Khmer",Inter,ui-sans-serif,system-ui,sans-serif;
+  --font-display:"EInvite Noto Serif",Georgia,"Times New Roman",serif;
+  --font-display-km:"EInvite Noto Serif Khmer","EInvite Noto Sans Khmer",serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  /* --- Type scale (§1.1) — nine steps, no ad-hoc sizes --------------------- */
+  --fs-title-lg:24px;  --lh-title-lg:1.2;  --ls-title-lg:-0.01em; --fw-title-lg:700;
+  --fs-title-md:20px;  --lh-title-md:1.25; --ls-title-md:-0.01em; --fw-title-md:700;
+  --fs-title-sm:16px;  --lh-title-sm:1.3;  --ls-title-sm:0;       --fw-title-sm:600;
+  --fs-title-xs:14px;  --lh-title-xs:1.3;  --ls-title-xs:0;       --fw-title-xs:600;
+  --fs-body-lg:16px;   --lh-body-lg:1.5;   --ls-body-lg:0;
+  --fs-body-md:14px;   --lh-body-md:1.5;   --ls-body-md:0;
+  --fs-body-sm:12px;   --lh-body-sm:1.45;  --ls-body-sm:0;
+  --fs-caption:11px;   --lh-caption:1.4;   --ls-caption:0.02em;   --fw-caption:500;
+  --fs-mono:11px;      --lh-mono:1.2;      --ls-mono:0.04em;      --fw-mono:600;
+  --fw-regular:400; --fw-medium:500; --fw-semibold:600; --fw-bold:700;
+
+  /* --- Spacing scale (§1.4) — 4px base, ten stops ------------------------- */
+  --space-1:4px;  --space-2:8px;  --space-3:12px; --space-4:16px; --space-5:20px;
+  --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
+
+  /* --- Motion (§1.5) ------------------------------------------------------ */
+  --motion-1:120ms; --motion-2:180ms; --motion-3:240ms;
+  --ease-out:cubic-bezier(0.2,0,0,1);
+  --ease-in:cubic-bezier(0.4,0,1,1);
+
+  /* --- Shell geometry (§2) ----------------------------------------------- */
+  --app-topbar-h:56px;
+  --app-rail-w:240px;
+  --app-rail-w-collapsed:64px;
+  --app-inspector-w:320px;
+  --app-statusbar-h:32px;
+  --app-content-max:1200px;
+  --app-card-h:280px;
+
+  /* --- Focus (§1.3) — the accent appears here and on the primary button --- */
+  --app-ring:0 0 0 2px var(--app-surface),0 0 0 4px var(--app-accent);
+  --app-ring-inset:0 0 0 2px var(--app-accent);
+
+  /* --- Info status colour (was absent; toast.css referenced it) ---------- */
+  --info:#2f6fb5;
+  --app-info:var(--info);
+}
+html[data-theme="dark"]{--info:#7fb2ef;--app-info:var(--info);}
+/* Khmer never gets negative tracking and always gets the Khmer family first
+   (a Latin family in front of a Khmer glyph run can suppress OpenType shaping). */
+:lang(km),.khmer-text{font-family:var(--font-khmer);letter-spacing:normal;}
+:lang(km) .ds-display,.khmer-text .ds-display{font-family:var(--font-display-km);}

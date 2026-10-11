@@ -3,43 +3,12 @@
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-function dashboard(){
-  const view=$('#dashboardView'),login=$('#loginView');if(!view)return;
-  view.classList.add('dashboard-home');
-  const rail=document.createElement('nav');rail.className='dashboard-home-rail';rail.innerHTML=`
-    <button type="button" class="rail-create" title="Create invitation"><span>＋</span>Create</button>
-    <a href="dashboard.html" class="active"><span>⌂</span>Home</a>
-    <a href="templates.html"><span>▣</span>Templates</a>
-    <a href="materials.html"><span>▧</span>Materials</a>
-    <a href="billing.html"><span>◉</span>Plans</a>
-    <div class="rail-spacer"></div>
-    <a href="account.html"><span>◌</span>Account</a>`;
-  document.body.append(rail);
-  $('.rail-create',rail).onclick=()=>$('#newBtn')?.click();
-  const hero=document.createElement('section');hero.className='dashboard-home-hero';hero.innerHTML=`
-    <h1>What will you create today?</h1>
-    <label class="dashboard-home-search"><span>⌕</span><input type="search" placeholder="Search your invitations"></label>
-    <div class="dashboard-quick-create">
-      <button type="button" class="create"><i>＋</i><span>Create</span></button>
-      <a href="templates.html" class="template"><i>▣</i><span>Templates</span></a>
-      <button type="button" class="wedding"><i>♡</i><span>Wedding</span></button>
-      <button type="button" class="birthday"><i>✦</i><span>Birthday</span></button>
-      <button type="button" class="business"><i>◇</i><span>Business</span></button>
-      <a href="materials.html" class="upload"><i>⇧</i><span>Uploads</span></a>
-    </div>`;
-  view.prepend(hero);
-  const createByType=(type)=>{const btn=$('#newBtn');btn?.click();setTimeout(()=>{const typeEl=$('#newType');if(typeEl){typeEl.value=type;typeEl.dispatchEvent(new Event('change',{bubbles:true}))}},40)};
-  $('.create',hero).onclick=()=>$('#newBtn')?.click();$('.wedding',hero).onclick=()=>createByType('Wedding');$('.birthday',hero).onclick=()=>createByType('Birthday');$('.business',hero).onclick=()=>createByType('Business');
-  const homeSearch=$('.dashboard-home-search input',hero);
-  homeSearch.oninput=()=>{const old=$('#dashboardSearch');if(old){old.value=homeSearch.value;old.dispatchEvent(new Event('input',{bubbles:true}))}else{$$('.invite-card','#inviteGrid').forEach(card=>card.hidden=!card.textContent.toLowerCase().includes(homeSearch.value.toLowerCase()))}};
-  const recent=document.createElement('div');recent.className='dashboard-recent-head';recent.innerHTML='<h2>Recent invitations</h2>';
-  const filter=$('.dashboard-filter-tabs');if(filter)recent.append(filter);
-  const grid=$('#inviteGrid');grid?.before(recent);
-  grid?.addEventListener('click',e=>{const cover=e.target.closest('.invite-cover');if(!cover)return;const card=cover.closest('.invite-card');card?.querySelector('[data-edit]')?.click()});
-  const header=$('body>header');
-  function authState(){const signed=view.hidden===false;rail.hidden=!signed;if(header){header.querySelectorAll('a[href="materials.html"],a[href="billing.html"],a[href="account.html"]').forEach(a=>a.hidden=!signed);const logout=$('#logoutBtn');if(logout)logout.hidden=!signed}}
-  new MutationObserver(authState).observe(view,{attributes:true,attributeFilter:['hidden']});authState();
-}
+/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
+   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
+   field and an English-only quick-create row, and it hid the real .dash-head. The shell
+   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
+   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
   const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;

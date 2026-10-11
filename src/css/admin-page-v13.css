@@ -1,0 +1,29 @@
+
+/* ============================================================================
+   V55 admin — one extra sub-navigation row inside the content area (§3 Group 6).
+   Same tokens, same type scale, same spacing; the sub-tab row is the only
+   distinguishing element. No new colour is introduced.
+   ========================================================================= */
+body[data-page="admin"] main.admin-page { max-width: var(--app-content-max); }
+body[data-page="admin"] .admin-metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+body[data-page="admin"] .admin-tabs {
+  display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap;
+  padding: 0 var(--space-2); margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--app-line);
+}
+body[data-page="admin"] .admin-tabs button {
+  min-height: 44px; padding: 0 var(--space-3);
+  border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  background: transparent; color: var(--app-muted);
+  font-size: var(--fs-body-md); font-weight: var(--fw-medium); cursor: pointer;
+  transition: color var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out), background var(--motion-1) var(--ease-out);
+}
+body[data-page="admin"] .admin-tabs button:hover { color: var(--app-text); background: var(--app-surface-2); }
+body[data-page="admin"] .admin-tabs button.active,
+body[data-page="admin"] .admin-tabs button[aria-selected="true"] { color: var(--app-accent); border-bottom-color: var(--app-accent); }
+body[data-page="admin"] .admin-search { display: block; width: 240px; margin-bottom: var(--space-5); }
+body[data-page="admin"] .admin-panel { display: none; }
+body[data-page="admin"] .admin-panel.active { display: block; }
+body[data-page="admin"] .admin-panel table { border: 1px solid var(--app-line); border-radius: var(--radius-md); overflow: hidden; }
+body[data-page="admin"] .admin-panel table thead th { background: var(--app-surface-2); position: sticky; top: var(--app-topbar-h); }
+body[data-page="admin"] .admin-panel tbody tr:hover { background: var(--app-surface-2); }

@@ -87,6 +87,7 @@
   let hud = null;
   let popover = null;
   let selectionCard = null;
+  let cardGeometryTracked = false;
   let hoverBox = null;
   let inspectorToggle = null;
   let inspectorEmpty = null;
@@ -439,9 +440,113 @@
     selectionCard.id = 'v54SelectionCard';
     selectionCard.className = 'v54-selection-card';
     selectionCard.hidden = true;
-    selectionCard.innerHTML = '<div><small data-v54-page></small><strong data-v54-label></strong></div><span data-v54-metrics></span>';
+    // Canva-style context card: a compact action row above a size read-out.
+    selectionCard.innerHTML = '<div class="v54-selection-actions" role="toolbar" aria-label="Selection actions">' +
+      '<button type="button" data-v54-action="text" title="Edit text" aria-label="Edit text"><span aria-hidden="true">T</span></button>' +
+      '<button type="button" data-v54-action="crop" title="Crop" aria-label="Crop"><span aria-hidden="true">\u25A3</span></button>' +
+      '<button type="button" data-v54-action="duplicate" title="Duplicate" aria-label="Duplicate"><span aria-hidden="true">\u29C9</span></button>' +
+      '<button type="button" data-v54-action="delete" title="Delete" aria-label="Delete"><span aria-hidden="true">\u232B</span></button>' +
+      '<button type="button" data-v54-action="more" title="More actions" aria-label="More actions"><span aria-hidden="true">\u22EF</span></button>' +
+      '</div>' +
+      '<div class="v54-selection-readout"><small data-v54-page></small><strong data-v54-label></strong><span data-v54-metrics></span></div>';
+    selectionCard.addEventListener('click', onSelectionCardAction);
     viewport.prepend(selectionCard);
+    trackSelectionCardGeometry();
     return selectionCard;
+  }
+
+  /**
+   * Handle the floating selection card's action row.
+   *
+   * Every action resolves to an existing editor capability — no new state is
+   * invented here: text/crop move focus into the inspector control that owns
+   * the edit, while duplicate/delete run the registered editor commands.
+   * @param {MouseEvent} event
+   */
+  function onSelectionCardAction(event) {
+    const button = event.target.closest?.('[data-v54-action]');
+    if (!button || button.disabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const action = button.dataset.v54Action;
+    if (action === 'text') {
+      const field = $('#textContent');
+      if (field) { field.focus({ preventScroll: true }); field.select?.(); }
+      document.querySelector('[data-studio-tab="design"]')?.click();
+      return;
+    }
+    if (action === 'crop') {
+      document.querySelector('[data-studio-tab="media"]')?.click();
+      const fit = $('#imageFit');
+      if (fit) fit.focus({ preventScroll: true });
+      return;
+    }
+    if (action === 'duplicate') { registry.execute?.('edit.duplicate'); return; }
+    if (action === 'delete') { registry.execute?.('edit.delete'); return; }
+    if (action === 'more') { registry.openUI?.(); return; }
+  }
+
+  /** Required vertical gap between the selected object's box and the card. */
+  const SELECTION_CARD_GAP = 8;
+
+  /**
+   * Anchor the selection card to the primary selected element's bounding box:
+   * 8px above it, flipped below when that would clip the viewport (dispatch §3-G4).
+   *
+   * Positioning is done by measuring the card where it actually is and moving it
+   * by the delta to where it must be — never by offsetTop/offsetLeft arithmetic.
+   * Those are resolved against the containing block's *padding* box, so any
+   * border on the offset parent is silently added to every measurement:
+   * `#canvasViewport` carries clientTop 1 / clientLeft 11, which turned the
+   * required 8px gap into 5px and pushed the horizontal centre 11px off. A
+   * getBoundingClientRect() delta reports real viewport geometry, so it stays
+   * exact whatever the offset parent's border, padding, scroll or a transformed
+   * ancestor does (G4/G7).
+   * @param {HTMLElement} card
+   * @param {boolean} hasSelection
+   */
+  function positionSelectionCard(card, hasSelection) {
+    if (!hasSelection) { card.style.transform = ''; return; }
+    const ids = bridge.getSelectedIds?.() || [];
+    const target = ids.length ? stage.querySelector(`.object[data-id="${typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(ids[0]) : ids[0]}"]`) : null;
+    if (!target) return;
+    const box = target.getBoundingClientRect();
+    if (!box.width && !box.height) return;
+    // Measure the card untransformed, then translate it by the exact delta.
+    card.style.transform = 'none';
+    const cardRect = card.getBoundingClientRect();
+    if (!cardRect.width && !cardRect.height) return;
+    const desiredLeft = box.left + box.width / 2 - cardRect.width / 2;
+    const above = box.top - SELECTION_CARD_GAP - cardRect.height;
+    const flip = above < SELECTION_CARD_GAP;
+    const desiredTop = flip ? box.bottom + SELECTION_CARD_GAP : above;
+    card.style.transform = `translate(${Math.round(desiredLeft - cardRect.left)}px, ${Math.round(desiredTop - cardRect.top)}px)`;
+    card.classList.toggle('is-below', flip);
+  }
+
+  /**
+   * On narrow viewports the right inspector is a drawer; selecting an object
+   * opens it so the tap has a visible result (dispatch §3-G6).
+   * @param {boolean} hasSelection
+   */
+  function syncInspectorDrawer(hasSelection) {
+    if (typeof innerWidth === 'number' && innerWidth > 768) {
+      document.body.classList.remove('right-open');
+      return;
+    }
+    const layout = window.EInviteResponsiveLayout;
+    const narrow = !layout || typeof layout.mode !== 'function' || layout.mode() !== 'desktop';
+    // `editor-responsive-contract-v27.js` owns the narrow-viewport drawer and
+    // reveals the pane from its own transform rules. Its API takes a boolean
+    // (`openInspector: o => set('inspector', o)`) — calling it with no argument
+    // is a no-op that leaves the panel translated off-screen (G6), so pass it.
+    if (!hasSelection) {
+      document.body.classList.remove('right-open');
+      if (narrow) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
+      return;
+    }
+    document.body.classList.add('right-open');
+    if (narrow) { try { layout?.openInspector?.(true); } catch { /* ignore */ } }
   }
 
   /**
@@ -453,13 +558,57 @@
     const card = ensureSelectionCard();
     const metrics = selectionMetrics();
     card.hidden = !metrics;
-    if (!metrics) return;
+    syncInspectorDrawer(!!metrics);
+    if (!metrics) { positionSelectionCard(card, false); return; }
     const canvasLabel = $('#activeCanvasLabel')?.textContent?.trim() || 'Canvas';
     $('[data-v54-page]', card).textContent = canvasLabel;
     $('[data-v54-label]', card).textContent = metrics.label;
     const rotation = Math.abs(metrics.rotation) > 0.05 ? ` · ${Math.round(metrics.rotation * 10) / 10}°` : '';
     $('[data-v54-metrics]', card).textContent = `${Math.round(metrics.width)} × ${Math.round(metrics.height)}${rotation}`;
     card.classList.toggle('is-multi', metrics.items.length > 1);
+    // Crop only applies to image objects; a disabled control always says why.
+    const crop = $('[data-v54-action="crop"]', card);
+    if (crop) {
+      const firstId = metrics.items?.[0]?.id || '';
+      const first = firstId ? stage.querySelector(`.object[data-id="${firstId}"]`) : null;
+      const isImage = !!first && (first.dataset.type === 'image' || !!first.querySelector('img'));
+      crop.disabled = !isImage;
+      crop.title = isImage ? 'Crop' : 'Crop applies to image objects only';
+    }
+    positionSelectionCard(card, true);
+    // Re-measure on the next frame. Selecting an object settles its box (and the
+    // narrow-viewport inspector drawer) in the same tick, so a card placed against
+    // the pre-layout rect sits a few pixels into the selection instead of 8px above
+    // it. The guard keeps this a no-op once the card is hidden again.
+    requestAnimationFrame(() => { if (!destroyed && !card.hidden) positionSelectionCard(card, true); });
+  }
+
+  /**
+   * Re-position the card whenever anything that can move the selected object
+   * moves.
+   *
+   * Selecting an object settles its layout over more than one frame: the
+   * inspector's controls appear (which re-centres the stage) and `.canvas-frame`
+   * runs a 0.3s `transform` transition whose hover state is `translateY(-2px)`.
+   * Both land *after* the card has been placed, which left the gap at 6px
+   * instead of the required 8px (G4/G7). Mirroring every event that can move the
+   * canvas keeps the card glued to the object, instead of widening the nominal
+   * gap to hide the error.
+   */
+  function trackSelectionCardGeometry() {
+    if (cardGeometryTracked) return;
+    cardGeometryTracked = true;
+    const reposition = () => {
+      if (destroyed || !selectionCard || selectionCard.hidden) return;
+      positionSelectionCard(selectionCard, true);
+    };
+    viewport.addEventListener('scroll', reposition, { passive: true });
+    // `transitionend` bubbles, so a capture listener sees `.canvas-frame`'s
+    // transform transition — and any other transition inside the canvas.
+    viewport.addEventListener('transitionend', reposition, true);
+    window.addEventListener('resize', reposition, { passive: true });
+    document.addEventListener('einvite:workspace-resized', reposition);
+    document.addEventListener('einvite:layout-stable', reposition);
   }
 
   /**
@@ -1028,6 +1177,13 @@
     menu.classList.toggle('v54-has-actions', actions.querySelector('button') != null);
     actions.hidden = !actions.querySelector('button');
 
+    // A menu is closed until the user opens it. The mobile canvas header mounts
+    // this popup absolutely over the artboard, so leaving it open hides the
+    // selection (and blocks the tap that is supposed to open the inspector
+    // drawer). Close it here; the trigger and click-outside still drive it.
+    menu.hidden = true;
+    $('.canvas-header-more-trigger')?.setAttribute('aria-expanded', 'false');
+
     // Tag device buttons with a single-letter short label for compact toolbars.
     $$('.studio-canvas-toolbar [data-device]').forEach(button => {
       button.classList.add('v54-device-button');
@@ -1141,7 +1297,28 @@
   function onSelectionChanged() {
     AutoFitGuard.patch();   // re-attempt controller patch (may appear after install)
     AutoFitGuard.pulse();
+    syncInspectorDrawer((bridge.getSelectedIds?.() || []).length > 0);
     scheduleUpdate();
+  }
+
+  /**
+   * Wire the mobile inspector drawer toggle (topbar button in index.html).
+   * Toggling is idempotent and safe on desktop, where the drawer CSS is inert.
+   */
+  function wireInspectorDrawer() {
+    const toggle = $('#v54InspectorDrawer');
+    if (!toggle) return;
+    const sync = () => toggle.setAttribute('aria-expanded', String(document.body.classList.contains('right-open')));
+    toggle.addEventListener('click', () => {
+      const open = document.body.classList.toggle('right-open');
+      const layout = window.EInviteResponsiveLayout;
+      if (layout && typeof layout.mode === 'function' && layout.mode() !== 'desktop') {
+        if (open) layout.openInspector?.(); else layout.closeInspector?.();
+      }
+      sync();
+    });
+    document.addEventListener('einvite:workspace-resized', sync);
+    sync();
   }
 
   // =========================================================================
@@ -1158,6 +1335,7 @@
     ensureSelectionCard();
     ensureHoverBox();
     ensureInspectorMode();
+    wireInspectorDrawer();
     organizeHeader();
     organizeFooter();
     registerCommands();

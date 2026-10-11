@@ -22,3 +22,98 @@
 .login .canvas-auth-actions{margin-top:18px}.login button.primary{width:100%;padding:10px;border-radius:8px;font-size:13px}
 .login .canvas-auth-links{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-size:11px}
 .login .canvas-auth-note{color:#766;font-size:10px;margin-top:8px}
+
+/* ============================================================================
+   V55 dashboard — auth card (Skeleton B inside the A shell) + signed-in grid.
+   Consumes tokens.css + app-shell-v55.css only. No priority overrides.
+   ========================================================================= */
+
+/* --- 1. Auth card --------------------------------------------------------- */
+body[data-page="dashboard"] #loginView.login.auth-shell { display: block; padding: var(--space-8) var(--space-4) var(--space-16); }
+body[data-page="dashboard"] #loginView .auth-card { margin: var(--space-10) auto var(--space-16); }
+body[data-page="dashboard"] #loginView .canvas-auth-visual,
+body[data-page="dashboard"] #loginView .canvas-auth-panel { display: none; }
+body[data-page="dashboard"] .auth-card__tabs { justify-content: stretch; }
+body[data-page="dashboard"] .auth-card__tabs button { flex: 1; }
+body[data-page="dashboard"] .canvas-auth-form { display: grid; gap: var(--space-3); }
+body[data-page="dashboard"] .canvas-auth-form label { margin: 0; }
+body[data-page="dashboard"] #authStatus:empty { display: none; }
+body[data-page="dashboard"] #authStatus { color: var(--danger); }
+
+/* --- 2. Signed-in head row + toolbar ------------------------------------- */
+body[data-page="dashboard"] #dashboardView .dash-head { align-items: center; gap: var(--space-4); margin-bottom: var(--space-5); }
+body[data-page="dashboard"] #dashboardView .dash-head h1 { margin-right: auto; }
+body[data-page="dashboard"] #dashboardView .dash-head #studioBtn { order: 2; }
+body[data-page="dashboard"] #dashboardView .dash-head #newBtn { order: 3; font-weight: var(--fw-semibold); }
+body[data-page="dashboard"] .dash-quickstart { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+body[data-page="dashboard"] .dash-quickstart button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: 40px; padding: 0 var(--space-4);
+  border: 1px solid var(--app-line); border-radius: var(--radius-sm);
+  background: var(--app-surface); color: var(--app-text); font-size: var(--fs-body-md);
+}
+body[data-page="dashboard"] .dash-quickstart button:hover { background: var(--app-surface-2); border-color: var(--app-line-2); }
+
+/* --- 3. Invitation cards: identical height, thumbnail 16:9 ---------------- */
+body[data-page="dashboard"] .invite-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+body[data-page="dashboard"] .invite-card {
+  position: relative;
+  display: flex; flex-direction: column;
+  height: var(--app-card-h);
+  overflow: hidden;
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow-sm);
+  transition: box-shadow var(--motion-2) var(--ease-out), transform var(--motion-2) var(--ease-out), border-color var(--motion-2) var(--ease-out);
+}
+body[data-page="dashboard"] .invite-card:hover { box-shadow: var(--app-shadow); transform: translateY(-1px); border-color: var(--app-line-2); }
+body[data-page="dashboard"] .invite-cover { position: relative; aspect-ratio: 16 / 9; background: var(--app-surface-2); border-bottom: 1px solid var(--app-line); overflow: hidden; }
+body[data-page="dashboard"] .invite-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); min-width: 0; }
+body[data-page="dashboard"] .invite-body h3,
+body[data-page="dashboard"] .invite-body strong { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body[data-page="dashboard"] .invite-body .stats { margin-top: auto; color: var(--app-muted); font-size: var(--fs-body-sm); display: flex; gap: var(--space-2); }
+body[data-page="dashboard"] .invite-body .actions { display: flex; gap: var(--space-2); padding-top: var(--space-2); opacity: .5; transition: opacity var(--motion-2) var(--ease-out); }
+body[data-page="dashboard"] .invite-card:hover .invite-body .actions,
+body[data-page="dashboard"] .invite-card:focus-within .invite-body .actions { opacity: 1; }
+body[data-page="dashboard"] .fp-project-status {
+  position: absolute; top: var(--space-2); left: var(--space-2);
+  padding: 2px var(--space-2); border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--app-surface) 88%, transparent);
+  color: var(--app-muted); font-size: var(--fs-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption);
+}
+body[data-page="dashboard"] .fp-project-more {
+  position: absolute; top: var(--space-2); right: var(--space-2);
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border: 0; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--app-surface) 86%, transparent);
+  color: var(--app-muted); cursor: pointer;
+}
+body[data-page="dashboard"] .fp-project-more:hover { background: var(--app-surface); color: var(--app-text); box-shadow: var(--app-shadow-sm); }
+
+/* --- 4. Empty / loading / error states ------------------------------------ */
+body[data-page="dashboard"] .dashboard-empty {
+  grid-column: 1 / -1;
+  display: grid; grid-template-columns: 1.05fr .95fr; gap: var(--space-8); align-items: center;
+  padding: var(--space-10); border: 1px solid var(--app-line); border-radius: var(--radius-md);
+  background: var(--app-surface);
+}
+body[data-page="dashboard"] .dashboard-empty h2 { font-size: var(--fs-title-md); font-weight: var(--fw-title-md); letter-spacing: var(--ls-title-md); margin: var(--space-2) 0; }
+body[data-page="dashboard"] .dashboard-empty small { font-size: var(--fs-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption); text-transform: uppercase; color: var(--app-faint); }
+body[data-page="dashboard"] .dashboard-empty p { color: var(--app-muted); max-width: 52ch; }
+body[data-page="dashboard"] .dashboard-empty-checklist { display: grid; gap: var(--space-2); margin: var(--space-4) 0; color: var(--app-muted); }
+body[data-page="dashboard"] .dashboard-empty-checklist span::before { content: "✓"; color: var(--app-accent); margin-right: var(--space-2); }
+body[data-page="dashboard"] .dashboard-empty__action { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+body[data-page="dashboard"] .dashboard-empty-preview {
+  display: grid; place-items: center; min-height: 300px;
+  background: var(--app-surface-2); border: 1px solid var(--app-line); border-radius: var(--radius-md);
+  color: var(--app-muted);
+}
+body[data-page="dashboard"] .dashboard-empty-preview strong { font-size: var(--fs-title-sm); color: var(--app-text); }
+@media (max-width: 860px) {
+  body[data-page="dashboard"] .dashboard-empty { grid-template-columns: 1fr; padding: var(--space-6); }
+}

@@ -1,7 +1,6 @@
 const $=s=>document.querySelector(s);localStorage.removeItem('sovan-auth-token');const contextInviteId=window.EInviteContext?.getInvitationId({allowRemembered:false})||'';let materials=[],invitations=[];
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
 const _txt=(en,km)=>_isKm()?(km!=null?km:en):en;
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const b=(en,km)=>`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${esc(km!=null?km:en)}</span>`;
 async function api(path,options={}){const response=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',...(options.headers||{})}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw Error(payload.error||'Request failed');return payload}
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));

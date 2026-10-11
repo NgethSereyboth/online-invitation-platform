@@ -7115,43 +7115,12 @@ window.EInviteCollaborationSync={clientId,get knownRevision(){return knownRevisi
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-function dashboard(){
-  const view=$('#dashboardView'),login=$('#loginView');if(!view)return;
-  view.classList.add('dashboard-home');
-  const rail=document.createElement('nav');rail.className='dashboard-home-rail';rail.innerHTML=`
-    <button type="button" class="rail-create" title="Create invitation"><span>＋</span>Create</button>
-    <a href="dashboard.html" class="active"><span>⌂</span>Home</a>
-    <a href="templates.html"><span>▣</span>Templates</a>
-    <a href="materials.html"><span>▧</span>Materials</a>
-    <a href="billing.html"><span>◉</span>Plans</a>
-    <div class="rail-spacer"></div>
-    <a href="account.html"><span>◌</span>Account</a>`;
-  document.body.append(rail);
-  $('.rail-create',rail).onclick=()=>$('#newBtn')?.click();
-  const hero=document.createElement('section');hero.className='dashboard-home-hero';hero.innerHTML=`
-    <h1>What will you create today?</h1>
-    <label class="dashboard-home-search"><span>⌕</span><input type="search" placeholder="Search your invitations"></label>
-    <div class="dashboard-quick-create">
-      <button type="button" class="create"><i>＋</i><span>Create</span></button>
-      <a href="templates.html" class="template"><i>▣</i><span>Templates</span></a>
-      <button type="button" class="wedding"><i>♡</i><span>Wedding</span></button>
-      <button type="button" class="birthday"><i>✦</i><span>Birthday</span></button>
-      <button type="button" class="business"><i>◇</i><span>Business</span></button>
-      <a href="materials.html" class="upload"><i>⇧</i><span>Uploads</span></a>
-    </div>`;
-  view.prepend(hero);
-  const createByType=(type)=>{const btn=$('#newBtn');btn?.click();setTimeout(()=>{const typeEl=$('#newType');if(typeEl){typeEl.value=type;typeEl.dispatchEvent(new Event('change',{bubbles:true}))}},40)};
-  $('.create',hero).onclick=()=>$('#newBtn')?.click();$('.wedding',hero).onclick=()=>createByType('Wedding');$('.birthday',hero).onclick=()=>createByType('Birthday');$('.business',hero).onclick=()=>createByType('Business');
-  const homeSearch=$('.dashboard-home-search input',hero);
-  homeSearch.oninput=()=>{const old=$('#dashboardSearch');if(old){old.value=homeSearch.value;old.dispatchEvent(new Event('input',{bubbles:true}))}else{$$('.invite-card','#inviteGrid').forEach(card=>card.hidden=!card.textContent.toLowerCase().includes(homeSearch.value.toLowerCase()))}};
-  const recent=document.createElement('div');recent.className='dashboard-recent-head';recent.innerHTML='<h2>Recent invitations</h2>';
-  const filter=$('.dashboard-filter-tabs');if(filter)recent.append(filter);
-  const grid=$('#inviteGrid');grid?.before(recent);
-  grid?.addEventListener('click',e=>{const cover=e.target.closest('.invite-cover');if(!cover)return;const card=cover.closest('.invite-card');card?.querySelector('[data-edit]')?.click()});
-  const header=$('body>header');
-  function authState(){const signed=view.hidden===false;rail.hidden=!signed;if(header){header.querySelectorAll('a[href="materials.html"],a[href="billing.html"],a[href="account.html"]').forEach(a=>a.hidden=!signed);const logout=$('#logoutBtn');if(logout)logout.hidden=!signed}}
-  new MutationObserver(authState).observe(view,{attributes:true,attributeFilter:['hidden']});authState();
-}
+/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
+   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
+   field and an English-only quick-create row, and it hid the real .dash-head. The shell
+   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
+   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
   const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;
@@ -9771,6 +9740,7 @@ boot();
   let hud = null;
   let popover = null;
   let selectionCard = null;
+  let cardGeometryTracked = false;
   let hoverBox = null;
   let inspectorToggle = null;
   let inspectorEmpty = null;
@@ -10123,9 +10093,113 @@ boot();
     selectionCard.id = 'v54SelectionCard';
     selectionCard.className = 'v54-selection-card';
     selectionCard.hidden = true;
-    selectionCard.innerHTML = '<div><small data-v54-page></small><strong data-v54-label></strong></div><span data-v54-metrics></span>';
+    // Canva-style context card: a compact action row above a size read-out.
+    selectionCard.innerHTML = '<div class="v54-selection-actions" role="toolbar" aria-label="Selection actions">' +
+      '<button type="button" data-v54-action="text" title="Edit text" aria-label="Edit text"><span aria-hidden="true">T</span></button>' +
+      '<button type="button" data-v54-action="crop" title="Crop" aria-label="Crop"><span aria-hidden="true">\u25A3</span></button>' +
+      '<button type="button" data-v54-action="duplicate" title="Duplicate" aria-label="Duplicate"><span aria-hidden="true">\u29C9</span></button>' +
+      '<button type="button" data-v54-action="delete" title="Delete" aria-label="Delete"><span aria-hidden="true">\u232B</span></button>' +
+      '<button type="button" data-v54-action="more" title="More actions" aria-label="More actions"><span aria-hidden="true">\u22EF</span></button>' +
+      '</div>' +
+      '<div class="v54-selection-readout"><small data-v54-page></small><strong data-v54-label></strong><span data-v54-metrics></span></div>';
+    selectionCard.addEventListener('click', onSelectionCardAction);
     viewport.prepend(selectionCard);
+    trackSelectionCardGeometry();
     return selectionCard;
+  }
+
+  /**
+   * Handle the floating selection card's action row.
+   *
+   * Every action resolves to an existing editor capability — no new state is
+   * invented here: text/crop move focus into the inspector control that owns
+   * the edit, while duplicate/delete run the registered editor commands.
+   * @param {MouseEvent} event
+   */
+  function onSelectionCardAction(event) {
+    const button = event.target.closest?.('[data-v54-action]');
+    if (!button || button.disabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const action = button.dataset.v54Action;
+    if (action === 'text') {
+      const field = $('#textContent');
+      if (field) { field.focus({ preventScroll: true }); field.select?.(); }
+      document.querySelector('[data-studio-tab="design"]')?.click();
+      return;
+    }
+    if (action === 'crop') {
+      document.querySelector('[data-studio-tab="media"]')?.click();
+      const fit = $('#imageFit');
+      if (fit) fit.focus({ preventScroll: true });
+      return;
+    }
+    if (action === 'duplicate') { registry.execute?.('edit.duplicate'); return; }
+    if (action === 'delete') { registry.execute?.('edit.delete'); return; }
+    if (action === 'more') { registry.openUI?.(); return; }
+  }
+
+  /** Required vertical gap between the selected object's box and the card. */
+  const SELECTION_CARD_GAP = 8;
+
+  /**
+   * Anchor the selection card to the primary selected element's bounding box:
+   * 8px above it, flipped below when that would clip the viewport (dispatch §3-G4).
+   *
+   * Positioning is done by measuring the card where it actually is and moving it
+   * by the delta to where it must be — never by offsetTop/offsetLeft arithmetic.
+   * Those are resolved against the containing block's *padding* box, so any
+   * border on the offset parent is silently added to every measurement:
+   * `#canvasViewport` carries clientTop 1 / clientLeft 11, which turned the
+   * required 8px gap into 5px and pushed the horizontal centre 11px off. A
+   * getBoundingClientRect() delta reports real viewport geometry, so it stays
+   * exact whatever the offset parent's border, padding, scroll or a transformed
+   * ancestor does (G4/G7).
+   * @param {HTMLElement} card
+   * @param {boolean} hasSelection
+   */
+  function positionSelectionCard(card, hasSelection) {
+    if (!hasSelection) { card.style.transform = ''; return; }
+    const ids = bridge.getSelectedIds?.() || [];
+    const target = ids.length ? stage.querySelector(`.object[data-id="${typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(ids[0]) : ids[0]}"]`) : null;
+    if (!target) return;
+    const box = target.getBoundingClientRect();
+    if (!box.width && !box.height) return;
+    // Measure the card untransformed, then translate it by the exact delta.
+    card.style.transform = 'none';
+    const cardRect = card.getBoundingClientRect();
+    if (!cardRect.width && !cardRect.height) return;
+    const desiredLeft = box.left + box.width / 2 - cardRect.width / 2;
+    const above = box.top - SELECTION_CARD_GAP - cardRect.height;
+    const flip = above < SELECTION_CARD_GAP;
+    const desiredTop = flip ? box.bottom + SELECTION_CARD_GAP : above;
+    card.style.transform = `translate(${Math.round(desiredLeft - cardRect.left)}px, ${Math.round(desiredTop - cardRect.top)}px)`;
+    card.classList.toggle('is-below', flip);
+  }
+
+  /**
+   * On narrow viewports the right inspector is a drawer; selecting an object
+   * opens it so the tap has a visible result (dispatch §3-G6).
+   * @param {boolean} hasSelection
+   */
+  function syncInspectorDrawer(hasSelection) {
+    if (typeof innerWidth === 'number' && innerWidth > 768) {
+      document.body.classList.remove('right-open');
+      return;
+    }
+    const layout = window.EInviteResponsiveLayout;
+    const narrow = !layout || typeof layout.mode !== 'function' || layout.mode() !== 'desktop';
+    // `editor-responsive-contract-v27.js` owns the narrow-viewport drawer and
+    // reveals the pane from its own transform rules. Its API takes a boolean
+    // (`openInspector: o => set('inspector', o)`) — calling it with no argument
+    // is a no-op that leaves the panel translated off-screen (G6), so pass it.
+    if (!hasSelection) {
+      document.body.classList.remove('right-open');
+      if (narrow) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
+      return;
+    }
+    document.body.classList.add('right-open');
+    if (narrow) { try { layout?.openInspector?.(true); } catch { /* ignore */ } }
   }
 
   /**
@@ -10137,13 +10211,57 @@ boot();
     const card = ensureSelectionCard();
     const metrics = selectionMetrics();
     card.hidden = !metrics;
-    if (!metrics) return;
+    syncInspectorDrawer(!!metrics);
+    if (!metrics) { positionSelectionCard(card, false); return; }
     const canvasLabel = $('#activeCanvasLabel')?.textContent?.trim() || 'Canvas';
     $('[data-v54-page]', card).textContent = canvasLabel;
     $('[data-v54-label]', card).textContent = metrics.label;
     const rotation = Math.abs(metrics.rotation) > 0.05 ? ` · ${Math.round(metrics.rotation * 10) / 10}°` : '';
     $('[data-v54-metrics]', card).textContent = `${Math.round(metrics.width)} × ${Math.round(metrics.height)}${rotation}`;
     card.classList.toggle('is-multi', metrics.items.length > 1);
+    // Crop only applies to image objects; a disabled control always says why.
+    const crop = $('[data-v54-action="crop"]', card);
+    if (crop) {
+      const firstId = metrics.items?.[0]?.id || '';
+      const first = firstId ? stage.querySelector(`.object[data-id="${firstId}"]`) : null;
+      const isImage = !!first && (first.dataset.type === 'image' || !!first.querySelector('img'));
+      crop.disabled = !isImage;
+      crop.title = isImage ? 'Crop' : 'Crop applies to image objects only';
+    }
+    positionSelectionCard(card, true);
+    // Re-measure on the next frame. Selecting an object settles its box (and the
+    // narrow-viewport inspector drawer) in the same tick, so a card placed against
+    // the pre-layout rect sits a few pixels into the selection instead of 8px above
+    // it. The guard keeps this a no-op once the card is hidden again.
+    requestAnimationFrame(() => { if (!destroyed && !card.hidden) positionSelectionCard(card, true); });
+  }
+
+  /**
+   * Re-position the card whenever anything that can move the selected object
+   * moves.
+   *
+   * Selecting an object settles its layout over more than one frame: the
+   * inspector's controls appear (which re-centres the stage) and `.canvas-frame`
+   * runs a 0.3s `transform` transition whose hover state is `translateY(-2px)`.
+   * Both land *after* the card has been placed, which left the gap at 6px
+   * instead of the required 8px (G4/G7). Mirroring every event that can move the
+   * canvas keeps the card glued to the object, instead of widening the nominal
+   * gap to hide the error.
+   */
+  function trackSelectionCardGeometry() {
+    if (cardGeometryTracked) return;
+    cardGeometryTracked = true;
+    const reposition = () => {
+      if (destroyed || !selectionCard || selectionCard.hidden) return;
+      positionSelectionCard(selectionCard, true);
+    };
+    viewport.addEventListener('scroll', reposition, { passive: true });
+    // `transitionend` bubbles, so a capture listener sees `.canvas-frame`'s
+    // transform transition — and any other transition inside the canvas.
+    viewport.addEventListener('transitionend', reposition, true);
+    window.addEventListener('resize', reposition, { passive: true });
+    document.addEventListener('einvite:workspace-resized', reposition);
+    document.addEventListener('einvite:layout-stable', reposition);
   }
 
   /**
@@ -10712,6 +10830,13 @@ boot();
     menu.classList.toggle('v54-has-actions', actions.querySelector('button') != null);
     actions.hidden = !actions.querySelector('button');
 
+    // A menu is closed until the user opens it. The mobile canvas header mounts
+    // this popup absolutely over the artboard, so leaving it open hides the
+    // selection (and blocks the tap that is supposed to open the inspector
+    // drawer). Close it here; the trigger and click-outside still drive it.
+    menu.hidden = true;
+    $('.canvas-header-more-trigger')?.setAttribute('aria-expanded', 'false');
+
     // Tag device buttons with a single-letter short label for compact toolbars.
     $$('.studio-canvas-toolbar [data-device]').forEach(button => {
       button.classList.add('v54-device-button');
@@ -10825,7 +10950,28 @@ boot();
   function onSelectionChanged() {
     AutoFitGuard.patch();   // re-attempt controller patch (may appear after install)
     AutoFitGuard.pulse();
+    syncInspectorDrawer((bridge.getSelectedIds?.() || []).length > 0);
     scheduleUpdate();
+  }
+
+  /**
+   * Wire the mobile inspector drawer toggle (topbar button in index.html).
+   * Toggling is idempotent and safe on desktop, where the drawer CSS is inert.
+   */
+  function wireInspectorDrawer() {
+    const toggle = $('#v54InspectorDrawer');
+    if (!toggle) return;
+    const sync = () => toggle.setAttribute('aria-expanded', String(document.body.classList.contains('right-open')));
+    toggle.addEventListener('click', () => {
+      const open = document.body.classList.toggle('right-open');
+      const layout = window.EInviteResponsiveLayout;
+      if (layout && typeof layout.mode === 'function' && layout.mode() !== 'desktop') {
+        if (open) layout.openInspector?.(); else layout.closeInspector?.();
+      }
+      sync();
+    });
+    document.addEventListener('einvite:workspace-resized', sync);
+    sync();
   }
 
   // =========================================================================
@@ -10842,6 +10988,7 @@ boot();
     ensureSelectionCard();
     ensureHoverBox();
     ensureInspectorMode();
+    wireInspectorDrawer();
     organizeHeader();
     organizeFooter();
     registerCommands();
@@ -11442,4 +11589,135 @@ boot();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
+})();;/**
+ * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ *
+ * Deliberately tiny and dependency-free. It owns exactly three things:
+ *
+ *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
+ *      (persisted in localStorage['einvite-rail-collapsed']).
+ *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
+ *      toggles `body.rail-open`, which is also closed on Escape, on an outside
+ *      click, and on hashchange.
+ *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
+ *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
+ *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
+ *
+ * Accessibility: the toggle buttons carry aria-expanded and the rail is a
+ * landmark; nothing here traps focus or blocks pointer events when closed.
+ */
+(function () {
+  'use strict';
+  if (window.EInviteShell && window.EInviteShell.version >= 55) return;
+
+  var body = document.body;
+  var html = document.documentElement;
+  var RAIL_KEY = 'einvite-rail-collapsed';
+  var THEME_KEY = 'einvite-theme-mode';
+
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
+
+  /* --- 1. Rail collapse -------------------------------------------------- */
+  function applyRailCollapsed(collapsed) {
+    body.classList.toggle('rail-collapsed', !!collapsed);
+    document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      var glyph = btn.querySelector('[data-rail-glyph]');
+      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+    });
+  }
+  function applyRailOpen(open) {
+    body.classList.toggle('rail-open', !!open);
+    document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  }
+
+  /* --- 2. Current page --------------------------------------------------- */
+  function markCurrentPage() {
+    var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+    document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
+      var target = link.getAttribute('href').split('#')[0].split('?')[0].toLowerCase();
+      if (target && target === here) link.setAttribute('aria-current', 'page');
+    });
+  }
+
+  /*
+   * Pages that show a signed-out flow (dashboard) hide their rail until the
+   * signed-in view is revealed, so the login card gets the full canvas. The
+   * same flag flips the topbar down to Skeleton B (brand + language + theme).
+   */
+  function syncAutoRail() {
+    var autoRail = document.querySelector('.app-rail[data-rail-auto]');
+    var signedIn = document.getElementById('dashboardView');
+    var signedInVisible = !signedIn || !signedIn.hidden;
+    if (autoRail) autoRail.hidden = !signedInVisible;
+    if (signedIn) body.classList.toggle('auth-mode', !signedInVisible);
+  }
+
+  function watchAutoRail() {
+    var signedIn = document.getElementById('dashboardView');
+    if (!signedIn || typeof MutationObserver !== 'function') return;
+    new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* --- 3. Appearance ----------------------------------------------------- */
+  function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyTheme(next) {
+    html.dataset.theme = next;
+    html.dataset.themeMode = next;
+    html.style.colorScheme = next;
+    write(THEME_KEY, next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(next === 'dark'));
+      btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
+      var glyph = btn.querySelector('[data-theme-glyph]');
+      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+    });
+  }
+
+  /* --- Wiring ------------------------------------------------------------ */
+  document.addEventListener('click', function (event) {
+    var railToggle = event.target.closest('[data-rail-toggle]');
+    if (railToggle) {
+      var collapsed = !body.classList.contains('rail-collapsed');
+      applyRailCollapsed(collapsed);
+      write(RAIL_KEY, collapsed ? '1' : '0');
+      return;
+    }
+    var drawerToggle = event.target.closest('[data-drawer-toggle]');
+    if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
+    var themeToggle = event.target.closest('[data-theme-toggle]');
+    if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
+    /* Outside click closes the mobile drawer but never the desktop rail. */
+    if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('rail-open')) applyRailOpen(false);
+  });
+  window.addEventListener('hashchange', function () { applyRailOpen(false); });
+  window.addEventListener('resize', function () { if (innerWidth > 768) applyRailOpen(false); });
+
+  function init() {
+    markCurrentPage();
+    applyRailCollapsed(read(RAIL_KEY) === '1');
+    applyRailOpen(false);
+    syncAutoRail();
+    watchAutoRail();
+    applyTheme(read(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+
+  window.EInviteShell = Object.freeze({
+    version: 55,
+    collapseRail: applyRailCollapsed,
+    openRail: applyRailOpen,
+    syncAutoRail: syncAutoRail,
+    setTheme: applyTheme
+  });
 })();

@@ -1,20 +1,38 @@
-<!doctype html><html lang="en"><head><script src="core/theme.js"></script><script>(function(){try{var e=document.documentElement,v=localStorage.getItem("einvite-lang");if(!v){var n=navigator.language||(navigator.languages&&navigator.languages[0])||"";v=n.toLowerCase().indexOf("km")===0?"km":"en"}e.lang=v}catch(x){}})();</script><script src="backend-mode-v14.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Reset password — E-invitation-website</title><link rel="stylesheet" href="bundle-reset-v15.css">
+<!doctype html><html lang="en"><head><script src="core/theme.js"></script><script>(function(){try{var e=document.documentElement,v=localStorage.getItem("einvite-lang");if(!v){var n=navigator.language||(navigator.languages&&navigator.languages[0])||"";v=n.toLowerCase().indexOf("km")===0?"km":"en"}e.lang=v}catch(x){}})();</script><script src="backend-mode-v14.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><title>Reset password — E-invitation-website</title><link rel="stylesheet" href="bundle-reset-v15.css">
 
 
 
 
 
 
-</head><body data-page="reset"><a class="skip-link" href="#main"><span class="i18n i18n-en">Skip to content</span><span class="i18n i18n-km khmer-text" lang="km">Skip to content</span></a><header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">Back to sign in</span><span class="i18n i18n-km khmer-text" lang="km">Back to sign in</span></a></header><main id="main" class="auth-page" tabindex="-1">
-  <div class="canvas-auth-visual">
-    <div><span class="canvas-auth-badge">✦ <span class="i18n i18n-en">Secure access</span><span class="i18n i18n-km khmer-text" lang="km">Secure access</span></span></div>
-    <div><h2><span class="i18n i18n-en">Recover account access cleanly and safely.</span><span class="i18n i18n-km khmer-text" lang="km">Recover account access cleanly and safely.</span></h2><p><span class="i18n i18n-en">Request a secure reset link, choose a new password, and return to the same creative workspace without losing your invitation data.</span><span class="i18n i18n-km khmer-text" lang="km">Request a secure reset link, choose a new password, and return to the same creative workspace without losing your invitation data.</span></p></div>
-    <div class="canvas-auth-bullets"><div><span>✓</span><div><strong><span class="i18n i18n-en">Simple request flow</span><span class="i18n i18n-km khmer-text" lang="km">Simple request flow</span></strong><small><span class="i18n i18n-en">Use the email attached to your E-invitation-website account.</span><span class="i18n i18n-km khmer-text" lang="km">Use the email attached to your E-invitation-website account.</span></small></div></div><div><span>✓</span><div><strong><span class="i18n i18n-en">Secure reset</span><span class="i18n i18n-km khmer-text" lang="km">Secure reset</span></strong><small><span class="i18n i18n-en">Reset tokens expire and existing sessions are invalidated after a password change.</span><span class="i18n i18n-km khmer-text" lang="km">Reset tokens expire and existing sessions are invalidated after a password change.</span></small></div></div></div>
-  </div>
-  <div class="canvas-auth-panel">
-    <section id="requestView"><h1><span class="i18n i18n-en">Reset your password</span><span class="i18n i18n-km khmer-text" lang="km">Reset your password</span></h1><p><span class="i18n i18n-en">Enter the email address used for your account.</span><span class="i18n i18n-km khmer-text" lang="km">Enter the email address used for your account.</span></p><form id="requestForm"><label><span class="i18n i18n-en">Email</span><span class="i18n i18n-km khmer-text" lang="km">Email</span><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label><button class="primary"><span class="i18n i18n-en">Send reset link</span><span class="i18n i18n-km khmer-text" lang="km">Send reset link</span></button></form><p id="requestStatus" class="canvas-auth-status status"></p></section>
-    <section id="confirmView" hidden><h1><span class="i18n i18n-en">Choose a new password</span><span class="i18n i18n-km khmer-text" lang="km">Choose a new password</span></h1><p><span class="i18n i18n-en">Use at least eight characters and avoid reusing an old password.</span><span class="i18n i18n-km khmer-text" lang="km">Use at least eight characters and avoid reusing an old password.</span></p><form id="confirmForm"><label><span class="i18n i18n-en">New password</span><span class="i18n i18n-km khmer-text" lang="km">New password</span><input name="newPassword" type="password" minlength="8" required autocomplete="new-password"></label><label><span class="i18n i18n-en">Confirm password</span><span class="i18n i18n-km khmer-text" lang="km">Confirm password</span><input name="confirmPassword" type="password" minlength="8" required autocomplete="new-password"></label><button class="primary"><span class="i18n i18n-en">Reset password</span><span class="i18n i18n-km khmer-text" lang="km">Reset password</span></button></form><p id="confirmStatus" class="canvas-auth-status status"></p></section>
-    <div class="canvas-auth-links"><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">← Back to sign in</span><span class="i18n i18n-km khmer-text" lang="km">← Back to sign in</span></a></div>
+</head><body data-shell="b" data-page="reset"><header>
+    <div class="app-topbar-left"><a href="dashboard.html" class="app-brand"><strong>E-invitation-website</strong></a></div>
+    <div class="app-topbar-right"><button class="app-theme-toggle" data-theme-toggle type="button" aria-label="Appearance" aria-pressed="false"><span data-theme-glyph aria-hidden="true">☀</span></button></div>
+  </header>
+<a class="skip-link" href="#main"><span class="i18n i18n-en">Skip to content</span><span class="i18n i18n-km khmer-text" lang="km">Skip to content</span></a><main id="main" class="auth-view" tabindex="-1">
+  <div class="auth-card">
+    <div class="auth-card__brand"><span class="auth-mark" aria-hidden="true">✦</span><strong>E-invitation-website</strong></div>
+    <h1><span class="i18n i18n-en">Reset your password</span><span class="i18n i18n-km" lang="km">Reset your password</span></h1>
+    <section id="requestView">
+      <p><span class="i18n i18n-en">Enter the email address used for your account.</span><span class="i18n i18n-km" lang="km">Enter the email address used for your account.</span></p>
+      <form id="requestForm">
+        <label for="resetEmail"><span><span class="i18n i18n-en">Email</span><span class="i18n i18n-km khmer-text" lang="km">អ៊ីមែល</span></span><input id="resetEmail" name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+        <button class="primary full"><span class="i18n i18n-en">Send reset link</span><span class="i18n i18n-km" lang="km">Send reset link</span></button>
+      </form>
+      <p id="requestStatus" class="auth-card__status status" role="status" aria-live="polite"></p>
+    </section>
+    <section id="confirmView" hidden>
+      <h2><span class="i18n i18n-en">Choose a new password</span><span class="i18n i18n-km" lang="km">Choose a new password</span></h2>
+      <p><span class="i18n i18n-en">Use at least eight characters and avoid reusing an old password.</span><span class="i18n i18n-km" lang="km">Use at least eight characters and avoid reusing an old password.</span></p>
+      <form id="confirmForm">
+        <label for="newPassword"><span><span class="i18n i18n-en">New password</span><span class="i18n i18n-km" lang="km">New password</span></span><input id="newPassword" name="newPassword" type="password" minlength="8" required autocomplete="new-password"></label>
+        <label for="confirmPassword"><span><span class="i18n i18n-en">Confirm password</span><span class="i18n i18n-km" lang="km">Confirm password</span></span><input id="confirmPassword" name="confirmPassword" type="password" minlength="8" required autocomplete="new-password"></label>
+        <button class="primary full"><span class="i18n i18n-en">Reset password</span><span class="i18n i18n-km khmer-text" lang="km">កំណត់ពាក្យសម្ងាត់ឡើងវិញ</span></button>
+      </form>
+      <p id="confirmStatus" class="auth-card__status status" role="status" aria-live="polite"></p>
+    </section>
+    <div class="auth-card__links"><a href="dashboard.html"><span class="i18n i18n-en">← Back to sign in</span><span class="i18n i18n-km" lang="km">← Back to sign in</span></a></div>
   </div>
 </main><script src="bundle-reset-v15.js"></script>
 

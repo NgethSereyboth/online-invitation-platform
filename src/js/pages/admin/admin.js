@@ -202,6 +202,16 @@
   }
 
   async function init(){
+    // Static mode: every admin panel is server-backed, so gate the whole console
+    // behind the backend probe instead of firing 404s from the shell, the
+    // impersonation probe and the lazily-mounted modules (G8).
+    if (window.EInviteBackend?.ready) { try { await window.EInviteBackend.ready; } catch (e) { /* ignore */ } }
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) {
+      window.EInviteBackend.message(
+        document.querySelector('.admin-page') || document.querySelector('main') || document.body,
+        '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km">The administration console requires the full application server.</span>');
+      return;
+    }
     initTabs();
     showImpersonationBanner();
     await pollOnce();

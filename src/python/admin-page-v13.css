@@ -1,1 +1,29 @@
-.admin-page{max-width:1280px;margin:auto;padding:30px}.admin-page h1{font:40px Georgia,serif;color:var(--accent)}.admin-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}.admin-metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}.admin-metric strong{display:block;font-size:28px;color:var(--accent)}.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}.admin-tabs button.active{background:var(--accent);color:#fff}.admin-panel{display:none}.admin-panel.active{display:block}.admin-row{display:grid;grid-template-columns:minmax(220px,2fr) repeat(5,minmax(110px,1fr)) auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);padding:13px;border-radius:12px;margin:8px 0}.admin-row h3{margin:0;font:20px Georgia,serif}.admin-row small{display:block;color:#776;margin-top:4px}.admin-row select{margin:0}.admin-upload-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}.admin-upload-toggle input{width:auto;margin:0}.admin-search{max-width:420px;margin-bottom:14px}@media(max-width:820px){.admin-row{grid-template-columns:1fr}.admin-page{padding:18px}}
+
+/* ============================================================================
+   V55 admin — one extra sub-navigation row inside the content area (§3 Group 6).
+   Same tokens, same type scale, same spacing; the sub-tab row is the only
+   distinguishing element. No new colour is introduced.
+   ========================================================================= */
+body[data-page="admin"] main.admin-page { max-width: var(--app-content-max); }
+body[data-page="admin"] .admin-metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+body[data-page="admin"] .admin-tabs {
+  display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap;
+  padding: 0 var(--space-2); margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--app-line);
+}
+body[data-page="admin"] .admin-tabs button {
+  min-height: 44px; padding: 0 var(--space-3);
+  border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  background: transparent; color: var(--app-muted);
+  font-size: var(--fs-body-md); font-weight: var(--fw-medium); cursor: pointer;
+  transition: color var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out), background var(--motion-1) var(--ease-out);
+}
+body[data-page="admin"] .admin-tabs button:hover { color: var(--app-text); background: var(--app-surface-2); }
+body[data-page="admin"] .admin-tabs button.active,
+body[data-page="admin"] .admin-tabs button[aria-selected="true"] { color: var(--app-accent); border-bottom-color: var(--app-accent); }
+body[data-page="admin"] .admin-search { display: block; width: 240px; margin-bottom: var(--space-5); }
+body[data-page="admin"] .admin-panel { display: none; }
+body[data-page="admin"] .admin-panel.active { display: block; }
+body[data-page="admin"] .admin-panel table { border: 1px solid var(--app-line); border-radius: var(--radius-md); overflow: hidden; }
+body[data-page="admin"] .admin-panel table thead th { background: var(--app-surface-2); position: sticky; top: var(--app-topbar-h); }
+body[data-page="admin"] .admin-panel tbody tr:hover { background: var(--app-surface-2); }

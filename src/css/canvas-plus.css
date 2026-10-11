@@ -24,11 +24,11 @@ body:not(.guest) h1{font-weight:800;line-height:1.05;color:var(--app-text)!impor
 body:not(.guest) h2, body:not(.guest) h3{color:var(--app-text)!important}
 body:not(.guest) small{color:var(--app-muted)!important}
 body:not(.guest) label, body:not(.guest) p, body:not(.guest) li, body:not(.guest) strong, body:not(.guest) em, body:not(.guest) span{color:inherit}
-body:not(.guest) > header{position:sticky;top:0;z-index:2000;gap:10px;padding:12px 18px!important;min-height:64px!important}
+body:not(.guest) > header{position:sticky;top:0;z-index:2000;gap:10px;padding:12px 18px;min-height:64px}
 body:not(.guest) > header strong{font-size:18px;font-weight:800;letter-spacing:-.02em}
-body:not(.guest) > header button{min-height:40px!important;padding:10px 14px!important;border-radius:12px!important;font-weight:600!important;font-size:13px!important;line-height:1.15!important;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
-body:not(.guest) > header a>button{background:transparent!important}
-body:not(.guest) > header a>button:hover{background:var(--app-surface-2)!important}
+body:not(.guest) > header button{min-height:40px;padding:10px 14px;border-radius:12px;font-weight:600;font-size:13px;line-height:1.15;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+body:not(.guest) > header a>button{background:transparent}
+body:not(.guest) > header a>button:hover{background:var(--app-surface-2)}
 
 .ui-theme-menu{min-width:230px!important;padding:10px!important}
 .ui-theme-menu button{gap:10px;border-radius:12px!important;padding:11px 12px!important;align-items:flex-start!important}
@@ -200,7 +200,7 @@ body.studio-experience .ui-context-menu button kbd, body.studio-experience .ui-s
   body[data-page="materials"] .library-toolbar, body[data-page="materials"] .upload-row, body[data-page="billing"] .usage-grid, body[data-page="billing"] .plans{grid-template-columns:1fr!important}
 }
 @media(max-width:760px){
-  body:not(.guest)>header{padding:10px 12px!important;flex-wrap:wrap}
+  body:not(.guest)>header{padding:10px 12px;flex-wrap:wrap}
   body[data-page="dashboard"] .dash, body[data-page="billing"] .billing-page, body[data-page="account"] .account-page, body[data-page="materials"] .library-page{padding:24px 16px 72px!important}
   body.studio-experience .toolbar{width:calc(100% - 12px);top:68px;overflow:auto;padding:10px!important}
   .canvas-ai-grid,.canvas-pro-grid{grid-template-columns:1fr 1fr}

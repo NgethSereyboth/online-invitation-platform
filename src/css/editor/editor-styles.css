@@ -19,18 +19,18 @@
    The stage column is a flex column: toolbar → context row → viewport → dock.
    ------------------------------------------------------------------------- */
 body.windows-ui-v54 .stage-wrap {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 0 !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Primary toolbar — stable, non-reflowing. overflow-x auto so buttons never
    jump position; they simply scroll when narrow. */
 body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar {
   order: 1;
-  overflow: visible !important;
-  scrollbar-width: none !important;
-  gap: 5px !important;
+  overflow: visible;
+  scrollbar-width: none;
+  gap: 5px;
 }
 
 /* Context row — STABLE. We reserve a min-height row and only toggle a
@@ -38,38 +38,38 @@ body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar {
    This is the core of the "stable toolbar" fix. */
 body.windows-ui-v54 .stage-wrap > .v54-context-row {
   order: 2;
-  position: relative !important;
-  inset: auto !important;
-  transform: none !important;
-  flex: 0 0 auto !important;
-  width: calc(100% - 20px) !important;
-  max-width: none !important;
-  min-height: 0 !important;          /* reserved: grows to content when visible */
-  height: auto !important;
-  margin: 0 10px 0 !important;
-  padding: 0 8px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  scrollbar-width: none !important;
-  border: 0 !important;
-  border-radius: 12px !important;
-  background: transparent !important;
-  box-sizing: border-box !important;
-  transition: opacity .18s ease !important;
+  position: relative;
+  inset: auto;
+  transform: none;
+  flex: 0 0 auto;
+  width: calc(100% - 20px);
+  max-width: none;
+  min-height: 0;          /* reserved: grows to content when visible */
+  height: auto;
+  margin: 0 10px 0;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-sizing: border-box;
+  transition: opacity .18s ease;
   opacity: 0;
   visibility: hidden;
 }
 
 body.windows-ui-v54 .stage-wrap > .v54-context-row.visible {
-  min-height: 44px !important;
-  margin: 6px 10px 0 !important;
-  padding: 5px 8px !important;
-  border: 1px solid var(--app-line, #e4e4e9) !important;
-  background: var(--app-surface, #fff) !important;
+  min-height: 44px;
+  margin: 6px 10px 0;
+  padding: 5px 8px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  background: var(--app-surface, #fff);
   opacity: 1;
   visibility: visible;
 }
@@ -77,33 +77,33 @@ body.windows-ui-v54 .stage-wrap > .v54-context-row.visible {
 /* When not visible, collapse the row to zero height BUT keep it in flow so the
    viewport below does not jump. */
 body.windows-ui-v54 .stage-wrap > .v54-context-row:not(.visible) {
-  display: block !important;
-  height: 0 !important;
-  overflow: hidden !important;
+  display: block;
+  height: 0;
+  overflow: hidden;
 }
 
-body.windows-ui-v54 .stage-wrap > .v54-context-row::-webkit-scrollbar { display: none !important; }
-body.windows-ui-v54 .stage-wrap > .v54-context-row > * { flex: 0 0 auto !important; }
+body.windows-ui-v54 .stage-wrap > .v54-context-row::-webkit-scrollbar { display: none; }
+body.windows-ui-v54 .stage-wrap > .v54-context-row > * { flex: 0 0 auto; }
 
 /* Canvas viewport + page dock slots. */
-body.windows-ui-v54 .stage-wrap > .canvas-viewport { order: 3; min-height: 0 !important; padding-bottom: 18px !important; }
+body.windows-ui-v54 .stage-wrap > .canvas-viewport { order: 3; min-height: 0; padding-bottom: 18px; }
 body.windows-ui-v54 .stage-wrap > .workflow-page-dock {
   order: 4;
-  position: relative !important;
-  left: auto !important; right: auto !important; bottom: auto !important;
-  transform: none !important;
-  flex: 0 0 auto !important;
-  width: min(760px, calc(100% - 20px)) !important;
-  max-width: calc(100% - 20px) !important;
-  margin: 7px auto 10px !important;
-  box-sizing: border-box !important;
-  z-index: 36 !important;
+  position: relative;
+  left: auto; right: auto; bottom: auto;
+  transform: none;
+  flex: 0 0 auto;
+  width: min(760px, calc(100% - 20px));
+  max-width: calc(100% - 20px);
+  margin: 7px auto 10px;
+  box-sizing: border-box;
+  z-index: 36;
 }
-body.windows-ui-v54 .workflow-page-dock-track { min-width: 0 !important; scrollbar-width: none !important; }
-body.windows-ui-v54 .workflow-page-dock-track::-webkit-scrollbar { display: none !important; }
+body.windows-ui-v54 .workflow-page-dock-track { min-width: 0; scrollbar-width: none; }
+body.windows-ui-v54 .workflow-page-dock-track::-webkit-scrollbar { display: none; }
 
 /* Keep modal close buttons above the toolbar More panel. */
-body.windows-ui-v54 #modal.final-dialog > .close { z-index: 10001 !important; pointer-events: auto !important; }
+body.windows-ui-v54 #modal.final-dialog > .close { z-index: 10001; pointer-events: auto; }
 
 /* -------------------------------------------------------------------------
    2. Toolbar "More" overflow menu (formerly windows-ui-v16.css)
@@ -135,68 +135,68 @@ body.windows-ui-v54 .v54-toolbar-more-panel {
   background: var(--app-surface, #fff);
   box-shadow: 0 18px 50px rgba(0, 0, 0, .2);
 }
-body.windows-ui-v54 .v54-toolbar-more:not([open]) .v54-toolbar-more-panel { display: none !important; }
+body.windows-ui-v54 .v54-toolbar-more:not([open]) .v54-toolbar-more-panel { display: none; }
 
 /* Secondary controls laid out inside the More panel — neutralise any leftover
    absolute positioning so they sit naturally in the grid. */
 body.windows-ui-v54 .v54-toolbar-more-panel .v54-toolbar-secondary {
-  position: relative !important;
-  inset: auto !important; transform: none !important; z-index: auto !important;
-  display: flex !important; align-items: center !important; justify-content: center !important;
-  width: 100% !important; min-width: 0 !important; min-height: 40px !important; height: auto !important;
-  margin: 0 !important; padding: 7px 8px !important;
-  border-radius: 9px !important; box-shadow: none !important;
-  font-size: 11px !important; white-space: normal !important;
-  color: var(--app-text, #35353b) !important;
+  position: relative;
+  inset: auto; transform: none; z-index: auto;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; min-width: 0; min-height: 40px; height: auto;
+  margin: 0; padding: 7px 8px;
+  border-radius: 9px; box-shadow: none;
+  font-size: 11px; white-space: normal;
+  color: var(--app-text, #35353b);
 }
-body.windows-ui-v54 .v54-toolbar-more-panel .v54-toolbar-secondary::after { display: none !important; }
+body.windows-ui-v54 .v54-toolbar-more-panel .v54-toolbar-secondary::after { display: none; }
 body.windows-ui-v54 .v54-toolbar-more-panel .ei-focus-toggle[aria-pressed="true"] {
-  background: var(--app-accent, #7d4052) !important; color: #fff !important;
+  background: var(--app-accent, #7d4052); color: #fff;
 }
 
 /* Compact toolbars (≤1600px) tighten padding so the primary icons stay put. */
 @media (max-width: 1600px) {
-  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar { padding-inline: 7px !important; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar { padding-inline: 7px; }
   body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar button,
-  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar select { padding-inline: 7px !important; min-width: 34px !important; }
-  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar .toolbar-divider { margin-inline: 1px !important; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar select { padding-inline: 7px; min-width: 34px; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar .toolbar-divider { margin-inline: 1px; }
   body.windows-ui-v54 #activeCanvasLabel {
-    display: none !important; max-width: 110px; overflow: hidden;
+    display: none; max-width: 110px; overflow: hidden;
     text-overflow: ellipsis; white-space: nowrap;
   }
 }
-@media (max-width: 1180px) { body.windows-ui-v54 #activeCanvasLabel { display: none !important; } }
+@media (max-width: 1180px) { body.windows-ui-v54 #activeCanvasLabel { display: none; } }
 
 /* Hide tool-rail scrollbars for a clean look. */
-body.windows-ui-v54 .ei-tool-rail { scrollbar-width: none !important; -ms-overflow-style: none !important; overscroll-behavior-x: contain !important; }
-body.windows-ui-v54 .ei-tool-rail::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+body.windows-ui-v54 .ei-tool-rail { scrollbar-width: none; -ms-overflow-style: none; overscroll-behavior-x: contain; }
+body.windows-ui-v54 .ei-tool-rail::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* Tour transitions must not fight the stable toolbar. */
 body.windows-ui-v54 .final-tour,
-body.windows-ui-v54 .final-tour * { transition-property: transform, opacity !important; transition-duration: .16s !important; }
+body.windows-ui-v54 .final-tour * { transition-property: transform, opacity; transition-duration: .16s; }
 
 /* Mobile: simplify the stage column. */
 @media (max-width: 640px) {
   body.windows-ui-v54 .stage-wrap > .workflow-page-dock {
-    left: auto !important; right: auto !important; transform: none !important;
-    width: calc(100% - 16px) !important; max-width: none !important;
-    margin: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important; padding: 5px !important;
+    left: auto; right: auto; transform: none;
+    width: calc(100% - 16px); max-width: none;
+    margin: 6px 8px calc(6px + env(safe-area-inset-bottom)); padding: 5px;
   }
-  body.windows-ui-v54 .workflow-page-dock-track { overflow: hidden !important; display: flex !important; }
-  body.windows-ui-v54 .workflow-page-chip:not(.active) { display: none !important; }
+  body.windows-ui-v54 .workflow-page-dock-track { overflow: hidden; display: flex; }
+  body.windows-ui-v54 .workflow-page-chip:not(.active) { display: none; }
   body.windows-ui-v54 .workflow-page-chip.active {
-    display: grid !important; min-width: 0 !important; width: 100% !important; flex: 1 1 auto !important;
-    grid-template-columns: 30px minmax(0, 1fr) !important;
+    display: grid; min-width: 0; width: 100%; flex: 1 1 auto;
+    grid-template-columns: 30px minmax(0, 1fr);
   }
-  body.windows-ui-v54 .workflow-page-chip.active strong { max-width: none !important; }
+  body.windows-ui-v54 .workflow-page-chip.active strong { max-width: none; }
   body.windows-ui-v54 .workflow-page-add,
-  body.windows-ui-v54 #workflowV7DockFlow { flex: 0 0 44px !important; width: 44px !important; height: 44px !important; min-height: 44px !important; padding: 0 !important; }
-  body.windows-ui-v54 #workflowV7DockFlow b { display: none !important; }
-  body.windows-ui-v54 .v54-toolbar-more { display: none !important; }
-  body.windows-ui-v54 .stage-wrap > .v54-context-row { display: none !important; }
-  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: none !important; }
-  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar::-webkit-scrollbar { display: none !important; }
-  body.windows-ui-v54 .mobile-editor-v14-bar { padding-bottom: env(safe-area-inset-bottom) !important; height: calc(68px + env(safe-area-inset-bottom)) !important; }
+  body.windows-ui-v54 #workflowV7DockFlow { flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; padding: 0; }
+  body.windows-ui-v54 #workflowV7DockFlow b { display: none; }
+  body.windows-ui-v54 .v54-toolbar-more { display: none; }
+  body.windows-ui-v54 .stage-wrap > .v54-context-row { display: none; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar::-webkit-scrollbar { display: none; }
+  body.windows-ui-v54 .mobile-editor-v14-bar { padding-bottom: env(safe-area-inset-bottom); height: calc(68px + env(safe-area-inset-bottom)); }
 }
 
 /* -------------------------------------------------------------------------
@@ -244,7 +244,7 @@ body.workspace-experience-v54 #stage { box-shadow: 0 0 0 1px #2b20301a, 0 2px 6p
 body.workspace-experience-v54 #canvasViewport.panning #canvasFrame,
 body.workspace-experience-v54 #canvasViewport.v54-middle-panning #canvasFrame { filter: drop-shadow(0 10px 18px #29202e16); }
 body.workspace-experience-v54 #canvasViewport.v54-middle-panning,
-body.workspace-experience-v54 #canvasViewport.v54-middle-panning * { cursor: grabbing !important; user-select: none !important; }
+body.workspace-experience-v54 #canvasViewport.v54-middle-panning * { cursor: grabbing; user-select: none; }
 
 /* Zoom HUD (bottom-right cluster). */
 .v54-canvas-hud {
@@ -275,10 +275,13 @@ body.workspace-experience-v54 #canvasViewport.v54-middle-panning * { cursor: gra
 
 /* Selection card — floating size/rotation read-out. */
 .v54-selection-card {
-  position: sticky; z-index: 35; left: 14px; top: 12px;
+  /* Absolute, anchored at the viewport's padding-box origin, so the JS
+     translate() that tracks the selected object's box is exact (a sticky,
+     in-flow card added its own margin to every measurement — G4). */
+  position: absolute; z-index: 35; left: 0; top: 0;
   display: flex; align-items: center; justify-content: space-between; gap: 20px;
   width: max-content; max-width: calc(100% - 28px);
-  margin: 12px 0 -54px 14px; padding: 8px 10px;
+  margin: 0; padding: 8px 10px;
   border: 1px solid #25192817; border-radius: 10px;
   background: color-mix(in srgb, var(--panel, #fff) 93%, transparent);
   box-shadow: 0 6px 20px #21152615; backdrop-filter: blur(12px);
@@ -301,14 +304,14 @@ body.workspace-experience-v54 .v23-context-toolbar { position: relative; flex: 1
 body.workspace-experience-v54 .v23-context-toolbar > div { overflow: visible; }
 body.workspace-experience-v54 .v23-context-toolbar button { border-radius: 8px; border-color: transparent; }
 body.workspace-experience-v54 .v23-context-toolbar button.primary { box-shadow: 0 2px 8px #6f3f6926; }
-.v54-context-hidden { display: none !important; }
+.v54-context-hidden { display: none; }
 
 /* Panels. */
 body.workspace-experience-v54 .left, body.workspace-experience-v54 .right { background: color-mix(in srgb, var(--panel, #fff) 97%, #f2edf3); border-color: var(--v54-line); }
 body.workspace-experience-v54 .right > h2, body.workspace-experience-v54 .left > h2 { letter-spacing: -.01em; }
 
 @media (max-width: 900px) {
-  body.workspace-experience-v54 .stage-wrap { display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+  body.workspace-experience-v54 .stage-wrap { display: flex; flex-direction: column; overflow: hidden; }
   .v54-canvas-hud { position: relative; inset: auto; order: 3; align-self: center; flex: 0 0 auto; margin: 8px auto calc(8px + env(safe-area-inset-bottom)); max-width: calc(100vw - 20px); overflow-x: auto; transform: none; }
   .v54-canvas-hud [data-v54-zoom="selection"], .v54-canvas-hud [data-command-id="workspace.hidePanels"] { display: none; }
   .v54-selection-card { top: 8px; margin-left: 8px; max-width: calc(100% - 16px); }
@@ -319,69 +322,74 @@ body.workspace-experience-v54 .right > h2, body.workspace-experience-v54 .left >
 @media (max-width: 600px) {
   .v54-canvas-hud { position: relative; inset: auto; left: auto; right: auto; bottom: auto; transform: none; margin: 7px auto calc(7px + env(safe-area-inset-bottom)); }
   .v54-canvas-hud [data-v54-zoom="fit"] { display: none; }
-  .v54-selection-card { display: none !important; }
-  .v54-hover-box { display: none !important; }
+  .v54-selection-card { display: none; }
+  .v54-hover-box { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body.workspace-experience-v54 #canvasFrame, .v54-canvas-hud, .v54-selection-card { transition: none !important; animation: none !important; }
+  body.workspace-experience-v54 #canvasFrame, .v54-canvas-hud, .v54-selection-card { transition: none; animation: none; }
 }
 
 /* Inspector mode toggle (Essentials / All). */
 .v54-inspector-mode { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 10px; padding: 7px 8px; border: 1px solid #25192814; border-radius: 9px; background: #7f477908; }
 .v54-inspector-mode span { font-size: 11px; color: var(--muted, #6f6874); }
 .v54-inspector-mode button { min-height: 29px; padding: 4px 8px; border-radius: 7px; font-size: 11px; }
-.v54-inspector-essential .v54-advanced-control { display: none !important; }
+.v54-inspector-essential .v54-advanced-control { display: none; }
 .v54-inspector-essential #properties { padding-bottom: 8px; }
 .v54-inspector-essential #properties > h2 { margin-top: 12px; }
 
 /* Alt-drag duplicate preview ghosts. */
-body.v54-alt-duplicating, body.v54-alt-duplicating * { cursor: copy !important; user-select: none !important; }
-.object[data-v54-duplicate-preview="1"] { pointer-events: none !important; opacity: .82; outline: 1px solid #7f4779 !important; outline-offset: 2px; filter: drop-shadow(0 8px 16px #2b173322); will-change: translate; z-index: 9996 !important; }
+body.v54-alt-duplicating, body.v54-alt-duplicating * { cursor: copy; user-select: none; }
+.object[data-v54-duplicate-preview="1"] { pointer-events: none; opacity: .82; outline: 1px solid #7f4779; outline-offset: 2px; filter: drop-shadow(0 8px 16px #2b173322); will-change: translate; z-index: 9996; }
 
 /* Final editor refinement — predictable top bar + main height. */
-body.workspace-experience-v54 > .studio-topbar { height: 58px !important; min-height: 58px !important; max-height: 58px !important; flex-flow: row nowrap !important; overflow: visible !important; padding-block: 8px !important; }
-body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 88px) !important; }
-body.workspace-experience-v54 .canvas-header-more-menu { width: min(286px, calc(100vw - 20px)); max-height: min(620px, calc(100dvh - 76px)); overflow: auto; padding: 8px !important; gap: 6px !important; }
+body.workspace-experience-v54 > .studio-topbar { height: 58px; min-height: 58px; max-height: 58px; flex-flow: row nowrap; overflow: visible; padding-block: 8px; }
+body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 88px); }
+body.workspace-experience-v54 .canvas-header-more-menu { width: min(286px, calc(100vw - 20px)); max-height: min(620px, calc(100dvh - 76px)); overflow: auto; padding: 8px; gap: 6px; }
 .v54-header-menu-section { display: grid; gap: 4px; padding: 5px; }
 .v54-header-menu-section + .v54-header-menu-section { border-top: 1px solid var(--app-line, #e4e4e9); padding-top: 10px; }
-.v54-header-menu-section > strong { padding: 0 5px 3px; color: var(--app-muted, #8a8085) !important; font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
-.v54-header-menu-section button { min-height: 36px !important; border-radius: 9px !important; padding: 7px 9px !important; color: var(--app-text, #35353b) !important; }
+.v54-header-menu-section > strong { padding: 0 5px 3px; color: var(--app-muted, #8a8085); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
+.v54-header-menu-section button { min-height: 36px; border-radius: 9px; padding: 7px 9px; color: var(--app-text, #35353b); }
 
 /* Inspector tabs — keep tab labels readable but clipped gracefully. */
-body.workspace-experience-v54 .studio-inspector-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; overflow: hidden !important; scrollbar-width: none !important; }
-body.workspace-experience-v54 .studio-inspector-tab { width: auto !important; min-width: 0 !important; padding-inline: 2px !important; overflow: hidden !important; }
+body.workspace-experience-v54 .studio-inspector-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); overflow: hidden; scrollbar-width: none; }
+body.workspace-experience-v54 .studio-inspector-tab { width: auto; min-width: 0; padding-inline: 2px; overflow: hidden; }
 body.workspace-experience-v54 .studio-inspector-tab small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Inspector empty state. */
 .v54-inspector-empty { display: grid; place-items: center; gap: 9px; margin: 20px 2px; padding: 28px 15px; border: 1px dashed color-mix(in srgb, var(--app-accent, #7d4052) 28%, var(--app-line, #e4e4e9)); border-radius: 16px; background: linear-gradient(145deg, color-mix(in srgb, var(--app-accent, #7d4052) 7%, var(--app-surface, #fff)), var(--app-surface, #fff)); text-align: center; }
-.v54-inspector-empty[hidden] { display: none !important; }
+.v54-inspector-empty[hidden] { display: none; }
 .v54-inspector-empty > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: var(--app-accent-soft, #f0e6e9); color: var(--app-accent, #7d4052); font-size: 20px; }
 .v54-inspector-empty > strong { font-size: 13px; }
 .v54-inspector-empty > p { max-width: 230px; margin: 0; color: var(--app-muted, #8a8085); font-size: 10px; line-height: 1.55; }
 .v54-inspector-empty > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-.v54-inspector-empty button { min-height: 44px !important; padding: 8px 9px !important; border-radius: 9px !important; font-size: 9px !important; }
+.v54-inspector-empty button { min-height: 44px; padding: 8px 9px; border-radius: 9px; font-size: 9px; }
 
-body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not(.studio-inspector-heading):not(.v54-inspector-empty) { display: none !important; }
-body.workspace-experience-v54.v54-inspector-essential.v54-has-selection [data-inspector-pane="object"] > .v54-advanced-control { display: none !important; }
+/* G3 cause: this child selector hid a *nested* pane. studio-experience.js wraps
+   the original `<div data-inspector-pane="object">` inside a generated
+   `<section data-inspector-pane="object">`, so both carry the attribute and the
+   inner pane matched as a "child control" of the outer section. Excluding any
+   nested pane keeps this rule hiding only the property controls. */
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty) { display: none; }
+body.workspace-experience-v54.v54-inspector-essential.v54-has-selection [data-inspector-pane="object"] > .v54-advanced-control { display: none; }
 
 /* Toolbar horizontal scroll (when narrow) — keep buttons in place. */
-body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto !important; overflow-y: hidden !important; scrollbar-width: none !important; }
-body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar::-webkit-scrollbar { display: none !important; }
-body.workspace-experience-v54 .v23-context-toolbar { min-width: 0 !important; flex: 0 1 auto !important; }
-body.workspace-experience-v54 .v23-context-toolbar > div { min-width: 0 !important; }
+body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar::-webkit-scrollbar { display: none; }
+body.workspace-experience-v54 .v23-context-toolbar { min-width: 0; flex: 0 1 auto; }
+body.workspace-experience-v54 .v23-context-toolbar > div { min-width: 0; }
 
 /* Footer Tools overflow menu. */
-.v54-footer-tools { position: relative; display: block !important; }
-.v54-footer-tools[hidden] { display: none !important; }
-.v54-footer-tools-trigger { min-height: 24px !important; padding: 3px 8px !important; border: 1px solid #4d4e55 !important; border-radius: 6px !important; background: #2d2e34 !important; color: #f2f2f4 !important; font-size: 9px !important; }
+.v54-footer-tools { position: relative; display: block; }
+.v54-footer-tools[hidden] { display: none; }
+.v54-footer-tools-trigger { min-height: 24px; padding: 3px 8px; border: 1px solid #4d4e55; border-radius: 6px; background: #2d2e34; color: #f2f2f4; font-size: 9px; }
 .v54-footer-tools-trigger span { margin-left: 3px; color: #aeb0b7; }
 .v54-footer-tools-menu { position: absolute; right: 0; bottom: 31px; z-index: 12050; width: min(460px, calc(100vw - 24px)); max-height: min(430px, 70dvh); overflow: auto; padding: 10px; border: 1px solid var(--app-line, #e4e4e9); border-radius: 14px; background: color-mix(in srgb, var(--app-surface, #fff) 97%, transparent); box-shadow: 0 20px 55px #0005; backdrop-filter: blur(18px); color: var(--app-text, #35353b); }
 .v54-footer-tools-menu[hidden] { display: none; }
 .v54-footer-tools-menu > strong { display: block; padding: 2px 4px 8px; color: var(--app-muted, #8a8085); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
 .v54-footer-tools-menu > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
-.v54-footer-tools-menu button { justify-content: flex-start !important; min-height: 35px !important; padding: 7px 9px !important; border: 1px solid var(--app-line, #e4e4e9) !important; border-radius: 8px !important; background: var(--app-surface-2, #f7f7f9) !important; color: var(--app-text, #35353b) !important; font-size: 9px !important; text-align: left !important; }
+.v54-footer-tools-menu button { justify-content: flex-start; min-height: 35px; padding: 7px 9px; border: 1px solid var(--app-line, #e4e4e9); border-radius: 8px; background: var(--app-surface-2, #f7f7f9); color: var(--app-text, #35353b); font-size: 9px; text-align: left; }
 
-body.workspace-experience-v54 .studio-statusbar { overflow: visible !important; }
+body.workspace-experience-v54 .studio-statusbar { overflow: visible; }
 body.workspace-experience-v54 .studio-statusbar > div { min-width: 0; }
 body.workspace-experience-v54 .studio-statusbar > div:last-child { overflow: visible; white-space: nowrap; }
 body.workspace-experience-v54 .studio-status-center { min-width: 0; overflow: hidden; }
@@ -392,43 +400,43 @@ html[data-theme="dark"] .v54-footer-tools-menu { box-shadow: 0 22px 60px #000a; 
 
 /* Compact device buttons (≤1450px) collapse to a single-letter short label. */
 @media (max-width: 1450px) {
-  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > button.v54-device-button { width: 36px !important; min-width: 36px !important; padding-inline: 0 !important; font-size: 0 !important; color: transparent !important; }
-  body.studio-experience.workspace-experience-v54 .v54-device-button::after { content: attr(data-short); font-size: 10px !important; font-weight: 750; color: var(--app-text, #35353b); }
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > button.v54-device-button { width: 36px; min-width: 36px; padding-inline: 0; font-size: 0; color: transparent; }
+  body.studio-experience.workspace-experience-v54 .v54-device-button::after { content: attr(data-short); font-size: 10px; font-weight: 750; color: var(--app-text, #35353b); }
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #zoomOut,
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #zoomLevel,
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #zoomIn,
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #fitCanvas,
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #panToggle,
-  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > .toolbar-divider { display: none !important; }
-  body.workspace-experience-v54 .v23-context-toolbar { width: 110px !important; max-width: 110px !important; flex: 0 0 110px !important; }
-  body.workspace-experience-v54 .v23-context-toolbar > span { display: none !important; }
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > .toolbar-divider { display: none; }
+  body.workspace-experience-v54 .v23-context-toolbar { width: 110px; max-width: 110px; flex: 0 0 110px; }
+  body.workspace-experience-v54 .v23-context-toolbar > span { display: none; }
 }
 @media (max-width: 1180px) {
-  body.workspace-experience-v54 > .studio-topbar { gap: 5px !important; }
-  body.workspace-experience-v54 > .studio-topbar .studio-document-title { display: flex !important; }
-  .v54-header-menu-actions:not([hidden]) { display: grid !important; }
+  body.workspace-experience-v54 > .studio-topbar { gap: 5px; }
+  body.workspace-experience-v54 > .studio-topbar .studio-document-title { display: flex; }
+  .v54-header-menu-actions:not([hidden]) { display: grid; }
 }
 @media (max-width: 900px) {
-  body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 58px) !important; }
+  body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 58px); }
   .v54-footer-tools-menu > div { grid-template-columns: 1fr; }
-  body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { padding-right: 6px !important; }
+  body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { padding-right: 6px; }
 }
 @media (max-width: 700px) {
-  body.workspace-experience-v54 > .studio-topbar { padding-inline: 8px !important; }
-  body.workspace-experience-v54 > .studio-topbar .studio-document-title { max-width: none !important; }
+  body.workspace-experience-v54 > .studio-topbar { padding-inline: 8px; }
+  body.workspace-experience-v54 > .studio-topbar .studio-document-title { max-width: none; }
   .v54-inspector-empty { margin: 12px 2px; padding: 20px 12px; }
   .v54-footer-tools-menu { right: -4px; }
 }
 @media (max-width: 600px) {
-  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { display: none !important; }
+  body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { display: none; }
 }
 @media (max-width: 600px) {
   body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left {
-    position: fixed !important; inset: 58px 0 68px 0 !important; width: 100vw !important; max-width: 100vw !important; height: auto !important; padding: 0 !important;
-    display: grid !important; grid-template-columns: var(--einvite-rail-width, 66px) minmax(0, 1fr) !important; overflow: hidden !important;
+    position: fixed; inset: 58px 0 68px 0; width: 100vw; max-width: 100vw; height: auto; padding: 0;
+    display: grid; grid-template-columns: var(--einvite-rail-width, 66px) minmax(0, 1fr); overflow: hidden;
   }
-  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-tool-rail { position: relative !important; inset: auto !important; width: var(--einvite-rail-width, 66px) !important; min-width: var(--einvite-rail-width, 66px) !important; height: 100% !important; margin: 0 !important; }
-  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-pane-host { position: relative !important; inset: auto !important; width: auto !important; min-width: 0 !important; height: 100% !important; transform: none !important; margin: 0 !important; overflow: hidden !important; }
+  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-tool-rail { position: relative; inset: auto; width: var(--einvite-rail-width, 66px); min-width: var(--einvite-rail-width, 66px); height: 100%; margin: 0; }
+  body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-pane-host { position: relative; inset: auto; width: auto; min-width: 0; height: 100%; transform: none; margin: 0; overflow: hidden; }
 }
 
 /* -------------------------------------------------------------------------
@@ -440,29 +448,29 @@ html[data-theme="dark"] .v54-footer-tools-menu { box-shadow: 0 22px 60px #000a; 
 
 /* Default: full labels, wrapped gracefully. */
 body.studio-experience .studio-tool-rail .studio-rail-button {
-  font-size: 10px !important;
-  line-height: 1.15 !important;
-  white-space: normal !important;          /* allow wrapping instead of ellipsis */
-  overflow: visible !important;
-  text-overflow: clip !important;
-  word-break: keep-all !important;         /* never break a word mid-character */
-  overflow-wrap: anywhere !important;      /* but allow long words to wrap */
+  font-size: 10px;
+  line-height: 1.15;
+  white-space: normal;          /* allow wrapping instead of ellipsis */
+  overflow: visible;
+  text-overflow: clip;
+  word-break: keep-all;         /* never break a word mid-character */
+  overflow-wrap: anywhere;      /* but allow long words to wrap */
   min-height: 62px;
 }
 body.studio-experience .studio-tool-rail .studio-rail-button small,
 body.studio-experience .studio-tool-rail .studio-rail-button span:not(.studio-nav-icon) {
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* Pane category headings (h2) — show in full. */
 body.studio-experience .studio-pane h2,
 body.studio-experience .studio-pane-heading h1,
 body.studio-experience .studio-inspector-heading strong {
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  text-overflow: clip !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
 }
 
 /* The collapse button itself. */
@@ -483,14 +491,14 @@ body.studio-experience .studio-inspector-heading strong {
 .v54-sidebar-collapse:focus-visible { outline: 2px solid var(--app-accent, #7d4052); outline-offset: 2px; }
 
 /* Collapsed (icon-only) mode. */
-body.sidebar-collapsed.studio-experience .studio-tool-rail { width: 56px !important; }
-body.sidebar-collapsed.studio-experience .left { grid-template-columns: 56px minmax(0, 1fr) !important; }
+body.sidebar-collapsed.studio-experience .studio-tool-rail { width: 56px; }
+body.sidebar-collapsed.studio-experience .left { grid-template-columns: 56px minmax(0, 1fr); }
 body.sidebar-collapsed.studio-experience .studio-tool-rail .studio-rail-button {
   min-height: 48px; padding: 8px 2px;
 }
 body.sidebar-collapsed.studio-experience .studio-tool-rail .studio-rail-button small,
 body.sidebar-collapsed.studio-experience .studio-tool-rail .studio-rail-button span:not(.studio-nav-icon) {
-  display: none !important;      /* icon-only */
+  display: none;      /* icon-only */
 }
 body.sidebar-collapsed.studio-experience .studio-rail-button .studio-nav-icon { font-size: 18px; }
 
@@ -500,9 +508,9 @@ body.sidebar-collapsed.studio-experience .studio-rail-button .studio-nav-icon { 
    and never spills outside its box.
    ------------------------------------------------------------------------- */
 .v54-nav-text {
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   hyphens: auto;
   min-width: 0;
   max-width: 100%;
@@ -513,8 +521,8 @@ body.sidebar-collapsed.studio-experience .studio-rail-button .studio-nav-icon { 
    when it does not. */
 .workflow-page-chip.v54-nav-text,
 .workflow-page-chip strong.v54-nav-text {
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
   max-width: 100%;
 }
 
@@ -523,8 +531,8 @@ body.sidebar-collapsed.studio-experience .studio-rail-button .studio-nav-icon { 
 .v23-command-row.v54-nav-text {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* Dashboard overview cards: numbers can be long (e.g. 1,234,567). */
@@ -544,8 +552,8 @@ body.ei-suppress-autofit .object[data-typography-model-version] .content {
      element's data-font-size attribute. The `inherit` fallback is a
      cross-browser-safe backstop: attr() for non-content properties is
      Chromium-only (invalid in Firefox/Safari). */
-  font-size: var(--ei-font-size, inherit) !important;
-  transition: none !important;
+  font-size: var(--ei-font-size, inherit);
+  transition: none;
 }
 /* When suppressing, hide any "text refitted" status toast so the user is not
    misled into thinking the font was changed. */
@@ -675,8 +683,13 @@ body[data-page="index"].studio-experience.v54-has-selection > aside.right > :not
   margin-top: 16px;
 }
 
-/* Inspector pane: hide property controls when nothing selected */
-body[data-page="index"].studio-experience:not(.v54-has-selection) [data-inspector-pane="object"] > :not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder) {
+/* Inspector pane: hide property controls when nothing selected.
+   `:not([data-inspector-pane])` is load-bearing (G3): the attribute is nested
+   (`section[data-inspector-pane] > div[data-inspector-pane]`), and without the
+   exclusion this rule's (0,7,1) specificity hid the inner pane itself — the
+   actual winner in the cascade — leaving `#noSelection` computed `grid` inside a
+   0x0 `display:none` parent. */
+body[data-page="index"].studio-experience:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder) {
   display: none;
 }
 body[data-page="index"].studio-experience.v54-has-selection .v54-inspector-placeholder,
@@ -816,4 +829,326 @@ body[data-page="index"].studio-experience #properties .selection-summary {
 /* Hide the legacy .mobile-desktop-hint when desktop editor is active */
 body[data-page="index"].studio-experience .mobile-desktop-hint {
   display: none;
+}
+
+/* ============================================================================
+   V55 editor chrome — Canva layout grammar on the v54 editor (dispatch §3 G3–G6)
+   Loaded last in the index bundle, so every rule below wins on order alone.
+   Zero priority-override declarations in this file; specificity and source
+   order carry the cascade instead.
+   ========================================================================= */
+
+/* --- G3: the no-selection placeholder --------------------------------------
+   The old rule excluded only `.v54-inspector-empty`, so the browser-level
+   placeholder `<div id="noSelection" class="empty v54-inspector-placeholder">`
+   was hidden even though the JS sets `style.display = 'grid'` on it. The
+   exclusion below is the fix — no second selector, no priority override.
+   The `:not([data-inspector-pane])` term is the G3 cause fix: see the note above
+   the `body[data-page="index"]` copy of this rule. */
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder) { display: none; }
+
+body.studio-experience #noSelection.v54-inspector-placeholder,
+.v54-inspector-placeholder {
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+  padding: var(--space-6) var(--space-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  background: var(--app-surface-2);
+  color: var(--app-muted);
+  font-size: var(--fs-body-sm);
+  line-height: 1.6;
+  text-align: center;
+}
+.v54-inspector-placeholder::before { content: "◇"; font-size: 20px; line-height: 1; color: var(--app-accent); }
+.v54-inspector-placeholder[hidden] { display: none; }
+body.v54-has-selection .v54-inspector-placeholder { display: none; }
+
+/* G3 follow-through: the pane that owns the placeholder is itself collapsed by a
+   legacy polish rule, so `#noSelection` only *computed* display:grid inside a
+   display:none parent — present in the DOM, invisible on screen. Showing the
+   active pane is the same fix as the selector fix above, one level up. */
+body[data-page="index"] .studio-inspector-pane.active > [data-inspector-pane].active { display: block; }
+/* G3 — with nothing selected the object pane still renders, so the no-selection
+   placeholder (and the empty state above it) is actually visible. The rules that
+   follow hide the pane's *children*, which is what keeps the pane calm. */
+body[data-page="index"].studio-experience:not(.v54-has-selection) .studio-inspector-pane.active > [data-inspector-pane] { display: block; }
+/* One placeholder, not two: editor-core.js injects its own English-only
+   `.v54-inspector-empty` card next to `#noSelection`. The bilingual element wins
+   (it carries the EN + KH pair), so the duplicate is suppressed here rather than
+   re-styled — two empty states in one pane is the actual defect. */
+body[data-page="index"] .studio-inspector-pane .v54-inspector-empty { display: none; }
+
+/* --- Shell geometry: 56px topbar · 304px content rail · 320px inspector ---- */
+body[data-page="index"] > header.studio-topbar {
+  height: var(--app-topbar-h);
+  min-height: var(--app-topbar-h);
+  padding: 0 var(--space-3);
+  gap: var(--space-2);
+}
+body[data-page="index"] > main {
+  height: auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: calc(var(--app-rail-w-collapsed) + var(--app-rail-w)) minmax(0, 1fr) var(--app-inspector-w);
+  overflow: hidden;
+}
+body[data-page="index"] .studio-document-title { font-size: var(--fs-body-md); font-weight: var(--fw-medium); color: var(--app-muted); }
+body[data-page="index"] .studio-document-title::before { content: "/"; margin-right: var(--space-2); color: var(--app-faint); }
+body.studio-experience.rail-collapsed > main { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr) var(--app-inspector-w); }
+
+/* Topbar buttons adopt the shell control metrics. */
+body[data-page="index"] > header.studio-topbar button,
+body[data-page="index"] > header.studio-topbar .button-link {
+  height: 36px;
+  min-width: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--app-text);
+  font-size: var(--fs-body-md);
+}
+body[data-page="index"] > header.studio-topbar button:hover { background: var(--app-surface-3); }
+body[data-page="index"] > header.studio-topbar #saveState,
+body[data-page="index"] > header.studio-topbar #serverState {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  font-size: var(--fs-body-sm); color: var(--app-muted); white-space: nowrap;
+}
+body[data-page="index"] > header.studio-topbar #publishBtn { font-weight: var(--fw-semibold); }
+
+/* --- The mobile desktop hint becomes a floating notice -------------------- */
+body[data-page="index"] > .mobile-desktop-hint {
+  position: fixed;
+  left: var(--space-3); right: var(--space-3); bottom: var(--space-3);
+  z-index: 70;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow);
+}
+
+/* --- Left rail: 64px tool strip + 240px section list --------------------- */
+body[data-page="index"] aside.left.studio-left-panel {
+  display: grid;
+  grid-template-columns: var(--app-rail-w-collapsed) var(--app-rail-w);
+  background: var(--app-surface);
+  border-right: 1px solid var(--app-line);
+  padding: 0;
+}
+body[data-page="index"] .studio-tool-rail {
+  width: var(--app-rail-w-collapsed);
+  padding: var(--space-2) 0;
+  gap: 2px;
+  background: var(--app-surface);
+  border-right: 1px solid var(--app-line);
+}
+body[data-page="index"] .studio-rail-button {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--app-muted);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-caption);
+  letter-spacing: var(--ls-caption);
+  gap: 2px;
+}
+body[data-page="index"] .studio-rail-button:hover { background: var(--app-surface-2); color: var(--app-text); }
+body[data-page="index"] .studio-rail-button.active { background: var(--app-accent-soft); color: var(--app-accent); }
+body[data-page="index"] .studio-nav-icon { font-size: 18px; }
+/* Rail labels are one line, always: a 64px strip cannot host a wrapped word
+   ("Desi / gn" is what happens without this) and the label is a caption, not a
+   paragraph, so ellipsis is the honest overflow. */
+body[data-page="index"] .studio-nav-label {
+  font-size: var(--fs-caption);
+  letter-spacing: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body[data-page="index"] .studio-rail-button { padding: var(--space-1) 2px; }
+
+/* Save state + backend mode live in the status bar (studio-experience.js mirrors
+   them there). Repeating them in the topbar is the chrome bloat §2.2 forbids. */
+body[data-page="index"] > header.studio-topbar #saveState,
+body[data-page="index"] > header.studio-topbar #serverState { display: none; }
+body[data-page="index"] .studio-pane-host { width: auto; padding: var(--space-3); background: var(--app-surface); }
+body[data-page="index"] .studio-panel-search input {
+  min-height: 36px;
+  border: 1px solid var(--app-line-2);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-2);
+  font-size: var(--fs-body-md);
+}
+body[data-page="index"] .studio-pane-heading h1,
+body[data-page="index"] .studio-pane-heading h2 { font-size: var(--fs-title-xs); font-weight: var(--fw-title-xs); letter-spacing: 0; text-transform: none; color: var(--app-text); }
+body[data-page="index"] .studio-pane h2 { font-size: var(--fs-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption); text-transform: uppercase; color: var(--app-faint); }
+
+/* --- Centre canvas: white artboard on surface-2, 40px of air -------------- */
+body[data-page="index"] .stage-wrap { background: var(--app-surface-2); padding: var(--space-10); }
+body[data-page="index"] .stage-wrap > .studio-canvas-toolbar { margin-bottom: var(--space-2); }
+body[data-page="index"] #stage.stage {
+  background: #fff;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--app-shadow);
+}
+html[data-theme="dark"] body[data-page="index"] #stage.stage { background: #f7f7f9; }
+
+/* --- Right inspector: 320px, tabbed, caption group labels ------------------ */
+body[data-page="index"] aside.right.studio-inspector {
+  width: var(--app-inspector-w);
+  background: var(--app-surface);
+  border-left: 1px solid var(--app-line);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+body[data-page="index"] .studio-inspector-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--app-line);
+}
+body[data-page="index"] .studio-inspector-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--app-muted);
+  font-size: var(--fs-body-md);
+  font-weight: var(--fw-medium);
+  transition: color var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out), background var(--motion-1) var(--ease-out);
+}
+body[data-page="index"] .studio-inspector-tab:hover { color: var(--app-text); background: var(--app-surface-2); }
+body[data-page="index"] .studio-inspector-tab.active,
+body[data-page="index"] .studio-inspector-tab[aria-selected="true"] { color: var(--app-accent); border-bottom-color: var(--app-accent); }
+body[data-page="index"] .studio-inspector-host { overflow: auto; padding: var(--space-4); }
+body[data-page="index"] .studio-inspector-pane > h2,
+body[data-page="index"] [data-inspector-pane="object"] > h2:not(.studio-inspector-heading) {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-caption);
+  letter-spacing: var(--ls-caption);
+  text-transform: uppercase;
+  color: var(--app-faint);
+  margin: var(--space-5) 0 var(--space-2);
+}
+body[data-page="index"] .studio-inspector-heading {
+  font-size: var(--fs-title-sm);
+  font-weight: var(--fw-title-sm);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--app-text);
+  margin: 0 0 var(--space-3);
+}
+body[data-page="index"] .v54-inspector-mode {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--app-line);
+  color: var(--app-muted); font-size: var(--fs-body-sm);
+}
+body[data-page="index"] .v54-inspector-mode button {
+  min-height: 28px; padding: 0 var(--space-2);
+  border: 1px solid var(--app-line-2); border-radius: var(--radius-sm);
+  background: var(--app-surface); color: var(--app-text); font-size: var(--fs-body-sm);
+}
+body[data-page="index"] .v54-inspector-empty { border: 0; background: transparent; }
+body[data-page="index"] .v54-inspector-empty > strong { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); }
+body[data-page="index"] .v54-inspector-empty > p { max-width: 240px; font-size: var(--fs-body-sm); color: var(--app-muted); }
+body[data-page="index"] .v54-inspector-empty button { min-height: 32px; padding: 0 var(--space-3); border-radius: var(--radius-sm); font-size: var(--fs-body-sm); }
+body[data-page="index"] .studio-inspector-pane label > span:first-child,
+body[data-page="index"] .studio-inspector-pane label { font-size: var(--fs-body-md); }
+body[data-page="index"] .studio-inspector-pane label { display: block; margin-bottom: var(--space-3); }
+body[data-page="index"] .studio-inspector-pane input,
+body[data-page="index"] .studio-inspector-pane select,
+body[data-page="index"] .studio-inspector-pane textarea { min-height: 34px; font-size: var(--fs-body-md); }
+
+/* --- Bottom status bar: 32px, no background, three left items -------------- */
+body[data-page="index"] > footer.studio-statusbar {
+  display: flex; align-items: center; gap: var(--space-4);
+  min-height: var(--app-statusbar-h);
+  padding: 0 var(--space-4);
+  background: transparent;
+  border-top: 1px solid var(--app-line);
+  color: var(--app-muted);
+  font-size: var(--fs-body-sm);
+}
+body[data-page="index"] > footer.studio-statusbar strong { font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--app-text); }
+body[data-page="index"] > footer.studio-statusbar small { font-size: var(--fs-body-sm); color: var(--app-muted); }
+body[data-page="index"] > footer.studio-statusbar .studio-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--app-good); }
+body[data-page="index"] > footer.studio-statusbar .studio-status-center { margin: 0 auto; display: flex; gap: var(--space-2); }
+body[data-page="index"] > footer.studio-statusbar kbd {
+  font-family: var(--font-mono); font-size: var(--fs-mono); letter-spacing: var(--ls-mono);
+  padding: 2px var(--space-1); border: 1px solid var(--app-line); border-radius: 6px; background: var(--app-surface-2);
+}
+
+/* --- G4/G7: the floating selection card ----------------------------------- */
+body[data-page="index"] .v54-selection-card {
+  position: absolute;
+  top: 0; left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow);
+  color: var(--app-text);
+  font-size: var(--fs-body-sm);
+  z-index: 26;
+  will-change: transform;
+}
+body[data-page="index"] .v54-selection-card[hidden] { display: none; }
+.v54-selection-actions { display: flex; align-items: center; gap: 2px; padding: 3px; border-bottom: 1px solid var(--app-line); }
+.v54-selection-actions button {
+  width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--app-text);
+  font-size: 14px; line-height: 1; cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.v54-selection-actions button:hover { background: var(--app-surface-3); }
+.v54-selection-actions button[data-v54-action="delete"]:hover { background: color-mix(in srgb, var(--danger) 16%, var(--app-surface)); color: var(--danger); }
+.v54-selection-actions button:disabled { opacity: .45; cursor: not-allowed; background: transparent; }
+.v54-selection-readout { display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-1) var(--space-3); }
+.v54-selection-readout strong { font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); white-space: nowrap; }
+.v54-selection-readout small,
+.v54-selection-readout span { font-size: var(--fs-caption); letter-spacing: var(--ls-caption); color: var(--app-muted); white-space: nowrap; }
+.v54-selection-card.is-below .v54-selection-actions { border-bottom: 0; border-top: 1px solid var(--app-line); order: 3; }
+
+/* --- G6: mobile inspector drawer (selector now matches data-page="index") -- */
+@media (max-width: 768px) {
+  body[data-page="index"].studio-experience > main { grid-template-columns: minmax(0, 1fr); }
+  body[data-page="index"] aside.right.studio-inspector,
+  body[data-page="index"] .right.studio-inspector {
+    position: fixed;
+    top: var(--app-topbar-h); right: 0; bottom: var(--app-statusbar-h);
+    width: min(360px, 92vw);
+    z-index: 60;
+    transform: translateX(100%);
+    transition: transform var(--motion-3) var(--ease-out);
+    box-shadow: var(--app-shadow-xl);
+  }
+  body[data-page="index"].right-open aside.right.studio-inspector,
+  body[data-page="index"].right-open .right.studio-inspector,
+  body[data-page="index"].inspector-open aside.right.studio-inspector,
+  body[data-page="index"].mobile-inspector-open aside.right.studio-inspector { transform: translateX(0); }
+  body[data-page="index"] .app-drawer-toggle { display: inline-flex; }
+}
+@media (min-width: 769px) { body[data-page="index"] .app-drawer-toggle { display: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="index"] .v54-selection-card,
+  body[data-page="index"] .studio-inspector-tab,
+  body[data-page="index"] .studio-rail-button { transition: none; }
 }

@@ -808,6 +808,10 @@ window.EInviteGuestJourney={enhance};
     refresh();
 
     async function refresh() {
+      if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
+        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        return;
+      }
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -981,6 +985,10 @@ window.EInviteGuestJourney={enhance};
     refresh();
 
     async function refresh() {
+      if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
+        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        return;
+      }
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1204,6 +1212,10 @@ window.EInviteGuestJourney={enhance};
     load(false);
 
     async function load(append) {
+      if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
+        grid.innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        return;
+      }
       try {
         const url = `/api/invitations/${encodeURIComponent(invitationId)}/album?limit=20` + (cursor ? `&before=${cursor}` : '');
         const res = await fetch(url, { headers });
@@ -1720,10 +1732,22 @@ let countdownTimer=0;function startCountdown(){if(countdownTimer){clearInterval(
 const palettePresets={rose:{background:'#fff6f3',surface:'#fffdfc',text:'#3d292f',heading:'#9d4555'},gold:{background:'#fff9eb',surface:'#fffdf7',text:'#4b3716',heading:'#a87616'},emerald:{background:'#eef8f1',surface:'#ffffff',text:'#29443a',heading:'#1f7158'},midnight:{background:'#100e19',surface:'#211b2d',text:'#f4efff',heading:'#c8b5ff'},'ivory-navy':{background:'#f7f2e8',surface:'#fffdf8',text:'#263248',heading:'#1f365d'}};
 function paletteRootStyle(d){if(!d.palettePreset||d.palettePreset==='template')return'';let p=d.palette||palettePresets[d.palettePreset]||palettePresets.rose,valid=v=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'#fff';return`--palette-background:${valid(p.background)};--palette-surface:${valid(p.surface)};--palette-text:${valid(p.text)};--palette-heading:${valid(p.heading)};--palette-accent:${valid(d.accent||p.heading)}`}
 const guestToken=new URLSearchParams(location.search).get('g');let publicAccessToken=sessionStorage.getItem('sovan-invite-access:'+slug)||'',galleryAccessToken=sessionStorage.getItem('sovan-gallery-access:'+slug)||'',externalMediaAllowed=true;
-function passwordGate(){return new Promise((resolve,reject)=>{root.className='guest';root.innerHTML=`<section class="invitation-password-gate"><div><span class="template-symbol">✦</span><h1>Private Invitation</h1><p>This invitation is password protected.</p><form id="accessForm"><label>Invitation password<input id="accessPassword" type="password" required autocomplete="current-password"></label><button class="primary">Open invitation</button><p id="accessError" class="hint"></p></form></div></section>`;const form=document.querySelector('#accessForm');form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('button'),error=document.querySelector('#accessError');button.disabled=true;error.textContent='';try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.querySelector('#accessPassword').value})});const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Unable to open invitation');sessionStorage.setItem('sovan-invite-access:'+slug,data.accessToken||'');resolve(data.accessToken||'')}catch(err){error.textContent=err.message;button.disabled=false}}})}
-async function loadPublic(){let accessToken=publicAccessToken;const controller=life?.controller?.()||new AbortController();for(let attempt=0;attempt<2;attempt++){const headers={};if(guestToken)headers['X-Invitation-Guest']=guestToken;if(accessToken)headers['X-Invitation-Access']=accessToken;if(galleryAccessToken)headers['X-Gallery-Access']=galleryAccessToken;const response=await fetch('/api/public/'+encodeURIComponent(slug),{headers,cache:'no-store',signal:controller.signal});if(response.ok)return response.json();const data=await response.json().catch(()=>({}));if(response.status===403&&data.protected){accessToken=await passwordGate();publicAccessToken=accessToken;continue}throw Error(data.error||'Invitation unavailable')}throw Error('Invitation access could not be verified')}
+function passwordGate(){return new Promise((resolve,reject)=>{root.className='guest';root.innerHTML=`<section class="invitation-password-gate"><div><span class="template-symbol">✦</span><h1>Private Invitation</h1><p>This invitation is password protected.</p><form id="accessForm"><label>Invitation password<input id="accessPassword" type="password" required autocomplete="current-password"></label><button class="primary">Open invitation</button><p id="accessError" class="hint"></p></form></div></section>`;const form=document.querySelector('#accessForm');form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('button'),error=document.querySelector('#accessError');button.disabled=true;error.textContent='';if(!apiAvailable()){error.textContent=OFFLINE_SAVE_NOTICE;button.disabled=false;return}
+try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:document.querySelector('#accessPassword').value})});const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Unable to open invitation');sessionStorage.setItem('sovan-invite-access:'+slug,data.accessToken||'');resolve(data.accessToken||'')}catch(err){error.textContent=err.message;button.disabled=false}}})}
+const apiAvailable=()=>!(window.EInviteBackend&&!window.EInviteBackend.isAvailable());
+const OFFLINE_SAVE_NOTICE='Demo mode — this sample invitation is not connected to a server, so nothing is saved. Start the application server to collect responses.';
+function offlineSeedDocument(){
+const year=new Date().getFullYear()+1,date=`${year}-02-14`;
+return {schemaVersion:4,languageMode:'both',title:'Sokha & Dara — Wedding invitation',accent:'#8d6e46',palette:{background:'#faf7f2',surface:'#ffffff',text:'#2c2620',heading:'#6b4f2a'},styleKit:{id:'',overrides:{}},sectionStyles:{},sectionAnimations:{},
+fields:{names:'Sokha & Dara',namesKm:'',date,time:'16:00',venue:'Sokha Phnom Penh Hotel, Phnom Penh',venueKm:'',message:'We would be honoured to celebrate our wedding with you. Join us for the blessing ceremony, the procession, and the evening reception.',dress:'Traditional formal — Cambodian silks welcome.',rsvpNote:'Please reply by 1 February so we can plan seating.'},
+events:[{id:'blessing',name:'Blessing ceremony',date,time:'07:30',venue:'Family home, Takhmau',durationMinutes:180},{id:'reception',name:'Reception',date,time:'16:00',venue:'Sokha Phnom Penh Hotel',durationMinutes:300}],
+settings:{rsvpMaxGuests:4,rsvpCloseDate:'',rsvpQuestions:{meal:true,transport:false,accommodation:false},musicSource:'none',galleryEnabled:false,showMusicControl:false},
+rsvpFields:[{id:'attendance',label:'Will you attend?',labelKm:'',type:'select',options:['Yes, I will attend','Sorry, I cannot attend'],required:true}],
+gallery:[],customBlocks:[]};
+}
+async function loadPublic(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(!apiAvailable())return {document:offlineSeedDocument(),invitationId:'demo-invitation',guest:null,studioBrand:null,editedAfterSendAt:null,analyticsConsentRequired:false,externalMediaConsentRequired:false};let accessToken=publicAccessToken;const controller=life?.controller?.()||new AbortController();for(let attempt=0;attempt<2;attempt++){const headers={};if(guestToken)headers['X-Invitation-Guest']=guestToken;if(accessToken)headers['X-Invitation-Access']=accessToken;if(galleryAccessToken)headers['X-Gallery-Access']=galleryAccessToken;const response=await fetch('/api/public/'+encodeURIComponent(slug),{headers,cache:'no-store',signal:controller.signal});if(response.ok)return response.json();const data=await response.json().catch(()=>({}));if(response.status===403&&data.protected){accessToken=await passwordGate();publicAccessToken=accessToken;continue}throw Error(data.error||'Invitation unavailable')}throw Error('Invitation access could not be verified')}
 function consentPreference(kind){return localStorage.getItem(`einvite-consent:${slug}:${kind}`)==='granted'}
-function showPrivacyConsent(p,d){document.querySelectorAll('.guest-consent-banner').forEach(node=>node.remove());const needAnalytics=!!p.analyticsConsentRequired&&!consentPreference('analytics'),needExternal=!!p.externalMediaConsentRequired&&!consentPreference('external-media');if(!needAnalytics&&!needExternal)return;const bar=document.createElement('aside');bar.className='guest-consent-banner';bar.dataset.followGuestLanguage='true';bar.dataset.language=root.dataset.language||(d.languageMode==='km'?'km':'en');bar.setAttribute('role','dialog');bar.setAttribute('aria-label','Privacy choices');bar.innerHTML=`<div><strong>${langText('Privacy choices','ជម្រើសឯកជនភាព',d.languageMode||'both')}</strong><p>${langText('Choose whether this invitation may record an anonymous visit and load external media such as YouTube or SoundCloud.','ជ្រើសរើសថាតើការអញ្ជើញនេះអាចកត់ត្រាការចូលមើលអនាមិក និងផ្ទុកមេឌៀខាងក្រៅដូចជា YouTube ឬ SoundCloud ដែរឬទេ។',d.languageMode||'both')}</p><a href="/privacy.html" target="_blank" rel="noopener">${langText('Privacy details','ព័ត៌មានឯកជនភាព',d.languageMode||'both')}</a></div><div class="guest-consent-actions">${needAnalytics?`<button type="button" data-consent="analytics">${langText('Allow analytics','អនុញ្ញាតវិភាគ',d.languageMode||'both')}</button>`:''}${needExternal?`<button type="button" data-consent="external-media">${langText('Allow external media','អនុញ្ញាតមេឌៀខាងក្រៅ',d.languageMode||'both')}</button>`:''}<button type="button" data-consent="continue">${langText('Continue without optional consent','បន្តដោយមិនយល់ព្រមជម្រើសបន្ថែម',d.languageMode||'both')}</button></div>`;document.body.append(bar);bar.querySelector('[data-consent=analytics]')?.addEventListener('click',async()=>{localStorage.setItem(`einvite-consent:${slug}:analytics`,'granted');try{await fetch('/api/public/'+encodeURIComponent(slug)+'/view',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch{}bar.querySelector('[data-consent=analytics]')?.remove();if(!bar.querySelector('[data-consent=external-media]'))bar.remove()});bar.querySelector('[data-consent=external-media]')?.addEventListener('click',()=>{localStorage.setItem(`einvite-consent:${slug}:external-media`,'granted');location.reload()});bar.querySelector('[data-consent=continue]')?.addEventListener('click',()=>bar.remove())}
+function showPrivacyConsent(p,d){document.querySelectorAll('.guest-consent-banner').forEach(node=>node.remove());const needAnalytics=!!p.analyticsConsentRequired&&!consentPreference('analytics'),needExternal=!!p.externalMediaConsentRequired&&!consentPreference('external-media');if(!needAnalytics&&!needExternal)return;const bar=document.createElement('aside');bar.className='guest-consent-banner';bar.dataset.followGuestLanguage='true';bar.dataset.language=root.dataset.language||(d.languageMode==='km'?'km':'en');bar.setAttribute('role','dialog');bar.setAttribute('aria-label','Privacy choices');bar.innerHTML=`<div><strong>${langText('Privacy choices','ជម្រើសឯកជនភាព',d.languageMode||'both')}</strong><p>${langText('Choose whether this invitation may record an anonymous visit and load external media such as YouTube or SoundCloud.','ជ្រើសរើសថាតើការអញ្ជើញនេះអាចកត់ត្រាការចូលមើលអនាមិក និងផ្ទុកមេឌៀខាងក្រៅដូចជា YouTube ឬ SoundCloud ដែរឬទេ។',d.languageMode||'both')}</p><a href="/privacy.html" target="_blank" rel="noopener">${langText('Privacy details','ព័ត៌មានឯកជនភាព',d.languageMode||'both')}</a></div><div class="guest-consent-actions">${needAnalytics?`<button type="button" data-consent="analytics">${langText('Allow analytics','អនុញ្ញាតវិភាគ',d.languageMode||'both')}</button>`:''}${needExternal?`<button type="button" data-consent="external-media">${langText('Allow external media','អនុញ្ញាតមេឌៀខាងក្រៅ',d.languageMode||'both')}</button>`:''}<button type="button" data-consent="continue">${langText('Continue without optional consent','បន្តដោយមិនយល់ព្រមជម្រើសបន្ថែម',d.languageMode||'both')}</button></div>`;document.body.append(bar);bar.querySelector('[data-consent=analytics]')?.addEventListener('click',async()=>{localStorage.setItem(`einvite-consent:${slug}:analytics`,'granted');if(apiAvailable())try{await fetch('/api/public/'+encodeURIComponent(slug)+'/view',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch{}bar.querySelector('[data-consent=analytics]')?.remove();if(!bar.querySelector('[data-consent=external-media]'))bar.remove()});bar.querySelector('[data-consent=external-media]')?.addEventListener('click',()=>{localStorage.setItem(`einvite-consent:${slug}:external-media`,'granted');location.reload()});bar.querySelector('[data-consent=continue]')?.addEventListener('click',()=>bar.remove())}
 loadPublic().then(async p=>{
   let d=window.EInviteExperience?.migrate ? window.EInviteExperience.migrate(p.document||{}) : (p.document||{});d=window.EInviteDocumentV32?.migrate?window.EInviteDocumentV32.migrate(d):d;if(window.TypographyDocumentModel)TypographyDocumentModel.normalizeDocument(d,{mutate:true});const advancedRenderer=await Promise.resolve(window.EInviteAdvancedPublicLoader?.load?.(d)).catch(()=>null);externalMediaAllowed=!p.externalMediaConsentRequired||consentPreference('external-media');preloadOpeningAsset(d);const f=d.fields||{},objects=Object.values(d.objects||{}),mode=d.languageMode||'both',guest=p.guest?.name||'',rsvpEnabled=d.settings?.rsvpEnabled!==false,anim=objects[0]?.animation||'fade-up',duration=Math.max(300,Math.min(3000,+(objects[0]?.duration||900))),motion=`animation-name:${animationName(anim)};animation-duration:${duration}ms`,gregorian=new Date(f.date+'T00:00:00').toLocaleDateString(undefined,{dateStyle:'long'}),khmer=d.khmerDate||khmerFor(f.date,f.time),dateBlock=d.dateFormat==='khmer'?`<h2 class="khmer-text">${esc(khmer||gregorian)}</h2>`:d.dateFormat==='gregorian'?`<h2>${esc(gregorian)}</h2>`:`<h2 class="khmer-text">${esc(khmer||gregorian)}</h2><p>${esc(gregorian)}</p>`;
   const rsvpClosed=(()=>{const close=String(d.settings?.rsvpCloseDate||'');if(!close)return false;const end=new Date(close+'T23:59:59');return !Number.isNaN(end.getTime())&&Date.now()>end.getTime()})(),rsvpMax=Math.max(1,Math.min(50,Number(d.settings?.rsvpMaxGuests||10))),rq=d.settings?.rsvpQuestions||{},standardRsvpFields=`${rq.meal?`<label>${langText('Meal preference','ជម្រើសអាហារ',mode)}<select name="meal"><option value="">${langText('Select','សូមជ្រើសរើស',mode)}</option><option>Standard</option><option>Vegetarian</option><option>Vegan</option><option>Other</option></select></label>`:''}${rq.transport?`<label>${langText('Transport needs','តម្រូវការមធ្យោបាយធ្វើដំណើរ',mode)}<select name="transport"><option value="">${langText('Select','សូមជ្រើសរើស',mode)}</option><option>None</option><option>Need transport</option><option>Can provide transport</option></select></label>`:''}${rq.accommodation?`<label>${langText('Accommodation needs','តម្រូវការកន្លែងស្នាក់នៅ',mode)}<select name="accommodation"><option value="">${langText('Select','សូមជ្រើសរើស',mode)}</option><option>None</option><option>Need accommodation information</option></select></label>`:''}`,rsvp=rsvpEnabled?(rsvpClosed?`<section class="reveal rsvp-closed" style="${combinedSectionStyle(d,'rsvp')}"><h2>${langText('RSVP closed','ការឆ្លើយតបបានបិទ',mode)}</h2><p>${langText('The response period for this invitation has ended.','រយៈពេលឆ្លើយតបសម្រាប់ការអញ្ជើញនេះបានបញ្ចប់ហើយ។',mode)}</p></section>`:`<form id="rsvp" class="reveal" style="${combinedSectionStyle(d,'rsvp')}"><h2>${langText('RSVP','សូមឆ្លើយតបការអញ្ជើញ',mode)}</h2><input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px"><label>${langText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120" value="${esc(guest)}"></label><label>${langText('Will you attend?','តើអ្នកនឹងចូលរួមទេ?',mode)}<select name="status"><option value="Yes, joyfully" data-en="Yes, joyfully" data-km="បាទ/ចាស ខ្ញុំនឹងចូលរួម">Yes, joyfully</option><option value="Unable to attend" data-en="Unable to attend" data-km="សូមអភ័យទោស ខ្ញុំមិនអាចចូលរួមបានទេ">Unable to attend</option><option value="Maybe" data-en="Maybe" data-km="ប្រហែលជា">Maybe</option></select></label><label>${langText('Number of guests','ចំនួនភ្ញៀវ',mode)}<input name="count" type="number" min="1" max="${rsvpMax}" value="1"></label>${standardRsvpFields}${rsvpCustomFields(d,mode)}<label>${langText('Message','សារ',mode)}<textarea name="note" maxlength="1000"></textarea></label><button class="primary">${langText(guestToken?'Update RSVP':'Send RSVP',guestToken?'កែប្រែការឆ្លើយតប':'ផ្ញើការឆ្លើយតប',mode)}</button></form>`):'';
@@ -1734,11 +1758,14 @@ loadPublic().then(async p=>{
   root.className=`guest theme-${d.theme||'rose'} template-${d.theme||'rose'}${d.palettePreset&&d.palettePreset!=='template'?' palette-applied':''}`;root.dataset.language=mode==='km'?'km':'en';root.style.cssText=paletteRootStyle(d);
   const guestActions=`<nav class="guest-quick-actions" aria-label="Invitation actions"><button id="addCalendar" type="button">${langText('Add to calendar','បន្ថែមទៅប្រតិទិន',mode)}</button><button id="shareInvitation" type="button">${langText('Share invitation','ចែករំលែកការអញ្ជើញ',mode)}</button></nav>`;
   root.innerHTML=`${cover}${audioMusic}${youtubeMusic}${soundcloudMusic}${musicToggle}${languageSwitcher(mode)}${artisticHeroMarkup(d,mode)}<section class="guest-hero guest-summary">${templateDecor(d.theme||'rose')}${guest?`<p class="invite-kicker">${langText('DEAR','ជូនចំពោះ',mode)} ${esc(guest)}</p>`:`<p class="invite-kicker">${langText('YOU ARE INVITED','សូមគោរពអញ្ជើញ',mode)}</p>`}<div class="hero-date">${dateBlock}</div>${guestActions}</section>${ordered}${studioBrandMarkup(p.studioBrand)}`;
-  window.EInviteGuestLayouts?.apply(root,d);window.EInviteOpeningScenes?.enhance(root,d);advancedRenderer?.enhance?.(root,d);window.EInviteGuestJourney?.enhance(root,d);window.EInviteRenderer?.installResponsiveTypography?.(root);bindLanguageSwitch(mode,d);startCountdown();window.EInvitePublicShare?.enhance(d);showPrivacyConsent(p,d);document.querySelector('#addCalendar')?.addEventListener('click',()=>downloadCalendar(d));document.querySelectorAll('[data-event-calendar]').forEach(button=>button.addEventListener('click',()=>{const event=(d.events||[]).find(item=>String(item.id||'')===button.dataset.eventCalendar);if(event)downloadCalendarEntry(event,d)}));if(!window.EInvitePublicShare)document.querySelector('#shareInvitation')?.addEventListener('click',shareInvitation);const galleryUnlock=document.querySelector('#galleryUnlockForm');if(galleryUnlock)galleryUnlock.onsubmit=async e=>{e.preventDefault();const button=galleryUnlock.querySelector('button'),error=galleryUnlock.querySelector('[data-gallery-error]'),password=new FormData(galleryUnlock).get('password');button.disabled=true;error.textContent='';try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/gallery/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})}),payload=await response.json().catch(()=>({}));if(!response.ok)throw Error(payload.error||'Unable to open gallery');galleryAccessToken=payload.galleryAccessToken||'';if(galleryAccessToken)sessionStorage.setItem('sovan-gallery-access:'+slug,galleryAccessToken);location.reload()}catch(err){error.textContent=err.message;button.disabled=false}};
+  window.EInviteGuestLayouts?.apply(root,d);window.EInviteOpeningScenes?.enhance(root,d);advancedRenderer?.enhance?.(root,d);window.EInviteGuestJourney?.enhance(root,d);window.EInviteRenderer?.installResponsiveTypography?.(root);bindLanguageSwitch(mode,d);startCountdown();window.EInvitePublicShare?.enhance(d);showPrivacyConsent(p,d);document.querySelector('#addCalendar')?.addEventListener('click',()=>downloadCalendar(d));document.querySelectorAll('[data-event-calendar]').forEach(button=>button.addEventListener('click',()=>{const event=(d.events||[]).find(item=>String(item.id||'')===button.dataset.eventCalendar);if(event)downloadCalendarEntry(event,d)}));if(!window.EInvitePublicShare)document.querySelector('#shareInvitation')?.addEventListener('click',shareInvitation);const galleryUnlock=document.querySelector('#galleryUnlockForm');if(galleryUnlock)galleryUnlock.onsubmit=async e=>{e.preventDefault();const button=galleryUnlock.querySelector('button'),error=galleryUnlock.querySelector('[data-gallery-error]'),password=new FormData(galleryUnlock).get('password');button.disabled=true;error.textContent='';if(!apiAvailable()){error.textContent=OFFLINE_SAVE_NOTICE;button.disabled=false;return}
+try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/gallery/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})}),payload=await response.json().catch(()=>({}));if(!response.ok)throw Error(payload.error||'Unable to open gallery');galleryAccessToken=payload.galleryAccessToken||'';if(galleryAccessToken)sessionStorage.setItem('sovan-gallery-access:'+slug,galleryAccessToken);location.reload()}catch(err){error.textContent=err.message;button.disabled=false}};
   const audio=document.querySelector('#guestMusic'),player=document.querySelector('#youtubePlayer'),soundcloudPlayer=document.querySelector('#soundcloudPlayer'),openCover=document.querySelector('#openCover'),toggle=document.querySelector('#musicToggle');let timelineStarted=false;const startTimeline=()=>{if(timelineStarted)return;timelineStarted=true;window.EInviteTimelineRuntime?.play(root,d)};if(!openCover)startTimeline();const targetVolume=Math.max(0,Math.min(1,Number(d.settings?.musicVolume??.75))),fadeSeconds=Math.max(0,Math.min(10,Number(d.settings?.musicFadeIn??1.2))),postYoutube=(func,args=[])=>player?.contentWindow?.postMessage(JSON.stringify({event:'command',func,args}),'https://www.youtube-nocookie.com'),start=()=>{if(player&&!player.src){let id=player.dataset.videoId,loop=d.settings?.musicLoop!==false?'1':'0',playlist=loop?`&playlist=${id}`:'';player.src=`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&loop=${loop}${playlist}&enablejsapi=1&playsinline=1&rel=0&origin=${encodeURIComponent(location.origin)}`}if(soundcloudPlayer&&!soundcloudPlayer.src){const track=encodeURIComponent(soundcloudPlayer.dataset.soundcloudUrl||'');soundcloudPlayer.src=`https://w.soundcloud.com/player/?url=${track}&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&visual=false`}if(audio){audio.loop=d.settings?.musicLoop!==false;if(fadeSeconds>0){audio.volume=0;audio.play().then(()=>{const started=performance.now(),tick=now=>{const ratio=Math.min(1,(now-started)/(fadeSeconds*1000));audio.volume=targetVolume*ratio;if(ratio<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)}).catch(()=>{})}else{audio.volume=targetVolume;audio.play().catch(()=>{})}}setTimeout(()=>postYoutube('setVolume',[Math.round(targetVolume*100)]),350)},updateMusicToggle=()=>{if(!toggle)return;toggle.textContent=playing?'♫':'♪';toggle.setAttribute('aria-label',playing?'Pause music':'Play music')};let playing=false;if(openCover){openCover.onclick=()=>{openCover.classList.add('opened');startTimeline();if(musicOn&&d.settings?.musicStartAfterOpen!==false){const offset=Math.max(0,Number(d.timeline?.audioOffset||0));if(offset)setTimeout(start,offset);else start();playing=true}updateMusicToggle()}}else updateMusicToggle();if(toggle)toggle.onclick=()=>{if(playing){audio?.pause();postYoutube('pauseVideo');if(soundcloudPlayer?.src)soundcloudPlayer.src=''}else{if((player&&!player.src)||(soundcloudPlayer&&!soundcloudPlayer.src))start();else{audio?.play().catch(()=>{});postYoutube('playVideo')}}playing=!playing;updateMusicToggle()};
   const formStatus=(form,message,error=false)=>{let node=form.querySelector('[data-submit-status]');if(!node){node=document.createElement('p');node.dataset.submitStatus='true';node.setAttribute('role','status');node.setAttribute('aria-live','polite');form.append(node)}node.textContent=String(message||'');node.classList.toggle('error',!!error)};
-  const rsvpForm=document.querySelector('#rsvp');if(rsvpForm)rsvpForm.onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type=submit],button.primary'),data=Object.fromEntries(new FormData(form));if(button?.disabled)return;if(button)button.disabled=true;formStatus(form,'');try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/rsvps',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation-Access':publicAccessToken}:{}),...(guestToken?{'X-Invitation-Guest':guestToken}:{})},body:JSON.stringify(data)}),payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||'We could not save your response. Please try again.');form.innerHTML=`<h2>${langText(payload.updated?'Response updated':'Thank you!',payload.updated?'បានកែប្រែការឆ្លើយតប':'សូមអរគុណ!',mode)}</h2><p>${langText(payload.updated?'Your latest response replaced the previous one.':'Your response was received.',payload.updated?'ការឆ្លើយតបថ្មីរបស់អ្នកបានជំនួសការឆ្លើយតបមុន។':'យើងបានទទួលការឆ្លើយតបរបស់អ្នកហើយ។',mode)}</p>`}catch(error){formStatus(form,error.message||'We could not save your response. Please try again.',true);if(button)button.disabled=false}};
-  const wishForm=document.querySelector('#guestWish');if(wishForm)wishForm.onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type=submit],button'),data=Object.fromEntries(new FormData(form));if(button?.disabled)return;if(button)button.disabled=true;formStatus(form,'');try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation-Access':publicAccessToken}:{})},body:JSON.stringify(data)}),payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||'We could not send your wishes. Please try again.');form.innerHTML=`<h2>${langText('Thank you!','សូមអរគុណ!',mode)}</h2><p>${langText('Your wishes were sent privately to the hosts.','ពាក្យជូនពររបស់អ្នកត្រូវបានផ្ញើជូនម្ចាស់កម្មវិធីជាឯកជនហើយ។',mode)}</p>`}catch(error){formStatus(form,error.message||'We could not send your wishes. Please try again.',true);if(button)button.disabled=false}};
+  const rsvpForm=document.querySelector('#rsvp');if(rsvpForm)rsvpForm.onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type=submit],button.primary'),data=Object.fromEntries(new FormData(form));if(button?.disabled)return;if(button)button.disabled=true;formStatus(form,'');if(!apiAvailable()){formStatus(form,OFFLINE_SAVE_NOTICE,true);if(button)button.disabled=false;return}
+try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/rsvps',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation-Access':publicAccessToken}:{}),...(guestToken?{'X-Invitation-Guest':guestToken}:{})},body:JSON.stringify(data)}),payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||'We could not save your response. Please try again.');form.innerHTML=`<h2>${langText(payload.updated?'Response updated':'Thank you!',payload.updated?'បានកែប្រែការឆ្លើយតប':'សូមអរគុណ!',mode)}</h2><p>${langText(payload.updated?'Your latest response replaced the previous one.':'Your response was received.',payload.updated?'ការឆ្លើយតបថ្មីរបស់អ្នកបានជំនួសការឆ្លើយតបមុន។':'យើងបានទទួលការឆ្លើយតបរបស់អ្នកហើយ។',mode)}</p>`}catch(error){formStatus(form,error.message||'We could not save your response. Please try again.',true);if(button)button.disabled=false}};
+  const wishForm=document.querySelector('#guestWish');if(wishForm)wishForm.onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type=submit],button'),data=Object.fromEntries(new FormData(form));if(button?.disabled)return;if(button)button.disabled=true;formStatus(form,'');if(!apiAvailable()){formStatus(form,OFFLINE_SAVE_NOTICE,true);if(button)button.disabled=false;return}
+try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation-Access':publicAccessToken}:{})},body:JSON.stringify(data)}),payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||'We could not send your wishes. Please try again.');form.innerHTML=`<h2>${langText('Thank you!','សូមអរគុណ!',mode)}</h2><p>${langText('Your wishes were sent privately to the hosts.','ពាក្យជូនពររបស់អ្នកត្រូវបានផ្ញើជូនម្ចាស់កម្មវិធីជាឯកជនហើយ។',mode)}</p>`}catch(error){formStatus(form,error.message||'We could not send your wishes. Please try again.',true);if(button)button.disabled=false}};
   // Phase 2a (V54.1) — mount the guest-feature sections (sign-up sheets,
   // polls, photo album) after the main invitation has rendered. Each module
   // is independent and no-ops if its container is missing or the modules
@@ -1757,43 +1784,12 @@ loadPublic().then(async p=>{
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-function dashboard(){
-  const view=$('#dashboardView'),login=$('#loginView');if(!view)return;
-  view.classList.add('dashboard-home');
-  const rail=document.createElement('nav');rail.className='dashboard-home-rail';rail.innerHTML=`
-    <button type="button" class="rail-create" title="Create invitation"><span>＋</span>Create</button>
-    <a href="dashboard.html" class="active"><span>⌂</span>Home</a>
-    <a href="templates.html"><span>▣</span>Templates</a>
-    <a href="materials.html"><span>▧</span>Materials</a>
-    <a href="billing.html"><span>◉</span>Plans</a>
-    <div class="rail-spacer"></div>
-    <a href="account.html"><span>◌</span>Account</a>`;
-  document.body.append(rail);
-  $('.rail-create',rail).onclick=()=>$('#newBtn')?.click();
-  const hero=document.createElement('section');hero.className='dashboard-home-hero';hero.innerHTML=`
-    <h1>What will you create today?</h1>
-    <label class="dashboard-home-search"><span>⌕</span><input type="search" placeholder="Search your invitations"></label>
-    <div class="dashboard-quick-create">
-      <button type="button" class="create"><i>＋</i><span>Create</span></button>
-      <a href="templates.html" class="template"><i>▣</i><span>Templates</span></a>
-      <button type="button" class="wedding"><i>♡</i><span>Wedding</span></button>
-      <button type="button" class="birthday"><i>✦</i><span>Birthday</span></button>
-      <button type="button" class="business"><i>◇</i><span>Business</span></button>
-      <a href="materials.html" class="upload"><i>⇧</i><span>Uploads</span></a>
-    </div>`;
-  view.prepend(hero);
-  const createByType=(type)=>{const btn=$('#newBtn');btn?.click();setTimeout(()=>{const typeEl=$('#newType');if(typeEl){typeEl.value=type;typeEl.dispatchEvent(new Event('change',{bubbles:true}))}},40)};
-  $('.create',hero).onclick=()=>$('#newBtn')?.click();$('.wedding',hero).onclick=()=>createByType('Wedding');$('.birthday',hero).onclick=()=>createByType('Birthday');$('.business',hero).onclick=()=>createByType('Business');
-  const homeSearch=$('.dashboard-home-search input',hero);
-  homeSearch.oninput=()=>{const old=$('#dashboardSearch');if(old){old.value=homeSearch.value;old.dispatchEvent(new Event('input',{bubbles:true}))}else{$$('.invite-card','#inviteGrid').forEach(card=>card.hidden=!card.textContent.toLowerCase().includes(homeSearch.value.toLowerCase()))}};
-  const recent=document.createElement('div');recent.className='dashboard-recent-head';recent.innerHTML='<h2>Recent invitations</h2>';
-  const filter=$('.dashboard-filter-tabs');if(filter)recent.append(filter);
-  const grid=$('#inviteGrid');grid?.before(recent);
-  grid?.addEventListener('click',e=>{const cover=e.target.closest('.invite-cover');if(!cover)return;const card=cover.closest('.invite-card');card?.querySelector('[data-edit]')?.click()});
-  const header=$('body>header');
-  function authState(){const signed=view.hidden===false;rail.hidden=!signed;if(header){header.querySelectorAll('a[href="materials.html"],a[href="billing.html"],a[href="account.html"]').forEach(a=>a.hidden=!signed);const logout=$('#logoutBtn');if(logout)logout.hidden=!signed}}
-  new MutationObserver(authState).observe(view,{attributes:true,attributeFilter:['hidden']});authState();
-}
+/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
+   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
+   field and an English-only quick-create row, and it hid the real .dash-head. The shell
+   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
+   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
   const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;
@@ -1850,4 +1846,135 @@ function editor(){
 if(page==='dashboard')dashboard();
 if(page==='materials')materials();
 if(page==='index')setTimeout(editor,0);
+})();;/**
+ * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ *
+ * Deliberately tiny and dependency-free. It owns exactly three things:
+ *
+ *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
+ *      (persisted in localStorage['einvite-rail-collapsed']).
+ *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
+ *      toggles `body.rail-open`, which is also closed on Escape, on an outside
+ *      click, and on hashchange.
+ *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
+ *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
+ *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
+ *
+ * Accessibility: the toggle buttons carry aria-expanded and the rail is a
+ * landmark; nothing here traps focus or blocks pointer events when closed.
+ */
+(function () {
+  'use strict';
+  if (window.EInviteShell && window.EInviteShell.version >= 55) return;
+
+  var body = document.body;
+  var html = document.documentElement;
+  var RAIL_KEY = 'einvite-rail-collapsed';
+  var THEME_KEY = 'einvite-theme-mode';
+
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
+
+  /* --- 1. Rail collapse -------------------------------------------------- */
+  function applyRailCollapsed(collapsed) {
+    body.classList.toggle('rail-collapsed', !!collapsed);
+    document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      var glyph = btn.querySelector('[data-rail-glyph]');
+      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+    });
+  }
+  function applyRailOpen(open) {
+    body.classList.toggle('rail-open', !!open);
+    document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  }
+
+  /* --- 2. Current page --------------------------------------------------- */
+  function markCurrentPage() {
+    var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+    document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
+      var target = link.getAttribute('href').split('#')[0].split('?')[0].toLowerCase();
+      if (target && target === here) link.setAttribute('aria-current', 'page');
+    });
+  }
+
+  /*
+   * Pages that show a signed-out flow (dashboard) hide their rail until the
+   * signed-in view is revealed, so the login card gets the full canvas. The
+   * same flag flips the topbar down to Skeleton B (brand + language + theme).
+   */
+  function syncAutoRail() {
+    var autoRail = document.querySelector('.app-rail[data-rail-auto]');
+    var signedIn = document.getElementById('dashboardView');
+    var signedInVisible = !signedIn || !signedIn.hidden;
+    if (autoRail) autoRail.hidden = !signedInVisible;
+    if (signedIn) body.classList.toggle('auth-mode', !signedInVisible);
+  }
+
+  function watchAutoRail() {
+    var signedIn = document.getElementById('dashboardView');
+    if (!signedIn || typeof MutationObserver !== 'function') return;
+    new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* --- 3. Appearance ----------------------------------------------------- */
+  function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyTheme(next) {
+    html.dataset.theme = next;
+    html.dataset.themeMode = next;
+    html.style.colorScheme = next;
+    write(THEME_KEY, next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(next === 'dark'));
+      btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
+      var glyph = btn.querySelector('[data-theme-glyph]');
+      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+    });
+  }
+
+  /* --- Wiring ------------------------------------------------------------ */
+  document.addEventListener('click', function (event) {
+    var railToggle = event.target.closest('[data-rail-toggle]');
+    if (railToggle) {
+      var collapsed = !body.classList.contains('rail-collapsed');
+      applyRailCollapsed(collapsed);
+      write(RAIL_KEY, collapsed ? '1' : '0');
+      return;
+    }
+    var drawerToggle = event.target.closest('[data-drawer-toggle]');
+    if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
+    var themeToggle = event.target.closest('[data-theme-toggle]');
+    if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
+    /* Outside click closes the mobile drawer but never the desktop rail. */
+    if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('rail-open')) applyRailOpen(false);
+  });
+  window.addEventListener('hashchange', function () { applyRailOpen(false); });
+  window.addEventListener('resize', function () { if (innerWidth > 768) applyRailOpen(false); });
+
+  function init() {
+    markCurrentPage();
+    applyRailCollapsed(read(RAIL_KEY) === '1');
+    applyRailOpen(false);
+    syncAutoRail();
+    watchAutoRail();
+    applyTheme(read(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+
+  window.EInviteShell = Object.freeze({
+    version: 55,
+    collapseRail: applyRailCollapsed,
+    openRail: applyRailOpen,
+    syncAutoRail: syncAutoRail,
+    setTheme: applyTheme
+  });
 })();

@@ -146,6 +146,10 @@
     load(false);
 
     async function load(append) {
+      if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
+        grid.innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        return;
+      }
       try {
         const url = `/api/invitations/${encodeURIComponent(invitationId)}/album?limit=20` + (cursor ? `&before=${cursor}` : '');
         const res = await fetch(url, { headers });

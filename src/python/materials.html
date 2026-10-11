@@ -3,6 +3,7 @@
 <head><script src="core/theme.js"></script><script>(function(){try{var e=document.documentElement,v=localStorage.getItem('einvite-lang');if(!v){var n=navigator.language||(navigator.languages&&navigator.languages[0])||"";v=n.toLowerCase().indexOf("km")===0?"km":"en"}e.lang=v}catch(x){}})();</script><script src="backend-mode-v14.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <title>Material Library — E-invitation-website</title>
   <link rel="stylesheet" href="bundle-materials-v15.css">
   
@@ -15,8 +16,30 @@
 
 
 </head>
-<body data-page="materials"><a class="skip-link" href="#main"><span class="i18n i18n-en">Skip to content</span><span class="i18n i18n-km khmer-text" lang="km">Skip to content</span></a>
-<header><strong>E-invitation-website</strong><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">Dashboard</span><span class="i18n i18n-km khmer-text" lang="km">Dashboard</span></a><a href="templates.html" class="button-link"><span class="i18n i18n-en">Template Studio</span><span class="i18n i18n-km khmer-text" lang="km">Template Studio</span></a><a href="account.html" class="button-link"><span class="i18n i18n-en">Account</span><span class="i18n i18n-km khmer-text" lang="km">Account</span></a></header>
+<body data-shell="a" data-page="materials"><a class="skip-link" href="#main"><span class="i18n i18n-en">Skip to content</span><span class="i18n i18n-km khmer-text" lang="km">Skip to content</span></a>
+<header>
+    <div class="app-topbar-left">
+      <button class="app-rail-toggle" data-rail-toggle type="button" aria-label="Collapse navigation" aria-expanded="true"><span data-rail-glyph aria-hidden="true">«</span></button>
+      <a href="dashboard.html" class="app-brand"><strong>E-invitation-website</strong></a>
+      <nav class="app-crumbs" aria-label="Breadcrumb"><a href="dashboard.html"><span class="i18n i18n-en">Workspace</span><span class="i18n i18n-km khmer-text" lang="km">Workspace</span></a><span class="sep" aria-hidden="true">/</span><span aria-current="page"><span class="i18n i18n-en">Materials</span><span class="i18n i18n-km khmer-text" lang="km">Materials</span></span></nav>
+    </div>
+    <div class="app-topbar-right">
+      <a href="templates.html" class="button-link"><span class="i18n i18n-en">Templates</span><span class="i18n i18n-km khmer-text" lang="km">ពុម្ពអត្ថបទ</span></a>
+      <button class="app-drawer-toggle" data-drawer-toggle type="button" aria-label="Open navigation" aria-expanded="false"><span aria-hidden="true">☰</span></button>
+    </div>
+  </header>
+  <nav class="app-rail" aria-label="Workspace navigation">
+    <span class="app-rail__label"><span class="i18n i18n-en">Workspace</span><span class="i18n i18n-km khmer-text" lang="km">Workspace</span></span>
+      <a href="dashboard.html"><span class="app-rail__icon" aria-hidden="true">⌂</span><span class="i18n i18n-en">Dashboard</span><span class="i18n i18n-km khmer-text" lang="km">Dashboard</span></a>
+      <a href="templates.html"><span class="app-rail__icon" aria-hidden="true">✦</span><span class="i18n i18n-en">Templates</span><span class="i18n i18n-km khmer-text" lang="km">ពុម្ពអត្ថបទ</span></a>
+      <a href="materials.html"><span class="app-rail__icon" aria-hidden="true">▣</span><span class="i18n i18n-en">Materials</span><span class="i18n i18n-km khmer-text" lang="km">សម្ភារែ</span></a>
+      <a href="guests.html"><span class="app-rail__icon" aria-hidden="true">☰</span><span class="i18n i18n-en">Guest list</span><span class="i18n i18n-km khmer-text" lang="km">បញ្ចូលភ្ញៀវ</span></a>
+      <a href="responses.html"><span class="app-rail__icon" aria-hidden="true">≣</span><span class="i18n i18n-en">Responses</span><span class="i18n i18n-km khmer-text" lang="km">បញ្ចូលទា</span></a>
+      <a href="analytics.html"><span class="app-rail__icon" aria-hidden="true">◔</span><span class="i18n i18n-en">Analytics</span><span class="i18n i18n-km khmer-text" lang="km">វិភានសម្តែង</span></a>
+      <a href="billing.html"><span class="app-rail__icon" aria-hidden="true">◎</span><span class="i18n i18n-en">Plans</span><span class="i18n i18n-km khmer-text" lang="km">Plans</span></a>
+      <a href="account.html" id="accountBtn"><span class="app-rail__icon" aria-hidden="true">⚙</span><span class="i18n i18n-en">Account</span><span class="i18n i18n-km khmer-text" lang="km">គណនី</span></a>
+    <span class="app-rail__spacer"></span>
+  </nav>
 <main id="main" class="library-page" tabindex="-1">
   <div class="library-head"><div><h1>Material Library</h1><p class="library-hint">Your account-wide collection of photos, music, and invitation videos.</p></div><button id="refreshBtn" type="button"><span class="i18n i18n-en">Refresh</span><span class="i18n i18n-km khmer-text" lang="km">Refresh</span></button></div>
   <section class="upload-box">

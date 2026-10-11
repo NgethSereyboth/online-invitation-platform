@@ -35,6 +35,11 @@ function checkoutBanner(){
 }
 
 async function init(){
+  if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;
+  if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
+    window.EInviteBackend.message(document.querySelector('main')||document.body,'<span class="i18n i18n-en">Billing, plan usage and card checkout require the full application server.</span><span class="i18n i18n-km khmer-text" lang="km">Billing, plan usage and card checkout require the full application server.</span>');
+    return;
+  }
   try{
     checkoutBanner();
     const [me,usage,billing]=await Promise.all([api('/api/auth/me'),api('/api/account/usage'),api('/api/billing/status')]);

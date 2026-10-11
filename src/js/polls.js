@@ -60,6 +60,10 @@
     refresh();
 
     async function refresh() {
+      if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
+        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        return;
+      }
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls`, { headers });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

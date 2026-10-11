@@ -813,87 +813,232 @@ function openTemplatePreview(item){
 $('#closeTemplatePreview').onclick=()=>$('#templatePreviewDialog').close();
 $('#usePreviewTemplate').onclick=()=>{if(!previewTemplateItem)return;$('#newTemplate').value=previewTemplateItem.id;updateTemplateSummary(previewTemplateItem);renderTemplateChoices();$('#templatePreviewDialog').close()};
 $('#templateSearch').oninput=renderTemplateChoices;
-document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{templateFilter=b.dataset.templateFilter;document.querySelectorAll('[data-template-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTemplateChoices()});;(() => {
+document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{templateFilter=b.dataset.templateFilter;document.querySelectorAll('[data-template-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTemplateChoices()});;/*
+ * dashboard-polish.js — V55 (dispatch Group 2): the dashboard's filter row and
+ * its async states.
+ *
+ * Before: this module injected a marketing intro ("Create beautiful moments,
+ * manage every guest."), four metric cards and a second filter bar, all with
+ * English-only copy, and final-polish.css hid the real .dash-head. It is now the
+ * single owner of the dashboard toolbar:
+ *
+ *   1. Filter row   — search (240px) + segmented control (All / Published / Archive).
+ *   2. Loading      — skeleton cards that mirror the real card (same height, same
+ *                     16:9 cover, same two-line body). Replaced as soon as the real
+ *                     cards or the empty state land.
+ *   3. Error        — when the invitations endpoint fails and there is nothing in
+ *                     local storage: icon, plain-English reason, Retry.
+ *   4. Card polish  — status badge (state only, never decoration), hover
+ *                     quick-actions row, uniform card height.
+ *
+ * Bilingual: EN + KM spans through the platform `[lang] .i18n-km` mechanism.
+ * Strings without a trusted Khmer source reuse the English text ("fallback" in
+ * docs/i18n/TRANSLATIONS.csv) and are listed as KH_PENDING in
+ * docs/reviews/redesign-report.md. Khmer is never invented here.
+ */
+(() => {
   'use strict';
-  const $ = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-  const view = $('#dashboardView');
-  if (!view) return;
+  const view = document.querySelector('#dashboardView');
+  const grid = document.querySelector('#inviteGrid');
+  if (!view || !grid) return;
 
-  const head = $('.dash-head', view);
-  const grid = $('#inviteGrid');
-  if (!head || !grid) return;
+  const SEGMENTS = [
+    { id: 'all', en: 'All', km: 'ទាំងអស់' },          /* docs/i18n/TRANSLATIONS.csv: translated */
+    { id: 'published', en: 'Published', km: 'ផ្សាយ' },  /* translated */
+    { id: 'archived', en: 'Archive', km: 'បង្ងា' }      /* translated */
+  ];
 
-  const intro = document.createElement('div');
-  intro.className = 'dashboard-intro';
-  intro.innerHTML = `
-    <div class="dashboard-intro-copy">
-      <span class="dashboard-eyebrow">Invitation workspace</span>
-      <h2>Create beautiful moments, manage every guest.</h2>
-      <p>Design, publish, collect RSVPs and keep your event experience in one place.</p>
-      <div class="dashboard-intro-actions"><button type="button" id="dashboardCreateV14" class="primary">Create invitation</button><a class="button-link" href="templates.html">Browse templates</a><a class="button-link" href="account.html">Account</a><button type="button" id="dashboardLogoutV14">Sign out</button></div>
-    </div>
-    <div class="dashboard-overview-cards">
-      <article><span>Invitations</span><strong id="dashMetricTotal">0</strong></article>
-      <article><span>Published</span><strong id="dashMetricLive">0</strong></article>
-      <article><span>Total views</span><strong id="dashMetricViews">0</strong></article>
-      <article><span>RSVPs</span><strong id="dashMetricRsvp">0</strong></article>
-    </div>`;
-  head.after(intro);
-
-  const toolbar = document.createElement('div');
-  toolbar.className = 'dashboard-filterbar';
-  toolbar.innerHTML = `
-    <div class="dashboard-search"><span>⌕</span><input id="dashboardSearch" type="search" placeholder="Search invitations…"></div>
-    <div class="dashboard-filter-tabs" role="group" aria-label="Invitation status">
-      <button type="button" class="active" data-dash-filter="all">All</button>
-      <button type="button" data-dash-filter="published">Published</button>
-      <button type="button" data-dash-filter="draft">Drafts</button>
-      <button type="button" data-dash-filter="archived">Archived</button>
-    </div>`;
-  intro.after(toolbar);
-
-  $('#dashboardCreateV14')?.addEventListener('click',()=>$('#newBtn')?.click());
-  $('#dashboardLogoutV14')?.addEventListener('click',()=>$('#logoutBtn')?.click());
-  let statusFilter = 'all';
-  function availableInvites(){
-    try { return Array.isArray(invites) ? invites : []; } catch { return []; }
+  function i18nHtml(en, km) {
+    const khmer = km == null ? en : km;
+    const cls = km == null ? 'i18n i18n-km' : 'i18n i18n-km khmer-text';
+    return `<span class="i18n i18n-en">${en}</span><span class="${cls}" lang="km">${khmer}</span>`;
   }
-  function updateMetrics(){
-    const items = availableInvites();
-    const total = items.filter(x=>!x.archived).length;
-    const live = items.filter(x=>!x.archived && String(x.status||'').toLowerCase().includes('publish')).length;
-    const views = items.reduce((s,x)=>s+Number(x.views||0),0);
-    const rsvp = items.reduce((s,x)=>s+Number(x.rsvps||0),0);
-    $('#dashMetricTotal').textContent = total.toLocaleString();
-    $('#dashMetricLive').textContent = live.toLocaleString();
-    $('#dashMetricViews').textContent = views.toLocaleString();
-    $('#dashMetricRsvp').textContent = rsvp.toLocaleString();
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
   }
-  function decorateCards(){
-    $$('.invite-card', grid).forEach(card=>{
-      const status = $('.invite-body>span',card);
-      if(status) status.classList.add('invite-status-pill');
-      const cover=$('.invite-cover',card);
-      if(cover){cover.classList.add('invite-rendered-thumbnail');cover.setAttribute('type','button')}
+
+  /* --- 1. Filter row ------------------------------------------------------ */
+  let toolbar = null;
+  let query = '';
+  let segment = 'all';
+
+  function buildToolbar() {
+    if (document.querySelector('.dashboard-filterbar')) {
+      toolbar = document.querySelector('.dashboard-filterbar');
+      return;
+    }
+    toolbar = document.createElement('div');
+    toolbar.className = 'dashboard-filterbar app-toolbar';
+    toolbar.innerHTML =
+      `<label class="app-search">` +
+      `<span class="app-search__icon" aria-hidden="true">⌕</span>` +
+      `<input id="dashboardSearch" type="search" autocomplete="off" ` +
+      `placeholder="${esc('Search invitations…')}" ` +
+      `data-en="${esc('Search invitations…')}" data-km="${esc('Search invitations…')}" ` +
+      `aria-label="${esc('Search invitations…')}">` +
+      `</label>` +
+      `<div class="segmented" role="group" aria-label="${esc('Filter invitations')}">` +
+      SEGMENTS.map(s => `<button type="button" data-dash-filter="${s.id}"` +
+        `${s.id === 'all' ? ' class="active" aria-pressed="true"' : ' aria-pressed="false"'}>${i18nHtml(s.en, s.km)}</button>`).join('') +
+      `</div>`;
+    const head = view.querySelector('.dash-head');
+    if (head) head.after(toolbar);
+    else view.prepend(toolbar);
+
+    const search = toolbar.querySelector('#dashboardSearch');
+    search.addEventListener('input', () => { query = search.value.trim().toLowerCase(); applyFilters(); });
+    toolbar.querySelectorAll('[data-dash-filter]').forEach(button => {
+      button.addEventListener('click', () => {
+        segment = button.dataset.dashFilter;
+        toolbar.querySelectorAll('[data-dash-filter]').forEach(other => {
+          const on = other === button;
+          other.classList.toggle('active', on);
+          other.setAttribute('aria-pressed', String(on));
+        });
+        applyFilters();
+      });
     });
   }
-  function applyFilter(){
-    const q = ($('#dashboardSearch')?.value||'').trim().toLowerCase();
-    $$('.invite-card',grid).forEach(card=>{
-      const title=($('.invite-body h2',card)?.textContent||'').toLowerCase();
-      const status=($('.invite-body>span',card)?.textContent||'').toLowerCase();
-      const archived=Number.parseFloat(card.style.opacity||'1')<1;
-      const statusOk=statusFilter==='all'||(statusFilter==='published'&&status.includes('publish'))||(statusFilter==='draft'&&!archived&&!status.includes('publish'))||(statusFilter==='archived'&&archived);
-      card.hidden=!(statusOk&&(!q||title.includes(q)));
-    });
-  }
-  $('#dashboardSearch').addEventListener('input',applyFilter);
-  $$('[data-dash-filter]').forEach(b=>b.onclick=()=>{statusFilter=b.dataset.dashFilter;$$('[data-dash-filter]').forEach(x=>x.classList.toggle('active',x===b));applyFilter()});
 
-  const observer=new MutationObserver(()=>{decorateCards();updateMetrics();applyFilter()});
-  observer.observe(grid,{childList:true,subtree:true});
-  decorateCards();updateMetrics();applyFilter();
+  function statusOf(card) {
+    const badge = card.querySelector('.app-badge');
+    return badge ? badge.dataset.state : 'published';
+  }
+
+  function applyFilters() {
+    const cards = grid.querySelectorAll('.invite-card');
+    let visible = 0;
+    cards.forEach(card => {
+      const matchesQuery = !query || card.textContent.toLowerCase().includes(query);
+      const matchesSegment = segment === 'all' || statusOf(card) === segment;
+      const show = matchesQuery && matchesSegment;
+      card.hidden = !show;
+      if (show) visible++;
+    });
+    let note = grid.querySelector('.dashboard-no-results');
+    if (!cards.length) { if (note) note.remove(); return; }
+    if (visible) { if (note) note.remove(); return; }
+    if (!note) {
+      note = document.createElement('p');
+      note.className = 'dashboard-no-results empty-state__message';
+      note.innerHTML = i18nHtml('No invitations match this filter.', null);
+      grid.append(note);
+    }
+  }
+
+  /* --- 2. Loading skeletons ---------------------------------------------- */
+  function showSkeletons() {
+    if (grid.querySelector('.invite-card, .empty-state, .error-state')) return;
+    if (grid.querySelector('.skeleton-card')) return;
+    grid.innerHTML = Array.from({ length: 6 }, () =>
+      `<article class="skeleton-card" aria-hidden="true">` +
+      `<span class="skeleton-card__cover"></span>` +
+      `<span class="skeleton-card__line"></span>` +
+      `<span class="skeleton-card__line skeleton-card__line--short"></span>` +
+      `</article>`).join('');
+  }
+  function clearSkeletons() {
+    grid.querySelectorAll('.skeleton-card').forEach(node => node.remove());
+  }
+
+  /* --- 3. Error state ---------------------------------------------------- */
+  function renderError(reason) {
+    if (grid.querySelector('.error-state')) return;
+    clearSkeletons();
+    grid.innerHTML =
+      `<section class="error-state empty-state">` +
+      `<span class="empty-state__icon" aria-hidden="true">⚠</span>` +
+      `<h2 class="empty-state__title">${i18nHtml("Couldn't load your invitations", null)}</h2>` +
+      `<p class="empty-state__message">${i18nHtml(reason || 'The server did not answer. Your drafts are still saved on this device.')}</p>` +
+      `<div class="empty-state__action"><button type="button" class="app-button--secondary" data-retry>${i18nHtml('Retry', 'ព្យាយាមម្ដងទៀត')}</button></div>` +
+      `</section>`;
+    const retry = grid.querySelector('[data-retry]');
+    if (retry) retry.addEventListener('click', () => window.location.reload());
+  }
+
+  async function probeServer() {
+    /* Static mode (no application server): the backend module already knows, so
+       do not fire a request whose only possible answer is a 404 (G8). The local
+       draft store stays authoritative. */
+    if (window.EInviteBackend?.ready) { try { await window.EInviteBackend.ready; } catch (e) { /* ignore */ } }
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) return;
+    let localInvites = null;
+    try { localInvites = JSON.parse(localStorage.getItem('sovan-multi-invites-v1') || 'null'); } catch (e) { localInvites = null; }
+    /* Local-first: an array (empty or not) is authoritative enough. Only a device
+       that has never seen this account needs the server, and only then can a failed
+       request be reported as an error state. */
+    if (Array.isArray(localInvites)) return;
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), 7000) : null;
+    fetch('/api/invitations', { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: controller ? controller.signal : undefined })
+      .then(response => {
+        if (timer) clearTimeout(timer);
+        if (!response.ok) renderError(response.status === 401 ? 'Your session expired. Sign in again to load them.' : 'The server answered with an error. Your drafts are still saved on this device.');
+      })
+      .catch(() => {
+        if (timer) clearTimeout(timer);
+        renderError('The server is unreachable. Your drafts are still saved on this device.');
+      });
+  }
+
+  /* --- 4. Card polish ---------------------------------------------------- */
+  const BADGE = {
+    published: { en: 'Published', km: 'ផ្សាយ', icon: '●' },
+    draft: { en: 'Draft', km: null, icon: '◐' },
+    archived: { en: 'Archived', km: 'បង្ងា', icon: '▤' }
+  };
+
+  function decorate() {
+    grid.querySelectorAll('.invite-card').forEach(card => {
+      /* Status badge: state only — never "New!" or "Recommended". */
+      const pill = card.querySelector('.invite-status-pill');
+      if (pill) {
+        const raw = (pill.textContent || '').trim().toLowerCase();
+        const state = raw.includes('draft') ? 'draft' : raw.includes('archiv') ? 'archived' : 'published';
+        const meta = BADGE[state];
+        pill.className = `app-badge app-badge--${state}`;
+        pill.dataset.state = state;
+        pill.innerHTML = `<span aria-hidden="true">${meta.icon}</span>${i18nHtml(meta.en, meta.km)}`;
+      }
+      /* Hover quick actions — visible affordance before the drag/click begins. */
+      if (!card.querySelector('.invite-quick')) {
+        const body = card.querySelector('.invite-body');
+        if (body) {
+          const quick = document.createElement('div');
+          quick.className = 'invite-quick';
+          quick.innerHTML =
+            `<button type="button" class="app-iconbtn" data-quick="edit" title="${esc('Edit design')}">${i18nHtml('Edit', 'កែប្រែ')}</button>` +
+            `<a class="app-iconbtn" href="guests.html" title="${esc('Guest list')}">${i18nHtml('Guests', 'បញ្ចូលភ្ញៀវ')}</a>` +
+            `<a class="app-iconbtn" href="analytics.html" title="${esc('Analytics')}">${i18nHtml('Analytics', 'វិភានសម្តែង')}</a>`;
+          body.append(quick);
+          quick.querySelector('[data-quick="edit"]').addEventListener('click', () => {
+            const edit = card.querySelector('[data-edit]');
+            if (edit) edit.click();
+          });
+        }
+      }
+    });
+    applyFilters();
+  }
+
+  function schedule() {
+    if (view.hidden) return;
+    clearSkeletons();
+    decorate();
+  }
+
+  buildToolbar();
+  if (!document.querySelector('.invite-card')) showSkeletons();
+  new MutationObserver(() => { if (grid.querySelector('.invite-card')) schedule(); }).observe(grid, { childList: true });
+  document.addEventListener('DOMContentLoaded', () => {
+    if (view.hidden) showSkeletons();
+    setTimeout(() => { clearSkeletons(); decorate(); probeServer(); }, 400);
+  }, { once: true });
+  if (document.readyState !== 'loading') setTimeout(() => { clearSkeletons(); decorate(); probeServer(); }, 400);
+
+  window.EInviteDashboard = Object.freeze({ version: 55, decorate, applyFilters, renderError });
 })();;(function(){
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -1130,43 +1275,12 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-function dashboard(){
-  const view=$('#dashboardView'),login=$('#loginView');if(!view)return;
-  view.classList.add('dashboard-home');
-  const rail=document.createElement('nav');rail.className='dashboard-home-rail';rail.innerHTML=`
-    <button type="button" class="rail-create" title="Create invitation"><span>＋</span>Create</button>
-    <a href="dashboard.html" class="active"><span>⌂</span>Home</a>
-    <a href="templates.html"><span>▣</span>Templates</a>
-    <a href="materials.html"><span>▧</span>Materials</a>
-    <a href="billing.html"><span>◉</span>Plans</a>
-    <div class="rail-spacer"></div>
-    <a href="account.html"><span>◌</span>Account</a>`;
-  document.body.append(rail);
-  $('.rail-create',rail).onclick=()=>$('#newBtn')?.click();
-  const hero=document.createElement('section');hero.className='dashboard-home-hero';hero.innerHTML=`
-    <h1>What will you create today?</h1>
-    <label class="dashboard-home-search"><span>⌕</span><input type="search" placeholder="Search your invitations"></label>
-    <div class="dashboard-quick-create">
-      <button type="button" class="create"><i>＋</i><span>Create</span></button>
-      <a href="templates.html" class="template"><i>▣</i><span>Templates</span></a>
-      <button type="button" class="wedding"><i>♡</i><span>Wedding</span></button>
-      <button type="button" class="birthday"><i>✦</i><span>Birthday</span></button>
-      <button type="button" class="business"><i>◇</i><span>Business</span></button>
-      <a href="materials.html" class="upload"><i>⇧</i><span>Uploads</span></a>
-    </div>`;
-  view.prepend(hero);
-  const createByType=(type)=>{const btn=$('#newBtn');btn?.click();setTimeout(()=>{const typeEl=$('#newType');if(typeEl){typeEl.value=type;typeEl.dispatchEvent(new Event('change',{bubbles:true}))}},40)};
-  $('.create',hero).onclick=()=>$('#newBtn')?.click();$('.wedding',hero).onclick=()=>createByType('Wedding');$('.birthday',hero).onclick=()=>createByType('Birthday');$('.business',hero).onclick=()=>createByType('Business');
-  const homeSearch=$('.dashboard-home-search input',hero);
-  homeSearch.oninput=()=>{const old=$('#dashboardSearch');if(old){old.value=homeSearch.value;old.dispatchEvent(new Event('input',{bubbles:true}))}else{$$('.invite-card','#inviteGrid').forEach(card=>card.hidden=!card.textContent.toLowerCase().includes(homeSearch.value.toLowerCase()))}};
-  const recent=document.createElement('div');recent.className='dashboard-recent-head';recent.innerHTML='<h2>Recent invitations</h2>';
-  const filter=$('.dashboard-filter-tabs');if(filter)recent.append(filter);
-  const grid=$('#inviteGrid');grid?.before(recent);
-  grid?.addEventListener('click',e=>{const cover=e.target.closest('.invite-cover');if(!cover)return;const card=cover.closest('.invite-card');card?.querySelector('[data-edit]')?.click()});
-  const header=$('body>header');
-  function authState(){const signed=view.hidden===false;rail.hidden=!signed;if(header){header.querySelectorAll('a[href="materials.html"],a[href="billing.html"],a[href="account.html"]').forEach(a=>a.hidden=!signed);const logout=$('#logoutBtn');if(logout)logout.hidden=!signed}}
-  new MutationObserver(authState).observe(view,{attributes:true,attributeFilter:['hidden']});authState();
-}
+/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
+   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
+   field and an English-only quick-create row, and it hid the real .dash-head. The shell
+   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
+   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
   const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;
@@ -1343,8 +1457,90 @@ function editorFinal(){
 if(page==='dashboard')setTimeout(dashboardFinal,0);
 if(page==='materials')setTimeout(materialsFinal,0);
 if(page==='index')setTimeout(editorFinal,120);
-})();;(()=>{'use strict';function render(){const grid=document.querySelector('#inviteGrid');if(!grid)return;const cards=grid.querySelectorAll('.invite-card,[data-invite-id],article');if(cards.length||grid.children.length)return;grid.innerHTML=`<section class="dashboard-empty"><div><small>WELCOME TO INVITATION STUDIO</small><h2>Create your first invitation</h2><p>Start with a coordinated premium template, add your event details, then preview the full guest journey before publishing.</p><div class="dashboard-empty-checklist"><span>Choose a recommended design</span><span>Add names, date and venue</span><span>Review the opening and guest flow</span><span>Publish and share your invitation</span></div><div class="dashboard-empty-templates"><button class="primary" id="emptyCreate">Create your first invitation</button><a class="button-link" href="templates.html">Recommended templates</a><a class="button-link" href="materials.html">Materials & uploads</a></div></div><div class="dashboard-empty-preview" aria-label="Example guest invitation preview"><div><span>❦</span><strong>Sophea & Dara</strong><p>Sunday · Phnom Penh</p><small>Tap to open invitation</small></div></div></section>`;document.querySelector('#emptyCreate').onclick=()=>document.querySelector('#newBtn')?.click()}
-const observer=new MutationObserver(()=>{if(document.querySelector('#dashboardView:not([hidden])'))setTimeout(render,0)});document.addEventListener('DOMContentLoaded',()=>{observer.observe(document.querySelector('#inviteGrid'),{childList:true});setTimeout(render,800)});})();;(()=>{'use strict';
+})();;/*
+ * dashboard-empty-state.js — V55 (dispatch Group 2).
+ *
+ * One job: when the signed-in dashboard has no invitations, render the centred
+ * empty state instead of an empty grid. It composes with the `ux-6` empty-state
+ * system in modern-ui.css (`.empty-state`, `__icon`, `__title`, `__message`,
+ * `__action`) rather than inventing another visual language.
+ *
+ * Shape follows the dispatch: line-art illustration in the single accent colour,
+ * Title medium headline, Body medium explanation, one primary action.
+ *
+ * Bilingual: every string ships an EN span and a KM span through the platform's
+ * `[lang] .i18n-km` mechanism. Strings with no trusted Khmer in
+ * docs/i18n/TRANSLATIONS.csv ("fallback" status, as the CSV calls it) reuse the
+ * English text and are listed as KH_PENDING in docs/reviews/redesign-report.md —
+ * never machine-invented Khmer.
+ */
+(() => {
+  'use strict';
+  const grid = document.querySelector('#inviteGrid');
+  if (!grid) return;
+
+  const FALLBACK = true; /* see KH_PENDING list in the redesign report */
+
+  function html(en, km) {
+    const khmer = km == null ? en : km;
+    const cls = FALLBACK && km == null ? 'i18n i18n-km' : 'i18n i18n-km khmer-text';
+    return `<span class="i18n i18n-en">${en}</span><span class="${cls}" lang="km">${khmer}</span>`;
+  }
+
+  /* Line-art illustration: single accent colour, no gradient, no drop-shadow stack. */
+  const ART = `<svg viewBox="0 0 96 72" role="img" aria-hidden="true" focusable="false">` +
+    `<rect x="10" y="10" width="60" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>` +
+    `<rect x="26" y="20" width="60" height="44" rx="4" fill="var(--app-surface)" stroke="currentColor" stroke-width="2"/>` +
+    `<path d="M38 34h36M38 42h24M38 50h30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>` +
+    `</svg>`;
+
+  function render() {
+    const hasCards = grid.querySelector('.invite-card, [data-invite-id], article, .skeleton-card');
+    if (hasCards && hasCards.hasAttribute && hasCards.classList.contains('skeleton-card')) return;
+    if (grid.children.length && grid.querySelector('.invite-card, [data-invite-id], article')) return;
+    /* An error state outranks the empty state — do not overwrite it. */
+    if (grid.querySelector('.error-state')) return;
+
+    grid.innerHTML =
+      `<section class="empty-state empty-state--invitations">` +
+      `<span class="empty-state__icon" aria-hidden="true">${ART}</span>` +
+      `<h2 class="empty-state__title">${html('No invitations yet')}</h2>` +
+      `<p class="empty-state__message">${html(
+        'Create your first invitation, add your event details, then publish and share it with your guests.'
+      )}</p>` +
+      `<div class="empty-state__action"><button type="button" class="primary" data-empty-create>${html(
+        'Create your first invitation'
+      )}</button></div>` +
+      `</section>`;
+
+    const button = grid.querySelector('[data-empty-create]');
+    if (button) {
+      button.addEventListener('click', () => {
+        const create = document.querySelector('#newBtn');
+        if (create) create.click();
+        else window.location.href = 'templates.html';
+      });
+    }
+  }
+
+  function schedule() {
+    const view = document.querySelector('#dashboardView');
+    if (!view || view.hidden) return;
+    setTimeout(render, 0);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      new MutationObserver(schedule).observe(grid, { childList: true });
+      schedule();
+    }, { once: true });
+  } else {
+    new MutationObserver(schedule).observe(grid, { childList: true });
+    schedule();
+  }
+
+  window.EInviteDashboardEmptyState = Object.freeze({ version: 55, render });
+})();;(()=>{'use strict';
 let lastDialogTrigger=new WeakMap();
 const focusable='a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 function syncPanel(panel,open,trigger){if(!panel)return;panel.hidden=!open;try{panel.inert=!open}catch{}panel.setAttribute('aria-hidden',String(!open));if(trigger)trigger.setAttribute('aria-expanded',String(open));if(!open&&panel.contains(document.activeElement))trigger?.focus();}
@@ -3067,4 +3263,135 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   }
 
   window.EInviteToast = { show: show };
+})();;/**
+ * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ *
+ * Deliberately tiny and dependency-free. It owns exactly three things:
+ *
+ *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
+ *      (persisted in localStorage['einvite-rail-collapsed']).
+ *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
+ *      toggles `body.rail-open`, which is also closed on Escape, on an outside
+ *      click, and on hashchange.
+ *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
+ *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
+ *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
+ *
+ * Accessibility: the toggle buttons carry aria-expanded and the rail is a
+ * landmark; nothing here traps focus or blocks pointer events when closed.
+ */
+(function () {
+  'use strict';
+  if (window.EInviteShell && window.EInviteShell.version >= 55) return;
+
+  var body = document.body;
+  var html = document.documentElement;
+  var RAIL_KEY = 'einvite-rail-collapsed';
+  var THEME_KEY = 'einvite-theme-mode';
+
+  function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
+
+  /* --- 1. Rail collapse -------------------------------------------------- */
+  function applyRailCollapsed(collapsed) {
+    body.classList.toggle('rail-collapsed', !!collapsed);
+    document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!collapsed));
+      var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+      var glyph = btn.querySelector('[data-rail-glyph]');
+      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+    });
+  }
+  function applyRailOpen(open) {
+    body.classList.toggle('rail-open', !!open);
+    document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  }
+
+  /* --- 2. Current page --------------------------------------------------- */
+  function markCurrentPage() {
+    var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
+    document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
+      var target = link.getAttribute('href').split('#')[0].split('?')[0].toLowerCase();
+      if (target && target === here) link.setAttribute('aria-current', 'page');
+    });
+  }
+
+  /*
+   * Pages that show a signed-out flow (dashboard) hide their rail until the
+   * signed-in view is revealed, so the login card gets the full canvas. The
+   * same flag flips the topbar down to Skeleton B (brand + language + theme).
+   */
+  function syncAutoRail() {
+    var autoRail = document.querySelector('.app-rail[data-rail-auto]');
+    var signedIn = document.getElementById('dashboardView');
+    var signedInVisible = !signedIn || !signedIn.hidden;
+    if (autoRail) autoRail.hidden = !signedInVisible;
+    if (signedIn) body.classList.toggle('auth-mode', !signedInVisible);
+  }
+
+  function watchAutoRail() {
+    var signedIn = document.getElementById('dashboardView');
+    if (!signedIn || typeof MutationObserver !== 'function') return;
+    new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
+  }
+
+  /* --- 3. Appearance ----------------------------------------------------- */
+  function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyTheme(next) {
+    html.dataset.theme = next;
+    html.dataset.themeMode = next;
+    html.style.colorScheme = next;
+    write(THEME_KEY, next);
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', String(next === 'dark'));
+      btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
+      var glyph = btn.querySelector('[data-theme-glyph]');
+      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+    });
+  }
+
+  /* --- Wiring ------------------------------------------------------------ */
+  document.addEventListener('click', function (event) {
+    var railToggle = event.target.closest('[data-rail-toggle]');
+    if (railToggle) {
+      var collapsed = !body.classList.contains('rail-collapsed');
+      applyRailCollapsed(collapsed);
+      write(RAIL_KEY, collapsed ? '1' : '0');
+      return;
+    }
+    var drawerToggle = event.target.closest('[data-drawer-toggle]');
+    if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
+    var themeToggle = event.target.closest('[data-theme-toggle]');
+    if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
+    /* Outside click closes the mobile drawer but never the desktop rail. */
+    if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && body.classList.contains('rail-open')) applyRailOpen(false);
+  });
+  window.addEventListener('hashchange', function () { applyRailOpen(false); });
+  window.addEventListener('resize', function () { if (innerWidth > 768) applyRailOpen(false); });
+
+  function init() {
+    markCurrentPage();
+    applyRailCollapsed(read(RAIL_KEY) === '1');
+    applyRailOpen(false);
+    syncAutoRail();
+    watchAutoRail();
+    applyTheme(read(THEME_KEY) === 'dark' ? 'dark' : 'light');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+
+  window.EInviteShell = Object.freeze({
+    version: 55,
+    collapseRail: applyRailCollapsed,
+    openRail: applyRailOpen,
+    syncAutoRail: syncAutoRail,
+    setTheme: applyTheme
+  });
 })();

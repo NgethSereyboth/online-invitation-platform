@@ -38,3 +38,37 @@ body[data-page=public]{margin:0;background:var(--kit-background,#f5eee8);overflo
 
 .guest-consent-banner[data-language="en"] .i18n-km{display:none!important}.guest-consent-banner[data-language="km"] .i18n-en{display:none!important}
 .public-share-status{min-height:1.35em;margin:2px 4px;text-align:center;font-size:.82rem;color:var(--kit-accent,var(--accent))}
+
+/* ============================================================================
+   V55 guest invitation page — content-first, 720px column, minimal topbar.
+   ========================================================================= */
+body[data-page="public"] .guest-topbar {
+  display: flex; align-items: center; gap: var(--space-3);
+  height: var(--app-topbar-h); padding: 0 var(--space-4);
+  background: color-mix(in srgb, var(--app-surface) 76%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--app-line) 60%, transparent);
+  position: sticky; top: 0; z-index: 40;
+}
+body[data-page="public"] .guest-topbar .app-topbar-right { margin-left: auto; }
+body[data-page="public"] #publicRoot.guest {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-4);
+  display: block;
+}
+body[data-page="public"] #publicRoot > section { margin-bottom: var(--space-12); display: block; }
+body[data-page="public"] #publicRoot > section:last-child { margin-bottom: 0; }
+body[data-page="public"] #publicRoot h1 { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
+body[data-page="public"] #publicRoot h2 { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); letter-spacing: 0; }
+body[data-page="public"] #publicRoot .rsvp-card,
+body[data-page="public"] #publicRoot form {
+  display: grid; gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow);
+}
+body[data-page="public"] #publicRoot form button[type="submit"],
+body[data-page="public"] #publicRoot .rsvp-submit { width: 100%; }
+body[data-page="public"] #publicRoot .demo-badge { position: fixed; bottom: var(--space-3); left: var(--space-3); }
