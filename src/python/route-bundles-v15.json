@@ -525,8 +525,8 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 128843,
-      "styleSha256": "76f1ab0912f05808d8af5bcf2271a382e7f8d27d3c4dea7781450265b3196ea3",
+      "styleBytes": 128899,
+      "styleSha256": "fe3c5134a86cc19bffc50d92b164a8f69e2a85d3a1049421f3d316279857501e",
       "stylesheet": "bundle-public-v15.css"
     },
     "reset.html": {
