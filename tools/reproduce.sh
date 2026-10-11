@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # reproduce.sh — run the full verification sequence from scratch.
 #
-# Every number in docs/reviews/*.md is produced by one of the five steps below,
+# Every number in docs/reviews/*.md is produced by one of the six steps below,
 # against a gzip server this script starts and stops itself. It is the check that
 # the repository is self-contained: no /tmp, no machine-specific paths, no
 # session-scoped scripts.
@@ -11,6 +11,7 @@
 #   3. gzip server        tools/serve-gzip.py                   (started here, stopped on exit)
 #   4. Lighthouse CI      npx lhci autorun --config=tools/lighthouserc.js
 #   5. determinism        tools/determinism-50x.py public.html   (50 captures)
+#   6. report text        tools/report-verify.mjs <report>        (quoted commands re-run)
 #
 # Prerequisites, in full:
 #   npm install
@@ -50,7 +51,7 @@ step() { printf '\n\033[1m== %s ==\033[0m\n' "$*"; }
 fail=0
 
 # ---------------------------------------------------------------------------
-step "0/5  prerequisites"
+step "0/6  prerequisites"
 for cmd in python3 node npx; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "  MISSING: $cmd" >&2
@@ -100,7 +101,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-step "1/5  build check  (python3 build.py all --check)"
+step "1/6  build check  (python3 build.py all --check)"
 python3 build.py all --check > "$ARTIFACTS/reproduce-build.log" 2>&1
 build_status=$?
 cat "$ARTIFACTS/reproduce-build.log"
@@ -114,7 +115,7 @@ for marker in EDITOR_BUNDLE_CHECK_PASSED ROUTE_BUNDLE_CHECK_PASSED PAGE_ASSET_MA
 done
 
 # ---------------------------------------------------------------------------
-step "2/5  unit tests  (pytest tests/)"
+step "2/6  unit tests  (pytest tests/)"
 if [ "$SKIP_TESTS" -eq 1 ]; then
   echo "  skipped (--skip-tests)"
 elif [ "$HAVE_PYTEST" -eq 0 ]; then
@@ -131,7 +132,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-step "3/5  gzip server  (tools/serve-gzip.py --port $PORT)"
+step "3/6  gzip server  (tools/serve-gzip.py --port $PORT)"
 python3 tools/serve-gzip.py --port "$PORT" > "$ARTIFACTS/reproduce-serve.log" 2>&1 &
 SERVER_PID=$!
 cleanup() {
@@ -176,7 +177,7 @@ print(f"  wire check: Content-Encoding={enc}  ({'gzip on' if enc == 'gzip' else 
 PY
 
 # ---------------------------------------------------------------------------
-step "4/5  Lighthouse CI  (16 pages)"
+step "4/6  Lighthouse CI  (16 pages)"
 if [ "$SKIP_LHCI" -eq 1 ]; then
   echo "  skipped (--skip-lhci)"
 else
@@ -188,7 +189,8 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-step "5/5  determinism  (tools/determinism-50x.py public.html)"
+# ---------------------------------------------------------------------------
+step "5/6  determinism  (tools/determinism-50x.py public.html)"
 # --base-url is passed explicitly. Without it the tool defaults to 8124, so a
 # run on any other port would silently measure a different server — which is
 # how this step first "passed" against the wrong tree.
@@ -197,11 +199,22 @@ det_status=$?
 [ "$det_status" -ne 0 ] && fail=1
 
 # ---------------------------------------------------------------------------
+step "6/6  report text  (tools/report-verify.mjs)"
+# Re-runs every read-only command the report quotes in a fenced block and diffs the
+# recorded output against the real output. Blocks that record a state the tree has
+# left behind are declared historical in the markdown itself; the declaration and
+# its reason are printed here, so a skip is visible and never silent.
+node tools/report-verify.mjs docs/reviews/reproducibility-and-performance-report.md
+rep_status=$?
+[ "$rep_status" -ne 0 ] && fail=1
+
+# ---------------------------------------------------------------------------
 step "summary"
 echo "  build check  : PASS"
 echo "  gzip server  : PASS (gzip verified on the wire)"
 if [ "$SKIP_LHCI" -eq 1 ]; then echo "  lhci         : skipped"; else echo "  lhci         : exit=$lhci_status"; fi
 echo "  determinism  : exit=$det_status"
+echo "  report text  : exit=$rep_status"
 echo "  artifacts    : $ARTIFACTS"
 if [ "$fail" -ne 0 ]; then
   echo "  RESULT: FAIL"

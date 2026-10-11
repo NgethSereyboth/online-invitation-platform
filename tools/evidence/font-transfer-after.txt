@@ -1,0 +1,21 @@
+# transferSize per fetched face, measured by Lighthouse, from lhr-1791708069007.json
+# (the 16-page `lhci collect` of this pass, against tools/serve-gzip.py).
+# Produced by: python3 tools/font-payload.py  (which selects this lhr: the newest
+# one for index.html). Kept as a file because .lighthouseci/lhr-*.json filenames
+# are run timestamps, so a command that names one is not reproducible.
+#
+# face                        on_disk    transfer    delta
+inter-latin-700.woff2           37560       37728      168
+inter-latin-800.woff2           37516       37684      168
+inter-latin-400.woff2           36632       36800      168
+noto-serif-latin-700.woff2      20640       20808      168
+noto-sans-latin-400.woff2       19300       19468      168
+noto-sans-latin-700.woff2       18956       19124      168
+noto-sans-khmer-700.woff2       16512       16680      168
+noto-sans-khmer-400.woff2       15000       15168      168
+TOTAL (8 fetched faces)        202116      203460     1344
+
+# The delta is 168 bytes on every face — HTTP overhead, constant because the same
+# server serves the same headers. That is what makes the base revision's transfer
+# figure reconstructible after its own lhr set was lost:
+#   324,272 on disk + (8 x 168) = 325,616 transferred.

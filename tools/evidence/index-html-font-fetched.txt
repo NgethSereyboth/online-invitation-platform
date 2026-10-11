@@ -1,0 +1,12 @@
+# Faces index.html fetches, measured from the Lighthouse network log.
+# Source: .lighthouseci/lhr-1791708069007.json (run of this pass, gzip server,
+# 16-page lhci collect). Listed by name so tools/font-payload.py can mark the
+# fetched set without depending on a directory whose filenames are timestamps.
+inter-latin-400.woff2
+inter-latin-700.woff2
+inter-latin-800.woff2
+noto-sans-khmer-400.woff2
+noto-sans-khmer-700.woff2
+noto-sans-latin-400.woff2
+noto-sans-latin-700.woff2
+noto-serif-latin-700.woff2

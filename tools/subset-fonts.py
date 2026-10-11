@@ -169,9 +169,44 @@ def all_font_faces():
     return faces
 
 
-def collect_codepoints(include_src_html=True):
+def tracked_paths() -> set[str] | None:
+    """Repo-relative paths git tracks, or None when git is unavailable."""
+    out = subprocess.run(
+        ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=False
+    )
+    if out.returncode != 0:
+        return None
+    return {line for line in out.stdout.splitlines() if line}
+
+
+def collect_codepoints(include_src_html=True, build_output_only=False):
+    """Union of every character the shipped pages can render.
+
+    `build_output_only` exists because the scan reads directories that mix build
+    output with whatever else is lying around. `src/python/` is generated and
+    untracked, so a page another session dumped there is scanned like any other,
+    and it can contribute a codepoint to the set the fonts are subset against.
+    That happened: two untracked `index-test-*.html` files supplied `U+005C`, the
+    only codepoint in the set that no tracked page or data file contains.
+
+    With this flag a served page counts only when a **tracked** page of the same
+    name exists under `src/html/` — the directory the build reads — and JSON
+    counts only when git tracks it. That makes the set a function of the
+    repository rather than of the working tree, which is what makes a subset
+    reproducible from a clean clone. The flag is off by default because it is a
+    diagnosis, not a shipping change: the safety floor already covers `U+005C`,
+    so both settings produce byte-identical fonts (measured; §4.5 retraction 4).
+    """
     sources = {}
     cps = set()
+    skipped = []
+    tracked = tracked_paths() if build_output_only else None
+    src_pages = set()
+    if build_output_only:
+        out = subprocess.run(
+            ["git", "ls-files", "src/html"], cwd=REPO_ROOT, capture_output=True, text=True, check=False
+        )
+        src_pages = {Path(line).name for line in out.stdout.splitlines() if line.endswith(".html")}
 
     def add(name, text):
         found = {ord(ch) for ch in text if not ch.isspace() or ch == " "}
@@ -182,9 +217,15 @@ def collect_codepoints(include_src_html=True):
     # Served pages (the built tree). Both -en and -km variants live here, plus
     # the route pages which carry the Khmer strings from the i18n data.
     for path in sorted(SERVE_ROOT.glob("*.html")):
+        if build_output_only and path.name not in src_pages:
+            skipped.append(f"{SERVE_ROOT.name}/{path.name}")
+            continue
         add(f"{SERVE_ROOT.name}/{path.name}", path.read_text(encoding="utf-8", errors="replace"))
     if include_src_html:
         for path in sorted((REPO_ROOT / "src" / "html").glob("*.html")):
+            if build_output_only and f"src/html/{path.name}" not in (tracked or set()):
+                skipped.append(f"src/html/{path.name}")
+                continue
             add(f"src/html/{path.name}", path.read_text(encoding="utf-8", errors="replace"))
 
     # Translation catalogue.
@@ -198,10 +239,15 @@ def collect_codepoints(include_src_html=True):
     # Invitation template data + fixture JSON that feeds the invite pages.
     for pattern in ("*.json", "src/python/*.json", "data/*.json"):
         for path in sorted(REPO_ROOT.glob(pattern)):
-            if path.is_file() and path.stat().st_size < 4_000_000:
-                add(str(path.relative_to(REPO_ROOT)), path.read_text(encoding="utf-8", errors="replace"))
+            if not (path.is_file() and path.stat().st_size < 4_000_000):
+                continue
+            rel = str(path.relative_to(REPO_ROOT))
+            if build_output_only and rel not in (tracked or set()):
+                skipped.append(rel)
+                continue
+            add(rel, path.read_text(encoding="utf-8", errors="replace"))
 
-    return cps, sources
+    return cps, sources, skipped
 
 
 def cmd_inventory(_args) -> int:
@@ -229,7 +275,10 @@ def cmd_inventory(_args) -> int:
 
 
 def cmd_codepoints(args) -> int:
-    cps, sources = collect_codepoints()
+    cps, sources, skipped = collect_codepoints(
+        include_src_html=not getattr(args, "no_src_html", False),
+        build_output_only=getattr(args, "build_output_only", False),
+    )
     latin = sorted(c for c in cps if not is_khmer(c))
     khmer = sorted(c for c in cps if is_khmer(c))
     payload = {
@@ -251,6 +300,10 @@ def cmd_codepoints(args) -> int:
         print(f"  {n:>6}  {name}")
     print(f"\nLatin ranges:\n  {payload['latinRanges'][:400]}")
     print(f"\nKhmer ranges:\n  {payload['khmerRanges'][:400]}")
+    if skipped:
+        print(f"\nskipped {len(skipped)} source(s) with no tracked counterpart:")
+        for name in sorted(skipped):
+            print(f"  {name}")
     print(f"\nwritten: {out.relative_to(REPO_ROOT)}")
     return 0
 
@@ -424,6 +477,10 @@ def main(argv=None) -> int:
 
     p_cp = sub.add_parser("codepoints", help="compute the union of rendered codepoints")
     p_cp.add_argument("--no-src-html", action="store_true", help="skip src/html (only the built tree)")
+    p_cp.add_argument("--build-output-only", action="store_true",
+                      help="count a served page only when a tracked src/html page of the same "
+                           "name exists, and JSON only when it is tracked — makes the set a "
+                           "function of the repository, not of the working tree")
 
     p_sub = sub.add_parser("subset", help="subset every font to the used codepoints")
     p_sub.add_argument("--out-dir", default=None, help="output directory (default artifacts/fonts-subset)")
