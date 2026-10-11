@@ -34,9 +34,25 @@ body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar {
   gap: 5px;
 }
 
-/* Context row — STABLE. We reserve a min-height row and only toggle a
-   `visible` class so showing/hiding it never shifts surrounding chrome.
-   This is the core of the "stable toolbar" fix. */
+/* Context row — RESERVED BOX. The row's geometry is IDENTICAL in both states and
+   only its paint changes. Showing/hiding it therefore cannot shift the chrome
+   below it.
+
+   History: this block used to collapse the row to `height: 0` when hidden and
+   grow it to `min-height: 44px` + `margin-top: 6px` when `.visible` arrived,
+   under a comment claiming that made it stable. It did the opposite — the box
+   changed by exactly 50px, so `#canvasViewport` moved down 50px and every
+   element below it with it. Measured with tools/layout-shift-probe.mjs: a
+   0.1229 layout-shift at t~1400ms on every one of 5 loads, sourced on
+   `.canvas-viewport` (top 108 -> 158) and `.studio-inspector-host`
+   (131.75 -> 191.75); tools/dom-timeline.mjs pairs it with this row receiving
+   `.visible` and 5 children at t~1390ms. The settled row measures exactly
+   44px tall with a 6px top margin (tools/dom-timeline.mjs -> _row-probe).
+
+   44px is fixed rather than `min-height` because the visible state's content
+   (34px controls inside 6px padding) would otherwise push the content box past
+   44px; `overflow-y: hidden` already clipped it there, so an explicit height
+   reproduces today's rendering exactly while making it state-independent. */
 body.windows-ui-v54 .stage-wrap > .v54-context-row {
   order: 2;
   position: relative;
@@ -45,10 +61,10 @@ body.windows-ui-v54 .stage-wrap > .v54-context-row {
   flex: 0 0 auto;
   width: calc(100% - 20px);
   max-width: none;
-  min-height: 0;          /* reserved: grows to content when visible */
-  height: auto;
-  margin: 0 10px 0;
-  padding: 0 8px;
+  height: 44px;           /* RESERVED: the visible height, always */
+  min-height: 44px;
+  margin: 6px 10px 0;     /* RESERVED: matches .visible */
+  padding: 5px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,7 +72,7 @@ body.windows-ui-v54 .stage-wrap > .v54-context-row {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
-  border: 0;
+  border: 1px solid transparent;   /* width reserved; colour arrives with .visible */
   border-radius: 12px;
   background: transparent;
   box-sizing: border-box;
@@ -65,21 +81,42 @@ body.windows-ui-v54 .stage-wrap > .v54-context-row {
   visibility: hidden;
 }
 
+/* Paint only. No geometry here: if this rule changes the box, the row shifts
+   the viewport again. */
 body.windows-ui-v54 .stage-wrap > .v54-context-row.visible {
-  min-height: 44px;
-  margin: 6px 10px 0;
-  padding: 5px 8px;
-  border: 1px solid var(--app-line, #e4e4e9);
+  border-color: var(--app-line, #e4e4e9);
   background: var(--app-surface, #fff);
   opacity: 1;
   visibility: visible;
 }
 
-/* When not visible, collapse the row to zero height BUT keep it in flow so the
-   viewport below does not jump. */
-body.windows-ui-v54 .stage-wrap > .v54-context-row:not(.visible) {
-  display: block;
+/* The zero-height collapse was removed deliberately — see the note above.
+   `display: none` would also remove the reserved box. */
+
+/* The row is not merely shown late: it is CREATED late. tools/dom-timeline.mjs
+   shows `DIV.ei-context-toolbar.visible` first appearing inside
+   `.studio-canvas-toolbar` (t~1082ms) and then a new
+   `DIV.ei-context-toolbar.visible.v54-context-row` added as a direct child of
+   `.stage-wrap` (t~1334ms). No rule ON the row can stop that insertion from
+   moving everything below it, because the box did not exist before.
+
+   So the space is reserved on the VIEWPORT instead, for as long as the row has
+   not arrived. Both states reserve exactly 50px (44px box + 6px margin), so the
+   swap is height-neutral and nothing below moves.
+   `:has()` ref: https://developer.mozilla.org/en-US/docs/Web/CSS/:has */
+body.windows-ui-v54 .stage-wrap:not(:has(> .v54-context-row)) > .canvas-viewport {
+  margin-top: 50px;
+}
+
+/* While the row is still parented inside the canvas toolbar it must contribute
+   NO height, or the reservation above would double up with the toolbar's own
+   growth and the viewport would move the other way when the row is reparented. */
+body.windows-ui-v54 .studio-canvas-toolbar > .v54-context-row {
   height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   overflow: hidden;
 }
 

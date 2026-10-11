@@ -39,9 +39,23 @@ const OUT = (argv.find((a) => a.startsWith('--out=')) || '').split('=')[1] || nu
 const LABEL = (argv.find((a) => a.startsWith('--label=')) || '--label=run').split('=')[1];
 const AS_JSON = hasFlag(argv, 'json');
 
+// The rects MUST be copied field by field. A DOMRectReadOnly exposes its
+// coordinates through prototype getters, so returning the object itself (or
+// JSON.stringify-ing it) yields `{}` — the attribution looks measured and is
+// empty. Fields are copied explicitly below for exactly that reason.
 const OBSERVER = `(() => {
   window.__shifts = [];
   window.__cls = 0;
+  const rect = (r) => (r ? {
+    x: r.x, y: r.y, width: r.width, height: r.height,
+    top: r.top, left: r.left, right: r.right, bottom: r.bottom,
+  } : null);
+  const name = (n) => {
+    if (!n) return null;
+    const cls = (typeof n.className === 'string' ? n.className : '').trim();
+    const id = n.id ? '#' + n.id : '';
+    return n.nodeName + id + (cls ? '.' + cls.split(/\\s+/).join('.') : '');
+  };
   try {
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
@@ -50,10 +64,11 @@ const OBSERVER = `(() => {
         window.__shifts.push({
           value: entry.value,
           startTime: entry.startTime,
+          lastInputTime: entry.lastInputTime,
           sources: entry.sources.map((s) => ({
-            node: s.node ? s.node.nodeName + '.' + (typeof s.node.className === 'string' ? s.node.className : '') : null,
-            previousRect: s.previousRect,
-            currentRect: s.currentRect,
+            node: name(s.node),
+            previousRect: rect(s.previousRect),
+            currentRect: rect(s.currentRect),
           })),
         });
       }
@@ -141,10 +156,13 @@ if (AS_JSON || OUT) {
   console.log(`\n--- top ${TOP} contributors by total shift value ---`);
   for (const c of summary.topContributors) {
     console.log(`  ${c.totalValue.toFixed(4)}  x${c.count} on ${c.loads}/${N} loads  ${c.node}`);
-    if (c.example) {
-      const p = c.example.previousRect, n = c.example.currentRect;
-      console.log(`      prev ${JSON.stringify(p)}`);
-      console.log(`      curr ${JSON.stringify(n)}`);
+    const ex = c.example;
+    if (ex && ex.previousRect && ex.currentRect) {
+      const p = ex.previousRect, n = ex.currentRect;
+      console.log(`      prev top=${p.top} left=${p.left} w=${p.width} h=${p.height}`);
+      console.log(`      curr top=${n.top} left=${n.left} w=${n.width} h=${n.height}` +
+        `   delta dTop=${(n.top - p.top).toFixed(2)} dLeft=${(n.left - p.left).toFixed(2)} ` +
+        `dH=${(n.height - p.height).toFixed(2)} at t=${ex.startTime.toFixed(0)}ms`);
     }
   }
   if (!contributors.length) console.log('  (no non-input layout shifts recorded)');
