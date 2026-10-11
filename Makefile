@@ -67,8 +67,10 @@ smoke:
 #
 # Extra flags go through REPRO_ARGS, because make would otherwise eat them:
 #   make reproduce REPRO_ARGS=--skip-lhci
+# $(or ...) rather than a bare $(PORT): make inherits PORT from the environment,
+# and lhci exports PORT=0, so an unset-or-zero PORT must not reach --port.
 reproduce:
-	bash tools/reproduce.sh --port $(PORT) $(REPRO_ARGS)
+	bash tools/reproduce.sh --port $(or $(PORT),8124) $(REPRO_ARGS)
 
 clean:
 	rm -rf /tmp/build-cache artifacts .lighthouseci

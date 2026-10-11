@@ -44,6 +44,23 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+# The port is validated, not trusted. `lhci` exports PORT=0 while it probes for a
+# free port, and that sentinel is meaningless here: this script has to tell every
+# tool where to look. Inherited as 0 it served the whole tree on an ephemeral port
+# and then failed its own readiness check against http://127.0.0.1:0/, which is
+# exactly the class of silent-wrong-measurement the report's section 7.3 records.
+if [ -z "$PORT" ] || [ "$PORT" = "0" ]; then
+  echo "  PORT=${PORT:-<unset>} is not a usable port (0 is lhci's 'pick one for me'); using 8124"
+  PORT=8124
+fi
+case "$PORT" in
+  *[!0-9]*) echo "reproduce.sh: PORT must be a number, got '$PORT'" >&2; exit 2 ;;
+esac
+if [ "$PORT" -lt 1024 ] || [ "$PORT" -gt 65535 ]; then
+  echo "reproduce.sh: PORT=$PORT is out of range (1024-65535)" >&2
+  exit 2
+fi
+
 mkdir -p "$ARTIFACTS"
 export PORT
 

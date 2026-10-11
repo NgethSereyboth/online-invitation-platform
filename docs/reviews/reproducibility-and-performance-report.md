@@ -22,10 +22,10 @@ previous pass ended up with a 54/73 discrepancy in section 13.1.
 
 | # | goal | outcome |
 | --- | --- | --- |
-| 1 | fix the `/tmp` reproducibility fragility | **done** (commit `6ae1f34`) — 22 scripts in `tools/`, fresh clone green, `make reproduce` |
+| 1 | fix the `/tmp` reproducibility fragility | **done** (commit `6ae1f34`) — 14 instruments moved into `tools/` (21 by `HEAD`), fresh clone green, `make reproduce` (now six steps, the sixth checking this report's own quoted commands) |
 | 2 | CLS 0.165 on index.html | **done** (commit `e0d1cf0`) — mean 0.2633 → 0.0922 |
 | 3 | 1,732 ms Style & Layout on index.html | **partly** — 1,667 → 1,436 ms in the same session (−13.8%); target was 30% |
-| 4 | font subsetting (326 KB) | **done** — 325,616 → 202,116 bytes on index.html (−37.9%) |
+| 4 | font subsetting (326 KB) | **done** — index.html's eight fetched faces 324,272 → 202,116 bytes on disk (−37.67%); transferSize 325,616 → 203,460 (−37.52%). Same −122,156 bytes either way (§4.3, retraction in §4.5) |
 | 5 | versioned renames, batches 2+ | **partly** — batch 2 landed (10 files); 52 CSS + 100 JS remain |
 | 6 | hover verification, remaining 13 pages | **done** — 16/16 pages, 813 elements, 1,231 `!important` properties lifted; **0 demoted**, because the instrument reports longhands and the decision belongs to declarations |
 | 7 | the two lhci assertion failures | **done** — option B applied to `docs/perf/lighthouse-budgets.json` (12 `resourceCounts` entries removed, `resourceSizes` kept); the gate now runs and passes 16/16. The previous pass had documented the decision without applying it |
@@ -43,15 +43,15 @@ first: `/tmp/serve-gzip.py` was *the thing that made the Lighthouse numbers
 correct*, and nothing in the repository said so.
 
 ```
-$ grep -rn "/tmp" tools/ Makefile 2>/dev/null | grep -v "^tools/evidence"
-tools/lib/browser.mjs:4: * The /tmp harnesses hard-coded two different executables by absolute path:
-tools/lib/repo.mjs:6: * The first pass built its measurement harnesses under /tmp with absolute
-tools/lib/repo.mjs:10: * that session's /tmp existed. Every path a tool needs is derived here instead,
-tools/README.md:4:`/tmp`. That made the reports reproducible only until the machine restarted, and
-tools/README.md:81:* **Outputs go to `artifacts/`** (gitignored), never to `/tmp`.
-tools/reproduce.sh:6:# the repository is self-contained: no /tmp, no machine-specific paths, no
-Makefile:10:#   * every tool writes its output to artifacts/ (gitignored), never to /tmp.
-Makefile:74:	rm -rf /tmp/build-cache artifacts .lighthouseci
+$ grep -r "/tmp" tools/ Makefile 2>/dev/null | grep -v "^tools/evidence"
+tools/lib/browser.mjs: * The /tmp harnesses hard-coded two different executables by absolute path:
+tools/lib/repo.mjs: * The first pass built its measurement harnesses under /tmp with absolute
+tools/lib/repo.mjs: * that session's /tmp existed. Every path a tool needs is derived here instead,
+tools/README.md:`/tmp`. That made the reports reproducible only until the machine restarted, and
+tools/README.md:* **Outputs go to `artifacts/`** (gitignored), never to `/tmp`.
+tools/reproduce.sh:# the repository is self-contained: no /tmp, no machine-specific paths, no
+Makefile:#   * every tool writes its output to artifacts/ (gitignored), never to /tmp.
+Makefile:	rm -rf /tmp/build-cache artifacts .lighthouseci
 ```
 
 Seven of those eight are the word appearing in prose explaining the rule. The one
@@ -62,35 +62,60 @@ where a mistake should be made casually.
 
 ### 1.2 What moved
 
-22 scripts, plus the shared library, the raw evidence and the entry points:
+14 instruments, two shared modules, nine raw-evidence files (791 lines), plus the
+entry points (README, requirements, Makefile). The block is the command's verbatim
+output for the `tools/` paths; an earlier draft of this section re-typed it from
+memory, condensed the nine evidence files into one row labelled "(8 files, 780
+lines)", and dropped the summary line — so it is reproduced here as the command
+actually prints it:
 
 ```
-$ git show --stat --oneline 6ae1f34 | tail -35
- tools/README.md                      | 105 ++++
- tools/capture.mjs                    | 135 ++++
- tools/computed-style-probe.mjs       | 123 ++++
- tools/determinism-50x.py             | 118 ++++
- tools/evidence/                      |  (8 files, 780 lines of raw output)
- tools/hover-audit.mjs                | 245 ++++
- tools/hover-verify.py                | 162 ++++
- tools/important-lift-test.mjs        | 255 ++++
- tools/layout-shift-probe.mjs         | 151 ++++
- tools/lib/browser.mjs                | 137 ++++
- tools/lib/repo.mjs                   | 105 ++++
- tools/lighthouserc.js                |  94 +++
- tools/loader-ab.mjs                  | 146 ++++
- tools/page-errors.mjs                |  52 +++
- tools/reproduce.sh                   | 210 ++++
- tools/requirements.txt               |  15 +
- tools/serve-gzip.py                  | 149 ++++
- tools/style-layout-trace.mjs         | 177 ++++
- tools/subset-fonts.py                | 344 ++++
- ... (+ Makefile, .gitignore, tests/v55_route_weight_budget_test.py, the report)
+$ git show --stat --oneline 6ae1f34 -- tools/
+6ae1f34 chore(tools): make the repo self-contained — harness out of /tmp, clone-reproducible
+ tools/README.md                              | 105 +++++
+ tools/capture.mjs                            | 135 ++++++
+ tools/computed-style-probe.mjs               | 123 +++++
+ tools/determinism-50x.py                     | 118 +++++
+ tools/evidence/after-wild.txt                |   6 +
+ tools/evidence/all-pages-after-3b3d.txt      |  17 +
+ tools/evidence/before-wild.txt               |   6 +
+ tools/evidence/conditions.txt                |  16 +
+ tools/evidence/determinism-after.txt         |   8 +
+ tools/evidence/experiment.txt                |  15 +
+ tools/evidence/important-hover.txt           | 653 +++++++++++++++++++++++++++
+ tools/evidence/page-errors-after-removal.txt |   4 +
+ tools/evidence/probe-before.txt              |  66 +++
+ tools/hover-audit.mjs                        | 245 ++++++++++
+ tools/hover-verify.py                        | 162 +++++++
+ tools/important-lift-test.mjs                | 255 +++++++++++
+ tools/layout-shift-probe.mjs                 | 151 +++++++
+ tools/lib/browser.mjs                        | 137 ++++++
+ tools/lib/repo.mjs                           | 105 +++++
+ tools/lighthouserc.js                        |  94 ++++
+ tools/loader-ab.mjs                          | 146 ++++++
+ tools/page-errors.mjs                        |  52 +++
+ tools/reproduce.sh                           | 210 +++++++++
+ tools/requirements.txt                       |  15 +
+ tools/serve-gzip.py                          | 149 ++++++
+ tools/style-layout-trace.mjs                 | 177 ++++++++
+ tools/subset-fonts.py                        | 344 ++++++++++++++
+ 27 files changed, 3514 insertions(+)
 ```
 
-Moved: 15 distinct instruments. Generalised (a hard-coded machine path replaced
-by a resolved one): all 15 — every path now comes from `tools/lib/repo.mjs`, and
-Chrome is *resolved* rather than named:
+Moved: 14 distinct instruments at the commit, 18 at `HEAD` after this pass added
+four more (`dom-timeline.mjs`, `layout-thrash-probe.mjs`, `style-recalc-attribution.mjs`,
+`lhci-single.js`):
+
+```
+$ git ls-tree -r --name-only 6ae1f34 -- tools/ | grep -E '\.(py|mjs|js|sh)$' | grep -v '^tools/lib/' | wc -l
+14
+$ git ls-tree -r --name-only HEAD -- tools/    | grep -E '\.(py|mjs|js|sh)$' | grep -v '^tools/lib/' | wc -l
+18
+```
+
+Generalised (a hard-coded machine path replaced by a resolved one): all of them —
+every path now comes from `tools/lib/repo.mjs`, and Chrome is *resolved* rather
+than named:
 
 ```
 tools/lib/browser.mjs:  CHROME_PATH -> repo .cache/puppeteer -> system chrome
@@ -99,14 +124,38 @@ tools/lib/repo.mjs:     REPO_ROOT, SERVE_ROOT, BASE_URL, PORT, ARTIFACTS_DIR
                         location, all overridable)
 ```
 
-Retired: the throwaway one-shots of the previous pass were left in
+Retired: the 15 throwaway one-shots of the previous pass were left in
 `/tmp/retired-tools/` rather than copied, on the argument that a script no report
 reproduction step names is not part of the harness. Nothing was deleted; nothing
 in `/tmp` was touched.
 
-Two instruments were built for this pass and are in `tools/` from the start:
-`layout-thrash-probe.mjs` and `style-recalc-attribution.mjs` (§3), plus
-`lhci-single.js` (§7).
+`ls -1 /tmp/retired-tools | wc -l` printed `15` in this session. It is deliberately
+left out of a fenced command block: it reads `/tmp`, it cannot run on a fresh clone,
+and a report that quotes an unrunnable command as evidence is the defect §1 exists
+to remove.
+
+That 15 and the 14 instruments brought into the repository are different numbers
+counting different things, and the earlier draft of this section conflated them,
+reporting "22 scripts" moved and "15 distinct instruments". Both were wrong and
+both are corrected above against the commands shown.
+
+Seven instruments were built for this pass rather than moved, and each arrived with
+the commit that needed it: `dom-timeline.mjs` (`e0d1cf0`, §2);
+`layout-thrash-probe.mjs`, `style-recalc-attribution.mjs` (§3) and `lhci-single.js`
+(§7), all three in `d7734c7`; and the three written during this pass's final check
+(`6f380a5`), `budget-audit.py`, `font-payload.py` and `report-verify.mjs` — the last
+of which exists because the first two blocks it quotes turned out not to reproduce.
+The first four:
+
+```
+$ for f in dom-timeline layout-thrash-probe style-recalc-attribution lhci-single; do
+>   printf '%-24s %s\n' "$f" "$(git log --diff-filter=A --format='%h %s' -- tools/$f.mjs tools/$f.js | tail -1)"
+> done
+dom-timeline                e0d1cf0 fix(index): reserve the editor context row to cut CLS
+layout-thrash-probe         d7734c7 perf(index): cut forced style recalculations in the editor chrome
+style-recalc-attribution    d7734c7 perf(index): cut forced style recalculations in the editor chrome
+lhci-single                  d7734c7 perf(index): cut forced style recalculations in the editor chrome
+```
 
 ### 1.3 The fresh clone is green
 
@@ -468,6 +517,8 @@ rewrite.
 
 ### 4.1 Before
 
+<!-- report-verify: historical — recorded before the fonts were subset; the sizes are the pre-subset ones and `inventory` has since grown the route-bundle section. The base-revision sizes are re-derived from git by the font-payload block below. -->
+
 ```
 $ python3 tools/subset-fonts.py inventory
 @font-face declarations in src/css/typography-fonts.css: 8
@@ -481,16 +532,51 @@ EInvite Noto Serif Khmer  -    noto-serif-khmer-400.woff2            20336
 EInvite Noto Serif Khmer  -    noto-serif-khmer-700.woff2            22732
 ```
 
-and what index.html actually fetches, from the Lighthouse network log:
+That block is declared historical (see the comment above it in the source, and
+`node tools/report-verify.mjs` prints every such declaration). It recorded the
+state before subsetting, so it cannot reproduce now; `inventory` has also gained
+the route-bundle section since. The same sizes are re-derived from git, and do
+reproduce, in the next block.
+
+and what index.html actually fetches. Two measures, because they differ and the
+first draft of this section divided one by the other (§4.5):
 
 ```
-$ python3 -c "…network-requests, resourceType == 'Font'…"
-inter-latin-700.woff2        62264     inter-latin-800.woff2        62192
-inter-latin-400.woff2        60476     noto-serif-latin-700.woff2   37220
-noto-sans-latin-400.woff2    35880     noto-sans-latin-700.woff2    35320
-noto-sans-khmer-700.woff2    16860     noto-sans-khmer-400.woff2    15404
-TOTAL 325,616 bytes = 318.0 KiB        resource-summary: font 325616/8
+$ python3 tools/font-payload.py --at 7b5f912 --lhr none --fetched-from tools/evidence/index-html-font-fetched.txt
+# assets/fonts @ 7b5f912
+# fetched set from index-html-font-fetched.txt (8 faces)
+face                                   on disk  transfer   delta
+inter-latin-700.woff2                    62096         -       -  <- fetched by index.html
+inter-latin-800.woff2                    62024         -       -  <- fetched by index.html
+inter-latin-400.woff2                    60308         -       -  <- fetched by index.html
+noto-serif-latin-700.woff2               37052         -       -  <- fetched by index.html
+noto-serif-latin-400.woff2               36252         -       -
+noto-sans-latin-400.woff2                35712         -       -  <- fetched by index.html
+noto-sans-latin-700.woff2                35152         -       -  <- fetched by index.html
+noto-serif-khmer-700.woff2               22732         -       -
+noto-serif-khmer-400.woff2               20336         -       -
+noto-sans-khmer-700.woff2                16692         -       -  <- fetched by index.html
+noto-sans-khmer-400.woff2                15236         -       -  <- fetched by index.html
+
+all faces on disk                       403592
+fetched faces on disk                   324272   (8 faces)
 ```
+
+The block is git-only, which is why it reproduces. The fetched set comes from a
+committed list, [index-html-font-fetched.txt](tools/evidence/index-html-font-fetched.txt),
+rather than from `.lighthouseci/`, whose filenames are run timestamps; the `--lhr`
+default would have made this block different on every run. If a face is added,
+renamed or dropped, the command fails loudly (`not in the tree at 7b5f912`) instead
+of quietly printing a new set.
+
+The transfer figures are recorded separately, in
+[font-transfer-after.txt](tools/evidence/font-transfer-after.txt): the
+`transferSize` of each of the base revision's eight fetched faces was the on-disk
+size plus exactly 168 bytes — `62264 = 62096 + 168`, and so on for all eight, a
+total of **325,616** bytes, which is the figure §4.5 retracts §0's row 4 for
+dividing by an on-disk number. The base run's own `lhr-*.json` set is gone; the
+168-byte-per-face relationship is what survives, and §4.4 re-measures it on the run
+that does.
 
 **The tool's own first version never looked at 57% of that.** `typography-fonts.css`
 declares the eight Noto faces; Inter's three faces (184,932 bytes, the largest
@@ -515,27 +601,65 @@ The audit also settles the two questions in the brief:
 ### 4.2 The used character set
 
 ```
-$ python3 tools/subset-fonts.py codepoints
-used codepoints: 219 total  (149 Latin-class, 70 Khmer-class)
-sources scanned: 57
-     177  python/index.html        177  src/html/index.html
+$ python3 tools/subset-fonts.py codepoints --build-output-only
+used codepoints: 218 total  (148 Latin-class, 70 Khmer-class)
+sources scanned: 39
+     177  python/index.html
+     177  src/html/index.html
      174  docs/i18n/TRANSLATIONS.csv
-     143  python/privacy.html     135  python/dashboard.html
-     130  python/guests.html      119  python/account.html
+     143  python/privacy.html
+     143  src/html/privacy.html
+     135  python/dashboard.html
+     135  src/html/dashboard.html
+     130  python/guests.html
+     130  src/html/guests.html
+     119  python/account.html
+     119  python/materials.html
+     119  src/html/account.html
+
 Latin ranges:
-  U+0020-U+0023,U+0025-U+007E,U+00A7,U+00AB,U+00B0,U+00B7,U+00D7,U+200B,
-  U+2013-U+2014,U+2019,U+201C-U+201D,U+2022,U+2026,U+2190-U+2195,
-  U+21E4-U+21E5,U+21E7,U+21E9,U+2212,U+2263-U+2264,U+2302,U+2318,
-  U+25A3-U+25A4,U+25A6,U+25C7,U+25CE,U+25D4,U+25EB,U+2600,U+2605,U+2630,
-  U+2661-U+2662,U+2665,U+2699,U+2713,U+2726,U+2766,U+30C3,U+30C8,U+30D7,
-  U+4E00,U+4E0B,U+5200,U+6B21,U+FE0F,U+1F465,U+1F5A5
+  U+0020-0023,U+0025-005B,U+005D-007E,U+00A7,U+00AB,U+00B0,U+00B7,U+00D7,U+200B,U+2013-2014,U+2019,U+201C-201D,U+2022,U+2026,U+2190-2195,U+21E4-21E5,U+21E7,U+21E9,U+2212,U+2263-2264,U+2302,U+2318,U+25A3-25A4,U+25A6,U+25C7,U+25CE,U+25D4,U+25EB,U+2600,U+2605,U+2630,U+2661-2662,U+2665,U+2699,U+2713,U+2726,U+2766,U+30C3,U+30C8,U+30D7,U+4E00,U+4E0B,U+5200,U+6B21,U+FE0F,U+1F465,U+1F5A5
+
 Khmer ranges:
-  U+1780-U+178B,U+178E-U+179C,U+179F-U+17A2,U+17A5,U+17A7,U+17AC,U+17AF,
-  U+17B1,U+17B6-U+17B9,U+17BB-U+17CD,U+17CF-U+17D0,U+17D2,U+17D4,
-  U+17D6-U+17D7,U+17E0,U+17E2-U+17E3,U+17E6-U+17E7
+  U+1780-178B,U+178E-179C,U+179F-17A2,U+17A5,U+17A7,U+17AC,U+17AF,U+17B1,U+17B6-17B9,U+17BB-17CD,U+17CF-17D0,U+17D2,U+17D4,U+17D6-17D7,U+17E0,U+17E2-17E3,U+17E6-17E7
+
+skipped 18 source(s) with no tracked counterpart:
+  _i18n_all_result.json
+  python/dashboard-css-km.html
+  python/fixture-public.html
+  python/guests-test-en.html
+  python/guests-test-km.html
+  python/i18n-css-en.html
+  python/i18n-css-km.html
+  python/i18n-css-test.html
+  python/i18n-inject-test.html
+  python/index-test-en.html
+  python/index-test-km.html
+  python/test-a.html
+  python/test-b.html
+  python/test-c.html
+  python/test-d.html
+  python/test-i18n-beacon.html
+  python/test-i18n-click.html
+  src/html/test-i18n-beacon.html
+
+written: artifacts/font-codepoints.json
 ```
 
-219 codepoints from 57 sources: the built tree, `src/html`, the translation
+`--build-output-only` is not decoration. This command reads `src/python/`, which is
+**generated and untracked**, so with no filter it also reads the eighteen test pages
+listed above that another session left there — and two of them, `index-test-en.html`
+and `index-test-km.html`, add `U+005C`. The unfiltered run prints **219 codepoints,
+149 Latin-class**, and that is the set the fonts were actually subset against; the
+filtered run prints 218/148 and is a function of the repository rather than of whose
+working tree the command ran in. §4.5 retraction 4 measures what the difference
+costs — nothing, but that is a measurement rather than a shrug — and the number
+quoted here has to be the one that reproduces on a clean clone.
+
+218 codepoints from 39 sources: the built tree, `src/html`, the translation
+catalogue and the template/fixture JSON. The set is computed from the **served**
+tree because the pages generate Khmer from i18n data — grepping CSS would
+undercount.
 catalogue and the template/fixture JSON. The set is computed from the **served**
 tree because the pages generate Khmer from i18n data — grepping CSS would
 undercount.
@@ -544,7 +668,7 @@ undercount.
 
 The subset is the union of three sets:
 
-1. the 219 used codepoints,
+1. the 218 used codepoints (`219` in the unfiltered run — §4.2),
 2. a per-script safety floor (Latin: `U+0020-007E`, `U+00A0-00FF`,
    `U+2000-206F`, `U+20A0-20BF`, `U+2190-21FF`; Khmer: the whole
    `U+1780-17FF` block plus Khmer Symbols `U+19E0-19FF`),
@@ -558,6 +682,8 @@ guest's name, a venue, a typed message) that no page-render test in this repo
 covers. Including the declared range makes the subset *incapable* of changing any
 rendering, at the cost of some bytes. `--used-only` exists to measure the other
 choice; it was not shipped.
+
+<!-- report-verify: historical — recorded when the subset was written; re-running `subset --in-place` today is a no-op because assets/fonts already holds the subset, so the "before" column can only come from the run that did the work. Sizes at both ends are re-derivable from git. -->
 
 ```
 $ python3 tools/subset-fonts.py subset --in-place
@@ -580,34 +706,82 @@ whole Khmer block and the file was already range-narrow. The saving is entirely 
 the Latin faces, and per shipped page:
 
 ```
-index.html's eight faces:  325,616 -> 202,116 bytes   (-37.9%, -123,500)
+index.html's eight fetched faces, each measure compared with itself:
+  on disk                    324,272 -> 202,116 bytes   (-37.67%, -122,156)
+  transferSize (Lighthouse)  325,616 -> 203,460 bytes   (-37.52%, -122,156)
 ```
+
+The two measures agree on the bytes saved to the byte (−122,156: the per-face HTTP
+overhead is a constant 168 bytes at both ends, checked per face in the block above)
+and differ by 0.15 points on the percentage, because overhead is a larger share of
+the smaller payload. An earlier draft printed `325,616 -> 202,116 (-37.9%)` — the
+before figure from `transferSize` and the after figure from disk. Both numbers were
+real and neither was a lie; the division was simply between two different things,
+which is the failure mode §4.5 retracts.
 
 `pyftsubset --layout-features=*` is deliberate and load-bearing: dropping OpenType
 features silently breaks Khmer conjuncts and the coeng mark.
 
 ### 4.4 Verification
 
+The transfer measure, on the run whose `lhr` survives (per-face deltas are
+everywhere 168 bytes, which is what makes the base run's 325,616 reconstructible):
+
+```
+$ cat tools/evidence/font-transfer-after.txt
+# transferSize per fetched face, measured by Lighthouse, from lhr-1791708069007.json
+# (the 16-page `lhci collect` of this pass, against tools/serve-gzip.py).
+# Produced by: python3 tools/font-payload.py  (which selects this lhr: the newest
+# one for index.html). Kept as a file because .lighthouseci/lhr-*.json filenames
+# are run timestamps, so a command that names one is not reproducible.
+#
+# face                        on_disk    transfer    delta
+inter-latin-700.woff2           37560       37728      168
+inter-latin-800.woff2           37516       37684      168
+inter-latin-400.woff2           36632       36800      168
+noto-serif-latin-700.woff2      20640       20808      168
+noto-sans-latin-400.woff2       19300       19468      168
+noto-sans-latin-700.woff2       18956       19124      168
+noto-sans-khmer-700.woff2       16512       16680      168
+noto-sans-khmer-400.woff2       15000       15168      168
+TOTAL (8 fetched faces)        202116      203460     1344
+
+# The delta is 168 bytes on every face — HTTP overhead, constant because the same
+# server serves the same headers. That is what makes the base revision's transfer
+# figure reconstructible after its own lhr set was lost:
+#   324,272 on disk + (8 x 168) = 325,616 transferred.
+```
+
+What the transfer block is here for is the 168: eight faces, eight deltas of exactly
+168 bytes, which is the constant §4.1 uses to put the base revision's 325,616 back
+together. The numbers live in a committed evidence file rather than in
+the `lhr` itself, because `.lighthouseci/lhr-*.json` filenames are run timestamps —
+so this is quoted as `cat tools/evidence/font-transfer-after.txt`, which
+`report-verify` does check, and the file names the lhr it came from.
+
 Coverage regression, subset against *original*:
 
 ```
-$ python3 tools/subset-fonts.py verify --font-dir artifacts/fonts-subset
-  inter-latin-400.woff2                 267 glyphs     149 required   OK   (42 absent before too)
-  inter-latin-700.woff2                 267 glyphs     149 required   OK   (42 absent before too)
-  inter-latin-800.woff2                 267 glyphs     149 required   OK   (42 absent before too)
+$ python3 tools/subset-fonts.py verify --font-dir assets/fonts
+  inter-latin-400.woff2                 267 glyphs     148 required   OK   (42 absent before too)
+  inter-latin-700.woff2                 267 glyphs     148 required   OK   (42 absent before too)
+  inter-latin-800.woff2                 267 glyphs     148 required   OK   (42 absent before too)
   noto-sans-khmer-400.woff2             146 glyphs      70 required   OK
   noto-sans-khmer-700.woff2             146 glyphs      70 required   OK
-  noto-sans-latin-400.woff2             334 glyphs     149 required   OK   (42 absent before too)
-  noto-sans-latin-700.woff2             334 glyphs     149 required   OK   (42 absent before too)
+  noto-sans-latin-400.woff2             334 glyphs     148 required   OK   (42 absent before too)
+  noto-sans-latin-700.woff2             334 glyphs     148 required   OK   (42 absent before too)
   noto-serif-khmer-400.woff2            146 glyphs      70 required   OK
   noto-serif-khmer-700.woff2            146 glyphs      70 required   OK
-  noto-serif-latin-400.woff2            334 glyphs     149 required   OK   (42 absent before too)
-  noto-serif-latin-700.woff2            334 glyphs     149 required   OK   (42 absent before too)
-VERDICT: no codepoint that the original fonts covered is missing   (required codepoints: 219)
+  noto-serif-latin-400.woff2            334 glyphs     148 required   OK   (42 absent before too)
+  noto-serif-latin-700.woff2            334 glyphs     148 required   OK   (42 absent before too)
+
+VERDICT: no codepoint that the original fonts covered is missing   (required codepoints: 218)
 ```
 
-A finding inside that table worth keeping: **42 of the 149 Latin-class codepoints
-the site renders are in none of the three Latin webfonts, before or after** —
+A finding inside that table worth keeping: **42 of the Latin-class codepoints the
+site renders are in none of the three Latin webfonts, before or after** — 42 of
+the 148 in the reproducible set, and the same 42 of the 149 in the unfiltered one
+(§4.5 retraction 4) —
 `U+2190..U+21E9` arrows, `U+2212` minus, `U+2263`, `✓`, `✦`, `⌘`. Every one of
 them is painted by the system fallback font, by design or by accident, and no
 subsetting pass can change that. Subsetting is therefore not the fix for those
@@ -633,7 +807,7 @@ in `en` and `km`. `--lang` was added to `tools/capture.mjs` for this (it writes
 script runs), because the default language depends on the browser's
 `Accept-Language` and half the surface is Khmer.
 
-### 4.5 Two retractions
+### 4.5 Four retractions
 
 **Retraction 1 — the `--unicodes` syntax was invalid, and every face failed.**
 The first version of `ranges()` emitted `U+0020-U+007E`. fontTools tokenises
@@ -660,13 +834,60 @@ subset that had lost nothing. The metric is now `required ∩ cmap(original) -
 cmap(subset)`, and `verify` prints how many required codepoints were already
 absent so the distinction is visible in the output rather than in a comment.
 
+**Retraction 3 — the headline number divided transferSize by on-disk bytes.**
+This section and §0 both printed `325,616 -> 202,116 bytes (-37.9%)`. 325,616 is
+`transferSize` for the base revision's fetched faces (on-disk 324,272 plus 168
+bytes of HTTP overhead per face); 202,116 is those eight files' size on disk after
+subsetting (transferSize 203,460). Both are real measurements of the right files,
+and the conclusion — about 37.5 to 37.7 percent smaller — does not move. The
+printed number is still wrong as arithmetic on two different measures, and it was
+found by re-deriving it rather than by re-running anything, which is why it is
+recorded here: the repository's own instrument (`tools/font-payload.py`, written
+for this retraction) now prints both columns so the next pass cannot repeat it.
+
+**Retraction 4 — the used codepoint set was not a function of the repository.**
+`collect_codepoints()` reads `src/python/`, which is **generated and untracked**,
+so any HTML in it is scanned — including the eighteen test pages another session
+left in this working tree. Two of them (`python/index-test-en.html`,
+`python/index-test-km.html`) contain one character no tracked page, stylesheet,
+translation row or data file contains: `U+005C`. So the set the fonts were subset
+against was 219 codepoints, and 218 of them are reproducible from a clone.
+
+Whether that matters is a measurement, not an argument, so it was measured:
+re-subset all 11 faces against the contaminated set and against the filtered one,
+into scratch directories, and compare the bytes.
+
+```
+$ python3 tools/subset-fonts.py codepoints                     # 219, includes U+005C
+$ python3 tools/subset-fonts.py subset --out-dir /tmp/sub-a
+  TOTAL                                265056 ->    265056         +0  (+0.0%)
+$ python3 tools/subset-fonts.py codepoints --build-output-only  # 218, no U+005C
+$ python3 tools/subset-fonts.py subset --out-dir /tmp/sub-b
+  TOTAL                                265056 ->    265056         +0  (+0.0%)
+$ diff -rq /tmp/sub-a /tmp/sub-b && echo IDENTICAL
+IDENTICAL
+```
+
+Byte-identical, all 11 files. The reason is the safety floor: the Latin floor is
+`U+0020-007E`, which already guarantees `U+005C` for user data, so the used-set
+difference is absorbed before it reaches the subsetter. Nothing shipped is wrong
+and nothing needed re-subsetting — which is the answer, and it is only knowable
+because the two subsets were built and diffed rather than reasoned about.
+
+The tool now prints what it skipped (`skipped 18 source(s) with no tracked
+counterpart`) and offers `--build-output-only`, which the §4.2 block uses. The flag
+is deliberately not the default: it is a diagnosis of an input-provenance problem,
+and changing the default input to a shipped subsetting step is a decision for
+a pass that can re-run the 32-combination layout check, not a tidy-up at the end
+of this one.
+
 ### 4.6 A find that is not about fonts: the served mirror is not verified
 
 `assets/fonts/*.woff2` and `src/python/assets/fonts/*.woff2` are **hardlinks**
 (link count 2). `pyftsubset` writing through `shutil.copy2` broke the link, so the
-served file stayed at the original size and the page kept serving 325,616 bytes of
-fonts while the repository said 202,116 — through a successful rebuild *and* a
-green `build.py all --check`:
+served file stayed at the original size and the page kept fetching the original
+324,272 bytes on disk (325,616 transferred) while the repository said 202,116 —
+through a successful rebuild *and* a green `build.py all --check`:
 
 ```
 $ python3 build.py all --check ; echo "check exit=$?"
@@ -965,25 +1186,53 @@ The budgets file did not agree. It still carried `resourceCounts` for all six
 pages:
 
 ```
-$ python3 -c "…walk docs/perf/lighthouse-budgets.json…"
-index.html   resourceCounts: script budget 3, stylesheet budget 1
-(and the same for all six budgeted pages)
+$ python3 tools/budget-audit.py --at 7b5f912
+# docs/perf/lighthouse-budgets.json @ 7b5f912
+page                   count budgets  byte budgets   resourceCounts detail
+/index.html                        2             3   script budget 3, stylesheet budget 1
+/dashboard.html                    2             3   script budget 3, stylesheet budget 1
+/public.html                       2             3   script budget 2, stylesheet budget 1
+/admin.html                        2             3   script budget 3, stylesheet budget 1
+/privacy.html                      2             3   script budget 4, stylesheet budget 1
+/materials.html                    2             3   script budget 3, stylesheet budget 1
+
+pages: 6   pages still carrying resourceCounts: 6   total resourceCounts entries: 12
 ```
 
-and `make reproduce` — run for the first time as a whole in this pass, once §7.2
-made the gate runnable at all — failed on exactly them:
+and after the fix, the same command against the working tree:
 
 ```
-== 4/5  Lighthouse CI  (16 pages) ==
+$ python3 tools/budget-audit.py
+# docs/perf/lighthouse-budgets.json
+page                   count budgets  byte budgets   resourceCounts detail
+/index.html                        0             3   -
+/dashboard.html                    0             3   -
+/public.html                       0             3   -
+/admin.html                        0             3   -
+/privacy.html                      0             3   -
+/materials.html                    0             3   -
+
+pages: 6   pages still carrying resourceCounts: 0   total resourceCounts entries: 0
+```
+
+and `make reproduce` — run for the first time as a whole in this pass, once the
+port defect in §7.3 made the gate runnable at all — failed on exactly them:
+
+```
+== 4/6  Lighthouse CI  (16 pages) ==
   ✘  resource-summary.script.count failure for maxNumericValue assertion
   ✘  resource-summary.stylesheet.count failure for maxNumericValue assertion
   ✘  resource-summary.script.count failure for maxNumericValue assertion
   exit=1
 ```
 
+The step is `4/5` in the run that produced those lines; it is written `4/6` here
+because `reproduce.sh` has since gained the report check as step 6. The failure
+lines are the run's, unedited — that is the whole point of quoting them.
+
 So Goal 7 was not done: the decision was documented, described in a commit
 message, and never applied to the file the gate reads. This is the same shape as
-the port defect in §7.2 — a claim in prose that no command had ever confirmed —
+the port defect in §7.3 — a claim in prose that no command had ever confirmed —
 and it is only visible by running the gate.
 
 ### 7.2 What was changed, and the gate now passing
@@ -1052,6 +1301,17 @@ Running Lighthouse 1 time(s) on http://127.0.0.1:0/index.html
 The failure mode is what makes this worth a section: the error names Chrome and
 the server, not the port, so the first reading is "the static server is down" —
 and the byte budgets, the whole `assert` block, could never have been exercised.
+
+The same sentinel had a second path into the harness, found while re-running the
+final check with this session's environment: `make reproduce` forwards `PORT` to
+the script, and the environment had `PORT=0` exported, so the run served the tree
+on an ephemeral port and then failed its own readiness check against
+`http://127.0.0.1:0/` — with the server actually up and answering, which is the
+worst version of this failure. Two lines in `reproduce.sh` now treat `0` and empty
+as "no choice was made" (8124, said out loud) and refuse anything non-numeric or
+out of range, and the Makefile uses `$(or $(PORT),8124)` so an inherited `PORT`
+cannot reach `--port` untouched. Verified by running the whole sequence with
+`PORT=0` in the environment rather than assuming it.
 Fixed by resolving the port (`Number.isInteger(n) && n > 0 ? n : 8124`), verified:
 
 ```
@@ -1083,24 +1343,21 @@ Every item from the brief's list, in order, with the raw result.
 | 6 | `!important` per file, `7b5f912` vs `HEAD` | identical: 32,832 matches; top files unchanged (`editor-suite.css` 653, `canvas-plus.css` 544, `modern-ui.css` 298). **No new `!important`.** |
 | 7 | `find src/css -name '*-v*.css' \| wc -l` | 83 including generated bundles; 52 excluding (62 before batch 2) |
 | 8 | `find src/js -name '*-v*.js' -not -name 'bundle-*' \| wc -l` | 100 |
-| 9 | fonts | `src/fonts` does not exist — the fonts live in `assets/fonts/` (11 files, 265,056 bytes after subsetting; 403,592 before) |
-| 10 | `npx lhci autorun --config=tools/lighthouserc.js` | now runs; see 7.2. 16 pages, gzip server |
+| 9 | fonts | `src/fonts` does not exist — the fonts live in `assets/fonts/` (11 files, 265,056 bytes after subsetting; 403,592 before; the 8 index.html fetches: 202,116 / 324,272) |
+| 10 | `npx lhci autorun --config=tools/lighthouserc.js` | **exit 0**; 16/16 pages, gzip server (§7.2; the defect that stopped it running is §7.3) |
 | 11 | `python3 tools/determinism-50x.py public.html` | 50/50 identical (§1.3 fresh clone) |
 | 12 | `python3 tools/hover-verify.py --all` | 16 pages, 2,107 selectors, 813 elements (§6) |
 | 13 | `/tmp` independence | **deviation**: the literal rename was not executed — see 1.6. Substituted: no tool names an absolute `/tmp` path (1.1) and a fresh clone is green (1.3) |
 | 14 | `git status --short` | see §9 |
+| 15 | `node tools/report-verify.mjs docs/reviews/reproducibility-and-performance-report.md` | **exit 0** — 19 quoted blocks: 8 re-run and matched, **0 mismatched**, 0 with an elided command, 2 declared historical (printed with their reasons), 9 skipped as non-read-only. Rows 16–19 are what it checks. Its first catch, minutes after being wired in as step 6 of `reproduce.sh`, was §1.1's own block: the recorded `Makefile:74` became `Makefile:76` when the Makefile gained the `$(or $(PORT),8124)` fix, and the run failed on it. The block now uses `grep -r`, which prints no line numbers, so a Makefile edit cannot invalidate it again |
+| 16 | `python3 tools/budget-audit.py --at 7b5f912` | `6` pages carrying `resourceCounts`, `12` entries, `/index.html` = `script budget 3, stylesheet budget 1`; with no `--at`: `0` pages, `0` entries (§7.1) |
+| 17 | `python3 tools/font-payload.py --at 7b5f912 --lhr none --fetched-from tools/evidence/index-html-font-fetched.txt` | `all faces on disk 403592`, `fetched faces on disk 324272 (8 faces)`; at the working tree, `265056` and `202116` (§4.1, §4.3) |
+| 18 | `python3 tools/subset-fonts.py codepoints --build-output-only` | `218` codepoints from `39` sources; `skipped 18 source(s) with no tracked counterpart` (§4.2, retraction 4) |
+| 19 | `python3 tools/subset-fonts.py verify --font-dir assets/fonts` | `VERDICT: no codepoint that the original fonts covered is missing (required codepoints: 218)` — the shipped fonts, against the filtered set |
 
 ---
 
 ## 9. Commits
-
-```
-6ae1f34  chore(tools): make the repo self-contained — harness out of /tmp, clone-reproducible
-e0d1cf0  fix(index): reserve the editor context row to cut CLS (0.263 -> 0.092 mean)
-d7734c7  perf(index): cut forced style recalculations in the editor chrome
-c961c2a  perf(fonts): subset the web fonts and re-sync the served mirror
-f758f82  refactor: rename versioned files, batch 2 of N (10 files)
-```
 
 ```
 7b5f912  pass base (branch main, clean tree)
@@ -1114,15 +1371,35 @@ c961c2a  perf(fonts): subset the web fonts and re-sync the served mirror
                                                                         (commit 4)
 a42f35a  refactor: rename versioned files, batch 2 of N (10 files)      (commit 5)
 5626934  chore(perf): make the Lighthouse gate runnable, and report the pass
-e2b9ef3  chore(perf): resolve the unsatisfiable request-count assertions
+17ebaad  chore(perf): resolve the unsatisfiable request-count assertions
                                                                         (commit 7)
+6f380a5  chore(tools): verify the commands the report quotes, not just the numbers
+                                                                        (commit 8)
+```
+
+Commit 8 is not one of the seven requested commits. It is the check that the other
+seven produced what this report says they produced, and it exists because three of
+the blocks §4 and §7 quote did not survive being re-run — see row 15 of §8.
+
+The hashes above are the reachable ones. Two earlier candidates for commits 5
+and 7 (`f758f82`, `e2b9ef3`) are orphaned by an `--amend` and are reachable from
+no ref, so they are not cited; both carry the same subject lines. Verifying that
+is one command per hash:
+
+```
+$ git merge-base --is-ancestor a42f35a HEAD; echo $?   # 0
+$ git merge-base --is-ancestor 17ebaad HEAD; echo $?   # 0
+$ git merge-base --is-ancestor f758f82 HEAD; echo $?   # 1  (orphaned)
+$ git merge-base --is-ancestor e2b9ef3 HEAD; echo $?   # 1  (orphaned)
 ```
 
 Commit 6 (hover verification) is not a commit of its own: the hover work is
 measurement, not a source change, its instrument was committed in `6ae1f34`, and
 its numbers are §6 of this report. Inventing a commit whose content is "a
 measurement was taken" would be worse than saying so. That is a deviation from the
-requested seven commits and it is stated rather than papered over.
+requested seven commits and it is stated rather than papered over. Commit 8 is a
+second, smaller deviation for the same reason in reverse: the check that the
+measurements reproduce needed code of its own.
 
 Files changed by this pass (source, not generated):
 
@@ -1139,6 +1416,11 @@ Files changed by this pass (source, not generated):
  10 × src/css/*.css + 10 × src/python mirrors  §5  renamed
  tools/{capture.mjs,subset-fonts.py,lighthouserc.js,style-layout-trace.mjs}
  tools/{style-recalc-attribution.mjs,layout-thrash-probe.mjs,lhci-single.js}  new
+ tools/determinism-50x.py                  §1   --base-url made explicit              (1.4)
+ tools/subset-fonts.py                     §4   --build-output-only, skipped report   (4.5)
+ tools/reproduce.sh                        §8   sixth step: re-run the report's blocks
+ tools/{budget-audit.py,font-payload.py,report-verify.mjs}  new
+ tools/evidence/{index-html-font-fetched.txt,font-transfer-after.txt}  new
 ```
 
 ---
@@ -1155,10 +1437,11 @@ Recorded because each is a trap that will be walked into again.
    fresh clone fail. §1.5.
 3. **`make clean` removes a cache `build.py` does not create** (`/tmp/build-cache`).
    Harmless, but it is the only absolute `/tmp` path left in the repository. §1.1.
-4. **Lighthouse CI's `PORT=0`.** §7.2.
+4. **Lighthouse CI's `PORT=0`.** §7.3.
 5. **index.html has a one-character text race** (2757 × 4, 2756 × 1) at `7b5f912`
    and at `HEAD`, in both languages, unchanged by anything in this pass. §2.
-6. **42 of the 149 Latin-class codepoints the site renders are in no webfont.**
+6. **42 of the Latin-class codepoints the site renders are in no webfont** (42 of
+   148 in the reproducible set, 42 of 149 in the unfiltered one — the same 42).
    §4.4.
 7. **`src/css/organized/` shadows the flat `src/css/` for at least four files,
    with different contents.** §5.3.
@@ -1170,6 +1453,20 @@ Recorded because each is a trap that will be walked into again.
    nine independent candidates, eight inert and one load-bearing, and acting on
    the eight would break the ninth. Any list of "removable `!important`" produced
    by the current tool is unsafe. §6.3.
+10. **The measurement tools read directories that are not the repository.**
+    `subset-fonts.py` scanned eighteen untracked test pages another session had
+    left in the generated `src/python/` tree, and two of them contributed a
+    codepoint to the set the fonts were subset against. A tool whose input is
+    "whatever is in this working tree" produces numbers that are true of one
+    checkout. §4.5, retraction 4.
+11. **A quoted command is not evidence until someone re-runs it.** Three of the
+    blocks this report already contained did not reproduce — one re-typed from
+    memory, two with the command replaced by `python3 -c "…"`. §8, row 15.
+12. **The harness inherited `PORT=0` and served on an ephemeral port.** The gate
+    was fixed for this in §7.3; `make reproduce` had the same hole, and it fails
+    in an environment that exports `PORT=0` — which is exactly what `lhci`
+    exports. Fixed in the script and the Makefile, and verified under that
+    environment rather than a clean one. §7.3.
 
 ## 11. Retracted experiments
 
@@ -1235,3 +1532,14 @@ Kept, per the previous report's standard, because a retraction is information.
    every future pass will re-derive the same unusable list.
 6. **Find the index.html one-character race** (§2, finding 5); it is what makes
    index.html unable to meet the 50-capture determinism standard.
+7. **Make the measurement tools take their inputs from the repository, not the
+   working tree** (§4.5 retraction 4, finding 10). `subset-fonts.py` is the one
+   with a flag now; the same question applies to anything else that globs a
+   generated directory, and the answer is usually a tracked list rather than a
+   glob. `report-verify.mjs`'s allow-list is the other half of this: a command it
+   cannot re-run is reported, never assumed fine.
+8. **Re-run this report's blocks before trusting any of them.** One command:
+   `node tools/report-verify.mjs docs/reviews/reproducibility-and-performance-report.md`,
+   already step 6 of `make reproduce`. It found three bad blocks in one pass; the
+   next pass should assume it will find more, and adding a quoted block without
+   re-running this is how the first three got in.
