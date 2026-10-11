@@ -34,6 +34,18 @@
  * Server requirement: the numbers only reproduce against tools/serve-gzip.py
  * (gzip on the wire, like every real static host). Against an uncompressed
  * server index.html reads 54 instead of 73 and every byte budget looks violated.
+ *
+ * 3. The port is resolved, not read straight out of the environment. Lighthouse
+ *    CI exports `PORT=0` while it probes for a free port, so `process.env.PORT
+ *    || 8124` resolves to the literal string "0" and every URL becomes
+ *    `http://127.0.0.1:0/index.html`. That does not fail as a wrong port; it
+ *    fails as `CHROME_INTERSTITIAL_ERROR` — "Chrome prevented page load with an
+ *    interstitial" — which reads like a server that is not running, so the gate
+ *    was red for a reason that named the wrong subsystem. Reproduced:
+ *      $ npx lhci collect --config=tools/lighthouserc.js
+ *      Running Lighthouse 1 time(s) on http://127.0.0.1:0/index.html
+ *    Only a real, non-zero, numeric port is honoured; PORT=8124 in the
+ *    environment still wins, which is what `make reproduce --port N` relies on.
  */
 const fs = require('fs');
 
@@ -47,6 +59,14 @@ const CHROME_CANDIDATES = [
 ];
 
 const chromePath = CHROME_CANDIDATES.find((p) => p && fs.existsSync(p));
+
+/** A usable TCP port from the environment, or the documented default. */
+function resolvePort() {
+  const n = Number(process.env.PORT);
+  return Number.isInteger(n) && n > 0 ? n : 8124;
+}
+
+const PORT = resolvePort();
 
 /** @type {import('@lhci/cli').LighthouseRc} */
 module.exports = {
@@ -69,7 +89,7 @@ module.exports = {
         'checkin.html',
         'templates.html',
         'designer.html',
-      ].map((p) => `http://127.0.0.1:${process.env.PORT || 8124}/${p}`),
+      ].map((p) => `http://127.0.0.1:${PORT}/${p}`),
       numberOfRuns: 1,
       settings: {
         preset: 'desktop',
