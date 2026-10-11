@@ -1381,6 +1381,12 @@ Commit 8 is not one of the seven requested commits. It is the check that the oth
 seven produced what this report says they produced, and it exists because three of
 the blocks §4 and §7 quote did not survive being re-run — see row 15 of §8.
 
+This report is committed after commit 8, together with the `reproduce.sh` and
+Makefile half of the `PORT=0` fix from §7.3, as one commit carrying the report, the
+harness fix and the last report-text corrections. Its own hash is deliberately not
+printed here: writing it in would change it, which is how the two orphaned hashes
+above came to exist.
+
 The hashes above are the reachable ones. Two earlier candidates for commits 5
 and 7 (`f758f82`, `e2b9ef3`) are orphaned by an `--amend` and are reachable from
 no ref, so they are not cited; both carry the same subject lines. Verifying that
