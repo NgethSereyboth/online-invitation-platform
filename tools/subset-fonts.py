@@ -92,19 +92,80 @@ def ranges(codepoints) -> str:
         start = prev = cp
     if start is not None:
         out.append((start, prev))
-    return ",".join(f"U+{a:04X}" if a == b else f"U+{a:04X}-U+{b:04X}" for a, b in out)
+    # fontTools' own --unicodes syntax takes the `U+` prefix once per RANGE, not
+    # once per endpoint: `U+0020-007E` parses, `U+0020-U+007E` does not. It is
+    # tokenised by replacing every `U`, `+`, `,` and space with a space and
+    # splitting on whitespace, so the second `U+` splits `007E` off its range and
+    # leaves a dangling `0020-`, which fails as int('', 16). Emitting the second
+    # prefix produced a hard error on every face:
+    #   ValueError: invalid literal for int() with base 16: ''
+    return ",".join(f"U+{a:04X}" if a == b else f"U+{a:04X}-{b:04X}" for a, b in out)
+
+
+def parse_unicode_range(value: str):
+    """`U+0000-024F,U+1E00-1EFF` -> [(0x0000, 0x024F), (0x1E00, 0x1EFF)]."""
+    out = []
+    for token in (value or "").split(","):
+        token = token.strip().lower().replace("u+", "")
+        if not token:
+            continue
+        if "-" in token:
+            lo, _, hi = token.partition("-")
+        else:
+            lo = hi = token
+        try:
+            out.append((int(lo, 16), int(hi, 16)))
+        except ValueError:
+            continue
+    return out
 
 
 def parse_font_faces(css_path: Path):
     text = css_path.read_text(encoding="utf-8", errors="replace")
     faces = []
     for m in FACE_RE.finditer(text):
+        raw_range = (m.group(4) or "").strip().strip(";").strip()
         faces.append({
             "family": m.group(1),
             "weight": m.group(2),
             "file": m.group(3),
-            "unicode_range": (m.group(4) or "").strip(),
+            "source": css_path.name,
+            "unicode_range": raw_range,
+            "unicodeRanges": parse_unicode_range(raw_range),
         })
+    return faces
+
+
+# Generated route bundles are concatenations of the hand-written sources, so
+# parsing them would report every face twice under a name that no one edits.
+# `bundle-<route>-v15.css` is produced by src/python/build/build_route_bundles.py.
+GENERATED_CSS_RE = re.compile(r"^bundle-[a-z-]+-v15\.css$")
+
+
+def hand_written_css():
+    """Every @font-face source of truth: src/css/**/*.css minus generated bundles."""
+    return [p for p in sorted(CSS_DIR.rglob("*.css"))
+            if not GENERATED_CSS_RE.match(p.name)]
+
+
+def all_font_faces():
+    """Deduplicate the hand-written faces by (family, weight, file).
+
+    Parsing only typography-fonts.css (the first version of this tool) missed
+    Inter entirely: Inter's three faces are declared in canvas-plus.css and
+    editor-suite.css, and together they are 57% of the bytes index.html fetches
+    (184,932 of 325,616 across the three weights). A subsetting pass that skips
+    the largest faces is worse than no pass, because the report then says the
+    fonts are as small as they can be.
+    """
+    seen, faces = set(), []
+    for path in hand_written_css():
+        for face in parse_font_faces(path):
+            key = (face["family"], face["weight"], Path(face["file"]).name)
+            if key in seen:
+                continue
+            seen.add(key)
+            faces.append(face)
     return faces
 
 
@@ -198,11 +259,31 @@ def classify_font(filename: str) -> str:
     return "khmer" if "khmer" in filename.lower() else "latin"
 
 
+def pyftsubset_cmd() -> list[str] | None:
+    """Resolve pyftsubset, preferring the console script then the module.
+
+    fontTools can be installed and importable without its console script being
+    on PATH (a venv created with --system-site-packages, a distro package that
+    splits the scripts out, or a Windows install where `Scripts/` is not on
+    PATH). `python -m fontTools.subset` is the same entry point, so falling back
+    to it keeps this tool runnable wherever fontTools itself is importable.
+    """
+    exe = shutil.which("pyftsubset")
+    if exe:
+        return [exe]
+    try:
+        import fontTools.subset  # noqa: F401
+    except ImportError:
+        return None
+    return [sys.executable, "-m", "fontTools.subset"]
+
+
 def cmd_subset(args) -> int:
-    if not shutil.which("pyftsubset"):
+    pyftsubset = pyftsubset_cmd()
+    if pyftsubset is None:
         sys.stderr.write(
-            "subset-fonts.py: pyftsubset not found on PATH.\n"
-            "  install the tooling:  pip install -r tools/requirements.txt\n"
+            "subset-fonts.py: neither pyftsubset nor the fontTools.subset module is\n"
+            "  importable. install the tooling:  pip install -r tools/requirements.txt\n"
         )
         return 2
 
@@ -214,7 +295,7 @@ def cmd_subset(args) -> int:
     latin_cps = [int(c[2:], 16) for c in payload["latinCodepoints"]]
     khmer_cps = [int(c[2:], 16) for c in payload["khmerCodepoints"]]
 
-    faces = parse_font_faces(CSS_DIR / "typography-fonts.css")
+    faces = all_font_faces()
     files = sorted({FONT_DIR / Path(f["file"]).name for f in faces})
     out_dir = Path(args.out_dir) if args.out_dir else ARTIFACTS / "fonts-subset"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -230,9 +311,21 @@ def cmd_subset(args) -> int:
         unicodes = set(used)
         for lo, hi in floor:
             unicodes.update(range(lo, hi + 1))
+        # Also keep every codepoint this face's `unicode-range` PROMISES. Subsetting
+        # to the used set alone would make the browser pick a different font for
+        # any character the CSS says this face covers but no page currently
+        # renders — a visible change for user-supplied text (a guest's name, a
+        # venue) with no visual review of it. Keeping the declared range makes the
+        # subset incapable of changing any rendering while still dropping every
+        # glyph outside the range (coverage the face can never be asked to paint).
+        if not args.used_only:
+            for face in faces:
+                if Path(face["file"]).name == src.name:
+                    for lo, hi in face.get("unicodeRanges", []):
+                        unicodes.update(range(lo, hi + 1))
         dst = out_dir / src.name
         cmd = [
-            "pyftsubset", str(src),
+            *pyftsubset, str(src),
             f"--unicodes={ranges(unicodes)}",
             # Khmer shaping lives in OpenType features; dropping them silently
             # breaks conjuncts and coeng. Keep every feature.
@@ -249,6 +342,7 @@ def cmd_subset(args) -> int:
         before, after = src.stat().st_size, dst.stat().st_size
         rows.append({
             "file": src.name, "class": kind, "unicodes": len(unicodes),
+            "usedCodepoints": len(used), "usedOnly": bool(args.used_only),
             "before": before, "after": after, "delta": after - before,
             "deltaPct": round(100.0 * (after - before) / before, 1),
         })
@@ -287,8 +381,14 @@ def cmd_verify(args) -> int:
         "khmer": {int(c[2:], 16) for c in payload["khmerCodepoints"]},
     }
     face_dir = Path(args.font_dir) if args.font_dir else FONT_DIR
-    faces = parse_font_faces(CSS_DIR / "typography-fonts.css")
+    faces = all_font_faces()
     files = sorted({face_dir / Path(f["file"]).name for f in faces})
+    # The regression that matters is a codepoint the ORIGINAL font painted and the
+    # replacement no longer does. A codepoint absent from both was already falling
+    # back to a system font before this pass, and counting it as a subsetting bug
+    # would make the check fail forever: 42 of the 149 Latin-class codepoints the
+    # site renders (U+2190..U+21E9 arrows, U+2212 minus, U+2263, ✓, ✦, …) are in
+    # none of the three Latin webfonts, original or subset.
     bad = 0
     for src in files:
         if not src.is_file():
@@ -297,14 +397,18 @@ def cmd_verify(args) -> int:
             continue
         kind = classify_font(src.name)
         cmap = font_cmap(src)
-        missing = sorted(c for c in want[kind] if c not in cmap)
-        status = "OK" if not missing else f"MISSING {len(missing)}"
-        print(f"  {src.name:<34}{len(cmap):>7} glyphs   {len(want[kind]):>5} required   {status}")
-        if missing:
+        original = FONT_DIR / src.name
+        before_cmap = font_cmap(original) if original.is_file() and original != src else cmap
+        regressed = sorted(c for c in want[kind] if c in before_cmap and c not in cmap)
+        already_absent = sorted(c for c in want[kind] if c not in before_cmap)
+        status = "OK" if not regressed else f"REGRESSED {len(regressed)}"
+        print(f"  {src.name:<34}{len(cmap):>7} glyphs   {len(want[kind]):>5} required   {status}"
+              + (f"   ({len(already_absent)} absent before too)" if already_absent else ""))
+        if regressed:
             bad += 1
-            print(f"      first missing: {', '.join(f'U+{c:04X}' for c in missing[:12])}")
+            print(f"      first regressed: {', '.join(f'U+{c:04X}' for c in regressed[:12])}")
     total_required = sum(len(v) for v in want.values())
-    print(f"\nVERDICT: {'every required codepoint is covered' if not bad else f'{bad} font(s) with gaps'}"
+    print(f"\nVERDICT: {'no codepoint that the original fonts covered is missing' if not bad else f'{bad} font(s) lost coverage'}"
           f"   (required codepoints: {total_required})")
     return 0 if not bad else 1
 
@@ -324,6 +428,10 @@ def main(argv=None) -> int:
     p_sub = sub.add_parser("subset", help="subset every font to the used codepoints")
     p_sub.add_argument("--out-dir", default=None, help="output directory (default artifacts/fonts-subset)")
     p_sub.add_argument("--in-place", action="store_true", help="overwrite assets/fonts/*.woff2")
+    p_sub.add_argument("--used-only", action="store_true",
+                       help="subset to used+floor ONLY, dropping the face's declared unicode-range "
+                            "(smaller, but changes which font paints any character the CSS promises "
+                            "and no page currently renders)")
 
     p_ver = sub.add_parser("verify", help="check every required codepoint is still covered")
     p_ver.add_argument("--font-dir", default=None, help="directory of fonts to check (default assets/fonts)")

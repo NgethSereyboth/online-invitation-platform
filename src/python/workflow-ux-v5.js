@@ -79,7 +79,12 @@ stage.addEventListener('contextmenu',e=>{const o=e.target.closest('.object');if(
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#workflowV5ContextMenu'))hideMenu()},true);addEventListener('blur',hideMenu);
 
 const dock=$('#workflowPageDock');
-function revealActivePage(){const active=$('.workflow-page-chip.active',dock);active?.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'})}
+let lastRevealedChip=null;
+// The observer below fires on every class change under the dock, and a dock
+// re-render toggles `active` on many chips in a row. scrollIntoView forces a
+// style recalculation + layout, so only a change of WHICH chip is active is
+// worth one; an unchanged chip would also be scrolled against the user's wish.
+function revealActivePage(){const active=$('.workflow-page-chip.active',dock);if(active===lastRevealedChip)return;lastRevealedChip=active;active?.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'})}
 if(dock){new MutationObserver(()=>requestAnimationFrame(revealActivePage)).observe(dock,{subtree:true,attributes:true,attributeFilter:['class']});dock.addEventListener('wheel',e=>{const track=$('.workflow-page-dock-track',dock);if(!track||Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;e.preventDefault();track.scrollLeft+=e.deltaY},{passive:false})}
 function extendQuickAdd(){
   const grid=$('#workflowV4QuickAddMenu .workflow-v4-add-grid');if(!grid||grid.querySelector('[data-quick-add="ai"]'))return;

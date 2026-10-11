@@ -229,8 +229,16 @@ function wireScrollable(root=document){
   });
 }
 wireScrollable();new MutationObserver(()=>requestAnimationFrame(()=>wireScrollable())).observe(document.body,{childList:true,subtree:true});
+let lastVisibleChip=null;
 function keepActivePageVisible(){
-  $('.workflow-page-chip.active')?.scrollIntoView?.({block:'nearest',inline:'nearest',behavior:'auto'});
+  // scrollIntoView forces a style recalculation + layout, and the observer below
+  // fires on every class change anywhere under #pageNavigator — including the
+  // class churn of a dock re-render. Only a change of WHICH chip is active needs
+  // a scroll; re-scrolling an unchanged chip would also fight a user's own scroll.
+  const active=$('.workflow-page-chip.active');
+  if(active===lastVisibleChip)return;
+  lastVisibleChip=active;
+  active?.scrollIntoView?.({block:'nearest',inline:'nearest',behavior:'auto'});
 }
 const pageNav=$('#pageNavigator');
 if(pageNav)new MutationObserver(()=>requestAnimationFrame(keepActivePageVisible)).observe(pageNav,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});

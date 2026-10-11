@@ -19,6 +19,11 @@
  *
  *   --mode=fixed  injects the motion-freeze stylesheet before the document
  *                 script runs, so layout is the only variable left.
+ *   --lang=km     pins the UI language before any document script runs, by
+ *                 writing the same localStorage key the site's own language
+ *                 picker writes (`einvite-lang`). Needed because half the
+ *                 regression surface is Khmer and the default depends on the
+ *                 browser's Accept-Language. Also sets documentElement.lang.
  *   --quiet       print only the machine-readable summary line.
  *
  * Output: a `docHeight|bodyHeight|nSections|textLen` distribution, a section
@@ -41,7 +46,13 @@ const WIDTH = Number((argv.find((a) => a.startsWith('--width=')) || '--width=128
 const HEIGHT = Number((argv.find((a) => a.startsWith('--height=')) || '--height=900').split('=')[1]);
 const AS_JSON = hasFlag(argv, 'json');
 const QUIET = hasFlag(argv, 'quiet');
+const LANG = (argv.find((a) => a.startsWith('--lang=')) || '').split('=')[1] || null;
 const OUT = (argv.find((a) => a.startsWith('--out=')) || '').split('=')[1] || null;
+
+if (LANG && !/^(en|km)$/.test(LANG)) {
+  console.error(`capture.mjs: --lang must be en or km (got ${LANG})`);
+  process.exit(2);
+}
 
 const browser = await launch({ kind: 'shell' });
 
@@ -50,6 +61,12 @@ const sectionDist = new Map();
 const rows = [];
 for (let i = 0; i < N; i++) {
   const page = await newPage(browser, { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 });
+  if (LANG) {
+    await page.evaluateOnNewDocument((lang) => {
+      try { localStorage.setItem('einvite-lang', lang); } catch { /* ignore */ }
+      document.documentElement.lang = lang;
+    }, LANG);
+  }
   if (MODE === 'fixed') {
     await page.evaluateOnNewDocument((css) => {
       const s = document.createElement('style');
@@ -98,6 +115,7 @@ const errCount = rows.reduce((a, r) => a + r.errs.length, 0);
 const summary = {
   url: URL,
   mode: MODE,
+  lang: LANG,
   n: N,
   settleMs: SETTLE_MS,
   viewport: `${WIDTH}x${HEIGHT}`,
