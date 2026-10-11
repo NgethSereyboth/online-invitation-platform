@@ -16,6 +16,18 @@ tests.bak/
 node_modules/
 
 # ---------------------------------------------------------------------------
+# Lighthouse / browser-tooling output.
+# `.lighthouseci/` holds the raw LHR JSON+HTML that `npx lhci autorun` writes
+# (16 pages, ~8 MB), and `.cache/` holds the Puppeteer browser download.
+# Both are regenerable from `npx lhci autorun`; the scores that matter are
+# recorded in docs/reviews/race-and-consolidation-report.md, and the upload
+# target docs/reviews/lighthouse/ is deliberately not committed either.
+# ---------------------------------------------------------------------------
+.lighthouseci/
+.cache/
+docs/reviews/lighthouse/
+
+# ---------------------------------------------------------------------------
 # Ephemeral editor test artifacts.
 # `.ff_screenshots/` lives at the repo root and holds throwaway diagnostic
 # scripts (take_screenshots.js, test_ff.js, verify_editor.js) plus their

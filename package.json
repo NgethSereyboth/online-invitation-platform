@@ -1,0 +1,8 @@
+{
+  "name": "dsh-profile-test",
+  "private": true,
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "puppeteer-core": "^25.12.0"
+  }
+}
