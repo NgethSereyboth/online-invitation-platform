@@ -11,7 +11,8 @@ Commits produced by this pass:
 | `c64263c` | `fix(public): pin render race that broke screenshot regression` |
 | `07ae755` | `refactor(js): retire superseded editor subsystem` |
 | `d22f114` | `refactor: resolve route budgets, dashboard second sheet, orphan app-shell-v55.css, and versioned file batches` |
-| (this report) | `chore: lhci execution + hover-state verification script` |
+| (report) | `chore: lhci execution + hover-state verification script` |
+| (report) | `docs: correct index.html's performance figure and record a rejected loader change` — see §13 |
 
 Pre-existing baseline for all deltas is `3ca3671` (`HEAD~3` at the time of
 writing; `04f7863` is `HEAD~4` and is the pass before it).
@@ -377,6 +378,9 @@ Findings, **not adjusted for**:
 * `index.html` is the only genuinely slow page (54, 2.3 s FCP, 270 ms TBT,
   CLS 0.165). It is also the page with the largest bundle (1,129,296 bytes).
   This is the single highest-value performance target in the app.
+  **Corrected in section 13.1: 19 of those 54 points were this harness serving
+  every file uncompressed. On a compression-correct host the page scores 73, and
+  the uncompressed figure must not be quoted as the app's score.**
 * CLS 0.076 on dashboard and 0.071 on templates — both real, both above the
   0.05 "good" line, both worth a look. Note the dashboard number **predates** the
   toast.css request removal; it was not re-measured after it.
@@ -666,10 +670,12 @@ raw counts above are how to check that claim rather than take it.
 | --- | --- |
 | 73 remaining versioned CSS + 100 versioned JS file renames | each is a contract change across file, mirror, manifest and HTML; batch 1 proved the mechanism, the rest is repetition not risk-taking |
 | ~300 redundant `!important` hover declarations | proven inert on the 3 pages tested, but the served sheets are generated; the edit belongs in the manifest's authoring sources via a scripted batch. Verified-removable, not yet removed |
-| `index.html` performance 54 / 2.3 s FCP | real and the highest-value single target in the app; needs its own pass rather than a rushed change at the end of this one |
+| `index.html` performance | the `54 / 2.3 s FCP` first recorded here was measured through an uncompressed harness; §13.1 corrects it to **73 / 1.3 s** and identifies what is genuinely left. Still deferred, because each remaining cost needs its own pass: 156 KiB of unused JS, a 1,732 ms Style & Layout bucket, and CLS 0.165 |
 | 1203px placeholder shift at a 600px viewport | deterministic viewport effect, not the race; the optimisation is doing its job |
 | `tests/v27_3_5_release_evidence_test.py` red | **already red at the base commit** (README hash, pinned to the v0_52 file set). Pre-existing; not touched |
 | `.cache/`, `.lighthouseci/`, `docs/reviews/lighthouse/` | generated tool output; scores are in this report instead of 8 MB of committed HTML |
+| `index.html` request-count ceilings (`script ≤ 3`, `stylesheet ≤ 1`) | structurally unsatisfiable with the 23-module deferred loader; the fix is fewer modules or a maintainer decision that the count is a tripwire, not a target. Goal 4 said log failures and leave the config alone (§13.2) |
+| The order coupling inside `photo-style-library-v23.js` | this is what makes the loader unparallelisable; removing it is a change with its own verification, against the same three checks (§13.3) |
 
 ## 9. Judged autonomously
 
@@ -702,15 +708,25 @@ raw counts above are how to check that claim rather than take it.
 
 ## 11. Reproducing every number in this report
 
+**Choose the server deliberately.** Layout/DOM checks (race captures, hover
+audits) are unaffected by transport, so either server reproduces them. The lhci
+numbers in sections 4 and 13 are **not** reproducible through the uncompressed
+one: it served every file raw, which is what made index.html read as 54 instead
+of 73 and inflated every byte budget.
+
 ```
-python3 /tmp/race/serve.py 8124 &                    # static server, src/python/
-node /tmp/race/capture.mjs                           # 50-capture determinism
+python3 /tmp/lhci/serve-gzip.py 8124 <repo>/src/python   # gzip - REQUIRED for lhci numbers
+python3 /tmp/race/serve.py 8124                          # uncompressed - layout checks only
+node /tmp/race/capture.mjs                               # 50-capture determinism
 node /tmp/hover/hover-audit.mjs   http://127.0.0.1:8124/index.html --json
 node /tmp/hover/hover-audit.mjs   http://127.0.0.1:8124/dashboard.html --json
 node /tmp/hover/hover-audit.mjs   http://127.0.0.1:8124/public.html --json
 node /tmp/hover/important-lift-test.mjs http://127.0.0.1:8124/index.html --json
 node /tmp/hover/toast-probe.mjs   http://127.0.0.1:8124/dashboard.html
 npx lhci autorun                                     # 16 pages, ~7 min
+npx lhci autorun --collect.url=http://127.0.0.1:8124/index.html \
+    --upload.outputDir=/tmp/lhci/recheck             # one page, for the section 13 A/B
+node /tmp/lhci/loader-ab.mjs http://127.0.0.1:8124/index.html   # 3 pairs, aborts if arm B is not patched
 python3 build.py all --check
 python3 tests/v55_route_weight_budget_test.py
 python3 tests/v14_performance_budget_test.py
@@ -780,4 +796,145 @@ any served or source HTML:
 $ grep -rn "toast\.css" src/html src/python --include=*.html
 (no output)
 ```
+
+---
+
+## 13. Follow-up: why index.html scores 54, and one attractive fix that was rejected
+
+No application source was changed in this section. It corrects a measurement and
+records a rejected change; both are the kind of result that is worth more than a
+shipped edit.
+
+### 13.1 Nineteen of the 54 points were the harness, not the app
+
+The server used for the whole of section 4 was a bare `http.server`
+(`/tmp/race/serve.py`) that served every file **uncompressed**. No static host
+does that, and Lighthouse said so out loud: `uses-text-compression` scored 0 with
+"Est savings of 1,655 KiB" and an estimated 1000 ms on *both* FCP and LCP. The
+harness was deciding the score, and it was deciding every byte-based budget
+assertion with it — the same class of error as the 3a category error, in the
+measurement layer this time.
+
+Replaced with `/tmp/lhci/serve-gzip.py`: gzip for compressible text types only
+(woff2 and images pass through untouched), `Cache-Control: no-store` so repeat
+automated runs cannot disagree due to a warm cache, and `gzip mtime=0` so
+identical input produces byte-identical output. Verified on the wire:
+
+```
+$ curl -o /dev/null -w '%{size_download}' -H 'Accept-Encoding: identity' .../index.html
+41391
+$ curl -o /dev/null -w '%{size_download}' -H 'Accept-Encoding: gzip' .../index.html
+11082
+$ curl ... -H 'Accept-Encoding: identity' .../bundle-index-v15.js
+1129296
+$ curl ... -H 'Accept-Encoding: gzip' .../bundle-index-v15.js
+303625          # -73%
+$ curl -sI -H 'Accept-Encoding: gzip' .../bundle-index-v15.css
+Content-Type: text/css
+Content-Length: 81222
+Content-Encoding: gzip
+Vary: Accept-Encoding
+```
+
+Re-measured, index.html alone, same config, one run:
+
+| metric | uncompressed harness | gzip harness |
+| --- | --- | --- |
+| **performance** | **54** | **73** |
+| accessibility | 100 | 100 |
+| best-practices | 100 | 100 |
+| SEO | 89 | 89 |
+| FCP | 2.3 s | 1.3 s |
+| LCP | 2.6 s | 1.7 s |
+| TBT | 270 ms | 220 ms |
+| CLS | 0.165 | 0.165 |
+| total byte weight | 2,586 KiB | 922 KiB |
+| `uses-text-compression` | 0 | 1 |
+| failed assertions | 4 | 2 |
+
+All four of index.html's byte/weight assertion failures were harness artefacts.
+The brief's instruction for Goal 4 — leave the thresholds alone and report
+failures as findings — was followed: the budgets file was not touched, the
+harness was corrected, and the corrected number is reported here.
+
+### 13.2 What is actually left on index.html
+
+Score-0 audits after the correction, in order of estimated cost:
+
+* `unused-javascript` — 156 KiB wasted of the bundle's 301,884 bytes transferred.
+* `mainthread-work-breakdown` — 3.9 s, of which **Style & Layout 1,732 ms** and
+  **Script Evaluation 1,275 ms**. Style & Layout is the single largest bucket;
+  it is consistent with 482 KB of CSS and 3,843 DOM elements.
+* `dom-size` — 3,843 elements.
+* CLS 0.165 is unchanged by compression, as expected, and is the one remaining
+  category that is purely a layout defect.
+
+The two surviving assertion failures are both request **count** ceilings, and
+they are structurally unsatisfiable as the app is designed:
+
+```
+resource-summary  script      39 <= 3   index.html
+resource-summary  stylesheet  24 <= 1   index.html
+```
+
+index.html serves 39 scripts and 24 stylesheets because it deliberately defers 23
+feature modules (13.3) on top of its bundle. A `script ≤ 3` ceiling was written
+when the page had three `<script>` tags; it has not been satisfiable since the
+deferred loader was added. Unlike the byte budgets, this one cannot be fixed by
+serving the app correctly — it needs either fewer modules or a decision that the
+count is a tripwire rather than a target. Left untouched, per Goal 4.
+
+### 13.3 The obvious fix for the waterfall, measured and rejected
+
+`performance-loader-v22.js` appends its 23 modules through a strict promise chain:
+
+```js
+EInvitePerformanceReady = () => p ??= a.reduce((p, n) => p.then(() => new Promise((r, j) => {
+  let s = document.createElement('script');
+  s.src = n; s.onload = r; s.onerror = j; document.head.append(s);
+})), Promise.resolve()).catch(() => 0);
+EInvitePerformanceReady();
+```
+
+Dynamically inserted scripts are `async` by default, so that chain is the *only*
+thing enforcing load order — and serial round trips are exactly what a simulated
+network punishes. It looked like a clear win.
+
+Two things had to be got right before the measurement meant anything:
+
+1. **The loader is not a request.** It is concatenated into
+   `bundle-index-v15.js` (offset ~13,292), so intercepting
+   `performance-loader-v22.js` as a URL never matches. The first version of the
+experiment did exactly that, compared the serial build against itself, and
+reported a plausible-looking "−206 ms". `patched` is now asserted, and a run
+where arm B was not actually patched **aborts** rather than printing noise.
+2. **One pair is not a measurement.** The corrected first pair showed −743 ms and
+   "identical module surface". Three pairs showed neither.
+
+Three A/B pairs, serial vs `Promise.all`, identical module list, in one process:
+
+| pair | wall to idle | load event | module globals | DOM elements |
+| --- | --- | --- | --- | --- |
+| 1 | −346 ms | −365 ms | **−1 (`EInvitePhotoStyleLibrary`)** | 3911 vs 3909 |
+| 2 | −350 ms | −347 ms | 0 | 3911 vs 3911 |
+| 3 | −460 ms | −486 ms | **−1 (`EInvitePhotoStyleLibrary`)** | 3911 vs 3909 |
+
+Zero page errors in both arms. The module that disappears is
+`photo-style-library-v23.js` — 6th in the list, immediately after
+`photo-workflow-v23.js` — and it disappeared in **two runs out of three**.
+
+**The chain is load-bearing.** It is not cargo cult: the module genuinely depends
+on one ahead of it, and parallelising it silently drops that dependency two times
+in three. No change was made to the loader, and the source file is untouched.
+
+The reason to record this in detail is the near miss: the single-pair run said
+"identical module surface — the chain is not protecting load order", which would
+have justified shipping an intermittent break in a photo-style library. Insisting
+on three pairs before editing is the only reason this report says "rejected"
+instead of "fixed".
+
+The safe version of this improvement is therefore not in the loader at all: remove
+the coupling inside `photo-style-library-v23.js` so the deferred modules become
+order-independent, *then* parallelise, against these same three checks. The
+measured prize is 350–460 ms of load-event time on index.html.
 
