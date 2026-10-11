@@ -1,3 +1,5 @@
+@layer reset, tokens, base, layout, components, utilities, overrides;
+@layer components {
 /* Generated trusted typography font faces. Bundled Noto assets use SIL OFL 1.1. */
 @font-face{font-family:'EInvite Noto Sans';src:url('assets/fonts/noto-sans-latin-400.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
 @font-face{font-family:'EInvite Noto Sans';src:url('assets/fonts/noto-sans-latin-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
@@ -7,3 +9,5 @@
 @font-face{font-family:'EInvite Noto Sans Khmer';src:url('assets/fonts/noto-sans-khmer-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
 @font-face{font-family:'EInvite Noto Serif Khmer';src:url('assets/fonts/noto-serif-khmer-400.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
 @font-face{font-family:'EInvite Noto Serif Khmer';src:url('assets/fonts/noto-serif-khmer-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
+
+}

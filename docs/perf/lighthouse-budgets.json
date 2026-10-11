@@ -1,0 +1,74 @@
+[
+  {
+    "path": "/index.html",
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 1163 },
+      { "resourceType": "stylesheet", "budget": 494 },
+      { "resourceType": "total", "budget": 1656 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 3 },
+      { "resourceType": "stylesheet", "budget": 1 }
+    ]
+  },
+  {
+    "path": "/dashboard.html",
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 349 },
+      { "resourceType": "stylesheet", "budget": 319 },
+      { "resourceType": "total", "budget": 667 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 3 },
+      { "resourceType": "stylesheet", "budget": 2 }
+    ]
+  },
+  {
+    "path": "/public.html",
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 259 },
+      { "resourceType": "stylesheet", "budget": 131 },
+      { "resourceType": "total", "budget": 390 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 2 },
+      { "resourceType": "stylesheet", "budget": 1 }
+    ]
+  },
+  {
+    "path": "/admin.html",
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 159 },
+      { "resourceType": "stylesheet", "budget": 263 },
+      { "resourceType": "total", "budget": 422 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 3 },
+      { "resourceType": "stylesheet", "budget": 1 }
+    ]
+  },
+  {
+    "path": "/privacy.html",
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 20 },
+      { "resourceType": "stylesheet", "budget": 154 },
+      { "resourceType": "total", "budget": 174 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 4 },
+      { "resourceType": "stylesheet", "budget": 1 }
+    ]
+  },
+  {
+    "path": "/materials.html",
+    "resourceSizes": [
+      { "resourceType": "script", "budget": 144 },
+      { "resourceType": "stylesheet", "budget": 283 },
+      { "resourceType": "total", "budget": 427 }
+    ],
+    "resourceCounts": [
+      { "resourceType": "script", "budget": 3 },
+      { "resourceType": "stylesheet", "budget": 1 }
+    ]
+  }
+]

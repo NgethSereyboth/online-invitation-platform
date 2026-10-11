@@ -1,3 +1,4 @@
+@layer components {
 /* =========================================================================
    V2-UX-7 (ROADMAP-V2 §3.7) — Toast notification system styles.
    Loaded by `dashboard.html` (and any future host-side page). Kept separate
@@ -166,4 +167,6 @@
    the toast reads against the dark backdrop. --------------------------- */
 html[data-theme="dark"] .toast {
   box-shadow: 0 16px 46px rgba(0, 0, 0, 0.34);
+}
+
 }

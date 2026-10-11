@@ -1,0 +1,27 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./src/python",
+      "numberOfRuns": 1,
+      "url": [
+        "http://localhost/index.html",
+        "http://localhost/dashboard.html",
+        "http://localhost/public.html",
+        "http://localhost/admin.html",
+        "http://localhost/privacy.html",
+        "http://localhost/materials.html"
+      ],
+      "settings": {
+        "preset": "desktop",
+        "onlyCategories": ["performance"]
+      }
+    },
+    "assert": {
+      "budgetsFile": "./docs/perf/lighthouse-budgets.json"
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./docs/reviews/lighthouse"
+    }
+  }
+}

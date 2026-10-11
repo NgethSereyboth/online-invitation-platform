@@ -68,7 +68,7 @@ function ensureTextWorkspace(){
         <button type="button" class="refine-text-preset heading" data-v7-text-preset="heading">Add a heading</button>
         <button type="button" class="refine-text-preset subheading" data-v7-text-preset="subheading">Add a subheading</button>
         <button type="button" class="refine-text-preset body" data-v7-text-preset="body">Add body text</button>
-        <button type="button" class="refine-text-preset khmer" data-v7-text-preset="khmer">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
+        <button type="button" class="refine-text-preset khmer" data-v7-text-preset="khmer" lang="km">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
       </div></section>
       <section class="refine-text-section fp-text-fonts"><div><h3>Fonts</h3><small>Apply to selected text</small></div><div class="fp-text-category-tabs"></div><div class="fp-inline-font-list"></div><button type="button" class="refine-browse-fonts">Browse full font library</button></section>
       <section class="refine-text-section"><div><h3>Font combinations</h3><small>Invitation-ready typography</small></div><div class="fp-text-combo-grid">
@@ -76,7 +76,7 @@ function ensureTextWorkspace(){
         <button type="button" class="fp-text-combo" data-v7-combo="editorial"><span class="hero" style="font-family:Didot,Georgia,serif">THE<br><i>MOMENT</i></span><small>Editorial contrast</small></button>
         <button type="button" class="fp-text-combo" data-v7-combo="modern"><span class="hero" style="font-family:Arial,sans-serif;font-weight:800">TITLE<br>DETAILS</span><small>Modern clean</small></button>
         <button type="button" class="fp-text-combo" data-v7-combo="romance"><span class="hero" style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
-        <button type="button" class="fp-text-combo" data-v7-combo="khmer"><span class="hero" style="font-family:'Khmer OS Muol Light','Noto Serif Khmer',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="khmer"><span class="hero" lang="km" style="font-family:'Khmer OS Muol Light','Noto Serif Khmer',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
         <button type="button" class="fp-text-combo" data-v7-combo="minimal"><span class="hero" style="font-family:Inter,Arial,sans-serif;letter-spacing:.12em">SAVE<br>THE DATE</span><small>Minimal spaced</small></button>
       </div></section>`;
     panelHost.append(pane);
@@ -139,7 +139,7 @@ function ensureTextWorkspace(){
     tabs.innerHTML=categories.map(x=>`<button type="button" class="${x===category?'active':''}" data-v7-font-cat="${x}">${x}</button>`).join('');
     $$('[data-v7-font-cat]',tabs).forEach(b=>b.onclick=()=>{category=b.dataset.v7FontCat;renderFonts()});
     const recent=recentFonts();let data=fonts.filter(f=>{if(category==='Recent'&&!recent.includes(f.stack))return false;if(!['All','Recent'].includes(category)&&f.category!==category)return false;return!query||`${f.name} ${f.category}`.toLowerCase().includes(query)});if(category==='Recent')data.sort((a,b)=>recent.indexOf(a.stack)-recent.indexOf(b.stack));
-    list.innerHTML='';data.forEach(f=>{const b=document.createElement('button');b.type='button';b.className='fp-inline-font';b.innerHTML=`<span class="sample"></span><small></small>`;$('.sample',b).textContent=f.category==='Khmer'?'សិរីមង្គល':'Beautiful moments';$('.sample',b).style.fontFamily=window.EInviteTypography?.stack?.(f.stack)||'serif';$('small',b).textContent=f.name;b.onclick=()=>applyFont(f);list.append(b)});if(!data.length)list.innerHTML='<small class="workflow-v7-font-empty">No fonts match this view.</small>';
+    list.innerHTML='';data.forEach(f=>{const b=document.createElement('button');b.type='button';b.className='fp-inline-font';b.innerHTML=`<span class="sample"></span><small></small>`;$('.sample',b).textContent=f.category==='Khmer'?'សិរីមង្គល':'Beautiful moments';$('.sample',b).lang=f.category==='Khmer'?'km':'en';$('.sample',b).style.fontFamily=window.EInviteTypography?.stack?.(f.stack)||'serif';$('small',b).textContent=f.name;b.onclick=()=>applyFont(f);list.append(b)});if(!data.length)list.innerHTML='<small class="workflow-v7-font-empty">No fonts match this view.</small>';
   }
   back?.addEventListener('click',()=>window.EInviteWorkflow?.back?.());
   close?.addEventListener('click',()=>window.EInviteWorkflow?.collapsePanel?.(true));

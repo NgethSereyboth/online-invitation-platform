@@ -1,3 +1,4 @@
+@layer components {
 /* Phase 2a (V54.1) — Guest features styles (sign-up sheets, polls, album, delivery dialog). */
 
 .guest-feature {
@@ -240,4 +241,6 @@
   background: var(--accent, #9d4555);
   color: #fff;
   border-color: var(--accent, #9d4555);
+}
+
 }

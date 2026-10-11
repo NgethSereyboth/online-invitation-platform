@@ -5,7 +5,7 @@ const clone=v=>structuredClone(v);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
 const _txt=(en,km)=>_isKm()?(km!=null?km:en):en;
-const b=(en,km)=>`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${esc(km!=null?km:en)}</span>`;
+const b=(en,km)=>`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km!=null?km:en)}</span>`;
 async function api(path,options={}){const r=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',}});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||'Request failed');return data}
 function palette(doc){const p=doc?.palette||{};return{background:p.background||'#fff7f3',text:p.text||'#342c26',heading:p.heading||doc?.accent||'#9d4555'}}
 function strip(value){const d=document.createElement('div');d.innerHTML=String(value||'');return d.textContent||''}

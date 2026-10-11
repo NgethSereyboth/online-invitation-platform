@@ -1,3 +1,4 @@
+@layer components {
 /* V0.52 editor interaction refinement: one primary text toolbar, collision-safe overlays, and unclipped tool labels. */
 body.studio-experience .v24-inline-toolbar,
 body.studio-experience .ei-rich-toolbar,
@@ -91,4 +92,6 @@ body.studio-experience .workflow-v4-popover {
     white-space: nowrap;
     font-size: 8px;
   }
+}
+
 }

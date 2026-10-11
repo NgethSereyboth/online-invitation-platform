@@ -32,14 +32,14 @@ function editor(){
         <button class="refine-text-preset heading" data-refine-text="heading">Add a heading</button>
         <button class="refine-text-preset subheading" data-refine-text="subheading">Add a subheading</button>
         <button class="refine-text-preset body" data-refine-text="body">Add a little bit of body text</button>
-        <button class="refine-text-preset khmer" data-refine-text="khmer">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
+        <button class="refine-text-preset khmer" data-refine-text="khmer" lang="km">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
       </div></section>
       <section class="refine-text-section"><div><h3>Fonts</h3><small>Search · Khmer · Favorites</small></div><button type="button" class="refine-browse-fonts">Browse all fonts</button></section>
       <section class="refine-text-section"><div><h3>Font combinations</h3><small>Quick invitation styles</small></div><div class="refine-font-combos">
         <button class="refine-font-combo" data-combo="gold"><span style="font-family:Georgia,serif;color:#b48a20">GOLDEN<br>HOUR</span><small>Luxury serif</small></button>
         <button class="refine-font-combo" data-combo="modern"><span style="font-family:Arial,sans-serif;font-weight:800">TITLE<br><i>HEADING</i></span><small>Modern contrast</small></button>
         <button class="refine-font-combo" data-combo="romance"><span style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
-        <button class="refine-font-combo" data-combo="khmer"><span style="font-family:'Noto Serif Khmer','Khmer OS Muol Light',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
+        <button class="refine-font-combo" data-combo="khmer"><span lang="km" style="font-family:'Noto Serif Khmer','Khmer OS Muol Light',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
       </div></section>`;
     host.append(pane);
     function activate(id){

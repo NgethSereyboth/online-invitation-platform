@@ -14,7 +14,7 @@
   const _isKm = () => (window.EInviteI18n && window.EInviteI18n.get ? window.EInviteI18n.get() : (document.documentElement.lang || 'en').toLowerCase()).startsWith('km');
   const _html = (en, km) => {
     if (window.EInviteI18n) return window.EInviteI18n.langText(en, km);
-    return `<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${esc(km != null ? km : en)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km != null ? km : en)}</span>`;
   };
   const _txt = (en, km) => _isKm() ? (km != null ? km : en) : en;
   localStorage.removeItem('sovan-auth-token');

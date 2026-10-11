@@ -1,3 +1,4 @@
+@layer components {
 :root{--app-bg:#f4f5f8;--app-surface:#ffffff;--app-surface-2:#f8f8fb;--app-surface-3:#f0f1f5;--app-text:#202127;--app-muted:#646773;--app-faint:#6c707a;--app-line:#e3e4e9;--app-line-2:#d7d8df;--app-accent:#8b465b;--app-accent-2:#ba6d84;--app-accent-soft:#f4e7eb;--app-good:#38a169;--app-warn:#d58b20;--app-shadow-sm:0 2px 8px rgba(30,32,40,.06);--app-shadow:0 14px 42px rgba(25,26,34,.10);--app-shadow-xl:0 30px 90px rgba(19,20,26,.20);--app-radius-sm:9px;--app-radius:14px;--app-radius-lg:20px;--motion-fast:150ms;--motion:260ms;--motion-slow:420ms;--spring:cubic-bezier(.2,.9,.2,1.15);--smooth:cubic-bezier(.2,.7,.2,1);--studio-left-width:370px;--studio-right-width:330px}
 /* Phase 2b WCAG AA: light-mode --app-faint was #9ea0aa (2.6:1 on white, fails AA for normal text).
    Bumped to #6c707a (4.96:1) — see docs/a11y/WCAG-AA-AUDIT.md §4.
@@ -454,3 +455,5 @@ html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-m
    layout shift on tap (iOS Safari sometimes triggers :active state on
    scroll-start, causing the button to scale and "jump"). Already covered by
    the global prefers-reduced-motion rule above — no additional override needed. */
+
+}

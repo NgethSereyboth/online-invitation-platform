@@ -1,3 +1,4 @@
+@layer components {
 
 /* ============================================================================
    V55 admin — one extra sub-navigation row inside the content area (§3 Group 6).
@@ -27,3 +28,5 @@ body[data-page="admin"] .admin-panel.active { display: block; }
 body[data-page="admin"] .admin-panel table { border: 1px solid var(--app-line); border-radius: var(--radius-md); overflow: hidden; }
 body[data-page="admin"] .admin-panel table thead th { background: var(--app-surface-2); position: sticky; top: var(--app-topbar-h); }
 body[data-page="admin"] .admin-panel tbody tr:hover { background: var(--app-surface-2); }
+
+}

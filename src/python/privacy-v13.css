@@ -1,3 +1,4 @@
+@layer components {
 body{margin:0;background:var(--surface,#f7f7f8);color:var(--text,#1d1d22)}
 .privacy-page{width:min(860px,calc(100% - 32px));margin:0 auto;padding:56px 0 80px}
 .privacy-page article{background:var(--panel,#fff);border:1px solid var(--border,#e2e2e7);border-radius:24px;padding:clamp(24px,5vw,52px);box-shadow:0 20px 70px rgba(0,0,0,.07)}
@@ -7,3 +8,5 @@ body{margin:0;background:var(--surface,#f7f7f8);color:var(--text,#1d1d22)}
 .privacy-page a{color:inherit}
 .privacy-page .note{padding:14px 16px;border-radius:14px;background:var(--surface,#f4f4f6)}
 .privacy-back-link{display:inline-flex;min-height:44px;align-items:center;padding:0 4px;font-weight:700}
+
+}

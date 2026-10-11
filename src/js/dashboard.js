@@ -1,7 +1,7 @@
 if('scrollRestoration'in history)history.scrollRestoration='manual';
 const $=s=>document.querySelector(s),accountKey='sovan-account-v1',invitesKey='sovan-multi-invites-v1',localTemplatesKey='sovan-full-invitation-templates-v1';localStorage.removeItem('sovan-auth-token');
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
-const _html=(en,km)=>{if(window.EInviteI18n)return window.EInviteI18n.langText(en,km);return`<span class="i18n i18n-en">${escapeHtml(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${escapeHtml(km!=null?km:en)}</span>`};
+const _html=(en,km)=>{if(window.EInviteI18n)return window.EInviteI18n.langText(en,km);return`<span class="i18n i18n-en">${escapeHtml(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${escapeHtml(km!=null?km:en)}</span>`};
 const _txt=(en,km)=>_isKm()?(km!=null?km:en):en;
 const seed=[{id:'demo-wedding',title:'Sophea & Dara',type:'Wedding',status:'Published',views:128,rsvps:34,updatedAt:new Date().toISOString()}];
 let account=JSON.parse(localStorage.getItem(accountKey)||'null'),invites=JSON.parse(localStorage.getItem(invitesKey)||'null')||seed,server=false,userTemplates=[],marketTemplates=[],templateFilter='all';

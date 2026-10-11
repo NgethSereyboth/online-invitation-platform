@@ -1,3 +1,4 @@
+@layer components {
 /* =========================================================================
    editor-styles.css — Consolidated editor chrome styles (v54 refactor).
    -------------------------------------------------------------------------
@@ -1084,10 +1085,16 @@ body[data-page="index"] > footer.studio-statusbar {
 body[data-page="index"] > footer.studio-statusbar strong { font-size: var(--fs-body-sm); font-weight: var(--fw-medium); color: var(--app-text); }
 body[data-page="index"] > footer.studio-statusbar small { font-size: var(--fs-body-sm); color: var(--app-muted); }
 body[data-page="index"] > footer.studio-statusbar .studio-status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--app-good); }
-body[data-page="index"] > footer.studio-statusbar .studio-status-center { margin: 0 auto; display: flex; gap: var(--space-2); }
+/* WCAG 2.1 AA 1.4.3: this block restyles the status bar as a light surface, but the
+   text colours of studio-experience.css were written for the old dark bar
+   (.studio-status-center{color:#d5d5da}, .studio-statusbar kbd{color:#f2f2f4}).
+   Without these two declarations the centre readout measured 1.35:1 and the
+   keyboard hints 1.05:1. Both now use the same tokens as `strong`/`small` above. */
+body[data-page="index"] > footer.studio-statusbar .studio-status-center { margin: 0 auto; display: flex; gap: var(--space-2); color: var(--app-muted); }
 body[data-page="index"] > footer.studio-statusbar kbd {
   font-family: var(--font-mono); font-size: var(--fs-mono); letter-spacing: var(--ls-mono);
-  padding: 2px var(--space-1); border: 1px solid var(--app-line); border-radius: 6px; background: var(--app-surface-2);
+  padding: 2px var(--space-1); border: 1px solid var(--app-line); border-radius: 6px;
+  background: var(--app-surface-2); color: var(--app-text);
 }
 
 /* --- G4/G7: the floating selection card ----------------------------------- */
@@ -1151,4 +1158,6 @@ body[data-page="index"] .v54-selection-card[hidden] { display: none; }
   body[data-page="index"] .v54-selection-card,
   body[data-page="index"] .studio-inspector-tab,
   body[data-page="index"] .studio-rail-button { transition: none; }
+}
+
 }

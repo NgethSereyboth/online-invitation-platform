@@ -209,7 +209,7 @@
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) {
       window.EInviteBackend.message(
         document.querySelector('.admin-page') || document.querySelector('main') || document.body,
-        '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km">The administration console requires the full application server.</span>');
+        '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">The administration console requires the full application server.</span>');
       return;
     }
     initTabs();

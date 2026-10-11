@@ -136,7 +136,7 @@
     // Dashboard/editor surfaces are always switchable: emit dual spans and let
     // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
     // re-render, form state preserved).
-    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const formatTs = (ts) => {
     if (!ts) return '';

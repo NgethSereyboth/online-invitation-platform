@@ -137,7 +137,7 @@
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
     kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
-    kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.textContent = "ខ្មែរ";
+    kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
   }
@@ -214,9 +214,9 @@
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
-      if (mode === "km") return '<span class="i18n i18n-km khmer-text" lang="km">' + escHTML(kmv) + '</span>';
+      if (mode === "km") return '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
-             '<span class="i18n i18n-km khmer-text" lang="km">' + escHTML(kmv) + '</span>';
+             '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
@@ -588,7 +588,7 @@ window.alert=(message)=>{uiAlert(message)};
 })();;if('scrollRestoration'in history)history.scrollRestoration='manual';
 const $=s=>document.querySelector(s),accountKey='sovan-account-v1',invitesKey='sovan-multi-invites-v1',localTemplatesKey='sovan-full-invitation-templates-v1';localStorage.removeItem('sovan-auth-token');
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
-const _html=(en,km)=>{if(window.EInviteI18n)return window.EInviteI18n.langText(en,km);return`<span class="i18n i18n-en">${escapeHtml(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${escapeHtml(km!=null?km:en)}</span>`};
+const _html=(en,km)=>{if(window.EInviteI18n)return window.EInviteI18n.langText(en,km);return`<span class="i18n i18n-en">${escapeHtml(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${escapeHtml(km!=null?km:en)}</span>`};
 const _txt=(en,km)=>_isKm()?(km!=null?km:en):en;
 const seed=[{id:'demo-wedding',title:'Sophea & Dara',type:'Wedding',status:'Published',views:128,rsvps:34,updatedAt:new Date().toISOString()}];
 let account=JSON.parse(localStorage.getItem(accountKey)||'null'),invites=JSON.parse(localStorage.getItem(invitesKey)||'null')||seed,server=false,userTemplates=[],marketTemplates=[],templateFilter='all';
@@ -1252,10 +1252,10 @@ if(elementsPane)elementsPane.insertBefore(librarySection,elementsPane.querySelec
 let libraryCat='All',libraryQuery='';const favKey='einvite-element-favorites-v1',recentKey='einvite-element-recent-v1';let favorites=new Set(JSON.parse(localStorage.getItem(favKey)||'[]')),recent=JSON.parse(localStorage.getItem(recentKey)||'[]');
 const cats=['All','Favorites','Recent',...new Set(library.map(x=>x.cat))];
 function addCustomElement(item,drop){if(item.shape){if(typeof addDesignElement==='function')addDesignElement(item.shape);return}
- const type='decoration',obj=typeof createObject==='function'?createObject(makeId('library'),type):null;if(!obj)return;const content=obj.querySelector('.content');content.textContent=item.text||item.glyph||'✦';obj.dataset.color=(window.state?.accent||$('#accent')?.value||'#9d4555');obj.dataset.fontSize=item.text?'34':'64';obj.style.width=item.text?'76%':'150px';obj.style.height=item.text?'110px':'120px';obj.style.left=drop?`${drop.x}%`:(item.text?'12%':'32%');obj.style.top=drop?`${drop.y}%`:'38%';if(item.preset==='luxury'){obj.dataset.textGradientEnabled='true';obj.dataset.textGradientStart='#7a5718';obj.dataset.textGradientEnd='#e9c86e';obj.dataset.fontWeight='700';obj.dataset.letterSpacing='2'}if(item.preset==='editorial'){obj.dataset.fontStyle='italic';obj.dataset.font='serif-georgia';obj.dataset.fontSize='38'}if(item.preset==='khmer'){obj.dataset.font="noto-serif-khmer";obj.dataset.fontSize='34';obj.dataset.color='#a87616'}if(item.preset==='date'){obj.dataset.letterSpacing='4';obj.dataset.fontSize='26';obj.dataset.backgroundEnabled='true';obj.dataset.backgroundColor='#ffffff';obj.dataset.backgroundOpacity='78';obj.dataset.borderRadius='28'}applyObjectVisualStyle(obj);stage.append(obj);clearSelection();setSelection([obj]);saveNow();
+ const type='decoration',obj=typeof createObject==='function'?createObject(makeId('library'),type):null;if(!obj)return;const content=obj.querySelector('.content');content.textContent=item.text||item.glyph||'✦';content.lang=/[\u1780-\u17FF]/.test(item.text||item.glyph||'')?'km':'en';obj.dataset.color=(window.state?.accent||$('#accent')?.value||'#9d4555');obj.dataset.fontSize=item.text?'34':'64';obj.style.width=item.text?'76%':'150px';obj.style.height=item.text?'110px':'120px';obj.style.left=drop?`${drop.x}%`:(item.text?'12%':'32%');obj.style.top=drop?`${drop.y}%`:'38%';if(item.preset==='luxury'){obj.dataset.textGradientEnabled='true';obj.dataset.textGradientStart='#7a5718';obj.dataset.textGradientEnd='#e9c86e';obj.dataset.fontWeight='700';obj.dataset.letterSpacing='2'}if(item.preset==='editorial'){obj.dataset.fontStyle='italic';obj.dataset.font='serif-georgia';obj.dataset.fontSize='38'}if(item.preset==='khmer'){obj.dataset.font="noto-serif-khmer";obj.dataset.fontSize='34';obj.dataset.color='#a87616'}if(item.preset==='date'){obj.dataset.letterSpacing='4';obj.dataset.fontSize='26';obj.dataset.backgroundEnabled='true';obj.dataset.backgroundColor='#ffffff';obj.dataset.backgroundOpacity='78';obj.dataset.borderRadius='28'}applyObjectVisualStyle(obj);stage.append(obj);clearSelection();setSelection([obj]);saveNow();
  recent=[item.id,...recent.filter(x=>x!==item.id)].slice(0,10);localStorage.setItem(recentKey,JSON.stringify(recent));renderLibrary();toast(`${item.name} added`)}
 function filteredLibrary(){return library.filter(x=>{if(libraryCat==='Favorites'&&!favorites.has(x.id))return false;if(libraryCat==='Recent'&&!recent.includes(x.id))return false;if(!['All','Favorites','Recent'].includes(libraryCat)&&x.cat!==libraryCat)return false;return!libraryQuery||`${x.name} ${x.cat}`.toLowerCase().includes(libraryQuery)})}
-function renderLibrary(){const catHost=$('.final-library-cats',librarySection),grid=$('.final-library-grid',librarySection);catHost.innerHTML=cats.map(c=>`<button type="button" class="${c===libraryCat?'active':''}" data-cat="${c}">${c}</button>`).join('');catHost.querySelectorAll('button').forEach(b=>b.onclick=()=>{libraryCat=b.dataset.cat;renderLibrary()});const items=filteredLibrary();$('.final-library-count',librarySection).textContent=`${items.length} items`;grid.innerHTML='';items.forEach(item=>{const card=document.createElement('article');card.className='final-element-card';card.draggable=true;card.innerHTML=`<button type="button" class="final-fav ${favorites.has(item.id)?'active':''}" aria-label="Favorite">★</button><div class="final-element-preview">${item.shape?`<i class="shape-${item.shape}"></i>`:`<span>${item.text||item.glyph}</span>`}</div><strong>${item.name}</strong><small>${item.cat}</small>`;card.onclick=e=>{if(e.target.closest('.final-fav'))return;addCustomElement(item)};card.querySelector('.final-fav').onclick=e=>{e.stopPropagation();favorites.has(item.id)?favorites.delete(item.id):favorites.add(item.id);localStorage.setItem(favKey,JSON.stringify([...favorites]));renderLibrary()};card.ondragstart=e=>{e.dataTransfer.setData('application/x-einvite-library-item',item.id);e.dataTransfer.effectAllowed='copy'};grid.append(card)})}
+function renderLibrary(){const catHost=$('.final-library-cats',librarySection),grid=$('.final-library-grid',librarySection);catHost.innerHTML=cats.map(c=>`<button type="button" class="${c===libraryCat?'active':''}" data-cat="${c}">${c}</button>`).join('');catHost.querySelectorAll('button').forEach(b=>b.onclick=()=>{libraryCat=b.dataset.cat;renderLibrary()});const items=filteredLibrary();$('.final-library-count',librarySection).textContent=`${items.length} items`;grid.innerHTML='';items.forEach(item=>{const card=document.createElement('article');card.className='final-element-card';card.draggable=true;card.innerHTML=`<button type="button" class="final-fav ${favorites.has(item.id)?'active':''}" aria-label="Favorite">★</button><div class="final-element-preview">${item.shape?`<i class="shape-${item.shape}"></i>`:`<span lang="${/[\u1780-\u17FF]/.test(item.text||'')?'km':'en'}">${item.text||item.glyph}</span>`}</div><strong>${item.name}</strong><small>${item.cat}</small>`;card.onclick=e=>{if(e.target.closest('.final-fav'))return;addCustomElement(item)};card.querySelector('.final-fav').onclick=e=>{e.stopPropagation();favorites.has(item.id)?favorites.delete(item.id):favorites.add(item.id);localStorage.setItem(favKey,JSON.stringify([...favorites]));renderLibrary()};card.ondragstart=e=>{e.dataTransfer.setData('application/x-einvite-library-item',item.id);e.dataTransfer.effectAllowed='copy'};grid.append(card)})}
 $('.final-library-search input',librarySection).oninput=e=>{libraryQuery=e.target.value.trim().toLowerCase();renderLibrary()};renderLibrary();
 stage.addEventListener('dragover',e=>{if(Array.from(e.dataTransfer.types||[]).includes('application/x-einvite-library-item')){e.preventDefault();stage.classList.add('final-library-drop')}});stage.addEventListener('dragleave',()=>stage.classList.remove('final-library-drop'));stage.addEventListener('drop',e=>{const id=e.dataTransfer.getData('application/x-einvite-library-item');if(!id)return;e.preventDefault();stage.classList.remove('final-library-drop');const r=stage.getBoundingClientRect(),item=library.find(x=>x.id===id);if(item)addCustomElement(item,{x:Math.max(0,Math.min(85,(e.clientX-r.left)/r.width*100)),y:Math.max(0,Math.min(85,(e.clientY-r.top)/r.height*100))})});
 const observer=new MutationObserver(()=>{refreshAdvancedControls();refreshTimeline()});observer.observe(stage,{subtree:true,childList:true,attributes:true,attributeFilter:['class','data-animation-delay','data-fill-mode','data-text-gradient-enabled']});
@@ -1304,14 +1304,14 @@ function editor(){
         <button class="refine-text-preset heading" data-refine-text="heading">Add a heading</button>
         <button class="refine-text-preset subheading" data-refine-text="subheading">Add a subheading</button>
         <button class="refine-text-preset body" data-refine-text="body">Add a little bit of body text</button>
-        <button class="refine-text-preset khmer" data-refine-text="khmer">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
+        <button class="refine-text-preset khmer" data-refine-text="khmer" lang="km">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
       </div></section>
       <section class="refine-text-section"><div><h3>Fonts</h3><small>Search · Khmer · Favorites</small></div><button type="button" class="refine-browse-fonts">Browse all fonts</button></section>
       <section class="refine-text-section"><div><h3>Font combinations</h3><small>Quick invitation styles</small></div><div class="refine-font-combos">
         <button class="refine-font-combo" data-combo="gold"><span style="font-family:Georgia,serif;color:#b48a20">GOLDEN<br>HOUR</span><small>Luxury serif</small></button>
         <button class="refine-font-combo" data-combo="modern"><span style="font-family:Arial,sans-serif;font-weight:800">TITLE<br><i>HEADING</i></span><small>Modern contrast</small></button>
         <button class="refine-font-combo" data-combo="romance"><span style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
-        <button class="refine-font-combo" data-combo="khmer"><span style="font-family:'Noto Serif Khmer','Khmer OS Muol Light',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
+        <button class="refine-font-combo" data-combo="khmer"><span lang="km" style="font-family:'Noto Serif Khmer','Khmer OS Muol Light',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
       </div></section>`;
     host.append(pane);
     function activate(id){
@@ -1437,14 +1437,14 @@ function editorFinal(){
       <button class="fp-text-combo" data-fp-combo="editorial"><span class="hero" style="font-family:Didot,Georgia,serif">THE<br><i>MOMENT</i></span><small>Editorial contrast</small></button>
       <button class="fp-text-combo" data-fp-combo="modern"><span class="hero" style="font-family:Arial,sans-serif;font-weight:800">TITLE<br><small>SUBHEADING</small></span><small>Modern clean</small></button>
       <button class="fp-text-combo" data-fp-combo="romance"><span class="hero" style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
-      <button class="fp-text-combo" data-fp-combo="khmer"><span class="hero" style="font-family:'Khmer OS Muol Light','Noto Serif Khmer',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
+      <button class="fp-text-combo" data-fp-combo="khmer"><span class="hero" lang="km" style="font-family:'Khmer OS Muol Light','Noto Serif Khmer',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
       <button class="fp-text-combo" data-fp-combo="minimal"><span class="hero" style="font-family:Inter,Arial,sans-serif;letter-spacing:.12em">SAVE<br>THE DATE</span><small>Minimal spaced</small></button>
     </div>`;
     const fontPlaceholder=$('.refine-text-section',textPane)?.nextElementSibling;textPane.append(section,combo);
     let cat='All',query='';const categories=['All','Recent','Khmer','Serif','Modern'];
     const selected=()=>$('.object.selected,.object.multi-selected',stage);
     const applyFont=font=>{let o=selected();if(!o){$('#addText')?.click();o=selected()}if(!o)return;try{pushHistory(capture())}catch{}o.dataset.font=font.stack;try{applyObjectVisualStyle(o);save()}catch{}const r=[font.stack,...recent().filter(x=>x!==font.stack)].slice(0,12);localStorage.setItem('einvite-font-recent-v1',JSON.stringify(r));closePaneOnMobile()};
-    function renderFonts(){const tabs=$('.fp-text-category-tabs',section),list=$('.fp-inline-font-list',section);tabs.innerHTML=categories.map(x=>`<button type="button" class="${x===cat?'active':''}" data-cat="${x}">${x}</button>`).join('');$$('[data-cat]',tabs).forEach(b=>b.onclick=()=>{cat=b.dataset.cat;renderFonts()});let data=fonts.filter(f=>{if(cat==='Recent'&&!recent().includes(f.stack))return false;if(!['All','Recent'].includes(cat)&&f.cat!==cat)return false;return!query||`${f.name} ${f.cat}`.toLowerCase().includes(query)});if(cat==='Recent')data.sort((a,b)=>recent().indexOf(a.stack)-recent().indexOf(b.stack));list.innerHTML='';data.forEach(f=>{const b=document.createElement('button');b.type='button';b.className='fp-inline-font';b.innerHTML=`<span class="sample" style="font-family:${window.EInviteTypography?.stack?.(f.stack)||'serif'}">${f.cat==='Khmer'?'សិរីមង្គល':'Beautiful moments'}</span><small>${esc(f.name)}</small>`;b.onclick=()=>applyFont(f);list.append(b)});if(!data.length)list.innerHTML='<small style="padding:12px;color:var(--app-muted)">No fonts match this view.</small>'}
+    function renderFonts(){const tabs=$('.fp-text-category-tabs',section),list=$('.fp-inline-font-list',section);tabs.innerHTML=categories.map(x=>`<button type="button" class="${x===cat?'active':''}" data-cat="${x}">${x}</button>`).join('');$$('[data-cat]',tabs).forEach(b=>b.onclick=()=>{cat=b.dataset.cat;renderFonts()});let data=fonts.filter(f=>{if(cat==='Recent'&&!recent().includes(f.stack))return false;if(!['All','Recent'].includes(cat)&&f.cat!==cat)return false;return!query||`${f.name} ${f.cat}`.toLowerCase().includes(query)});if(cat==='Recent')data.sort((a,b)=>recent().indexOf(a.stack)-recent().indexOf(b.stack));list.innerHTML='';data.forEach(f=>{const b=document.createElement('button');b.type='button';b.className='fp-inline-font';b.innerHTML=`<span class="sample" lang="${f.cat==='Khmer'?'km':'en'}" style="font-family:${window.EInviteTypography?.stack?.(f.stack)||'serif'}">${f.cat==='Khmer'?'សិរីមង្គល':'Beautiful moments'}</span><small>${esc(f.name)}</small>`;b.onclick=()=>applyFont(f);list.append(b)});if(!data.length)list.innerHTML='<small style="padding:12px;color:var(--app-muted)">No fonts match this view.</small>'}
     renderFonts();
     const search=$('.refine-text-search input',textPane);if(search){const prior=search.oninput;search.oninput=e=>{query=e.target.value.trim().toLowerCase();renderFonts();$$('.refine-text-preset,.fp-text-combo',textPane).forEach(x=>x.hidden=!!query&&!x.textContent.toLowerCase().includes(query));if(typeof prior==='function')prior.call(search,e)}}
     const combos={gold:{font:'serif-georgia',fontSize:'48',color:'#b48a20',text:'Golden Hour',letterSpacing:'1'},editorial:{font:'noto-serif',fontSize:'48',color:'#2c2530',text:'The Moment',fontStyle:'italic'},modern:{font:'sans-arial',fontSize:'44',color:'#202127',text:'Your Celebration',fontWeight:'700'},romance:{font:'serif-georgia',fontSize:'46',color:'#426b52',text:'Bride & Groom',fontStyle:'italic'},khmer:{font:"noto-serif-khmer",fontSize:'38',color:'#9b6b13',text:'សិរីមង្គលអាពាហ៍ពិពាហ៍'},minimal:{font:'noto-sans',fontSize:'34',color:'#22242a',text:'SAVE THE DATE',letterSpacing:'5'}};
@@ -1598,7 +1598,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     // Dashboard/editor surfaces are always switchable: emit dual spans and let
     // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
     // re-render, form state preserved).
-    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const detectLang = () => (document.documentElement.lang === 'km' ? 'km' : 'en');
 
@@ -1775,8 +1775,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
     if (mode === 'en') return `<span class="i18n i18n-en" lang="en">${esc(en)}</span>`;
-    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
-    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
+    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
   };
   const formatTs = (ts) => {
     if (!ts) return '';
@@ -1872,9 +1872,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         const msg = (STRINGS.resendDone.en).replace('{sent}', String(sent));
         const msgKm = (STRINGS.resendDone.km).replace('{sent}', String(sent));
         resendStatus.innerHTML = mode === 'km'
-          ? `<span class="khmer-text" lang="km">${esc(msgKm)}</span>`
+          ? `<span class="khmer-text" lang="km" lang="km">${esc(msgKm)}</span>`
           : mode === 'both'
-            ? `<span lang="en">${esc(msg)}</span> <span class="khmer-text" lang="km">${esc(msgKm)}</span>`
+            ? `<span lang="en">${esc(msg)}</span> <span class="khmer-text" lang="km" lang="km">${esc(msgKm)}</span>`
             : `<span lang="en">${esc(msg)}</span>`;
       } catch (err) {
         resendStatus.innerHTML = `<span class="error">${langText('resendFailed', mode)}</span>`;
@@ -2023,7 +2023,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     // Dashboard/editor surfaces are always switchable: emit dual spans and let
     // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
     // re-render, form state preserved).
-    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const formatTs = (ts) => {
     if (!ts) return '';
@@ -2559,7 +2559,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     // Dashboard/editor surfaces are always switchable: emit dual spans and let
     // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
     // re-render, form state preserved).
-    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const formatTs = (ts) => {
     if (!ts) return '';

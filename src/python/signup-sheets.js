@@ -44,8 +44,8 @@
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
     if (mode === 'en') return `<span class="i18n i18n-en" lang="en">${esc(en)}</span>`;
-    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
-    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
+    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
+    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
   };
   const formatDate = (ts) => (ts ? new Date(parseInt(ts, 10)).toLocaleString() : '');
 

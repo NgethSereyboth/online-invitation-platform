@@ -216,7 +216,7 @@
         <button type="button" data-text-preset="heading"><span>Aa</span><strong>Heading</strong><small>Large editorial title</small></button>
         <button type="button" data-text-preset="subheading"><span>Ag</span><strong>Subheading</strong><small>Elegant supporting text</small></button>
         <button type="button" data-text-preset="body"><span>¶</span><strong>Body text</strong><small>Readable event copy</small></button>
-        <button type="button" data-text-preset="khmer"><span>ក</span><strong>Khmer title</strong><small>Ceremonial Khmer style</small></button>
+        <button type="button" data-text-preset="khmer"><span lang="km">ក</span><strong>Khmer title</strong><small>Ceremonial Khmer style</small></button>
         <button type="button" data-smart-insert="monogram"><span>✦</span><strong>Monogram</strong><small>Couple initials</small></button>
         <button type="button" data-smart-insert="date"><span>◫</span><strong>Date badge</strong><small>Styled event date</small></button>
       </div>`;

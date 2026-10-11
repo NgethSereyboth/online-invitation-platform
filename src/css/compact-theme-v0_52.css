@@ -1,3 +1,4 @@
+@layer components {
 /* Compact Light/Dark appearance picker shared by authenticated pages. */
 html body .ui-theme .ui-theme-button {
   width: 32px !important;
@@ -66,4 +67,6 @@ html body .ui-theme .ui-theme-menu .check {
     top: 52px !important;
     z-index: 10001;
   }
+}
+
 }

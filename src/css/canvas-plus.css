@@ -1,3 +1,4 @@
+@layer components {
 /* App-chrome Inter faces: deterministic heading/body font so the Inter stack never
    depends on a host-installed font (SIL OFL 1.1 - licenses/fonts/Inter-OFL-1.1.txt).
    Inter v4.1 static TTFs, subset to the same Latin range as the bundled Noto faces. */
@@ -353,3 +354,5 @@ body.studio-experience #stage{color:#342c26!important}
 body.studio-experience #stage .subtitle,body.studio-experience #stage .details{color:#5b4148}
 body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme-midnight .subtitle,body.studio-experience #stage.theme-midnight .details{color:#f6efff!important}
 .canvas-bg-cut-settings{margin:8px 0!important;padding:8px 9px!important;border:1px solid var(--app-line)!important;border-radius:12px!important;background:var(--app-surface-2)!important}.canvas-bg-cut-settings summary{cursor:pointer;font-size:9px!important;font-weight:750!important;color:var(--app-text)!important}.canvas-bg-cut-settings label{margin:8px 0 0!important;font-size:8px!important}.canvas-bg-cut-settings small{display:block;margin-top:7px;font-size:7.5px!important;line-height:1.45!important;color:var(--app-muted)!important}.canvas-bg-cut-settings input[type=range]{margin-top:5px!important}
+
+}

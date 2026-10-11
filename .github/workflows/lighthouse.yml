@@ -1,0 +1,105 @@
+name: Performance Budgets
+
+# Three-layer performance budget (optimisation pass, task 7).
+#
+#   Layer 1 — declarative:  docs/perf/lighthouse-budgets.json holds the per-route
+#                           script / stylesheet / total ceilings in KB, in the
+#                           Lighthouse budget-file schema. It is the single source
+#                           of truth for both consumers below.
+#   Layer 2 — build-time:   src/python/build/build_page_manifests.py writes
+#                           docs/page-assets-v15.json (per-page asset manifest +
+#                           the aspirational route budgets). The route-bundle
+#                           builder is re-run with --check so a stale bundle
+#                           cannot pass as fresh.
+#   Layer 3 — gate:         tests/v55_route_weight_budget_test.py enforces the
+#                           budget file against the served bytes with no browser
+#                           (fast, always available), and `lhci autorun` enforces
+#                           the same file against real transfer sizes.
+#
+# Why the budget file and not `assert.assertions`: Lighthouse removed the core
+# `performance-budget` audit in v12
+# (https://github.com/GoogleChrome/lighthouse/issues/15203) and Lighthouse CI's
+# `assert.budgetsFile` cannot be combined with any other assert option
+# (https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md),
+# so per-path budgets live in one file that both layers read.
+#
+# See docs/reviews/optimisation-report.md for the measured baselines the numbers
+# were derived from, and for the two pre-existing defects this workflow surfaces.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: perf-budgets-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance-budgets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+      LHCI_BUILD_CONTEXT__COMMIT_TIME: ${{ github.event.head_commit.timestamp }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # --- Layer 1: the build outputs the budget file measures must be fresh ---
+      - name: Regenerate route bundles and page manifests (layer 1)
+        run: |
+          python3 src/python/build/build_route_bundles.py
+          python3 src/python/build/build_page_manifests.py
+
+      - name: Verify regenerated bundles are unchanged (layer 1)
+        run: python3 src/python/build/build_route_bundles.py --check
+
+      # --- Layer 2: the pre-existing aspirational route budgets ------------------
+      # KNOWN RED, quarantined on purpose. Two pre-existing defects keep this
+      # gate from being a pass/fail signal today, both documented in
+      # docs/reviews/optimisation-report.md:
+      #   1. the repo-root forwarder build_page_manifests.py is truncated (76 B,
+      #      missing `import os, runpy, sys` and the runpy.run_path call), so the
+      #      test cannot even import the builder it checks;
+      #   2. with the builder invoked directly, the BUDGETS ceilings for three of
+      #      the five routes are already exceeded (editor +194,149 B,
+      #      dashboard +190,247 B, public-guest +119,928 B) on an untouched
+      #      checkout.
+      # Re-baselining or reducing those ceilings is a payload decision, not a
+      # build fix, so this step reports without blocking. Delete
+      # `continue-on-error` once the decision lands.
+      - name: Aspirational route budgets (layer 2, known red)
+        continue-on-error: true
+        run: python3 tests/v14_performance_budget_test.py
+
+      # --- Layer 3a: the same budget file, no browser needed --------------------
+      - name: Route weight budgets, Chrome-free (layer 3a)
+        run: python3 tests/v55_route_weight_budget_test.py
+
+      # --- Layer 3b: the same budget file against real transfer sizes -----------
+      - name: Lighthouse CI (layer 3b)
+        run: npx --yes @lhci/cli@0 autorun
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: docs/reviews/lighthouse
+          if-no-files-found: ignore
+          retention-days: 14

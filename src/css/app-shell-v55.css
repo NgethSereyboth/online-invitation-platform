@@ -1,3 +1,4 @@
+@layer components {
 /* ============================================================================
    app-shell-v55.css — shared design system + application shell.
 
@@ -999,3 +1000,5 @@ body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
 .stat-card strong { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
 .stat-card span { color: var(--app-muted); font-size: var(--fs-body-sm); }
 
+
+}

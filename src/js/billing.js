@@ -3,7 +3,7 @@ localStorage.removeItem('sovan-auth-token');
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
 const _txt=(en,km)=>_isKm()?(km!=null?km:en):en;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const b=(en,km)=>`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${esc(km!=null?km:en)}</span>`;
+const b=(en,km)=>`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km!=null?km:en)}</span>`;
 
 const plans={
   free:{name:'Free',invitations:3,templates:5,storageBytes:250_000_000,features:['Create and publish invitations','Basic templates and editor','RSVP and guest tools','250 MB material storage']},
@@ -37,7 +37,7 @@ function checkoutBanner(){
 async function init(){
   if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;
   if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){
-    window.EInviteBackend.message(document.querySelector('main')||document.body,'<span class="i18n i18n-en">Billing, plan usage and card checkout require the full application server.</span><span class="i18n i18n-km khmer-text" lang="km">Billing, plan usage and card checkout require the full application server.</span>');
+    window.EInviteBackend.message(document.querySelector('main')||document.body,'<span class="i18n i18n-en">Billing, plan usage and card checkout require the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Billing, plan usage and card checkout require the full application server.</span>');
     return;
   }
   try{

@@ -1113,11 +1113,11 @@ const title=$('[data-id="title"] .content');
 const subtitle=$('[data-id="subtitle"] .content');
 if(title){
 if(!state.objects?.title?.richText)title.textContent=names;
-title.classList.toggle('khmer-text',mode==='km')
+title.classList.toggle('khmer-text',mode==='km');title.lang=mode==='km'?'km':''
 }
 if(subtitle){
 if(!state.objects?.subtitle?.richText)subtitle.textContent=message;
-subtitle.classList.toggle('khmer-text',mode==='km')
+subtitle.classList.toggle('khmer-text',mode==='km');subtitle.lang=mode==='km'?'km':'';title.lang=mode==='km'?'km':''
 }
 let dt=new Date($('#date').value+'T00:00:00');
 let label=isNaN(dt)?$('#date').value:dt.toLocaleDateString(undefined,{
@@ -1130,7 +1130,7 @@ const details=$('[data-id="details"] .content');
 const venueLabel=mode==='km'?($('#venueKm').value||$('#venue').value):$('#venue').value;
 if(details){
 if(!state.objects?.details?.richText)details.innerHTML=`${label}${time?` · ${time}`:''}<br>${venueLabel}`;
-details.classList.toggle('khmer-text',mode==='km')
+details.classList.toggle('khmer-text',mode==='km');details.lang=mode==='km'?'km':''
 }
 refreshKhmerDate();
 if(shouldSave)save()
@@ -1424,7 +1424,7 @@ const fields=[
 fields.forEach(([label,key,khmer],fieldIndex)=>{
 const wrap=document.createElement('label');wrap.textContent=label;
 const control=fieldIndex<2?document.createElement('input'):document.createElement('textarea');
-control.value=block[key]||'';if(khmer)control.classList.add('khmer-text');
+control.value=block[key]||'';if(khmer){control.classList.add('khmer-text');control.lang='km'}
 control.oninput=()=>{block[key]=control.value;save()};
 wrap.append(control);card.append(wrap)
 });
@@ -1464,7 +1464,7 @@ if(target.id==='musicSource'){const enabled=$('#musicEnabled');if(enabled)enable
 },true);
 function renderRsvpFieldsManager(){
 const panel=$('#rsvpFieldsManager');if(!panel)return;const fields=state.rsvpFields||[];panel.innerHTML=fields.length?'':'<p class="hint">No custom RSVP questions. The standard attendance, guest count, and message fields remain available.</p>';
-fields.forEach((field,index)=>{const card=document.createElement('div');card.className='custom-block-editor rsvp-field-editor';card.innerHTML=`<div class="custom-block-head"><strong>Question ${index+1}</strong><label class="toggle-row"><span>Required</span><input type="checkbox" data-rsvp-required ${field.required?'checked':''}></label></div><label>Label — English<input data-rsvp-label maxlength="200"></label><label>Label — Khmer<input class="khmer-text" data-rsvp-label-km maxlength="200"></label><label>Answer type<select data-rsvp-type><option value="text">Short text</option><option value="textarea">Long text</option><option value="select">Choice list</option><option value="number">Number</option></select></label><label data-rsvp-options-wrap>Choices — comma separated<input data-rsvp-options placeholder="Standard, Vegetarian, Vegan"></label><div class="mini-actions"><button type="button" data-rsvp-up>↑ Earlier</button><button type="button" data-rsvp-down>↓ Later</button><button type="button" class="danger" data-rsvp-remove>Remove</button></div>`;card.querySelector('[data-rsvp-label]').value=field.label||'';card.querySelector('[data-rsvp-label-km]').value=field.labelKm||'';card.querySelector('[data-rsvp-type]').value=field.type||'text';card.querySelector('[data-rsvp-options]').value=(field.options||[]).join(', ');const toggleOptions=()=>card.querySelector('[data-rsvp-options-wrap]').hidden=card.querySelector('[data-rsvp-type]').value!=='select';toggleOptions();
+fields.forEach((field,index)=>{const card=document.createElement('div');card.className='custom-block-editor rsvp-field-editor';card.innerHTML=`<div class="custom-block-head"><strong>Question ${index+1}</strong><label class="toggle-row"><span>Required</span><input type="checkbox" data-rsvp-required ${field.required?'checked':''}></label></div><label>Label — English<input data-rsvp-label maxlength="200"></label><label>Label — Khmer<input class="khmer-text" lang="km" data-rsvp-label-km maxlength="200"></label><label>Answer type<select data-rsvp-type><option value="text">Short text</option><option value="textarea">Long text</option><option value="select">Choice list</option><option value="number">Number</option></select></label><label data-rsvp-options-wrap>Choices — comma separated<input data-rsvp-options placeholder="Standard, Vegetarian, Vegan"></label><div class="mini-actions"><button type="button" data-rsvp-up>↑ Earlier</button><button type="button" data-rsvp-down>↓ Later</button><button type="button" class="danger" data-rsvp-remove>Remove</button></div>`;card.querySelector('[data-rsvp-label]').value=field.label||'';card.querySelector('[data-rsvp-label-km]').value=field.labelKm||'';card.querySelector('[data-rsvp-type]').value=field.type||'text';card.querySelector('[data-rsvp-options]').value=(field.options||[]).join(', ');const toggleOptions=()=>card.querySelector('[data-rsvp-options-wrap]').hidden=card.querySelector('[data-rsvp-type]').value!=='select';toggleOptions();
 card.querySelector('[data-rsvp-label]').oninput=e=>{field.label=e.target.value;save()};card.querySelector('[data-rsvp-label-km]').oninput=e=>{field.labelKm=e.target.value;save()};card.querySelector('[data-rsvp-required]').onchange=e=>{field.required=e.target.checked;save()};card.querySelector('[data-rsvp-type]').onchange=e=>{field.type=e.target.value;toggleOptions();save()};card.querySelector('[data-rsvp-options]').oninput=e=>{field.options=e.target.value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,30);save()};card.querySelector('[data-rsvp-up]').disabled=index===0;card.querySelector('[data-rsvp-down]').disabled=index===fields.length-1;card.querySelector('[data-rsvp-up]').onclick=()=>{[fields[index-1],fields[index]]=[fields[index],fields[index-1]];state.rsvpFields=fields;save()};card.querySelector('[data-rsvp-down]').onclick=()=>{[fields[index],fields[index+1]]=[fields[index+1],fields[index]];state.rsvpFields=fields;save()};card.querySelector('[data-rsvp-remove]').onclick=()=>{state.rsvpFields=fields.filter(x=>x.id!==field.id);save()};panel.append(card)})
 }
 function addRsvpField(){state.rsvpFields=[...(state.rsvpFields||[]),{id:`question-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,label:'Additional question',labelKm:'',type:'text',required:false,options:[]}];save()}
@@ -2889,12 +2889,12 @@ function safeHtml(v){
 return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 }
 function languageText(en,km,mode){
-if(mode==='km')return`<span class="i18n i18n-km khmer-text">${safeHtml(km || en)}</span>`;
-if(mode==='both')return`<span class="i18n i18n-en">${safeHtml(en)}</span><span class="i18n i18n-km khmer-text">${safeHtml(km || en)}</span>`;
+if(mode==='km')return`<span class="i18n i18n-km khmer-text" lang="km">${safeHtml(km || en)}</span>`;
+if(mode==='both')return`<span class="i18n i18n-en">${safeHtml(en)}</span><span class="i18n i18n-km khmer-text" lang="km">${safeHtml(km || en)}</span>`;
 return`<span class="i18n i18n-en">${safeHtml(en)}</span>`
 }
 function languageSwitcher(mode){
-return mode==='both'?'<div class="language-switch" role="group" aria-label="Invitation language"><button type="button" data-guest-lang="en" class="active">EN</button><button type="button" data-guest-lang="km">ខ្មែរ</button></div>':''
+return mode==='both'?'<div class="language-switch" role="group" aria-label="Invitation language"><button type="button" data-guest-lang="en" class="active">EN</button><button type="button" data-guest-lang="km" lang="km">ខ្មែរ</button></div>':''
 }
 function normalizedTelegram(value){
 const raw=String(value||'').trim();
@@ -3135,7 +3135,7 @@ anim=objs[0]?.animation||'fade-up',
 duration=Math.max(300,Math.min(3000,+(objs[0]?.duration||900))),
 gregorian=gregorianLabel(f),
 khmer=d.khmerDate||khmerDateFor(f.date,f.time),
-dateBlock=d.dateFormat==='khmer'?`<h2 class="khmer-text">${safeHtml(khmer||gregorian)}</h2>`:d.dateFormat==='gregorian'?`<h2>${safeHtml(gregorian)}</h2>`:`<h2 class="khmer-text">${safeHtml(khmer||gregorian)}</h2><p>${safeHtml(gregorian)}</p>`,
+dateBlock=d.dateFormat==='khmer'?`<h2 class="khmer-text" lang="km">${safeHtml(khmer||gregorian)}</h2>`:d.dateFormat==='gregorian'?`<h2>${safeHtml(gregorian)}</h2>`:`<h2 class="khmer-text" lang="km">${safeHtml(khmer||gregorian)}</h2><p>${safeHtml(gregorian)}</p>`,
 rsvp=d.settings?.rsvpEnabled===false?'':`<form id="guestRsvp" class="reveal" style="${combinedSectionStyle(d,'rsvp')}"><h2>${languageText('RSVP','សូមឆ្លើយតបការអញ្ជើញ',mode)}</h2><label>${languageText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120"></label><label>${languageText('Will you attend?','តើអ្នកនឹងចូលរួមទេ?',mode)}<select name="status"><option value="Yes, joyfully" data-en="Yes, joyfully" data-km="បាទ/ចាស ខ្ញុំនឹងចូលរួម">Yes, joyfully</option><option value="Unable to attend" data-en="Unable to attend" data-km="សូមអភ័យទោស ខ្ញុំមិនអាចចូលរួមបានទេ">Unable to attend</option><option value="Maybe" data-en="Maybe" data-km="ប្រហែលជា">Maybe</option></select></label><label>${languageText('Number of guests','ចំនួនភ្ញៀវ',mode)}<input name="count" type="number" min="1" max="10" value="1"></label>${previewRsvpCustomFields(d,mode)}<label>${languageText('Message','សារ',mode)}<textarea name="note" maxlength="1000"></textarea></label><button class="primary">${languageText('Send RSVP','ផ្ញើការឆ្លើយតប',mode)}</button></form>`,
 schedule=d.settings?.scheduleEnabled===false?'':`<section class="schedule-section schedule-layout-${safeHtml(d.sectionLayouts?.schedule||'timeline')} reveal" style="${combinedSectionStyle(d,'schedule')}"><h2>${languageText('Schedule','កម្មវិធី',mode)}</h2><div class="schedule-list">${(d.schedule||[]).map(x=>`<article><strong>${safeHtml(x.time)}</strong><span>${languageText(x.title||'',x.titleKm||x.title||'',mode)}</span></article>`).join('')}</div></section>`,
 countdown=d.settings?.countdownEnabled===false?'':`<section class="countdown-section countdown-layout-${safeHtml(d.sectionLayouts?.countdown||'cards')} reveal" style="${combinedSectionStyle(d,'countdown')}"><h2>${languageText(d.countdownTitle||'Counting down to our celebration',d.countdownTitleKm||d.countdownTitle||'រាប់ថយក្រោយ',mode)}</h2><div class="countdown" data-target="${safeHtml(`${f.date}T${f.time||'00:00'}:00`)}"><span><strong data-unit="days">0</strong>${languageText('Days','ថ្ងៃ',mode)}</span><span><strong data-unit="hours">0</strong>${languageText('Hours','ម៉ោង',mode)}</span><span><strong data-unit="minutes">0</strong>${languageText('Minutes','នាទី',mode)}</span><span><strong data-unit="seconds">0</strong>${languageText('Seconds','វិនាទី',mode)}</span></div></section>`,
@@ -3287,7 +3287,7 @@ const lunarMonths=['មិគសិរ','បុស្ស','មាឃ','ផល្
 $('#khmerDay').innerHTML=Array.from({
 length:15
 },(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
-$('#khmerMonth').innerHTML=lunarMonths.map((name,i)=>`<option value="${i}">${name}</option>`).join('');
+$('#khmerMonth').innerHTML=lunarMonths.map((name,i)=>`<option value="${i}" lang="km">${name}</option>`).join('');
 $('#useKhmerDate').onclick=()=>{
 try{
 if(!window.momentkh)throw Error('Khmer calendar library is not available');
