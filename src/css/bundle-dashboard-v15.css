@@ -1105,7 +1105,7 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
   --space-24:96px;
 
   
-  --motion-1:120ms; --motion-2:180ms; --motion-3:240ms;
+  --motion-1:150ms; --motion-2:200ms; --motion-3:250ms;
   --ease-out:cubic-bezier(0.2,0,0,1);
   --ease-in:cubic-bezier(0.4,0,1,1);
 
@@ -1125,8 +1125,38 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
   
   --info:#2f6fb5;
   --app-info:var(--info);
+
+  
+  --radius-media:24px;
 }
 html[data-theme="dark"]{--info:#7fb2ef;--app-info:var(--info);}
+
+
+:root{
+  --canva-turquoise:#00C4CC;
+  --canva-blue:#2B8CFF;
+  --canva-purple:#8B3DFF;
+  --canva-pink:#FF4ECD;
+  --canva-gradient:linear-gradient(90deg,#00C4CC 0%,#7D2AE8 100%);
+
+  
+  --shadow-1:0 2px 8px rgba(13,18,22,.08);
+  --shadow-2:0 8px 24px rgba(13,18,22,.12);
+  --shadow-card-hover:0 8px 24px rgba(13,18,22,.12);
+  --app-shadow-sm:0 2px 8px rgba(13,18,22,.08);
+  --app-shadow-card-hover:0 8px 24px rgba(13,18,22,.12);
+}
+html[data-theme="dark"]{
+  --shadow-1:0 2px 10px rgba(0,0,0,.24);
+  --shadow-2:0 8px 24px rgba(0,0,0,.38);
+  --shadow-card-hover:0 8px 24px rgba(0,0,0,.38);
+  --app-shadow-sm:0 2px 10px rgba(0,0,0,.24);
+  --app-shadow-card-hover:0 8px 24px rgba(0,0,0,.38);
+}
+
+
+.card-hover{transition:transform var(--motion-2) var(--ease-out),box-shadow var(--motion-2) var(--ease-out),border-color var(--motion-2) var(--ease-out)}
+.card-hover:hover,.card-hover:focus-within{transform:scale(1.02);box-shadow:var(--app-shadow-card-hover);border-color:var(--app-line-2)}
 
 :lang(km),.khmer-text{font-family:var(--font-khmer);letter-spacing:normal;}
 :lang(km) .ds-display,.khmer-text .ds-display{font-family:var(--font-display-km);}
@@ -1715,9 +1745,9 @@ main > h1:first-child + p { margin: var(--space-2) 0 var(--space-6); color: var(
               border-color var(--motion-2) var(--ease-out);
 }
 .card:hover, .invite-card:hover, .material-card-page:hover, .workspace-card:hover, .template-card:hover {
-  box-shadow: var(--app-shadow);
+  box-shadow: var(--app-shadow-card-hover);
   border-color: var(--app-line-2);
-  transform: translateY(-1px);
+  transform: scale(1.02);
 }
 .card:focus-within, .invite-card:focus-within { box-shadow: var(--app-ring); }
 .card__thumb, .invite-cover, .material-thumb, .card-media {
@@ -1918,7 +1948,10 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
     scroll-behavior: auto;
   }
   .skeleton::after { animation: none; }
-  .card:hover, .invite-card:hover { transform: none; }
+  
+  .card-hover, .card-hover:hover, .card-hover:focus-within,
+  .card:hover, .invite-card:hover, .material-card-page:hover,
+  .workspace-card:hover, .template-card:hover { transform: none; }
 }
 
 
@@ -2074,9 +2107,9 @@ body[data-page="dashboard"] #inviteGrid .invite-card {
 }
 body[data-page="dashboard"] #inviteGrid .invite-card:hover,
 body[data-page="dashboard"] #inviteGrid .invite-card:focus-within {
-  box-shadow: var(--app-shadow);
+  box-shadow: var(--app-shadow-card-hover);
   border-color: var(--app-line-2);
-  transform: translateY(-2px);
+  transform: scale(1.02);
 }
 body[data-page="dashboard"] #inviteGrid .invite-cover {
   display: block; width: 100%; aspect-ratio: 16 / 9; height: auto;
