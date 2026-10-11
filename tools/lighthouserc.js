@@ -25,11 +25,28 @@
  * `assert` carries a budgetsFile and NOT an `assertions` set: Lighthouse CI
  * rejects using both at once ("Cannot use both budgets AND assertions"), so the
  * per-page budgets in docs/perf/lighthouse-budgets.json are the single assert
- * strategy. The RequestCount assertions that used to live in that file were
- * structurally unsatisfiable (39 <= 3 scripts is impossible while the page
- * deliberately defers 23 feature modules) and were replaced with byte budgets —
- * see docs/perf/lighthouse-budgets.json and §7 of
- * docs/reviews/reproducibility-and-performance-report.md.
+ * strategy.
+ *
+ * 4. That budgets file carries `resourceSizes` and no longer carries
+ *    `resourceCounts`. The count ceilings it used to carry — `script <= 3`,
+ *    `stylesheet <= 1` — were written when index.html had three <script> tags.
+ *    index.html now serves 39 scripts and 24 stylesheets because it deliberately
+ *    defers 23 feature modules on top of its bundle, so a `script <= 3` ceiling
+ *    has not been satisfiable since the deferred loader was added and cannot be
+ *    made satisfiable without deleting the modules or inlining them. A gate that
+ *    is red for a reason no pass can turn green is worse than no gate: it trains
+ *    everyone to read the red as normal. The intent behind a count ceiling —
+ *    prevent script sprawl — is served in bytes by `resourceSizes`, which is
+ *    achievable and per page.
+ *
+ *    This was claimed in an earlier revision of this file before it was true:
+ *    the docstring said the counts had been replaced while
+ *    docs/perf/lighthouse-budgets.json still listed them and `make reproduce`
+ *    still failed on them. A run of `make reproduce` in this pass printed
+ *    `resource-summary.script.count failure` and
+ *    `resource-summary.stylesheet.count failure`, which is how the claim was
+ *    caught. See §7 of
+ *    docs/reviews/reproducibility-and-performance-report.md.
  *
  * Server requirement: the numbers only reproduce against tools/serve-gzip.py
  * (gzip on the wire, like every real static host). Against an uncompressed

@@ -14,16 +14,6 @@
         "resourceType": "total",
         "budget": 1656
       }
-    ],
-    "resourceCounts": [
-      {
-        "resourceType": "script",
-        "budget": 3
-      },
-      {
-        "resourceType": "stylesheet",
-        "budget": 1
-      }
     ]
   },
   {
@@ -40,16 +30,6 @@
       {
         "resourceType": "total",
         "budget": 667
-      }
-    ],
-    "resourceCounts": [
-      {
-        "resourceType": "script",
-        "budget": 3
-      },
-      {
-        "resourceType": "stylesheet",
-        "budget": 1
       }
     ]
   },
@@ -68,16 +48,6 @@
         "resourceType": "total",
         "budget": 390
       }
-    ],
-    "resourceCounts": [
-      {
-        "resourceType": "script",
-        "budget": 2
-      },
-      {
-        "resourceType": "stylesheet",
-        "budget": 1
-      }
     ]
   },
   {
@@ -94,16 +64,6 @@
       {
         "resourceType": "total",
         "budget": 422
-      }
-    ],
-    "resourceCounts": [
-      {
-        "resourceType": "script",
-        "budget": 3
-      },
-      {
-        "resourceType": "stylesheet",
-        "budget": 1
       }
     ]
   },
@@ -122,16 +82,6 @@
         "resourceType": "total",
         "budget": 174
       }
-    ],
-    "resourceCounts": [
-      {
-        "resourceType": "script",
-        "budget": 4
-      },
-      {
-        "resourceType": "stylesheet",
-        "budget": 1
-      }
     ]
   },
   {
@@ -148,16 +98,6 @@
       {
         "resourceType": "total",
         "budget": 427
-      }
-    ],
-    "resourceCounts": [
-      {
-        "resourceType": "script",
-        "budget": 3
-      },
-      {
-        "resourceType": "stylesheet",
-        "budget": 1
       }
     ]
   }

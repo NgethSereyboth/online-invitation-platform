@@ -28,7 +28,7 @@ previous pass ended up with a 54/73 discrepancy in section 13.1.
 | 4 | font subsetting (326 KB) | **done** — 325,616 → 202,116 bytes on index.html (−37.9%) |
 | 5 | versioned renames, batches 2+ | **partly** — batch 2 landed (10 files); 52 CSS + 100 JS remain |
 | 6 | hover verification, remaining 13 pages | **done** — 16/16 pages, 813 elements, 1,231 `!important` properties lifted; **0 demoted**, because the instrument reports longhands and the decision belongs to declarations |
-| 7 | the two lhci assertion failures | **done in commit 1** — retired for byte budgets; gate re-enabled and verified here |
+| 7 | the two lhci assertion failures | **done** — option B applied to `docs/perf/lighthouse-budgets.json` (12 `resourceCounts` entries removed, `resourceSizes` kept); the gate now runs and passes 16/16. The previous pass had documented the decision without applying it |
 
 ---
 
@@ -950,18 +950,76 @@ now measured on 16 pages instead of 3**, not "resolved".
 
 ## 7. The lhci assertion decision — and the gate that could not run
 
-### 7.1 The decision
+### 7.1 The decision, and the fact that it had not been implemented
 
-Commit `6ae1f34` chose **option B** and it is already in the tree:
+**Option B**, executed in this pass. The important part of this section is how the
+previous state was discovered, because the repository claimed otherwise.
+
+`tools/lighthouserc.js`'s docstring, as committed in `6ae1f34`, said:
+
+> The RequestCount assertions that used to live in that file were structurally
+> unsatisfiable (39 <= 3 scripts is impossible while the page deliberately defers
+> 23 feature modules) and were replaced with byte budgets
+
+The budgets file did not agree. It still carried `resourceCounts` for all six
+pages:
 
 ```
-$ cat docs/perf/lighthouse-budgets.json     # byte budgets, per route
-$ sed -n '78,95p' tools/lighthouserc.js
-    // Either budgetsFile or assertions — never both (Lighthouse CI configuration).
-    assert: {
-      budgetsFile: 'docs/perf/lighthouse-budgets.json',
-    },
+$ python3 -c "…walk docs/perf/lighthouse-budgets.json…"
+index.html   resourceCounts: script budget 3, stylesheet budget 1
+(and the same for all six budgeted pages)
 ```
+
+and `make reproduce` — run for the first time as a whole in this pass, once §7.2
+made the gate runnable at all — failed on exactly them:
+
+```
+== 4/5  Lighthouse CI  (16 pages) ==
+  ✘  resource-summary.script.count failure for maxNumericValue assertion
+  ✘  resource-summary.stylesheet.count failure for maxNumericValue assertion
+  ✘  resource-summary.script.count failure for maxNumericValue assertion
+  exit=1
+```
+
+So Goal 7 was not done: the decision was documented, described in a commit
+message, and never applied to the file the gate reads. This is the same shape as
+the port defect in §7.2 — a claim in prose that no command had ever confirmed —
+and it is only visible by running the gate.
+
+### 7.2 What was changed, and the gate now passing
+
+The reasoning, restated because it is the reason the brief gave for the goal:
+`script 39 <= 3` and `stylesheet 24 <= 1` were written when index.html had three
+`<script>` tags. index.html now serves 39 scripts and 24 stylesheets because it
+deliberately defers 23 feature modules on top of its bundle. The ceiling is not
+achievable without either deleting the modules or inlining them, and a gate that
+is red for a reason no pass can turn green is worse than no gate — it trains
+everyone to read the red as normal. The *intent* of a script-count ceiling
+(prevent script sprawl) is served by byte budgets, which are achievable and
+per page. Options A (accept red) and C (split the loader) were rejected: A leaves
+an unexplained red gate, and C is a real architecture change to a loader whose
+order dependency is load-bearing (`photo-style-library-v23.js` depends on a
+module ahead of it in the chain), which §13.3 of the previous report already
+measured and rejected on its own terms.
+
+Applied: `resourceCounts` removed from all six pages (12 entries); `resourceSizes`
+kept unchanged — `script`, `stylesheet` and `total`, per page, in KiB. `assert`
+still uses `budgetsFile` and not `assertions`, because Lighthouse CI rejects using
+both at once. The gate, run whole:
+
+```
+$ npx lhci autorun --config=tools/lighthouserc.js
+autorun exit=0
+Running Lighthouse 1 time(s) on http://127.0.0.1:8124/index.html
+…16 pages…
+Done running Lighthouse!
+Checking assertions against 16 URL(s), 16 total run(s)
+All results processed!
+```
+
+Scores from that run: `index.html` **82**, and 99–100 on the other fifteen;
+accessibility 96–100; best-practices 100 on all sixteen; SEO 89–91. CLS 0.000–0.079
+across the sixteen, all under the 0.10 threshold.
 
 The reasoning, restated because it is the reason the brief gave for the goal:
 `script 39 ≤ 3` and `stylesheet 24 ≤ 1` were written when index.html had three
@@ -977,7 +1035,7 @@ a loader whose order dependency is load-bearing (`photo-style-library-v23.js`
 depends on a module ahead of it in the chain), which §13.3 of the previous report
 already measured and rejected on its own terms.
 
-### 7.2 The gate was not running at all
+### 7.3 The gate was not running at all
 
 `lhci collect` exports `PORT=0` while it probes for a free port. The committed
 config read `process.env.PORT || 8124`, so `"0"` won and every URL became
@@ -1044,14 +1102,27 @@ c961c2a  perf(fonts): subset the web fonts and re-sync the served mirror
 f758f82  refactor: rename versioned files, batch 2 of N (10 files)
 ```
 
-Five of the seven commits are landed. Commit 6 (hover, 16 pages) and commit 7
-(lhci assertions) are not separate commits: commit 7's substance was already in
-commit `6ae1f34`, and this pass added only the port fix to the same config, which
-belongs with the config; the hover work is measurement, not a source change, and
-its instrument was committed in `6ae1f34`. Rather than invent two commits whose
-content is "a measurement was taken", the hover numbers are in this report and the
-port fix is recorded here. That is a deviation from the requested seven and it is
-stated rather than papered over.
+```
+7b5f912  pass base (branch main, clean tree)
+6ae1f34  chore(tools): make the repo self-contained — harness out of /tmp, clone-reproducible
+                                                                        (commit 1)
+e0d1cf0  fix(index): reserve the editor context row to cut CLS (0.263 -> 0.092)
+                                                                        (commit 2)
+d7734c7  perf(index): cut forced style recalculations in the editor chrome
+                                                                        (commit 3)
+c961c2a  perf(fonts): subset the web fonts and re-sync the served mirror
+                                                                        (commit 4)
+a42f35a  refactor: rename versioned files, batch 2 of N (10 files)      (commit 5)
+5626934  chore(perf): make the Lighthouse gate runnable, and report the pass
+e2b9ef3  chore(perf): resolve the unsatisfiable request-count assertions
+                                                                        (commit 7)
+```
+
+Commit 6 (hover verification) is not a commit of its own: the hover work is
+measurement, not a source change, its instrument was committed in `6ae1f34`, and
+its numbers are §6 of this report. Inventing a commit whose content is "a
+measurement was taken" would be worse than saying so. That is a deviation from the
+requested seven commits and it is stated rather than papered over.
 
 Files changed by this pass (source, not generated):
 
