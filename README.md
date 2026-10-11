@@ -12,8 +12,10 @@ A self-hosted, professional invitation design & event management platform. Bilin
 ```
 einvite-platform/
 ├── src/                      # Source code
-│   ├── css/                  # Stylesheets (119 files)
-│   ├── js/                   # JavaScript modules (175 files)
+│   ├── css/                  # Stylesheets (design tokens + per-page sheets;
+│   │                         #   bundle-*-v15.css and editor-suite.css are GENERATED)
+│   ├── js/                   # JavaScript modules (bundle-*-v15.js and
+│   │                         #   editor-suite.js are GENERATED)
 │   ├── html/                 # HTML pages (16 + manifest.webmanifest)
 │   └── python/               # Python backend (26 source files + synced bundles)
 │
@@ -214,13 +216,25 @@ python -m pytest tests/
 # module imports + repo root for ai_agent/, platform_v32/, future_platform_v52/)
 PYTHONPATH=src/python:. EINVITE_ALLOW_NO_SCANNER=1 python3 src/python/server.py
 
-# Rebuild route bundles after editing JS/CSS sources
-python3 src/python/build_route_bundles.py
-python3 src/python/build_editor_bundle.py
-python3 src/python/sync_frontend_assets.py
+# Rebuild every generated artifact after editing JS/CSS sources
+python3 build.py all
+python3 build.py all --check        # must pass before you commit
+
+# or use the Makefile
+make build   # = python3 build.py all
+make check   # = python3 build.py bundles --check
+make test    # = python3 -m pytest tests/
+make serve   # static preview on http://127.0.0.1:8124
+make dev     # the real server (API + assets)
 ```
 
-> **Note:** The previous draft of this README suggested `python -m platform_v32.service` as a dev command — that module has no `__main__` block. The correct entry point is `src/python/server.py` with `PYTHONPATH=.`.
+`build.py` is the only supported build entry point. The historical repo-root
+scripts (`build_route_bundles.py`, `build_editor_bundle.py`,
+`build_page_manifests.py`) still exist as deprecated shims so older callers keep
+working — see [CONTRIBUTING.md](CONTRIBUTING.md) for the hard rules, the
+directory map and a "where does new code go" decision tree.
+
+> **Note:** The previous draft of this README suggested `python -m platform_v32.service` as a dev command — that module has no `__main__` block. The correct entry point is `src/python/server.py` with `PYTHONPATH=`.
 
 ---
 

@@ -1,7 +1,7 @@
-@layer components {
 /* Generated editor style bundle. Edit source modules, then run build_editor_bundle.py. */
 
 /* ===== canvas-plus.css ===== */
+@layer components {
 /* App-chrome Inter faces: deterministic heading/body font so the Inter stack never
    depends on a host-installed font (SIL OFL 1.1 - licenses/fonts/Inter-OFL-1.1.txt).
    Inter v4.1 static TTFs, subset to the same Latin range as the bundled Noto faces. */
@@ -358,6 +358,8 @@ body.studio-experience #stage .subtitle,body.studio-experience #stage .details{c
 body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme-midnight .subtitle,body.studio-experience #stage.theme-midnight .details{color:#f6efff!important}
 .canvas-bg-cut-settings{margin:8px 0!important;padding:8px 9px!important;border:1px solid var(--app-line)!important;border-radius:12px!important;background:var(--app-surface-2)!important}.canvas-bg-cut-settings summary{cursor:pointer;font-size:9px!important;font-weight:750!important;color:var(--app-text)!important}.canvas-bg-cut-settings label{margin:8px 0 0!important;font-size:8px!important}.canvas-bg-cut-settings small{display:block;margin-top:7px;font-size:7.5px!important;line-height:1.45!important;color:var(--app-muted)!important}.canvas-bg-cut-settings input[type=range]{margin-top:5px!important}
 
+}
+
 /* ===== editor-builders.css ===== */
 /* Visual builders that replace raw line-based schedule, venue, and section-order textareas. */
 .ei-raw-field{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important;padding:0!important;margin:-1px!important}
@@ -388,5 +390,3 @@ body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme
 /* ===== collaboration-live.css ===== */
 .ei-live-sync-chip{margin-left:auto;display:inline-flex!important;align-items:center;gap:6px;min-height:30px!important;padding:5px 9px!important;border-radius:999px!important;background:color-mix(in srgb,var(--app-warn,#e6a23c) 12%,var(--app-surface))!important;border:1px solid color-mix(in srgb,var(--app-warn,#e6a23c) 35%,var(--app-line))!important;color:var(--app-text)!important;font-size:10px!important}.ei-live-sync-chip[hidden]{display:none!important}.ei-live-sync-chip span{color:var(--app-warn,#e6a23c)}
 .ei-presence-stack{position:fixed;right:18px;top:74px;z-index:70;display:flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--border,#ddd);border-radius:999px;background:var(--surface,#fff);box-shadow:0 8px 24px rgba(0,0,0,.12)}.ei-presence-stack[hidden]{display:none}.ei-presence-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent,#9d4555);color:white;font-weight:700;font-size:12px}.ei-presence-label{font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media(max-width:700px){.ei-presence-stack{top:auto;bottom:72px;right:10px}.ei-presence-label{display:none}}
-
-}

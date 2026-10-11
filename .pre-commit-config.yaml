@@ -32,6 +32,6 @@ repos:
         pass_filenames: false
       - id: bundle-check
         name: Route bundle integrity check
-        entry: python3 src/python/build_route_bundles.py --check
+        entry: python3 build.py bundles --check
         language: system
         pass_filenames: false
