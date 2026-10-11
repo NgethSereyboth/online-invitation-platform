@@ -183,8 +183,8 @@
     },
     "dashboard.html": {
       "javascript": "bundle-dashboard-v15.js",
-      "scriptBytes": 335941,
-      "scriptSha256": "e9cb7cd5133daf4f9fd4bb9078bc507c32a37d640f1d1fbe0c9d876e3c5509de",
+      "scriptBytes": 337907,
+      "scriptSha256": "966f41b6e774b5d34dee348cec242a1b9066b4e01d9f9c1e3a5e0a73fc28b922",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -311,8 +311,8 @@
     },
     "index.html": {
       "javascript": "bundle-index-v15.js",
-      "scriptBytes": 1129296,
-      "scriptSha256": "2e1d28b033d1911b5c9b61d181fd67a95963a08484bc5711d293753e233ac934",
+      "scriptBytes": 1133844,
+      "scriptSha256": "e872e31768ecea283ef41e9e7ba581a2b37ea88fbc5c255f8c07f38f95654b95",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -487,8 +487,8 @@
     },
     "public.html": {
       "javascript": "bundle-public-v15.js",
-      "scriptBytes": 249994,
-      "scriptSha256": "6936378861b49811d85fb74da14e5c1528c6d658d1766c3d94a67123f77be023",
+      "scriptBytes": 251960,
+      "scriptSha256": "db6ac543087a317842cc8f86b7359d18ffed6386f462b625a38d8a4e1d085d32",
       "sources": {
         "scripts": [
           "core/i18n.js",

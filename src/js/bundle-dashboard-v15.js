@@ -409,11 +409,21 @@ function fit(outer,model={},options={}){
  if(!outer)return null;ensureFlow(outer);applyToElement(outer,model);
  if(model.textAutoFit!=='fit'){delete outer.dataset.textComputedFontSize;return measurement(outer)}
  const available=availableSpace(outer);if(available.width<2||available.height<2)return measurement(outer);
+ // Autofit is a 16-step search, and every step writes font-size and then reads
+ // layout, i.e. one forced document style recalculation per step. The search is
+ // a pure function of (available box, model), so when neither has changed it
+ // would return exactly the value it returned last time: reuse that value and
+ // pay one measurement instead of sixteen. The key includes the whole model, so
+ // any edit that could move the result still recomputes.
+ const fitKey=`${Math.round(available.width)}x${Math.round(available.height)}|${options.set===false?'probe':'apply'}|${JSON.stringify(model)}`;
+ const fitCached=outer.__typographyFitCache;
+ if(fitCached&&fitCached.key===fitKey)return{...fitCached.result};
  const min=finite(model.textMinFontSize,10,8,72),max=finite(model.textAutoFitMax,model.fontSize,Math.max(8,min),200),old=outer.style.fontSize,oldComputed=outer.dataset.textComputedFontSize;
  const fitLargest=globalThis.EInviteTypography?.fitLargest||(({min})=>min);
  const computed=fitLargest({min,max,steps:16,fits:size=>{outer.style.fontSize=`${size}px`;return!measurement(outer).overflow}});
  outer.style.fontSize=`${computed}px`;outer.dataset.textComputedFontSize=String(computed);const result={...measurement(outer),computedSize:computed,min,max};
  if(options.set===false){outer.style.fontSize=old;if(oldComputed===undefined)delete outer.dataset.textComputedFontSize;else outer.dataset.textComputedFontSize=oldComputed}
+ else outer.__typographyFitCache={key:fitKey,result};
  return result;
 }
 function parseColor(value){const raw=String(value||'').trim();if(/^#[0-9a-f]{6}$/i.test(raw))return[parseInt(raw.slice(1,3),16),parseInt(raw.slice(3,5),16),1];const match=raw.match(/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:\s*[,/]\s*([\d.]+))?\s*\)$/i);return match?[Number(match[1]),Number(match[2]),Number(match[3]),match[4]===undefined?1:Math.max(0,Math.min(1,Number(match[4])))]:null}
@@ -431,9 +441,21 @@ function renderedClusterLines(outer,locale='km'){
 function assertRenderedClusterIntegrity(outer,locale='km'){const result=renderedClusterLines(outer,locale);outer?.setAttribute?.('data-khmer-cluster-integrity',result.ok?'true':'false');return result}
 function installResponsive(root=document,options={}){
  const scope=root||document,selector=options.selector||'[data-text-auto-fit="fit"],[data-typography-model-version]',targetFor=options.targetFor||((source)=>source),modelFor=options.modelFor||((target)=>target?.__typographyModel||null),onResult=options.onResult||(()=>{}),delay=Math.max(0,Number(options.delay??48)),events=options.events||[],sources=new Set(),timers=new Map();
- const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);onResult(result,target,source,model);return result};
+ const boxKey=node=>{const rect=node.getBoundingClientRect();return `${Math.round(rect.width)}x${Math.round(rect.height)}`};
+ // `run` writes typography sizing onto the element it measures, so the element's
+ // own box changes as a result of being fitted. Recording the box the fit left
+ // behind is what lets the ResizeObserver below tell "the fit moved this box"
+ // (already handled) from "something outside resized it" (must re-fit).
+ const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);source.__typographyFitBox=boxKey(source);onResult(result,target,source,model);return result};
  const schedule=source=>{if(!source)return;clearTimeout(timers.get(source));timers.set(source,setTimeout(()=>{timers.delete(source);run(source)},delay))};
- const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>schedule(entry.target))):null;
+ // An unconditional re-schedule here is a self-triggered loop: the fit changes
+ // the measured box, the observer reports that change, the fit runs again.
+ // Measured on index.html before this change, the loop produced 74 refits worth
+ // 457 ms of style recalculation plus 37 re-installations of the controller.
+ // A box this element has already been fitted at is not new information, so it
+ // is skipped; a genuine resize or a font swap still changes the box and still
+ // re-fits. The convergence is at most one extra pass.
+ const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>{const source=entry.target;const rect=entry.contentRect;const key=`${Math.round(rect.width)}x${Math.round(rect.height)}`;if(source.__typographyFitBox===key)return;source.__typographyFitBox=key;schedule(source)})):null;
  const observe=(source,model)=>{if(!source)return source;sources.add(source);const target=targetFor(source);if(model&&target)target.__typographyModel=model;observer?.observe(source);return source};
  const discover=()=>{scope.querySelectorAll?.(selector).forEach(observe);return sources};
  discover();sources.forEach(run);

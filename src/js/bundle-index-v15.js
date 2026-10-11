@@ -591,11 +591,21 @@ function fit(outer,model={},options={}){
  if(!outer)return null;ensureFlow(outer);applyToElement(outer,model);
  if(model.textAutoFit!=='fit'){delete outer.dataset.textComputedFontSize;return measurement(outer)}
  const available=availableSpace(outer);if(available.width<2||available.height<2)return measurement(outer);
+ // Autofit is a 16-step search, and every step writes font-size and then reads
+ // layout, i.e. one forced document style recalculation per step. The search is
+ // a pure function of (available box, model), so when neither has changed it
+ // would return exactly the value it returned last time: reuse that value and
+ // pay one measurement instead of sixteen. The key includes the whole model, so
+ // any edit that could move the result still recomputes.
+ const fitKey=`${Math.round(available.width)}x${Math.round(available.height)}|${options.set===false?'probe':'apply'}|${JSON.stringify(model)}`;
+ const fitCached=outer.__typographyFitCache;
+ if(fitCached&&fitCached.key===fitKey)return{...fitCached.result};
  const min=finite(model.textMinFontSize,10,8,72),max=finite(model.textAutoFitMax,model.fontSize,Math.max(8,min),200),old=outer.style.fontSize,oldComputed=outer.dataset.textComputedFontSize;
  const fitLargest=globalThis.EInviteTypography?.fitLargest||(({min})=>min);
  const computed=fitLargest({min,max,steps:16,fits:size=>{outer.style.fontSize=`${size}px`;return!measurement(outer).overflow}});
  outer.style.fontSize=`${computed}px`;outer.dataset.textComputedFontSize=String(computed);const result={...measurement(outer),computedSize:computed,min,max};
  if(options.set===false){outer.style.fontSize=old;if(oldComputed===undefined)delete outer.dataset.textComputedFontSize;else outer.dataset.textComputedFontSize=oldComputed}
+ else outer.__typographyFitCache={key:fitKey,result};
  return result;
 }
 function parseColor(value){const raw=String(value||'').trim();if(/^#[0-9a-f]{6}$/i.test(raw))return[parseInt(raw.slice(1,3),16),parseInt(raw.slice(3,5),16),1];const match=raw.match(/^rgba?\(\s*(\d+)[, ]+\s*(\d+)[, ]+\s*(\d+)(?:\s*[,/]\s*([\d.]+))?\s*\)$/i);return match?[Number(match[1]),Number(match[2]),Number(match[3]),match[4]===undefined?1:Math.max(0,Math.min(1,Number(match[4])))]:null}
@@ -613,9 +623,21 @@ function renderedClusterLines(outer,locale='km'){
 function assertRenderedClusterIntegrity(outer,locale='km'){const result=renderedClusterLines(outer,locale);outer?.setAttribute?.('data-khmer-cluster-integrity',result.ok?'true':'false');return result}
 function installResponsive(root=document,options={}){
  const scope=root||document,selector=options.selector||'[data-text-auto-fit="fit"],[data-typography-model-version]',targetFor=options.targetFor||((source)=>source),modelFor=options.modelFor||((target)=>target?.__typographyModel||null),onResult=options.onResult||(()=>{}),delay=Math.max(0,Number(options.delay??48)),events=options.events||[],sources=new Set(),timers=new Map();
- const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);onResult(result,target,source,model);return result};
+ const boxKey=node=>{const rect=node.getBoundingClientRect();return `${Math.round(rect.width)}x${Math.round(rect.height)}`};
+ // `run` writes typography sizing onto the element it measures, so the element's
+ // own box changes as a result of being fitted. Recording the box the fit left
+ // behind is what lets the ResizeObserver below tell "the fit moved this box"
+ // (already handled) from "something outside resized it" (must re-fit).
+ const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);source.__typographyFitBox=boxKey(source);onResult(result,target,source,model);return result};
  const schedule=source=>{if(!source)return;clearTimeout(timers.get(source));timers.set(source,setTimeout(()=>{timers.delete(source);run(source)},delay))};
- const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>schedule(entry.target))):null;
+ // An unconditional re-schedule here is a self-triggered loop: the fit changes
+ // the measured box, the observer reports that change, the fit runs again.
+ // Measured on index.html before this change, the loop produced 74 refits worth
+ // 457 ms of style recalculation plus 37 re-installations of the controller.
+ // A box this element has already been fitted at is not new information, so it
+ // is skipped; a genuine resize or a font swap still changes the box and still
+ // re-fits. The convergence is at most one extra pass.
+ const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>{const source=entry.target;const rect=entry.contentRect;const key=`${Math.round(rect.width)}x${Math.round(rect.height)}`;if(source.__typographyFitBox===key)return;source.__typographyFitBox=key;schedule(source)})):null;
  const observe=(source,model)=>{if(!source)return source;sources.add(source);const target=targetFor(source);if(model&&target)target.__typographyModel=model;observer?.observe(source);return source};
  const discover=()=>{scope.querySelectorAll?.(selector).forEach(observe);return sources};
  discover();sources.forEach(run);
@@ -8131,7 +8153,12 @@ stage.addEventListener('contextmenu',e=>{const o=e.target.closest('.object');if(
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#workflowV5ContextMenu'))hideMenu()},true);addEventListener('blur',hideMenu);
 
 const dock=$('#workflowPageDock');
-function revealActivePage(){const active=$('.workflow-page-chip.active',dock);active?.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'})}
+let lastRevealedChip=null;
+// The observer below fires on every class change under the dock, and a dock
+// re-render toggles `active` on many chips in a row. scrollIntoView forces a
+// style recalculation + layout, so only a change of WHICH chip is active is
+// worth one; an unchanged chip would also be scrolled against the user's wish.
+function revealActivePage(){const active=$('.workflow-page-chip.active',dock);if(active===lastRevealedChip)return;lastRevealedChip=active;active?.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'})}
 if(dock){new MutationObserver(()=>requestAnimationFrame(revealActivePage)).observe(dock,{subtree:true,attributes:true,attributeFilter:['class']});dock.addEventListener('wheel',e=>{const track=$('.workflow-page-dock-track',dock);if(!track||Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;e.preventDefault();track.scrollLeft+=e.deltaY},{passive:false})}
 function extendQuickAdd(){
   const grid=$('#workflowV4QuickAddMenu .workflow-v4-add-grid');if(!grid||grid.querySelector('[data-quick-add="ai"]'))return;
@@ -8574,8 +8601,16 @@ function wireScrollable(root=document){
   });
 }
 wireScrollable();new MutationObserver(()=>requestAnimationFrame(()=>wireScrollable())).observe(document.body,{childList:true,subtree:true});
+let lastVisibleChip=null;
 function keepActivePageVisible(){
-  $('.workflow-page-chip.active')?.scrollIntoView?.({block:'nearest',inline:'nearest',behavior:'auto'});
+  // scrollIntoView forces a style recalculation + layout, and the observer below
+  // fires on every class change anywhere under #pageNavigator — including the
+  // class churn of a dock re-render. Only a change of WHICH chip is active needs
+  // a scroll; re-scrolling an unchanged chip would also fight a user's own scroll.
+  const active=$('.workflow-page-chip.active');
+  if(active===lastVisibleChip)return;
+  lastVisibleChip=active;
+  active?.scrollIntoView?.({block:'nearest',inline:'nearest',behavior:'auto'});
 }
 const pageNav=$('#pageNavigator');
 if(pageNav)new MutationObserver(()=>requestAnimationFrame(keepActivePageVisible)).observe(pageNav,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
@@ -11520,10 +11555,12 @@ boot();
    * Idempotent (the class is only added once).
    */
   function tagNavSurfaces() {
-    NAV_SURFACE_SELECTORS.forEach(selector => {
-      $$(selector).forEach(node => {
-        if (!node.classList.contains('v54-nav-text')) node.classList.add('v54-nav-text');
-      });
+    // One document scan for the whole selector list, not one per selector. The
+    // union is identical because every entry matches on classes/tags that this
+    // function never changes (it only adds `v54-nav-text`, which no entry here
+    // selects), so a node cannot start or stop matching mid-pass.
+    $$(NAV_SURFACE_SELECTORS.join(',')).forEach(node => {
+      if (!node.classList.contains('v54-nav-text')) node.classList.add('v54-nav-text');
     });
   }
 
@@ -11543,13 +11580,28 @@ boot();
     if (expandRaf) return;
     expandRaf = requestAnimationFrame(() => {
       expandRaf = 0;
-      $$('.v54-nav-text').forEach(node => {
+      const nodes = $$('.v54-nav-text');
+      // Read every box FIRST, write every box SECOND.
+      //
+      // The previous version read and wrote inside one loop. Writing
+      // `style.minHeight` dirties style, so each following `node.scrollHeight`
+      // read forced a fresh document style recalculation + layout — up to one
+      // full recalculation per matched node, on every mutation, on every resize,
+      // and on every font load. Measured on index.html before this change:
+      // 3,429 ms of Recalculate Style across 24 invocations (max 358 ms,
+      // 143 ms per invocation for 30 nodes). Reading first costs one forced
+      // recalculation for the whole batch instead.
+      const overflowed = [];
+      for (const node of nodes) {
         // Only measure leaf text containers (skip wrappers without their own
         // text height).
-        if (node.scrollHeight - node.clientHeight > 2) {
-          node.style.minHeight = `${Math.ceil(node.scrollHeight)}px`;
-        }
-      });
+        const height = node.scrollHeight;
+        if (height - node.clientHeight > 2) overflowed.push([node, `${Math.ceil(height)}px`]);
+      }
+      for (const [node, next] of overflowed) {
+        // Assigning the value it already has still invalidates style, so skip it.
+        if (node.style.minHeight !== next) node.style.minHeight = next;
+      }
     });
   }
 
@@ -11560,12 +11612,19 @@ boot();
    */
   function observeSurfaces() {
     const target = document.querySelector('#stage, .studio-pane-host, .studio-inspector-host');
-    if (!target || typeof MutationObserver === 'undefined') return;
-    const observer = new MutationObserver(() => {
+    if (typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(mutations => {
+      // Only element insertions can introduce a nav surface. Attribute-only and
+      // character-data batches cannot, and skipping them keeps a re-render that
+      // only toggles classes from scheduling a measurement pass.
+      if (!mutations.some(m => m.addedNodes && m.addedNodes.length)) return;
       tagNavSurfaces();
       expandOverflowingCards();
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // `target` is kept as the deliberate observation root: it is where the
+    // surfaces this module tags are rendered. document.body is the fallback when
+    // the editor shell is not on the page at all (module is loaded site-wide).
+    observer.observe(target || document.body, { childList: true, subtree: true });
     // Re-measure on resize as font metrics / widths change.
     window.addEventListener('resize', () => { tagNavSurfaces(); expandOverflowingCards(); }, { passive: true });
   }

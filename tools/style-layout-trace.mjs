@@ -80,7 +80,7 @@ const ms = (us) => us / 1000;
 const totals = { UpdateLayoutTree: 0, Layout: 0 };
 const perEvent = { UpdateLayoutTree: [], Layout: [] };
 for (const e of events) {
-  if (e.ph !== 'X' && e.ph !== 'B') continue;
+  if (e.ph !== 'X') continue; // complete events only: 'B' has no dur and would double-count
   if (!(e.name in totals)) continue;
   const dur = e.dur || 0;
   totals[e.name] += dur;
@@ -92,24 +92,65 @@ for (const e of events) {
 }
 for (const k of Object.keys(perEvent)) perEvent[k].sort((a, b) => b.durMs - a.durMs);
 
+// Recalculate Style events NEST: a top-level style recalc that triggers a
+// second recalc inside it emits both, and summing durations then counts the
+// inner one twice. The non-overlapping union of the event intervals is the
+// honest "main thread was inside style recalc for this long" figure. Both are
+// reported so the difference between them is visible rather than assumed away.
+const mainThreadTid = perEvent.UpdateLayoutTree.length
+  ? events.find((e) => e.name === 'UpdateLayoutTree').tid
+  : null;
+function unionMs(name, tid) {
+  const iv = events
+    .filter((e) => e.name === name && e.ph === 'X' && (tid == null || e.tid === tid))
+    .map((e) => [e.ts, e.ts + (e.dur || 0)])
+    .sort((a, b) => a[0] - b[0]);
+  let total = 0;
+  let curStart = null;
+  let curEnd = null;
+  for (const [s, e] of iv) {
+    if (curStart === null) { curStart = s; curEnd = e; continue; }
+    if (s <= curEnd) curEnd = Math.max(curEnd, e);
+    else { total += curEnd - curStart; curStart = s; curEnd = e; }
+  }
+  if (curStart !== null) total += curEnd - curStart;
+  return { ms: ms(total), intervals: iv.length };
+}
+const recalcUnion = unionMs('UpdateLayoutTree', mainThreadTid);
+const layoutUnion = unionMs('Layout', mainThreadTid);
+
 // --- selector stats ---------------------------------------------------------
 // The payload path is not part of the CDP CSS schema (it is a trace event), so
 // this reads every plausible shape instead of assuming one, and reports which
 // key it actually found. A future Chrome that renames the field fails loudly
 // (empty top list plus the observed keys) rather than silently reporting zero.
+//
+// Shape actually emitted by Chrome 155 (verified against a raw trace dump, see
+// docs/reviews/reproducibility-and-performance-report.md §3):
+//
+//   { name: "SelectorStats", args: { selector_stats: { selector_timings: [
+//       { "selector": "html", "style_sheet_id": "ua-style-sheet",
+//         "elapsed (us)": 1, "match_attempts": 3, "match_count": 1,
+//         "fast_reject_count": 0 }, ... ] } } }
+//
+// Note `selector_stats` is an OBJECT wrapping the array, and the timing key is
+// the literal string `"elapsed (us)"` — with a space and parentheses. The first
+// version of this parser only accepted an array directly under `args`, so it
+// reported 264 events and 0 rows. That retraction is recorded in the report.
 const selectorStatsEvents = events.filter((e) => e.name === 'SelectorStats');
 const observedKeys = new Set();
 let selectorRows = [];
 for (const e of selectorStatsEvents) {
   const args = e.args || {};
   for (const k of Object.keys(args)) observedKeys.add(k);
-  const rows = args.selector_stats || args.selectorStats || args.data || args.stats || null;
+  let rows = args.selector_stats || args.selectorStats || args.data || args.stats || null;
+  if (rows && !Array.isArray(rows) && Array.isArray(rows.selector_timings)) rows = rows.selector_timings;
   if (Array.isArray(rows)) selectorRows = selectorRows.concat(rows);
 }
 const selectorTotals = new Map();
 for (const row of selectorRows) {
   const selector = row.selector ?? row.selectorText ?? '(unknown)';
-  const elapsed = row.elapsed ?? row.elapsed_us ?? row.elapsedUs ?? row.time ?? 0;
+  const elapsed = row['elapsed (us)'] ?? row.elapsed ?? row.elapsed_us ?? row.elapsedUs ?? row.time ?? 0;
   const attempts = row.match_attempts ?? row.matchAttempts ?? 0;
   const matches = row.match_count ?? row.matchCount ?? row.matches ?? 0;
   const key = selector;
@@ -132,8 +173,12 @@ const summary = {
   traceEvents: events.length,
   recalcStyleTotalMs: ms(totals.UpdateLayoutTree),
   recalcStyleEventCount: perEvent.UpdateLayoutTree.length,
+  recalcStyleUnionMs: recalcUnion.ms,
+  recalcStyleUnionIntervals: recalcUnion.intervals,
   layoutTotalMs: ms(totals.Layout),
   layoutEventCount: perEvent.Layout.length,
+  layoutUnionMs: layoutUnion.ms,
+  layoutUnionIntervals: layoutUnion.intervals,
   selectorStatsEvents: selectorStatsEvents.length,
   selectorStatsKeysObserved: [...observedKeys],
   selectorRows: selectorRows.length,
@@ -157,8 +202,10 @@ if (AS_JSON || OUT) {
   }
 } else {
   console.log(`URL ${URL}   label=${LABEL}   wait=${WAIT}ms   trace events=${summary.traceEvents}`);
-  console.log(`Recalculate Style (UpdateLayoutTree): ${summary.recalcStyleTotalMs.toFixed(1)} ms over ${summary.recalcStyleEventCount} events`);
-  console.log(`Layout:                               ${summary.layoutTotalMs.toFixed(1)} ms over ${summary.layoutEventCount} events`);
+  console.log(`Recalculate Style (UpdateLayoutTree): ${summary.recalcStyleTotalMs.toFixed(1)} ms summed over ${summary.recalcStyleEventCount} events`);
+  console.log(`                              union:  ${summary.recalcStyleUnionMs.toFixed(1)} ms of non-overlapping main-thread time`);
+  console.log(`Layout:                               ${summary.layoutTotalMs.toFixed(1)} ms summed over ${summary.layoutEventCount} events`);
+  console.log(`                              union:  ${summary.layoutUnionMs.toFixed(1)} ms`);
   console.log(`Selector stats: ${summary.selectorStatsEvents} events, ${summary.selectorRows} rows, ` +
     `keys observed=${JSON.stringify(summary.selectorStatsKeysObserved)}, total ${summary.selectorStatsTotalMs.toFixed(1)} ms`);
   console.log(`\n--- top ${TOP} selectors by elapsed time ---`);
