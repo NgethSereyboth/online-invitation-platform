@@ -19,7 +19,7 @@
       ],
       "styles": [
         "styles.css",
-        "account-page-v13.css",
+        "account-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -56,7 +56,7 @@
       ],
       "styles": [
         "styles.css",
-        "admin-page-v13.css",
+        "admin-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -85,7 +85,7 @@
       ],
       "styles": [
         "styles.css",
-        "analytics-page-v13.css",
+        "analytics-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -112,7 +112,7 @@
       ],
       "styles": [
         "styles.css",
-        "billing-page-v13.css",
+        "billing-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -175,7 +175,7 @@
         "typography-fonts.css",
         "typography-system-v20.css",
         "styles.css",
-        "dashboard-page-v13.css",
+        "dashboard-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -190,7 +190,8 @@
         "stabilized-v14.css",
         "zoom-layout-pages-v22.css",
         "guest-features-v54_1.css",
-        "app-shell-v55.css"
+        "app-shell-v55.css",
+        "toast.css"
       ]
     },
     "designer.html": {
@@ -206,7 +207,7 @@
       "styles": [
         "styles.css",
         "studio-experience.css",
-        "designer-page-v13.css",
+        "designer-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -370,7 +371,7 @@
       ],
       "styles": [
         "styles.css",
-        "materials-page-v13.css",
+        "materials-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -395,7 +396,7 @@
         "styles.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
-        "privacy-v13.css",
+        "privacy.css",
         "zoom-layout-pages-v22.css",
         "tokens.css",
         "app-shell-v55.css"
@@ -450,7 +451,7 @@
       ],
       "styles": [
         "styles.css",
-        "reset-page-v13.css",
+        "reset-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -478,7 +479,7 @@
       ],
       "styles": [
         "styles.css",
-        "responses-page-v13.css",
+        "responses-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",

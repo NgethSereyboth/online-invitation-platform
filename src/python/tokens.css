@@ -65,8 +65,13 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
   --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
   --space-24:96px;
 
-  /* --- Motion (§1.5) ------------------------------------------------------ */
-  --motion-1:120ms; --motion-2:180ms; --motion-3:240ms;
+  /* --- Motion (§1.5) — 150/200/250ms.
+     Canva publishes the token NAMES only (hoverTransition, fadeTransition) and
+     no durations — https://www.canva.dev/docs/apps/app-ui-kit/transitions/
+     (read 2026-10-11). These three stops therefore come from the dispatch
+     brief's "150-250ms, ease-out" envelope, NOT from a Canva-published value.
+     Raised from 120/180/240 so all three sit inside that envelope. --------- */
+  --motion-1:150ms; --motion-2:200ms; --motion-3:250ms;
   --ease-out:cubic-bezier(0.2,0,0,1);
   --ease-in:cubic-bezier(0.4,0,1,1);
 
@@ -86,8 +91,86 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
   /* --- Info status colour (was absent; toast.css referenced it) ---------- */
   --info:#2f6fb5;
   --app-info:var(--info);
+
+  /* --- Feature-media radius (§1.2a) — LOCAL PRODUCT ADDITION, not a Canva
+     token. Canva publishes exactly two radius values, radiusElementSharp=4px
+     and radiusElement=8px
+     (https://www.canva.dev/docs/apps/app-ui-kit/spacing/, read 2026-10-11);
+     there is no published 12px button radius or 24px media radius. --radius-md
+     stays at Canva's published 8px rather than the brief's 12px for that
+     reason, and this one ships with no consumers for the same reason the
+     display type steps do. ---------------------------------------------- */
+  --radius-media:24px;
 }
 html[data-theme="dark"]{--info:#7fb2ef;--app-info:var(--info);}
+
+/* ============================================================================
+   Canva brand reference palette (§1.6) + aligned card elevation (§1.5b).
+   ----------------------------------------------------------------------------
+   PROVENANCE: Canva does NOT publish hex values for any of these. Its design
+   guidelines and App UI Kit document colour token NAMES only
+   (colorActionPrimaryBg, colorContentFg, ...) and explicitly state that a
+   token's value is "a CSS variable, not the underlying CSS value":
+     https://www.canva.dev/docs/apps/design-guidelines/colors/
+     https://www.canva.dev/docs/apps/app-ui-kit/colors/
+     https://www.canva.dev/docs/apps/app-ui-kit/design-tokens/
+   (all read 2026-10-11). #8b3dff additionally appears as "Canva Violet" in the
+   THIRD-PARTY Refero Styles collection
+   (https://styles.refero.design/style/62f89392-609d-45b7-b9df-7a5acd529864),
+   which is not a Canva-published source.
+
+   These are recorded as a named reference layer so a future Canva-styled
+   surface can reach for them, exactly as --radius-pill and the display type
+   steps already are. Nothing consumes them yet, and none of them replaces this
+   product's own --brand identity: the brief's instruction to re-point the
+   accent was conditional on the current accent being blue, and --app-accent is
+   the product's maroon #8b465b. The gradient is for hero/identity moments only,
+   never for a main CTA.
+
+   Measured contrast (WCAG 2.1 relative luminance, sRGB) is recorded per value
+   so a future consumer knows which of them may carry text:
+     #00C4CC  2.15:1 on white  — fill/decoration only, never text
+     #2B8CFF  3.33:1 on white  — large text / non-text UI only
+     #8B3DFF  4.99:1 on white  — clears AA for normal text
+     #FF4ECD  2.91:1 on white  — large text / non-text UI only
+     #7D2AE8  6.23:1 on white  — clears AA for normal text (gradient end stop)
+   ========================================================================= */
+:root{
+  --canva-turquoise:#00C4CC;
+  --canva-blue:#2B8CFF;
+  --canva-purple:#8B3DFF;
+  --canva-pink:#FF4ECD;
+  --canva-gradient:linear-gradient(90deg,#00C4CC 0%,#7D2AE8 100%);
+
+  /* Card elevation (§1.5b). Geometry and alpha are the dispatch brief's Canva
+     card rest/hover pair; Canva's shadows reference publishes the token names
+     elevationSurfaceRaisedShadow / elevationSurfaceFloatingShadow and no
+     numeric box-shadow (https://www.canva.dev/docs/apps/app-ui-kit/shadows/,
+     read 2026-10-11). --app-shadow-sm is the LIVE card-rest token (defined in
+     modern-ui.css, 40 declarations); --app-shadow and --app-shadow-xl stay
+     where they are because they are this system's raised/floating layers and
+     the brief keeps floating "slightly larger". --shadow-1/-2 are aligned to
+     the same pair for consistency but have zero consumers in src/css. ------ */
+  --shadow-1:0 2px 8px rgba(13,18,22,.08);
+  --shadow-2:0 8px 24px rgba(13,18,22,.12);
+  --shadow-card-hover:0 8px 24px rgba(13,18,22,.12);
+  --app-shadow-sm:0 2px 8px rgba(13,18,22,.08);
+  --app-shadow-card-hover:0 8px 24px rgba(13,18,22,.12);
+}
+html[data-theme="dark"]{
+  --shadow-1:0 2px 10px rgba(0,0,0,.24);
+  --shadow-2:0 8px 24px rgba(0,0,0,.38);
+  --shadow-card-hover:0 8px 24px rgba(0,0,0,.38);
+  --app-shadow-sm:0 2px 10px rgba(0,0,0,.24);
+  --app-shadow-card-hover:0 8px 24px rgba(0,0,0,.38);
+}
+
+/* --- .card-hover (§1.5c) — the single hover-lift utility.
+   Cards lift by transform only (no layout-affecting property) over --motion-2
+   with --ease-out. The reduced-motion guard for it lives next to the other
+   hover transforms in app-shell-v55.css. ------------------------------- */
+.card-hover{transition:transform var(--motion-2) var(--ease-out),box-shadow var(--motion-2) var(--ease-out),border-color var(--motion-2) var(--ease-out)}
+.card-hover:hover,.card-hover:focus-within{transform:scale(1.02);box-shadow:var(--app-shadow-card-hover);border-color:var(--app-line-2)}
 /* Khmer never gets negative tracking and always gets the Khmer family first
    (a Latin family in front of a Khmer glyph run can suppress OpenType shaping). */
 :lang(km),.khmer-text{font-family:var(--font-khmer);letter-spacing:normal;}

@@ -66,17 +66,16 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 651405,
+      "bytes": 649239,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
         "backend-mode-v14.js",
         "bundle-dashboard-v15.js"
       ],
-      "styleCount": 2,
+      "styleCount": 1,
       "styles": [
-        "bundle-dashboard-v15.css",
-        "toast.css"
+        "bundle-dashboard-v15.css"
       ]
     },
     "designer.html": {
@@ -213,8 +212,8 @@
   "routes": {
     "account-admin": {
       "budgets": {
-        "bytes": 470000,
-        "scripts": 3,
+        "bytes": 435000,
+        "scripts": 4,
         "styles": 1
       },
       "pages": [
@@ -247,7 +246,7 @@
     },
     "dashboard": {
       "budgets": {
-        "bytes": 460000,
+        "bytes": 685000,
         "scripts": 3,
         "styles": 1
       },
@@ -260,13 +259,12 @@
         "bundle-dashboard-v15.js"
       ],
       "styles": [
-        "bundle-dashboard-v15.css",
-        "toast.css"
+        "bundle-dashboard-v15.css"
       ]
     },
     "editor": {
       "budgets": {
-        "bytes": 1420000,
+        "bytes": 1700000,
         "scripts": 3,
         "styles": 1
       },
@@ -284,7 +282,7 @@
     },
     "event-operations": {
       "budgets": {
-        "bytes": 530000,
+        "bytes": 440000,
         "scripts": 3,
         "styles": 1
       },
@@ -320,8 +318,8 @@
     },
     "public-guest": {
       "budgets": {
-        "bytes": 260000,
-        "scripts": 1,
+        "bytes": 405000,
+        "scripts": 2,
         "styles": 1
       },
       "pages": [
