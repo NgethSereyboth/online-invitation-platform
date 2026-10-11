@@ -1,0 +1,16 @@
+
+===== PRE-FIX  (N=8 per condition) =====
+  netidle0 h900 wait1200           -> 8x 5440|748,748,748
+  netidle2 h900 wait400            -> 8x 5440|748,748,748
+  netidle0 h900 wait1200 +scroll   -> 8x 4220|254,254,516
+  netidle0 h1200 wait1200          -> 8x 5440|748,748,748
+  netidle0 h600 wait1200           -> 8x 6643|748,748,748
+  domcontentloaded h900 wait2500   -> 8x 5440|748,748,748
+
+===== POST-FIX (N=8 per condition) =====
+  netidle0 h900 wait1200           -> 8x 4220|254,254,516
+  netidle2 h900 wait400            -> 8x 4220|254,254,516
+  netidle0 h900 wait1200 +scroll   -> 8x 4220|254,254,516
+  netidle0 h1200 wait1200          -> 8x 4220|254,254,516
+  netidle0 h600 wait1200           -> 8x 5423|254,254,516
+  domcontentloaded h900 wait2500   -> 8x 4220|254,254,516

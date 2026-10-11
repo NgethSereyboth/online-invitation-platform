@@ -1,0 +1,4 @@
+index.html: consoleErrors=0 non2xx=0
+dashboard.html: consoleErrors=0 non2xx=0
+public.html: consoleErrors=0 non2xx=0
+designer.html: consoleErrors=0 non2xx=0

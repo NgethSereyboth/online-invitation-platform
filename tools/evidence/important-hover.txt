@@ -1,0 +1,653 @@
+src/css/ai-assistant-pro.css|.ei-ai-close:hover|background:var(--ei-ai-bg-subtle)!important
+src/css/ai-assistant-pro.css|.ei-ai-close:hover|color:var(--ei-ai-text)!important
+src/css/ai-assistant-pro.css|.ei-ai-close:hover|transform:none!important
+src/css/ai-assistant-pro.css|.ei-ai-selection-tools button:hover|border-color:color-mix(in srgb,var(--ei-ai-accent) 34%,var(--ei-ai-lin
+src/css/ai-assistant-pro.css|.ei-ai-selection-tools button:hover|background:var(--ei-ai-accent-soft)!important
+src/css/ai-assistant-pro.css|.ei-ai-selection-tools button:hover|transform:none!important
+src/css/ai-assistant-pro.css|.ei-ai-quick button:hover|border-color:color-mix(in srgb,var(--ei-ai-accent) 38%,var(--ei-ai-lin
+src/css/ai-assistant-pro.css|.ei-ai-quick button:hover|background:var(--ei-ai-accent-soft)!important
+src/css/ai-assistant-pro.css|.ei-ai-quick button:hover|transform:none!important
+src/css/bundle-account-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-account-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-account-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-account-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-account-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-account-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-account-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-account-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-account-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-account-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-account-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-account-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-account-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-account-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-account-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-account-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-account-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-account-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-account-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-account-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-account-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-account-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-account-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-account-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-account-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-account-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-admin-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-admin-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-admin-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-admin-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-admin-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-admin-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-admin-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-admin-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-admin-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-admin-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-admin-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-admin-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-admin-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-admin-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-admin-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-admin-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-admin-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-admin-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-admin-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-admin-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-admin-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-admin-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-admin-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-admin-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-admin-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-admin-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-analytics-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-analytics-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-analytics-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-analytics-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-analytics-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-analytics-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-analytics-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-analytics-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-analytics-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-analytics-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-analytics-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-analytics-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-analytics-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-analytics-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-analytics-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-analytics-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-analytics-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-analytics-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-analytics-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-analytics-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-analytics-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-analytics-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-analytics-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-analytics-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-analytics-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-analytics-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-billing-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-billing-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-billing-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-billing-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-billing-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-billing-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-billing-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-billing-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-billing-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-billing-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-billing-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-billing-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-billing-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-billing-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-billing-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-billing-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-billing-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-billing-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-billing-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-billing-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-billing-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-billing-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-billing-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-billing-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-billing-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-billing-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-dashboard-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-dashboard-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-dashboard-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-dashboard-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-dashboard-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-dashboard-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-dashboard-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-dashboard-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-dashboard-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-dashboard-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-dashboard-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-dashboard-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-dashboard-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-dashboard-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-dashboard-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-dashboard-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-dashboard-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-dashboard-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-dashboard-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-dashboard-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-dashboard-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-dashboard-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-dashboard-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-dashboard-v15.css|.fp-project-more:hover|background:var(--app-surface-2)!important
+src/css/bundle-dashboard-v15.css|.fp-project-more:hover|color:var(--app-text)!important
+src/css/bundle-dashboard-v15.css|.fp-project-more:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.fp-project-menu button:hover|background:var(--app-surface-2)!important
+src/css/bundle-dashboard-v15.css|.fp-project-menu button:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|background:var(--app-surface-2)!important
+src/css/bundle-dashboard-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.material-card-page:hover|transform:none!important
+src/css/bundle-dashboard-v15.css|.material-card-page:hover|box-shadow:0 9px 28px rgba(20,24,36,.09)!important
+src/css/bundle-dashboard-v15.css|.fp-visual-asset:hover|transform:translateY(-2px)!important
+src/css/bundle-dashboard-v15.css|.fp-visual-asset:hover|border-color:color-mix(in srgb,var(--app-accent) 34%,var(--app-line))!
+src/css/bundle-dashboard-v15.css|.ei-context-overflow button:hover|background:var(--app-surface-2)!important
+src/css/bundle-dashboard-v15.css|.ei-context-overflow button:hover|transform:none!important
+src/css/bundle-designer-v15.css|.studio-rail-button:hover|background:#2b2c33!important
+src/css/bundle-designer-v15.css|.studio-rail-button:hover|color:#fff!important
+src/css/bundle-designer-v15.css|.page-builder-library button:hover,.element-library button:hover,.bloc|border-color:#cfaeb8!important
+src/css/bundle-designer-v15.css|.material-card-page:hover,.studio-card:hover|box-shadow:0 18px 42px #35282f16!important
+src/css/bundle-designer-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-designer-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-designer-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-designer-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-designer-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-designer-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-designer-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-designer-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-designer-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-designer-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-designer-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-designer-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-designer-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-designer-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-designer-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-designer-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-designer-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-designer-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-designer-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-designer-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-designer-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-designer-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-designer-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-designer-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-designer-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-designer-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-guests-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-guests-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-guests-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-guests-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-guests-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-guests-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-guests-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-guests-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-guests-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-guests-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-guests-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-guests-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-guests-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-guests-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-guests-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-guests-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-guests-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-guests-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-guests-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-guests-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-guests-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-guests-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-guests-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-guests-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-guests-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-guests-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-index-v15.css|.studio-rail-button:hover|background:#2b2c33!important
+src/css/bundle-index-v15.css|.studio-rail-button:hover|color:#fff!important
+src/css/bundle-index-v15.css|.page-builder-library button:hover,.element-library button:hover,.bloc|border-color:#cfaeb8!important
+src/css/bundle-index-v15.css|.material-card-page:hover,.studio-card:hover|box-shadow:0 18px 42px #35282f16!important
+src/css/bundle-index-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-index-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-index-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-index-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-index-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-index-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-index-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-index-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-index-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-index-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-index-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-index-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-index-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-index-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-index-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-index-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-index-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-index-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-index-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-index-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-index-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-index-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-index-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-index-v15.css|.ei-tool-rail button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.ei-tool-rail button:hover|color:var(--app-text)!important
+src/css/bundle-index-v15.css|.ei-tool-rail button:hover|transform:scale(1.06)!important
+src/css/bundle-index-v15.css|.ei-rich-toolbar button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.ei-rich-toolbar button:hover|transform:none!important
+src/css/bundle-index-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-index-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-index-v15.css|.fp-project-more:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.fp-project-more:hover|color:var(--app-text)!important
+src/css/bundle-index-v15.css|.fp-project-more:hover|transform:none!important
+src/css/bundle-index-v15.css|.fp-project-menu button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.fp-project-menu button:hover|transform:none!important
+src/css/bundle-index-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|transform:none!important
+src/css/bundle-index-v15.css|.material-card-page:hover|transform:none!important
+src/css/bundle-index-v15.css|.material-card-page:hover|box-shadow:0 9px 28px rgba(20,24,36,.09)!important
+src/css/bundle-index-v15.css|.fp-visual-asset:hover|transform:translateY(-2px)!important
+src/css/bundle-index-v15.css|.fp-visual-asset:hover|border-color:color-mix(in srgb,var(--app-accent) 34%,var(--app-line))!
+src/css/bundle-index-v15.css|.ei-context-overflow button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.ei-context-overflow button:hover|transform:none!important
+src/css/bundle-index-v15.css|.flow-back-design:hover|color:var(--flow-purple)!important
+src/css/bundle-index-v15.css|.flow-back-design:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.flow-action-grid button:hover|border-color:color-mix(in srgb,var(--flow-purple) 38%,var(--app-line))
+src/css/bundle-index-v15.css|.flow-action-grid button:hover|background:color-mix(in srgb,var(--app-surface-2) 92%,var(--flow-purpl
+src/css/bundle-index-v15.css|.flow-action-grid button:hover|transform:translateY(-1px)!important
+src/css/bundle-index-v15.css|.workflow-pane-actions button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-pane-actions button:hover|border-color:var(--app-line)!important
+src/css/bundle-index-v15.css|.workflow-pane-actions button:hover|color:var(--app-text)!important
+src/css/bundle-index-v15.css|.workflow-pane-actions button:hover|transform:none!important
+src/css/bundle-index-v15.css|.workflow-recent-grid button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-recent-grid button:hover|border-color:color-mix(in srgb,var(--workflow-purple) 28%,var(--app-li
+src/css/bundle-index-v15.css|.workflow-recent-grid button:hover|transform:none!important
+src/css/bundle-index-v15.css|.workflow-search-results button:hover,.workflow-search-results button.|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-search-results button:hover,.workflow-search-results button.|transform:none!important
+src/css/bundle-index-v15.css|.workflow-page-chip:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-page-chip:hover|transform:none!important
+src/css/bundle-index-v15.css|.workflow-quick-strip button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-quick-strip button:hover|transform:none!important
+src/css/bundle-index-v15.css|.workflow-v4-popover button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-v4-popover button:hover|transform:none!important
+src/css/bundle-index-v15.css|.workflow-page-more:hover|color:var(--app-text)!important
+src/css/bundle-index-v15.css|.workflow-v5-context button:hover|background:var(--app-surface-2)!important
+src/css/bundle-index-v15.css|.workflow-v5-context button:hover|transform:none!important
+src/css/bundle-materials-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-materials-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-materials-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-materials-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-materials-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-materials-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-materials-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-materials-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-materials-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-materials-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-materials-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-materials-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-materials-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-materials-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-materials-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-materials-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-materials-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-materials-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-materials-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-materials-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-materials-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-materials-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-materials-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-materials-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-materials-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-materials-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-materials-v15.css|.fp-project-more:hover|background:var(--app-surface-2)!important
+src/css/bundle-materials-v15.css|.fp-project-more:hover|color:var(--app-text)!important
+src/css/bundle-materials-v15.css|.fp-project-more:hover|transform:none!important
+src/css/bundle-materials-v15.css|.fp-project-menu button:hover|background:var(--app-surface-2)!important
+src/css/bundle-materials-v15.css|.fp-project-menu button:hover|transform:none!important
+src/css/bundle-materials-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|background:var(--app-surface-2)!important
+src/css/bundle-materials-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|transform:none!important
+src/css/bundle-materials-v15.css|.material-card-page:hover|transform:none!important
+src/css/bundle-materials-v15.css|.material-card-page:hover|box-shadow:0 9px 28px rgba(20,24,36,.09)!important
+src/css/bundle-materials-v15.css|.fp-visual-asset:hover|transform:translateY(-2px)!important
+src/css/bundle-materials-v15.css|.fp-visual-asset:hover|border-color:color-mix(in srgb,var(--app-accent) 34%,var(--app-line))!
+src/css/bundle-materials-v15.css|.ei-context-overflow button:hover|background:var(--app-surface-2)!important
+src/css/bundle-materials-v15.css|.ei-context-overflow button:hover|transform:none!important
+src/css/bundle-privacy-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-privacy-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-privacy-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-privacy-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-privacy-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-privacy-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-privacy-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-privacy-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-privacy-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-privacy-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-reset-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-reset-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-reset-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-reset-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-reset-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-reset-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-reset-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-reset-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-reset-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-reset-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-reset-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-reset-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-reset-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-reset-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-reset-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-reset-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-reset-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-reset-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-reset-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-reset-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-reset-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-reset-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-reset-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-reset-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-reset-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-reset-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-responses-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-responses-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-responses-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-responses-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-responses-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-responses-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-responses-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-responses-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-responses-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-responses-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-responses-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-responses-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-responses-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-responses-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-responses-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-responses-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-responses-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-responses-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-responses-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-responses-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-responses-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-responses-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-responses-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-responses-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-responses-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-responses-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-templates-v15.css|.studio-rail-button:hover|background:#2b2c33!important
+src/css/bundle-templates-v15.css|.studio-rail-button:hover|color:#fff!important
+src/css/bundle-templates-v15.css|.page-builder-library button:hover,.element-library button:hover,.bloc|border-color:#cfaeb8!important
+src/css/bundle-templates-v15.css|.material-card-page:hover,.studio-card:hover|box-shadow:0 18px 42px #35282f16!important
+src/css/bundle-templates-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-templates-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-templates-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-templates-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-templates-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-templates-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-templates-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-templates-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-templates-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-templates-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-templates-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-templates-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-templates-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-templates-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-templates-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-templates-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-templates-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-templates-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-templates-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-templates-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-templates-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-templates-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-templates-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-templates-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-templates-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-templates-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/bundle-verify-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/bundle-verify-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/bundle-verify-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/bundle-verify-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-verify-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-verify-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-verify-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/bundle-verify-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/bundle-verify-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/bundle-verify-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/bundle-verify-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/bundle-verify-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/bundle-verify-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-verify-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/bundle-verify-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/bundle-verify-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/bundle-verify-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-verify-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/bundle-verify-v15.css|.layer-row button:hover|transform:none!important
+src/css/bundle-verify-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/bundle-verify-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-verify-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/bundle-verify-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/bundle-verify-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/bundle-verify-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/bundle-verify-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/canvas-plus.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/canvas-plus.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/canvas-plus.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/canvas-plus.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/canvas-plus.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/canvas-plus.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/canvas-plus.css|.layer-row button:hover|transform:none!important
+src/css/canvas-plus.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/canvas-plus.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/canvas-plus.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/canvas-plus.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/canvas-plus.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/editor-pro.css|.ei-tool-rail button:hover|background:var(--app-surface-2)!important
+src/css/editor-pro.css|.ei-tool-rail button:hover|color:var(--app-text)!important
+src/css/editor-pro.css|.ei-tool-rail button:hover|transform:scale(1.06)!important
+src/css/editor-pro.css|.ei-rich-toolbar button:hover|background:var(--app-surface-2)!important
+src/css/editor-pro.css|.ei-rich-toolbar button:hover|transform:none!important
+src/css/editor-suite.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/editor-suite.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/editor-suite.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/editor-suite.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/editor-suite.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/editor-suite.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/editor-suite.css|.layer-row button:hover|transform:none!important
+src/css/editor-suite.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/editor-suite.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/editor-suite.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/editor-suite.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/editor-suite.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/editor-suite.css|.ei-tool-rail button:hover|background:var(--app-surface-2)!important
+src/css/editor-suite.css|.ei-tool-rail button:hover|color:var(--app-text)!important
+src/css/editor-suite.css|.ei-tool-rail button:hover|transform:scale(1.06)!important
+src/css/editor-suite.css|.ei-rich-toolbar button:hover|background:var(--app-surface-2)!important
+src/css/editor-suite.css|.ei-rich-toolbar button:hover|transform:none!important
+src/css/final-experience.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/final-experience.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/final-polish.css|.fp-project-more:hover|background:var(--app-surface-2)!important
+src/css/final-polish.css|.fp-project-more:hover|color:var(--app-text)!important
+src/css/final-polish.css|.fp-project-more:hover|transform:none!important
+src/css/final-polish.css|.fp-project-menu button:hover|background:var(--app-surface-2)!important
+src/css/final-polish.css|.fp-project-menu button:hover|transform:none!important
+src/css/final-polish.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|background:var(--app-surface-2)!important
+src/css/final-polish.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|transform:none!important
+src/css/final-polish.css|.material-card-page:hover|transform:none!important
+src/css/final-polish.css|.material-card-page:hover|box-shadow:0 9px 28px rgba(20,24,36,.09)!important
+src/css/final-polish.css|.fp-visual-asset:hover|transform:translateY(-2px)!important
+src/css/final-polish.css|.fp-visual-asset:hover|border-color:color-mix(in srgb,var(--app-accent) 34%,var(--app-line))!
+src/css/final-polish.css|.ei-context-overflow button:hover|background:var(--app-surface-2)!important
+src/css/final-polish.css|.ei-context-overflow button:hover|transform:none!important
+src/css/modern-ui.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/modern-ui.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/modern-ui.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/modern-ui.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/modern-ui.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/modern-ui.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/modern-ui.css|.ui-theme-menu button:hover|transform:none!important
+src/css/modern-ui.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/modern-ui.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/modern-ui.css|.ui-context-menu button:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/organized/bundle-dashboard-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/organized/bundle-dashboard-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/organized/bundle-dashboard-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-dashboard-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-dashboard-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-dashboard-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-dashboard-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/organized/bundle-dashboard-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/organized/bundle-dashboard-v15.css|body:not(.guest) button.primary:hover|box-shadow:0 14px 34px color-mix(in srgb,var(--final-accent) 34%,trans
+src/css/organized/bundle-dashboard-v15.css|body:not(.guest) > header a>button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-dashboard-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-dashboard-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/organized/bundle-dashboard-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/organized/bundle-dashboard-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/organized/bundle-dashboard-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/organized/bundle-dashboard-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/organized/bundle-dashboard-v15.css|.layer-row button:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-dashboard-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-dashboard-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-dashboard-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|background:var(--app-accent-soft)!important
+src/css/organized/bundle-dashboard-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|color:var(--app-accent)!important
+src/css/organized/bundle-dashboard-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/organized/bundle-dashboard-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="dashboard"] .invite-card:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="dashboard"] .invite-card:hover|box-shadow:none!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="dashboard"] .invite-cover:hover|transform:translateY(-4px)!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="dashboard"] .invite-cover:hover|box-shadow:var(--fp-shadow-lg)!important
+src/css/organized/bundle-dashboard-v15.css|body[data-page="dashboard"] .invite-cover:hover|border-color:color-mix(in srgb,var(--app-accent) 30%,var(--app-line))!
+src/css/organized/bundle-dashboard-v15.css|.fp-project-more:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-dashboard-v15.css|.fp-project-more:hover|color:var(--app-text)!important
+src/css/organized/bundle-dashboard-v15.css|.fp-project-more:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.fp-project-menu button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-dashboard-v15.css|.fp-project-menu button:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-dashboard-v15.css|.fp-profile-popover a:hover,.fp-profile-popover button:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.material-card-page:hover|transform:none!important
+src/css/organized/bundle-dashboard-v15.css|.material-card-page:hover|box-shadow:0 9px 28px rgba(20,24,36,.09)!important
+src/css/organized/bundle-dashboard-v15.css|.fp-visual-asset:hover|transform:translateY(-2px)!important
+src/css/organized/bundle-dashboard-v15.css|.fp-visual-asset:hover|border-color:color-mix(in srgb,var(--app-accent) 34%,var(--app-line))!
+src/css/organized/bundle-dashboard-v15.css|.ei-context-overflow button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-dashboard-v15.css|.ei-context-overflow button:hover|transform:none!important
+src/css/organized/bundle-designer-v15.css|.studio-rail-button:hover|background:#2b2c33!important
+src/css/organized/bundle-designer-v15.css|.studio-rail-button:hover|color:#fff!important
+src/css/organized/bundle-designer-v15.css|.page-builder-library button:hover,.element-library button:hover,.bloc|border-color:#cfaeb8!important
+src/css/organized/bundle-designer-v15.css|.material-card-page:hover,.studio-card:hover|box-shadow:0 18px 42px #35282f16!important
+src/css/organized/bundle-designer-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/organized/bundle-designer-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/organized/bundle-designer-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/organized/bundle-designer-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-designer-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-designer-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-designer-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/organized/bundle-designer-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/organized/bundle-designer-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-designer-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/organized/bundle-designer-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/organized/bundle-designer-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/organized/bundle-designer-v15.css|body:not(.guest) button.primary:hover|box-shadow:0 14px 34px color-mix(in srgb,var(--final-accent) 34%,trans
+src/css/organized/bundle-designer-v15.css|body:not(.guest) > header a>button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-designer-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-designer-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/organized/bundle-designer-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/organized/bundle-designer-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/organized/bundle-designer-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/organized/bundle-designer-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/organized/bundle-designer-v15.css|.layer-row button:hover|transform:none!important
+src/css/organized/bundle-designer-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-designer-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-designer-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-designer-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-designer-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-designer-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|background:var(--app-accent-soft)!important
+src/css/organized/bundle-designer-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|color:var(--app-accent)!important
+src/css/organized/bundle-designer-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|transform:none!important
+src/css/organized/bundle-designer-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/organized/bundle-designer-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/organized/bundle-privacy-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/organized/bundle-privacy-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/organized/bundle-privacy-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/organized/bundle-privacy-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-privacy-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-privacy-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-privacy-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/organized/bundle-privacy-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/organized/bundle-privacy-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-privacy-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/organized/bundle-responses-v15.css|button.primary:not(:disabled):hover|box-shadow:0 10px 28px color-mix(in srgb,var(--app-accent) 27%,transpa
+src/css/organized/bundle-responses-v15.css|.studio-rail-button:hover,.studio-inspector-tab:hover|transform:translateY(-2px) scale(1.035)!important
+src/css/organized/bundle-responses-v15.css|input:hover,textarea:hover,select:hover|border-color:color-mix(in srgb,var(--app-accent) 42%,var(--app-line-2)
+src/css/organized/bundle-responses-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-responses-v15.css|.invite-card:hover,.metric:hover,.response-card:hover,.wish-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-responses-v15.css|.ui-theme-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-responses-v15.css|.ui-theme-menu button:hover|transform:none!important
+src/css/organized/bundle-responses-v15.css|.canvas-frame:hover,button:hover,.invite-card:hover,.metric:hover,.res|transform:none!important
+src/css/organized/bundle-responses-v15.css|.ui-context-menu button:hover|background:var(--app-surface-3)!important
+src/css/organized/bundle-responses-v15.css|.ui-context-menu button:hover|transform:none!important
+src/css/organized/bundle-responses-v15.css|.final-timeline-row:hover,.final-timeline-row.active|background:color-mix(in srgb,var(--final-accent) 10%,transparent)!impo
+src/css/organized/bundle-responses-v15.css|.studio-floating-toolbar button:hover|transform:translateY(-2px) scale(1.04)!important
+src/css/organized/bundle-responses-v15.css|body:not(.guest) button.primary:hover|box-shadow:0 14px 34px color-mix(in srgb,var(--final-accent) 34%,trans
+src/css/organized/bundle-responses-v15.css|body:not(.guest) > header a>button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-responses-v15.css|.card:hover,.invite-card:hover,.usage-card:hover,.plan:hover,.plan-sta|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-responses-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|background:var(--app-surface-3)!important
+src/css/organized/bundle-responses-v15.css|html[data-theme="dark"] body:not(.guest) button:not(.primary):not(.stu|color:#fff!important
+src/css/organized/bundle-responses-v15.css|.canvas-extra-grid button:hover|transform:translateY(-3px) scale(1.02)!important
+src/css/organized/bundle-responses-v15.css|.canvas-extra-grid button:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/organized/bundle-responses-v15.css|.canvas-extra-grid button:hover|border-color:color-mix(in srgb,var(--app-accent) 36%,var(--app-line))!
+src/css/organized/bundle-responses-v15.css|.layer-row button:hover|transform:none!important
+src/css/organized/bundle-responses-v15.css|.layer-row button:hover|background:var(--app-surface-2)!important
+src/css/organized/bundle-responses-v15.css|body[data-page="designer"] .workspace-card:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-responses-v15.css|body[data-page="designer"] .workspace-card:hover|border-color:color-mix(in srgb,var(--app-accent) 28%,var(--app-line))!
+src/css/organized/bundle-responses-v15.css|.template-card:hover,.template-item:hover|box-shadow:var(--canvas-shadow-hover)!important
+src/css/organized/bundle-responses-v15.css|.guest-row:hover|box-shadow:var(--app-shadow)!important
+src/css/organized/bundle-responses-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|background:var(--app-accent-soft)!important
+src/css/organized/bundle-responses-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|color:var(--app-accent)!important
+src/css/organized/bundle-responses-v15.css|.dashboard-home-rail a:hover,.dashboard-home-rail button:hover,.dashbo|transform:none!important
+src/css/organized/bundle-responses-v15.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/organized/bundle-responses-v15.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/organized/workflow-continuity.css|.workflow-pane-actions button:hover|background:var(--app-surface-2)!important
+src/css/organized/workflow-continuity.css|.workflow-pane-actions button:hover|border-color:var(--app-line)!important
+src/css/organized/workflow-continuity.css|.workflow-pane-actions button:hover|color:var(--app-text)!important
+src/css/organized/workflow-continuity.css|.workflow-pane-actions button:hover|transform:none!important
+src/css/organized/workflow-continuity.css|.workflow-recent-grid button:hover|background:var(--app-surface-2)!important
+src/css/organized/workflow-continuity.css|.workflow-recent-grid button:hover|border-color:color-mix(in srgb,var(--workflow-purple) 28%,var(--app-li
+src/css/organized/workflow-continuity.css|.workflow-recent-grid button:hover|transform:none!important
+src/css/organized/workflow-continuity.css|.workflow-search-results button:hover,.workflow-search-results button.|background:var(--app-surface-2)!important
+src/css/organized/workflow-continuity.css|.workflow-search-results button:hover,.workflow-search-results button.|transform:none!important
+src/css/organized/workflow-refine.css|.flow-back-design:hover|color:var(--flow-purple)!important
+src/css/organized/workflow-refine.css|.flow-back-design:hover|background:var(--app-surface-2)!important
+src/css/organized/workflow-refine.css|.flow-action-grid button:hover|border-color:color-mix(in srgb,var(--flow-purple) 38%,var(--app-line))
+src/css/organized/workflow-refine.css|.flow-action-grid button:hover|background:color-mix(in srgb,var(--app-surface-2) 92%,var(--flow-purpl
+src/css/organized/workflow-refine.css|.flow-action-grid button:hover|transform:translateY(-1px)!important
+src/css/organized/workflow-ux-v5.css|.workflow-v5-context button:hover|background:var(--app-surface-2)!important
+src/css/organized/workflow-ux-v5.css|.workflow-v5-context button:hover|transform:none!important
+src/css/page-experience-v22.css|.workflow-page-dock-track .v22-workflow-insert:hover,.workflow-page-do|opacity:1!important
+src/css/page-experience-v22.css|.workflow-page-dock-track .v22-workflow-insert:hover,.workflow-page-do|background:var(--app-surface-2)!important
+src/css/page-experience-v22.css|.workflow-page-dock-track .v22-workflow-insert:hover,.workflow-page-do|color:var(--app-accent)!important
+src/css/page-experience-v22.css|.workflow-page-dock-track .v22-workflow-insert:hover,.workflow-page-do|border-color:var(--app-line)!important
+src/css/studio-experience.css|.studio-rail-button:hover|background:#2b2c33!important
+src/css/studio-experience.css|.studio-rail-button:hover|color:#fff!important
+src/css/studio-experience.css|.page-builder-library button:hover,.element-library button:hover,.bloc|border-color:#cfaeb8!important
+src/css/studio-experience.css|.material-card-page:hover,.studio-card:hover|box-shadow:0 18px 42px #35282f16!important
+src/css/ux-refine.css|.material-card-page:hover|box-shadow:var(--app-shadow-sm)!important
+src/css/ux-refine.css|.material-card-page:hover|transform:translateY(-2px)!important
+src/css/workflow-creation-flow-v4.css|.workflow-page-chip:hover|background:var(--app-surface-2)!important
+src/css/workflow-creation-flow-v4.css|.workflow-page-chip:hover|transform:none!important
+src/css/workflow-creation-flow-v4.css|.workflow-quick-strip button:hover|background:var(--app-surface-2)!important
+src/css/workflow-creation-flow-v4.css|.workflow-quick-strip button:hover|transform:none!important
+src/css/workflow-creation-flow-v4.css|.workflow-v4-popover button:hover|background:var(--app-surface-2)!important
+src/css/workflow-creation-flow-v4.css|.workflow-v4-popover button:hover|transform:none!important
+src/css/workflow-creation-flow-v4.css|.workflow-page-more:hover|color:var(--app-text)!important

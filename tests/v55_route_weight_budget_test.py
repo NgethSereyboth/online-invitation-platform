@@ -9,8 +9,11 @@ Layer 1 (declarative)  docs/perf/lighthouse-budgets.json
 Layer 2 (build-time)   tests/v14_performance_budget_test.py
                        the pre-existing aspirational route budgets
                        (src/python/build/build_page_manifests.py: BUDGETS).
-Layer 3 (gate)         .lighthouserc.json  ->  `lhci autorun` (real browser,
+Layer 3 (gate)         tools/lighthouserc.js -> `lhci autorun` (real browser,
                        transfer sizes) and this file (byte sizes, no browser).
+                       (Renamed from .lighthouserc.json on 2026-10-11; the
+                       repo-root file was removed so there is exactly one
+                       Lighthouse CI config.)
 
 Why this file exists: Lighthouse's own `performance-budget` audit was removed
 from Lighthouse core in v12 (https://github.com/GoogleChrome/lighthouse/issues/15203),

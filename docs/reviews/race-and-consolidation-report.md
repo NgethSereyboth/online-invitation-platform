@@ -708,33 +708,47 @@ raw counts above are how to check that claim rather than take it.
 
 ## 11. Reproducing every number in this report
 
+> **Relocated on 2026-10-11** by the reproducibility pass. Every script below
+> used to live in `/tmp` and carried absolute paths to one developer's checkout,
+> so this section was reproducible only until the machine restarted. The scripts
+> now live in `tools/` (see [tools/README.md](../../tools/README.md)); the `/tmp`
+> paths originally recorded here are kept in
+> [tools/evidence](../../tools/evidence/) as the raw pre-fix output they pointed
+> at. Only the paths changed — the instruments are the same code.
+
 **Choose the server deliberately.** Layout/DOM checks (race captures, hover
 audits) are unaffected by transport, so either server reproduces them. The lhci
-numbers in sections 4 and 13 are **not** reproducible through the uncompressed
+numbers in sections 4 and 13 are **not** reproducible through an uncompressed
 one: it served every file raw, which is what made index.html read as 54 instead
-of 73 and inflated every byte budget.
+of 73 and inflated every byte budget. `make reproduce` starts the correct one.
 
 ```
-python3 /tmp/lhci/serve-gzip.py 8124 <repo>/src/python   # gzip - REQUIRED for lhci numbers
-python3 /tmp/race/serve.py 8124                          # uncompressed - layout checks only
-node /tmp/race/capture.mjs                               # 50-capture determinism
-node /tmp/hover/hover-audit.mjs   http://127.0.0.1:8124/index.html --json
-node /tmp/hover/hover-audit.mjs   http://127.0.0.1:8124/dashboard.html --json
-node /tmp/hover/hover-audit.mjs   http://127.0.0.1:8124/public.html --json
-node /tmp/hover/important-lift-test.mjs http://127.0.0.1:8124/index.html --json
-node /tmp/hover/toast-probe.mjs   http://127.0.0.1:8124/dashboard.html
-npx lhci autorun                                     # 16 pages, ~7 min
-npx lhci autorun --collect.url=http://127.0.0.1:8124/index.html \
-    --upload.outputDir=/tmp/lhci/recheck             # one page, for the section 13 A/B
-node /tmp/lhci/loader-ab.mjs http://127.0.0.1:8124/index.html   # 3 pairs, aborts if arm B is not patched
+# one-off setup (fresh clone)
+npm install && pip install -r tools/requirements.txt
+
+python3 tools/serve-gzip.py --port 8124                  # gzip - REQUIRED for lhci numbers
+python3 tools/determinism-50x.py public.html --n 50      # 50-capture determinism
+node tools/hover-audit.mjs http://127.0.0.1:8124/index.html --json
+node tools/hover-audit.mjs http://127.0.0.1:8124/dashboard.html --json
+node tools/hover-audit.mjs http://127.0.0.1:8124/public.html --json
+node tools/important-lift-test.mjs http://127.0.0.1:8124/index.html --json
+node tools/computed-style-probe.mjs http://127.0.0.1:8124/dashboard.html \
+    --selectors=.toast-stack --out=toast-after.json
+npx lhci autorun --config=tools/lighthouserc.js          # 16 pages, ~7 min
+npx lhci autorun --config=tools/lighthouserc.js --collect.url=http://127.0.0.1:8124/index.html \
+    --upload.outputDir=.lighthouseci/recheck             # one page, for the section 13 A/B
+node tools/loader-ab.mjs http://127.0.0.1:8124/index.html --pairs=3   # aborts if arm B is not patched
 python3 build.py all --check
 python3 tests/v55_route_weight_budget_test.py
 python3 tests/v14_performance_budget_test.py
+
+make reproduce                                           # all of the above, in order
 ```
 
-Raw JSON for every hover run is retained at `/tmp/hover/{before,after}-<page>.json`
-and `/tmp/hover/lift-<page>.json`, and the raw race captures at
-`/tmp/race/{before,after}-wild.txt`.
+Hover, lift, CLS and trace output is written to `artifacts/` (gitignored). The
+raw pre-fix captures that cannot be regenerated — the race distributions and the
+`!important` inventory — are committed under `tools/evidence/` so the numbers in
+sections 1, 5 and 6 remain checkable after the defects were fixed.
 
 ---
 

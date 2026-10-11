@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="E-Invitation">
+  <rect width="32" height="32" rx="7" fill="#8d6e46"/>
+  <path d="M16 6.5l2.4 5.6 5.6 2.4-5.6 2.4L16 22.5l-2.4-5.6L8 14.5l5.6-2.4z" fill="#ffffff"/>
+  <circle cx="16" cy="25" r="1.6" fill="#ffffff" opacity=".85"/>
+</svg>

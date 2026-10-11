@@ -1,0 +1,15 @@
+# Python dependencies for the scripts in tools/.
+#
+#   pip install -r tools/requirements.txt
+#
+# Node-side tooling (puppeteer-core, @lhci/cli) is declared in ./package.json at
+# the repo root — not in a nested package.json here, so there is exactly one
+# node_modules and one `npm install` for the whole repo.
+#
+# Most tools need nothing beyond the standard library; only font subsetting has
+# a dependency. Versions are pinned to the same releases the production image
+# already pins in docs/requirements-production.txt, so the sub-setting output is
+# the same artifact CI would produce.
+
+fonttools[woff]==4.66.1
+Brotli==1.2.0

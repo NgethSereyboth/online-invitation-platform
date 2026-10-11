@@ -1,0 +1,6 @@
+MODE=wild URL=http://127.0.0.1:8124/public.html N=50 SETTLE_MS=1200
+--- docHeight|bodyHeight|nSections|textLen distribution ---
+ 50x  4220|4220.06|14|1258
+--- section-layout distribution ---
+ 50x  [["DIV","guest-layout-shell guest-layout-ambient-frame",2874.06],["SECTION","guest-hero guest-summary guest-lazy-section",313.09],["SECTION","countdown-section countdown-layout-cards reveal guest-lazy-section",209.5],["SECTION","event-journey reveal guest-lazy-section",510.72],["SECTION","schedule-section schedule-layout-timeline reveal guest-lazy-section",80],["SECTION","venue-section venue-layout-cards reveal guest-lazy-section",117],["FORM","reveal",718],["BUTTON","open-cover opening-scene-soft-monogram",900],["NAV","guest-journey",60],["DIV","guest-journey-menu",0],["P","guest-journey-live",1],["SECTION","guest-feature signup-sheets",254],["SECTION","guest-feature polls",254],["SECTION","guest-feature album",516]]
+total console errors: 0

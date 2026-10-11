@@ -1,0 +1,15 @@
+
+### A_baseline  (N=10)
+   10x  5440|748,748,748
+
+### B_contain-intrinsic-size:auto 700px only  (N=10)
+   10x  5440|748,748,748
+
+### C_contain-intrinsic-size:auto 254px on features only  (N=10)
+   10x  4102|302,302,302
+
+### D_content-visibility:visible on features only  (N=10)
+   10x  4220|254,254,516
+
+### E_both (auto 700 + visible features)  (N=10)
+   10x  4220|254,254,516

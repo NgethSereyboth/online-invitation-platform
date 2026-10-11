@@ -1,0 +1,66 @@
+=== waitUntil=networkidle0 settle=1200 ===
+scrollY=0 docH=5440 bodyH=5440.0625 innerH=900 mainH=5384.06
+shells=1 contents=1
+main children: ["DIV.guest-layout-shell guest-layout-ambient-frame","BUTTON.open-cover opening-scene-soft-monogram","NAV.guest-journey","DIV.guest-journey-menu","P.guest-journey-live","SECTION.guest-feature signup-sheets","SECTION.guest-feature polls","SECTION.guest-feature album"]
+  # 0 cv=auto    h=  313.09 offH=   313 top=    300 skipped=true parent=guest-layout-content cls=guest-hero guest-summary guest-lazy-section
+  # 1 cv=auto    h=   209.5 offH=   210 top=    729 skipped=true parent=guest-layout-content cls=countdown-section countdown-layout-cards reveal guest-lazy-section
+  # 2 cv=auto    h=  510.72 offH=   511 top=   1054 skipped=true parent=guest-layout-content cls=event-journey reveal guest-lazy-section
+  # 3 cv=auto    h=      80 offH=    80 top=   1681 skipped=true parent=guest-layout-content cls=schedule-section schedule-layout-timeline reveal guest-lazy-section
+  # 4 cv=auto    h=     117 offH=   117 top=   1877 skipped=true parent=guest-layout-content cls=venue-section venue-layout-cards reveal guest-lazy-section
+  # 5 cv=visible h=     718 offH=   718 top=   2103 skipped=true parent=guest-layout-content cls=reveal
+  # 6 cv=auto    h=     748 offH=   748 top=   3036 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature signup-sheets
+  # 7 cv=auto    h=     748 offH=   748 top=   3832 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature polls
+  # 8 cv=auto    h=     748 offH=   748 top=   4628 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature album
+=== waitUntil=networkidle2 settle=400 ===
+scrollY=0 docH=5440 bodyH=5440.0625 innerH=900 mainH=5384.06
+shells=1 contents=1
+main children: ["DIV.guest-layout-shell guest-layout-ambient-frame","BUTTON.open-cover opening-scene-soft-monogram","NAV.guest-journey","DIV.guest-journey-menu","P.guest-journey-live","SECTION.guest-feature signup-sheets","SECTION.guest-feature polls","SECTION.guest-feature album"]
+  # 0 cv=auto    h=  313.09 offH=   313 top=    300 skipped=true parent=guest-layout-content cls=guest-hero guest-summary guest-lazy-section
+  # 1 cv=auto    h=   209.5 offH=   210 top=    729 skipped=true parent=guest-layout-content cls=countdown-section countdown-layout-cards reveal guest-lazy-section
+  # 2 cv=auto    h=  510.72 offH=   511 top=   1054 skipped=true parent=guest-layout-content cls=event-journey reveal guest-lazy-section
+  # 3 cv=auto    h=      80 offH=    80 top=   1681 skipped=true parent=guest-layout-content cls=schedule-section schedule-layout-timeline reveal guest-lazy-section
+  # 4 cv=auto    h=     117 offH=   117 top=   1877 skipped=true parent=guest-layout-content cls=venue-section venue-layout-cards reveal guest-lazy-section
+  # 5 cv=visible h=     718 offH=   718 top=   2103 skipped=true parent=guest-layout-content cls=reveal
+  # 6 cv=auto    h=     748 offH=   748 top=   3036 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature signup-sheets
+  # 7 cv=auto    h=     748 offH=   748 top=   3832 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature polls
+  # 8 cv=auto    h=     748 offH=   748 top=   4628 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature album
+=== waitUntil=networkidle2 settle=400 + scrollBottomThenTop ===
+scrollY=0 docH=5440 bodyH=5440.0625 innerH=900 mainH=5384.06
+shells=1 contents=1
+main children: ["DIV.guest-layout-shell guest-layout-ambient-frame","BUTTON.open-cover opening-scene-soft-monogram","NAV.guest-journey","DIV.guest-journey-menu","P.guest-journey-live","SECTION.guest-feature signup-sheets","SECTION.guest-feature polls","SECTION.guest-feature album"]
+  # 0 cv=auto    h=  313.09 offH=   313 top=    300 skipped=true parent=guest-layout-content cls=guest-hero guest-summary guest-lazy-section
+  # 1 cv=auto    h=   209.5 offH=   210 top=    729 skipped=true parent=guest-layout-content cls=countdown-section countdown-layout-cards reveal guest-lazy-section
+  # 2 cv=auto    h=  510.72 offH=   511 top=   1054 skipped=true parent=guest-layout-content cls=event-journey reveal guest-lazy-section
+  # 3 cv=auto    h=      80 offH=    80 top=   1681 skipped=true parent=guest-layout-content cls=schedule-section schedule-layout-timeline reveal guest-lazy-section
+  # 4 cv=auto    h=     117 offH=   117 top=   1877 skipped=true parent=guest-layout-content cls=venue-section venue-layout-cards reveal guest-lazy-section
+  # 5 cv=visible h=     718 offH=   718 top=   2103 skipped=true parent=guest-layout-content cls=reveal
+  # 6 cv=auto    h=     748 offH=   748 top=   3036 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature signup-sheets
+  # 7 cv=auto    h=     748 offH=   748 top=   3832 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature polls
+  # 8 cv=auto    h=     748 offH=   748 top=   4628 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature album
+=== waitUntil=networkidle2 settle=400 AFTER scroll ===
+scrollY=0 docH=4220 bodyH=4220.0625 innerH=900 mainH=4164.06
+shells=1 contents=1
+main children: ["DIV.guest-layout-shell guest-layout-ambient-frame","BUTTON.open-cover opening-scene-soft-monogram","NAV.guest-journey","DIV.guest-journey-menu","P.guest-journey-live","SECTION.guest-feature signup-sheets","SECTION.guest-feature polls","SECTION.guest-feature album"]
+  # 0 cv=auto    h=  313.09 offH=   313 top=    300 skipped=true parent=guest-layout-content cls=guest-hero guest-summary guest-lazy-section
+  # 1 cv=auto    h=   209.5 offH=   210 top=    729 skipped=true parent=guest-layout-content cls=countdown-section countdown-layout-cards reveal guest-lazy-section
+  # 2 cv=auto    h=  510.72 offH=   511 top=   1054 skipped=true parent=guest-layout-content cls=event-journey reveal guest-lazy-section
+  # 3 cv=auto    h=      80 offH=    80 top=   1681 skipped=true parent=guest-layout-content cls=schedule-section schedule-layout-timeline reveal guest-lazy-section
+  # 4 cv=auto    h=     117 offH=   117 top=   1877 skipped=true parent=guest-layout-content cls=venue-section venue-layout-cards reveal guest-lazy-section
+  # 5 cv=visible h=     718 offH=   718 top=   2103 skipped=true parent=guest-layout-content cls=reveal
+  # 6 cv=auto    h=     254 offH=   254 top=   3036 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature signup-sheets
+  # 7 cv=auto    h=     254 offH=   254 top=   3338 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature polls
+  # 8 cv=auto    h=     516 offH=   516 top=   3640 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature album
+AFTER-SCROLL docH delta: -1220
+=== waitUntil=domcontentloaded settle=3000 ===
+scrollY=0 docH=5440 bodyH=5440.0625 innerH=900 mainH=5384.06
+shells=1 contents=1
+main children: ["DIV.guest-layout-shell guest-layout-ambient-frame","BUTTON.open-cover opening-scene-soft-monogram","NAV.guest-journey","DIV.guest-journey-menu","P.guest-journey-live","SECTION.guest-feature signup-sheets","SECTION.guest-feature polls","SECTION.guest-feature album"]
+  # 0 cv=auto    h=  313.09 offH=   313 top=    300 skipped=true parent=guest-layout-content cls=guest-hero guest-summary guest-lazy-section
+  # 1 cv=auto    h=   209.5 offH=   210 top=    729 skipped=true parent=guest-layout-content cls=countdown-section countdown-layout-cards reveal guest-lazy-section
+  # 2 cv=auto    h=  510.72 offH=   511 top=   1054 skipped=true parent=guest-layout-content cls=event-journey reveal guest-lazy-section
+  # 3 cv=auto    h=      80 offH=    80 top=   1681 skipped=true parent=guest-layout-content cls=schedule-section schedule-layout-timeline reveal guest-lazy-section
+  # 4 cv=auto    h=     117 offH=   117 top=   1877 skipped=true parent=guest-layout-content cls=venue-section venue-layout-cards reveal guest-lazy-section
+  # 5 cv=visible h=     718 offH=   718 top=   2103 skipped=true parent=guest-layout-content cls=reveal
+  # 6 cv=auto    h=     748 offH=   748 top=   3036 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature signup-sheets
+  # 7 cv=auto    h=     748 offH=   748 top=   3832 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature polls
+  # 8 cv=auto    h=     748 offH=   748 top=   4628 skipped=true parent=guest theme-rose template-rose style-kit-custom cls=guest-feature album

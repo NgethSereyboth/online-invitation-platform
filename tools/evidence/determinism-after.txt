@@ -1,0 +1,8 @@
+VIEWPORT 1280x900  N=30
+  pre-scroll  docH dist : 30x 4220
+  post-scroll docH dist : 30x 4220
+  scroll-shift dist     : 30x 4220 -> 4220
+VIEWPORT 1280x600  N=30
+  pre-scroll  docH dist : 30x 5423
+  post-scroll docH dist : 30x 5423
+  scroll-shift dist     : 30x 5423 -> 5423
