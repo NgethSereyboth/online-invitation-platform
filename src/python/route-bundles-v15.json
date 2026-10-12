@@ -274,8 +274,8 @@
     },
     "guests.html": {
       "javascript": "bundle-guests-v15.js",
-      "scriptBytes": 96858,
-      "scriptSha256": "3e2a6c0b1d9873d0219da3369d74e07b30e9ee062cd8375f35a177bb595ccb94",
+      "scriptBytes": 106622,
+      "scriptSha256": "84f43ec5956b404d3b12bbbaf8775a1f0f03daf094831f1271f929ec70101ea2",
       "sources": {
         "scripts": [
           "core/i18n.js",

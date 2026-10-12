@@ -336,8 +336,87 @@ async function manageLink(id){let g=guests.find(x=>x.id===id);if(!g)return;if(!g
 function showQr(id){let g=guests.find(x=>x.id===id);if(!g?.token)return manageLink(id);let url=guestUrl(g),qr=server?`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(id)}/qr.png`:'';$('#qrBody').innerHTML=`<h2>${esc(g.name)}</h2>${qr?`<div id="qrImageWrap"><img id="guestQrImage" src="${qr}" alt="${_txt('QR code','QR code')} for ${esc(g.name)}" width="420" height="420"><p id="qrError" class="hint" hidden></p></div>`:`<p class="hint">${_html('Run the local server to generate a private QR code.','Run the local server to generate a private QR code.')}</p>`}<p><button id="copyLink">${_html('Copy personal link','Copy personal link')}</button>${qr?` <a id="downloadGuestQr" href="${qr}" download="${esc(g.name)}-qr.png" class="button-link">${_html('Download QR','Download QR')}</a>`:''}</p>`;$('#qrModal').showModal();const img=$('#guestQrImage'),download=$('#downloadGuestQr'),error=$('#qrError');if(img)img.onerror=()=>{img.hidden=true;if(download)download.hidden=true;if(error){error.hidden=false;error.textContent=_txt('QR generation is unavailable. The personal link can still be copied safely.','QR generation is unavailable. The personal link can still be copied safely.')}};$('#copyLink').onclick=async()=>{await navigator.clipboard.writeText(url);$('#copyLink').textContent=_txt('Copied!','Copied!')}}
 $('.close').onclick=()=>$('#qrModal').close();
 function parseCsv(text){let rows=[],row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){let c=text[i];if(c==='"'&&quoted&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')quoted=!quoted;else if(c===','&&!quoted){row.push(cell.trim());cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell.trim());if(row.some(Boolean))rows.push(row);return rows}
-$('#importFile').onchange=async e=>{let rows=parseCsv(await e.target.files[0].text()),start=/name/i.test(rows[0]?.[0]||'')?1:0,added=0;for(let i=start;i<rows.length;i++){if(!rows[i][0])continue;await addGuest({name:rows[i][0],phone:rows[i][1]||''});added++}render();alert(_txt('Imported %d guest(s).','Imported %d guest(s).').replace('%d',String(added)));e.target.value=''};
+$('#importFile').onchange=e=>{const file=e.target.files?.[0];if(file)openImport(file)};
 $('#exportBtn').onclick=()=>{let rows=[[_txt('Name','Name'),_txt('Phone','Phone'),_txt('Email','Email'),_txt('Group','Group'),_txt('Household','Household'),_txt('Table','Table'),_txt('Seat','Seat'),_txt('Tags','Tags'),rsvpEnabled?_txt('RSVP status','RSVP status'):_txt('Invitation mode','Invitation mode'),_txt('Checked in','Checked in'),_txt('Delivery','Delivery'),_txt('Opened','Opened'),_txt('Personal link','Personal link')],...guests.map(g=>[g.name,g.phone||'',g.email||'',g.group_name||'',g.household_id||'',g.table_name||'',g.seat_label||'',(g.tags||[]).join('|'),rsvpEnabled?(g.rsvp_status||_txt('Pending','Pending')):_txt('RSVP disabled','RSVP disabled'),g.checked_in?_txt('Yes','Yes'):_txt('No','No'),g.delivery_status||'',g.opened_at?new Date(g.opened_at).toISOString():'',guestUrl(g)])],csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='guest-list.csv';a.click();URL.createObjectURL(a.href)};
+/* ────────────────────────────────────────────────────────────────────────────
+   Bulk guest import — the research pass's phase A (§5.7 of
+   docs/reviews/bulk-guest-import-research.md).
+
+   Why Excel is the primary path: a spreadsheet has no charset. Excel on Windows
+   writes CSV as UTF-16LE-with-BOM or in a legacy codepage, and reading that as
+   UTF-8 either throws or silently imports mojibake Khmer names (research risk
+   2). CSV is still accepted, with the BOM sniffed; a byte stream that no
+   supported encoding decodes is refused with a message that names the fix,
+   never imported as garbage.
+
+   SheetJS is loaded lazily from the vendored build only when a spreadsheet is
+   actually chosen, so the guests route keeps its 3-script / 440,000-byte page
+   budget (docs/route-bundle-sources-v15.json, src/python/build/build_page_manifests.py).
+
+   Khmer below comes from docs/i18n/TRANSLATIONS.csv where an approved string
+   exists; every string passed with an EMPTY Khmer slot is listed as KH_PENDING
+   in docs/reviews/bulk-guest-import-implementation.md — none is invented.
+   ──────────────────────────────────────────────────────────────────────────── */
+const SHEETJS_URL='/vendor/sheetjs/xlsx.mini.min.js';let sheetJsPromise=null;
+function loadSheetJs(){if(window.XLSX)return Promise.resolve(window.XLSX);if(!sheetJsPromise)sheetJsPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=SHEETJS_URL;script.onload=()=>window.XLSX?resolve(window.XLSX):reject(Error('Spreadsheet library did not initialise'));script.onerror=()=>reject(Error('Spreadsheet library could not be loaded'));document.head.append(script)});return sheetJsPromise}
+function decodeImportText(buffer){const bytes=new Uint8Array(buffer),decode=(encoding,offset)=>new TextDecoder(encoding).decode(bytes.subarray(offset));if(bytes.length>=3&&bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF)return{text:decode('utf-8',3),encoding:'UTF-8 with BOM'};if(bytes.length>=2&&bytes[0]===0xFF&&bytes[1]===0xFE)return{text:decode('utf-16le',2),encoding:'UTF-16LE with BOM'};if(bytes.length>=2&&bytes[0]===0xFE&&bytes[1]===0xFF)return{text:decode('utf-16be',2),encoding:'UTF-16BE with BOM'};try{return{text:new TextDecoder('utf-8',{fatal:true}).decode(bytes),encoding:'UTF-8'}}catch(error){return{text:'',encoding:'',failed:true}}}
+const csvCells=rows=>rows.map(row=>Array.isArray(row)?row.map(value=>String(value??'').trim()):[]);
+async function readImportFile(file){const name=String(file?.name||'').toLowerCase();if(/\.xlsx$|\.xlsm$|\.xls$/.test(name)){const XLSX=await loadSheetJs();const workbook=XLSX.read(new Uint8Array(await file.arrayBuffer()));const sheet=workbook.Sheets[workbook.SheetNames[0]];if(!sheet)throw Error('The workbook has no worksheet');return{rows:csvCells(XLSX.utils.sheet_to_json(sheet,{header:1,blankrows:false,defval:''})),source:'Excel'}}const decoded=decodeImportText(await file.arrayBuffer());if(decoded.failed)return{rows:[],source:'CSV',decodeFailure:true};return{rows:csvCells(parseCsv(decoded.text)),source:'CSV · '+decoded.encoding}}
+function importStateFor(rows,source){const headerRow=rows[0]||[],header=/name|guest|ឈ្មោះ/i.test(String(headerRow[0]||'')),columns=Math.max(1,rows.reduce((max,row)=>Math.max(max,row.length),0));return{rows,source,header,columns,column:0,skipDuplicates:false,start:header?1:0}}
+function importEntries(state){const entries=[];for(let index=state.start;index<state.rows.length;index++){const row=state.rows[index]||[],name=String(row[state.column]||'').trim();if(!row.some(value=>String(value||'').trim()))continue;entries.push({index,name,phone:String(row[1]||'').trim()})}return entries}
+function importFindings(state){const entries=importEntries(state),blank=[],duplicates=[],seen=new Set();for(const entry of entries){if(!entry.name){blank.push(entry.index+1);continue}const key=entry.name.toLowerCase();if(seen.has(key)){duplicates.push(entry.name);continue}seen.add(key)}return{entries,blank,duplicates}}
+function importRowsToImport(state){const{entries,duplicates}=importFindings(state);if(!state.skipDuplicates)return entries;const seen=new Set(),kept=[];for(const entry of entries){const key=entry.name.toLowerCase();if(seen.has(key))continue;seen.add(key);kept.push(entry)}return kept}
+let importDialog=null,importState=null;
+function ensureImportDialog(){if(importDialog)return importDialog;importDialog=document.createElement('dialog');importDialog.className='ei-dialog';importDialog.setAttribute('aria-modal','true');importDialog.innerHTML='<div class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="guest-import-body"></div><div class="ei-dialog-actions"></div></div>';document.body.append(importDialog);importDialog.addEventListener('close',()=>{importState=null});return importDialog}
+function closeImportDialog(){importDialog?.close()}
+function renderImportDialog(){
+  const dialog=ensureImportDialog(),state=importState;
+  const icon=dialog.querySelector('.ei-dialog-icon'),heading=dialog.querySelector('h2'),message=dialog.querySelector('.ei-dialog-message'),body=dialog.querySelector('.guest-import-body'),actions=dialog.querySelector('.ei-dialog-actions');
+  if(!state){body.innerHTML='';actions.innerHTML='';return}
+  if(state.failure){
+    icon.textContent='!';heading.textContent=_txt('Import guests','');
+    message.innerHTML=_html('The file could not be read.','');
+    body.innerHTML=`<p class="hint">${esc(state.failure)}</p>`;
+    actions.innerHTML=`<button type="button" class="ei-primary" data-cancel>${_html('Close','បិទ')}</button>`;
+    actions.querySelector('[data-cancel]').onclick=closeImportDialog;return
+  }
+  if(state.decodeFailure){
+    icon.textContent='!';heading.textContent=_txt('Import guests','');
+    message.innerHTML=_html('This CSV is neither UTF-8, UTF-16LE nor UTF-16BE. Export the guest list as .xlsx and import that instead — a spreadsheet has no charset, so Khmer names survive it.','');
+    body.innerHTML='';actions.innerHTML=`<button type="button" class="ei-primary" data-cancel>${_html('Close','បិទ')}</button>`;
+    actions.querySelector('[data-cancel]').onclick=closeImportDialog;return
+  }
+  const{entries,blank,duplicates}=importFindings(state),importable=importRowsToImport(state),detected=state.header?String((state.rows[0]||[])[state.column]||'').trim():'';
+  icon.textContent='⇪';heading.textContent=_txt('Import guests','');
+  message.innerHTML=_html(state.header?`Found ${entries.length} rows, name column detected as '${detected||'Column 1'}'.`:`Found ${entries.length} rows, no header row detected — choose the name column.`,'');
+  const options=Array.from({length:state.columns},(_,index)=>`<option value="${index}" ${index===state.column?'selected':''}>${esc(`Column ${index+1} — ${String((state.rows[0]||[])[index]||'').slice(0,18)||'—'}`)}</option>`).join('');
+  const shown=entries.length>7?[...entries.slice(0,5),null,...entries.slice(-2)]:entries;
+  const preview=shown.map(entry=>entry===null?`<div class="guest-row"><div><strong>…</strong></div></div>`:`<div class="guest-row"><div><strong>${esc(entry.name||_txt('(empty name)',''))}</strong>${entry.phone?`<br><small>${esc(entry.phone)}</small>`:''}</div></div>`).join('');
+  const emptyWarning=blank.length?`<p class="hint">${esc(`${blank.length} row(s) have no name, so nothing was imported yet (rows ${blank.slice(0,8).join(', ')}${blank.length>8?'…':''})`)}</p>`:'';
+  const duplicateWarning=duplicates.length?`<p class="hint">${esc(`${duplicates.length} duplicate name(s) in this file: ${duplicates.slice(0,5).join(', ')}${duplicates.length>5?'…':''}`)}</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-skip-duplicates ${state.skipDuplicates?'checked':''}> ${_html('Skip later duplicates (the default keeps both)','')}</label>`:'';
+  body.innerHTML=`<label class="sr-only" for="importColumn">${_html('Name column','')}</label><select id="importColumn">${options}</select>${emptyWarning}${duplicateWarning}<div class="guest-table">${preview}</div>`;
+  const select=body.querySelector('#importColumn');select.onchange=()=>{state.column=Number(select.value);renderImportDialog()};
+  const skip=body.querySelector('[data-skip-duplicates]');if(skip)skip.onchange=()=>{state.skipDuplicates=skip.checked;renderImportDialog()};
+  actions.innerHTML=`<button type="button" data-cancel>${_html('Cancel','បោះបង់')}</button><button type="button" class="ei-primary" data-import ${blank.length||!importable.length?'disabled':''}>${esc(`Import ${importable.length} guest(s)`)}</button>`;
+  actions.querySelector('[data-cancel]').onclick=closeImportDialog;
+  actions.querySelector('[data-import]').onclick=()=>runImport(importable);
+}
+async function openImport(file){
+  let parsed;
+  try{parsed=await readImportFile(file)}catch(error){parsed={failure:error.message||String(error)}}
+  const dialog=ensureImportDialog();
+  importState=parsed.failure?{rows:[],source:'',failure:parsed.failure}:importStateFor(parsed.rows,parsed.source);
+  renderImportDialog();
+  if(!dialog.open)dialog.showModal();
+}
+async function runImport(entries){
+  const button=importDialog?.querySelector('[data-import]');if(button)button.disabled=true;
+  let added=0,failed=0;
+  try{for(const entry of entries){try{await addGuest({name:entry.name,phone:entry.phone});added++}catch(error){failed++}}}finally{closeImportDialog();render()}
+  const summary=`${added} ${_txt('guest(s) imported','')}${failed?` · ${failed} ${_txt('failed','')}`:''}`;
+  if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary);
+  $('#importFile').value='';
+}
 if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.EInviteI18n.subscribe(render)};
 load();;(function(){
 'use strict';
