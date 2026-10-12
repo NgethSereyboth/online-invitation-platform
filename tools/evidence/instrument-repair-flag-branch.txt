@@ -1,0 +1,159 @@
+INSTRUMENT REPAIR — Goal 3: the flag test's unreachable 200-branch.
+Every block below is raw output; the command that produced it is named in the
+'cmd:' line above the block. (No block embeds a leading '$ ', so a report block
+that quotes this file stays machine-checkable by tools/report-verify.mjs.)
+
+cmd: grep -n 'path == "/api/admin/feature-flags"' src/python/server.py
+3509:        if path == "/api/admin/feature-flags": return self.admin_feature_flags()
+3598:            if path == "/api/admin/feature-flags": return self.admin_update_feature_flags()
+
+  3509 is in do_GET, 3598 is in do_PUT. There is no do_POST arm for this path, so
+  the test's POST reached the 404 catch-all and never the flag handler.
+
+cmd: sed -n '5118,5131p' src/python/server.py
+    def admin_update_feature_flags(self):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, "/api/admin/feature-flags", "PUT")
+            self.json(403, {"error": "Insufficient permissions"})
+            return
+        admin=self.require_role("admin")
+        if not admin:return
+        if not self.rate_limit(f"admin-feature-flags:{admin['id']}",60,60):return
+        data=self.body(20_000)
+        # 1. Validate body shape.
+        if not isinstance(data, dict) or not isinstance(data.get("updates"), list):
+
+cmd: git diff 7e97f57 -- tests/analytics_reports_test.py
+diff --git a/tests/analytics_reports_test.py b/tests/analytics_reports_test.py
+index 7ee6438..6088ed7 100644
+--- a/tests/analytics_reports_test.py
++++ b/tests/analytics_reports_test.py
+@@ -24,6 +24,7 @@ Runs against a real app server via tests/v14_test_utils.app_server.
+ from __future__ import annotations
+ import json
+ import os
++import sqlite3
+ import sys
+ import time
+ import urllib.error
+@@ -66,6 +67,40 @@ def _get(base, path, headers=None):
+         return None, str(e).encode() if isinstance(e, Exception) else b""
+ 
+ 
++def _put(base, path, body, headers=None):
++    """PUT with a JSON body. `_post` cannot stand in for it: the admin
++    feature-flag route is PUT-only, and urllib sends no method override."""
++    data = json.dumps(body).encode()
++    req = urllib.request.Request(
++        base + path, data=data, method="PUT",
++        headers={"Content-Type": "application/json", **(headers or {})}
++    )
++    try:
++        with urllib.request.urlopen(req, timeout=10) as r:
++            return r.status, r.read()
++    except urllib.error.HTTPError as e:
++        return e.code, e.read()
++    except Exception as e:
++        return None, str(e).encode() if isinstance(e, Exception) else b""
++
++
++def _promote_to_admin(data_dir, email):
++    """Make a registered user an admin, in the server's own SQLite file.
++
++    The harness has no admin-registration route (`role` is a column on `users`),
++    so a test that needs the admin API has to promote the user itself. This is
++    the same step `tools/analytics-live-flag-probe.py` takes.
++    """
++    conn = sqlite3.connect(Path(data_dir) / "invites.db")
++    try:
++        cur = conn.execute("UPDATE users SET role='admin' WHERE email=?", (email,))
++        changed = cur.rowcount
++        conn.commit()
++    finally:
++        conn.close()
++    assert changed == 1, f"expected to promote exactly 1 user ({email}), promoted {changed}"
++
++
+ def _register_and_login(base):
+     s, b = _post(base, "/api/auth/register", {"email": USERNAME, "password": PASSWORD})
+     assert s == 201, f"register failed: {s} {b}"
+@@ -278,29 +313,43 @@ def test_phase5_export_account_csv():
+ 
+ 
+ def test_phase6_live_endpoint_feature_flag():
+-    with app_server() as (proc, base, _):
++    """Both branches of `/api/invitations/{id}/analytics/live`.
++
++    The flag-ON branch used to be unreachable, and the test said so by printing
++    "skipped" and passing anyway. It POSTed `{"key": ..., "value": ...}` to
++    `/api/admin/feature-flags`; that route is **PUT**-only, requires
++    `role=admin`, and takes `{"updates": [{"key": ..., "value": ...}]}`. So the
++    request 404'd, the test took its else-branch, and the 200 assertion
++    ("activeSessions" + "lastEventAt") never ran on any run of this suite — a
++    green test covering nothing.
++
++    The branch is reachable and worth asserting: the endpoint that flips the flag
++    exists and works. What was wrong was the fixture, not the server, so the
++    fixture is what changed — it promotes the host to admin in the server's own
++    database and PUTs the documented body. The else-branch is gone rather than
++    kept: a branch that silently passes is how this defect survived.
++    """
++    with app_server() as (proc, base, data_dir):
+         headers = _register_and_login(base)
+         inv_id = _create_invitation(base, headers, "live-test")
+-        # Default flag is False → 403.
++        # The live endpoint is gated on the flag, and the flag defaults to off.
+         s, b = _get(base, f"/api/invitations/{inv_id}/analytics/live", headers)
+         assert s == 403, f"live should be 403 by default, got {s} {b!r}"
+-        # Flip the flag via the admin API.
+-        s, b = _get(base, "/api/auth/me", headers)
+-        me = json.loads(b)["user"]
+-        # Use the admin feature-flag set route (added in Part 5 §5.4).
+-        s, b = _post(base, "/api/admin/feature-flags", {
+-            "key": "analytics_live_enabled", "value": True, "updatedBy": me["id"],
+-        }, headers)
+-        if s == 200:
+-            # Flag was set — retry.
+-            s, b = _get(base, f"/api/invitations/{inv_id}/analytics/live", headers)
+-            assert s == 200, f"live should be 200 after flag set, got {s} {b!r}"
+-            data = json.loads(b)
+-            assert "activeSessions" in data and "lastEventAt" in data
+-        else:
+-            # Admin route not wired in this build — skip the second check.
+-            print(f"  (skipped admin flag set: {s} {b!r})")
+-        print("Phase 6 (live endpoint feature flag) PASSED")
++        assert json.loads(b).get("code") == "feature_disabled", f"wrong 403 body: {b!r}"
++
++        # Flip the flag through the real admin API: promote first, then PUT.
++        _promote_to_admin(data_dir, USERNAME)
++        s, b = _put(base, "/api/admin/feature-flags",
++                    {"updates": [{"key": "analytics_live_enabled", "value": True}]}, headers)
++        assert s == 200, f"admin PUT should flip the flag, got {s} {b!r}"
++        assert json.loads(b).get("updated") == 1, f"expected 1 flag updated, got {b!r}"
++
++        # Flag on → the same endpoint now answers with the live payload.
++        s, b = _get(base, f"/api/invitations/{inv_id}/analytics/live", headers)
++        assert s == 200, f"live should be 200 after flag set, got {s} {b!r}"
++        payload = json.loads(b)
++        assert "activeSessions" in payload and "lastEventAt" in payload, f"live payload missing fields: {payload!r}"
++        print("Phase 6 (live endpoint feature flag) PASSED — 403 feature_disabled then 200 with a live payload")
+ 
+ 
+ def test_phase7_js_modules_static():
+
+cmd: EINVITE_ALLOW_NO_SCANNER=1 .venv/bin/python -m pytest tests/analytics_reports_test.py -k phase6 -q -p no:randomly
+.                                                                        [100%]
+1 passed, 6 deselected in 4.18s
+
+cmd: .venv/bin/python tools/phase6-flag-mutations.py
+     (the output below was produced by this script while it was still a /tmp throwaway; it
+      graduated to tools/ unchanged, and re-running it from there prints the same three kills)
+  Three mutations injected at the fixed test's own seams; each had to make it FAIL.
+  A surviving mutation would mean the branch is still not under test. Both the
+  pytest run above and this command predate nothing in the tree — the same file.
+[MUTATION KILLED]   admin PUT returns 500 — admin PUT should flip the flag, got 500 b'{"error":"broken"}'
+[MUTATION KILLED]   admin PUT flips ai_agent_enabled instead — expected 1 flag updated, got b'{"updated": 0, "flags": [{"key": "ai_agent_enabled", "description": "Master switch for the AI creative agent", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "canva_bridge_enabled", "description": "Allow Canva import/export bridge", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "plugin_marketplace_enabled", "description": "Allow installing signed plugins from the marketplace", "value": true, "tier": "creator", "updatedAt": null, "updatedBy": null}, {"key": "collaboration_v52_enabled", "description": "Use the Y.js CRDT V52 collaboration protocol", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "analytics_enabled", "description": "Creator analytics tracking", "value": true, "tier": "free", "updatedAt": null, "updatedBy": null}, {"key": "analytics_live_enabled", "description": "Live activity polling on creator dashboard", "value": false, "tier": "creator", "updatedAt": null, "updatedBy": null}, {"key": "guest_album_enabled", "description": "Guest photo album on public invitation pages", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "guest_signup_sheets_enabled", "description": "Guest sign-up sheets", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "guest_polls_enabled", "description": "Guest polls", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "guest_gift_registry_enabled", "description": "Guest gift registry", "value": true, "tier": null, "updatedAt": null, "updatedBy": null}, {"key": "multi_channel_delivery_enabled", "description": "SMS/WhatsApp/Telegram delivery channels", "value": true, "tier": "creator", "updatedAt": null, "updatedBy": null}, {"key": "maintenance_mode", "description": "Return 503 to non-admins (maintenance window)", "value": false, "tier": null, "updatedAt": null, "updatedBy": null}]}'
+[MUTATION KILLED]   user never promoted to admin — admin PUT should flip the flag, got 403 b'{"error": "Insufficient permissions"}'

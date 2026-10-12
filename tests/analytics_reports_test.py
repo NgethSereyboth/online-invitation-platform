@@ -24,6 +24,7 @@ Runs against a real app server via tests/v14_test_utils.app_server.
 from __future__ import annotations
 import json
 import os
+import sqlite3
 import sys
 import time
 import urllib.error
@@ -64,6 +65,40 @@ def _get(base, path, headers=None):
         return e.code, e.read()
     except Exception as e:
         return None, str(e).encode() if isinstance(e, Exception) else b""
+
+
+def _put(base, path, body, headers=None):
+    """PUT with a JSON body. `_post` cannot stand in for it: the admin
+    feature-flag route is PUT-only, and urllib sends no method override."""
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(
+        base + path, data=data, method="PUT",
+        headers={"Content-Type": "application/json", **(headers or {})}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()
+    except Exception as e:
+        return None, str(e).encode() if isinstance(e, Exception) else b""
+
+
+def _promote_to_admin(data_dir, email):
+    """Make a registered user an admin, in the server's own SQLite file.
+
+    The harness has no admin-registration route (`role` is a column on `users`),
+    so a test that needs the admin API has to promote the user itself. This is
+    the same step `tools/analytics-live-flag-probe.py` takes.
+    """
+    conn = sqlite3.connect(Path(data_dir) / "invites.db")
+    try:
+        cur = conn.execute("UPDATE users SET role='admin' WHERE email=?", (email,))
+        changed = cur.rowcount
+        conn.commit()
+    finally:
+        conn.close()
+    assert changed == 1, f"expected to promote exactly 1 user ({email}), promoted {changed}"
 
 
 def _register_and_login(base):
@@ -278,29 +313,43 @@ def test_phase5_export_account_csv():
 
 
 def test_phase6_live_endpoint_feature_flag():
-    with app_server() as (proc, base, _):
+    """Both branches of `/api/invitations/{id}/analytics/live`.
+
+    The flag-ON branch used to be unreachable, and the test said so by printing
+    "skipped" and passing anyway. It POSTed `{"key": ..., "value": ...}` to
+    `/api/admin/feature-flags`; that route is **PUT**-only, requires
+    `role=admin`, and takes `{"updates": [{"key": ..., "value": ...}]}`. So the
+    request 404'd, the test took its else-branch, and the 200 assertion
+    ("activeSessions" + "lastEventAt") never ran on any run of this suite — a
+    green test covering nothing.
+
+    The branch is reachable and worth asserting: the endpoint that flips the flag
+    exists and works. What was wrong was the fixture, not the server, so the
+    fixture is what changed — it promotes the host to admin in the server's own
+    database and PUTs the documented body. The else-branch is gone rather than
+    kept: a branch that silently passes is how this defect survived.
+    """
+    with app_server() as (proc, base, data_dir):
         headers = _register_and_login(base)
         inv_id = _create_invitation(base, headers, "live-test")
-        # Default flag is False → 403.
+        # The live endpoint is gated on the flag, and the flag defaults to off.
         s, b = _get(base, f"/api/invitations/{inv_id}/analytics/live", headers)
         assert s == 403, f"live should be 403 by default, got {s} {b!r}"
-        # Flip the flag via the admin API.
-        s, b = _get(base, "/api/auth/me", headers)
-        me = json.loads(b)["user"]
-        # Use the admin feature-flag set route (added in Part 5 §5.4).
-        s, b = _post(base, "/api/admin/feature-flags", {
-            "key": "analytics_live_enabled", "value": True, "updatedBy": me["id"],
-        }, headers)
-        if s == 200:
-            # Flag was set — retry.
-            s, b = _get(base, f"/api/invitations/{inv_id}/analytics/live", headers)
-            assert s == 200, f"live should be 200 after flag set, got {s} {b!r}"
-            data = json.loads(b)
-            assert "activeSessions" in data and "lastEventAt" in data
-        else:
-            # Admin route not wired in this build — skip the second check.
-            print(f"  (skipped admin flag set: {s} {b!r})")
-        print("Phase 6 (live endpoint feature flag) PASSED")
+        assert json.loads(b).get("code") == "feature_disabled", f"wrong 403 body: {b!r}"
+
+        # Flip the flag through the real admin API: promote first, then PUT.
+        _promote_to_admin(data_dir, USERNAME)
+        s, b = _put(base, "/api/admin/feature-flags",
+                    {"updates": [{"key": "analytics_live_enabled", "value": True}]}, headers)
+        assert s == 200, f"admin PUT should flip the flag, got {s} {b!r}"
+        assert json.loads(b).get("updated") == 1, f"expected 1 flag updated, got {b!r}"
+
+        # Flag on → the same endpoint now answers with the live payload.
+        s, b = _get(base, f"/api/invitations/{inv_id}/analytics/live", headers)
+        assert s == 200, f"live should be 200 after flag set, got {s} {b!r}"
+        payload = json.loads(b)
+        assert "activeSessions" in payload and "lastEventAt" in payload, f"live payload missing fields: {payload!r}"
+        print("Phase 6 (live endpoint feature flag) PASSED — 403 feature_disabled then 200 with a live payload")
 
 
 def test_phase7_js_modules_static():
