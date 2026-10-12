@@ -94,6 +94,17 @@ Measured on this host: `/usr/bin/google-chrome` (used by the Node instruments an
 `canva-probe.mjs` records the resolved browser and Chrome version in its artifact:
 `"chrome": "/usr/bin/google-chrome (kind=full)"` (`artifacts/canva-probe-summary.json`).
 
+**The brief's own step 0b check cannot pass on this host, and that has to be said plainly.**
+`node -e "require('playwright')"` fails (playwright is not a dependency of this repo) and
+`playwright.chromium.launch()` fails even where the package is importable — inside `.venv`
+it raises `Executable doesn't exist at /home/ngethsereyboth/.cache/ms-playwright/chromium_headless_shell-1228/...`.
+That is the same fact §3 records and repairs in `tests/layers_panel_guard_test.py`. The
+equivalent proof for the toolchain that *is* used is that every instrument in this report
+launched a browser and produced an artifact — 81 scripts inventoried, a 71 MB trace, the
+module-loading timings, and the two site traces compared in §1.5 — all through
+`tools/lib/browser.mjs`, plus `/usr/bin/google-chrome` for the one pytest that needs a
+browser.
+
 > Note on the working tree: `package.json` and `package-lock.json` are **modified** in
 > this checkout — a single `agent-browser` devDependency added at 09:41, before this
 > pass's first Canva run at 12:31 and untouched by every tool this pass wrote. They are
