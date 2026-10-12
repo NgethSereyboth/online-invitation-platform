@@ -1,0 +1,12 @@
+=== tests/layers_panel_guard_test.py, with a browser ===
+V17_LAYERS_PANEL_GUARD_STATIC_PASSED
+V17_LAYERS_PANEL_GUARD_PASSED rows=4==objects=4, selection marked 1 row(s), 5 writes for one sync then 0 at rest, box {'stage': {'w': 212, 'h': 459}, 'viewport': {'w': 660, 'h': 468}} -> {'stage': {'w': 164, 'h': 459}, 'viewport': {'w': 721, 'h': 463}}, 8 observer notification(s) on resize
+
+=== negative control A: remove the observer gate ===
+static assertion:
+  AssertionError: src/js/professional-editor-v17.js: the schedule is no longer gated on a real box change
+dynamic-only run (gate removed, rebuilt): ('pass', ...)  <- documented: this host cannot discriminate it
+
+=== negative control B: without a browser (python3, no playwright) ===
+V17_LAYERS_PANEL_GUARD_STATIC_PASSED
+V17_LAYERS_PANEL_GUARD_SKIPPED playwright is not importable: No module named 'playwright'
