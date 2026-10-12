@@ -2910,6 +2910,9 @@ showInHero:o.dataset.showInHero!=='false',
 showInGallery:o.dataset.showInGallery!=='false',
 groupId:o.dataset.groupId||'',
 zIndex:Number(o.style.zIndex||index+1),
+contentBinding:o.dataset.contentBinding||'',
+bindingDetached:o.dataset.bindingDetached==='true',
+bindingLastSyncedAt:Number(o.dataset.bindingLastSyncedAt||0),
 type:o.dataset.objectType||(o.classList.contains('image-object')?'image':'text')
 };
 if(window.RichTextDocumentModel&&['text','decoration'].includes(state.objects[o.dataset.id].type)){
@@ -3032,6 +3035,14 @@ o.dataset.typographyResolvedSnapshot=JSON.stringify(d.typographyResolvedSnapshot
 o.dataset.colorToken=typography.colorToken||d.colorToken||'text';
 o.dataset.color=typography.color||d.color||'';
 o.dataset.objectType=d.type||(o.classList.contains('image-object')?'image':'text');
+// V25 adaptive/guest bindings are document data, not DOM data: without this the
+// state→DOM→state round-trip (apply() here and capture()) dropped
+// contentBinding, so a binding never survived a page load and the guest.*
+// binding written by template-bindings-v25.js could not be published (research
+// §5.3, Goal 3d).
+o.dataset.contentBinding=d.contentBinding||'';
+o.dataset.bindingDetached=d.bindingDetached===true?'true':'false';
+o.dataset.bindingLastSyncedAt=String(d.bindingLastSyncedAt||0);
 o.dataset.fontSize=String(typography.fontSize);
 o.dataset.textAlign=typography.textAlign;
 o.dataset.fontWeight=d.fontWeight||'400';

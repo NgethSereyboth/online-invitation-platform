@@ -2702,6 +2702,65 @@ def guest_slug(name, taken=()):
         index += 1
     return candidate
 
+# ---------------------------------------------------------------------------
+# Goal 3d — guest-bound text objects (research §5.3)
+#
+# The editor writes the *placeholder* into the object's content (Goal 3c): an
+# object bound to ``guest.name`` holds ``{{name}}`` on the canvas. The guest's
+# own value is substituted only when the published document is served to that
+# guest, so one design serves every guest without the editor knowing who they
+# are.
+#
+# The substitution reuses the merge semantics the editor already ships rather
+# than inventing a second dialect: canva-scale-v31.js mergeFields is
+# ``/\{\{\s*([\w.-]+)\s*\}\}/g`` with a missing key becoming ''.
+# ---------------------------------------------------------------------------
+_MERGE_TOKEN = re.compile(r"\{\{\s*([\w.-]+)\s*\}\}")
+
+def merge_fields(template, row):
+    """The Python twin of the editor's ``mergeFields`` (research §5.3)."""
+    values = row if isinstance(row, dict) else {}
+    def replace(match):
+        value = values.get(match.group(1))
+        return "" if value is None else str(value)
+    return _MERGE_TOKEN.sub(replace, str(template if template is not None else ""))
+
+
+def apply_guest_bindings(document, guest_row):
+    """Resolve every ``guest.*``-bound object against ``guest_row``.
+
+    Walks the same two canvas groups the editor's binding inspector walks
+    (``objects`` for the hero canvas and each ``designPages[].objects``), so an
+    object the editor reported as a guest binding is the object resolved here.
+    Objects with no guest binding are untouched, and a document that has none is
+    returned unchanged.
+    """
+    if not isinstance(document, dict) or not guest_row:
+        return document
+    row = dict(guest_row)
+    groups = [document.get("objects") or {}]
+    for page in document.get("designPages") or []:
+        if isinstance(page, dict):
+            groups.append(page.get("objects") or {})
+    for group in groups:
+        if not isinstance(group, dict):
+            continue
+        for obj in group.values():
+            if not isinstance(obj, dict):
+                continue
+            binding = str(obj.get("contentBinding") or "")
+            if not binding.startswith("guest."):
+                continue
+            template = obj.get("html") if obj.get("html") is not None else obj.get("text")
+            if template is None:
+                continue
+            merged = merge_fields(template, row)
+            obj["html"] = merged
+            if "text" in obj:
+                obj["text"] = merged
+    return document
+
+
 def guest_token_value(guest_id, token_salt, token_version=1):
     payload=f"{guest_id}|{token_salt}|{int(token_version or 1)}"
     digest=hmac.new(GUEST_TOKEN_SECRET.encode(),payload.encode(),hashlib.sha256).digest()
@@ -6727,6 +6786,9 @@ class Handler(SimpleHTTPRequestHandler):
                 if guest:db.execute("UPDATE guests SET opened_at=COALESCE(opened_at,?),delivery_status=CASE WHEN delivery_status='sent' THEN 'opened' ELSE delivery_status END WHERE id=?",(int(time.time()*1000),guest["id"]))
         document=apply_gallery_access(public_document,row["id"],gallery_authorized)
         if row["access_mode"]=="password":document=rewrite_document_media_urls(document,row["id"])
+        # Goal 3d (§5.3): a guest token resolves guest.* bindings for that guest
+        # only. No token — the designer's own preview — leaves the placeholders.
+        if guest:document=apply_guest_bindings(document,dict(guest))
         try:studio_white=json.loads(row["white_label_json"] or "{}")
         except Exception:studio_white={}
         studio_brand={"name":row["studio_name"] or "","logo":studio_white.get("logo","") or "","primaryColor":studio_white.get("primaryColor","") or "","accentColor":studio_white.get("accentColor","") or "","website":studio_white.get("website","") or "","hidePlatformBrand":bool(studio_white.get("hidePlatformBrand",False))}
