@@ -11,7 +11,7 @@
         "core/safe-dom.js",
         "ui-dialogs.js",
         "account.js",
-        "account-security-v13.js",
+        "account-security.js",
         "modern-ui.js",
         "final-experience.js",
         "ux-refine.js",
@@ -28,8 +28,8 @@
         "tokens.css",
         "theme-hardening.css",
         "ux-refine.css",
-        "account-security-v13.css",
-        "stabilized-v14.css",
+        "account-security.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -66,7 +66,7 @@
         "tokens.css",
         "theme-hardening.css",
         "ux-refine.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -95,7 +95,7 @@
         "theme-hardening.css",
         "ux-refine.css",
         "accessibility.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -121,7 +121,7 @@
         "tokens.css",
         "theme-hardening.css",
         "ux-refine.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -131,7 +131,7 @@
         "core/i18n.js",
         "ui-dialogs.js",
         "invitation-context.js",
-        "checkin-v13.js",
+        "checkin.js",
         "accessibility-polish.js",
         "ui/app-shell.js"
       ],
@@ -141,7 +141,7 @@
         "theme-hardening.css",
         "accessibility.css",
         "checkin.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -187,7 +187,7 @@
         "final-polish.css",
         "dashboard-empty-state.css",
         "accessibility.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "guest-features.css",
         "app-shell-v55.css",
@@ -216,7 +216,7 @@
         "tokens.css",
         "theme-hardening.css",
         "ux-refine.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -235,7 +235,7 @@
       ],
       "styles": [
         "styles.css",
-        "guests-page-v13.css",
+        "guests-page.css",
         "modern-ui.css",
         "compact-theme-v0_52.css",
         "final-experience.css",
@@ -245,7 +245,7 @@
         "theme-hardening.css",
         "ux-refine.css",
         "accessibility.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -295,15 +295,15 @@
         "storyboard.js",
         "style-kits.js",
         "accessibility-polish.js",
-        "editor-commands-v13.js",
+        "editor-commands.js",
         "typography-editor-v20.js",
         "editor-canva-v13.js",
-        "editor-shared-styles-v13.js",
+        "editor-shared-styles.js",
         "photo-editor-v13.js",
-        "photo-retouch-v13.js",
+        "photo-retouch.js",
         "timeline-v13.js",
         "product-operations-v13.js",
-        "mobile-editor-v14.js",
+        "mobile-editor.js",
         "professional-editor-v17.js",
         "editor-responsive-contract-v27.js",
         "editor/editor-core.js",
@@ -334,7 +334,7 @@
         "workflow-pro-editor-v6.css",
         "workflow-final-audit-v7.css",
         "style-kits.css",
-        "editor-canva-v13.css",
+        "editor-canva.css",
         "editor-shared-styles.css",
         "opening-scenes.css",
         "storyboard.css",
@@ -344,7 +344,7 @@
         "photo-retouch.css",
         "timeline.css",
         "product-operations.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "editor-ux-refinement-v0_52.css",
         "professional-editor-v17.css",
         "zoom-layout-v22.css",
@@ -382,7 +382,7 @@
         "ux-refine.css",
         "final-polish.css",
         "accessibility.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -460,7 +460,7 @@
         "tokens.css",
         "theme-hardening.css",
         "ux-refine.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -489,7 +489,7 @@
         "theme-hardening.css",
         "ux-refine.css",
         "accessibility.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -519,7 +519,7 @@
         "theme-hardening.css",
         "ux-refine.css",
         "accessibility.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
@@ -545,7 +545,7 @@
         "tokens.css",
         "theme-hardening.css",
         "ux-refine.css",
-        "stabilized-v14.css",
+        "stabilized.css",
         "zoom-layout-pages-v22.css",
         "app-shell-v55.css"
       ]
