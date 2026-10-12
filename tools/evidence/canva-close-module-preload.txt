@@ -14,7 +14,7 @@ src/js/performance-loader-v22.js declares the 23 chain URLs as <link rel=preload
 before starting the chain. Execution order is untouched: the chain still appends one script
 and waits for its onload. Skipped when navigator.connection.saveData is set.
 
-# measurement — 3 runs per side, one page load each, 3 runs per side, median
+# measurement — 3 runs per side, one page load each, median
 metric                         before      after      delta
 chainSpanMs                      3174       3075        -99
 chainTransferMs                  1346       3393      +2047

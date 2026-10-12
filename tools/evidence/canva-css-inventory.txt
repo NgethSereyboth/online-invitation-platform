@@ -1,0 +1,42 @@
+CANVA_CSS_INVENTORY — one instrument, two sites (tools/css-feature-inventory.mjs)
+
+$ node tools/css-feature-inventory.mjs https://www.canva.com/ --label=canva
+  canva         stylesheets=2 inline=2 externalBytes=229650 domRules=1830
+$ node tools/css-feature-inventory.mjs --pages=index.html --label=project-index
+  project-index stylesheets=24 inline=0 externalBytes=579384 domRules=179
+
+Both rows are counts over the union of every stylesheet + inline block the page shipped, read
+from the CSS text via CDP so cross-origin sheets count. The project also declares 6
+content-visibility / 8 contain / 4 contain-intrinsic-size, which Canva's page does not.
+
+construct                   canva  project   reading
+contentVisibility               0        6   the project uses it (5 of 6 auto); Canva homepage: 0
+contain                         0        8   the project uses it; Canva homepage: 0
+containIntrinsicSize            0        4   the project pairs it with content-visibility; Canva: 0
+willChange                      7        8   comparable
+translateZ                      6        2   comparable
+isolation                       7        7   identical count
+layers                          9       65   the project uses @layer far more (65 vs 9)
+containerQueries                1        3   comparable
+containerType                   1        1   identical
+isSelector                     13        2   Canva flattens specificity with :is() 6.5x more
+whereSelector                  73        6   Canva flattens specificity with :where() 12x more
+hasSelector                     0       29   the project uses :has(), Canva does not on this page
+clamp                           3       22   the project uses clamp() 7x more
+colorMix                        0      316   the project uses color-mix() 316x, Canva 0 here
+important                       7     2985   the project declares the most: 2985 vs 7 (426x)
+mediaBlocks                   324      206   Canva has 1.6x more @media blocks
+keyframes                      39       22   Canva has 1.8x more @keyframes
+customPropertyDecls          1031      340   Canva declares 3x more custom properties (1031 vs 340)
+styleRules                   4289     5245   comparable (4289 vs 5245)
+selectors                    4289     5245   comparable
+aspectRatio                     1       21   the project uses it more (21 vs 1)
+
+# the caveats that make this table safe to use
+* Canva's row is the marketing homepage, not the editor. The editor needs a login and was
+  deliberately not entered. One of Canva's sheets did not come back at all:
+  https://static.canva.com/web/2f6666decdbd610e.ltr.css -> Protocol error (Network.getResponseBody): No data found for resource with given identifier
+  so Canva's row is a lower bound.
+* The two pages are different pages. Ratios here are order-of-magnitude readings, not a
+  like-for-like byte comparison; the one number that is directly comparable is !important,
+  because it is a count of declarations the project controls.

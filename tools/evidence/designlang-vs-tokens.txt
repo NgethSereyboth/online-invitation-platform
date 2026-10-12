@@ -1,0 +1,41 @@
+DESIGNLANG_VS_TOKENS — what designlang extracted from canva.com, next to src/css/tokens.css
+
+# provenance
+designlang 7.0.0, --system-chrome --user-agent <desktop Chrome UA>, source https://www.canva.com
+output: artifacts/canva-design/canva-com-design-tokens.json (DTCG v1), captured 2026-10-12T05:31:50Z
+CAUTION: these are COMPUTED styles of the MARKETING homepage, not the editor. The editor needs
+a login; no editor tokens were extracted.
+
+# colour
+canva primitive.color.brand.primary    #8b3dff
+canva primitive.color.brand.secondary  #ff6105
+project --brand                        #8b465b
+project --brand-2                      #9c6cff
+=> different, and expected to be: the purple/orange pair is Canva's own brand, and this
+   project is not Canva. Nothing to port here; the useful part is that their brand pair is
+   a token pair with a primary/secondary split, which tokens.css already has.
+
+# radius
+canva designlang radii: {'r0': '8px', 'r1': '12px', 'r2': '24px', 'r3': '50px', 'r4': '9999px'}
+project --radius-sm    8px
+project --radius-md    8px
+project --radius-lg    16px
+project --radius-xl    16px
+project --radius-pill  9999px
+=> matches at 8px and 9999px. src/css/tokens.css already documents 8px as "Canva's named
+   radiusElement token" and 16px as its panel value, so the extraction confirms a decision
+   the project already recorded rather than adding a new one.
+
+# spacing
+canva designlang spacing: {'s0': '4px', 's1': '16px', 's2': '24px', 's3': '32px', 's4': '48px', 's5': '256px', 's6': '296px', 's7': '315px', 's8': '332px', 's9': '495px'}
+project --space-1/2/3/4/6/8: ['4px', '8px', '12px', '16px', '24px', '32px']
+=> both are 4px-based. designlang's list also contains page-width values (256/296/315/332/495px)
+   because it samples computed padding/gaps on a marketing layout; those are section widths,
+   not a spacing scale, and are not ported.
+
+# type
+canva primitive has fontSize keys: ['h2', 'title-1', 'title-2', 'h3', 'title-3', 'h1', 'title-4', 'title-5'] | fontFamily keys: ['f0', 'f1']
+project --fs-title-lg/body-md/caption: 24px 14px 11px
+=> the extracted families are "Canva Sans, Times New Roman" (marketing), and this project
+   self-hosts Inter + Noto Sans/Serif Khmer. No port: different fonts, and the project cannot
+   self-host a font it does not licence.

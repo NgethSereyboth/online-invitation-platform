@@ -76,6 +76,12 @@ either server. Only the byte numbers depend on compression.
 | --- | --- |
 | `lighthouserc.js` | the only Lighthouse CI config. Run from the repo root: `npx lhci autorun --config=tools/lighthouserc.js`. |
 
+### Suites and routing
+
+| file | what it does |
+| --- | --- |
+| `analytics-wiring-gap.py` | collect every path the three analytics suites call and report whether the same literal appears in `src/python/server.py`. The feature itself is built in `src/python/features/analytics/`; this prints what was never wired. Read-only. |
+
 ### Served mirror
 
 | file | what it does |

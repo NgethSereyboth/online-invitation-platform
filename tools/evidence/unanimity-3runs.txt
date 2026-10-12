@@ -16,3 +16,8 @@ $ (run 2: no bucket contains it) ; python3 tools/hover-verify.py --cross-page
 summary: {"pages": 1, "runsPerPage": {"index": 3}, "minRunsPerPage": 3, "declarations": 60, "demotable": 0, "keep": 23, "noEvidence": 36, "unstable": 1}
 unstable: input:hover, textarea:hover, select:hover / border-color [{"page": "index", "runs": [[1, "redundant"], [3, "redundant"]], "missingRuns": 1}]
 demotable: 0
+
+# 16-page sweep, run 1 from the prior pass for the other 15 pages plus the three index runs
+$ ARTIFACTS_DIR=/tmp/unanimity-sweep (artifacts/lift-*.json + lift-index.run2/3) LIFT_JSON=1 python3 tools/hover-verify.py --cross-page
+summary: {"pages": 16, "runsPerPage": {"account": 1, "admin": 1, "analytics": 1, "billing": 1, "checkin": 1, "dashboard": 1, "designer": 1, "guests": 1, "index": 3, "materials": 1, "privacy": 1, "public": 1, "reset": 1, "responses": 1, "templates": 1, "verify": 1}, "minRunsPerPage": 1, "declarations": 60, "demotable": 0, "keep": 27, "noEvidence": 33, "unstable": 0}
+the one candidate, after the sweep: {"selector": "input:hover, textarea:hover, select:hover", "declaration": "border-color", "longhands": 4, "loadBearingOn": ["public"], "redundantOn": ["checkin", "dashboard", "guests", "index", "materials", "reset", "templates"], "unmeasuredOn": ["account", "admin", "analytics", "billing", "designer", "privacy", "responses", "verify"], "maxDiffs": 18, "measuredOnCount": 8, "conflicts": [], "verdict": "keep"}

@@ -1,0 +1,32 @@
+REA_REGISTRATION — what the setup changed, checked after the fact
+
+# the skill it installed (tools/evidence/rea-setup.txt recorded the install)
+/home/ngethsereyboth/.agents/skills/reverse-engineer-anything
+
+# the managed-skill identities, from tools/evidence/rea-doctor.txt
+  expected_skill_version: "37"
+    installed_version: "37"
+    installed_tool_count: 170
+    state: aligned
+      state: aligned
+      state: aligned
+
+# the client registrations it wrote, read back from the configs themselves
+/home/ngethsereyboth/.config/Code/User/mcp.json: servers=['rea'] rea={"type": "stdio", "command": "npx", "args": ["-y", "rea-agents@6.4.0", "mcp"]}
+/home/ngethsereyboth/.copilot/mcp-config.json: servers=['rea'] rea={"type": "stdio", "command": "npx", "args": ["-y", "rea-agents@6.4.0", "mcp"], "tools": ["*"]}
+
+# provider state, same file: the JS/website side needs no provider, the native side has none
+28:    detail: GHIDRA_INSTALL_DIR is not set
+29:    remediation: Set GHIDRA_INSTALL_DIR to an extracted Ghidra 12.1.x release directory.
+33:    detail: IDA MCP registration is not configured.
+34:    remediation: Set REA_IDA_MCP_CONFIG to your upstream IDA MCP registration JSON; see docs/ida-provider.md.
+37:  - id: ghidra
+43:      configuration,false,not_configured,GHIDRA_INSTALL_DIR is not set,Set GHIDRA_INSTALL_DIR to an extracted Ghidra 12.1.x release directory.,missing_analysis_engine
+44:  - id: ida
+50:      registration,false,not_configured,IDA MCP registration is not configured.,Set REA_IDA_MCP_CONFIG to your upstream IDA MCP registration JSON; see docs/ida-provider.md.,missing_analysis_engine
+
+# and the two doctor flags that disagree between runs
+3:healthy: false
+4:environment_healthy: false
+15:  healthy: true
+16:  environment_healthy: false

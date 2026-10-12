@@ -1,0 +1,39 @@
+ANALYTICS_WIRING_GAP — the endpoints the analytics suites call, and whether
+src/python/server.py serves them
+
+The feature is fully built in src/python/features/analytics/:
+  model.py    schema, record_event_batch, purge_invitation_analytics,
+              set_invitation_analytics_enabled, is_invitation_analytics_enabled
+  sessions.py close_idle_sessions, delete_spam_sessions, aggregate_daily_summary,
+              run_retention_prune, run_session_reconstruction
+  queries.py  ten read-model functions, including live activity and account summaries
+  export.py   invitation and account CSV + JSON streams
+What is missing is the wiring: server.py does not route to most of it.
+
+This column is a literal search of the server source, so it is a lower bound on what
+is routed: two paths that work are matched by pattern rather than by literal (below).
+
+path a suite calls                                           literal in server.py?
+/api/account/analytics/creations                                                no
+/api/account/analytics/creations?sort=views&order=asc                           no
+/api/account/analytics/creations?status=draft                                   no
+/api/account/analytics/export?format=csv                                        no
+/api/account/analytics/summary                                                  no
+/api/admin/feature-flags                                                       yes
+/api/analytics/events                                                           no
+/api/auth/login                                                                yes
+/api/auth/me                                                                   yes
+/api/auth/register                                                             yes
+/api/invitations                                                               yes
+/privacy.html                                                                   no
+
+# the two that are served, and the one that is not a route at all
+POST /api/analytics/events
+    literal: no; matched by pattern. Proof it is served: the 5 ingestion tests pass
+    against a real server (tests/analytics_ingestion_test.py, -k analytics: 5 passed).
+GET  /api/invitations/<id>/analytics
+    literal: no; matched at src/python/server.py:
+    if path.startswith("/api/invitations/") and path.endswith("/analytics"): return self.get_analytics(path.split("/")[3])
+    It exists, and answers with the pre-analytics shape the dashboard already reads.
+/privacy.html
+    not a route: a page file. src/html/privacy.html exists: True

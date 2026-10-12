@@ -92,6 +92,10 @@ const ALLOWED = [
   // Read-only with --check: it verifies every generated artifact and writes nothing.
   'python3 build.py all --check',
   'python3 tools/budget-audit.py',
+  // Re-derives the served mirror against its sources by sha256 and writes nothing.
+  'python3 tools/mirror-diff.py',
+  // Reads the three analytics suites and server.py; prints the routing gap. Write-free.
+  'python3 tools/analytics-wiring-gap.py',
   // Proves a CSS edit is exactly its !important removals, and that the manifests'
   // size/digest fields still describe the files on disk. Read-only: git show + stat.
   'python3 tools/important-removal-audit.py',

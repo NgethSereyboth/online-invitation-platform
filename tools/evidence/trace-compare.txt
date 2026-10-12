@@ -14,3 +14,47 @@ Layouts nested in script (forced proxy)                   6                77
 Layouts with stackTrace                                   0                 0
 
 --- canva: longest 10 main-thread tasks (ms) ---
+     689.32  RunTask
+     318.98  RunTask
+     287.95  RunTask
+     263.18  RunTask
+     169.45  RunTask
+     119.83  RunTask
+     113.86  RunTask
+     106.29  RunTask
+      86.54  RunTask
+      66.65  RunTask
+--- canva: longest 10 Layout events (ms) ---
+     228.46  dirtyObjects=1465 totalObjects=1465
+      19.50  dirtyObjects=914 totalObjects=1472
+      10.80  dirtyObjects=209 totalObjects=1472
+       7.67  dirtyObjects=270 totalObjects=1625
+       5.34  dirtyObjects=14 totalObjects=1472
+       3.42  dirtyObjects=491 totalObjects=1626
+       0.59  dirtyObjects=38 totalObjects=1497
+       0.39  dirtyObjects=5 totalObjects=1470
+       0.23  dirtyObjects=17 totalObjects=1625
+       0.23  dirtyObjects=35 totalObjects=1465
+
+--- project-index: longest 10 main-thread tasks (ms) ---
+     942.09  RunTask
+     471.81  RunTask
+     410.37  RunTask
+     155.89  RunTask
+     155.86  RunTask
+     135.01  RunTask
+      95.20  RunTask
+      89.93  RunTask
+      84.82  RunTask
+      77.98  RunTask
+--- project-index: longest 10 Layout events (ms) ---
+     390.92  dirtyObjects=886 totalObjects=886
+     193.85  dirtyObjects=393 totalObjects=473
+      69.44  dirtyObjects=843 totalObjects=1611
+      66.61  dirtyObjects=324 totalObjects=361
+      59.47  dirtyObjects=217 totalObjects=621
+      32.21  dirtyObjects=210 totalObjects=808
+      30.99  dirtyObjects=103 totalObjects=816
+      21.15  dirtyObjects=24 totalObjects=482
+      16.44  dirtyObjects=558 totalObjects=621
+      11.78  dirtyObjects=13 totalObjects=808
