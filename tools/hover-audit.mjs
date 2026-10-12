@@ -38,7 +38,7 @@
  */
 import { writeFileSync } from 'node:fs';
 
-import { freezeMotion, launch } from './lib/browser.mjs';
+import { emulateHoverCapable, freezeMotion, launch, verifyHoverMediaRewrite } from './lib/browser.mjs';
 import { artifactPath, hasFlag, pageUrl, urlFromArg } from './lib/repo.mjs';
 
 const argv = process.argv.slice(2);
@@ -54,6 +54,11 @@ await page.setViewport({ width: 1366, height: 900 });
 await page.goto(URL, { waitUntil: 'networkidle0', timeout: 60000 });
 await new Promise((r) => setTimeout(r, 1200));
 await freezeMotion(page);
+
+// headless Chrome reports (hover:hover) as false and CDP cannot override it, so
+// `@media(hover:hover)` rules would otherwise be invisible to this audit.
+const hoverMedia = await emulateHoverCapable(page);
+const rewrittenMedia = (await verifyHoverMediaRewrite(page, hoverMedia.rewrittenCount)).rewritten;
 
 const cdp = await page.target().createCDPSession();
 await cdp.send('DOM.enable');
@@ -160,9 +165,48 @@ for (const info of collected.elements) {
   // nodeId 0 is a legitimate id here; only undefined/null is a real failure.
   if (nodeId === undefined || nodeId === null) { unreadable++; continue; }
   await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover'] });
-  const after = await page.evaluate((i, props) => {
+  const after = await page.evaluate(async (i, props) => {
     const t = window.__hoverAudit.targets[i];
     if (!t || !t.el || !t.el.isConnected) return null;
+    // Wait for every running transition to reach its end value before reading.
+    //
+    // Why: a transitioning property makes getComputedStyle return the
+    // *interpolated* value, which is a function of when you sample rather than of
+    // the CSS. Measured cost of not doing this: two runs of an unchanged page
+    // disagreed on 72 of 813 hover rows, all of them `transform` matrices a few
+    // thousandths apart (1.0296 vs 1.02944) — a noise floor that would hide a
+    // real regression and that made "this change altered nothing" unfalsifiable.
+    //
+    // lib/browser.mjs freezeMotion() zeroes transition-duration, but some route
+    // bundles are injected after that stylesheet and re-declare
+    // `transition:...!important`, so the freeze does not always win the cascade.
+    // Waiting for the animation to finish is independent of who wins.
+    //
+    // Infinite animations (spinners, ripples with `forwards`) never finish, so
+    // only finite running animations are awaited, and with a hard cap so one
+    // stuck element cannot stall the sweep.
+    const settle = (el) => {
+      const running = (el && el.getAnimations ? el.getAnimations() : []).filter(
+        (a) => a.playState === 'running' && a.effect && a.effect.getTiming().iterations !== Infinity,
+      );
+      if (!running.length) return Promise.resolve();
+      return Promise.race([
+        Promise.allSettled(running.map((a) => a.finished)),
+        new Promise((r) => setTimeout(r, 500)),
+      ]);
+    };
+    // One frame first: a CSS transition does not enter getAnimations() until the
+    // forced pseudo-state has been recalculated, so settling immediately after
+    // CSS.forcePseudoState samples an empty list and then reads a value the
+    // transition is still moving. Measured: without this frame, one element
+    // (index.html `button.primary`) reported its box-shadow in the interpolation
+    // space — `oklab(0.486062 ...)`, alpha .269783 — in one run and the settled
+    // form — `color(srgb .545098 .27451 .356863 / 0.27)` — in the other.
+    await new Promise((r) => requestAnimationFrame(r));
+    await Promise.all([settle(t.el), ...t.subjectEls.map(settle)]);
+    // Two more frames so the settled value is committed to the style system
+    // before the read, not just scheduled.
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const snap = (el) => {
       if (!el || !el.isConnected) return null;
       const cs = getComputedStyle(el);
@@ -209,6 +253,11 @@ const summary = {
   elementsUnreadable: unreadable,
   elementsWithVisibleChange: changed.length,
   elementsWithNoVisibleChange: unchanged.length,
+  // Declared simulation: how many @media(hover:hover) conditions were rewritten
+  // to active, and whether headless Chrome reported a hover-capable pointer.
+  hoverCapableByDefault: hoverMedia.mediaHoverCapableBefore,
+  hoverMediaRulesReEnabled: hoverMedia.rewrittenCount,
+  hoverMediaRulesStillInactive: rewrittenMedia.filter((r) => !r.matches).length,
 };
 
 function text() {

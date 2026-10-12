@@ -135,3 +135,101 @@ export const FREEZE_CSS =
 export async function freezeMotion(page) {
   await page.addStyleTag({ content: FREEZE_CSS });
 }
+
+/**
+ * Make the page behave as though it were viewed on a hover-capable, fine-pointer
+ * device, so that `@media(hover:hover)` rules take part in the measurement.
+ *
+ * Why this is necessary, measured: headless Chrome reports
+ * `matchMedia('(hover: hover)').matches === false` (and `(pointer: fine)` false),
+ * and `Emulation.setEmulatedMedia` with `features:[{name:'hover',value:'hover'}]`
+ * does NOT override it. So every `@media(hover:hover)` block is *inactive*
+ * during a forced-`:hover` measurement, and a declaration outside such a block
+ * can look inert only because its competitor inside the block is switched off on
+ * this machine while it is live on a real one. Those rules are where most hover
+ * styling lives (`@media(hover:hover){button:not(:disabled):hover{transform:…}}`).
+ *
+ * The fix rewrites the media condition instead of the environment: each media
+ * query clause that asks for hover/fine-pointer is replaced with an
+ * always-true clause, in the page's CSSOM, at test time only. Nothing is
+ * written to disk, and the tool declares the rewrite in its report.
+ *
+ * `(hover: none)` / `(pointer: coarse)` blocks are deliberately left alone: a
+ * touch-first block is not what is being simulated here.
+ */
+/**
+ * Re-read the media conditions `emulateHoverCapable` rewrote, in a later task so
+ * `matches` is no longer stale, and report how many are still inactive. Callers
+ * fail their run when this is non-empty: a silent rewrite failure means every
+ * hover verdict was taken on a touch-first page.
+ */
+export async function verifyHoverMediaRewrite(page, expectedCount) {
+  await new Promise((r) => setTimeout(r, 100));
+  const rewritten = await page.evaluate(() => {
+    const out = [];
+    const walk = (rules) => {
+      for (const rule of rules) {
+        if (rule.cssRules && rule.selectorText === undefined) {
+          if (rule.media && /min-width\s*:\s*0px/.test(rule.media.mediaText)) {
+            out.push({ text: rule.media.mediaText, matches: window.matchMedia(rule.media.mediaText).matches });
+          }
+          walk(rule.cssRules);
+        }
+      }
+    };
+    for (const sheet of document.styleSheets) {
+      try { walk(sheet.cssRules); } catch { /* opaque sheet */ }
+    }
+    return out;
+  });
+  return {
+    rewritten,
+    stillInactive: rewritten.filter((r) => !r.matches),
+    markerCountMatches: expectedCount === undefined || rewritten.length === expectedCount,
+  };
+}
+
+export async function emulateHoverCapable(page) {
+  return page.evaluate(() => {
+    const REWRITE = [
+      [/\(\s*(?:any-)?hover\s*:\s*hover\s*\)/gi, '(min-width:0px)'],
+      [/\(\s*(?:any-)?pointer\s*:\s*fine\s*\)/gi, '(min-width:0px)'],
+    ];
+    const mentionsHoverClause = (text) => REWRITE.some(([re]) => new RegExp(re.source, 'i').test(text));
+    const rewritten = [];
+    let clausesFound = 0;
+    const walk = (rules) => {
+      for (const rule of rules) {
+        if (rule.cssRules && rule.selectorText === undefined) {
+          if (rule.media) {
+            const text = rule.media.mediaText;
+            // A CSSMediaRule's `.media` is a MediaList, which has mediaText and no
+            // `matches`; evaluating the condition means asking matchMedia.
+            if (mentionsHoverClause(text)) clausesFound++;
+            if (mentionsHoverClause(text) && !window.matchMedia(text).matches) {
+              let next = text;
+              for (const [re, to] of REWRITE) next = next.replace(re, to);
+              rule.media.mediaText = next;
+              // The new condition is measured by the caller in a later pass,
+              // keyed on the `(min-width:0px)` rewrite marker.
+              rewritten.push({ from: text, to: next });
+            }
+          }
+          walk(rule.cssRules);
+        }
+      }
+    };
+    for (const sheet of document.styleSheets) {
+      try { walk(sheet.cssRules); } catch { /* opaque sheet */ }
+    }
+    return {
+      mediaHoverCapableBefore: window.matchMedia('(hover: hover)').matches,
+      pointerFineBefore: window.matchMedia('(pointer: fine)').matches,
+      // `clausesFound` counts rules whose condition asks for hover/fine-pointer at
+      // all; 0 is a legitimate page, so a no-op rewrite is not a failure.
+      clausesFound,
+      rewrittenCount: rewritten.length,
+      rewritten: rewritten.slice(0, 20),
+    };
+  });
+}

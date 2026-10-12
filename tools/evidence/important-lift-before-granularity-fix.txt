@@ -1,0 +1,33 @@
+# important-lift-test.mjs output produced by the LONGHAND enumerator
+# (prior pass). Preserved before the instrument was rewritten: artifacts/ is
+# gitignored, so the artifact itself is not committed, only this digest.
+#
+# Command that produced it, on the prior pass's tree:
+#   python3 tools/hover-verify.py --all --lift   (writes artifacts/lift-<page>.json)
+#
+# The defect: CSSStyleDeclaration's indexed properties are longhands, so one
+# authored `background: var(--app-surface-3) !important` appears below as NINE
+# independent candidates -- eight inert, one load-bearing. Acting on the eight
+# would have deleted the hover highlight.
+
+index.html summary (longhand model): {"url": "http://127.0.0.1:8124/index.html", "hoverRulesInCssom": 137, "distinctTriggerSelectors": 134, "triggersMatchingNothing": 86, "skippedHoverInsideNotIsHas": 20, "elementsMeasured": 271, "candidateRules": 37, "candidateDeclarations": 270, "declarationsRedundantHere": 190, "declarationsLoadBearingHere": 80}
+
+--- fragmentation, verbatim rows for three selectors ---
+  [redundant] border-top-color         diffs=0  input:hover, textarea:hover, select:hover
+  [redundant] border-right-color       diffs=0  input:hover, textarea:hover, select:hover
+  [redundant] border-bottom-color      diffs=0  input:hover, textarea:hover, select:hover
+  [redundant] border-left-color        diffs=0  input:hover, textarea:hover, select:hover
+  [redundant] background-image         diffs=0  .ui-theme-menu button:hover
+  [redundant] background-position-x    diffs=0  .ui-theme-menu button:hover
+  [redundant] background-position-y    diffs=0  .ui-theme-menu button:hover
+  [redundant] background-size          diffs=0  .ui-theme-menu button:hover
+  [redundant] background-repeat        diffs=0  .ui-theme-menu button:hover
+  [redundant] background-attachment    diffs=0  .ui-theme-menu button:hover
+  [redundant] background-origin        diffs=0  .ui-theme-menu button:hover
+  [redundant] background-clip          diffs=0  .ui-theme-menu button:hover
+  [needed   ] background-color         diffs=2  .ui-theme-menu button:hover
+  [needed   ] transform                diffs=2  .ui-theme-menu button:hover
+
+--- the same three declarations as ONE unit each, after the fix ---
+  input:hover, textarea:hover, select:hover     -> 1 declaration: border-color (4 longhands)
+  .ui-theme-menu button:hover                   -> 2 declarations: background (9 longhands), transform
