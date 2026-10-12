@@ -52,7 +52,17 @@
  *      evidence either. Both directions are now measured, and a declaration is
  *      load-bearing if EITHER path changes a computed value.
  *   2. Snapshot the COMPLETE computed style — every property Chrome exposes — of
- *      the trigger, its `::before`/`::after`, and every subject, with hover forced.
+ *      the trigger, its `::before`/`::after`, and every subject, with hover forced,
+ *      AFTER the forced state's motion has settled (v3). The read used to happen
+ *      between `CSS.forcePseudoState` and its undo, so it could sample a
+ *      mid-transition frame; that made the per-declaration verdict a per-run
+ *      observation rather than a property of the tree. Five runs over the same
+ *      page and tree split on three declarations (§1.1 of the instrument-repair
+ *      report). `lib/motion-settle.mjs` waits — one frame, every finite running
+ *      animation on the elements being read, then two frames — before the read.
+ *      What is measured is unchanged; only when it is read. The instrument
+ *      reports how often it found motion in flight (`settleStats`) so a reader can
+ *      tell the fix was exercised rather than merely present.
  *   3. For each `!important` DECLARATION: rebuild the rule's declaration text
  *      without it, re-force hover on every element the rule can reach, and diff the
  *      complete computed style against the snapshot. Restore, and assert the
@@ -60,6 +70,21 @@
  *   4. A declaration whose removal changes nothing, anywhere, is redundant on this
  *      page. "Redundant here" stays a weaker claim than "safe to delete", which is
  *      why the sweep is per-page and every page must agree before source changes.
+ *   4b. (v4) ... and only where the elements it reaches are RENDERED. A leave-one-out
+ *      diff is an observation of computed values, and for an element with no box
+ *      Chrome stops resolving used values: inside a `display:none` subtree
+ *      `transform` reads `none` whatever the cascade says, so removal "changes
+ *      nothing" in every run — a vacuous verdict, not an inert declaration.
+ *      Measured on index.html (2026-10-12): `.ui-theme-menu button:hover`
+ *      `transform: none !important` read `none` and reported 0 differences with the
+ *      theme menu `[hidden]`, and `matrix(1.012, 0, 0, 1.012, 0, -2)` — a real
+ *      change — once the menu was revealed; the unanimous 'demotable' verdict the
+ *      expanded sweep produced for it was an artifact of measuring a closed menu.
+ *      Such a declaration is now reported as UNMEASURED, with the count of elements
+ *      reached and no box, and can never be pooled into a unanimous demotion.
+ *      The rule is a precondition on the observation, not a change to what is
+ *      measured: every read below is the same complete computed style it was
+ *      before, taken at the same moment (v3).
  *
  * Self-check (fails the run, exit 3)
  *   1. Fixture: the rule text is read out of src/css/modern-ui.css — a tracked,
@@ -94,6 +119,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { emulateHoverCapable, freezeMotion, launch, verifyHoverMediaRewrite } from './lib/browser.mjs';
+import { MOTION_SETTLE_SOURCE } from './lib/motion-settle.mjs';
 import { REPO_ROOT, artifactPath, hasFlag, pageUrl, urlFromArg } from './lib/repo.mjs';
 
 const argv = process.argv.slice(2);
@@ -134,6 +160,10 @@ const sheetIds = [];
 cdp.on('CSS.styleSheetAdded', (e) => sheetIds.push(e.header.styleSheetId));
 
 await page.addScriptTag({ content: readFileSync(resolve(REPO_ROOT, 'tools', 'lib', 'css-decl.js'), 'utf8') });
+// (v3) The settle helper every read below goes through. Injected the same way as
+// the declaration parser, so one implementation serves the self-check and the
+// sweep.
+await page.addScriptTag({ content: MOTION_SETTLE_SOURCE });
 
 // ---------------------------------------------------------------------------
 // Self-check 1: the fixture, through the same code the sweep uses.
@@ -351,10 +381,56 @@ if (SELF_CHECK_ONLY) {
 }
 
 // ---------------------------------------------------------------------------
+// (v4) Tear the fixture down before the sweep runs.
+// ---------------------------------------------------------------------------
+// The self-check has to inject its fixture rule and synthesize a DOM for it. That
+// synthesized host is `div.ui-theme-menu.decl-fixture-host > button` — a REAL,
+// RENDERED element that matches any rule this page already has for
+// `.ui-theme-menu button` (and for a bare `button`). Measured on dashboard.html
+// (2026-10-12) before this teardown: the candidate `.ui-theme-menu button:hover`
+// reported 3 targets, the third being
+// `button rects=1 hidden=false parent=div.ui-theme-menu.decl-fixture-host`, i.e. the
+// probe was sweeping its own scaffolding, and the fixture sheet's copy of the rule
+// was enumerated as a second rule with the same selector. Both are removed here, so
+// what the sweep measures is the page's own DOM and the page's own stylesheets.
+const fixtureTeardown = await page.evaluate((marker) => {
+  const removed = { styleSheets: 0, hosts: 0 };
+  for (const el of [...document.querySelectorAll('style')]) {
+    if (el.textContent && el.textContent.includes(marker)) { el.remove(); removed.styleSheets++; }
+  }
+  for (const el of [...document.querySelectorAll('.decl-fixture-host')]) { el.remove(); removed.hosts++; }
+  return {
+    ...removed,
+    fixtureRulesLeft: [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules]; } catch { return []; } })
+      .filter((r) => r.selectorText === '.ui-theme-menu button:hover').length,
+    fixtureHostsLeft: document.querySelectorAll('.decl-fixture-host').length,
+  };
+}, FIXTURE_MARKER);
+if (fixtureTeardown.styleSheets !== 1 || fixtureTeardown.hosts !== 1 || fixtureTeardown.fixtureHostsLeft !== 0) {
+  console.error('SELF_CHECK_FAILED — the fixture the self-check injected is still in the page: ' + JSON.stringify(fixtureTeardown));
+  await browser.close();
+  process.exit(3);
+}
+selfCheckReport.fixtureTeardown = fixtureTeardown;
+console.log('SELF_CHECK_TEARDOWN ' + JSON.stringify(fixtureTeardown));
+
+// ---------------------------------------------------------------------------
 // Enumerate every `!important` DECLARATION in a `:hover` rule, and the targets.
 // ---------------------------------------------------------------------------
 const setup = await page.evaluate((cap) => {
   const { declarationsOf } = globalThis.CssDecl;
+  // (v4) Does this element have a box at all? A leave-one-out diff can only
+  // observe a change on an element that is RENDERED: for an element inside a
+  // `display:none` subtree Chrome resolves `transform` to `none` (and, more
+  // generally, stops resolving used values), so a declaration that governs it can
+  // look inert on every run. Measured on index.html (2026-10-12): removing
+  // `transform: none !important` from `.ui-theme-menu button:hover` left the value
+  // reading `none` while the menu was `[hidden]`, and produced
+  // `matrix(1.012, 0, 0, 1.012, 0, -2)` once the menu was revealed — same page,
+  // same declaration, opposite verdicts. `getClientRects().length > 0` is the
+  // predicate: an element with no box cannot be hovered by a user either, so
+  // nothing about it is observable in this harness.
+  const isRendered = (el) => { try { return el.getClientRects().length > 0; } catch { return false; } };
   const hoverRules = [];
   const walk = (rules) => {
     for (const rule of rules) {
@@ -493,7 +569,14 @@ const setup = await page.evaluate((cap) => {
           }
         }
       }
-      targets.push({ el, subjectEls, trigger });
+      // (v4) `rendered` is about the TRIGGER — the element whose state is forced. A
+      // subject without a box cannot produce a diff either, so it cannot turn an
+      // unobservable read into an observable one; and a subject that IS rendered while
+      // its trigger is not is a *different* element's style, which this rule's `:hover`
+      // cannot reach. (Measured on index.html: counting subjects as rendering the target
+      // reported 28 rendered targets for `input:hover, textarea:hover, select:hover`
+      // where the page has 340 form controls and 3 with a box.)
+      targets.push({ el, subjectEls, trigger, rendered: isRendered(el) });
     }
   }
 
@@ -511,7 +594,7 @@ const setup = await page.evaluate((cap) => {
     let els;
     try { els = [...document.querySelectorAll(spec.base)]; } catch { stateUnresolved++; continue; }
     if (!els.length) { stateUnresolved++; continue; }
-    for (const el of els.slice(0, cap)) stateTargets.push({ el, key, cls: spec.cls, pseudo: spec.pseudo });
+    for (const el of els.slice(0, cap)) stateTargets.push({ el, key, cls: spec.cls, pseudo: spec.pseudo, rendered: isRendered(el) });
   }
   const stateIdxByKey = new Map();
   stateTargets.forEach((t, i) => {
@@ -520,8 +603,8 @@ const setup = await page.evaluate((cap) => {
   });
 
   window.__lift = {
-    targets: targets.map((t) => ({ el: t.el, subjectEls: t.subjectEls })),
-    stateTargets: stateTargets.map((t) => ({ el: t.el, cls: t.cls, pseudo: t.pseudo })),
+    targets: targets.map((t) => ({ el: t.el, subjectEls: t.subjectEls, rendered: t.rendered })),
+    stateTargets: stateTargets.map((t) => ({ el: t.el, cls: t.cls, pseudo: t.pseudo, rendered: t.rendered })),
     candidates: candidates.map((c) => ({
       declarations: c.declarations.map((d) => ({ name: d.name, longhands: d.longhands })),
       rule: c.rule,
@@ -543,6 +626,10 @@ const setup = await page.evaluate((cap) => {
     triggersWithNoMatch,
     triggersCapped,
     targetCount: targets.length,
+    // (v4) How many of those targets can carry an observation at all.
+    targetsRendered: targets.filter((t) => t.rendered).length,
+    targetsNotRendered: targets.filter((t) => !t.rendered).length,
+    stateTargetsRendered: stateTargets.filter((t) => t.rendered).length,
     candidateRules: candidates.length,
     candidateDeclarations: declarationsEnumerated,
     candidateLonghands: longhandsEnumerated,
@@ -576,8 +663,12 @@ async function nodeIdFor(i) {
  * Capture the complete computed style of the trigger, its pseudo-elements, and
  * every subject (on its declared pseudo-element when it names one).
  */
-const CAPTURE = (idx) => {
+const CAPTURE = async (idx) => {
   const t = window.__lift.targets[idx];
+  // (v3) WHEN the read happens: after the forced state's motion settles, not
+  // between the force and its undo. Every element about to be read is settled,
+  // including the subjects on their declared pseudo-element.
+  await globalThis.MotionSettle.settleAll([t.el, ...t.subjectEls.map((s) => s.el)]);
   const styleOf = (el, pseudo) => {
     if (!el || !el.isConnected) return null;
     const cs = getComputedStyle(el, pseudo);
@@ -598,8 +689,11 @@ const CAPTURE = (idx) => {
  * part. The class the selector names is already added (or the pseudo-class forced)
  * when this runs, so this is the state's own computed style.
  */
-const CAPTURE_STATE = (idx) => {
+const CAPTURE_STATE = async (idx) => {
   const t = window.__lift.stateTargets[idx];
+  // (v3) Same settle as CAPTURE: the class was just added / the pseudo-class just
+  // forced, so a transition on the state path is exactly as sampleable mid-flight.
+  await globalThis.MotionSettle.settleAll([t.el]);
   const styleOf = (el, pseudo) => {
     if (!el || !el.isConnected) return null;
     const cs = getComputedStyle(el, pseudo);
@@ -700,12 +794,18 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
       sharedWithNonHover: c.sharedWithNonHover === true,
       sel: c.rule.selectorText.slice(0, 90),
       originalCssText: c.rule.style.cssText,
+      // (v4) Which of this rule's reachable elements have a box, and so can carry
+      // an observation. Empty means the leave-one-out below would be vacuous.
+      renderedIndices: c.indices.filter((i) => window.__lift.targets[i] && window.__lift.targets[i].rendered),
+      renderedStateIndices: (c.stateIndices || []).filter((i) => window.__lift.stateTargets[i] && window.__lift.stateTargets[i].rendered),
     };
   }, ci);
   const rows = [];
   for (const decl of cand.declarations) {
     const affected = cand.indices.filter((i) => nodeIdByIndex.has(i) && baseline.has(i));
     const stateAffected = (cand.stateIndices || []).filter((i) => stateBaseline.has(i));
+    const renderedAffected = cand.renderedIndices.filter((i) => nodeIdByIndex.has(i) && baseline.has(i));
+    const renderedStateAffected = cand.renderedStateIndices.filter((i) => stateBaseline.has(i));
     if (cand.sharedWithNonHover) {
       rows.push({
         name: decl.name, longhands: decl.longhands, diffs: 0, affected: affected.length, unmeasured: true,
@@ -719,6 +819,22 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
       // through :hover or through the rule's other state parts — cannot be cleared
       // here, and it must not be counted as demotable anywhere.
       rows.push({ name: decl.name, longhands: decl.longhands, diffs: 0, affected: 0, unmeasured: true, note: 'no element on this page reaches this rule', sample: [] });
+      continue;
+    }
+    if (!renderedAffected.length && !renderedStateAffected.length) {
+      // (v4) Reached, but not observable: every element this rule reaches exists in
+      // the DOM without a box (a `display:none` subtree — a closed popover, a hidden
+      // panel). Chrome does not resolve used values for such an element, so the
+      // leave-one-out below returns the identical snapshot no matter what the
+      // declaration says, in every run: a vacuous verdict, not an inert declaration.
+      // It is reported as unmeasured with the reason, so it can never be pooled into
+      // a unanimous demotion. `tools/demotion-recheck.mjs` is the instrument that
+      // answers the question this page state cannot (`--reveal`).
+      rows.push({
+        name: decl.name, longhands: decl.longhands, diffs: 0, affected: affected.length + stateAffected.length,
+        stateAffected: stateAffected.length, stateDiffs: 0, sample: [], unmeasured: true, notRendered: true,
+        note: `${affected.length + stateAffected.length} element(s) reached, none rendered (no box: a display:none subtree), so no computed value can be observed here`,
+      });
       continue;
     }
     // Remove this ONE declaration by rebuilding the rule's declaration text.
@@ -775,6 +891,7 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
     rows.push({
       name: decl.name, longhands: decl.longhands, diffs, affected: affected.length + stateAffected.length,
       stateAffected: stateAffected.length, stateDiffs, sample, removedAny: removed.removedAny,
+      rendered: renderedAffected.length + renderedStateAffected.length,
     });
   }
   results.push({ i: ci, selector: cand.sel, declarations: rows });
@@ -782,14 +899,19 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
 
 const measureMs = Date.now() - t0;
 const measurements = nodeIdByIndex.size;
+// (v3) How often a read found motion in flight and waited for it. Non-zero means
+// the fix was exercised on this page, not merely present in the source.
+const settleStats = await page.evaluate(() => globalThis.MotionSettle.stats);
 const redundant = [], needed = [], unmeasured = [];
 for (const r of results) for (const d of r.declarations) {
   const row = {
     selector: r.selector, declaration: d.name, longhands: d.longhands.length,
     diffs: d.diffs, affected: d.affected ?? 0, sample: d.sample,
     stateDiffs: d.stateDiffs ?? 0, stateAffected: d.stateAffected ?? 0,
+    rendered: d.rendered ?? 0,
   };
   if (d.note) row.note = d.note;
+  if (d.notRendered) row.notRendered = true;
   if (d.unmeasured) unmeasured.push(row);
   else if (!d.diffs) redundant.push(row);
   else needed.push(row);
@@ -803,6 +925,12 @@ const summary = {
   skippedHoverInsideNotIsHas: setup.skippedNested,
   pseudoElementSubjects: setup.pseudoSubjects,
   elementsMeasured: matched.length,
+  // (v4) A target without a box cannot carry an observation. Reported so a reader
+  // can see how much of the sweep's evidence came from rendered elements.
+  targetsInScope: setup.targetCount,
+  targetsRendered: setup.targetsRendered,
+  targetsNotRendered: setup.targetsNotRendered,
+  stateTargetsRendered: setup.stateTargetsRendered,
   candidateRules: setup.candidateRules,
   // `candidateDeclarations` is the count that matters: authored declarations, not longhands.
   candidateDeclarations: setup.candidateDeclarations,
@@ -821,6 +949,10 @@ const summary = {
   declarationsLoadBearingHere: needed.length,
   declarationsUnmeasuredHere: unmeasured.length,
   declarationsUnmeasuredSharedWithNonHover: unmeasured.filter((u) => u.note && u.note.includes('non-:hover')).length,
+  declarationsUnmeasuredNotRendered: unmeasured.filter((u) => u.notRendered).length,
+  // (v3) The sampling moment, made observable: settles performed, elements
+  // settled, and elements found mid-motion.
+  settleStats,
   measureMs,
   measureCostPerTarget: measurements ? Math.round(measureMs / measurements) : null,
 };
@@ -842,13 +974,15 @@ if (OUT) {
   console.log('URL ..................................... ' + URL);
   console.log('  :hover rules in CSSOM ................ ' + summary.hoverRulesInCssom);
   console.log('  @media(hover:hover) rules re-enabled .. ' + summary.hoverMediaSimulation.rewrittenCount + '   (headless reports hover:none; see lib/browser.mjs)');
-  console.log('  elements measured (full computed style) ' + summary.elementsMeasured);
+  console.log('  elements measured (full computed style) ' + summary.elementsMeasured
+    + '   of ' + summary.targetsInScope + ' in scope (' + summary.targetsNotRendered + ' have no box and can carry no observation)');
   console.log('  candidate rules (hover + !important) .. ' + summary.candidateRules);
   console.log('  candidate DECLARATIONS ................ ' + summary.candidateDeclarations);
   console.log('  longhands those declarations cover .... ' + summary.candidateLonghands + '   <- what the longhand model reported');
   console.log('  -> removal changed NOTHING (redundant)   ' + summary.declarationsRedundantHere);
   console.log('  -> removal CHANGED a computed value ...  ' + summary.declarationsLoadBearingHere);
-  console.log('  -> no element on this page reaches it ..  ' + summary.declarationsUnmeasuredHere);
+  console.log('  -> no element on this page reaches it ..  ' + summary.declarationsUnmeasuredHere
+    + '   (of which reached-but-not-rendered: ' + summary.declarationsUnmeasuredNotRendered + ')');
   console.log('  state-path elements measured (non-:hover) ' + summary.stateTargetsMeasured
     + '   (declarations also measured on that path: ' + summary.declarationsMeasuredOnStatePath + ')');
   console.log('\n--- load-bearing (must keep) ---');

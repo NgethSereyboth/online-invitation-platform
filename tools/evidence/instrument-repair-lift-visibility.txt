@@ -1,0 +1,205 @@
+INSTRUMENT REPAIR — Goal 1 (continued): two defects in the lift probe that the
+Goal 1 stability fix did not touch, both found by chasing the one declaration the
+expanded sweep called unanimously demotable.
+
+Blocks are raw output; the command that produced each is named on the 'cmd:' line
+above it. No block embeds a leading '$ ', so a report that quotes this file stays
+machine-checkable by tools/report-verify.mjs.
+
+=====================================================================
+1. DEFECT: the probe swept its own self-check fixture
+=====================================================================
+The self-check reads a real rule out of src/css/modern-ui.css, injects it, and
+synthesizes a DOM for it — div.ui-theme-menu.decl-fixture-host > button. That element
+matches the very selector the fixture is about, so it entered the sweep's target set,
+and the fixture's copy of the rule was enumerated as a second candidate with the same
+selector text. Both are visible in the artifacts of the two sweeps:
+
+cmd: python3 - (count the '.ui-theme-menu button:hover' rows and their 'affected'
+     field in the v3 sweep and in the v4 sweep, dashboard.html, all three runs)
+v3 (before) lift-dashboard.json: rows=4 [transform affected=3 rendered=n/a] [background affected=3 rendered=n/a] [transform affected=3 rendered=n/a] [background affected=3 rendered=n/a]
+v3 (before) lift-dashboard.run2.json: rows=4 [transform affected=3 rendered=n/a] [background affected=3 rendered=n/a] [transform affected=3 rendered=n/a] [background affected=3 rendered=n/a]
+v3 (before) lift-dashboard.run3.json: rows=4 [transform affected=3 rendered=n/a] [background affected=3 rendered=n/a] [transform affected=3 rendered=n/a] [background affected=3 rendered=n/a]
+v4 (after) lift-dashboard.json: rows=2 [background affected=2 rendered=0] [transform affected=2 rendered=0]
+v4 (after) lift-dashboard.run2.json: rows=2 [background affected=2 rendered=0] [transform affected=2 rendered=0]
+v4 (after) lift-dashboard.run3.json: rows=2 [background affected=2 rendered=0] [transform affected=2 rendered=0]
+
+  Reading: v3 reports each declaration twice (the real rule and the fixture's copy)
+  and counts ONE MORE element than the page has. v4 reports each declaration once,
+  with the page's own 2 elements.
+
+cmd: grep -n 'decl-fixture-host' tools/important-lift-test.mjs
+250:  wrap.className = 'ui-theme-menu decl-fixture-host';
+255:  return { selector: '.decl-fixture-host button', ok: !!document.querySelector('.decl-fixture-host button') };
+387:// synthesized host is `div.ui-theme-menu.decl-fixture-host > button` — a REAL,
+392:// `button rects=1 hidden=false parent=div.ui-theme-menu.decl-fixture-host`, i.e. the
+401:  for (const el of [...document.querySelectorAll('.decl-fixture-host')]) { el.remove(); removed.hosts++; }
+406:    fixtureHostsLeft: document.querySelectorAll('.decl-fixture-host').length,
+
+cmd: a run's own report of the teardown (node tools/important-lift-test.mjs
+     http://127.0.0.1:8124/dashboard.html --out=... | grep SELF_CHECK_TEARDOWN)
+SELF_CHECK_TEARDOWN {"styleSheets":1,"hosts":1,"fixtureRulesLeft":0,"fixtureHostsLeft":0}
+
+  What the probe measured before the teardown existed (a temporary hook that printed
+  the candidate's targets was removed after this diagnostic, so this block is quoted
+  rather than re-runnable — the artifact comparison above is the re-runnable form):
+
+     DEBUG_CAND {"sel":".ui-theme-menu button:hover","targets":["button.active rects=0 hidden=true parent=div.ui-theme-menu rendered=true","button. rects=0 hidden=true parent=div.ui-theme-menu rendered=true","button. rects=1 hidden=false parent=div.ui-theme-menu.decl-fixture-host rendered=true"]}
+
+  ^ the third target is the probe's own scaffold, with a box (rects=1) while the
+    page's two real elements have none.
+
+=====================================================================
+2. DEFECT: a verdict read where nothing is observable
+=====================================================================
+Every element .ui-theme-menu button:hover reaches is inside a display:none subtree
+(the theme menu carries [hidden] until a user opens it). Chrome does not resolve
+used values for an element with no box, so removing the declaration left transform
+reading 'none' in every run — which is why the sweep's demotable set had exactly one
+declaration in it, unanimously. The probe now reports the element count and the
+rendered count, and classifies such a declaration UNMEASURED:
+
+cmd: python3 - (the declaration's row, per sweep, with the new fields)
+v3 (before) lift-index.json: bucket=redundant diffs=0 affected=3 rendered=n/a note=
+v3 (before) lift-index.json: bucket=redundant diffs=0 affected=3 rendered=n/a note=
+v3 (before) lift-index.run2.json: bucket=redundant diffs=0 affected=3 rendered=n/a note=
+v3 (before) lift-index.run2.json: bucket=redundant diffs=0 affected=3 rendered=n/a note=
+v3 (before) lift-index.run3.json: bucket=redundant diffs=0 affected=3 rendered=n/a note=
+v3 (before) lift-index.run3.json: bucket=redundant diffs=0 affected=3 rendered=n/a note=
+v4 (after) lift-index.json: bucket=unmeasured diffs=0 affected=2 rendered=0 note=2 element(s) reached, none rendered (no box: a display:none subtree), 
+v4 (after) lift-index.run2.json: bucket=unmeasured diffs=0 affected=2 rendered=0 note=2 element(s) reached, none rendered (no box: a display:none subtree), 
+v4 (after) lift-index.run3.json: bucket=unmeasured diffs=0 affected=2 rendered=0 note=2 element(s) reached, none rendered (no box: a display:none subtree), 
+
+cmd: the probe's own summary counters, v3 vs v4 (dashboard.html)
+v3: targetsInScope=absent  targetsRendered=absent  targetsNotRendered=absent  elementsMeasured=69  candidateRules=22  declarationsRedundantHere=6  declarationsLoadBearingHere=2  declarationsUnmeasuredHere=24  declarationsUnmeasuredNotRendered=absent
+v4: targetsInScope=68  targetsRendered=34  targetsNotRendered=34  elementsMeasured=68  candidateRules=20  declarationsRedundantHere=2  declarationsLoadBearingHere=0  declarationsUnmeasuredHere=27  declarationsUnmeasuredNotRendered=3
+
+  Reading: v3 could not report a rendered count at all; v4 reports that half the
+  targets it reaches have no box, and that 3 declarations were reached but not
+  rendered (v3 counted those as redundant wherever they were its only candidates).
+
+=====================================================================
+3. WHAT THE FOUR CHANGES ARE, IN THE PROBE'S OWN DIFF
+=====================================================================
+cmd: git diff 7e97f57 -- tools/important-lift-test.mjs   (v3 + v4; the report quotes
+     the parts it relies on, this is the whole thing)
+diff --git a/tools/important-lift-test.mjs b/tools/important-lift-test.mjs
+index b49538a..884643b 100644
+--- a/tools/important-lift-test.mjs
++++ b/tools/important-lift-test.mjs
+@@ -52,7 +52,17 @@
+  *      evidence either. Both directions are now measured, and a declaration is
+  *      load-bearing if EITHER path changes a computed value.
+  *   2. Snapshot the COMPLETE computed style — every property Chrome exposes — of
+- *      the trigger, its `::before`/`::after`, and every subject, with hover forced.
++ *      the trigger, its `::before`/`::after`, and every subject, with hover forced,
++ *      AFTER the forced state's motion has settled (v3). The read used to happen
++ *      between `CSS.forcePseudoState` and its undo, so it could sample a
++ *      mid-transition frame; that made the per-declaration verdict a per-run
++ *      observation rather than a property of the tree. Five runs over the same
++ *      page and tree split on three declarations (§1.1 of the instrument-repair
++ *      report). `lib/motion-settle.mjs` waits — one frame, every finite running
++ *      animation on the elements being read, then two frames — before the read.
++ *      What is measured is unchanged; only when it is read. The instrument
++ *      reports how often it found motion in flight (`settleStats`) so a reader can
++ *      tell the fix was exercised rather than merely present.
+  *   3. For each `!important` DECLARATION: rebuild the rule's declaration text
+  *      without it, re-force hover on every element the rule can reach, and diff the
+  *      complete computed style against the snapshot. Restore, and assert the
+@@ -60,6 +70,21 @@
+  *   4. A declaration whose removal changes nothing, anywhere, is redundant on this
+  *      page. "Redundant here" stays a weaker claim than "safe to delete", which is
+  *      why the sweep is per-page and every page must agree before source changes.
++ *   4b. (v4) ... and only where the elements it reaches are RENDERED. A leave-one-out
++ *      diff is an observation of computed values, and for an element with no box
++ *      Chrome stops resolving used values: inside a `display:none` subtree
++ *      `transform` reads `none` whatever the cascade says, so removal "changes
++ *      nothing" in every run — a vacuous verdict, not an inert declaration.
++ *      Measured on index.html (2026-10-12): `.ui-theme-menu button:hover`
++ *      `transform: none !important` read `none` and reported 0 differences with the
++ *      theme menu `[hidden]`, and `matrix(1.012, 0, 0, 1.012, 0, -2)` — a real
++ *      change — once the menu was revealed; the unanimous 'demotable' verdict the
++ *      expanded sweep produced for it was an artifact of measuring a closed menu.
++ *      Such a declaration is now reported as UNMEASURED, with the count of elements
++ *      reached and no box, and can never be pooled into a unanimous demotion.
++ *      The rule is a precondition on the observation, not a change to what is
++ *      measured: every read below is the same complete computed style it was
++ *      before, taken at the same moment (v3).
+  *
+  * Self-check (fails the run, exit 3)
+  *   1. Fixture: the rule text is read out of src/css/modern-ui.css — a tracked,
+@@ -94,6 +119,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
+ import { resolve } from 'node:path';
+ 
+ import { emulateHoverCapable, freezeMotion, launch, verifyHoverMediaRewrite } from './lib/browser.mjs';
++import { MOTION_SETTLE_SOURCE } from './lib/motion-settle.mjs';
+ import { REPO_ROOT, artifactPath, hasFlag, pageUrl, urlFromArg } from './lib/repo.mjs';
+ 
+ const argv = process.argv.slice(2);
+@@ -134,6 +160,10 @@ const sheetIds = [];
+ cdp.on('CSS.styleSheetAdded', (e) => sheetIds.push(e.header.styleSheetId));
+ 
+ await page.addScriptTag({ content: readFileSync(resolve(REPO_ROOT, 'tools', 'lib', 'css-decl.js'), 'utf8') });
++// (v3) The settle helper every read below goes through. Injected the same way as
++// the declaration parser, so one implementation serves the self-check and the
++// sweep.
++await page.addScriptTag({ content: MOTION_SETTLE_SOURCE });
+ 
+ // ---------------------------------------------------------------------------
+ // Self-check 1: the fixture, through the same code the sweep uses.
+@@ -350,11 +380,57 @@ if (SELF_CHECK_ONLY) {
+   process.exit(0);
+ }
+ 
++// ---------------------------------------------------------------------------
++// (v4) Tear the fixture down before the sweep runs.
++// ---------------------------------------------------------------------------
++// The self-check has to inject its fixture rule and synthesize a DOM for it. That
++// synthesized host is `div.ui-theme-menu.decl-fixture-host > button` — a REAL,
++// RENDERED element that matches any rule this page already has for
++// `.ui-theme-menu button` (and for a bare `button`). Measured on dashboard.html
++// (2026-10-12) before this teardown: the candidate `.ui-theme-menu button:hover`
++// reported 3 targets, the third being
++// `button rects=1 hidden=false parent=div.ui-theme-menu.decl-fixture-host`, i.e. the
++// probe was sweeping its own scaffolding, and the fixture sheet's copy of the rule
++// was enumerated as a second rule with the same selector. Both are removed here, so
++// what the sweep measures is the page's own DOM and the page's own stylesheets.
++const fixtureTeardown = await page.evaluate((marker) => {
++  const removed = { styleSheets: 0, hosts: 0 };
++  for (const el of [...document.querySelectorAll('style')]) {
++    if (el.textContent && el.textContent.includes(marker)) { el.remove(); removed.styleSheets++; }
++  }
++  for (const el of [...document.querySelectorAll('.decl-fixture-host')]) { el.remove(); removed.hosts++; }
++  return {
++    ...removed,
++    fixtureRulesLeft: [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules]; } catch { return []; } })
++      .filter((r) => r.selectorText === '.ui-theme-menu button:hover').length,
++    fixtureHostsLeft: document.querySelectorAll('.decl-fixture-host').length,
++  };
++}, FIXTURE_MARKER);
++if (fixtureTeardown.styleSheets !== 1 || fixtureTeardown.hosts !== 1 || fixtureTeardown.fixtureHostsLeft !== 0) {
++  console.error('SELF_CHECK_FAILED — the fixture the self-check injected is still in the page: ' + JSON.stringify(fixtureTeardown));
++  await browser.close();
++  process.exit(3);
++}
++selfCheckReport.fixtureTeardown = fixtureTeardown;
++console.log('SELF_CHECK_TEARDOWN ' + JSON.stringify(fixtureTeardown));
++
+ // ---------------------------------------------------------------------------
+ // Enumerate every `!important` DECLARATION in a `:hover` rule, and the targets.
+ // ---------------------------------------------------------------------------
+ const setup = await page.evaluate((cap) => {
+   const { declarationsOf } = globalThis.CssDecl;
++  // (v4) Does this element have a box at all? A leave-one-out diff can only
++  // observe a change on an element that is RENDERED: for an element inside a
++  // `display:none` subtree Chrome resolves `transform` to `none` (and, more
++  // generally, stops resolving used values), so a declaration that governs it can
++  // look inert on every run. Measured on index.html (2026-10-12): removing
++  // `transform: none !important` from `.ui-theme-menu button:hover` left the value
++  // reading `none` while the menu was `[hidden]`, and produced
++  // `matrix(1.012, 0, 0, 1.012, 0, -2)` once the menu was revealed — same page,
++  // same declaration, opposite verdicts. `getClientRects().length > 0` is the
++  // predicate: an element with no box cannot be hovered by a user either, so
++  // nothing about it is observable in this harness.
++  const isRendered = (el) => { try { return el.getClientRects().length > 0; } catch { return false; } };
+   const hoverRules = [];

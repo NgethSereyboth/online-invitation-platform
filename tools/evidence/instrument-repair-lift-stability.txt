@@ -1,0 +1,94 @@
+INSTRUMENT REPAIR — Goal 1: the lift probe's sampling moment. The probe forced a
+state with CDP CSS.forcePseudoState and read the complete computed style on the
+next line, undoing the force on the line after that, so a property with a running
+transition was read MID-INTERPOLATION — a value that is a function of when you
+sample, not of the CSS. freezeMotion() zeroes transition-duration, but the route
+bundles re-declare 'transition:...!important' at a higher specificity and win that
+cascade, which is why tools/hover-audit.mjs already waits for animations to finish
+and why tools/lib/motion-settle.mjs now exists as a shared helper.
+
+Blocks are raw output; the command is named on the 'cmd:' line above each. No block
+embeds a leading '$ ', so a report that quotes this file stays machine-checkable.
+
+=====================================================================
+1. THE DEFECTIVE PROBE, THE SAME PAGE, THE SAME TREE (2 runs kept; the
+   prior pass's 3 runs on the PRE-demotion tree are a different tree)
+=====================================================================
+cmd: python3 tools/lift-verdict-compare.py --max-selector=64 artifacts/lift-index-before-run1.json artifacts/lift-index-before-run2.json
+LIFT_VERDICT_COMPARE files=2 declarations=59 flips=3
+  artifacts/lift-index-before-run1.json                redundant=8 loadBearing=23 unmeasured=33
+  artifacts/lift-index-before-run2.json                redundant=5 loadBearing=26 unmeasured=33
+
+R = redundant here (removal changed nothing)   L = load-bearing (removal changed a value)
+U = unmeasured here (no element on the page reaches the rule)   ? = absent from that file
+
+          L4    L4   background    .ei-context-overflow button:hover
+          U0    U0   background    .ei-rich-toolbar button:hover
+          L6    L4   background    .ei-tool-rail button:hover
+          L8   L11   background    .flow-action-grid button:hover
+          U0    U0   background    .flow-back-design:hover
+
+cmd: python3 tools/lift-verdict-compare.py --max-selector=64 artifacts/unanimity-demo/lift-index.json artifacts/unanimity-demo/lift-index.run2.json artifacts/unanimity-demo/lift-index.run3.json
+LIFT_VERDICT_COMPARE files=3 declarations=60 flips=0
+  artifacts/unanimity-demo/lift-index.json             redundant=4 loadBearing=23 unmeasured=38
+  artifacts/unanimity-demo/lift-index.run2.json        redundant=4 loadBearing=23 unmeasured=38
+  artifacts/unanimity-demo/lift-index.run3.json        redundant=4 loadBearing=23 unmeasured=38
+
+R = redundant here (removal changed nothing)   L = load-bearing (removal changed a value)
+U = unmeasured here (no element on the page reaches the rule)   ? = absent from that file
+
+          L4    L4    L4   background    .ei-context-overflow button:hover
+
+  Three declarations flip verdict between runs of an unchanged page, and the diff
+  counts of the ones that do not flip wobble too (9 -> 98 on one transform).
+
+=====================================================================
+2. THE FIX — WHEN the read happens, not what is measured
+=====================================================================
+cmd: wc -l tools/lib/motion-settle.mjs
+93 tools/lib/motion-settle.mjs
+cmd: git diff 7e97f57 -- tools/important-lift-test.mjs   (the call site, in CAPTURE)
++import { MOTION_SETTLE_SOURCE } from './lib/motion-settle.mjs';
++await page.addScriptTag({ content: MOTION_SETTLE_SOURCE });
++  await globalThis.MotionSettle.settleAll([t.el, ...t.subjectEls.map((s) => s.el)]);
++  await globalThis.MotionSettle.settleAll([t.el]);
+
+  lib/motion-settle.mjs is injected the same way lib/css-decl.js is; its settleAll()
+  is called inside CAPTURE and CAPTURE_STATE before any value is read: one frame,
+  every FINITE running animation on the elements about to be read, then two more
+  frames. The probe reports how often motion was actually in flight (settleStats),
+  so 'the fix ran' is measurable rather than assumed.
+
+=====================================================================
+3. THE THREE-RUN STABILITY PROOF (same page, same tree)
+=====================================================================
+cmd: ARTIFACTS_DIR=artifacts/goal1 node tools/important-lift-test.mjs <index.html> --out=lift-index-after-run{1,2,3}.json
+cmd: python3 tools/lift-verdict-compare.py --max-selector=64 artifacts/goal1/lift-index-after-run1.json artifacts/goal1/lift-index-after-run2.json artifacts/goal1/lift-index-after-run3.json
+LIFT_VERDICT_COMPARE files=3 declarations=59 flips=0
+  artifacts/goal1/lift-index-after-run1.json           redundant=5 loadBearing=26 unmeasured=33 settle={"calls": 544, "elementsSettled": 53023, "motionFound": 1216}
+  artifacts/goal1/lift-index-after-run2.json           redundant=5 loadBearing=26 unmeasured=33 settle={"calls": 544, "elementsSettled": 53023, "motionFound": 1210}
+  artifacts/goal1/lift-index-after-run3.json           redundant=5 loadBearing=26 unmeasured=33 settle={"calls": 544, "elementsSettled": 53023, "motionFound": 1216}
+
+R = redundant here (removal changed nothing)   L = load-bearing (removal changed a value)
+U = unmeasured here (no element on the page reaches the rule)   ? = absent from that file
+
+          L4    L4    L4   background    .ei-context-overflow button:hover
+          U0    U0    U0   background    .ei-rich-toolbar button:hover
+
+  Zero flips, and not merely agreement on the REDUNDANT/LOAD-BEARING verdict: every
+  diff count is identical across the three runs, and settle moved=1216/1210/1216 says
+  the wait was exercised on every run rather than merely present in the source.
+
+=====================================================================
+4. THE RETRACTED ELEVENTH DEMOTION DOES NOT COME BACK
+=====================================================================
+cmd: python3 tools/lift-verdict-compare.py --max-selector=64 artifacts/goal1/lift-index-after-run{1,2,3}.json | grep studio-rail-button
+           L12   L12   L12   background    .studio-rail-button:hover
+           L24   L24   L24   color         .studio-rail-button:hover
+           L24   L24   L24   transform     .studio-rail-button:hover, .studio-inspector-tab:hover
+
+  .studio-rail-button:hover background (retracted in
+  tools/evidence/important-11th-demotion-retraction.txt) is unanimously LOAD-BEARING
+  on the fixed probe: 12 computed-value differences for background, 24 for color,
+  identical in all three runs. The row-level before/after check that failed the
+  demotion then and the fixed probe now agree.
