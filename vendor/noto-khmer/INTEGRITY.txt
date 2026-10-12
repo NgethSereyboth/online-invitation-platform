@@ -1,0 +1,2 @@
+NotoSansKhmer-Regular.ttf bc9a5e2afcee249849e409aabe6e22330c479b878ea3e59bf5e7c84482d7ee53
+NotoSansKhmer-Bold.ttf cc74e7ac685da9a84e18b773ec8d80d06765aa1754bb14acc390c3620023c4dc

@@ -493,7 +493,9 @@ def object_storage_enabled():
 
 def object_storage_key(path, owner_id=""):
     clean=str(path or "").lstrip("/")
-    tenant=f"owners/{clean_slug(owner_id)}/" if owner_id else ""
+    # Deterministic: this key is derived from an account id and is compared as a
+    # string, so it must be stable across calls (hence the explicit fallback).
+    tenant=f"owners/{clean_slug(owner_id,'owner')}/" if owner_id else ""
     key=f"{tenant}{clean}"
     return f"{OBJECT_STORAGE_PREFIX}/{key}" if OBJECT_STORAGE_PREFIX else key
 
@@ -783,17 +785,37 @@ def available_social_image_format():
         return "png"
     except Exception:return "svg"
 
+# Goal 0b (docs/reviews/bulk-guest-import-research.md §5.4, risk 1): the deploy
+# manifest installs no font package and the repository shipped only .woff2
+# subsets, which Pillow cannot load as a system font. So on Render the Khmer
+# branch below fell through to DejaVu and Khmer names rendered as empty boxes
+# with no exception raised. A Khmer face is therefore vendored in the repository
+# (vendor/noto-khmer/, SIL OFL 1.1 — the same licence already vendored at
+# licenses/fonts/Noto-OFL-1.1.txt) and its path is now the FIRST candidate, so
+# card rendering no longer depends on the machine it runs on.
+KHMER_FONT_DIR = ROOT / "vendor" / "noto-khmer"
+# The same tree as it exists in the checkout (src/python/vendor is the mirror the
+# build produces; both are committed, and either resolves on a fresh clone).
+KHMER_FONT_SOURCE_DIR = ROOT.parent.parent / "vendor" / "noto-khmer"
+
+def khmer_font_candidates(bold=False):
+    """Khmer face paths in resolution order: vendored, then system, then cwd."""
+    weight="Bold" if bold else "Regular"
+    return [
+        str(KHMER_FONT_SOURCE_DIR / f"NotoSansKhmer-{weight}.ttf"),
+        str(KHMER_FONT_DIR / f"NotoSansKhmer-{weight}.ttf"),
+        f"/usr/share/fonts/truetype/noto/NotoSansKhmer-{weight}.ttf",
+        f"/usr/share/fonts/opentype/noto/NotoSansKhmer-{weight}.ttf",
+        "C:/Windows/Fonts/KhmerUIb.ttf" if bold else "C:/Windows/Fonts/KhmerUI.ttf",
+        f"NotoSansKhmer-{weight}.ttf",
+    ]
+
 def image_font(size, khmer=False, bold=False):
     try:
         from PIL import ImageFont
         candidates=[]
         if khmer:
-            candidates += [
-                "/usr/share/fonts/truetype/noto/NotoSansKhmer-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansKhmer-Regular.ttf",
-                "/usr/share/fonts/opentype/noto/NotoSansKhmer-Bold.ttf" if bold else "/usr/share/fonts/opentype/noto/NotoSansKhmer-Regular.ttf",
-                "C:/Windows/Fonts/KhmerUIb.ttf" if bold else "C:/Windows/Fonts/KhmerUI.ttf",
-                "NotoSansKhmer-Bold.ttf" if bold else "NotoSansKhmer-Regular.ttf",
-            ]
+            candidates += khmer_font_candidates(bold)
         candidates += [
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
             "C:/Windows/Fonts/arialbd.ttf" if bold else "C:/Windows/Fonts/arial.ttf",
@@ -2445,6 +2467,66 @@ def _khmer_font_metadata(font,cmap):
     }
 
 
+# ---------------------------------------------------------------------------
+# Goal 0b — is the face image_font(khmer=True) resolves *actually* Khmer?
+#
+# The vendored face is what makes "the card draws Khmer" true on the deploy as
+# well as on a developer machine, and a silent DejaVu fallback is exactly the
+# failure mode risk 1 describes. This reports the verdict at startup using the
+# same ``_khmer_font_metadata`` that uploads are validated with, so "is this a
+# Khmer font" has one definition in the tree rather than two.
+# ---------------------------------------------------------------------------
+_KHMER_FONT_STATUS_CACHE = None
+
+
+def khmer_font_status():
+    """Inspect the Khmer face ``image_font`` would resolve. Never raises."""
+    status={"resolved":"","boldResolved":"","vendored":False,"khmerReady":False,"reason":""}
+    regular=next((c for c in khmer_font_candidates(False) if Path(c).is_file()),None)
+    bold=next((c for c in khmer_font_candidates(True) if Path(c).is_file()),None)
+    status["resolved"]=regular or "";status["boldResolved"]=bold or ""
+    vendored_paths={(KHMER_FONT_DIR/"NotoSansKhmer-Regular.ttf").resolve(),(KHMER_FONT_SOURCE_DIR/"NotoSansKhmer-Regular.ttf").resolve()}
+    status["vendored"]=bool(regular) and Path(regular).resolve() in vendored_paths
+    if not regular:
+        status["reason"]="no Khmer font file exists in any candidate path"
+        return status
+    try:
+        from fontTools.ttLib import TTFont
+    except ImportError:
+        status["reason"]="fontTools is not installed, so the resolved face was not verified"
+        return status
+    try:
+        font=TTFont(regular,lazy=False,recalcTimestamp=False)
+        try:
+            cmap={int(codepoint) for table in font["cmap"].tables if getattr(table,"isUnicode",lambda:False)() for codepoint in table.cmap.keys()}
+            metadata=_khmer_font_metadata(font,cmap)
+        finally:
+            font.close()
+    except Exception as exc:
+        status["reason"]=f"the resolved face could not be inspected: {exc}"
+        return status
+    status["khmerReady"]=bool(metadata.get("khmerReady"))
+    status["khmerSupport"]=metadata.get("khmerSupport")
+    status["khmerCoreCoveragePercent"]=metadata.get("khmerCoreCoveragePercent")
+    status["khmerShaping"]=metadata.get("khmerShaping")
+    if not status["khmerReady"]:
+        status["reason"]="the resolved face is not usable for Khmer, so guest names would render as empty boxes"
+    return status
+
+
+def log_khmer_font_status():
+    """Log the Khmer font verdict once per process. Warns; never raises."""
+    global _KHMER_FONT_STATUS_CACHE
+    if _KHMER_FONT_STATUS_CACHE is not None:return _KHMER_FONT_STATUS_CACHE
+    status=khmer_font_status()
+    if status["khmerReady"]:
+        print(f"KHMER_FONT_STATUS ok resolved={status['resolved']} vendored={status['vendored']} support={status.get('khmerSupport')} coreCoverage={status.get('khmerCoreCoveragePercent')} shaping={status.get('khmerShaping')}",flush=True)
+    else:
+        print(f"KHMER_FONT_STATUS WARN resolved={status['resolved'] or '(none)'} reason={status['reason']} — personalized Khmer guest names will render as empty boxes. Vendor a Khmer face under {KHMER_FONT_DIR} or install a font package.",flush=True)
+    _KHMER_FONT_STATUS_CACHE=status
+    return status
+
+
 def optimize_custom_font(raw,filename="font.ttf",declared_mime="application/octet-stream"):
     """Validate one user font and normalize it to a compact WOFF2 payload."""
     if not raw:raise ValueError("The selected font is empty")
@@ -2509,9 +2591,56 @@ def optimize_custom_font(raw,filename="font.ttf",declared_mime="application/octe
         try:font.close()
         except Exception as exc: _log.debug("cleanup failed: %s", exc)
 
-def clean_slug(value):
-    value = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
-    return value[:60] or "our-invitation"
+# OSWP's household invite code excludes the same confusable characters
+# (0 1 i l o) so a code can be read aloud or typed unambiguously; the exclusion
+# is taken from its own source (research §4.1), not invented here.
+_SHORT_CODE_ALPHABET = "23456789abcdefghjkmnpqrstuvwxyz"
+
+def short_code(n=6):
+    """An opaque, unambiguous code drawn with ``secrets`` (research §5.2)."""
+    length = max(1, min(64, int(n or 6)))
+    return "".join(secrets.choice(_SHORT_CODE_ALPHABET) for _ in range(length))
+
+def clean_slug(value, fallback=None):
+    """Slugify ``value``; an empty result becomes ``fallback`` or a short code.
+
+    The previous implementation returned the shared constant ``our-invitation``
+    for any input with no ``[a-z0-9-]`` character left — which is every Khmer
+    string (research §2.6; ``tools/khmer-slug-probe.py`` measured 8 of 8
+    collapsing), so the first Khmer-titled wedding took ``/i/our-invitation``
+    and the second took ``/i/our-invitation-2``.
+
+    ``fallback`` is for callers that need determinism — an owner tenant key is
+    derived from an id and must not become a fresh random code on every call.
+    Callers whose slug is user-visible pass nothing.
+    """
+    value = re.sub(r"[^a-z0-9-]+", "-", str(value or "").lower()).strip("-")
+    value = value[:60].strip("-")
+    if value:
+        return value
+    return short_code(6) if fallback is None else str(fallback)
+
+def guest_slug(name, taken=()):
+    """The per-guest URL segment for ``name`` (research §5.1 and §5.2).
+
+    A Latin-only name keeps a readable slug; anything else — which for this
+    user is essentially every Khmer name — gets an opaque 6-character code,
+    because no Khmer romanization can be trusted silently (no maintained
+    library, no canonical system, four official systems that disagree: §3.1).
+    The code is frozen at generation time and never recomputed from the name.
+
+    Collisions are scoped per invitation and resolved deterministically with a
+    ``-2``, ``-3`` suffix, matching the de-duplication style already used by
+    ``create_invitation``.
+    """
+    taken = set(taken or ())
+    latin = clean_slug(name or "", "")
+    candidate = latin if latin and re.fullmatch(r"[a-z0-9-]+", latin) else short_code(6)
+    base, index = candidate, 2
+    while candidate in taken:
+        candidate = f"{base}-{index}"
+        index += 1
+    return candidate
 
 def guest_token_value(guest_id, token_salt, token_version=1):
     payload=f"{guest_id}|{token_salt}|{int(token_version or 1)}"
@@ -3536,8 +3665,11 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/i/"): return self.serve_public(path.split("/", 2)[2])
         if path.startswith("/api/media/"): return self.serve_signed_media(unquote(path[len("/api/media/"):]))
         if path.startswith("/api/image/"): return self.serve_responsive_image(unquote(path[len("/api/image/"):]))
-        if path.startswith("/api/public/") and path.endswith("/social-card.svg"): return self.social_card_svg(unquote(path.split("/")[3]))
-        if path.startswith("/api/public/") and path.endswith("/social-card.png"): return self.social_card_png(unquote(path.split("/")[3]))
+        # Goal 0c (§3.7): the card is served both at the historical unversioned
+        # path (any preview already in a chat keeps working) and at the
+        # version-suffixed path serve_public now advertises.
+        if path.startswith("/api/public/") and re.fullmatch(r"/api/public/[^/]+/social-card(?:-v\d+)?\.svg",path): return self.social_card_svg(unquote(path.split("/")[3]))
+        if path.startswith("/api/public/") and re.fullmatch(r"/api/public/[^/]+/social-card(?:-v\d+)?\.png",path): return self.social_card_png(unquote(path.split("/")[3]))
         if path.startswith("/api/public/") and path.endswith("/qr-card.png"): return self.public_qr_card_png(unquote(path.split("/")[3]))
         if path.startswith("/api/public/") and path.endswith("/qr.png"): return self.public_qr_png(unquote(path.split("/")[3]))
         if path.startswith("/api/invitations/") and "/guests/" in path and path.endswith("/qr.png"): return self.guest_qr_png(path.split("/")[3],path.split("/")[5])
@@ -6022,7 +6154,14 @@ class Handler(SimpleHTTPRequestHandler):
         if not user:return
         if not self.rate_limit(f"invitation-create:{user['id']}",60,60):return
         if not self.require_plan_capacity(user,"invitations"):return
-        data = self.body(); document=validate_document(data.get("document",{})); invite_id = str(uuid.uuid4()); slug = clean_slug(data.get("slug", "our-invitation")); now = int(time.time()*1000)
+        data = self.body(); document=validate_document(data.get("document",{}))
+        # Goal 0a: the slug falls back to the invitation's own title, and to a
+        # random short code when nothing survives slugification. The previous
+        # default ("our-invitation") meant every Khmer-titled wedding shared one
+        # public link (research §2.6). The dashboard sends the raw title as
+        # ``slug``, so the title path is the one that runs in practice.
+        title_hint = str((document.get("fields") or {}).get("names") or "")
+        invite_id = str(uuid.uuid4()); slug = clean_slug(data.get("slug") or title_hint); now = int(time.time()*1000)
         workspace=get_platform_v32_service().workspace_for_user(user["id"])
         with connect() as db:
             base=slug; n=2
@@ -6051,7 +6190,9 @@ class Handler(SimpleHTTPRequestHandler):
         user=self.require_user()
         if not user:return
         if not self.rate_limit(f"invitation-slug:{user['id']}",60,60):return
-        data=self.body(50_000);slug=clean_slug(data.get("slug",""))
+        data=self.body(50_000);submitted=str(data.get("slug","") or "").strip()
+        if not submitted:return self.json(400,{"error":"A public link is required"})
+        slug=clean_slug(submitted)
         with connect() as db:
             if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             if db.execute("SELECT 1 FROM invitations WHERE slug=? AND id<>?",(slug,invite_id)).fetchone():return self.json(409,{"error":"That public link is already in use"})
@@ -9473,15 +9614,21 @@ class Handler(SimpleHTTPRequestHandler):
         })
 
     def serve_public(self, slug):
-        title="Invitation";description="You are invited to a special event."
+        title="Invitation";description="You are invited to a special event.";publication_version=0
         with connect() as db:
-            row=db.execute("SELECT i.access_mode,p.document_json FROM invitations i LEFT JOIN publications p ON p.invitation_id=i.id WHERE i.slug=? AND i.is_published=1 AND i.archived=0 AND i.deleted_at IS NULL AND (i.expires_at IS NULL OR i.expires_at>?) ORDER BY p.published_at DESC LIMIT 1",(slug,int(time.time()*1000))).fetchone()
+            row=db.execute("SELECT i.access_mode,p.document_json,p.version FROM invitations i LEFT JOIN publications p ON p.invitation_id=i.id WHERE i.slug=? AND i.is_published=1 AND i.archived=0 AND i.deleted_at IS NULL AND (i.expires_at IS NULL OR i.expires_at>?) ORDER BY p.published_at DESC LIMIT 1",(slug,int(time.time()*1000))).fetchone()
+            if row:publication_version=int(row["version"] or 0)
             if row and row["access_mode"]!="password" and row["document_json"]:
                 try:
                     document=json.loads(row["document_json"]);fields=document.get("fields",{});title=str(fields.get("names") or "Invitation")[:120];description=str(fields.get("message") or "You are invited to a special event.")[:240]
                 except Exception as exc: _log.debug("cleanup failed: %s", exc)
             elif row and row["access_mode"]=="password":title="Private Invitation";description="A private invitation is waiting for you."
-        image_format=available_social_image_format();image_path=f"/api/public/{quote(slug)}/social-card.{image_format}";public_path=f"/i/{quote(slug)}"
+        # Goal 0c (§3.7): the cache FILE was always keyed by the publication
+        # version (social_cache_path) while the public URL was not, so a
+        # re-published design changed the bytes at an unchanged URL — the one
+        # case Meta documents as "will not refresh in caches". The version now
+        # travels in the URL, and the unversioned path still resolves.
+        image_format=available_social_image_format();image_path=f"/api/public/{quote(slug)}/social-card-v{publication_version}.{image_format}";public_path=f"/i/{quote(slug)}"
         # V54.9 (sec-1, P1-A from ASVS L2 gap analysis): every user-controlled
         # placeholder substituted into public.html must be HTML-escaped with
         # quote=True so the value is safe in both attribute (content="...",
@@ -10145,6 +10292,9 @@ def create_app():
     security posture.  The handler itself also sets these headers in
     ``end_headers()`` (belt and suspenders).
     """
+    # Goal 0b — report the Khmer font verdict before serving anything, so a
+    # deploy that lost the font says so in the log instead of rendering boxes.
+    log_khmer_font_status()
     from io import BytesIO
 
     # §1B — security headers applied as WSGI middleware so they are present
@@ -10385,6 +10535,7 @@ if __name__ == "__main__":
     print(f"E-invitation-website: {address}", flush=True)
     print(f"Data directory: {DATA}", flush=True)
     ensure_frontend_assets()
+    log_khmer_font_status()
     platform_config=PlatformConfig.from_environment()
     platform_errors=list(platform_config.validate())
     if PRODUCTION_MODE:
