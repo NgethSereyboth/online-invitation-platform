@@ -81,3 +81,54 @@ src/python/lang-km.html.bak
 
 # Local spelling of the page-level asset budget, if a developer edits it.
 docs/perf/lighthouse-budgets.local.json
+
+# ---------------------------------------------------------------------------
+# HYGIENE (instrument-and-closure pass).
+#
+# Each entry below decided something that had been left untracked across several
+# sessions — review evidence, scratch result files, editor test fixtures, and a
+# vendored agent toolchain. None of it is a product input, and all of it was
+# making `git status` unreadable.
+#
+# The decision is deliberately NOT deletion and NOT `/tmp`: evidence parked in
+# /tmp is lost to the next restart (this pass lost a harness log that way), and
+# `git clean` cannot tell the difference between a scratch file and a file only
+# cherry-picked into the tree. So the files stay where they were, and these rules
+# keep them out of `git status` while leaving them readable and durable.
+#
+# One exception: `pnpm-workspace.yaml` (a 37-byte package-manager workspace file
+# at the root of an npm repository) is parked at ~/einvite-moved-aside/ instead,
+# because ignoring it would not stop pnpm from acting on it.
+# ---------------------------------------------------------------------------
+
+# Served test fixtures another session left at the root. They are read by ad-hoc
+# font/scan runs (`subset-fonts.py` reports them as sources with no tracked
+# counterpart), so they are kept rather than removed.
+/fixture-public.html
+/test-i18n-beacon.html
+
+# Freebuff/agent session metadata: one file, regenerated per session, not part of
+# the product.
+.freebuff/
+
+# Locally installed agent tooling (a vendored `graphify` install, 183 MB). It is
+# a local development helper, not a dependency this repo ships or builds with.
+.tools/
+
+# DISPATCH box-evidence (01_summary.md + task1..7_*_box.json) and the bilingual
+# page captures (62 PNGs, 8.4 MB) from a completed i18n review. Generated review
+# evidence, same class as `.ff_screenshots/` and `.lighthouseci/` above, which are
+# already kept out of git for the same reason.
+deliverables/
+screenshots/
+
+# Scratch result JSON written at the repo root by a one-off i18n audit run. It
+# embeds the machine's Chrome path (`/media/<user>/Local Disk/...`), so it is both
+# stale and host-specific.
+_i18n_all_result.json
+
+# Ephemeral editor/browser test fixtures. `src/python/*-test-*.html` is already
+# ignored for this reason; these are the same class of throwaway fixture that were
+# still sitting in the tree.
+src/html/*-test-*.html
+src/python/fixture-*.html
