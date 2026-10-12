@@ -1,0 +1,24 @@
+PYTEST_CONFTEST_REPAIR 2026-10-12T06:52:03Z
+
+# 1. the failure the module exists to prevent, reproduced by deleting one line
+$ git stash-less check: the line 'collect_ignore = [...]' is absent (it was deleted when the
+  server_url fixture was appended to this file)
+$ .venv/bin/python -m pytest tests/ -q
+usage: server.py [-h] [--host HOST] [--port PORT]
+server.py: error: unrecognized arguments: tests/ -q
+INTERNALERROR> File ".../tests/final_features_test.py", line 5, in <module>
+INTERNALERROR> from server import validate_document
+no tests ran
+
+# 2. after restoring it
+$ .venv/bin/python -m pytest tests/ -q --collect-only | tail -1
+68 tests collected in 1.34s
+
+# 3. the suite this pass was asked to resolve
+$ .venv/bin/python -m pytest tests/ -k 'v52 or crdt' -q | tail -1
+6 passed, 62 deselected in 8.04s
+
+# 4. the analytics suites, unchanged: the feature is built in the model layer,
+#    src/python/features/analytics/{model,sessions,queries,export}.py, and never wired
+$ .venv/bin/python -m pytest tests/ -k analytics -q | tail -1
+15 failed, 5 passed, 48 deselected in 46.25s

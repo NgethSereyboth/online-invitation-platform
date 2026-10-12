@@ -84,5 +84,39 @@ if _missing:
         + " — re-run `python3 tools/tests-import-audit.py` and update the list."
     )
 
+# ---------------------------------------------------------------------------
+# Shared fixtures
+# ---------------------------------------------------------------------------
+# `tests/v52_crdt_offline_merge_test.py` asks for a `server_url` fixture in all
+# six of its tests and its own docstring says it "exercise[s] the V52 Y.js
+# collaboration endpoints end-to-end against a real HTTP server (via
+# ``v14_test_utils.app_server``)" — but no fixture of that name existed anywhere
+# in the tree, so all six erred with `fixture 'server_url' not found` rather than
+# running. This is the fixture its docstring describes: the same real server, on a
+# free port, with a temporary data directory, from tests/v14_test_utils.py.
+#
+# Module scope: one server for the module's six tests, because each one only reads
+# and writes its own invitation and starting a server per test would cost ~6x the
+# wall clock for no isolation that the data directory does not already give.
+import pytest  # noqa: E402  (after the sys.path setup above)
+
+
+@pytest.fixture(scope="module")
+def server_url():
+    """Base URL of a real app server, alive for the module that asks for it."""
+    from v14_test_utils import app_server
+
+    with app_server() as (_process, base, _data):
+        yield base
+
+
 # pytest's documented mechanism for keeping a file out of collection entirely.
+#
+# This line is load-bearing and its absence is invisible: without it `collect_ignore`
+# does not exist, `COLLECT_IGNORE` above is a plain list nobody reads, and
+# `python3 -m pytest tests/` dies with an INTERNALERROR while importing
+# `final_features_test.py` — which is exactly the failure this module was written to
+# prevent. It was deleted once, in this pass, when the fixture below was appended to
+# the file; `python3 -m pytest tests/ -q` was run again after the repair and collected
+# the suite, which is the check that would have caught it.
 collect_ignore = [str(TESTS_DIR / name) for name in COLLECT_IGNORE]
