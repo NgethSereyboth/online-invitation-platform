@@ -1,0 +1,110 @@
+INSTRUMENT REPAIR — Goal 1: the one candidate the expanded sweep called
+unanimously demotable, and why it is not demoted.
+
+The candidate: 'transform' in
+  .ui-theme-menu button:hover { background: var(--app-surface-3) !important; transform: none !important }
+which the sweep on the fixed (v3) probe reported redundant in all 3 runs on all
+16 pages — 48 of 48. It is the only declaration in the sweep's demotable set.
+
+Two defects made that unanimity vacuous, and the tool below is what measures the
+declaration where the sweep cannot:
+
+  (a) every element the rule reaches is inside a display:none subtree (the theme
+      menu carries [hidden] until the user opens it), and Chrome does not resolve
+      used values for an element with no box — so 'transform' reads none whatever
+      the cascade says. The probe now reports this as UNMEASURED (v4), with the
+      count of elements reached and no box.
+  (b) the probe's own self-check fixture lives in the page while the sweep runs
+      (div.ui-theme-menu.decl-fixture-host > button), and that element matches
+      this very selector: it was measured as a target of the real rule. The probe
+      now tears its fixture down before the sweep (v4) and asserts it is gone.
+
+=====================================================================
+1. THE STATE THE SWEEP MEASURES (menu closed): NOTHING IS OBSERVABLE
+=====================================================================
+cmd: node tools/demotion-recheck.mjs http://127.0.0.1:8124/index.html --selector='.ui-theme-menu button:hover' --property=transform      (three runs)
+VALUES_BASELINE [{"element":0,"value":"none","rendered":false},{"element":1,"value":"none","rendered":false}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":false,"elements":2,"elementsReadable":0,"demotion":[],"deletion":[],"verdict":"NO-CHANGE"}
+VALUES_BASELINE [{"element":0,"value":"none","rendered":false},{"element":1,"value":"none","rendered":false}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":false,"elements":2,"elementsReadable":0,"demotion":[],"deletion":[],"verdict":"NO-CHANGE"}
+VALUES_BASELINE [{"element":0,"value":"none","rendered":false},{"element":1,"value":"none","rendered":false}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":false,"elements":2,"elementsReadable":0,"demotion":[],"deletion":[],"verdict":"NO-CHANGE"}
+
+  Reading: elementsReadable=0. Every element is in the DOM with no box, so the
+  leave-one-out returns an identical snapshot by construction — the verdict is a
+  property of the page state, not of the declaration. This is the exact reading
+  that produced 48/48 'redundant' in the sweep.
+
+=====================================================================
+2. THE STATE A USER IS IN WHEN THEY CAN HOVER IT (menu revealed)
+=====================================================================
+cmd: node tools/demotion-recheck.mjs <index.html> --selector='.ui-theme-menu button:hover' --property=transform --reveal      (three runs)
+REVEALED ["div.ui-theme-menu"]
+VALUES_BASELINE [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DEMOTION [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DELETION [{"element":0,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true},{"element":1,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":true,"elements":2,"elementsReadable":2,"demotion":[],"deletion":[{"element":0,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"},{"element":1,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"}],"verdict":"LOAD-BEARING"}
+REVEALED ["div.ui-theme-menu"]
+VALUES_BASELINE [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DEMOTION [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DELETION [{"element":0,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true},{"element":1,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":true,"elements":2,"elementsReadable":2,"demotion":[],"deletion":[{"element":0,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"},{"element":1,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"}],"verdict":"LOAD-BEARING"}
+REVEALED ["div.ui-theme-menu"]
+VALUES_BASELINE [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DEMOTION [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DELETION [{"element":0,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true},{"element":1,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":true,"elements":2,"elementsReadable":2,"demotion":[],"deletion":[{"element":0,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"},{"element":1,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"}],"verdict":"LOAD-BEARING"}
+
+cmd: the same three runs on dashboard.html (a different bundle, same rule)
+VALUES_BASELINE [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DEMOTION [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DELETION [{"element":0,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true},{"element":1,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/dashboard.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":true,"elements":2,"elementsReadable":2,"demotion":[],"deletion":[{"element":0,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"},{"element":1,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"}],"verdict":"LOAD-BEARING"}
+VALUES_BASELINE [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DEMOTION [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DELETION [{"element":0,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true},{"element":1,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/dashboard.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":true,"elements":2,"elementsReadable":2,"demotion":[],"deletion":[{"element":0,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"},{"element":1,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"}],"verdict":"LOAD-BEARING"}
+VALUES_BASELINE [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DEMOTION [{"element":0,"value":"none","rendered":true},{"element":1,"value":"none","rendered":true}]
+VALUES_AFTER_DELETION [{"element":0,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true},{"element":1,"value":"matrix(1.012, 0, 0, 1.012, 0, -2)","rendered":true}]
+DEMOTION_VERDICT {"url":"http://127.0.0.1:8124/dashboard.html","selector":".ui-theme-menu button:hover","property":"transform","reveal":true,"elements":2,"elementsReadable":2,"demotion":[],"deletion":[{"element":0,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"},{"element":1,"from":"none","to":"matrix(1.012, 0, 0, 1.012, 0, -2)"}],"verdict":"LOAD-BEARING"}
+
+  Reading (identical in all six runs): with a rendered menu the DELETION the sweep
+  performs moves both elements from none to matrix(1.012, 0, 0, 1.012, 0, -2) —
+  translateY(-2px) scale(1.012) from @media(hover:hover){button:not(:disabled):hover}.
+  The declaration is load-bearing in the open state; the unanimous demotable verdict
+  was a measurement artifact. It is NOT demoted.
+
+=====================================================================
+3. WHAT THE CASCADE SAYS: WHY THE DELETE DIFFERS FROM THE DEMOTE
+=====================================================================
+cmd: node tools/css-cascade-winner.mjs http://127.0.0.1:8124/index.html --selector='.ui-theme-menu button' --property=transform --states=plain,hover
+CASCADE_HOVER_MEDIA {"hoverCapableByDefault":false,"clausesFound":2,"rewritten":2,"stillInactiveAfter":0}
+CASCADE_WINNER {"url":"http://127.0.0.1:8124/index.html","selector":".ui-theme-menu button","property":"transform","elements":2,"index":0,"states":["plain","hover"]}
+  state=plain         computed transform="none"
+    last-important -> (none)
+  state=hover         computed transform="none"
+    order=22           transform          translateY(-2px) scale(1.012)                        button:not(:disabled):hover, .cta:hover, .secondary:hover, .action:hover
+    order=23 IMPORTANT transform          none!important                                       .ui-theme-menu button:hover
+    last-important -> .ui-theme-menu button:hover  transform:none!important
+
+  order=22 is the @media(hover:hover) rule and order=23 the declaration, in the SAME
+  sheet, at the SAME specificity (0,2,1). So a demotion — dropping only the priority
+  — would leave this declaration winning the tie by source order (which is why
+  VALUES_AFTER_DEMOTION above is unchanged), while deleting it hands the property to
+  the lift. That distinction is exactly why the sweep's model of the change (remove
+  the declaration) is the STRONGER test, and why a declaration that fails it is not
+  demoted on the strength of a page state where nothing is observable.
+
+=====================================================================
+4. THE SAME DECLARATION, BEFORE THE v4 CLASSIFICATION
+=====================================================================
+cmd: python3 - <<'PY' ... over artifacts/goal1-sweep/lift-*.json (the v3 sweep)
+pages reporting the declaration: 16/16; runs per page: [3]
+  13 page(s): ('redundant:diffs=0,affected=3', 'redundant:diffs=0,affected=3', 'redundant:diffs=0,affected=3')
+  3 page(s): ('redundant:diffs=0,affected=1', 'redundant:diffs=0,affected=1', 'redundant:diffs=0,affected=1')
+
+  Reading: all 16 pages, all 3 runs, 'redundant' with 0 differences. The unanimity
+  was real and the verdict was still wrong — which is the finding, not a failure of
+  the unanimity rule: repeating a measurement that cannot observe anything cannot
+  make it evidence. The v4 probe reports it as unmeasured instead.
