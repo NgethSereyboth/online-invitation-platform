@@ -40,6 +40,17 @@
  *      (the element whose style changes). A subject naming a pseudo-element keeps
  *      it: `.studio-panel-resizer:hover:after` is measured on the trigger's
  *      `::after`, which the previous version could not see at all.
+ *   1b. (v2) A rule whose selector list mixes `:hover` with another state
+ *      (`.final-timeline-row:hover, .final-timeline-row.active`) is now MEASURED on
+ *      both paths instead of being written off: the class the selector names is
+ *      added to the matching elements and a pseudo-class it names is forced over
+ *      CDP. Only a state this harness cannot synthesize leaves a declaration
+ *      unmeasured, and the reason is reported per rule. Before this, 19
+ *      row-instances across 7 declarations were unmeasurable by construction — the
+ *      largest single block of "no evidence" in the sweep — and a declaration whose
+ *      only reachable path is `.active` could never be cleared on hover-only
+ *      evidence either. Both directions are now measured, and a declaration is
+ *      load-bearing if EITHER path changes a computed value.
  *   2. Snapshot the COMPLETE computed style — every property Chrome exposes — of
  *      the trigger, its `::before`/`::after`, and every subject, with hover forced.
  *   3. For each `!important` DECLARATION: rebuild the rule's declaration text
@@ -63,9 +74,10 @@
  *      expansions must equal the set of longhands the rule marks important. A
  *      re-grouped or mis-parsed rule shows up here.
  *
- * Scope: `:hover` rules. Every other `!important` in the tree is out of reach of
- * this method at a sane cost — the leave-one-out needs a computed-style diff of
- * every element a rule can reach, and the non-hover universe is 32,832
+ * Scope: rules whose selector list contains `:hover`, including the other state
+ * parts of those same rules (v2). Every other `!important` in the tree is out of
+ * reach of this method at a sane cost — the leave-one-out needs a computed-style
+ * diff of every element a rule can reach, and the non-hover universe is 32,832
  * declarations against 3,911 elements. That boundary is stated in the report
  * rather than implied away.
  *
@@ -355,6 +367,25 @@ const setup = await page.evaluate((cap) => {
   // A subject may name a pseudo-element; keep it, so the measurement lands on the
   // box the rule actually paints (`.x:hover:after` is invisible otherwise).
   const PSEUDO = /::?(before|after|marker|placeholder|first-line|first-letter|selection|backdrop)$/i;
+  // (v2) A NON-:hover state part: the class or pseudo-class the selector names,
+  // which this harness can force on the elements the part matches. `base` is the
+  // rest of the part, and is what gets queried.
+  const STATE_PSEUDO = /:(focus-visible|focus-within|focus|active|checked|target)$/;
+  const parseStatePart = (s) => {
+    const pm = STATE_PSEUDO.exec(s);
+    if (pm) {
+      const base = s.slice(0, pm.index).trim();
+      return base ? { base, cls: null, pseudo: pm[1], raw: s } : null;
+    }
+    const cm = /\.([A-Za-z_][\w-]*)$/.exec(s);
+    if (cm) {
+      const base = s.slice(0, cm.index).trim();
+      return base ? { base, cls: cm[1], pseudo: null, raw: s } : null;
+    }
+    return null;
+  };
+  const stateSpecs = new Map(); // spec key -> {base, cls, pseudo} to apply
+  const stateKeyOf = (p) => `${p.base}|${p.cls || ''}|${p.pseudo || ''}`;
   const byTrigger = new Map();
   const candidates = [];
   let skippedNested = 0;
@@ -393,12 +424,25 @@ const setup = await page.evaluate((cap) => {
         for (const p of pseudos) acc.get(base).add(p);
       }
     }
-    // A rule may also target a NON-:hover selector — `.row:hover, .row.active` is
-    // one declaration governing both. This harness only ever forces `:hover`, so
-    // the `.active` case is unmeasured, and a declaration shared with it must never
-    // be cleared on hover-only evidence. Those are reported as unmeasured.
+    // (v2) A rule may also target a NON-:hover state — `.row:hover, .row.active` is
+    // one declaration governing both. Both paths are now forced and measured; the
+    // declaration is unmeasured only when a state part cannot be synthesized (the
+    // reason is carried out with the row).
     const selectorParts = rule.selectorText.split(',').map((s) => s.trim()).filter(Boolean);
-    const sharedWithNonHover = selectorParts.some((s) => !s.includes(':hover'));
+    const stateKeys = [];
+    let unsupportedStatePart = null;
+    for (const part of selectorParts) {
+      if (part.includes(':hover')) continue;
+      const spec = parseStatePart(part);
+      if (!spec) { unsupportedStatePart = part; continue; }
+      const key = stateKeyOf(spec);
+      if (!stateSpecs.has(key)) stateSpecs.set(key, spec);
+      if (!stateKeys.includes(key)) stateKeys.push(key);
+    }
+    const sharedWithNonHover = unsupportedStatePart !== null;
+    const unsupportedReason = unsupportedStatePart
+      ? `the rule also targets \`${unsupportedStatePart.slice(0, 60)}\`, a state this harness cannot synthesize`
+      : null;
     const { declarations } = declarationsOf(rule);
     const important = declarations.filter((d) => d.important);
     // 3 — per-rule invariant: the important longhands the declarations cover must be
@@ -425,6 +469,7 @@ const setup = await page.evaluate((cap) => {
     if (important.length && triggers.size) {
       candidates.push({
         rule, declarations: important, triggers: [...triggers], sharedWithNonHover,
+        stateKeys, unsupportedReason,
         subjects: [...subjects].map(([base, pseudos]) => ({ base, pseudos: [...pseudos] })),
       });
     }
@@ -458,12 +503,31 @@ const setup = await page.evaluate((cap) => {
     byTriggerIdx.get(t.trigger).push(i);
   });
 
+  // (v2) Resolve the state parts to elements: one entry per element that must have
+  // the class added / the pseudo-class forced while the leave-one-out runs.
+  const stateTargets = [];
+  let stateUnresolved = 0;
+  for (const [key, spec] of stateSpecs) {
+    let els;
+    try { els = [...document.querySelectorAll(spec.base)]; } catch { stateUnresolved++; continue; }
+    if (!els.length) { stateUnresolved++; continue; }
+    for (const el of els.slice(0, cap)) stateTargets.push({ el, key, cls: spec.cls, pseudo: spec.pseudo });
+  }
+  const stateIdxByKey = new Map();
+  stateTargets.forEach((t, i) => {
+    if (!stateIdxByKey.has(t.key)) stateIdxByKey.set(t.key, []);
+    stateIdxByKey.get(t.key).push(i);
+  });
+
   window.__lift = {
     targets: targets.map((t) => ({ el: t.el, subjectEls: t.subjectEls })),
+    stateTargets: stateTargets.map((t) => ({ el: t.el, cls: t.cls, pseudo: t.pseudo })),
     candidates: candidates.map((c) => ({
       declarations: c.declarations.map((d) => ({ name: d.name, longhands: d.longhands })),
       rule: c.rule,
       sharedWithNonHover: c.sharedWithNonHover,
+      unsupportedReason: c.unsupportedReason,
+      stateIndices: [...new Set(c.stateKeys.flatMap((k) => stateIdxByKey.get(k) || []))],
       indices: [...new Set(c.triggers.flatMap((t) => byTriggerIdx.get(t) || []))],
     })),
   };
@@ -472,6 +536,8 @@ const setup = await page.evaluate((cap) => {
     hoverRulesTotal: hoverRules.length,
     skippedNested,
     pseudoSubjects,
+    stateTargetCount: stateTargets.length,
+    stateSpecsUnresolved: stateUnresolved,
     distinctTriggers: byTrigger.size,
     invalidSelectors: invalid,
     triggersWithNoMatch,
@@ -527,6 +593,23 @@ const CAPTURE = (idx) => {
   };
 };
 
+/**
+ * (v2) The same capture for an element reached through a rule's NON-:hover state
+ * part. The class the selector names is already added (or the pseudo-class forced)
+ * when this runs, so this is the state's own computed style.
+ */
+const CAPTURE_STATE = (idx) => {
+  const t = window.__lift.stateTargets[idx];
+  const styleOf = (el, pseudo) => {
+    if (!el || !el.isConnected) return null;
+    const cs = getComputedStyle(el, pseudo);
+    let s = '';
+    for (let k = 0; k < cs.length; k++) { const p = cs[k]; s += p + ':' + cs.getPropertyValue(p) + ';'; }
+    return s;
+  };
+  return { self: styleOf(t.el, null), selfBefore: styleOf(t.el, '::before'), selfAfter: styleOf(t.el, '::after') };
+};
+
 // ---------------------------------------------------------------------------
 // 2 — baseline: complete computed style with hover forced.
 // ---------------------------------------------------------------------------
@@ -570,6 +653,40 @@ function firstDifference(from, to) {
 }
 
 const nodeIdByIndex = new Map(matched.map((m) => [m.i, m.nodeId]));
+
+// (v2) Baseline for the non-:hover state paths: the same complete-style capture,
+// taken with the state applied (class added, or pseudo-class forced over CDP) and
+// WITHOUT :hover, because these are the elements a `X:hover, X.active` rule reaches
+// through its other selector part.
+async function stateNodeIdFor(i) {
+  const { result: remote } = await cdp.send('Runtime.evaluate', {
+    expression: 'window.__lift.stateTargets[' + i + '].el', returnByValue: false,
+  });
+  if (!remote || !remote.objectId) return null;
+  try { const { nodeId } = await cdp.send('DOM.requestNode', { objectId: remote.objectId }); return nodeId; }
+  catch { return null; }
+}
+const applyState = async (i, on) => page.evaluate((k, add) => {
+  const t = window.__lift.stateTargets[k];
+  if (t.cls) { if (add) t.el.classList.add(t.cls); else t.el.classList.remove(t.cls); }
+  return { pseudo: t.pseudo, cls: t.cls };
+}, i, on);
+
+const stateBaseline = new Map();
+const stateMatched = [];
+const stateNodeIds = new Map();
+for (let i = 0; i < setup.stateTargetCount; i++) {
+  const meta = await applyState(i, true);
+  let nodeId = stateNodeIds.get(i) ?? null;
+  if (nodeId === null) { nodeId = await stateNodeIdFor(i); if (nodeId !== null) stateNodeIds.set(i, nodeId); }
+  if (nodeId !== null && meta.pseudo) await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [meta.pseudo] });
+  const snap = await page.evaluate(CAPTURE_STATE, i);
+  if (nodeId !== null && meta.pseudo) await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+  await applyState(i, false);
+  if (!snap) continue;
+  stateBaseline.set(i, snap);
+  stateMatched.push(i);
+}
 const results = [];
 let restoreFailures = 0;
 for (let ci = 0; ci < setup.candidateRules; ci++) {
@@ -578,6 +695,8 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
     return {
       declarations: c.declarations,
       indices: c.indices,
+      stateIndices: c.stateIndices,
+      unsupportedReason: c.unsupportedReason || null,
       sharedWithNonHover: c.sharedWithNonHover === true,
       sel: c.rule.selectorText.slice(0, 90),
       originalCssText: c.rule.style.cssText,
@@ -586,16 +705,19 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
   const rows = [];
   for (const decl of cand.declarations) {
     const affected = cand.indices.filter((i) => nodeIdByIndex.has(i) && baseline.has(i));
+    const stateAffected = (cand.stateIndices || []).filter((i) => stateBaseline.has(i));
     if (cand.sharedWithNonHover) {
       rows.push({
         name: decl.name, longhands: decl.longhands, diffs: 0, affected: affected.length, unmeasured: true,
-        note: 'the rule also targets a non-:hover selector, which this harness does not measure', sample: [],
+        note: cand.unsupportedReason || 'the rule also targets a non-:hover selector, which this harness does not measure',
+        sample: [],
       });
       continue;
     }
-    if (!affected.length) {
-      // Not "redundant": unmeasured. A declaration no element on this page reaches
-      // cannot be cleared here, and it must not be counted as demotable anywhere.
+    if (!affected.length && !stateAffected.length) {
+      // Not "redundant": unmeasured. A declaration no element on this page reaches —
+      // through :hover or through the rule's other state parts — cannot be cleared
+      // here, and it must not be counted as demotable anywhere.
       rows.push({ name: decl.name, longhands: decl.longhands, diffs: 0, affected: 0, unmeasured: true, note: 'no element on this page reaches this rule', sample: [] });
       continue;
     }
@@ -624,6 +746,26 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
         }
       }
     }
+    // (v2) The same leave-one-out along the rule's non-:hover state path. A
+    // declaration that changes a computed value in EITHER state is load-bearing.
+    let stateDiffs = 0;
+    for (const i of stateAffected) {
+      const meta = await applyState(i, true);
+      const nodeId = stateNodeIds.get(i) ?? null;
+      if (nodeId !== null && meta.pseudo) await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [meta.pseudo] });
+      const snap = await page.evaluate(CAPTURE_STATE, i);
+      if (nodeId !== null && meta.pseudo) await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+      await applyState(i, false);
+      if (!snap) continue;
+      const changes = diffSnapshots(stateBaseline.get(i), snap);
+      if (changes.length) {
+        diffs += changes.length;
+        stateDiffs += changes.length;
+        if (sample.length < 3) {
+          sample.push({ element: i, where: `state:${changes[0].where}`, changed: firstDifference(changes[0].from, changes[0].to) });
+        }
+      }
+    }
     const restored = await page.evaluate((k, original) => {
       const rule = window.__lift.candidates[k].rule;
       rule.style.cssText = original;
@@ -631,8 +773,8 @@ for (let ci = 0; ci < setup.candidateRules; ci++) {
     }, ci, cand.originalCssText);
     if (restored !== cand.originalCssText) restoreFailures++;
     rows.push({
-      name: decl.name, longhands: decl.longhands, diffs, affected: affected.length,
-      sample, removedAny: removed.removedAny,
+      name: decl.name, longhands: decl.longhands, diffs, affected: affected.length + stateAffected.length,
+      stateAffected: stateAffected.length, stateDiffs, sample, removedAny: removed.removedAny,
     });
   }
   results.push({ i: ci, selector: cand.sel, declarations: rows });
@@ -645,6 +787,7 @@ for (const r of results) for (const d of r.declarations) {
   const row = {
     selector: r.selector, declaration: d.name, longhands: d.longhands.length,
     diffs: d.diffs, affected: d.affected ?? 0, sample: d.sample,
+    stateDiffs: d.stateDiffs ?? 0, stateAffected: d.stateAffected ?? 0,
   };
   if (d.note) row.note = d.note;
   if (d.unmeasured) unmeasured.push(row);
@@ -664,6 +807,11 @@ const summary = {
   // `candidateDeclarations` is the count that matters: authored declarations, not longhands.
   candidateDeclarations: setup.candidateDeclarations,
   candidateLonghands: setup.candidateLonghands,
+  // (v2) elements reached through a rule's non-:hover state part, and the state
+  // parts that could not be synthesized (each one keeps its declaration unmeasured).
+  stateTargetsMeasured: stateMatched.length,
+  stateSpecsUnresolved: setup.stateSpecsUnresolved,
+  declarationsMeasuredOnStatePath: needed.concat(redundant).filter((r) => r.stateAffected > 0).length,
   // What the defective enumerator would have reported for the same rules.
   longhandModelWouldReport: setup.candidateLonghands,
   groupingMismatches,
@@ -701,6 +849,8 @@ if (OUT) {
   console.log('  -> removal changed NOTHING (redundant)   ' + summary.declarationsRedundantHere);
   console.log('  -> removal CHANGED a computed value ...  ' + summary.declarationsLoadBearingHere);
   console.log('  -> no element on this page reaches it ..  ' + summary.declarationsUnmeasuredHere);
+  console.log('  state-path elements measured (non-:hover) ' + summary.stateTargetsMeasured
+    + '   (declarations also measured on that path: ' + summary.declarationsMeasuredOnStatePath + ')');
   console.log('\n--- load-bearing (must keep) ---');
   for (const r of needed) console.log('  ' + r.declaration.padEnd(22) + ' longhands=' + r.longhands + ' diffs=' + r.diffs + '  ' + r.selector);
 }

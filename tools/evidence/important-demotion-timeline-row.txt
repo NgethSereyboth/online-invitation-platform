@@ -1,0 +1,57 @@
+IMPORTANT DEMOTION — .final-timeline-row:hover,.final-timeline-row.active background (Goal 2)
+
+1. The unanimous candidate (N=3 across 16 pages = 48 runs):
+LIFT_CROSS_PAGE {"pages": 16, "runsPerPage": {"account": 3, "admin": 3, "analytics": 3, "billing": 3, "checkin": 3, "dashboard": 3, "designer": 3, "guests": 3, "index": 3, "materials": 3, "privacy": 3, "public": 3, "reset": 3, "responses": 3, "templates": 3, "verify": 3}, "minRunsPerPage": 3, "declarations": 60, "demotable": 1, "keep": 31, "noEvidence": 28, "unstable": 0}
+--- DEMOTABLE (inert in EVERY run of every page that measured it) ---
+  background             longhands=9  inert on index  unmeasured on 12
+      .final-timeline-row:hover, .final-timeline-row.active
+
+
+2. The CSS change — one !important removed, nothing else:
+   $ git diff --stat -- src/css/final-experience.css
+ src/css/final-experience.css | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+   $ git show HEAD:src/css/final-experience.css | grep -o 'final-timeline-row:hover[^}]*}'
+final-timeline-row:hover,.final-timeline-row.active{background:color-mix(in srgb,var(--final-accent) 10%,transparent)!important}
+   $ grep -o 'final-timeline-row:hover[^}]*}' src/css/final-experience.css
+final-timeline-row:hover,.final-timeline-row.active{background:color-mix(in srgb,var(--final-accent) 10%,transparent)}
+
+3. Rebuild:
+BUILD_OK editor bundles manifests mirror
+BUILD_OK editor bundles manifests mirror (check)
+
+4. Independent check A — complete computed style in the plain / active / hover states,
+   4 elements x 3 states, before vs after the edit (tools/state-style-diff.mjs):
+STATE_STYLE_DIFF {"before":{"url":"http://127.0.0.1:8124/index.html","selector":".final-timeline-row","states":["plain","active","hover"],"elements":4},"after":{"url":"http://127.0.0.1:8124/index.html","selector":".final-timeline-row","states":["plain","active","hover"],"elements":4},"elementsCompared":4,"differences":0,"identical":true}
+
+5. Independent check B — row-level hover diff, 16 pages (tools/hover-regression-diff.py):
+HOVER_REGRESSION_TOTALS {"pagesCompared": 16, "pagesMissing": 0, "elementsCompared": 813, "elementsIdentical": 813, "elementsDiffering": 0, "pagesShapeMismatch": 0, "clsDrift": 0}
+  index       before=271  after=271  changes 226->226  rows 271 identical 271 differing 0  ok
+  dashboard   before=68   after=68   changes 54->54   rows 68 identical 68 differing 0  ok
+   (the remaining 13 per-page lines are all 'differing 0  ok')
+
+6. Instrument defect found while checking: the first version of the state comparison
+   diffed properties by POSITION, and Chrome enumerates registered custom properties in
+   an unstable order, so it reported 32 'differences' that were the same values
+   reordered. Fixed to compare by property name; the 32 collapsed to 0.
+
+7. Why the demotion is safe, from the browser's own cascade (tools/css-cascade-winner.mjs):
+CASCADE_WINNER {"url":"http://127.0.0.1:8124/index.html","selector":".final-timeline-row","property":"background","elements":4,"index":0,"states":["plain","active","hover"]}
+  state=plain         computed background="rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box"
+    order= 7           background         #fff                                                 button
+    order=15 IMPORTANT background         transparent!important                                .final-timeline-row
+    order=17 IMPORTANT background         var(--app-surface)!important                         body.studio-experience .final-timeline-row
+    last-important -> body.studio-experience .final-timeline-row  background:var(--app-surface)!important
+  state=active        computed background="rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box"
+    order= 7           background         #fff                                                 button
+    order=15 IMPORTANT background         transparent!important                                .final-timeline-row
+    order=17           background         color-mix(in srgb,var(--final-accent) 10%,transparen .final-timeline-row:hover, .final-timeline-row.active
+    order=18 IMPORTANT background         var(--app-surface)!important                         body.studio-experience .final-timeline-row
+    last-important -> body.studio-experience .final-timeline-row  background:var(--app-surface)!important
+  state=hover         computed background="rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box"
+    order= 7           background         #fff                                                 button
+    order=15 IMPORTANT background         transparent!important                                .final-timeline-row
+    order=17           background         #fbf7f8                                              button:hover
+    order=19           background         color-mix(in srgb,var(--final-accent) 10%,transparen .final-timeline-row:hover, .final-timeline-row.active
+    order=20 IMPORTANT background         var(--app-surface)!important                         body.studio-experience .final-timeline-row
+    last-important -> body.studio-experience .final-timeline-row  background:var(--app-surface)!important

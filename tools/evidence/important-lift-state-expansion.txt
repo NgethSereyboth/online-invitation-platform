@@ -1,0 +1,15 @@
+IMPORTANT-LIFT — expanded sweep, N=3, all 16 pages (Goal 2)
+
+$ ARTIFACTS_DIR=artifacts/goal2 python3 tools/hover-verify.py --all --lift --lift-runs=3 --jobs=4
+HOVER_VERIFY_TOTAL {"pages": 16, "hoverSelectors": 2107, "elementsTested": 813, "visibleChange": 679, "noVisibleChange": 134, "liftPages": 16, "liftCandidateDeclarations": 424, "liftCandidateLonghands": 1536, "liftRedundant": 40, "liftLoadBearing": 78, "liftUnmeasured": 266, "liftGroupingMismatches": 0, "liftRestoreFailures": 0}
+
+$ ARTIFACTS_DIR=artifacts/goal2 python3 tools/hover-verify.py --cross-page
+LIFT_CROSS_PAGE {"pages": 16, "runsPerPage": {"account": 3, "admin": 3, "analytics": 3, "billing": 3, "checkin": 3, "dashboard": 3, "designer": 3, "guests": 3, "index": 3, "materials": 3, "privacy": 3, "public": 3, "reset": 3, "responses": 3, "templates": 3, "verify": 3}, "minRunsPerPage": 3, "declarations": 60, "demotable": 1, "keep": 31, "noEvidence": 28, "unstable": 0}
+pages: account, admin, analytics, billing, checkin, dashboard, designer, guests, index, materials, privacy, public, reset, responses, templates, verify
+runs per page: {"account": 3, "admin": 3, "analytics": 3, "billing": 3, "checkin": 3, "dashboard": 3, "designer": 3, "guests": 3, "index": 3, "materials": 3, "privacy": 3, "public": 3, "reset": 3, "responses": 3, "templates": 3, "verify": 3}
+  [demotable / keep / noEvidence / unstable sections: see the report table]
+
+$ tail -3 of the sweep (per-page totals)
+checkin      hoverSelectors=64    triggers=45    noMatch=38   tested=22    change=18    noChange=4
+templates    hoverSelectors=147   triggers=95    noMatch=81   tested=47    change=40    noChange=7
+designer     hoverSelectors=147   triggers=95    noMatch=84   tested=34    change=32    noChange=2
