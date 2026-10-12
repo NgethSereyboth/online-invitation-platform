@@ -23,12 +23,25 @@ What is measured, and the definition used for each
     tasks        the N longest complete `RunTask` events (top-level main-thread work)
     forced       `Layout` events that are *nested inside* a script event on the
                  same thread, i.e. the layout was begun from JS with no frame in
-                 between. This is a proxy, and it is labelled as one: the trace
-                 carries no `args.stackTrace` on any Layout event even with the
-                 `disabled-by-default-devtools.timeline.stack` category enabled
-                 (measured — see the report), so a nested event is the only
-                 available signal. The report says UNVERIFIED where this proxy is
-                 the whole evidence.
+                 between. This is a proxy, and it is labelled as one. It was the
+                 only signal available when this file was written, because the
+                 stack was looked for at the wrong place — see `stack_of()`.
+
+Where the stack actually lives (a correction, measured)
+    A previous pass reported "the trace carries no `args.stackTrace` on any Layout
+    event even with the `disabled-by-default-devtools.timeline.stack` category"
+    and concluded the stack was unavailable. That was a false negative from this
+    reader, not a limitation of the capture: it checked only the TOP-LEVEL
+    `args.stackTrace`. Measured on artifacts/goal3-index-run1-trace.json: 79 of
+    107 Layout events and 98 UpdateLayoutTree events carry the stack one level
+    down, at `args.beginData.stackTrace` — the same nesting Blink uses for other
+    forced-work events (`SetCallStack` attaches the stack to the event's own data
+    dictionary, not to `args`). `stack_of()` therefore searches `args` at any
+    depth, and `layoutEventsWithStackTrace` counts those.
+
+    Chromium sources:
+      https://chromium.googlesource.com/chromium/src/+/main/base/trace_event/builtin_categories.h
+      https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/core/inspector/inspector_trace_events.cc
 
 Usage
     python3 tools/perf-trace-compare.py artifacts/canva-trace.json artifacts/project-index-trace.json
@@ -47,6 +60,35 @@ STYLE_EVENTS = ("UpdateLayoutTree", "ParseAuthorStyleSheet", "RecalcStyle")
 LAYOUT_EVENTS = ("Layout",)
 SCRIPT_EVENTS = ("EvaluateScript", "FunctionCall", "v8.run", "v8.compile", "RunMicrotasks", "v8.callFunction")
 TASK_EVENTS = ("RunTask",)
+
+
+def stack_of(event: dict) -> list[dict] | None:
+    """The stack trace attached to a trace event, wherever Blink put it.
+
+    Blink's `SetCallStack` writes the stack into the event's own data
+    dictionary, so for a Layout event it lands at `args.beginData.stackTrace`
+    (measured: 79/107 on index.html) while `args.stackTrace` is empty. Searching
+    only the top level produced the prior pass's "no stack traces" conclusion.
+    Prefer the documented top-level location when a future Chrome emits it there.
+    """
+    args = event.get("args") or {}
+    top = args.get("stackTrace")
+    if top:
+        return top
+    for holder in ("beginData", "endData", "data"):
+        nested = (args.get(holder) or {}).get("stackTrace")
+        if nested:
+            return nested
+    # Any other nesting depth, so a renamed holder does not silently report 0.
+    stack = [args]
+    while stack:
+        cur = stack.pop()
+        for key, value in cur.items():
+            if key == "stackTrace" and value:
+                return value
+            if isinstance(value, dict):
+                stack.append(value)
+    return None
 
 
 def load(path: Path) -> list[dict]:
@@ -141,9 +183,10 @@ def analyse(path: Path) -> dict:
     thread = busiest_thread(events)
     pid, tid = thread if thread else (None, None)
     forced_n, forced_ms = forced_layout_proxy(events, tid=tid)
-    with_stack = len(
-        [e for e in complete(events, LAYOUT_EVENTS) if (e.get("args") or {}).get("stackTrace")]
-    )
+    # Counted where the stack actually is (`args.beginData.stackTrace`), not only at
+    # the top level. Before this fix the same traces reported 0 for index.html's 79
+    # stacked Layout events — the measurement the prior pass read as "unavailable".
+    with_stack = len([e for e in complete(events, LAYOUT_EVENTS) if stack_of(e)])
     return {
         "file": str(path),
         "events": len(events),

@@ -5,12 +5,28 @@
  * ---------------
  * `tools/perf-trace-compare.py` measured that index.html emits 111 `Layout`
  * trace events against Canva's 37, and that 77 of them are nested inside a
- * script event (the forced-layout proxy) against Canva's 6. A trace can say that;
- * it cannot say *which function*. Chrome attaches no `args.stackTrace` to Layout
- * events even with `disabled-by-default-devtools.timeline.stack` and the
- * invalidation-tracking category enabled — measured, on both sites
- * (artifacts/canva-trace.json, artifacts/project-index-trace.json). So
- * attribution has to happen in the DOM instead.
+ * script event (the forced-layout proxy) against Canva's 6.
+ *
+ * CORRECTION (this header used to say the opposite). It claimed "Chrome attaches
+ * no `args.stackTrace` to Layout events even with
+ * `disabled-by-default-devtools.timeline.stack` ... enabled". That was a reader
+ * bug, not a capture limitation: the stack is attached to the event's own data
+ * dictionary, so it lands at `args.beginData.stackTrace`, and the count of such
+ * events on index.html is 79 of 107 — i.e. essentially every Layout event that
+ * the nested-in-script proxy calls forced. The trace therefore CAN name the
+ * calling function; `tools/layout-stack-attribution.py` does exactly that, and it
+ * is the cheaper first question to ask.
+ *
+ * This tool still answers a question the trace cannot: whether a *read of layout
+ * geometry while the DOM is dirty* occurs, including reads that coalesce into an
+ * already-pending frame and therefore cost nothing (`--exercise` measures one
+ * interaction, not the load). A trace shows where layout time actually went; this
+ * shows where a forced read could have gone. Use the trace to rank, this tool to
+ * confirm.
+ *
+ * Chromium sources for the category and the stack attachment:
+ *   https://chromium.googlesource.com/chromium/src/+/main/base/trace_event/builtin_categories.h
+ *   https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/core/inspector/inspector_trace_events.cc
  *
  * How the detector works (the classic algorithm, stated plainly)
  *   A forced synchronous layout is a *read of layout geometry while the DOM is

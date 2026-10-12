@@ -295,8 +295,30 @@ writeFileSync(
 // The forced-reflow question, answered from the trace rather than asserted: how
 // many Layout events carry the stack trace the `...timeline.stack` category is
 // supposed to attach.
+//
+// CORRECTION. This used to test `e.args.stackTrace` — the TOP-LEVEL key — and so
+// printed `withStackTrace: 0` for every page ever traced, including pages with 79
+// stacks in the same trace, and the prior pass read that 0 as "the trace carries no
+// stack traces". Blink's `SetCallStack` writes the stack into the event's own data
+// dictionary, so for a Layout event it lands at `args.beginData.stackTrace`. The
+// lookup now mirrors `tools/layout-stack-attribution.py::stack_of` and the output
+// names the path it found, so the next reader can tell "no stacks" from "looked in
+// the wrong place".
+//
+//   https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/core/inspector/inspector_trace_events.cc
+const STACK_HOLDERS = ['stackTrace', 'beginData', 'endData', 'data'];
+function stackPathOf(event) {
+  const args = event.args || {};
+  if (args.stackTrace) return 'args.stackTrace';
+  for (const holder of STACK_HOLDERS.slice(1)) {
+    const nested = args[holder] && args[holder].stackTrace;
+    if (nested) return `args.${holder}.stackTrace`;
+  }
+  return null;
+}
 const layoutEvents = (primaryEvents || []).filter((e) => e.ph === 'X' && e.name === 'Layout');
-const forcedLayouts = layoutEvents.filter((e) => e.args && e.args.stackTrace);
+const withStackPath = layoutEvents.map((e) => [e, stackPathOf(e)]).filter(([, p]) => p);
+const stackPathsFound = [...new Set(withStackPath.map(([, p]) => p))];
 const observerTotals = targets.reduce(
   (acc, t) => {
     for (const [k, v] of Object.entries(t.observerCounters || {})) acc[k] = (acc[k] || 0) + v;
@@ -318,7 +340,7 @@ if (AS_JSON) {
     `CANVA_SCRIPTS {"count": ${scriptRows.length}, "totalDecodedBytes": ${scriptsArtifact.totalDecodedBytes}, "totalTransferBytes": ${scriptsArtifact.totalTransferBytes}}`,
   );
   console.log(
-    `CANVA_LAYOUT {"layoutEvents": ${layoutEvents.length}, "withStackTrace": ${forcedLayouts.length}}`,
+    `CANVA_LAYOUT {"layoutEvents": ${layoutEvents.length}, "withStackTrace": ${withStackPath.length}, "stackPath": ${JSON.stringify(stackPathsFound.length ? stackPathsFound : ['(none found at any known path)'])}}`,
   );
   console.log(`CANVA_OBSERVERS ${JSON.stringify(observerTotals)}`);
   console.log('  top 10 by decoded bytes:');
