@@ -10,3 +10,22 @@ dynamic-only run (gate removed, rebuilt): ('pass', ...)  <- documented: this hos
 === negative control B: without a browser (python3, no playwright) ===
 V17_LAYERS_PANEL_GUARD_STATIC_PASSED
 V17_LAYERS_PANEL_GUARD_SKIPPED playwright is not importable: No module named 'playwright'
+
+=== the false failure this check produced on a host without playwright's own Chromium ===
+$ .venv/bin/python -m pytest tests/layers_panel_guard_test.py -q            (PLAYWRIGHT_CHROMIUM_EXECUTABLE unset)
+E   playwright._impl._errors.Error: BrowserType.launch: Executable doesn't exist at
+E   /home/ngethsereyboth/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+1 failed, 2 passed          <- a red suite for an environmental reason, not a product fact
+
+# after routing a launch failure through the same skip path as a missing module
+$ .venv/bin/python -m pytest tests/layers_panel_guard_test.py -q -s
+..V17_LAYERS_PANEL_GUARD_SKIPPED cannot launch a browser: BrowserType.launch: Executable doesn't exist at /home/ngethsereyboth/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+3 passed in 1.41s
+
+$ EINVITE_REQUIRE_BROWSER=1 .venv/bin/python -m pytest tests/layers_panel_guard_test.py -q -s   (a host that must have a browser still fails)
+E               AssertionError: browser required but unavailable: cannot launch a browser: BrowserType.launch: Executable doesn't exist at /home/ngethsereyboth/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+1 failed, 2 passed in 1.45s
+
+$ PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/google-chrome .venv/bin/python -m pytest tests/layers_panel_guard_test.py -q -s
+..V17_LAYERS_PANEL_GUARD_PASSED rows=4==objects=4, selection marked 1 row(s), 5 writes for one sync then 0 at rest, box {'stage': {'w': 212, 'h': 459}, 'viewport': {'w': 660, 'h': 468}} -> {'stage': {'w': 164, 'h': 459}, 'viewport': {'w': 721, 'h': 463}}, 8 observer notification(s) on resize
+3 passed in 10.00s

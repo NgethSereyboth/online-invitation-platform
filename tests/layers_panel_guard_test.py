@@ -172,7 +172,19 @@ def _run_dynamic() -> tuple[str, str]:
     base = f"http://127.0.0.1:{port}"
     try:
         with sync_playwright() as pw:
-            browser = launch_chromium(pw)
+            try:
+                browser = launch_chromium(pw)
+            except Exception as exc:
+                # A missing browser *executable* is the same class of fact as a missing
+                # playwright module, and has to take the same path. Measured on a host
+                # with playwright installed but its bundled Chromium absent and no
+                # PLAYWRIGHT_CHROMIUM_EXECUTABLE: the launch raised
+                # `Executable doesn't exist at .../chrome-headless-shell` and the test
+                # went red for an environmental reason, which is a false failure. It is
+                # reported as a skip with the reason, and `test_...` still raises when
+                # EINVITE_REQUIRE_BROWSER=1, so a host that is supposed to have a
+                # browser still fails loudly.
+                return "skip", f"cannot launch a browser: {exc}"
             try:
                 page = browser.new_page(viewport={"width": 1440, "height": 900})
                 page.add_init_script(PROBE)
