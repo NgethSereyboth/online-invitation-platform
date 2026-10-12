@@ -883,16 +883,27 @@ def dependency_status():
     status["malwareScanRequired"]=bool(scanner["required"])
     return status
 
-def social_cache_path(invitation_id, version, fmt):
+# Goal 5 (§5.4): the guest's frozen code is the only part of the path that
+# arrives from a request, so it is validated before it can become a file name.
+def safe_guest_code(value):
+    """The frozen guest code as a cache-file component, or '' when unusable."""
+    code=str(value or "").strip().lower()
+    return code if re.fullmatch(r"[a-z0-9-]{1,64}", code) else ""
+
+def social_cache_path(invitation_id, version, fmt, guest_slug=None):
     safe_fmt=fmt if fmt in {"og","square","story"} else "og"
-    return SOCIAL_CACHE / f"{invitation_id}-v{int(version or 0)}-{safe_fmt}.png"
+    # Goal 5b (§5.4): a guest card is its own file, keyed by the frozen code, so
+    # one guest's card can never be served for another. The glob in
+    # invalidate_social_cache still matches both shapes.
+    suffix=f"-{safe_guest_code(guest_slug)}" if safe_guest_code(guest_slug) else ""
+    return SOCIAL_CACHE / f"{invitation_id}-v{int(version or 0)}{suffix}-{safe_fmt}.png"
 
 def invalidate_social_cache(invitation_id):
     for candidate in SOCIAL_CACHE.glob(f"{invitation_id}-v*-*.png"):
         try:candidate.unlink()
         except OSError as exc: _log.debug("os cleanup failed: %s", exc)
 
-def render_social_card_png_bytes(invite_id, access_mode, document, fmt="og"):
+def render_social_card_png_bytes(invite_id, access_mode, document, fmt="og", guest_name=None):
     try:
         from PIL import Image,ImageDraw,ImageOps
     except Exception:return None
@@ -929,6 +940,17 @@ def render_social_card_png_bytes(invite_id, access_mode, document, fmt="og"):
         for part in wrapped:
             draw.text((anchor_x,cursor),part,font=font,fill=text_color,anchor=anchor);cursor+=round(title_size*1.3)
         cursor+=round(title_size*.15)
+    # Goal 5a (§5.4): the guest's name is the only difference between their card
+    # and the project card. It uses the same font resolution as the title
+    # (image_font(.., khmer=True) picks the vendored Noto Sans Khmer from Goal
+    # 0b) and the accent colour, and the detail block below it is pushed down
+    # rather than overlapped.
+    guest_text=" ".join(str(guest_name or "").split())[:80]
+    if guest_text:
+        guest_font=image_font(w*.042,text_is_khmer(guest_text),True);guest_y=cursor+round(h*.02)
+        for part in fitted_text_lines(draw,guest_text,guest_font,w*.76,2):
+            draw.text((anchor_x,guest_y),part,font=guest_font,fill=accent,anchor=anchor);guest_y+=round(w*.052)
+        cursor=max(cursor,guest_y-round(w*.052))+round(w*.052)
     detail_font=image_font(w*.026,False,False);kh_detail=image_font(w*.026,True,False)
     detail_y=max(cursor+round(h*.04),round(h*.66 if h<1000 else h*.63))
     if date_text:draw.text((anchor_x,detail_y),date_text,font=detail_font,fill=text_color,anchor=anchor);detail_y+=round(w*.045)
@@ -946,6 +968,49 @@ def warm_social_card_cache(invitation_id, access_mode, version, document):
                     target=social_cache_path(invitation_id,version,fmt);tmp=target.with_suffix(".tmp");tmp.write_bytes(payload);tmp.replace(target)
             except Exception as exc: _log.debug("cleanup failed: %s", exc)
     threading.Thread(target=worker,daemon=True,name=f"social-card-{invitation_id}").start()
+
+def warm_guest_social_cards(invitation_id, access_mode, version, document, guests=None):
+    """Render and cache one card per guest (research §5.4). Blocking.
+
+    The research measured 82 ms and 26 KB per card, so a 300-guest wedding is
+    about 25 s of one worker and 7.8 MB of disk, and a 5,000-guest import would
+    be roughly 7 minutes — which is why this never runs inside a request: the
+    caller either enqueues a background job or hands it to a daemon thread.
+    Only the ``og`` format is warmed per guest; the square and story cards are
+    rendered on demand like the project card already is.
+    """
+    if guests is None:
+        with connect() as db:
+            guests=[dict(row) for row in db.execute("SELECT name,slug FROM guests WHERE invitation_id=? AND slug<>'' ORDER BY id",(invitation_id,)).fetchall()]
+    warmed=0
+    for guest in guests or []:
+        code=safe_guest_code(guest.get("slug"))
+        if not code:continue
+        try:
+            payload=render_social_card_png_bytes(invitation_id,access_mode,document,"og",guest_name=guest.get("name"))
+            if not payload:continue
+            target=social_cache_path(invitation_id,version,"og",code);tmp=target.with_suffix(".tmp");tmp.write_bytes(payload);tmp.replace(target);warmed+=1
+        except Exception as exc: _log.debug("guest social card warm failed: %s", exc)
+    return warmed
+
+def warm_guest_social_cards_async(invitation_id, access_mode, version, document):
+    threading.Thread(target=warm_guest_social_cards,args=(invitation_id,access_mode,version,document),daemon=True,name=f"guest-social-{invitation_id}").start()
+
+def latest_published_document(invitation_id):
+    """The published document plus what the card renderer needs about it."""
+    with connect() as db:
+        row=db.execute("SELECT i.access_mode,p.version,p.document_json FROM invitations i LEFT JOIN publications p ON p.invitation_id=i.id WHERE i.id=? ORDER BY p.published_at DESC LIMIT 1",(invitation_id,)).fetchone()
+    if not row or not row["document_json"]:return None
+    try:document=json.loads(row["document_json"])
+    except Exception:return None
+    return {"accessMode":row["access_mode"],"version":int(row["version"] or 0),"document":document}
+
+def schedule_published_guest_warm(invitation_id):
+    """Schedule the per-guest card warm after a publish or a freeze (§5.4)."""
+    published=latest_published_document(invitation_id)
+    if not published:return None
+    if BACKGROUND_MEDIA_ENABLED:return enqueue_background_job("social.guest_warm",{"invitationId":invitation_id})
+    warm_guest_social_cards_async(invitation_id,published["accessMode"],published["version"],published["document"]);return None
 
 def make_qr_image(text, box_size=12, border=4):
     try:
@@ -3793,6 +3858,11 @@ class Handler(SimpleHTTPRequestHandler):
         # Goal 0c (§3.7): the card is served both at the historical unversioned
         # path (any preview already in a chat keeps working) and at the
         # version-suffixed path serve_public now advertises.
+        # Goal 5d (§5.4): the guest-scoped card URL /api/public/<slug>/<guest>/
+        # social-card-v<n>.png that serve_public now advertises. Checked before
+        # the project card so the two-segment form is never mistaken for one.
+        guest_card=re.fullmatch(r"/api/public/([^/]+)/([^/]+)/social-card(?:-v\d+)?\.(png|svg)",path)
+        if guest_card: return self.public_guest_social_card(unquote(guest_card.group(1)),unquote(guest_card.group(2)),unquote(guest_card.group(3)))
         if path.startswith("/api/public/") and re.fullmatch(r"/api/public/[^/]+/social-card(?:-v\d+)?\.svg",path): return self.social_card_svg(unquote(path.split("/")[3]))
         if path.startswith("/api/public/") and re.fullmatch(r"/api/public/[^/]+/social-card(?:-v\d+)?\.png",path): return self.social_card_png(unquote(path.split("/")[3]))
         if path.startswith("/api/public/") and path.endswith("/qr-card.png"): return self.public_qr_card_png(unquote(path.split("/")[3]))
@@ -6654,7 +6724,7 @@ class Handler(SimpleHTTPRequestHandler):
                 latest=db.execute("SELECT updated_at,last_client_id,last_mutation_id FROM invitations WHERE id=?",(invite_id,)).fetchone()
                 return self.json(409,{"error":"This invitation changed in another session. Reload the latest version before publishing again.","code":"revision_conflict","updatedAt":int(latest["updated_at"] or current) if latest else current,"clientId":latest["last_client_id"] if latest else None,"mutationId":latest["last_mutation_id"] if latest else None})
             db.execute("INSERT INTO publications(id,invitation_id,version,document_json,published_at,workspace_id,snapshot_fingerprint,document_epoch,document_version) VALUES(?,?,?,?,?,?,?,?,?)",(pub_id,invite_id,now,json.dumps(document),now,platform_readiness["workspaceId"],platform_readiness["fingerprint"],platform_readiness["documentEpoch"],new_document_version));invalidate_social_cache(invite_id)
-        schedule_social_warm(invite_id,row["access_mode"],now,document);self.audit("invitation.published","invitation",invite_id,{"publicationId":pub_id,"version":now})
+        schedule_social_warm(invite_id,row["access_mode"],now,document);schedule_published_guest_warm(invite_id);self.audit("invitation.published","invitation",invite_id,{"publicationId":pub_id,"version":now})
         self.json(201,{"publicationId":pub_id,"version":now,"updatedAt":now,"documentVersion":new_document_version,"clientId":client_id or None,"mutationId":mutation_id or None,"slug":row["slug"],"url":f"/i/{row['slug']}"})
     def unpublish(self, invite_id):
         user=self.require_user()
@@ -7272,7 +7342,10 @@ class Handler(SimpleHTTPRequestHandler):
                 if db.execute("SELECT 1 FROM guests WHERE invitation_id=? AND slug=? AND id<>?",(invite_id,candidate,guest_id)).fetchone():
                     conflicts.append(candidate);continue
                 db.execute("UPDATE guests SET slug=? WHERE id=? AND invitation_id=?",(candidate,guest_id,invite_id));updated+=1
-            queued=0
+            queued=int(db.execute("SELECT COUNT(*) AS c FROM guests WHERE invitation_id=? AND slug<>''",(invite_id,)).fetchone()["c"] or 0)
+        # Goal 5c (§5.4): freezing is when the links become real, so the cards are
+        # warmed here — never in the request thread (each card is ~82 ms).
+        if queued:schedule_published_guest_warm(invite_id)
         self.audit("guests.links_frozen","invitation",invite_id,{"updated":updated,"conflicts":len(conflicts),"queued":queued})
         self.json(200 if not conflicts else 409,{"updated":updated,"frozen":True,"conflicts":conflicts,"queued":queued})
 
@@ -8827,6 +8900,35 @@ class Handler(SimpleHTTPRequestHandler):
             tmp=cache.with_suffix(".tmp");tmp.write_bytes(payload);tmp.replace(cache)
         except OSError as exc: _log.debug("os cleanup failed: %s", exc)
         return self.send_binary(200,payload,"image/png","public,max-age=300,must-revalidate",f"{slug}-{fmt}-social-card.png")
+
+    def public_guest_social_card(self, slug, guest_code, extension="png"):
+        """Goal 5d (§5.4): one guest's card, falling back to the project card.
+
+        A crawler that arrives before the warm job has finished, or for a code
+        that no longer exists, still gets a real invitation card rather than a
+        404 — the preview must never break, and a wrong guess about a guest must
+        not reveal whether that guest exists. Pillow missing falls back to the
+        same SVG the project card uses (social_card_png's behaviour).
+        """
+        row,d=self._published_social_document(slug)
+        if not row:return self.json(404,{"error":"Invitation not found"})
+        code=safe_guest_code(guest_code);guest=None
+        if code:
+            with connect() as db:
+                guest=db.execute("SELECT name FROM guests WHERE invitation_id=? AND slug=?",(row["id"],code)).fetchone()
+        if not guest:return self.social_card_svg(slug) if extension=="svg" else self.social_card_png(slug)
+        query=parse_qs(urlparse(self.path).query);fmt=str(query.get("format",["og"])[0]).lower()
+        if fmt not in {"og","square","story"}:return self.json(400,{"error":"Unsupported social-card format"})
+        cache=social_cache_path(row["id"],row["version"],fmt,code)
+        try:
+            if cache.exists():return self.send_binary(200,cache.read_bytes(),"image/png","public,max-age=300,must-revalidate",f"{slug}-{code}-{fmt}-social-card.png")
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
+        payload=render_social_card_png_bytes(row["id"],row["access_mode"],d,fmt,guest_name=guest["name"])
+        if payload is None:return self.social_card_svg(slug)
+        try:
+            tmp=cache.with_suffix(".tmp");tmp.write_bytes(payload);tmp.replace(cache)
+        except OSError as exc: _log.debug("os cleanup failed: %s", exc)
+        return self.send_binary(200,payload,"image/png","public,max-age=300,must-revalidate",f"{slug}-{code}-{fmt}-social-card.png")
 
     def public_qr_png(self, slug):
         row,_=self._published_social_document(slug)

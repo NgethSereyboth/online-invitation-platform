@@ -19,6 +19,12 @@ def run_job(job):
         server.pre_generate_common_derivatives(payload['path'],payload.get('mime',''),payload.get('sha256',''))
     elif kind=='social.warm':
         server.warm_social_card_cache(payload['invitationId'],payload.get('accessMode','unlisted'),int(payload.get('version') or 0),payload.get('document') or {})
+    elif kind=='social.guest_warm':
+        # Goal 5c (research §5.4): one card per guest. The document and version
+        # are read at run time rather than carried in the payload, so a job that
+        # waited in the queue still warms the newest publication.
+        published=server.latest_published_document(payload['invitationId'])
+        if published:server.warm_guest_social_cards(payload['invitationId'],published['accessMode'],published['version'],published['document'])
     elif kind=='maintenance.cleanup':
         server.cleanup_expired_security_rows()
     elif kind=='storage.delete':
