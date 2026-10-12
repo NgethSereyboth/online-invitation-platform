@@ -1,0 +1,220 @@
+INSTRUMENT REPAIR — the verification battery on this pass's final tree.
+
+Blocks are raw output; the command is named on the 'cmd:' line above each. No block
+embeds a leading '$ ', so a report that quotes this file stays machine-checkable.
+
+=====================================================================
+1. BUILD, MIRROR
+=====================================================================
+cmd: python3 build.py all --check > /tmp/check.log 2>&1; echo "exit=$?"; tail -3 /tmp/check.log
+exit=0
+organized: drifted=0 up_to_date=15
+MIRROR_CHECK_PASSED (up_to_date=314)
+BUILD_OK editor bundles manifests mirror (check)
+
+cmd: python3 tools/mirror-diff.py | tail -2
+MIRROR_DIFF {"sources": 314, "drifted": 0, "unmigrated": 0, "orphans": 0, "orphansExempt": 19, "generatedExempt": 34}
+MIRROR_DIFF_SUMMARY 0 drifted, 0 unmigrated, 0 orphans (19 named and exempt)
+
+=====================================================================
+2. THE SUITE
+=====================================================================
+cmd: EINVITE_ALLOW_NO_SCANNER=1 .venv/bin/python -m pytest tests/ -q | tail -2
+....................................................................     [100%]
+68 passed in 109.66s (0:01:49)
+
+=====================================================================
+3. BUDGETS AND VERSIONED FILES
+=====================================================================
+cmd: wc -c src/js/bundle-index-v15.js src/js/bundle-public-v15.js
+1136115 src/js/bundle-index-v15.js
+ 251960 src/js/bundle-public-v15.js
+1388075 total
+cmd: find src/css -name '*-v*.css' | wc -l
+64
+cmd: find src/js -name '*-v*.js' -not -name 'bundle-*' | wc -l
+94
+
+=====================================================================
+4. !important, PER FILE, HEAD vs THIS TREE
+=====================================================================
+cmd: python3 - <<'PY'   (per-file !important count: git show HEAD:FILE vs the working tree, both counted for the literal '!important')
+files=105 HEAD=26425 tree=26410 increased=0 []
+changed (file, HEAD, tree):
+  src/css/bundle-account-v15.css  1522 -> 1521
+  src/css/bundle-admin-v15.css  1522 -> 1521
+  src/css/bundle-analytics-v15.css  1557 -> 1556
+  src/css/bundle-billing-v15.css  1528 -> 1527
+  src/css/bundle-dashboard-v15.css  1805 -> 1804
+  src/css/bundle-designer-v15.css  1646 -> 1645
+  src/css/bundle-guests-v15.css  1557 -> 1556
+  src/css/bundle-index-v15.css  2887 -> 2886
+  src/css/bundle-materials-v15.css  1774 -> 1773
+  src/css/bundle-privacy-v15.css  465 -> 464
+  src/css/bundle-reset-v15.css  1522 -> 1521
+  src/css/bundle-responses-v15.css  1558 -> 1557
+  src/css/bundle-templates-v15.css  1681 -> 1680
+  src/css/bundle-verify-v15.css  1522 -> 1521
+  src/css/modern-ui.css  297 -> 296
+
+=====================================================================
+5. STYLE & LAYOUT ON index.html — 5 RUNS, QUIET MACHINE (no other browser
+   running), against the brief's 1,167 ms target
+=====================================================================
+cmd: for n in 1 2 3 4 5: node tools/canva-probe.mjs http://127.0.0.1:8124/index.html --prefix=verif-index-run$n --wait=6000
+  200  http://127.0.0.1:8124/index.html  title="E-invitation-website"  responses=75  resources=72  traceEvents=140670  6723ms
+  200  http://127.0.0.1:8124/index.html  title="E-invitation-website"  responses=75  resources=72  traceEvents=141539  6796ms
+  200  http://127.0.0.1:8124/index.html  title="E-invitation-website"  responses=75  resources=72  traceEvents=136225  6751ms
+  200  http://127.0.0.1:8124/index.html  title="E-invitation-website"  responses=75  resources=72  traceEvents=137623  6764ms
+  200  http://127.0.0.1:8124/index.html  title="E-invitation-website"  responses=75  resources=72  traceEvents=126869  6575ms
+
+cmd: python3 tools/perf-trace-compare.py --label run1=artifacts/verif-index-run1-trace.json --label run2=artifacts/verif-index-run2-trace.json --label run3=artifacts/verif-index-run3-trace.json --label run4=artifacts/verif-index-run4-trace.json --label run5=artifacts/verif-index-run5-trace.json
+style+layout union ms (main thread)                  1761.2           1839.77           1721.94           1783.51           1652.74
+  style recalc union ms                               940.0            993.81            921.29            943.15            845.99
+  layout union ms                                    821.28            846.05            800.74            840.42            806.87
+  style recalc union ms (all threads)                 940.0            993.81            921.29            943.15            845.99
+  layout union ms (all threads)                      821.28            846.05            800.74            840.42            806.87
+Layout events                                           114               114               109               109               102
+
+cmd: python3 - <<'PY'   (median of the five 'style+layout union ms' values above, and the brief's target)
+  five runs: [1761.2, 1839.77, 1721.94, 1783.51, 1652.74]
+  sorted:    [1652.74, 1721.94, 1761.2, 1783.51, 1839.77]
+  median:    1761.20 ms
+  target:    1167.0 ms (30% below the 1667.0 ms baseline the earlier pass started from)
+  vs target: ABOVE by 594.20 ms
+
+=====================================================================
+6. THE SWEEP ON THE FINAL TREE
+=====================================================================
+cmd: ARTIFACTS_DIR=artifacts/instrument-repair-sweep python3 tools/hover-verify.py --all --lift --lift-runs=3 --jobs=4
+hoverSelectors=147   triggers=95    noMatch=81   tested=47    change=40    noChange=7
+             lift: rules=15 decls=24 (longhands=76) redundant=1 loadBearing=2 unmeasured=18
+designer     hoverSelectors=147   triggers=95    noMatch=84   tested=34    change=32    noChange=2
+             lift: rules=15 decls=24 (longhands=76) redundant=1 loadBearing=0 unmeasured=20
+HOVER_VERIFY_TOTAL {"pages": 16, "hoverSelectors": 2107, "elementsTested": 813, "visibleChange": 679, "noVisibleChange": 134, "liftPages": 16, "liftCandidateDeclarations": 349, "liftCandidateLonghands": 1139, "liftRedundant": 15, "liftLoadBearing": 17, "liftUnmeasured": 277, "liftGroupingMismatches": 0, "liftRestoreFailures": 0}
+
+cmd: ARTIFACTS_DIR=artifacts/instrument-repair-sweep python3 tools/hover-verify.py --cross-page
+LIFT_CROSS_PAGE {"pages": 16, "runsPerPage": {"account": 3, "admin": 3, "analytics": 3, "billing": 3, "checkin": 3, "dashboard": 3, "designer": 3, "guests": 3, "index": 3, "materials": 3, "privacy": 3, "public": 3, "reset": 3, "responses": 3, "templates": 3, "verify": 3}, "minRunsPerPage": 3, "declarations": 58, "demotable": 0, "keep": 17, "noEvidence": 41, "unstable": 0}
+pages: account, admin, analytics, billing, checkin, dashboard, designer, guests, index, materials, privacy, public, reset, responses, templates, verify
+runs per page: {"account": 3, "admin": 3, "analytics": 3, "billing": 3, "checkin": 3, "dashboard": 3, "designer": 3, "guests": 3, "index": 3, "materials": 3, "privacy": 3, "public": 3, "reset": 3, "responses": 3, "templates": 3, "verify": 3}
+
+--- DEMOTABLE (inert in EVERY run of every page that measured it) ---
+
+--- UNSTABLE (runs of the same page disagreed: 0) — never demoted ---
+
+--- KEEP (load-bearing on at least one page) ---
+  transform              longhands=1  diffs=90   on index
+      .canvas-frame:hover, button:hover, .invite-card:hover, .metric:hover, .response-card:hover
+  background             longhands=9  diffs=14   on index
+      .ei-tool-rail button:hover
+  color                  longhands=1  diffs=28   on index
+      .ei-tool-rail button:hover
+  transform              longhands=1  diffs=16   on index
+      .ei-tool-rail button:hover
+  background             longhands=9  diffs=8    on index
+      .flow-action-grid button:hover
+  border-color           longhands=4  diffs=8    on index
+      .flow-action-grid button:hover
+  transform              longhands=1  diffs=8    on index
+      .flow-action-grid button:hover
+  border-color           longhands=4  diffs=10   on templates
+      .invite-card:hover, .metric:hover, .response-card:hover, .wish-card:hover, .usage-card:hov
+  box-shadow             longhands=1  diffs=10   on templates
+      .invite-card:hover, .metric:hover, .response-card:hover, .wish-card:hover, .usage-card:hov
+  background             longhands=9  diffs=12   on index
+      .studio-rail-button:hover
+  color                  longhands=1  diffs=24   on index
+      .studio-rail-button:hover
+  transform              longhands=1  diffs=24   on index
+      .studio-rail-button:hover, .studio-inspector-tab:hover
+  transform              longhands=1  diffs=2    on index
+      .workflow-page-chip:hover
+  background             longhands=9  diffs=4    on index
+      .workflow-page-dock-track .v22-workflow-insert:hover, .workflow-page-dock-track .v22-workf
+  border-color           longhands=4  diffs=4    on index
+      .workflow-page-dock-track .v22-workflow-insert:hover, .workflow-page-dock-track .v22-workf
+  color                  longhands=1  diffs=10   on index
+
+=====================================================================
+7. THE REPORT GATE ON THIS PASS'S REPORT
+=====================================================================
+cmd: node tools/report-verify.mjs docs/reviews/instrument-repair-report.md --with-server
+report-verify: docs/reviews/instrument-repair-report.md
+  blocks checked 33 — match 33, MISMATCH 0, ELIDED 0
+
+  declared, not compared  historical 0, write 0, measurement 0, heavy 0
+  still skipped 0
+  not mechanically checkable 0   (no `$ ` command line, or not the "one command, then its output" shape)
+
+=====================================================================
+8. THE TREE
+=====================================================================
+This is the working tree as it stood when the battery ran — before this pass's commits. The
+commit list is in the report's §1 header block; the tree goes clean as those land.
+
+cmd: git status --short
+ M docs/page-assets-v15.json
+ M docs/route-bundles-v15.json
+ M package-lock.json
+ M package.json
+ M src/css/bundle-account-v15.css
+ M src/css/bundle-admin-v15.css
+ M src/css/bundle-analytics-v15.css
+ M src/css/bundle-billing-v15.css
+ M src/css/bundle-dashboard-v15.css
+ M src/css/bundle-designer-v15.css
+ M src/css/bundle-guests-v15.css
+ M src/css/bundle-index-v15.css
+ M src/css/bundle-materials-v15.css
+ M src/css/bundle-privacy-v15.css
+ M src/css/bundle-reset-v15.css
+ M src/css/bundle-responses-v15.css
+ M src/css/bundle-templates-v15.css
+ M src/css/bundle-verify-v15.css
+ M src/css/modern-ui.css
+ M src/python/build/page-assets-v15.json
+ M src/python/bundle-account-v15.css
+ M src/python/bundle-admin-v15.css
+ M src/python/bundle-analytics-v15.css
+ M src/python/bundle-billing-v15.css
+ M src/python/bundle-dashboard-v15.css
+ M src/python/bundle-designer-v15.css
+ M src/python/bundle-guests-v15.css
+ M src/python/bundle-index-v15.css
+ M src/python/bundle-materials-v15.css
+ M src/python/bundle-privacy-v15.css
+ M src/python/bundle-reset-v15.css
+ M src/python/bundle-responses-v15.css
+ M src/python/bundle-templates-v15.css
+ M src/python/bundle-verify-v15.css
+ M src/python/modern-ui.css
+ M src/python/route-bundles-v15.json
+ M tests/analytics_reports_test.py
+ M tools/README.md
+ M tools/canva-probe.mjs
+ M tools/css-cascade-winner.mjs
+ M tools/forced-layout-attribution.mjs
+ M tools/important-lift-test.mjs
+ M tools/perf-trace-compare.py
+ M tools/report-verify.mjs
+?? docs/STRUCTURE-PILOT-AUDIT.md
+?? docs/reviews/deploy-02-linux.md
+?? docs/reviews/instrument-repair-report.md
+?? scripts/audit_bidi.js
+?? scripts/fix_structure_references.py
+?? src/python/admin-page-v13.css
+?? tests/ac4_2d_audit_test.py
+?? tools/demotion-recheck.mjs
+?? tools/evidence/instrument-repair-canva-public-templates.txt
+?? tools/evidence/instrument-repair-demotion-applied.txt
+?? tools/evidence/instrument-repair-demotion-recheck.txt
+?? tools/evidence/instrument-repair-flag-branch.txt
+?? tools/evidence/instrument-repair-layout-attribution.txt
+?? tools/evidence/instrument-repair-lift-stability.txt
+?? tools/evidence/instrument-repair-lift-visibility.txt
+?? tools/evidence/instrument-repair-report-verify-hole.txt
+?? tools/evidence/instrument-repair-verification.txt
+?? tools/important-lift-test-7e97f57.mjs
+?? tools/layout-stack-attribution.py
+?? tools/lib/motion-settle.mjs
+?? tools/lift-verdict-compare.py
