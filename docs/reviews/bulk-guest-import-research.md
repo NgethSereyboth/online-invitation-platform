@@ -1656,14 +1656,13 @@ Written down rather than tidied away, per the house standard.
 
 Recorded after the report was written and the gates were run.
 
-* **Commit:** the research report, the three new instruments, and the evidence
-  script/output. No application source.
-* **Push:** to `origin/main` as instructed.
-* **Deploy:** `render.yaml` sets `autoDeploy: true` for the `einvite-platform` Web
-  Service (`render.yaml:6,8,50`), so **the push triggers a Render deploy of the same
-  application code plus three new files under `tools/` and one under `docs/`** —
-  none of which the running server reads. No deploy hook was called: there is no
-  hook in the repository to call, and the Render API was not queried. The exact
-  command outputs for the commit, the push and the gate runs are recorded in
-  [bulk-guest-import-audit.txt](tools/evidence/bulk-guest-import-audit.txt) where
-  they are command output rather than prose.
+| | result |
+|---|---|
+| commit | `c030e16` — *docs: research bulk guest import, and what the platform already has*, 7 files changed, 2597 insertions |
+| files in the commit | `docs/reviews/bulk-guest-import-research.md`, `tools/og-contract-audit.py`, `tools/khmer-slug-probe.py`, `tools/social-card-cost.py`, `tools/evidence/bulk-guest-import-audit.sh`, `tools/evidence/bulk-guest-import-audit.txt`, `tools/evidence/social-card-cost.json` |
+| files deliberately **not** committed | `package.json`, `package-lock.json` (modified) and `docs/STRUCTURE-PILOT-AUDIT.md`, `docs/reviews/deploy-02-linux.md`, `scripts/audit_bidi.js`, `scripts/fix_structure_references.py`, `src/python/admin-page-v13.css`, `tests/ac4_2d_audit_test.py`, `tools/important-lift-test-7e97f57.mjs` (untracked) — all pre-date this pass and belong to other sessions |
+| application source | `git diff --stat HEAD -- src/ build.py tests/` is empty (§8.3) |
+| push | `git push origin main` succeeded, `0f60dce..c030e16  main -> main`. **The remote was 55 commits behind, so the push carried this pass's commit and the 54 before it**; the remote is at `c030e16` as of this writing |
+| deploy | `render.yaml` is a Blueprint for a **Web Service** with `autoDeploy: true` (`render.yaml:6,8,50`), live at `https://einvite-platform.onrender.com` (recorded in `docs/reviews/deploy-03-render.md`). The push is the trigger. **No deploy hook exists in the repository and none was called**: `grep -rn 'deploy-hook\|deploy_hook\|RENDER_API\|RENDER_DEPLOY'` over `.md/.yaml/.yml/.sh/.py` returns nothing, `.github/workflows/` contains only `lighthouse.yml` and `security.yml`, and no `RENDER_*` variable is set in this shell, so there is no Render API token here to query for a deploy confirmation URL |
+| what the deploy actually ships | the same application bytes as `2599cb0` plus one Markdown file and six files under `tools/`. The running server reads none of them, so the deploy is a restart, not a behaviour change |
+| not run | the `pytest` suite: no `pytest` is importable by the system interpreter and both virtualenvs in the tree (`.venv/`, `.scan-venv/`) are Windows layouts (`Lib/`, `Scripts/`) whose `bin/pytest` cannot execute here. No application or test source changed, so the suite's subject is unchanged from `2599cb0`, where the prior pass recorded 68 passing |
