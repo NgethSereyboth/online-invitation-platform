@@ -1,0 +1,10 @@
+{
+  "name": "einvite-playwright-check",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Isolated Playwright install for the brief's step-0b browser check. Deliberately NOT a dependency of the application: the repository package.json is owned by the app, this is a tool-local manifest so `require('playwright')` resolves without touching it.",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.64.0"
+  }
+}

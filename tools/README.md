@@ -53,8 +53,10 @@ either server. Only the byte numbers depend on compression.
 | file | what it does |
 | --- | --- |
 | `hover-audit.mjs` | forces `:hover` on each rule's trigger via CDP `CSS.forcePseudoState` and diffs the computed style of trigger + subjects. |
-| `important-lift-test.mjs` | demotes one `!important` declaration at a time and compares the **full** computed style — decides whether a priority is load-bearing. |
-| `hover-verify.py` | entry point for both, across every page; `--all`, `--lift`. |
+| `important-lift-test.mjs` | removes one authored `!important` **declaration** at a time and compares the **full** computed style — decides whether a priority is load-bearing. A rule whose selector mixes `:hover` with another state (`.x:hover, .x.active`) is measured on **both** paths: the class the selector names is added, a pseudo-class it names is forced over CDP. A declaration is load-bearing if either path changes a value; only a state the instrument cannot synthesize leaves it unmeasured, and that reason is carried out with the row. |
+| `hover-verify.py` | entry point for both, across every page; `--all`, `--lift`, `--lift-runs=N` (a `demotable` verdict then needs every run of every page to agree), `--cross-page`. |
+| `state-style-diff.mjs` | snapshot the full computed style of everything matching a selector in the states you name (`plain`, `active`, `focus-visible`, `hover`) and `--compare=` two snapshots. This is the before/after check for a declaration whose only reachable path is a non-`:hover` state, which the hover row-level diff cannot cover. Comparison is by property **name**: Chrome enumerates registered custom properties in an unstable order, and a positional diff reports dozens of phantom changes. |
+| `css-cascade-winner.mjs` | who actually WINS a property for an element in each state, from the browser's matched-style list (cascade order, values, `!important` flags, the last important entry). Answers "is this declaration inert because it is overridden", which is the difference between a safe demotion and a lucky one. |
 | `computed-style-probe.mjs` | prove a CSS refactor changed no computed value: snapshot selectors before/after, or `--compare=` two saved runs. |
 
 ### Performance tracing
@@ -81,6 +83,8 @@ either server. Only the byte numbers depend on compression.
 | file | what it does |
 | --- | --- |
 | `analytics-wiring-gap.py` | collect every path the three analytics suites call and report whether the same literal appears in `src/python/server.py`. The feature itself is built in `src/python/features/analytics/`; this prints what was never wired. Read-only. |
+| `analytics-live-flag-probe.py` | boot the app server with the repo's own harness and exercise the analytics paths the shipped suites cannot reach: the live endpoint 403 → admin PUT flips `analytics_live_enabled` → 200 with `activeSessions`/`lastEventAt`, plus non-host 404, unknown-invitation 404 and invalid-sessionId 400 on ingestion. `test_phase6` cannot reach its own 200 branch because the admin write it tries is PUT-only and admin-only; this does. Exit 0 means all seven checks held. |
+| `playwright-check/` | the brief's `playwright.chromium.launch()` check, in its own directory with its own manifest, so the application's `package.json` is never touched. `node tools/playwright-check/launch-check.mjs` launches Playwright's own Chromium, loads a served page and prints `PLAYWRIGHT_LAUNCH_OK`. See its README. |
 
 ### Served mirror
 

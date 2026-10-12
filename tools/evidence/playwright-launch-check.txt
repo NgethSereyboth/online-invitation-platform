@@ -1,0 +1,16 @@
+PLAYWRIGHT STEP-0B CHECK — resolved without touching the application's package.json
+
+$ cd <repo root> && node -e "require('playwright').chromium.launch()"
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+$ node tools/playwright-check/launch-check.mjs
+PLAYWRIGHT_LAUNCH_OK version=156.0.8078.4
+  url=http://127.0.0.1:8124/index.html  title="E-invitation-website"
+
+$ cd tools/playwright-check && node -e "require('playwright').chromium.launch().then(b=>b.close())"
+exit=0 (no output = launched and closed)
+
+installed: 1.64.0
+browser:   /home/ngethsereyboth/.cache/ms-playwright/chromium_headless_shell-1248
