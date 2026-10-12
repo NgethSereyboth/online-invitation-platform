@@ -1,0 +1,73 @@
+STYLE & LAYOUT ON index.html — five fresh runs, and the attribution (Goal 3)
+
+Capture (raw CDP traces, same instrument as the Canva column):
+  for i in 1..5: node tools/canva-probe.mjs http://127.0.0.1:8124/index.html --prefix=goal3-index-run$i
+
+Analysis (busiest-thread unions, not sums):
+  python3 tools/perf-trace-compare.py --label canva=artifacts/canva-trace.json --label run1=... (12 lines)
+metric                                                canva              run1              run2              run3              run4              run5
+trace events                                         189695            128442            139447            132561            133375            138263
+style+layout union ms (main thread)                  805.22           2039.29           2137.55           2152.56           2099.97           2151.75
+  style recalc union ms                              525.12           1056.97           1134.54           1142.23           1175.03           1175.14
+  layout union ms                                     280.1            982.41           1003.09           1010.42            925.04            976.68
+  style recalc union ms (all threads)                525.12           1056.97           1134.54           1142.23           1175.03           1175.14
+  layout union ms (all threads)                       280.1            982.41           1003.09           1010.42            925.04            976.68
+Script union ms (main thread)                       2604.65            2737.7           2971.32            2792.0           2785.64            2771.6
+UpdateLayoutTree events                                 379               152               166               155               162               163
+Layout events                                            37               107               114               110               111               109
+RunTask events                                        29315             17102             17978             18362             18295             17740
+Layouts nested in script (forced proxy)                   6                80                85                79                80                80
+
+median style+layout union, 5 runs: 2137.55 ms   (min 2039.29, max 2152.56, spread 113.27 ms)
+median style recalc union:          1142.23 ms   (5 runs: [1056.97, 1134.54, 1142.23, 1175.03, 1175.14])
+median layout union:               982.41 ms   (5 runs: [982.41, 1003.09, 1010.42, 925.04, 976.68])
+median / canva 805.22 =            2.65x
+
+Worst layout events, run1:
+--- run1: longest 10 Layout events (ms) ---
+     387.86  dirtyObjects=731 totalObjects=731
+     183.49  dirtyObjects=393 totalObjects=473
+     111.55  dirtyObjects=970 totalObjects=1611
+      67.53  dirtyObjects=217 totalObjects=621
+      57.16  dirtyObjects=324 totalObjects=361
+      37.35  dirtyObjects=103 totalObjects=816
+      27.03  dirtyObjects=210 totalObjects=808
+      26.80  dirtyObjects=24 totalObjects=482
+      15.54  dirtyObjects=558 totalObjects=621
+       9.96  dirtyObjects=842 totalObjects=842
+
+
+Who causes the recalculations (run3 trace, tools/style-recalc-attribution.mjs):
+URL http://127.0.0.1:8124/index.html   main renderer tid=612895   wait=2000ms
+main-thread wall clock in trace: 7798 ms
+Recalculate Style total:         1119 ms over 131 events  (14.4% of main-thread wall clock)
+
+--- by enclosing TASK (outermost) ---
+     1119 ms    131 events  RunTask
+
+--- by nearest non-style cause ---
+      591 ms     84 events  FunctionCall
+      333 ms     30 events  RunTask
+      141 ms      9 events  v8.run
+       54 ms      7 events  v8.callFunction
+        0 ms      1 events  ParseHTML
+
+--- by innermost JS frame (the actionable one) ---
+      369 ms  n=  34 max=  93ms avgEl= 213  (no JS frame)
+      141 ms  n=   9 max=  51ms avgEl= 351  EvaluateScript@/bundle-index-v15.js:1
+      129 ms  n=  12 max=  24ms avgEl= 271  FunctionCall@/bundle-index-v15.js:9665
+      102 ms  n=   9 max=  22ms avgEl= 194  FunctionCall@/bundle-index-v15.js:646
+       52 ms  n=   2 max=  43ms avgEl= 294  FunctionCall@/page-experience-v22.js:859 secondary
+       50 ms  n=   4 max=  18ms avgEl= 299  FunctionCall@/bundle-index-v15.js:11605
+       49 ms  n=  37 max=  19ms avgEl=  24  FunctionCall@/bundle-index-v15.js:2207 initializeV19Typography
+       37 ms  n=   2 max=  25ms avgEl= 253  FunctionCall@/bundle-index-v15.js:7490
+       25 ms  n=   1 max=  25ms avgEl= 586  FunctionCall@/bundle-index-v15.js:11477 install
+       24 ms  n=   1 max=  24ms avgEl= 292  FunctionCall@/rich-text-editing-v21.js:41 snapSelection
+       19 ms  n=   1 max=  19ms avgEl= 329  FunctionCall@/interaction-scheduler-v22.js:9 flushIdle
+
+Prior pass's forced-layout attribution (tools/evidence/forced-layout-attribution-index-after.txt):
+FORCED_LAYOUT_ATTRIBUTION {"label":"index-after","url":"http://127.0.0.1:8124/index.html","distinctCallSites":1017,"dirty":false,"writes":5458,"reads":1986,"forced":155,"forcedDetached":150,"wrapErrors":0}
+  top 8 call sites by forced reads:
+     57 forced      95 reads       0 writes  text (http://127.0.0.1:8124/bundle-index-v15.js:5532:37)
+
+Element counts: index.html 3934 elements; Canva's worst layout in the Canva column reports totalObjects=1465/1611.

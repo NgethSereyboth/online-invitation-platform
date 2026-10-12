@@ -55,7 +55,17 @@ if (FROM_TRACE) {
   // Re-analyse a saved trace instead of capturing a new one. This is how the
   // before/after numbers in the report are produced from the same parser: a
   // parser fix must not require re-running an unrepeatable capture.
-  events = JSON.parse(readFileSync(FROM_TRACE, 'utf8'));
+  //
+  // Both shapes the harness writes are accepted: a bare event array (this tool's
+  // own `--trace=`) and the `{traceEvents: [...]}` envelope `tools/canva-probe.mjs`
+  // writes. Before this, pointing `--from-trace` at a canva-probe trace threw
+  // `events.filter is not a function`, so the two trace instruments could not be
+  // composed — and the attribution could not be run on the very traces the
+  // Canva comparison is made from.
+  const parsed = JSON.parse(readFileSync(FROM_TRACE, 'utf8'));
+  if (Array.isArray(parsed)) events = parsed;
+  else if (parsed && Array.isArray(parsed.traceEvents)) events = parsed.traceEvents;
+  else throw new Error(`--from-trace: ${FROM_TRACE} is neither an event array nor a {traceEvents:[...]} trace`);
 } else {
   const browser = await launch({ kind: 'full' });
   const page = await newPage(browser, { width: 1366, height: 900 });
