@@ -1,0 +1,99 @@
+RENAME_SURFACE {"versionedFiles": 304, "liveNamed": 100, "zeroTestRefs": 48, "candidatePool": 17, "readyToRename": 15, "blockedByTargetName": 2, "inOrganized": 3}
+
+--- READY: live-named, no test reference, rename target unclaimed ---
+  src/css/account-security-v13.css                 -> account-security.css               other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/css/app-shell-v55.css                        -> app-shell.css                      other reference(s): CONTRIBUTING.md, docs/reviews/consolidation-and-fidelity-report.md, docs/reviews/optimisation-report.md, docs/reviews/race-and-consolidation-report.md, docs/reviews/redesign-report.md, docs/reviews/reproducibility-and-performance-report.md, docs/route-bundles-v15.json, src/css/dashboard-page.css, src/css/tokens.css, src/python/app-shell-v55.css, src/python/dashboard-page.css, src/python/route-bundles-v15.json, src/python/tokens.css
+  src/css/organized/editor-canva-v13.css           -> editor-canva.css                   in src/css/organized/ (resolver falls back, no flat file of this name exists)  other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/reproducibility-and-performance-report.md, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/css/organized/guests-page-v13.css            -> guests-page.css                    in src/css/organized/ (resolver falls back, no flat file of this name exists)  other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/reproducibility-and-performance-report.md, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/css/stabilized-v14.css                       -> stabilized.css                     other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/redesign-report.md, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/account-security-v13.js                   -> account-security.js                other reference(s): docs/STRUCTURE-AUDIT.csv, docs/STRUCTURE-MAPPING.md, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/certification/BROWSER-MATRIX.md, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/backend-mode-v14.js                       -> backend-mode.js                    other reference(s): docs/STRUCTURE-AUDIT.csv, docs/STRUCTURE-MAPPING.md, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/i18n/LANGUAGE-GAP-REPORT.md, docs/page-assets-v15.json, docs/reviews/optimisation-report.md, docs/reviews/race-and-consolidation-report.md, docs/reviews/redesign-report.md, docs/reviews/v54-rc-verification.md, src/css/app-shell-v55.css, src/html/account.html, src/html/admin.html, src/html/analytics.html, src/html/billing.html, src/html/checkin.html, src/html/dashboard.html, src/html/designer.html, src/html/guests.html, src/html/index.html, src/html/materials.html, src/html/privacy.html, src/html/public.html, src/html/reset.html, src/html/responses.html, src/html/templates.html, src/html/verify.html, src/js/service-worker.js, src/python/account.html, src/python/admin.html, src/python/analytics.html, src/python/app-shell-v55.css, src/python/billing.html, src/python/build/build_page_manifests.py, src/python/build/page-assets-v15.json, src/python/build/sync_frontend_assets.py, src/python/checkin.html, src/python/dashboard-css-km.html, src/python/dashboard.html, src/python/designer.html, src/python/guests.html, src/python/index.html, src/python/materials.html, src/python/privacy.html, src/python/public.html, src/python/reset.html, src/python/responses.html, src/python/service-worker.js, src/python/templates.html, src/python/verify.html
+  src/js/checkin-v13.js                            -> checkin.js                         other reference(s): docs/STRUCTURE-AUDIT.csv, docs/STRUCTURE-MAPPING.md, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/i18n/LANGUAGE-GAP-REPORT.md, docs/i18n/TRANSLATIONS.csv, docs/reviews/redesign-report.md, docs/reviews/v54-commit.md, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/editor-commands-v13.js                    -> editor-commands.js                 other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/editor-shared-styles-v13.js               -> editor-shared-styles.js            other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/mobile-editor-v14.js                      -> mobile-editor.js                   other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/certification/BROWSER-MATRIX.md, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/photo-retouch-v13.js                      -> photo-retouch.js                   other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/product-operations-v13.js                 -> product-operations.js              other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/timeline-runtime-v13.js                   -> timeline-runtime.js                other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+  src/js/timeline-v13.js                           -> timeline.js                        other reference(s): docs/STRUCTURE-AUDIT.csv, docs/STRUCTURE-MAPPING.md, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
+
+--- BLOCKED: the rename target name is already taken ---
+  src/css/organized/photo-editor-v13.css           -> photo-editor.css                   exists at src/css/photo-editor.css
+  src/js/photo-editor-v13.js                       -> photo-editor.js                    exists at src/js/photo-editor.js
+
+--- EXCLUDED: referenced by tests/ (a rename would be a contract change) ---
+  src/css/adaptive-templates-v25.css               3 test reference(s)
+  src/css/ai-creative-agent-v28.css                6 test reference(s)
+  src/css/asset-workflow-v23.css                   6 test reference(s)
+  src/css/brand-components-v24.css                 7 test reference(s)
+  src/css/collaboration-studio-v31.css             1 test reference(s)
+  src/css/collaboration-v24.css                    7 test reference(s)
+  src/css/command-palette-v23.css                  3 test reference(s)
+  src/css/compact-theme-v0_52.css                  1 test reference(s)
+  src/css/content-browser-v24.css                  7 test reference(s)
+  src/css/custom-fonts-v22.css                     2 test reference(s)
+  src/css/direct-manipulation-v24.css              6 test reference(s)
+  src/css/editor-responsive-contract-v27.css       3 test reference(s)
+  src/css/editor-ux-refinement-v0_52.css           1 test reference(s)
+  src/css/future-studio-v52.css                    2 test reference(s)
+  src/css/graphics-runtime-v22.css                 2 test reference(s)
+  src/css/navigation-history-v23.css               4 test reference(s)
+  src/css/organized/export-quality-v24.css         8 test reference(s)
+  src/css/organized/professional-editor-v17.css    2 test reference(s)
+  src/css/organized/review-v23.css                 9 test reference(s)
+  src/css/organized/workflow-final-audit-v7.css    1 test reference(s)
+  src/css/organized/workflow-ux-v5.css             1 test reference(s)
+  src/css/page-experience-v22.css                  9 test reference(s)
+  src/css/photo-style-library-v23.css              4 test reference(s)
+  src/css/photo-workflow-v23.css                   5 test reference(s)
+  src/css/print-readiness-v25.css                  3 test reference(s)
+  src/css/professional-layers-v29.css              1 test reference(s)
+  src/css/professional-workflow-v23.css            4 test reference(s)
+  src/css/raster-workspace-v30.css                 1 test reference(s)
+  src/css/rich-text-editing-v21.css                1 test reference(s)
+  src/css/rich-text-renderer-v21.css               2 test reference(s)
+  src/css/smart-layout-v24.css                     7 test reference(s)
+  src/css/studio-automation-v27.css                4 test reference(s)
+  src/css/studio-governance-v25.css                5 test reference(s)
+  src/css/studio-operations-v26.css                4 test reference(s)
+  src/css/style-history-v23.css                    2 test reference(s)
+  src/css/template-bindings-v25.css                3 test reference(s)
+  src/css/typography-system-v20.css                2 test reference(s)
+  src/css/workflow-creation-flow-v4.css            1 test reference(s)
+  src/css/workflow-pro-editor-v6.css               2 test reference(s)
+  src/css/workspace-v21.css                        2 test reference(s)
+  src/css/zoom-layout-pages-v22.css                1 test reference(s)
+  src/css/zoom-layout-v22.css                      2 test reference(s)
+  src/js/adaptive-gpu-quality-v22.js               6 test reference(s)
+  src/js/adaptive-templates-v25.js                 4 test reference(s)
+  src/js/advanced-animation-v44.js                 2 test reference(s)
+  src/js/advanced-editor-loader-v32.js             3 test reference(s)
+  src/js/advanced-motion-runtime-v44.js            1 test reference(s)
+  src/js/advanced-public-loader-v32.js             2 test reference(s)
+  src/js/advanced-public-renderer-v32.js           1 test reference(s)
+  src/js/ai-agent-tool-registry-v28.js             8 test reference(s)
+  src/js/ai-assistant-loader-v27.js                5 test reference(s)
+  src/js/ai-creative-agent-v28.js                  7 test reference(s)
+  src/js/ai-editor-action-extension-v53.js         1 test reference(s)
+  src/js/ai-editor-action-service-v27.js           3 test reference(s)
+  src/js/ai-production-v35.js                      2 test reference(s)
+  src/js/asset-workflow-v23.js                     9 test reference(s)
+  src/js/brand-components-v24.js                   7 test reference(s)
+  src/js/canva-scale-v31.js                        1 test reference(s)
+  src/js/collaboration-studio-v31.js               1 test reference(s)
+  src/js/collaboration-v24.js                      7 test reference(s)
+  src/js/command-palette-v23.js                    3 test reference(s)
+  src/js/content-browser-v24.js                    7 test reference(s)
+  src/js/crdt-adapter-v31.js                       1 test reference(s)
+  src/js/custom-font-core-v22.js                   3 test reference(s)
+  src/js/custom-fonts-v22.js                       4 test reference(s)
+  src/js/data-merge-v47.js                         2 test reference(s)
+  src/js/direct-manipulation-v24.js                7 test reference(s)
+  src/js/document-schema-v32.js                    1 test reference(s)
+  src/js/editor-canva-v13.js                       1 test reference(s)
+  src/js/editor-command-system-v23.js              7 test reference(s)
+  src/js/editor-deferred-tools-bootstrap-v0_52.js  6 test reference(s)
+  src/js/editor-responsive-contract-v27.js         2 test reference(s)
+  src/js/editor-schema-v13.js                      4 test reference(s)
+  src/js/enterprise-government-v42.js              2 test reference(s)
+  src/js

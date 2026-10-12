@@ -1,0 +1,47 @@
+$ python3 tools/important-removal-audit.py --rev=623b233
+  ok   src/python/editor-commands.js                            renamed from src/python/editor-commands-v13.js; content identical
+  ok   src/python/editor-shared-styles.js                       renamed from src/python/editor-shared-styles-v13.js; content identical
+  ok   src/python/guests-page.css                               renamed from src/python/guests-page-v13.css; content identical
+  ok   src/python/mobile-editor.js                              renamed from src/python/mobile-editor-v14.js; content identical
+  ok   src/python/photo-retouch.js                              renamed from src/python/photo-retouch-v13.js; content identical
+  ok   src/python/stabilized.css                                renamed from src/python/stabilized-v14.css; content identical
+  FAIL tools/lib/css-decl.js                                    status A: neither a modification nor a rename — a CSS/JS file was added or deleted
+  ok   docs/page-assets-v15.json                                14 size/digest/source-name field(s) moved; pages.account.html.bytes 356445 -> 356415 (-30)
+  ok   docs/route-bundle-sources-v15.json                       23 size/digest/source-name field(s) moved; pages.account.html.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
+  ok   docs/route-bundles-v15.json                              53 size/digest/source-name field(s) moved; pages.account.html.sources.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
+  ok   src/python/build/page-assets-v15.json                    14 size/digest/source-name field(s) moved; pages.account.html.bytes 356445 -> 356415 (-30)
+  ok   src/python/route-bundles-v15.json                        53 size/digest/source-name field(s) moved; pages.account.html.sources.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
+
+important-removal-audit: vs 623b233 — 64 changed CSS/JS/JSON entry(s) (39 modified, 20 renamed, 5 manifest(s)); failures=4
+
+$ python3 -c "import json; ..."
+index.html budgets from docs/perf/lighthouse-budgets.json:
+  script       1163 KB = 1190912 B
+  stylesheet   494 KB = 505856 B
+  total        1656 KB = 1695744 B
+  measured now: script 1135022 B, stylesheet 482145 B, total 1617167 B
+
+
+$ git ls-files --others --exclude-standard
+docs/STRUCTURE-PILOT-AUDIT.md
+docs/reviews/deploy-02-linux.md
+scripts/audit_bidi.js
+scripts/fix_structure_references.py
+src/python/admin-page-v13.css
+tests/ac4_2d_audit_test.py
+tools/evidence/build-and-verdict-for-report.txt
+tools/evidence/for-report-extra-blocks.txt
+tools/evidence/hover-regression-diff.txt
+tools/evidence/important-11th-demotion-retraction.txt
+tools/evidence/important-lift-sweep-before-demotion.txt
+tools/evidence/important-removal-diff-audit.txt
+tools/evidence/pytest-red-classes.txt
+tools/evidence/pytest-suite-before-after.txt
+tools/evidence/rename-batch-3-verification.txt
+tools/evidence/report-verify-coverage.txt
+tools/evidence/style-layout-before-after.txt
+tools/evidence/tests-import-audit-after-conftest.txt
+tools/evidence/two-repaired-gates.txt
+tools/evidence/versioned-rename-surface.txt
+tools/important-removal-audit.py
+tools/versioned-rename-surface.py

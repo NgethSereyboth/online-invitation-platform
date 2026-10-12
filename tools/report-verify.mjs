@@ -89,7 +89,18 @@ const ALLOWED = [
   'python3 -c',
   'python3 - <<',
   'python3 -m json.tool',
+  // Read-only with --check: it verifies every generated artifact and writes nothing.
+  'python3 build.py all --check',
   'python3 tools/budget-audit.py',
+  // Proves a CSS edit is exactly its !important removals, and that the manifests'
+  // size/digest fields still describe the files on disk. Read-only: git show + stat.
+  'python3 tools/important-removal-audit.py',
+  // Compares two recorded hover sweeps row by row. Read-only, but it needs two
+  // artifact snapshots, which is why the blocks using it carry a declaration.
+  'python3 tools/hover-regression-diff.py',
+  // Recomputes the versioned-rename surface from the tracked corpus.
+  'python3 tools/versioned-rename-surface.py',
+  'git check-ignore',
   'python3 tools/font-payload.py',
   'python3 tools/subset-fonts.py inventory',
   'python3 tools/subset-fonts.py codepoints',
@@ -189,6 +200,14 @@ const WRITE = /^<!--\s*report-verify:\s*write\s*(?:[-—:]\s*)?(.*?)\s*-->$/;
  * permanently red gate that people learn to ignore.
  */
 const MEASUREMENT = /^<!--\s*report-verify:\s*measurement\s*(?:[-—:]\s*)?(.*?)\s*-->$/;
+/**
+ * Read-only but not appropriate for this tool to run: it installs nothing, writes
+ * nothing, yet runs a 252-module test suite or a 250-module import probe for
+ * minutes, and in some cases starts a server of its own. The declaration is not a
+ * licence to skip the number — the block is still printed with its reason, and the
+ * command is one a reader can run.
+ */
+const HEAVY = /^<!--\s*report-verify:\s*heavy\s*(?:[-—:]\s*)?(.*?)\s*-->$/;
 
 /** Pull ```-fenced blocks with their starting line number. */
 function fencedBlocks(text) {
@@ -213,7 +232,7 @@ function fencedBlocks(text) {
             pending = { kind: 'prefix', prefix: Number(hit[1]), why: hit[2] || '(no reason given)' };
             break;
           }
-          for (const [re, kind] of [[HISTORICAL, 'historical'], [WRITE, 'write'], [MEASUREMENT, 'measurement']]) {
+          for (const [re, kind] of [[HISTORICAL, 'historical'], [WRITE, 'write'], [MEASUREMENT, 'measurement'], [HEAVY, 'heavy']]) {
             const m = re.exec(text);
             if (m) { pending = { kind, why: m[1] || '(no reason given)' }; break; }
           }
@@ -425,6 +444,7 @@ const elided = results.filter((r) => r.status === 'ELIDED');
 const historical = results.filter((r) => r.status === 'historical');
 const writes = results.filter((r) => r.status === 'write');
 const measurements = results.filter((r) => r.status === 'measurement');
+const heavy = results.filter((r) => r.status === 'heavy');
 const matched = results.filter((r) => r.status === 'match');
 const skipped = results.filter((r) => r.status === 'skipped');
 const partiallyCompared = matched.filter((r) => r.declaredPrefix);
@@ -433,14 +453,14 @@ if (asJson) {
   console.log(JSON.stringify({
     file, checked: results.length, matched: matched.length, mismatches: mismatches.length,
     elided: elided.length, historical: historical.length, write: writes.length,
-    measurement: measurements.length, skipped: skipped.length,
+    measurement: measurements.length, heavy: heavy.length, skipped: skipped.length,
     comparedLines: matched.reduce((n, r) => n + (r.comparedLines ?? r.recordedLines ?? 0), 0),
     partialMatches: partiallyCompared.length, serverUp, results,
   }, null, 2));
 } else {
   console.log(`report-verify: ${file}`);
   console.log(`  blocks checked ${results.length} — match ${matched.length}, MISMATCH ${mismatches.length}, ELIDED ${elided.length}\n`);
-  console.log(`  declared, not compared  historical ${historical.length}, write ${writes.length}, measurement ${measurements.length}`);
+  console.log(`  declared, not compared  historical ${historical.length}, write ${writes.length}, measurement ${measurements.length}, heavy ${heavy.length}`);
   console.log(`  still skipped ${skipped.length}${withServer ? '' : '   (pass --with-server to verify the server-dependent ones)'}`);
   if (partiallyCompared.length) console.log(`  partially compared (declared tail) ${partiallyCompared.length}`);
   console.log('');
@@ -450,6 +470,7 @@ if (asJson) {
   for (const r of historical) console.log(`  historical line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
   for (const r of writes) console.log(`  write      line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
   for (const r of measurements) console.log(`  measurement line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
+  for (const r of heavy) console.log(`  heavy      line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
   for (const r of mismatches) {
     console.log(`  MISMATCH  line ${r.line}: ${r.command}`);
     if (r.why) console.log(`            ${r.why}`);

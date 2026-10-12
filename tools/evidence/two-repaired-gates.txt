@@ -1,0 +1,15 @@
+$ python3 tests/v27_3_5_release_evidence_test.py
+V0_52_BUILD_INFO_ROUTE limit=1420000 recordedBytes=1414838 recordedHeadroom=5162 currentTotal=1617167
+V0_52_MANIFEST entries=808 present=274 missing=534 digestMatches=125 digestDiffers=149
+V0_52_EDITOR_ROUTE_BYTES=1617167
+V27_3_5_RELEASE_EVIDENCE_TEST_PASSED
+exit=0
+
+$ python3 tests/v53_1_operator_repair_contract_test.py
+V53_1_OPERATOR_REPAIR_CONTRACT_TEST_PASSED
+exit=0
+
+$ python3 tools/tests-import-audit.py
+
+--- IMPORTABLE BUT SIDE-EFFECTING (1) ---
+  tests/conftest.py                                    runpy.run_path at import

@@ -1,0 +1,28 @@
+TESTS_IMPORT_AUDIT {"modules": 252, "importable": 240, "notImportable": 12, "importableButSideEffecting": 1, "importableClean": 239}
+
+--- NOT IMPORTABLE (runner scripts; run as python3 <path>) ---
+  tests/_capture_v22_2.py                              exit=1    ╚════════════════════════════════════════════════════════════╝
+      File "/mnt/external/eInvite/einvite-platform/tests/_capture_v22_2.py", line 8, in <module>
+  tests/final_features_test.py                         timeout   import did not finish within 10.0s
+  tests/final_workflow_audit_v7_test.py                exit=1    AssertionError: missing editor dependency: #main
+      File "/mnt/external/eInvite/einvite-platform/tests/final_workflow_audit_v7_test.py", line 39, in <module>
+  tests/static_integrity_test.py                       exit=1    Node.js v22.23.3
+      File "/mnt/external/eInvite/einvite-platform/tests/static_integrity_test.py", line 34, in <module>
+  tests/v0_52_first_time_setup_contract_test.py        exit=1    AssertionError: FIRST_TIME_SETUP.cmd
+      File "/mnt/external/eInvite/einvite-platform/tests/v0_52_first_time_setup_contract_test.py", line 16, in <modu
+  tests/v0_52_laptop_host_contract_test.py             exit=1    FileNotFoundError: [Errno 2] No such file or directory: 'powershell.exe'
+      File "/mnt/external/eInvite/einvite-platform/tests/v0_52_laptop_host_contract_test.py", line 16, in <module>
+  tests/v13_backup_restore_test.py                     exit=1    ModuleNotFoundError: No module named 'backup_restore'
+      File "/mnt/external/eInvite/einvite-platform/tests/v13_backup_restore_test.py", line 7, in <module>
+  tests/v21_0_rich_text_server_test.py                 timeout   import did not finish within 10.0s
+  tests/v22_zoom_layout_test.py                        exit=1    AssertionError
+      File "/mnt/external/eInvite/einvite-platform/tests/v22_zoom_layout_test.py", line 12, in <module>
+  tests/v23_2_navigation_history_performance_test.py   exit=1    ╚════════════════════════════════════════════════════════════╝
+      File "/mnt/external/eInvite/einvite-platform/tests/v23_2_navigation_history_performance_test.py", line 8, in <
+  tests/v24_canva_experience_contract_test.py          exit=1    FileNotFoundError: [Errno 2] No such file or directory: '/mnt/external/eInvite/e
+      File "/mnt/external/eInvite/einvite-platform/tests/v24_canva_experience_contract_test.py", line 17, in <module
+  tests/v52_selected_capabilities_contract_test.py     exit=1    AssertionError
+      File "/mnt/external/eInvite/einvite-platform/tests/v52_selected_capabilities_contract_test.py", line 18, in <m
+
+--- IMPORTABLE BUT SIDE-EFFECTING (1) ---
+  tests/conftest.py                                    runpy.run_path at import

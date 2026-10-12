@@ -1,0 +1,62 @@
+RETRACTION — the eleventh demotion (.studio-rail-button:hover background) was written,
+checked, and reverted. Raw evidence, in the order the events happened.
+
+1. The triage said it was demotable. On this same CSS (HEAD + the ten demotions),
+   the cross-page verdict was:
+
+     LIFT_CROSS_PAGE {"pages": 16, "declarations": 60, "demotable": 1, "keep": 26, "noEvidence": 33}
+     --- DEMOTABLE (inert on every page that measured it) ---
+       background             longhands=9  inert on index  unmeasured on 2
+           .studio-rail-button:hover
+
+   ... measured on ONE page (index) and unreachable on the other fifteen, which is the
+   weakest evidence class the tool has. It was acted on anyway, because the protocol that
+   makes a demotion safe is the check in item 3, not the triage.
+
+2. The edit: src/css/studio-experience.css
+     - .studio-rail-button:hover{background:#2b2c33!important;color:#fff!important}
+     + .studio-rail-button:hover{background:#2b2c33;color:#fff!important}
+   Rebuilt: EDITOR_BUNDLE_BUILT / WROTE 16 route bundles / BUILD_OK, and the six affected
+   bundle files (index, designer, templates — each in the served tree and the repo tree)
+   differed from the ten-demotion state by exactly -10 bytes each.
+
+3. The demote-then-diff check FAILED it. 18 of index's 271 rows changed:
+     before: "background-color": "rgba(0, 0, 0, 0) -> rgb(43, 44, 51)"
+     after : the key is absent — the rail button no longer changes background on hover
+   (the derived border-color/box-shadow/outline-color rows follow from the same change).
+
+4. Reverted and rebuilt. The reverted state then reproduced twice:
+     HOVER_REGRESSION_TOTALS {"pagesCompared": 16, "elementsCompared": 813, "elementsIdentical": 813,
+                             "elementsDiffering": 0, "pagesShapeMismatch": 0, "clsDrift": 0}
+   (first vs the pre-demotion baseline, then again vs the freshly re-audited index)
+
+5. FINDING — the triage instrument is not reproducible for this declaration, and that is
+   the reason this pass stops demoting here. Two cross-page runs over the SAME CSS
+   (HEAD + ten demotions) disagree:
+     run A (artifacts at 08:36-08:41, the sweep that produced the candidate):
+       .studio-rail-button:hover  = inert on index      -> counted demotable
+     run C (index re-audited after the revert, noon):
+       .studio-rail-button:hover  = load-bearing on index -> counted keep
+     and the post-demotion sweep rotated the verdict onto an unrelated declaration
+     (LIFT_CROSS_PAGE 59 declarations, demotable: .flow-action-grid button:hover transform),
+     i.e. demoting one candidate promoted a different one to 'demotable' with no
+     relationship between them.
+
+   The declaration sits inside a transition; the lift test reads a computed value once,
+   and a value read while a transition is still interpolating is not the settled value.
+   This is the same defect class as the mid-flight sampling that dedf093 fixed in
+   hover-audit.mjs, one level up: fixed in the audit, still present in the lift probe.
+
+6. What this changes, and what it does not.
+   * It does NOT weaken the ten demotions: they were verified by the row-level check,
+     which is reproducible (two independent runs, 813/813 identical) and which this
+     declaration failed. The protocol held; the shortcut did not.
+   * It means the demotable COUNT is a per-run observation, not a property of the tree,
+     and must be quoted with the run it came from. It is quoted that way above.
+   * Next pass: repeat each lift measurement N times (or freeze transitions while
+     measuring) and require a unanimous verdict before an edit; until then, treat the
+     verdict as a candidate generator and the row-level diff as the authority.
+
+Kept for the record: artifacts/retracted-11th/{hover,lift}-index-post-11th-demotion.json
+hold the demoted state's own artifacts, so the failed check is re-checkable without
+re-applying the edit.

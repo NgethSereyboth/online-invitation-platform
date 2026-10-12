@@ -1,0 +1,29 @@
+$ python3 build.py all --check
+EDITOR_BUNDLE_CHECK_PASSED
+ROUTE_BUNDLE_CHECK_PASSED
+PAGE_ASSET_MANIFEST_CHECK_PASSED
+BUILD_OK editor bundles manifests (check)
+exit=0
+
+$ python3 tools/hover-verify.py --cross-page
+LIFT_CROSS_PAGE {"pages": 16, "declarations": 60, "demotable": 0, "keep": 27, "noEvidence": 33}
+pages: account, admin, analytics, billing, checkin, dashboard, designer, guests, index, materials, privacy, public, reset, responses, templates, verify
+
+--- DEMOTABLE (inert on every page that measured it) ---
+
+--- KEEP (load-bearing on at least one page) ---
+  border-color           longhands=4  diffs=20   on index
+      .canvas-extra-grid button:hover
+  transform              longhands=1  diffs=13   on account,admin,analytics,billing,dashboard,designer,guests,index,materials,privacy,reset,responses,templates,verify
+      .canvas-frame:hover, button:hover, .invite-card:hover, .metric:hover, .response-card:hover
+  box-shadow             longhands=1  diffs=16   on index
+      .card:hover, .invite-card:hover, .usage-card:hover, .plan:hover, .plan-status:hover, .prov
+
+$ git check-ignore -v deliverables screenshots _i18n_all_result.json fixture-public.html test-i18n-beacon.html .freebuff .tools
+.gitignore:122:deliverables/	deliverables
+.gitignore:123:screenshots/	screenshots
+.gitignore:128:_i18n_all_result.json	_i18n_all_result.json
+.gitignore:107:/fixture-public.html	fixture-public.html
+.gitignore:108:/test-i18n-beacon.html	test-i18n-beacon.html
+.gitignore:112:.freebuff/	.freebuff
+.gitignore:116:.tools/	.tools

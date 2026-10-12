@@ -1,0 +1,59 @@
+== BEFORE this pass's extension ==
+blocks 19: 7 re-run and matched, 1 MISMATCH, 2 declared historical, 9 skipped as non-read-only.
+The prior report's own row 15 claims "8 re-run and matched, 0 mismatched" for the same run: the
+mismatching block was one of those 8. That is the difference a gate makes — d8f1fab's body
+records the correction, and the run reproduced today is the AFTER column below.
+
+== AFTER: node tools/report-verify.mjs docs/reviews/reproducibility-and-performance-report.md --with-server --timeout=480 ==
+report-verify: docs/reviews/reproducibility-and-performance-report.md
+  blocks checked 19 — match 9, MISMATCH 0, ELIDED 0
+
+  declared, not compared  historical 4, write 1, measurement 5
+  still skipped 0
+  partially compared (declared tail) 1
+
+  historical line 527: python3 tools/subset-fonts.py inventory
+            declared reason: recorded before the fonts were subset; the sizes are the pre-subset ones and `inventory` has since grown the route-bundle section. The base-revision sizes are re-derived from git by the font-payload block below.
+
+  historical line 694: python3 tools/subset-fonts.py subset --in-place
+            declared reason: recorded when the subset was written; re-running `subset --in-place` today is a no-op because assets/fonts already holds the subset, so the "before" column can only come from the run that did the work. Sizes at both ends are re-derivable from git.
+
+  historical line 1041: python3 tools/hover-verify.py --all --summary-only
+            declared reason: these per-page counts were produced by an earlier revision of tools/hover-audit.mjs in the same pass, before it emulated @media(hover:hover) and before it waited for transitions to settle. The finalized instrument reports different counts for the same pages (index 162 -> 224 with this instrument), so this block records that revision, not the tree. The corrected sweep is verified in docs/reviews/instrument-and-closure-report.md section 1.
+
+  historical line 1080: python3 tools/hover-verify.py --all --lift --summary-only
+            declared reason: same revision problem on the leave-one-out pass: these totals were produced by an instrument that enumerated CSSStyleDeclaration indexed properties, i.e. longhands, so 194 "declarations" on index is a longhand count. That defect is what this pass fixed; the corrected cross-page verdict is verified in docs/reviews/instrument-and-closure-report.md section 1.
+
+  write      line 221: make reproduce
+            declared reason: orchestrates the whole verification sequence: it builds, starts the gzip server, runs lhci and pytest. Not a read-only command, so it is declared rather than executed.
+
+  measurement line 293: node tools/style-recalc-attribution.mjs index.html --wait=2000 --top=12 \
+            declared reason: prints per-call-frame milliseconds from a live CDP trace; the numbers move run to run by construction, so byte comparison can never hold.
+
+  measurement line 307: node tools/style-layout-trace.mjs index.html --top=25 --wait=2000 --label=before
+            declared reason: same shape as the block above: recalc/layout sums in milliseconds read from a live trace.
+
+  measurement line 428: PAGE=index.html npx lhci collect --config=tools/lhci-single.js
+            declared reason: a Lighthouse run: styleLayout and the score are one sample of a noisy process (three baseline runs in the closing pass spanned 1,565-1,723 ms).
+
+  measurement line 1268: npx lhci autorun --config=tools/lighthouserc.js
+            declared reason: the release assertion run against all 16 routes; scores and millisecond buckets differ every run.
+
+  measurement line 1303: npx lhci collect --config=tools/lighthouserc.js
+            declared reason: same as above, all 16 routes through the release config.
+
+exit=0
+
+== machine-readable summary ==
+file=docs/reviews/reproducibility-and-performance-report.md
+checked=19
+matched=9
+mismatches=0
+elided=0
+historical=4
+write=1
+measurement=5
+skipped=0
+comparedLines=133
+partialMatches=1
+serverUp=True

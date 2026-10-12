@@ -1,0 +1,25 @@
+== the 6 ERRORs, one cause each ==
+E       fixture 'server_url' not found
+E       fixture 'server_url' not found
+E       fixture 'server_url' not found
+E       fixture 'server_url' not found
+E       fixture 'server_url' not found
+E       fixture 'server_url' not found
+
+== do the red classes touch anything this pass changed? ==
+$ git diff --name-only HEAD
+.gitignore
+docs/page-assets-v15.json
+docs/route-bundles-v15.json
+src/css/bundle-designer-v15.css
+src/css/bundle-index-v15.css
+src/css/bundle-templates-v15.css
+src/css/studio-experience.css
+src/python/build/page-assets-v15.json
+src/python/bundle-designer-v15.css
+src/python/bundle-index-v15.css
+src/python/bundle-templates-v15.css
+src/python/route-bundles-v15.json
+
+$ git diff --name-only HEAD -- 'tests/analytics*' 'tests/v52_crdt*' 'src/python/analytics*' 'src/python/core/' 'src/python/server.py'
+(empty = the failing modules and everything they import are unmodified)

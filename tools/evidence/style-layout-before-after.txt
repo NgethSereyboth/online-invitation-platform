@@ -1,0 +1,19 @@
+# Style & Layout on index.html — PAGE=index.html npx lhci collect --config=tools/lhci-single.js
+# three runs per side, same session, same server, same config (numberOfRuns is 1)
+
+BEFORE (HEAD 623b233 + this pass's Goal-1 demotions, before the syncAll fix)
+  run 1  styleLayout=1722.9 ms  total=3907 ms  perf=80
+  run 2  styleLayout=1571.0 ms  total=3762 ms  perf=79
+  run 3  styleLayout=1564.9 ms  total=3400 ms  perf=84
+  median styleLayout=1571.0 ms  median total=3762 ms  median perf=80
+
+AFTER (the ResizeObserver change-detection fix, commit a851083)
+  run 1  styleLayout=1456.9 ms  total=3307 ms  perf=84
+  run 2  styleLayout=1500.0 ms  total=3210 ms  perf=88
+  run 3  styleLayout=1472.0 ms  total=3294 ms  perf=87
+  median styleLayout=1472.0 ms  median total=3294 ms  median perf=87
+
+delta  styleLayout -99.0 ms (-6.3%)   total -468 ms (-12.4%)   perf +7
+target <=1167.0 ms (-30% of the original 1667.0 ms baseline): NOT MET (-305 ms short)
+
+# extraction: python3 tools/lhci-bucket.py --url index.html   (new instrument)

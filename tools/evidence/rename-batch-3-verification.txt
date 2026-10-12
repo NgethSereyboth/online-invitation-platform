@@ -1,0 +1,18 @@
+== rebuild ==
+EDITOR_BUNDLE_BUILT
+WROTE 16 route bundles
+WROTE page-assets-v15.json
+BUILD_OK editor bundles manifests
+
+== all 32 bundles byte-identical to the pre-rename build? ==
+ALL 32 BUNDLES BYTE-IDENTICAL
+
+== build check ==
+EDITOR_BUNDLE_CHECK_PASSED
+ROUTE_BUNDLE_CHECK_PASSED
+PAGE_ASSET_MANIFEST_CHECK_PASSED
+check_exit=0
+
+== budget gates ==
+V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED (6 pages within budget)
+V16_PERFORMANCE_BUDGET_TEST_PASSED

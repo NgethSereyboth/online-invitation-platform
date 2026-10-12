@@ -1,0 +1,115 @@
+LIFT_CROSS_PAGE {"pages": 16, "declarations": 70, "demotable": 10, "keep": 27, "noEvidence": 33}
+pages: account, admin, analytics, billing, checkin, dashboard, designer, guests, index, materials, privacy, public, reset, responses, templates, verify
+
+--- DEMOTABLE (inert on every page that measured it) ---
+  box-shadow             longhands=1  inert on index  unmeasured on 12
+      .canvas-extra-grid button:hover
+  transform              longhands=1  inert on index  unmeasured on 12
+      .canvas-extra-grid button:hover
+  transform              longhands=1  inert on index  unmeasured on 2
+      .ei-context-overflow button:hover
+  transform              longhands=1  inert on dashboard  unmeasured on 2
+      .fp-profile-popover a:hover, .fp-profile-popover button:hover
+  transform              longhands=1  inert on index  unmeasured on 2
+      .fp-visual-asset:hover
+  box-shadow             longhands=1  inert on templates  unmeasured on 2
+      .material-card-page:hover, .studio-card:hover
+  transform              longhands=1  inert on index  unmeasured on 13
+      .ui-context-menu button:hover
+  background             longhands=9  inert on index
+      .workflow-page-chip:hover
+  transform              longhands=1  inert on index
+      .workflow-pane-actions button:hover
+  transform              longhands=1  inert on index
+      .workflow-v4-popover button:hover
+
+--- KEEP (load-bearing on at least one page) ---
+  border-color           longhands=4  diffs=20   on index
+      .canvas-extra-grid button:hover
+  transform              longhands=1  diffs=11   on account,admin,analytics,billing,dashboard,designer,guests,index,materials,privacy,reset,responses,templates,verify
+      .canvas-frame:hover, button:hover, .invite-card:hover, .metric:hover, .response-card:hover
+  box-shadow             longhands=1  diffs=16   on index
+      .card:hover, .invite-card:hover, .usage-card:hover, .plan:hover, .plan-status:hover, .prov
+  background             longhands=9  diffs=4    on index
+      .ei-context-overflow button:hover
+  background             longhands=9  diffs=4    on index
+      .ei-tool-rail button:hover
+  color                  longhands=1  diffs=4    on index
+      .ei-tool-rail button:hover
+  transform              longhands=1  diffs=4    on index
+      .ei-tool-rail button:hover
+  background             longhands=9  diffs=10   on index
+      .flow-action-grid button:hover
+  border-color           longhands=4  diffs=13   on index
+      .flow-action-grid button:hover
+  transform              longhands=1  diffs=2    on index
+      .flow-action-grid button:hover
+  background             longhands=9  diffs=12   on dashboard
+      .fp-profile-popover a:hover, .fp-profile-popover button:hover
+  border-color           longhands=4  diffs=20   on index
+      .fp-visual-asset:hover
+  border-color           longhands=4  diffs=12   on guests,templates
+      .invite-card:hover, .metric:hover, .response-card:hover, .wish-card:hover, .usage-card:hov
+  box-shadow             longhands=1  diffs=4    on guests,templates
+      .invite-card:hover, .metric:hover, .response-card:hover, .wish-card:hover, .usage-card:hov
+  border-color           longhands=4  diffs=46   on index
+      .page-builder-library button:hover, .element-library button:hover, .block-library button:h
+  background             longhands=9  diffs=5    on index
+      .studio-rail-button:hover
+  color                  longhands=1  diffs=5    on index
+      .studio-rail-button:hover
+  transform              longhands=1  diffs=27   on index
+      .studio-rail-button:hover, .studio-inspector-tab:hover
+  background             longhands=9  diffs=18   on index
+      .ui-context-menu button:hover
+  background             longhands=9  diffs=4    on account,admin,analytics,analytics,billing,checkin,dashboard,designer,guests,guests,index,materials,privacy,public,reset,reset,responses,templates,verify,verify
+      .ui-theme-menu button:hover
+  transform              longhands=1  diffs=4    on account,admin,analytics,analytics,dashboard,designer,guests,guests,index,materials,privacy,reset,reset,responses,verify
+      .ui-theme-menu button:hover
+  transform              longhands=1  diffs=2    on index
+      .workflow-page-chip:hover
+  background             longhands=9  diffs=20   on index
+      .workflow-pane-actions button:hover
+  border-color           longhands=4  diffs=20   on index
+      .workflow-pane-actions button:hover
+  color                  longhands=1  diffs=40   on index
+      .workflow-pane-actions button:hover
+  background             longhands=9  diffs=18   on index
+      .workflow-v4-popover button:hover
+  border-color           longhands=4  diffs=18   on public
+      input:hover, textarea:hover, select:hover
+
+--- NO EVIDENCE (reachable on no page: 33) ---
+  background             longhands=9   .ei-rich-toolbar button:hover
+  transform              longhands=1   .ei-rich-toolbar button:hover
+  background             longhands=9   .final-timeline-row:hover, .final-timeline-row.active
+  background             longhands=9   .flow-back-design:hover
+  color                  longhands=1   .flow-back-design:hover
+  background             longhands=9   .fp-project-menu button:hover
+  transform              longhands=1   .fp-project-menu button:hover
+  background             longhands=9   .fp-project-more:hover
+  color                  longhands=1   .fp-project-more:hover
+  transform              longhands=1   .fp-project-more:hover
+  box-shadow             longhands=1   .guest-row:hover
+  background             longhands=9   .layer-row button:hover
+  transform              longhands=1   .layer-row button:hover
+  box-shadow             longhands=1   .material-card-page:hover
+  transform              longhands=1   .material-card-page:hover
+  transform              longhands=1   .studio-floating-toolbar button:hover
+  box-shadow             longhands=1   .template-card:hover, .template-item:hover
+  background             longhands=9   .workflow-page-dock-track .v22-workflow-insert:hover, .workflow-page-dock-track .v22-workf
+  border-color           longhands=4   .workflow-page-dock-track .v22-workflow-insert:hover, .workflow-page-dock-track .v22-workf
+  color                  longhands=1   .workflow-page-dock-track .v22-workflow-insert:hover, .workflow-page-dock-track .v22-workf
+  opacity                longhands=1   .workflow-page-dock-track .v22-workflow-insert:hover, .workflow-page-dock-track .v22-workf
+  color                  longhands=1   .workflow-page-more:hover
+  background             longhands=9   .workflow-quick-strip button:hover
+  transform              longhands=1   .workflow-quick-strip button:hover
+  background             longhands=9   .workflow-recent-grid button:hover
+  border-color           longhands=4   .workflow-recent-grid button:hover
+  transform              longhands=1   .workflow-recent-grid button:hover
+  background             longhands=9   .workflow-search-results button:hover, .workflow-search-results button.active
+  transform              longhands=1   .workflow-search-results button:hover, .workflow-search-results button.active
+  background             longhands=9   .workflow-v5-context button:hover
+  transform              longhands=1   .workflow-v5-context button:hover
+  border-color           longhands=4   body[data-page="designer"] .workspace-card:hover
+  box-shadow             longhands=1   body[data-page="designer"] .workspace-card:hover

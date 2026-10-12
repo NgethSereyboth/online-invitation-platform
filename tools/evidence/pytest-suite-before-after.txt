@@ -1,0 +1,43 @@
+== BEFORE, re-run today with --noconftest (the mechanism the fix removed) ==
+$ python3 -m pytest tests/ --noconftest -q
+INTERNALERROR>   File "<frozen runpy>", line 98, in _run_module_code
+INTERNALERROR>   File "<frozen runpy>", line 88, in _run_code
+INTERNALERROR>   File "/mnt/external/eInvite/einvite-platform/src/python/server.py", line 10173, in <module>
+INTERNALERROR>     args = parser.parse_args()
+INTERNALERROR>            ^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "/usr/lib/python3.12/argparse.py", line 1911, in parse_args
+INTERNALERROR>     self.error(msg % ' '.join(argv))
+INTERNALERROR>   File "/usr/lib/python3.12/argparse.py", line 2677, in error
+INTERNALERROR>     self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+INTERNALERROR>   File "/usr/lib/python3.12/argparse.py", line 2664, in exit
+INTERNALERROR>     _sys.exit(status)
+INTERNALERROR> SystemExit: 2
+
+no tests ran in 1.34s
+exit=3
+
+== AFTER (tests/conftest.py in place) ==
+$ python3 -m pytest tests/ -q
+FAILED tests/analytics_ingestion_test.py::test_phase1_happy_path - AssertionE...
+FAILED tests/analytics_ingestion_test.py::test_phase2_validation - AssertionE...
+FAILED tests/analytics_ingestion_test.py::test_phase3_session_upsert_and_close
+FAILED tests/analytics_ingestion_test.py::test_phase4_rate_limit - AssertionE...
+FAILED tests/analytics_privacy_test.py::test_phase1_disable - assert 404 == 204
+FAILED tests/analytics_privacy_test.py::test_phase2_reenable - assert 404 == 200
+FAILED tests/analytics_privacy_test.py::test_phase3_purge - KeyError: 'analyt...
+FAILED tests/analytics_privacy_test.py::test_phase6_non_host_forbidden - Asse...
+FAILED tests/analytics_privacy_test.py::test_phase7_disable_rate_limit - Asse...
+FAILED tests/analytics_reports_test.py::test_phase1_per_invitation_analytics
+FAILED tests/analytics_reports_test.py::test_phase2_creations_table - Asserti...
+FAILED tests/analytics_reports_test.py::test_phase3_account_summary - Asserti...
+FAILED tests/analytics_reports_test.py::test_phase4_export_invitation_csv_json
+FAILED tests/analytics_reports_test.py::test_phase5_export_account_csv - Asse...
+FAILED tests/analytics_reports_test.py::test_phase6_live_endpoint_feature_flag
+ERROR tests/v52_crdt_offline_merge_test.py::test_two_users_edit_offline_then_both_reconnect
+ERROR tests/v52_crdt_offline_merge_test.py::test_concurrent_edit_then_delete_same_element
+ERROR tests/v52_crdt_offline_merge_test.py::test_three_users_concurrent_insert_eventual_consistency
+ERROR tests/v52_crdt_offline_merge_test.py::test_one_hour_offline_reconnect
+ERROR tests/v52_crdt_offline_merge_test.py::test_idempotency_same_client_clock_returns_existing_revision
+ERROR tests/v52_crdt_offline_merge_test.py::test_snapshot_publish_roundtrip
+15 failed, 44 passed, 6 errors in 153.12s (0:02:33)
+exit=1

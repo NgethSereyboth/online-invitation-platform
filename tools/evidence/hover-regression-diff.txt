@@ -1,0 +1,17 @@
+HOVER_REGRESSION_TOTALS {"pagesCompared": 16, "pagesMissing": 0, "elementsCompared": 813, "elementsIdentical": 813, "elementsDiffering": 0, "pagesShapeMismatch": 0, "clsDrift": 0}
+  index       before=271  after=271  changes 226->226  rows 271 identical 271 differing 0  ok
+  dashboard   before=68   after=68   changes 54->54   rows 68 identical 68 differing 0  ok
+  public      before=41   after=41   changes 34->34   rows 41 identical 41 differing 0  ok
+  admin       before=34   after=34   changes 32->32   rows 34 identical 34 differing 0  ok
+  account     before=34   after=34   changes 31->31   rows 34 identical 34 differing 0  ok
+  billing     before=34   after=34   changes 31->31   rows 34 identical 34 differing 0  ok
+  verify      before=25   after=25   changes 20->20   rows 25 identical 25 differing 0  ok
+  reset       before=31   after=31   changes 25->25   rows 31 identical 31 differing 0  ok
+  privacy     before=4    after=4    changes 4->4    rows 4 identical 4 differing 0  ok
+  guests      before=51   after=51   changes 37->37   rows 51 identical 51 differing 0  ok
+  responses   before=34   after=34   changes 31->31   rows 34 identical 34 differing 0  ok
+  analytics   before=33   after=33   changes 30->30   rows 33 identical 33 differing 0  ok
+  materials   before=50   after=50   changes 34->34   rows 50 identical 50 differing 0  ok
+  checkin     before=22   after=22   changes 18->18   rows 22 identical 22 differing 0  ok
+  templates   before=47   after=47   changes 40->40   rows 47 identical 47 differing 0  ok
+  designer    before=34   after=34   changes 32->32   rows 34 identical 34 differing 0  ok
