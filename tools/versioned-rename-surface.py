@@ -51,6 +51,31 @@ def tracked(patterns: list[str]) -> list[str]:
     return [p for p in proc.stdout.splitlines() if p.strip()]
 
 
+def bundle_inputs() -> tuple[set[str], set[str]]:
+    """(route-bundle source names, editor-bundle source names) — both bundle systems.
+
+    Route bundles read docs/route-bundle-sources-v15.json. The editor bundle has no
+    JSON manifest; its source list is the quoted filename list inside
+    src/python/build/build_editor_bundle.py, so that file is scanned for quoted
+    `*.js` / `*.css` names. A name appearing in either set is shipped by a bundle,
+    which is what makes a blocked rename "both sides live" rather than a queue item.
+    """
+    route_path = REPO_ROOT / "docs" / "route-bundle-sources-v15.json"
+    route: set[str] = set()
+    if route_path.is_file():
+        spec = json.loads(route_path.read_text(encoding="utf-8"))
+        for entry in spec.get("pages", {}).values():
+            route.update(entry.get("scripts", []))
+            route.update(entry.get("styles", []))
+    editor_path = REPO_ROOT / "src" / "python" / "build" / "build_editor_bundle.py"
+    editor: set[str] = set()
+    if editor_path.is_file():
+        text = editor_path.read_text(encoding="utf-8")
+        editor.update(re.findall(r'"([^"]+\.(?:js|css))"', text))
+        editor.update(re.findall(r"'([^']+\.(?:js|css))'", text))
+    return route, editor
+
+
 def tracked_names() -> list[str]:
     """Every tracked path, once — the corpus a reference search scans.
 
@@ -128,6 +153,42 @@ def main(argv=None) -> int:
     ready = [r for r in pool if not r["collides"]]
     blocked = [r for r in pool if r["collides"]]
 
+    # A blocked rename has two very different meanings, and reporting them as one
+    # class is how the previous pass left `organized/` as a question rather than a
+    # decision. `bundle_inputs()` reads BOTH bundle systems — the 16 route bundles
+    # (docs/route-bundle-sources-v15.json) and the editor bundle
+    # (src/python/build/build_editor_bundle.py, scanned for its quoted source list)
+    # — so each side of a collision can be called live or dead by measurement.
+    route_inputs, editor_inputs = bundle_inputs()
+
+    def classify(row):
+        target, name = row["target"], row["name"]
+        annotated = dict(row)
+        annotated["targetLiveIn"] = sorted(
+            label for label, names in (("route-bundles", route_inputs), ("editor-bundle", editor_inputs)) if target in names
+        )
+        annotated["versionedLiveIn"] = sorted(
+            label for label, names in (("route-bundles", route_inputs), ("editor-bundle", editor_inputs)) if name in names
+        )
+        if annotated["targetLiveIn"] and annotated["versionedLiveIn"]:
+            annotated["resolution"] = "BOTH-LIVE"
+            annotated["reason"] = (
+                "both names are build inputs of *different* bundles, so the rename would consume a "
+                "name another shipped artifact needs; not a rename, a retirement decision"
+            )
+        elif not annotated["targetLiveIn"]:
+            annotated["resolution"] = "TARGET-DEAD"
+            annotated["reason"] = "the occupying target is referenced by no bundle; the versioned file is the live one"
+        else:
+            annotated["resolution"] = "TARGET-LIVE-ELSEWHERE"
+            annotated["reason"] = "the occupying target is a live input of another bundle"
+        return annotated
+
+    blocked = [classify(r) for r in blocked]
+    summary_blocked = {}
+    for r in blocked:
+        summary_blocked[r["resolution"]] = summary_blocked.get(r["resolution"], 0) + 1
+
     summary = {
         "versionedFiles": len(rows),
         "liveNamed": sum(1 for r in rows if r["live"]),
@@ -135,6 +196,7 @@ def main(argv=None) -> int:
         "candidatePool": len(pool),
         "readyToRename": len(ready),
         "blockedByTargetName": len(blocked),
+        "blockedByResolution": summary_blocked,
         "inOrganized": sum(1 for r in pool if r["inOrganized"]),
     }
 
@@ -154,7 +216,16 @@ def main(argv=None) -> int:
     print()
     print("--- BLOCKED: the rename target name is already taken ---")
     for r in blocked:
-        print(f"  {r['path']:<48} -> {r['target']:<34} exists at {', '.join(r['collides'])}")
+        print(
+            f"  [{r['resolution']}] {r['path']:<44} -> {r['target']:<30} "
+            f"exists at {', '.join(r['collides'])}"
+        )
+        print(
+            f"      versioned live in: {r['versionedLiveIn'] or '(no bundle)'}   "
+            f"target live in: {r['targetLiveIn'] or '(no bundle)'}"
+        )
+        print(f"      {r['reason']}")
+    print(f"  blocked by resolution: {json.dumps(summary_blocked, sort_keys=True)}")
     print()
     print("--- EXCLUDED: referenced by tests/ (a rename would be a contract change) ---")
     for r in sorted((r for r in rows if r["testRefs"] and not r["isMirror"]), key=lambda r: r["path"]):
