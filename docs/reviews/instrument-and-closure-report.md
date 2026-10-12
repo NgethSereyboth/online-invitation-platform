@@ -147,7 +147,7 @@ The full run is in
 its last line is the claim:
 
 ```
-important-removal-audit: vs 623b233 — 61 changed CSS/JSON entry(s) (36 modified, 20 renamed, 5 manifest(s)); 4 JS change(s) not judged; failures=0
+important-removal-audit: vs 623b233 — 61 changed CSS/JSON entry(s) (36 modified, 20 renamed, 5 manifest(s)); 6 change(s) named and not judged (JS, or JSON this pass does not generate); failures=0
 ```
 
 Every changed CSS file is byte-identical to the pass base after deleting the
@@ -330,22 +330,36 @@ of the rename *target* name exists. This pass added
 [`tools/versioned-rename-surface.py`](../../tools/versioned-rename-surface.py), which
 recomputes the whole surface and prints the three classes:
 
-<!-- report-verify: prefix 12 — the tool also prints the files excluded for test references and the ones not named by the live source list; the first 12 lines are the summary, the ready list and the blocked list, which is everything a batch decision needs. -->
+<!-- report-verify: prefix 3 — the ready list prints every file that mentions each name, and a report that quotes this output is itself one of those files, so the per-file reference lists move whenever a document is edited. The classification is what a batch decision rests on, and it is in the first line; the ready and blocked lists are reproduced as a table below and in tools/evidence/versioned-rename-surface.txt. -->
 ```
-$ python3 tools/versioned-rename-surface.py | head -22
+$ python3 tools/versioned-rename-surface.py | head -3
 RENAME_SURFACE {"versionedFiles": 284, "liveNamed": 80, "zeroTestRefs": 28, "candidatePool": 7, "readyToRename": 5, "blockedByTargetName": 2, "inOrganized": 1}
 
 --- READY: live-named, no test reference, rename target unclaimed ---
-  src/css/app-shell-v55.css                        -> app-shell.css                      other reference(s): CONTRIBUTING.md, docs/reviews/consolidation-and-fidelity-report.md, docs/reviews/optimisation-report.md, docs/reviews/race-and-consolidation-report.md, docs/reviews/redesign-report.md, docs/reviews/reproducibility-and-performance-report.md, docs/route-bundles-v15.json, src/css/dashboard-page.css, src/css/tokens.css, src/python/app-shell-v55.css, src/python/dashboard-page.css, src/python/route-bundles-v15.json, src/python/tokens.css
-  src/js/backend-mode-v14.js                       -> backend-mode.js                    other reference(s): docs/STRUCTURE-AUDIT.csv, docs/STRUCTURE-MAPPING.md, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/i18n/LANGUAGE-GAP-REPORT.md, docs/page-assets-v15.json, docs/reviews/optimisation-report.md, docs/reviews/race-and-consolidation-report.md, docs/reviews/redesign-report.md, docs/reviews/v54-rc-verification.md, src/css/app-shell-v55.css, src/html/account.html, src/html/admin.html, src/html/analytics.html, src/html/billing.html, src/html/checkin.html, src/html/dashboard.html, src/html/designer.html, src/html/guests.html, src/html/index.html, src/html/materials.html, src/html/privacy.html, src/html/public.html, src/html/reset.html, src/html/responses.html, src/html/templates.html, src/html/verify.html, src/js/service-worker.js, src/python/account.html, src/python/admin.html, src/python/analytics.html, src/python/app-shell-v55.css, src/python/billing.html, src/python/build/build_page_manifests.py, src/python/build/page-assets-v15.json, src/python/build/sync_frontend_assets.py, src/python/checkin.html, src/python/dashboard-css-km.html, src/python/dashboard.html, src/python/designer.html, src/python/guests.html, src/python/index.html, src/python/materials.html, src/python/privacy.html, src/python/public.html, src/python/reset.html, src/python/responses.html, src/python/service-worker.js, src/python/templates.html, src/python/verify.html
-  src/js/product-operations-v13.js                 -> product-operations.js              other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
-  src/js/timeline-runtime-v13.js                   -> timeline-runtime.js                other reference(s): docs/STRUCTURE-AUDIT.csv, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
-  src/js/timeline-v13.js                           -> timeline.js                        other reference(s): docs/STRUCTURE-AUDIT.csv, docs/STRUCTURE-MAPPING.md, docs/V0_52_RELEASE_FILE_HASHES.sha256, docs/V13_FUTURE_DEVELOPMENT_REPORT_2026-07-24.md, docs/V18_RELEASE_FILE_HASHES.sha256, docs/V19_1_RELEASE_FILE_HASHES.sha256, docs/V19_RELEASE_FILE_HASHES.sha256, docs/V20_RELEASE_FILE_HASHES.sha256, docs/V27_3_5_RELEASE_FILE_HASHES.sha256, docs/V28_RELEASE_FILE_HASHES.sha256, docs/V32_RELEASE_FILE_HASHES.sha256, docs/reviews/v54-rc-verification.md, docs/route-bundles-v15.json, src/python/build/route-bundles-v15.json, src/python/route-bundles-v15.json
-
---- BLOCKED: the rename target name is already taken ---
-  src/css/organized/photo-editor-v13.css           -> photo-editor.css                   exists at src/css/photo-editor.css
-  src/js/photo-editor-v13.js                       -> photo-editor.js                    exists at src/js/photo-editor.js
 ```
+
+The five ready files, with the references that decide whether a rename is a rename or
+a page-edit batch. "Generated" means a manifest the build rewrites; "record" means a
+historical document (release hash manifests, session reports) that a rename does not
+break:
+
+| file | target | references that matter |
+| --- | --- | --- |
+| `src/css/app-shell-v55.css` | `app-shell.css` | two other CSS files (`dashboard-page.css`, `tokens.css`) plus generated manifests |
+| `src/js/backend-mode-v14.js` | `backend-mode.js` | all 16 `src/html` pages, 15 `src/python` mirrors, `service-worker.js`, `build_page_manifests.py`, `sync_frontend_assets.py` |
+| `src/js/product-operations-v13.js` | `product-operations.js` | generated manifests only, plus records |
+| `src/js/timeline-runtime-v13.js` | `timeline-runtime.js` | generated manifests only, plus records |
+| `src/js/timeline-v13.js` | `timeline.js` | generated manifests only, plus records |
+
+and the two that are blocked outright, because the rename *target* is another file:
+
+| file | target | already exists |
+| --- | --- | --- |
+| `src/css/organized/photo-editor-v13.css` | `photo-editor.css` | `src/css/photo-editor.css` |
+| `src/js/photo-editor-v13.js` | `photo-editor.js` | `src/js/photo-editor.js` |
+
+The full output, reference lists included, is
+[`tools/evidence/versioned-rename-surface.txt`](../../tools/evidence/versioned-rename-surface.txt).
 
 Before batch 3 those numbers were 304 versioned paths, 100 live-named, 17 in the
 candidate pool, 15 ready and 2 blocked; the batch consumed ten of the fifteen, which

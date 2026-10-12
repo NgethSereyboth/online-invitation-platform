@@ -59,9 +59,5 @@
   ok   docs/route-bundles-v15.json                              53 size/digest/source-name field(s) moved; pages.account.html.sources.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
   ok   src/python/build/page-assets-v15.json                    14 size/digest/source-name field(s) moved; pages.account.html.bytes 356445 -> 356415 (-30)
   ok   src/python/route-bundles-v15.json                        53 size/digest/source-name field(s) moved; pages.account.html.sources.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
-  n/a  src/js/bundle-index-v15.js (modified, +1178 B)           a JS change: out of scope here, see the commit that made it
-  n/a  src/js/professional-editor-v17.js (modified, +1178 B)    a JS change: out of scope here, see the commit that made it
-  n/a  src/python/bundle-index-v15.js (modified, +1178 B)       a JS change: out of scope here, see the commit that made it
-  n/a  tools/lib/css-decl.js (added, +5343 B)                   a JS change: out of scope here, see the commit that made it
 
-important-removal-audit: vs 623b233 — 61 changed CSS/JSON entry(s) (36 modified, 20 renamed, 5 manifest(s)); 4 JS change(s) not judged; failures=0
+important-removal-audit: vs 623b233 — 61 changed CSS/JSON entry(s) (36 modified, 20 renamed, 5 manifest(s)); 6 change(s) named and not judged (JS, or JSON this pass does not generate); failures=0

@@ -130,6 +130,19 @@ def audit_css(path: str, rev: str) -> tuple[bool, str]:
 # artifact to every tree that needs it. Resolution order for a recorded file name.
 CANDIDATE_ROOTS = ("src/python", "src/js", "src/css", "docs", ".")
 
+# The JSON this pass's rebuild generates. Only these are judged: every other JSON in
+# the tree belongs to somebody else, and this is a shared checkout — an audit that
+# failed on a concurrent `package.json` edit would be an audit that cries wolf. The
+# rest are named in the `n/a` section, so an unrelated change is visible rather than
+# silently ignored.
+GENERATED_MANIFESTS = (
+    "docs/page-assets-v15.json",
+    "docs/route-bundles-v15.json",
+    "docs/route-bundle-sources-v15.json",
+    "src/python/build/page-assets-v15.json",
+    "src/python/route-bundles-v15.json",
+)
+
 # Sibling keys whose value names the file an entry's size/digest fields describe.
 FILE_LIST_KEYS = ("javascript", "stylesheet", "scripts", "styles", "files", "assets")
 
@@ -267,7 +280,7 @@ def main(argv=None) -> int:
                 # CSS audit has no opinion about it.
                 delta = (REPO_ROOT / path).stat().st_size - len(blob(args.rev, path))
                 verb = {"M": "modified", "A": "added", "D": "deleted"}.get(status, status)
-                not_judged.append(f"{path} ({verb}, {delta:+d} B)")
+                not_judged.append((f"{path} ({verb}, {delta:+d} B)", "a JS change: out of scope here, see the commit that made it"))
             continue
         if not path.endswith(".css"):
             continue
@@ -295,21 +308,24 @@ def main(argv=None) -> int:
         if status.startswith(("R", "C")) and old is not None
     }
     for status, path, _old in entries:
-        if path.endswith(".json") and status == "M":
+        if not path.endswith(".json"):
+            continue
+        if path not in GENERATED_MANIFESTS:
+            not_judged.append((f"{path} ({status})", "not a manifest this pass generates; out of scope"))
+            continue
+        if status == "M":
             ok, note = audit_manifest(path, args.rev, rename_map)
             print(f"  {'ok  ' if ok else 'FAIL'} {path:<56} {note}")
             counts["manifest"] += 1
             if not ok:
                 failures.append(path)
 
-    for note in not_judged:
-        print(f"  n/a  {note:<56} a JS change: out of scope here, see the commit that made it")
-
     total = sum(counts.values())
     print(
         f"\nimportant-removal-audit: vs {args.rev} — {total} changed CSS/JSON entry(s) "
         f"({counts['modified']} modified, {counts['renamed']} renamed, {counts['manifest']} manifest(s)); "
-        f"{len(not_judged)} JS change(s) not judged; failures={len(failures)}"
+        f"{len(not_judged)} change(s) named and not judged (JS, or JSON this pass does not generate); "
+        f"failures={len(failures)}"
     )
     return 1 if failures else 0
 
