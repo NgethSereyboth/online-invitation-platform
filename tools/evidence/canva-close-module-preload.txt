@@ -1,0 +1,39 @@
+CANVA_CLOSE_GAP module-loading — declared-fetch-ahead for the loader chain
+
+# technique and its source
+Canva, on https://www.canva.com/ (artifact artifacts/module-loading-canva.json): 8 declared
+src scripts, of which 5 defer + 3 parser-blocking, and 9 declared <link rel=preload> tags —
+the fetches are declared ahead of need and the transfers overlap. Measured chain span
+2866 ms against 5871 ms of summed transfer = the
+overlap is real (serialGap -3005 ms, i.e. negative).
+This project, same instrument: chain span 3174 ms against 1346 ms summed transfer, serialGap
++1828 ms — every fetch waiting for the previous script to finish.
+
+# what was implemented (own idiom, not their code)
+src/js/performance-loader-v22.js declares the 23 chain URLs as <link rel=preload as=script>
+before starting the chain. Execution order is untouched: the chain still appends one script
+and waits for its onload. Skipped when navigator.connection.saveData is set.
+
+# measurement — 3 runs per side, one page load each, 3 runs per side, median
+metric                         before      after      delta
+chainSpanMs                      3174       3075        -99
+chainTransferMs                  1346       3393      +2047
+chainSerialGapMs                 1828       -314      -2142
+lastChainScriptEnd               3211       3096       -115
+domContentLoaded                 1587       1676        +89
+loadEventEnd                     3280       2771       -509
+
+# the honest reading of serialGap
+serialGap counts time the chain is not transferring; it is NOT wall clock saved, because the
+main thread is parsing the previous script during much of it. The end-to-end numbers are the
+chain end (lastChainScriptEnd) and the load event. Measured: chain end 3211 -> 3096 ms, load 3280 -> 2771 ms.
+So the win is real but small at this size: the span is dominated by serial execution, which is
+deliberate (order guarantee), not by fetch waiting.
+
+# contract check after the change (puppeteer, served mirror)
+$. chainCount=37 last=bundle-index-v15.js preloaded=23 ready=function pageErrors=0
+$ node tools/page-errors.mjs index.html -> index.html: consoleErrors=0 non2xx=0; TOTAL pages=1 consoleErrors=0 non2xx=0
+
+# FCP / first-paint (no regression claimed beyond noise)
+before FCP: [800, 768, 828]
+after  FCP: [920, 492, 780]
