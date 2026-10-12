@@ -91,6 +91,7 @@ either server. Only the byte numbers depend on compression.
 | `forced-layout-attribution.mjs` | name the JS call sites that force synchronous layout, by instrumenting writes and layout-forcing reads in the DOM and recording the first non-probe stack frame. `--exercise=SELECTOR` measures one interaction (types into it) instead of the load. |
 | `css-feature-inventory.mjs` | count the modern-CSS constructs a URL ships (`content-visibility`, `contain`, `@layer`, `@container`, `:has(`, `color-mix(`, `!important`, …) from the CSS **text**, read via CDP so cross-origin sheets work. One instrument, both sites. |
 | `bundle-line-map.py` | map a bundle line number back to `src/<dir>/<file>:<line>`, replaying the generator's own concatenation. `--verify` re-derives every bundle and asserts each mapped source line's text occurs in the bundle line it was mapped to. |
+| `module-loading-strategy.mjs` | the **declared** loading strategy of a page (`async` / `defer` / `type=module` / `preload` counts, parser-blocking srcs) read from the document's own HTML, plus the **injected** set read from the DOM, plus each script's fetch timing and the chain's span / transfer / serial gap. Reports the two sets separately because counting the DOM as "parser-blocking" overstated this project's index page 12× (3 declared, 34 injected after the parser finished). |
 
 ## Conventions
 
