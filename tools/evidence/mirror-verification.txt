@@ -1,0 +1,56 @@
+=== tools/mirror-diff.py before the fix (7 drifted, 20 raw orphans) ===
+  drifted     src/css/organized/bundle-checkin-v15.css -> src/python/bundle-checkin-v15.css   (generator-owned; excluded from the mirror model)
+
+=== after: sync_frontend_assets.py --check (content-based) ===
+html: drifted=0 up_to_date=16
+html: drifted=0 up_to_date=1
+vendor: drifted=0 up_to_date=8
+assets: drifted=0 up_to_date=13
+licenses: drifted=0 up_to_date=2
+js: drifted=1 up_to_date=167
+core: drifted=0 up_to_date=3
+css: drifted=5 up_to_date=83
+organized: drifted=1 up_to_date=14
+MIRROR_CHECK_FAILED 7 stale destination(s)
+  stale  src/python/professional-editor-v17.js
+  stale  src/python/canvas-plus.css
+  stale  src/python/final-polish.css
+  stale  src/python/modern-ui.css
+  stale  src/python/studio-experience.css
+  stale  src/python/workflow-creation-flow-v4.css
+  stale  src/python/workflow-continuity.css
+MIRROR_CHECK_HINT run: python3 src/python/build/sync_frontend_assets.py
+
+=== sync run ===
+SYNC_FRONTEND_ASSETS_DONE copied=7 skipped=291
+
+=== after: --check ===
+html: drifted=0 up_to_date=16
+html: drifted=0 up_to_date=1
+vendor: drifted=0 up_to_date=8
+assets: drifted=0 up_to_date=13
+licenses: drifted=0 up_to_date=2
+js: drifted=0 up_to_date=168
+core: drifted=0 up_to_date=3
+css: drifted=0 up_to_date=88
+organized: drifted=0 up_to_date=15
+MIRROR_CHECK_PASSED (up_to_date=314)
+
+=== tools/mirror-diff.py after ===
+MIRROR_DIFF {"sources": 314, "drifted": 0, "unmigrated": 0, "orphans": 0, "orphansExempt": 19, "generatedExempt": 34}
+MIRROR_DIFF_SUMMARY 0 drifted, 0 unmigrated, 0 orphans (19 named and exempt)
+
+=== deliberate-drift test ===
+1. baseline            build.py all --check -> exit 0
+2. append 24 bytes to src/python/modern-ui.css:
+MIRROR_CHECK_FAILED 1 stale destination(s)
+  stale  src/python/modern-ui.css
+MIRROR_CHECK_HINT run: python3 src/python/build/sync_frontend_assets.py
+BUILD_FAILED mirror
+3. python3 src/python/build/sync_frontend_assets.py -> exit 0
+SYNC_FRONTEND_ASSETS_DONE copied=1 skipped=297
+MIRROR_CHECK_PASSED (after sync)
+4. build.py all --check -> exit 0
+MIRROR_CHECK_PASSED (up_to_date=314)
+BUILD_OK editor bundles manifests mirror (check)
+5. revert to recorded bytes -> exit 0, byte-identical

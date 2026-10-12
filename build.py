@@ -13,13 +13,22 @@ Usage
     python3 build.py editor            # editor-suite.{js,css}
     python3 build.py bundles           # bundle-*-v15.{js,css} for the 16 routes
     python3 build.py manifests         # page-assets-v15.json (server + docs)
-    python3 build.py all               # all three, in dependency order
+    python3 build.py mirror            # src/python/ runtime mirror (sync_frontend_assets.py)
+    python3 build.py all               # all four, in dependency order
     python3 build.py all --check       # verify every artifact, write nothing
     python3 build.py bundles --check   # verify one step
 
 Each step prints its own ``*_CHECK_PASSED`` / ``*_BUILT`` marker and exits
 non-zero when ``--check`` finds a stale artifact, so the exit status of this
 command is the gate.
+
+The ``mirror`` step is why this command is the whole gate. ``src/python/`` is the
+HTTP server's ROOT, so the HTML/CSS/JS the server serves is a *mirror* of
+``src/html``, ``src/css`` and ``src/js``; keeping it in step used to depend on an
+mtime comparison inside ``sync_frontend_assets.py``, which cannot see a content
+change that arrives with an equal-or-older timestamp (a ``git checkout``, a
+``git mv``, a restored archive) and which reported nothing when it drifted. It now
+compares bytes, and ``--check`` prints ``MIRROR_CHECK_PASSED`` or fails.
 """
 from __future__ import annotations
 
@@ -36,11 +45,13 @@ STEPS = {
     "editor": "build_editor_bundle.py",
     "bundles": "build_route_bundles.py",
     "manifests": "build_page_manifests.py",
+    "mirror": "sync_frontend_assets.py",
 }
 
 # Dependency order: the route bundles must exist on disk before the page
-# manifest measures their byte sizes, so ``manifests`` always runs last.
-ORDER = ("editor", "bundles", "manifests")
+# manifest measures their byte sizes, so ``manifests`` runs third; ``mirror``
+# goes last so it verifies a fully-generated tree.
+ORDER = ("editor", "bundles", "manifests", "mirror")
 
 
 def run_step(step: str, check: bool) -> int:

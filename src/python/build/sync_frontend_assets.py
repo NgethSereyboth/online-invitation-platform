@@ -13,14 +13,32 @@ safe. Generated bundle artifacts (``bundle-*-v15.js/.css``, ``editor-suite.*``)
 are NOT copied here — they are produced by ``build_route_bundles.py`` and
 ``build_editor_bundle.py`` directly into ``src/python/``.
 
+Two defects this script used to have, and what replaced them
+-----------------------------------------------------------
+1. **Staleness was a timestamp comparison** (`dest.st_mtime < src.st_mtime`). A
+   `git checkout`, `git mv`, restored archive or any mtime-preserving copy leaves
+   a *different* file that is *not older*, so it was never re-copied, and the
+   server kept serving the old bytes with nothing reporting it. Staleness is now
+   a content comparison (byte equality), so "stale" and "differs" are the same
+   question.
+2. **Generated artifacts could be overwritten.** `src/css/organized/` still holds
+   five stale `bundle-*-v15.css` files (e.g. 71,045 bytes against the generated
+   128,721), and because the organised glob is synced *after* the top-level one,
+   that glob could claim `src/python/bundle-*.css` and overwrite a generated,
+   hash-verified bundle with an old copy. Anything matching `GENERATED` is
+   therefore skipped here; those artifacts are written and verified by the three
+   generators, not mirrored by this script.
+
 Usage::
 
-    python3 src/python/sync_frontend_assets.py        # copy if stale
-    python3 src/python/sync_frontend_assets.py --check # report drift without copying
+    python3 src/python/build/sync_frontend_assets.py        # copy what differs
+    python3 src/python/build/sync_frontend_assets.py --check # report drift, exit 1
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
+import re
 import shutil
 from pathlib import Path
 
@@ -36,6 +54,16 @@ CSS_ORG_DIR = CSS_DIR / "organized"
 VENDOR_DIR = REPO_ROOT / "vendor"
 ASSETS_DIR = REPO_ROOT / "assets"
 LICENSES_DIR = REPO_ROOT / "licenses"
+
+# Artifacts the generators write directly into the serve root. They are NOT
+# mirror content: build_route_bundles.py / build_editor_bundle.py /
+# build_page_manifests.py write them to BOTH src/python/ and the repo source of
+# truth, and verify them by sha256 in their own --check. Mirroring them from
+# src/css/ or src/css/organized/ can only ever overwrite them.
+GENERATED = re.compile(
+    r"^(?:bundle-[a-z0-9_-]+-v15\.(?:js|css)|editor-suite\.(?:js|css)|"
+    r"route-bundles-v15\.json|page-assets-v15\.json)$"
+)
 
 # Each entry: (source_dir, dest_dir, glob_pattern, recursive).
 #
@@ -66,11 +94,26 @@ SYNC_PLAN = [
 ]
 
 
+def _sha256(path: Path) -> str:
+    """sha256 of a file's bytes, read in chunks so a large bundle does not load whole."""
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 16), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _needs_copy(src: Path, dest: Path) -> bool:
-    """Return True if ``dest`` is missing or older than ``src`` (so a copy is needed)."""
+    """Return True when ``dest`` is missing or its bytes differ from ``src``.
+
+    Content, not mtime: see the module docstring. A size difference short-circuits
+    the hash, which keeps the common case cheap without changing the answer.
+    """
     if not dest.is_file():
         return True
-    return dest.stat().st_mtime < src.stat().st_mtime
+    if dest.stat().st_size != src.stat().st_size:
+        return True
+    return _sha256(src) != _sha256(dest)
 
 
 def copy_file(src: Path, dest: Path) -> bool:
@@ -112,6 +155,8 @@ def sync_tree(src_dir: Path, dest_dir: Path, pattern: str, recursive: bool) -> t
     else:
         for src in src_dir.glob(pattern):
             if src.is_file():
+                if GENERATED.match(src.name):
+                    continue  # generator-owned; never mirrored
                 dest = dest_dir / src.name
                 if copy_file(src, dest):
                     copied += 1
@@ -135,24 +180,36 @@ def main(argv=None) -> int:
     ap.add_argument("--check", action="store_true", help="Report what would be copied without writing")
     args = ap.parse_args(argv)
     if args.check:
-        # In --check mode we report per-source drift counts without writing.
-        # We use _needs_copy (which only reads stat()) so nothing is mutated.
-        report: dict = {}
+        # --check is the mirror gate: it reports every destination whose bytes do
+        # not match its source and exits non-zero, so a stale mirror fails the
+        # build instead of being served. It mutates nothing.
+        drifted: list[str] = []
+        total_skipped = 0
         for src_dir, dest_dir, pattern, recursive in SYNC_PLAN:
-            copied = 0
-            skipped = 0
+            drifted_here = 0
+            up_to_date = 0
             if src_dir.is_dir():
                 for src in src_dir.glob(pattern):
                     if not src.is_file():
                         continue
+                    if not recursive and GENERATED.match(src.name):
+                        continue
                     rel = src.relative_to(src_dir)
                     dest = dest_dir / rel if recursive else dest_dir / src.name
                     if _needs_copy(src, dest):
-                        copied += 1
+                        drifted_here += 1
+                        drifted.append(str(dest.relative_to(REPO_ROOT)))
                     else:
-                        skipped += 1
-            report[src_dir.name] = {"would_copy": copied, "up_to_date": skipped}
-            print(f"{src_dir.name}: would_copy={copied} up_to_date={skipped}")
+                        up_to_date += 1
+            total_skipped += up_to_date
+            print(f"{src_dir.name}: drifted={drifted_here} up_to_date={up_to_date}")
+        if drifted:
+            print(f"MIRROR_CHECK_FAILED {len(drifted)} stale destination(s)")
+            for path in drifted:
+                print(f"  stale  {path}")
+            print("MIRROR_CHECK_HINT run: python3 src/python/build/sync_frontend_assets.py")
+            return 1
+        print(f"MIRROR_CHECK_PASSED (up_to_date={total_skipped})")
         return 0
     summary = sync_all()
     total_copied = 0
@@ -162,6 +219,7 @@ def main(argv=None) -> int:
         total_copied += stats["copied"]
         total_skipped += stats["skipped"]
     print(f"SYNC_FRONTEND_ASSETS_DONE copied={total_copied} skipped={total_skipped}")
+    print("MIRROR_CHECK_PASSED (after sync)")
     return 0
 
 
