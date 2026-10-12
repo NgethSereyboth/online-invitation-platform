@@ -1,0 +1,6 @@
+sqlite tables: ['analytics_events', 'analytics_sessions', 'analytics_summary_daily']
+pg     tables: ['analytics_events', 'analytics_sessions', 'analytics_summary_daily']
+DIALECT_LISTS_OK (same 3 tables, no AUTOINCREMENT in the PG list, 1 BIGSERIAL)
+run_session_reconstruction -> {'closedIdleSessions': 1, 'deletedSpamSessions': 0, 'aggregatedRows': 0, 'pruned': {'events': 0, 'sessions': 0, 'summaries': 0, 'retentionDays': 365, 'cutoffMs': 1760254001934}}
+idle session ended_at: 1791788201925 duration_ms: 3600000 daily rows: 0
+RECONSTRUCTION_ENTRYPOINT_OK

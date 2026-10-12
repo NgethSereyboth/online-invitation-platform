@@ -1,0 +1,225 @@
+FFFF..FFF..FFFFFFFF.                                                     [100%]
+=================================== FAILURES ===================================
+____________________________ test_phase1_happy_path ____________________________
+
+>   ???
+E   AssertionError: ingest should return 204, got 404 body=b'{"error": "Not found"}'
+E   assert 404 == 204
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_ingestion_test.py:108: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:38257
+Data directory: /tmp/einvite-live-v14-fmkty19s
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+____________________________ test_phase2_validation ____________________________
+
+>   ???
+E   AssertionError: invalid sid should be 400, got 404 b'{"error": "Not found"}'
+E   assert 404 == 400
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_ingestion_test.py:129: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:60143
+Data directory: /tmp/einvite-live-v14-wx4t6mm3
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+_____________________ test_phase3_session_upsert_and_close _____________________
+
+>   ???
+E   AssertionError: view ingest failed: 404 b'{"error": "Not found"}'
+E   assert 404 == 204
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_ingestion_test.py:156: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:56557
+Data directory: /tmp/einvite-live-v14-1siezmv0
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+____________________________ test_phase4_rate_limit ____________________________
+
+>   ???
+E   AssertionError: unexpected status 404: b'{"error": "Not found"}'
+E   assert False
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_ingestion_test.py:200: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:54887
+Data directory: /tmp/einvite-live-v14-hqma5jyi
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+_____________________________ test_phase1_disable ______________________________
+
+>   ???
+E   assert 404 == 204
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_privacy_test.py:111: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:60113
+Data directory: /tmp/einvite-live-v14-vnioyrj7
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+_____________________________ test_phase2_reenable _____________________________
+
+>   ???
+E   assert 404 == 200
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_privacy_test.py:142: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:49213
+Data directory: /tmp/einvite-live-v14-b29j8js6
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+______________________________ test_phase3_purge _______________________________
+
+>   ???
+E   KeyError: 'analytics'
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_privacy_test.py:176: KeyError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:43229
+Data directory: /tmp/einvite-live-v14-6n01yh0m
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+________________________ test_phase6_non_host_forbidden ________________________
+
+>   ???
+E   AssertionError: non-host disable should be 403, got 404 b'{"error": "Not found"}'
+E   assert 404 == 403
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_privacy_test.py:248: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:51943
+Data directory: /tmp/einvite-live-v14-07ig1w4w
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+________________________ test_phase7_disable_rate_limit ________________________
+
+>   ???
+E   AssertionError: expected 10 accepted (rate limit), got 0
+E   assert 0 == 10
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_privacy_test.py:267: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:45993
+Data directory: /tmp/einvite-live-v14-agtrh5xl
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+_____________________ test_phase1_per_invitation_analytics _____________________
+
+>   ???
+E   KeyError: 'analytics'
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_reports_test.py:126: KeyError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:41049
+Data directory: /tmp/einvite-live-v14-63i8f_hk
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+_________________________ test_phase2_creations_table __________________________
+
+>   ???
+E   AssertionError: creations failed: 404 b'{"error": "Not found"}'
+E   assert 404 == 200
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_reports_test.py:173: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:34145
+Data directory: /tmp/einvite-live-v14-1gtx6d9l
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+_________________________ test_phase3_account_summary __________________________
+
+>   ???
+E   AssertionError: summary failed: 404 b'{"error": "Not found"}'
+E   assert 404 == 200
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_reports_test.py:213: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:55137
+Data directory: /tmp/einvite-live-v14-rs7qi_34
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+____________________ test_phase4_export_invitation_csv_json ____________________
+
+>   ???
+E   AssertionError: csv export failed: 404 b'{"error": "Not found"}'
+E   assert 404 == 200
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_reports_test.py:234: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:33309
+Data directory: /tmp/einvite-live-v14-gy9ex_ul
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+________________________ test_phase5_export_account_csv ________________________
+
+>   ???
+E   AssertionError: acct csv failed: 404 b'{"error": "Not found"}'
+E   assert 404 == 200
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_reports_test.py:269: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:58577
+Data directory: /tmp/einvite-live-v14-3hbsr2st
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+____________________ test_phase6_live_endpoint_feature_flag ____________________
+
+>   ???
+E   AssertionError: live should be 403 by default, got 404 b'{"error": "Not found"}'
+E   assert 404 == 403
+
+/mnt/external/eInvite/einvite-platform/tests/analytics_reports_test.py:286: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+[V14 server log tail]
+E-invitation-website: http://127.0.0.1:42715
+Data directory: /tmp/einvite-live-v14-wbqncre4
+WARNING: EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)
+security_scanner_v54: scanner='clamav' available=True reason=clamd INSTREAM probe succeeded
+=========================== short test summary info ============================
+FAILED tests/analytics_ingestion_test.py::test_phase1_happy_path - AssertionE...
+FAILED tests/analytics_ingestion_test.py::test_phase2_validation - AssertionE...
+FAILED tests/analytics_ingestion_test.py::test_phase3_session_upsert_and_close
+FAILED tests/analytics_ingestion_test.py::test_phase4_rate_limit - AssertionE...
+FAILED tests/analytics_privacy_test.py::test_phase1_disable - assert 404 == 204
+FAILED tests/analytics_privacy_test.py::test_phase2_reenable - assert 404 == 200
+FAILED tests/analytics_privacy_test.py::test_phase3_purge - KeyError: 'analyt...
+FAILED tests/analytics_privacy_test.py::test_phase6_non_host_forbidden - Asse...
+FAILED tests/analytics_privacy_test.py::test_phase7_disable_rate_limit - Asse...
+FAILED tests/analytics_reports_test.py::test_phase1_per_invitation_analytics
+FAILED tests/analytics_reports_test.py::test_phase2_creations_table - Asserti...
+FAILED tests/analytics_reports_test.py::test_phase3_account_summary - Asserti...
+FAILED tests/analytics_reports_test.py::test_phase4_export_invitation_csv_json
+FAILED tests/analytics_reports_test.py::test_phase5_export_account_csv - Asse...
+FAILED tests/analytics_reports_test.py::test_phase6_live_endpoint_feature_flag
+15 failed, 5 passed, 48 deselected in 45.95s

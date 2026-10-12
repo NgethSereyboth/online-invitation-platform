@@ -18,7 +18,7 @@ from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is
 from features.secrets import ensure_secret as v54_ensure_secret
 from features import settings
 from features.settings import get_setting_int, list_settings, set_setting
-from features.feature_flags import list_flags, set_flag, ensure_schema as ensure_feature_flags_schema, DEFAULT_FLAGS
+from features.feature_flags import list_flags, set_flag, ensure_schema as ensure_feature_flags_schema, DEFAULT_FLAGS, is_enabled as feature_flag_enabled
 from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from typography_contract import normalize_font_id, finite_number
@@ -35,6 +35,27 @@ from future_platform_v52 import FuturePlatformService, FuturePlatformError, ensu
 # ``register_email_sender`` (wired at boot, below) so importing it never
 # creates a hard dependency on Twilio / WhatsApp / Telegram SDKs.
 from delivery_channels import get_channel as _delivery_get_channel, available_channels as _delivery_available_channels, channel_metadata as _delivery_channel_metadata, register_email_sender as _delivery_register_email_sender, ChannelError as DeliveryChannelError
+
+# ROADMAP-v0.54-to-v1.0 Part 6 — creator analytics (§6.1–§6.9). The feature
+# module ships the schema, the ingestion helpers, the background
+# reconstruction job and the read/export layer; server.py owns the routing.
+from features.analytics import (
+    ensure_schema as ensure_analytics_schema,
+    record_event_batch,
+    run_session_reconstruction,
+    purge_invitation_analytics,
+    set_invitation_analytics_enabled,
+    is_invitation_analytics_enabled,
+    invitation_analytics_summary,
+    invitation_live_activity,
+    account_creations_table,
+    account_analytics_summary,
+    stream_invitation_csv,
+    stream_invitation_json,
+    stream_account_csv,
+    stream_account_json,
+)
+from features.analytics.model import SESSION_ID_RE as ANALYTICS_SESSION_ID_RE
 
 
 
@@ -1724,6 +1745,15 @@ def connect():
     else:
         with connect_sqlite() as db:yield db
 
+def ensure_analytics_ready(db):
+    """Create the creator-analytics tables on first use.
+
+    Every analytics handler calls this inside its own ``connect()`` block, so
+    the tables exist even in a process that booted before this version. The
+    one dialect difference (``analytics_events.id``) is resolved here.
+    """
+    ensure_analytics_schema(db, dialect="postgresql" if DATABASE_KIND=="postgresql" else "sqlite")
+
 def write_audit_event(user_id, action, target_type="", target_id="", metadata=None, ip_address="system"):
     now=int(time.time()*1000);meta=json.dumps(metadata or {},ensure_ascii=False,sort_keys=True,separators=(",",":"))[:20000]
     with connect() as db:
@@ -2849,8 +2879,30 @@ class Handler(SimpleHTTPRequestHandler):
         except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):
             return False
         return self.safe_write(body)
+    def no_content(self):
+        """Send an empty 204 No Content (used by the analytics ingest route)."""
+        try:
+            self.send_response(204)
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+        except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):
+            return False
+        return True
+    def send_download(self, payload, content_type, filename):
+        """Send a generated export as an attachment."""
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+        except (BrokenPipeError,ConnectionResetError,ConnectionAbortedError):
+            return False
+        return self.safe_write(payload)
     def request_authority(self):
-        """Return a normalized HTTP authority or an empty string when malformed."""
         value=(self.headers.get("Host") or "").strip().lower()
         if not value or any(ord(ch)<0x21 or ord(ch)>0x7e for ch in value) or any(ch in value for ch in "/\\@?#"):
             return ""
@@ -3435,6 +3487,9 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/account/export": return self.export_account()
         if path == "/api/account/export/archive": return self.export_account_archive()
         if path == "/api/account/usage": return self.account_usage()
+        if path == "/api/account/analytics/creations": return self.account_analytics_creations()
+        if path == "/api/account/analytics/summary": return self.account_analytics_rollup()
+        if path == "/api/account/analytics/export": return self.export_account_analytics()
         if path == "/api/account/tier": return self.account_tier()
         if path == "/api/billing/status": return self.billing_status()
         if path == "/api/account/security": return self.security_overview()
@@ -3493,6 +3548,8 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/api/invitations/") and path.endswith("/rsvps"): return self.get_rsvps(path.split("/")[3])
         if path.startswith("/api/invitations/") and re.fullmatch(r"/api/invitations/[^/]+/versions/[^/]+",path): return self.get_version(path.split("/")[3],path.split("/")[5])
         if path.startswith("/api/invitations/") and path.endswith("/versions"): return self.get_versions(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/analytics/live"): return self.invitation_analytics_live(path.split("/")[3])
+        if path.startswith("/api/invitations/") and path.endswith("/analytics/export"): return self.export_invitation_analytics(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.endswith("/analytics"): return self.get_analytics(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.endswith("/wishes"): return self.get_wishes(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.endswith("/collaborators"): return self.get_collaborators(path.split("/")[3])
@@ -3571,6 +3628,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not self.guard_cookie_origin():return
         path=urlparse(self.path).path
         try:
+            if path.startswith("/api/invitations/") and path.endswith("/analytics"):return self.purge_invitation_analytics_data(path.split("/")[3])
             if path.startswith("/api/account/sessions/") and path.count("/")==4:return self.revoke_session(path.split("/")[4] if len(path.split("/"))>4 else path.rsplit("/",1)[-1])
             if path.startswith("/api/account/passkeys/") and path.count("/")==4:return self.delete_passkey(path.rsplit("/",1)[-1])
             if path.startswith("/api/uploads/") and path.count("/")==3:return self.cancel_resumable_upload(path.split("/")[3])
@@ -3624,6 +3682,11 @@ class Handler(SimpleHTTPRequestHandler):
             platform_result=self.platform_v32_post(path)
             if platform_result is not False:return platform_result
         csrf_exempt={
+            # ROADMAP Part 6 §6.2 — first-party analytics ingestion is a public
+            # guest action: the caller has no session to bind a CSRF token to.
+            # Origin/Sec-Fetch-Site validation still applies, and the route is
+            # rate-limited per client IP inside the handler.
+            "/api/analytics/events",
             "/api/auth/register","/api/auth/login","/api/auth/mfa/complete",
             "/api/auth/passkeys/login/options","/api/auth/passkeys/login/complete",
             "/api/auth/password-reset/request","/api/auth/password-reset/confirm",
@@ -3665,6 +3728,7 @@ class Handler(SimpleHTTPRequestHandler):
             public_guest_action = True
         if not self.guard_cookie_origin(require_session_csrf=path not in csrf_exempt and not public_guest_action):return
         try:
+            if path == "/api/analytics/events": return self.ingest_analytics_events()
             if path == "/api/auth/register": return self.register()
             if path == "/api/auth/login": return self.login()
             if path == "/api/auth/logout": return self.logout()
@@ -3739,6 +3803,7 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/public/") and path.endswith("/gallery/unlock"): return self.unlock_public_gallery(unquote(path.split("/")[3]))
             if path.startswith("/api/public/") and path.endswith("/view"): return self.record_public_view(unquote(path.split("/")[3]))
             if path.startswith("/api/public/") and path.endswith("/unlock"): return self.unlock_public(unquote(path.split("/")[3]))
+            if path.startswith("/api/invitations/") and path.endswith("/analytics/disable"): return self.set_invitation_analytics(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/publish"): return self.publish(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/trash"): return self.trash_invitation(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/restore"): return self.restore_trashed_invitation(path.split("/")[3])
@@ -6031,7 +6096,151 @@ class Handler(SimpleHTTPRequestHandler):
         for row in rsvps:statuses[row["status"]]=statuses.get(row["status"],0)+1
         try:rsvp_enabled=json.loads(invite["draft_json"] or "{}").get("settings",{}).get("rsvpEnabled") is not False
         except Exception:rsvp_enabled=True
-        self.json(200,{"totalViews":int(invite["views"] or 0),"views30Days":len(rows),"viewsByDay":by_day,"rsvpEnabled":rsvp_enabled,"rsvpTotal":len(rsvps),"rsvpGuests":sum(int(r["guest_count"] or 0) for r in rsvps),"rsvpStatuses":statuses,"guestListTotal":len(guests),"checkedIn":sum(1 for g in guests if g["checked_in"])})
+        with connect() as db:analytics=invitation_analytics_summary(db,invite_id)
+        self.json(200,{"totalViews":int(invite["views"] or 0),"views30Days":len(rows),"viewsByDay":by_day,"rsvpEnabled":rsvp_enabled,"rsvpTotal":len(rsvps),"rsvpGuests":sum(int(r["guest_count"] or 0) for r in rsvps),"rsvpStatuses":statuses,"guestListTotal":len(guests),"checkedIn":sum(1 for g in guests if g["checked_in"]),"analytics":analytics})
+
+    # ---- Creator analytics (ROADMAP Part 6 §6.1–§6.9) ------------------
+    # The feature (src/python/features/analytics/) is complete: schema,
+    # ingestion, background reconstruction, read models, exports. Nothing
+    # routed to it before this change, so these handlers are wiring only —
+    # no logic from the module is reimplemented here.
+
+    def ingest_analytics_events(self):
+        """POST /api/analytics/events — public guest ingestion (§6.1, §6.2).
+
+        Deliberately unauthenticated: the caller is a guest page with no
+        account. It is CSRF-exempt in ``do_POST`` and rate-limited per client
+        IP instead. 204 on success, 400 for a malformed batch, 404 when the
+        invitation does not exist. A host that switched analytics off for an
+        invitation still gets 204 — the batch is dropped silently so the
+        public page cannot observe the host's choice (§6.7).
+        """
+        if not self.rate_limit(f"analytics-ingest:{self.client_ip()}",60,60):return
+        try:data=self.body(256_000)
+        except ValueError as exc:return self.json(400,{"error":str(exc)})
+        if not isinstance(data,dict):return self.json(400,{"error":"Invalid payload"})
+        session_id=str(data.get("sessionId") or "").strip()
+        invitation_id=str(data.get("invitationId") or "").strip()
+        events=data.get("events")
+        if not ANALYTICS_SESSION_ID_RE.fullmatch(session_id):return self.json(400,{"error":"Invalid sessionId"})
+        if not isinstance(events,list) or not events:return self.json(400,{"error":"events must be a non-empty array"})
+        with connect() as db:
+            ensure_analytics_ready(db)
+            if db.execute("SELECT 1 FROM invitations WHERE id=? AND deleted_at IS NULL",(invitation_id,)).fetchone() is None:
+                return self.json(404,{"error":"Invitation not found"})
+            if not is_invitation_analytics_enabled(db,invitation_id):return self.no_content()
+            record_event_batch(db,session_id=session_id,invitation_id=invitation_id,events=events,
+                               recipient_id=data.get("recipientId"),
+                               device_type=str(data.get("deviceType") or "desktop"))
+        return self.no_content()
+
+    def set_invitation_analytics(self,invite_id):
+        """POST /api/invitations/{id}/analytics/disable — host-only (§6.7).
+
+        Body ``{"enabled": bool}``. The guest page keeps sending events after
+        a disable; the server drops them.
+        """
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"analytics-consent:{user['id']}",10,60):return
+        try:data=self.body(10_000)
+        except ValueError as exc:return self.json(400,{"error":str(exc)})
+        if not isinstance(data,dict):return self.json(400,{"error":"Invalid payload"})
+        enabled=bool(data.get("enabled",True))
+        with connect() as db:
+            ensure_analytics_ready(db)
+            if not self.owns(db,invite_id,user["id"]):return self.json(403,{"error":"Only the invitation owner can change analytics settings"})
+            set_invitation_analytics_enabled(db,invite_id,enabled)
+        self.audit("analytics.consent_changed","invitation",invite_id,{"enabled":enabled})
+        self.json(200,{"analyticsEnabled":enabled})
+
+    def purge_invitation_analytics_data(self,invite_id):
+        """DELETE /api/invitations/{id}/analytics — host-only "delete my data" (§6.8)."""
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"analytics-purge:{user['id']}",10,60):return
+        with connect() as db:
+            ensure_analytics_ready(db)
+            if not self.owns(db,invite_id,user["id"]):return self.json(403,{"error":"Only the invitation owner can purge analytics data"})
+            counts=purge_invitation_analytics(db,invite_id)
+        self.audit("analytics.purged","invitation",invite_id,counts)
+        self.json(200,{"ok":True,**counts})
+
+    def account_analytics_creations(self):
+        """GET /api/account/analytics/creations?sort=&order=&status=&limit=&offset= (§6.5)."""
+        user=self.require_user()
+        if not user:return
+        query=parse_qs(urlparse(self.path).query)
+        sort=(query.get("sort",["updatedAt"])[0] or "updatedAt")
+        order=(query.get("order",["desc"])[0] or "desc")
+        status_filter=(query.get("status",[None])[0] or None)
+        try:limit=max(1,min(int(query.get("limit",["100"])[0]),500))
+        except (TypeError,ValueError):limit=100
+        try:offset=max(0,int(query.get("offset",["0"])[0]))
+        except (TypeError,ValueError):offset=0
+        with connect() as db:
+            ensure_analytics_ready(db)
+            data=account_creations_table(db,user["id"],sort=sort,order=order,status_filter=status_filter,limit=limit,offset=offset)
+        self.json(200,data)
+
+    def account_analytics_rollup(self):
+        """GET /api/account/analytics/summary (§6.5)."""
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            ensure_analytics_ready(db)
+            data=account_analytics_summary(db,user["id"])
+        self.json(200,data)
+
+    def export_invitation_analytics(self,invite_id):
+        """GET /api/invitations/{id}/analytics/export?format=csv|json (§6.8)."""
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"analytics-export:{user['id']}",30,60):return
+        fmt=(parse_qs(urlparse(self.path).query).get("format",["csv"])[0] or "csv").lower()
+        with connect() as db:
+            ensure_analytics_ready(db)
+            if not self.owns(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
+            if fmt=="json":
+                payload=b"".join(stream_invitation_json(db,invite_id))
+                content_type="application/json; charset=utf-8";filename=f"analytics-{invite_id}.json"
+            else:
+                payload=b"".join(stream_invitation_csv(db,invite_id))
+                content_type="text/csv; charset=utf-8";filename=f"analytics-{invite_id}.csv"
+        self.audit("analytics.exported","invitation",invite_id,{"format":fmt})
+        self.send_download(payload,content_type,filename)
+
+    def export_account_analytics(self):
+        """GET /api/account/analytics/export?format=csv|json (§6.8)."""
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"analytics-export:{user['id']}",30,60):return
+        fmt=(parse_qs(urlparse(self.path).query).get("format",["csv"])[0] or "csv").lower()
+        with connect() as db:
+            ensure_analytics_ready(db)
+            if fmt=="json":
+                payload=b"".join(stream_account_json(db,user["id"]))
+                content_type="application/json; charset=utf-8";filename="analytics-account.json"
+            else:
+                payload=b"".join(stream_account_csv(db,user["id"]))
+                content_type="text/csv; charset=utf-8";filename="analytics-account.csv"
+        self.audit("analytics.exported","account",user["id"],{"format":fmt})
+        self.send_download(payload,content_type,filename)
+
+    def invitation_analytics_live(self,invite_id):
+        """GET /api/invitations/{id}/analytics/live (§6.6).
+
+        Gated on the ``analytics_live_enabled`` feature flag (default off);
+        403 with ``code=feature_disabled`` when the flag is off.
+        """
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
+            if not feature_flag_enabled(db,"analytics_live_enabled"):
+                return self.json(403,{"error":"Live analytics is not enabled","code":"feature_disabled"})
+            data=invitation_live_activity(db,invite_id)
+        self.json(200,data)
 
     def list_trash(self):
         user=self.require_user()
@@ -10215,6 +10424,7 @@ if __name__ == "__main__":
     with connect() as _db:_db.execute("SELECT 1")
     ensure_agent_schema(connect)
     ensure_platform_schema(connect)
+    with connect() as _analytics_db:ensure_analytics_ready(_analytics_db)
     cleanup_expired_security_rows()
     process_storage_delete_jobs(limit=100)
     cleanup_upload_sessions()
@@ -10253,6 +10463,16 @@ if __name__ == "__main__":
                 if JSON_LOGS:print(json.dumps({"level":"warning","event":"studio_backup_scheduler_failed","message":str(exc)}),flush=True)
             if stopping.wait(60):break
     threading.Thread(target=backup_scheduler_loop,daemon=True,name="studio-backup-scheduler").start()
+    def analytics_reconstruction_loop():
+        # ROADMAP Part 6 §6.4 — close idle sessions, drop spam sessions,
+        # aggregate the daily summary and prune past the retention window.
+        while not stopping.is_set():
+            try:
+                with connect() as db:run_session_reconstruction(db)
+            except Exception as exc:
+                if JSON_LOGS:print(json.dumps({"level":"warning","event":"analytics_reconstruction_failed","message":str(exc)}),flush=True)
+            if stopping.wait(300):break
+    threading.Thread(target=analytics_reconstruction_loop,daemon=True,name="analytics-reconstruction").start()
     def request_stop(*_):
         if stopping.is_set():return
         stopping.set();threading.Thread(target=server.shutdown,daemon=True).start()

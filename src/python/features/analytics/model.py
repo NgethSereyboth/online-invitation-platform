@@ -160,12 +160,26 @@ SCHEMA_STATEMENTS = [
 )""",
 ]
 
+# PostgreSQL spells the auto-incrementing key ``BIGSERIAL`` where SQLite spells
+# it ``INTEGER PRIMARY KEY AUTOINCREMENT``; that single token is the only
+# dialect difference in the list above. ``CREATE TABLE IF NOT EXISTS`` and
+# ``CREATE INDEX IF NOT EXISTS`` are valid in both.
+PG_SCHEMA_STATEMENTS = [
+    stmt.replace("id INTEGER PRIMARY KEY AUTOINCREMENT", "id BIGSERIAL PRIMARY KEY")
+    for stmt in SCHEMA_STATEMENTS
+]
+
 
 # --- Schema -------------------------------------------------------------
 
-def ensure_schema(db) -> None:
-    """Create the three analytics tables + indices if missing."""
-    for stmt in SCHEMA_STATEMENTS:
+def ensure_schema(db, dialect: str = "sqlite") -> None:
+    """Create the three analytics tables + indices if missing.
+
+    ``dialect`` picks the statement list; it defaults to the SQLite list so
+    every existing caller keeps working unchanged.
+    """
+    statements = PG_SCHEMA_STATEMENTS if dialect == "postgresql" else SCHEMA_STATEMENTS
+    for stmt in statements:
         db.execute(stmt)
 
 

@@ -1,0 +1,9 @@
+[ok] ingest accepted (204) before the flag is touched status=204
+[ok] live is 403 feature_disabled by default status=403 body={'error': 'Live analytics is not enabled', 'code': 'feature_disabled'}
+[ok] admin PUT flips analytics_live_enabled status=200 body=b'{"updated": 1, "flags": [{"key": "ai_agent_enabled", "description": "Master switch for the AI creative agent", "value": true, "tier": null, "updatedAt": null, "'
+[ok] live returns 200 with activeSessions + lastEventAt once the flag is on status=200 body={'activeSessions': 1, 'lastEventAt': 1791789991393}
+[ok] live is 404 for a non-host status=404
+[ok] ingest for an unknown invitation is 404 status=404
+[ok] ingest with an invalid sessionId is 400 status=400
+
+ANALYTICS_LIVE_FLAG_PROBE: 7/7 checks passed
