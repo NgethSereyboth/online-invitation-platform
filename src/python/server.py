@@ -3781,7 +3781,13 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/api/invitations/") and path.endswith("/materials/import-jobs"): return self.get_material_import_jobs(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.endswith("/materials/duplicates"): return self.find_material_duplicates(path.split("/")[3])
         if path.startswith("/api/invitations/") and path.count("/") == 3: return self.get_invitation(path.split("/")[3])
-        if path.startswith("/i/"): return self.serve_public(path.split("/", 2)[2])
+        if path.startswith("/i/"):
+            # Goal 4a (§5.3): /i/<project-slug>/<guest-code> — the project slug is
+            # the first segment, the guest's frozen code the second. A bare
+            # /i/<slug> keeps working exactly as before (guest_slug=None), and a
+            # trailing slash is treated as no guest rather than an empty code.
+            parts=path.split("/", 2)[2].split("/")
+            return self.serve_public(parts[0], parts[1] if len(parts)>1 and parts[1] else None)
         if path.startswith("/api/media/"): return self.serve_signed_media(unquote(path[len("/api/media/"):]))
         if path.startswith("/api/image/"): return self.serve_responsive_image(unquote(path[len("/api/image/"):]))
         # Goal 0c (§3.7): the card is served both at the historical unversioned
@@ -9785,14 +9791,26 @@ class Handler(SimpleHTTPRequestHandler):
             "total": int(total or 0), "limit": limit, "offset": offset,
         })
 
-    def serve_public(self, slug):
+    def serve_public(self, slug, guest_slug=None):
+        # Goal 4 (§5.3): a guest segment only *refines* the preview tags. Every
+        # value still comes from the published document — no new columns, no new
+        # template store — and an unknown or missing segment falls through to
+        # the project-only behaviour rather than 404, because /i/<slug> is a
+        # valid link that may already be sitting in a chat.
         title="Invitation";description="You are invited to a special event.";publication_version=0
         with connect() as db:
-            row=db.execute("SELECT i.access_mode,p.document_json,p.version FROM invitations i LEFT JOIN publications p ON p.invitation_id=i.id WHERE i.slug=? AND i.is_published=1 AND i.archived=0 AND i.deleted_at IS NULL AND (i.expires_at IS NULL OR i.expires_at>?) ORDER BY p.published_at DESC LIMIT 1",(slug,int(time.time()*1000))).fetchone()
+            row=db.execute("SELECT i.id,i.access_mode,p.document_json,p.version FROM invitations i LEFT JOIN publications p ON p.invitation_id=i.id WHERE i.slug=? AND i.is_published=1 AND i.archived=0 AND i.deleted_at IS NULL AND (i.expires_at IS NULL OR i.expires_at>?) ORDER BY p.published_at DESC LIMIT 1",(slug,int(time.time()*1000))).fetchone()
             if row:publication_version=int(row["version"] or 0)
             if row and row["access_mode"]!="password" and row["document_json"]:
                 try:
-                    document=json.loads(row["document_json"]);fields=document.get("fields",{});title=str(fields.get("names") or "Invitation")[:120];description=str(fields.get("message") or "You are invited to a special event.")[:240]
+                    document=json.loads(row["document_json"]);fields=document.get("fields",{});couple=str(fields.get("names") or "Invitation");title=couple[:120];description=str(fields.get("message") or "You are invited to a special event.")[:240]
+                    guest=db.execute("SELECT name FROM guests WHERE invitation_id=? AND slug=?",(row["id"],guest_slug)).fetchone() if guest_slug else None
+                    if guest:
+                        social=document.get("socialCard") if isinstance(document.get("socialCard"),dict) else {}
+                        guest_title=str(social.get("guestTitleTemplate") or "")
+                        title=(guest_title.replace("{guest}",str(guest["name"])).replace("{title}",couple) if guest_title else f"{guest['name']} · {couple[:100]}")[:120]
+                        guest_description=str(social.get("guestDescriptionTemplate") or "")
+                        if guest_description:description=guest_description.replace("{guest}",str(guest["name"])).replace("{title}",couple)[:240]
                 except Exception as exc: _log.debug("cleanup failed: %s", exc)
             elif row and row["access_mode"]=="password":title="Private Invitation";description="A private invitation is waiting for you."
         # Goal 0c (§3.7): the cache FILE was always keyed by the publication
@@ -9800,7 +9818,9 @@ class Handler(SimpleHTTPRequestHandler):
         # re-published design changed the bytes at an unchanged URL — the one
         # case Meta documents as "will not refresh in caches". The version now
         # travels in the URL, and the unversioned path still resolves.
-        image_format=available_social_image_format();image_path=f"/api/public/{quote(slug)}/social-card-v{publication_version}.{image_format}";public_path=f"/i/{quote(slug)}"
+        # Goal 4e (§5.3): the versioned card path gains the guest segment when the
+        # URL had one, so each guest's preview image has its own cacheable URL.
+        image_format=available_social_image_format();image_path=f"/api/public/{quote(slug)}"+(f"/{quote(guest_slug)}" if guest_slug else "")+f"/social-card-v{publication_version}.{image_format}";public_path=f"/i/{quote(slug)}"
         # V54.9 (sec-1, P1-A from ASVS L2 gap analysis): every user-controlled
         # placeholder substituted into public.html must be HTML-escaped with
         # quote=True so the value is safe in both attribute (content="...",
