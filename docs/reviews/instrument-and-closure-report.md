@@ -154,7 +154,11 @@ important-removal-audit: vs 623b233 — 61 changed CSS/JSON entry(s) (36 modifie
 ```
 
 Every changed CSS file is byte-identical to the pass base after deleting the
-`!important` token — including the generated bundles. The manifests moved only size,
+`!important` token — including the generated bundles. A rename arrives in that diff
+as `R100 old -> new` because `git diff` detects renames by content similarity rather
+than by trusting the working tree ([git-diff: `-M` / `--find-renames`](https://git-scm.com/docs/git-diff#Documentation/git-diff.txt--M),
+where a similarity threshold of 100 % is an exact-content rename), and the tool then
+compares the two blobs itself rather than treating the status as evidence. The manifests moved only size,
 digest and renamed-source fields, and each of those was re-derived: every recorded
 digest was compared against sha256 of the file it names, and every size delta against
 that file's own delta. **Failures: 0.** The tool does not judge JS (a logic change is
