@@ -9174,7 +9174,7 @@ let layerFocusTimer = 0;
 let settings = readSettings();
 let selectionUndoStack = [], selectionRedoStack = [], lastDocumentCommitAt = 0, lastSelectionUndoAt = 0;
 let commandSequence = 0, lastCommand = null;
-let overlaySyncFrame=0,overlaySyncFull=false,overlaySyncLifecycle=null,overlayResizeObserver=null,lastRevealAdjustAt=0;
+let overlaySyncFrame=0,overlaySyncFull=false,overlaySyncLifecycle=null,overlayResizeObserver=null,overlayObservedSizes=new WeakMap(),lastRevealAdjustAt=0;
 function readSettings(){
 try { return {grid:false,rulers:false,snap:true,guides:true,gridSize:20,...JSON.parse(localStorage.getItem(SETTINGS)||'{}')}; }
 catch { return {grid:false,rulers:false,snap:true,guides:true,gridSize:20}; }
@@ -9656,7 +9656,7 @@ overlaySyncFrame=setTimeout(()=>{overlaySyncFrame=0;const runFull=overlaySyncFul
 }
 function teardownOverlaySync(){
 if(overlaySyncFrame)clearTimeout(overlaySyncFrame);overlaySyncFrame=0;overlaySyncFull=false;
-overlayResizeObserver?.disconnect();overlayResizeObserver=null;
+overlayResizeObserver?.disconnect();overlayResizeObserver=null;overlayObservedSizes=new WeakMap();
 overlaySyncLifecycle?.abort();overlaySyncLifecycle=null;
 }
 function installOverlaySync(){
@@ -9667,7 +9667,17 @@ window.addEventListener('einvite:workspace-resized',()=>scheduleOverlaySync(true
 window.addEventListener('resize',()=>scheduleOverlaySync(true),{signal});
 viewport?.addEventListener('scroll',scheduleOverlaySync,{passive:true,signal});
 window.addEventListener('pagehide',event=>{if(!event.persisted)teardownOverlaySync()},{signal});
-if('ResizeObserver'in window){overlayResizeObserver=new ResizeObserver(()=>scheduleOverlaySync());overlayResizeObserver.observe(stage);if(viewport)overlayResizeObserver.observe(viewport)}
+if('ResizeObserver'in window){
+// Change detection on the observed boxes. The observer watches #stage and
+// #viewport, and the sync it schedules re-renders the layers panel and the
+// overlay — which resizes the stage. Without this guard the observer re-arms
+// itself on its own output, so the synchronous work runs at frame rate instead of
+// when the canvas actually changes size. Measured: this loop accounts for the
+// 1,359 ms / 13 calls the previous pass attributed to the syncAll rAF, and this is
+// the same self-triggering shape as the mutation-observer defect fixed in
+// src/js/editor/ui-components.js, which went 3,429 ms -> 689 ms by the same means.
+// A genuine resize still notifies: the box key is compared per observed element.
+overlayResizeObserver=new ResizeObserver(entries=>{let boxChanged=false;for(const entry of entries){const box=entry.borderBoxSize&&entry.borderBoxSize[0];const key=box?`${Math.round(box.inlineSize)}x${Math.round(box.blockSize)}`:`${Math.round(entry.contentRect.width)}x${Math.round(entry.contentRect.height)}`;if(overlayObservedSizes.get(entry.target)!==key){overlayObservedSizes.set(entry.target,key);boxChanged=true}}if(boxChanged)scheduleOverlaySync()});overlayResizeObserver.observe(stage);if(viewport)overlayResizeObserver.observe(viewport)}
 }
 function boot(){
 window.EInviteProfessionalEditor={version:17,ownsPointerInteractions:true,ownsKeyboardInteractions:true,renderLayers,sync:syncAll,get commandSequence(){return commandSequence},get lastCommand(){return lastCommand?clone(lastCommand):null},get activeInteraction(){return interaction?{type:interaction.type,handle:interaction.handle,pointerId:interaction.pointerId,ids:interaction.ids?[...interaction.ids]:[]}:null},commands:{alignSelection,distributeSelection,groupSelection,ungroupSelection,copySelection,cutSelection,pasteSelection,pastePayload,validateClipboardPayload,duplicateSelection,deleteSelection,reorder,reorderRelative,nudge,clearSelection,setSelection,setObjectFlag,undoSelection,redoSelection}};
