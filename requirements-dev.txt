@@ -1,0 +1,38 @@
+# requirements-dev.txt — development and test entry point (not shipped).
+#
+#   python3 -m venv .venv
+#   .venv/bin/python -m pip install -r requirements-dev.txt
+#
+# `tools/reproduce.sh` (step 2, the unit-test step) does exactly that when the
+# interpreter it is run with has no pytest, so `make reproduce` includes the test
+# suite without any manual setup. The venv lives at .venv/ and is gitignored.
+#
+# Why this file exists at all: `tools/reproduce.sh` used to print
+#   "pip install -r docs/requirements-test.txt"
+# on the pytest-skip path, but docs/requirements-test.txt pins the *browser and
+# asset* toolchain (playwright, Pillow, qrcode, argon2-cffi, cryptography,
+# fonttools, Brotli) and does not list pytest. Following the printed hint left the
+# test step skipped, which is how the hole in the reproducibility claim survived.
+# This file is the single installable target that actually makes the step run.
+#
+# python3 on this machine is Debian's, and it is marked EXTERNALLY-MANAGED
+# (PEP 668), so `python3 -m pip install pytest` is refused unless
+# --break-system-packages is passed. That flag mutates the OS-managed interpreter,
+# so the script uses a venv instead: no sudo, no system state, same command for
+# every machine.
+#
+# Versions are exact, matching the pinning discipline of
+# docs/requirements-production.txt and tools/requirements.txt. Verified current
+# against the index this installs from (`python3 -m pip index versions <name>`,
+# 2026-10-12): pytest 9.1.1, pytest-timeout 2.4.0.
+#
+#   https://pypi.org/project/pytest/9.1.1/
+#   https://pypi.org/project/pytest-timeout/2.4.0/
+pytest==9.1.1
+pytest-timeout==2.4.0
+
+# The browser/asset toolchain the test suite imports (playwright for the geometry
+# tests, Pillow/qrcode for the asset tests, fonttools/Brotli for subsetting).
+# Kept as a reference rather than duplicated, exactly like requirements.txt does
+# with docs/requirements-production.txt.
+-r docs/requirements-test.txt

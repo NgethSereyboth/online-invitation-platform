@@ -16,6 +16,16 @@
 # Prerequisites, in full:
 #   npm install
 #   pip install -r tools/requirements.txt
+#   (the test step installs its own dependencies into .venv — nothing to do by hand)
+#
+# Step 2 is no longer conditional on the caller's environment. It used to print
+# "pytest is not installed — the test step will be skipped" and move on, which is
+# how the suite went unmeasured: the printed hint pointed at
+# docs/requirements-test.txt, a file that pins playwright/Pillow/qrcode but not
+# pytest, so following it could never enable the step. It now installs the pinned
+test dependencies from requirements-dev.txt into .venv/ on first use. When no
+# interpreter with pytest can be obtained the step says CANNOT RUN and names the
+# hole instead of reporting a skip that reads like a pass.
 #
 # Usage:  tools/reproduce.sh [--skip-lhci] [--skip-tests] [--port 8124]
 #         make reproduce
@@ -87,13 +97,35 @@ for mod in puppeteer-core @lhci/cli; do
 done
 echo "  python3 $(python3 --version 2>&1 | awk '{print $2}')   node $(node --version)   npm $(npm --version)"
 
-# pytest is a test-only dependency (docs/requirements-test.txt), not a
-# production one. Its absence is a skip, not a failure.
-HAVE_PYTEST=0
-if python3 -m pytest --version >/dev/null 2>&1; then HAVE_PYTEST=1; fi
-if [ "$HAVE_PYTEST" -eq 0 ]; then
-  echo "  NOTE: pytest is not installed — the test step will be skipped."
-  echo "        to include it:  pip install -r docs/requirements-test.txt"
+# Resolve an interpreter that has pytest, and the browser/asset imports the
+# suite needs. Order:
+#   1. the interpreter running this script, if it already has pytest
+#   2. .venv, created here from requirements-dev.txt on first use
+# A venv rather than `pip install` because python3 on this and every supported
+# host is EXTERNALLY-MANAGED (PEP 668): installing into it needs
+# --break-system-packages, which mutates the OS-managed interpreter.
+PYTEST_PY=""
+TEST_VENV="${TEST_VENV:-$REPO_ROOT/.venv}"
+if python3 -m pytest --version >/dev/null 2>&1; then
+  PYTEST_PY=python3
+else
+  if [ ! -x "$TEST_VENV/bin/python" ]; then
+    echo "  creating $TEST_VENV for the test-only dependencies"
+    python3 -m venv "$TEST_VENV" >/dev/null 2>&1 || true
+  fi
+  if [ -x "$TEST_VENV/bin/python" ] && ! "$TEST_VENV/bin/python" -m pytest --version >/dev/null 2>&1; then
+    echo "  installing requirements-dev.txt into $TEST_VENV"
+    "$TEST_VENV/bin/python" -m pip install -q -r requirements-dev.txt > "$ARTIFACTS/reproduce-pip.log" 2>&1 || true
+  fi
+  if [ -x "$TEST_VENV/bin/python" ] && "$TEST_VENV/bin/python" -m pytest --version >/dev/null 2>&1; then
+    PYTEST_PY="$TEST_VENV/bin/python"
+  fi
+fi
+if [ -z "$PYTEST_PY" ]; then
+  echo "  CANNOT RUN the test step: no interpreter with pytest."
+  echo "        to enable it:  python3 -m venv .venv && .venv/bin/python -m pip install -r requirements-dev.txt"
+else
+  echo "  pytest: $("$PYTEST_PY" -m pytest --version 2>&1 | head -1)  (interpreter: $PYTEST_PY)"
 fi
 
 # Fail before starting anything if the port is taken: an unrelated listener on
@@ -132,20 +164,32 @@ for marker in EDITOR_BUNDLE_CHECK_PASSED ROUTE_BUNDLE_CHECK_PASSED PAGE_ASSET_MA
 done
 
 # ---------------------------------------------------------------------------
-step "2/6  unit tests  (pytest tests/)"
+step "2/6  unit tests  ($PYTEST_PY -m pytest tests/ -q)"
 if [ "$SKIP_TESTS" -eq 1 ]; then
   echo "  skipped (--skip-tests)"
-elif [ "$HAVE_PYTEST" -eq 0 ]; then
-  echo "  skipped — pytest is not installed (pip install -r docs/requirements-test.txt)"
+elif [ -z "$PYTEST_PY" ]; then
+  echo "  CANNOT RUN — this is a hole in the run, not a pass. See step 0/6 above."
 else
-  python3 -m pytest tests/ -q > "$ARTIFACTS/reproduce-pytest.log" 2>&1
+  "$PYTEST_PY" -m pytest tests/ -q > "$ARTIFACTS/reproduce-pytest.log" 2>&1
   pytest_status=$?
   tail -n 25 "$ARTIFACTS/reproduce-pytest.log"
   echo "  exit=$pytest_status  (full log: artifacts/reproduce-pytest.log)"
-  if [ "$pytest_status" -ne 0 ]; then
-    echo "  NOTE: test failures are reported, not fatal — the suite carries pre-existing"
-    echo "        red tests unrelated to measurement. Not counted against this run's exit status."
-  fi
+  # Exit 3 is pytest's INTERNALERROR: the session aborted, so "no tests ran" rather
+  # than "tests passed". Exit 5 is "no tests collected". Both look like a quiet pass
+  # in a summary line and are exactly how this step went unmeasured before, so they
+  # are named and counted against the run.
+  case "$pytest_status" in
+    3) echo "  SUITE DID NOT RUN (pytest INTERNALERROR — collection aborted). This is not a pass." >&2; fail=1 ;;
+    5) echo "  SUITE DID NOT RUN (no tests collected). This is not a pass." >&2; fail=1 ;;
+    *)
+      summary_line=$(grep -E "^[0-9]+ (passed|failed)|passed|failed|error" "$ARTIFACTS/reproduce-pytest.log" | tail -1)
+      echo "  result: $summary_line"
+      if [ "$pytest_status" -ne 0 ]; then
+        echo "  NOTE: test failures are reported, not fatal — the suite carries pre-existing"
+        echo "        red tests unrelated to measurement. Not counted against this run's exit status."
+      fi
+      ;;
+  esac
 fi
 
 # ---------------------------------------------------------------------------
@@ -217,18 +261,38 @@ det_status=$?
 
 # ---------------------------------------------------------------------------
 step "6/6  report text  (tools/report-verify.mjs)"
-# Re-runs every read-only command the report quotes in a fenced block and diffs the
+# Re-runs every read-only command each report quotes in a fenced block and diffs the
 # recorded output against the real output. Blocks that record a state the tree has
-# left behind are declared historical in the markdown itself; the declaration and
-# its reason are printed here, so a skip is visible and never silent.
-node tools/report-verify.mjs docs/reviews/reproducibility-and-performance-report.md
-rep_status=$?
+# left behind, a write, or a measurement are declared in the markdown itself; the
+# declaration and its reason are printed, so nothing is skipped silently.
+#
+# --with-server lets the blocks whose only obstacle was a missing server run. The
+# gzip server from step 3 is still up, so report-verify reuses it rather than
+# starting a second one, and its own startup path is what --with-server falls back
+# to on a cold run. --timeout must cover the 16-page hover sweeps (~90 s and ~5 min),
+# which the 60 s default cannot.
+rep_status=0
+for report in docs/reviews/reproducibility-and-performance-report.md \
+              docs/reviews/instrument-and-closure-report.md; do
+  if [ ! -f "$report" ]; then
+    echo "  MISSING REPORT: $report" >&2
+    rep_status=2
+    continue
+  fi
+  node tools/report-verify.mjs "$report" --with-server --timeout=480
+  status=$?
+  echo "  exit=$status  ($report)"
+  [ "$status" -ne 0 ] && rep_status=$status
+done
 [ "$rep_status" -ne 0 ] && fail=1
 
 # ---------------------------------------------------------------------------
 step "summary"
 echo "  build check  : PASS"
 echo "  gzip server  : PASS (gzip verified on the wire)"
+if [ "${SKIP_TESTS:-0}" -eq 1 ]; then echo "  unit tests   : skipped (--skip-tests)"
+elif [ -z "$PYTEST_PY" ]; then echo "  unit tests   : CANNOT RUN (no interpreter with pytest)"
+else echo "  unit tests   : exit=${pytest_status:-not reached}  (interpreter: $PYTEST_PY)"; fi
 if [ "$SKIP_LHCI" -eq 1 ]; then echo "  lhci         : skipped"; else echo "  lhci         : exit=$lhci_status"; fi
 echo "  determinism  : exit=$det_status"
 echo "  report text  : exit=$rep_status"

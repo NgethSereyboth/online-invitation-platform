@@ -36,7 +36,26 @@ export const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR
   : resolve(REPO_ROOT, 'artifacts');
 
 export const BASE_URL = (process.env.BASE_URL || 'http://127.0.0.1:8124').replace(/\/$/, '');
-export const PORT = Number(process.env.PORT || 8124);
+
+/**
+ * The port every tool here defaults to.
+ *
+ * `Number(process.env.PORT || 8124)` looked correct and was not: an exported
+ * `PORT=0` is a *truthy string*, so it resolves to the number 0 rather than to the
+ * default. That is not hypothetical — the environment this pass ran in exports
+ * `PORT=0`, and it cost an afternoon: report-verify's `--with-server` readiness probe
+ * asked for `http://127.0.0.1:0/index.html`, never got an answer, and left the
+ * server-dependent blocks reported as skipped with the flag apparently doing
+ * nothing.
+ *
+ * tools/lhci-single.js already carries this exact fix for the same reason (Lighthouse
+ * CI exports PORT=0 while it probes for a free port). It belongs here, in the one
+ * place every tool reads the port from, rather than in each caller.
+ *
+ * Only a real, non-zero port is honoured; anything else falls back to 8124.
+ */
+const envPort = Number(process.env.PORT);
+export const PORT = Number.isInteger(envPort) && envPort > 0 ? envPort : 8124;
 
 /** The 16 shipped routes, in the order lhci measures them. */
 export const PAGES = [

@@ -11,7 +11,9 @@ import urllib.error
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import route_budget_utils
 from ai_agent.local_providers import _json_request
 from ai_agent.service import AgentService, AgentServiceError
 
@@ -114,8 +116,12 @@ def test_browser_contracts_and_route_budget():
     assert "MULTIPLE_SERVER_MUTATIONS_UNSUPPORTED" in registry
     assert "X-EInvite-AI-Authorization" in registry
     assert "authorizationHeaders" in upload
-    bundle_bytes = (ROOT / "src" / "js" / "bundle-index-v15.js").stat().st_size + (ROOT / "src" / "css" / "bundle-index-v15.css").stat().st_size
-    assert bundle_bytes <= 1_420_000, bundle_bytes
+    # The ceiling is read from docs/perf/lighthouse-budgets.json, the declared single
+    # source of truth, rather than hard-coded. This assertion used to hold a private
+    # copy of the V0.52-era literal `<= 1_420_000`, which stayed behind when the
+    # budget file (and its owner gate, tests/v55_route_weight_budget_test.py) moved
+    # on: this test was red while the gate that owns the number was green.
+    route_budget_utils.assert_index_route_within_budget()
 
 
 if __name__ == "__main__":
