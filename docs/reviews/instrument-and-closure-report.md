@@ -24,8 +24,9 @@ the section that uses it. Where a claim could not be verified, it says so.
 | 5 | extend `report-verify.mjs` coverage | **closed**: 9 skipped → 0, 0 mismatches, one new declaration kind | §5 |
 | 6 | hygiene: decide the untracked artifacts | **decided**, and the first attempt at it was wrong in a way worth recording | §6 |
 
-Commits, in order (the hashes are stable; this report's own commit is not printed,
-because writing it here would change the hash it names):
+Commits, in order. The list stops at the two commits that carry this report:
+printing the *final* correction's own hash would change it, which is how the prior
+report ended up with two hashes that do not exist.
 
 ```
 623b233  pass base (branch main)
@@ -36,6 +37,8 @@ d8f1fab  chore(tools): extend report-verify to continuations, server blocks and 
 aa4fbe4  refactor: rename versioned files, batch 3 of N (10 files)
 42cbaca  chore(hygiene): decide the untracked set, and stop parking evidence in /tmp
 2bb56c1  chore(tools): two new instruments, a declaration kind, and the pass's raw evidence
+dc169e1  docs: the instrument-and-closure pass report, and the evidence it rests on
+9b3ffa2  docs: make the new report's own blocks pass its gate, and scope the audit to generated JSON
 ```
 
 ---
