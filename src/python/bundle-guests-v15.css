@@ -110,6 +110,13 @@ input[type="date"],input[type="time"]{max-width:100%;box-sizing:border-box}
 }@layer components {
 .guest-admin{max-width:1000px;margin:auto;padding:32px}.top,.filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.top h1{font:36px Georgia;color:var(--accent);margin-right:auto}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0}.metric{background:white;padding:18px;border-radius:12px}.metric strong{display:block;font-size:28px;color:var(--accent)}.add-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;background:var(--surface,#fff);padding:16px;border-radius:12px}.add-form .wide{grid-column:span 2}.add-form button{align-self:end}.filters{margin:16px 0}.filters input{max-width:320px;margin:0}.filters select{width:auto;margin:0}.guest-row{display:grid;grid-template-columns:minmax(220px,1fr) 130px auto auto auto auto;gap:8px;align-items:center;background:white;margin-top:8px;padding:13px;border-radius:10px}.checked{border-left:5px solid #3d9361}.qr{padding:30px;text-align:center}.qr img{width:260px;height:260px}@media(max-width:700px){.summary{grid-template-columns:1fr 1fr}.add-form,.guest-row{grid-template-columns:1fr}.guest-row{margin-top:12px}}
 
+.share-all{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--app-text,#2b2b33)}
+.guest-pick{display:inline-flex;align-items:center;justify-content:center;padding:0 4px}
+.guest-pick input{width:18px;height:18px}
+.share-channels{display:inline-flex;gap:8px;font-size:12px}
+.share-channels a{color:var(--app-accent,#9d4555);text-decoration:underline}
+.share-note{margin:10px 0 0}
+
 }@layer components {
 :root{--app-bg:#f4f5f8;--app-surface:#ffffff;--app-surface-2:#f8f8fb;--app-surface-3:#f0f1f5;--app-text:#202127;--app-muted:#646773;--app-faint:#6c707a;--app-line:#e3e4e9;--app-line-2:#d7d8df;--app-accent:#8b465b;--app-accent-2:#ba6d84;--app-accent-soft:#f4e7eb;--app-good:#38a169;--app-warn:#d58b20;--app-shadow-sm:0 2px 8px rgba(30,32,40,.06);--app-shadow:0 14px 42px rgba(25,26,34,.10);--app-shadow-xl:0 30px 90px rgba(19,20,26,.20);--app-radius-sm:9px;--app-radius:14px;--app-radius-lg:20px;--motion-fast:150ms;--motion:260ms;--motion-slow:420ms;--spring:cubic-bezier(.2,.9,.2,1.15);--smooth:cubic-bezier(.2,.7,.2,1);--studio-left-width:370px;--studio-right-width:330px}
 

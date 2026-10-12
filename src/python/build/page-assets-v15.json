@@ -92,7 +92,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 374966,
+      "bytes": 379130,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
