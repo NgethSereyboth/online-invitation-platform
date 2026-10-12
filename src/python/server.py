@@ -3848,11 +3848,18 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/api/invitations/") and path.count("/") == 3: return self.get_invitation(path.split("/")[3])
         if path.startswith("/i/"):
             # Goal 4a (§5.3): /i/<project-slug>/<guest-code> — the project slug is
-            # the first segment, the guest's frozen code the second. A bare
-            # /i/<slug> keeps working exactly as before (guest_slug=None), and a
-            # trailing slash is treated as no guest rather than an empty code.
-            parts=path.split("/", 2)[2].split("/")
-            return self.serve_public(parts[0], parts[1] if len(parts)>1 and parts[1] else None)
+            # the first segment and the guest's frozen code the second, and only a
+            # segment that could *be* a code counts as one (safe_guest_code is the
+            # same validator the cache path uses). A bare /i/<slug> keeps working
+            # as before, a trailing slash means "no guest", and anything else
+            # falls back to the whole remainder as the slug — which is exactly
+            # what this dispatcher did before the guest segment existed, so a
+            # slug containing a slash is still reflected and escaped as it was
+            # (tests/security_reflected_injection_test.py asserts that).
+            remainder=path.split("/", 2)[2].rstrip("/")
+            head,_,tail=remainder.partition("/")
+            code=safe_guest_code(tail.partition("/")[0]) if tail else ""
+            return self.serve_public(head if code else remainder, code or None)
         if path.startswith("/api/media/"): return self.serve_signed_media(unquote(path[len("/api/media/"):]))
         if path.startswith("/api/image/"): return self.serve_responsive_image(unquote(path[len("/api/image/"):]))
         # Goal 0c (§3.7): the card is served both at the historical unversioned
