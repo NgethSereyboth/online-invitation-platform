@@ -20,6 +20,25 @@
  * .final-timeline-row { background: var(--app-surface) !important }` overrides it in
  * both states — which is why its demotion produced no change (§6 of the report).
  *
+ * The environment it measures in (a correction, this pass)
+ *   A cascade claim is only as good as the page it was read from, and this tool used
+ *   to read a page where every `@media(hover:hover)` block was INACTIVE: headless
+ *   Chrome reports `matchMedia('(hover: hover)').matches === false` and CDP cannot
+ *   override it, so the rules that style a real desktop hover —
+ *   `@media(hover:hover){button:not(:disabled):hover{transform:…}}` — were switched
+ *   off while the tool claimed to be explaining a hover declaration. The lift probe
+ *   that proposes a demotion DOES emulate a hover-capable device
+ *   (`lib/browser.mjs emulateHoverCapable`, which the same probe verifies with
+ *   `verifyHoverMediaRewrite`), so the tool that justifies the demotion was measuring
+ *   in a different environment from the tool that proposed it. Measured on
+ *   index.html before this change: `transform` on `.ui-theme-menu button:hover`
+ *   showed exactly one matched rule (the declaration itself), against four once the
+ *   media block is live.
+ *
+ *   The emulation is now on by default and its effect is verified in the run (the
+ *   rewritten-call count is printed, and a rewrite that did not take effect fails the
+ *   run). `--no-hover-emulation` keeps the old behaviour for a comparison.
+ *
  * Reading the output
  *   `order` is cascade order as Chrome reports it (later entries win when priority
  *   and specificity tie); `IMPORTANT` marks `!important`. The tool prints what the
@@ -28,6 +47,7 @@
  * Usage
  *   node tools/css-cascade-winner.mjs <url> --selector=.final-timeline-row \
  *        [--property=background] [--states=plain,active,hover] [--index=0]
+ *   node tools/css-cascade-winner.mjs <url> --selector=… --no-hover-emulation
  *
  * `plain` forces nothing; `active`/`focus-visible`/`checked` are applied as the class
  * the selector names (or forced over CDP when the name is a pseudo-class), the same
@@ -35,8 +55,8 @@
  *
  * Requires: node + puppeteer-core and a running server (tools/serve-gzip.py).
  */
-import { launch, newPage } from './lib/browser.mjs';
-import { argValue, pageUrl, urlFromArg } from './lib/repo.mjs';
+import { emulateHoverCapable, launch, newPage, verifyHoverMediaRewrite } from './lib/browser.mjs';
+import { argValue, hasFlag, pageUrl, urlFromArg } from './lib/repo.mjs';
 
 const argv = process.argv.slice(2);
 const URL = urlFromArg(argv.find((a) => !a.startsWith('--')) || pageUrl('index.html'));
@@ -53,10 +73,31 @@ const PSEUDO = new Set(['hover', 'focus', 'focus-visible', 'focus-within', 'chec
 const CLASS_STATES = ['active'];
 const propertyMatcher = new RegExp('^' + PROPERTY.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '(-.*)?$');
 
+const HOVER_EMULATION = !hasFlag(argv, 'no-hover-emulation');
+
 const browser = await launch({ kind: 'full' });
 const page = await newPage(browser, { width: 1366, height: 900 });
 await page.goto(URL, { waitUntil: 'networkidle0', timeout: 60000 });
 await new Promise((r) => setTimeout(r, 1200));
+
+// Same declared simulation as the probe this tool justifies. Verified rather than
+// assumed: a rewrite that silently failed would put every `@media(hover:hover)` rule
+// back out of the match list, which is the defect this section exists to prevent.
+const hoverMedia = HOVER_EMULATION ? await emulateHoverCapable(page) : null;
+if (hoverMedia) {
+  const check = await verifyHoverMediaRewrite(page, hoverMedia.rewrittenCount);
+  if (check.stillInactive.length) {
+    console.error(`css-cascade-winner: ${check.stillInactive.length} rewritten media rule(s) still report matches=false — refusing to report a cascade read from a touch-first page.`);
+    await browser.close();
+    process.exit(3);
+  }
+  console.log(`CASCADE_HOVER_MEDIA ${JSON.stringify({
+    hoverCapableByDefault: hoverMedia.mediaHoverCapableBefore,
+    clausesFound: hoverMedia.clausesFound,
+    rewritten: hoverMedia.rewrittenCount,
+    stillInactiveAfter: check.stillInactive.length,
+  })}`);
+}
 
 const cdp = await page.target().createCDPSession();
 await cdp.send('DOM.enable');

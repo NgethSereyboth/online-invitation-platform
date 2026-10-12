@@ -102,6 +102,12 @@ const ALLOWED = [
   // Compares two recorded hover sweeps row by row. Read-only, but it needs two
   // artifact snapshots, which is why the blocks using it carry a declaration.
   'python3 tools/hover-regression-diff.py',
+  // Compares N recorded lift runs of ONE page row by row: verdict and diff count per
+  // declaration, FLIP where they disagree. Reads JSON artifacts and prints; it opens no
+  // browser and writes nothing. Added in this pass because the lift probe's stability
+  // proof is one of these blocks, and a read-only tool a report relies on should be
+  // verifiable by the gate rather than skipped by it.
+  'python3 tools/lift-verdict-compare.py',
   // Recomputes the versioned-rename surface from the tracked corpus.
   'python3 tools/versioned-rename-surface.py',
   'git check-ignore',
@@ -332,7 +338,26 @@ const results = [];
 for (const block of blocks) {
   const dollar = block.body.map((l, i) => [l, i]).filter(([l]) => l.startsWith('$ '));
   // Only the "one command, then its output" shape is mechanically checkable.
-  if (dollar.length !== 1 || dollar[0][1] !== 0) continue;
+  //
+  // This used to `continue` silently, which was the gate's own blind spot: a report
+  // could carry any number of blocks this tool cannot check and still print
+  // "0 skipped". `skipped` was honest and incomplete at the same time. The checking
+  // rules are unchanged — only the hole is now counted and printed, so a claim of
+  // "0 skipped" can be read next to the number of blocks it does not cover.
+  if (dollar.length !== 1 || dollar[0][1] !== 0) {
+    let why;
+    if (!dollar.length) why = 'no `$ ` command line, so there is nothing to re-run';
+    else if (dollar[0][1] !== 0) why = 'the first `$ ` line is not the block\u2019s first line';
+    else why = `${dollar.length} \`$ \` lines: only the "one command, then its output" shape is checkable`;
+    results.push({
+      line: block.line,
+      command: (dollar[0] && dollar[0][0].slice(2)) || '(none)',
+      status: 'uncheckable',
+      why,
+      diffs: [],
+    });
+    continue;
+  }
 
   // A shell-echoed multi-line command continues on `> ` lines. Reading those as
   // output is what made the two-line `for` loop in §1.2 impossible to verify.
@@ -451,6 +476,9 @@ const measurements = results.filter((r) => r.status === 'measurement');
 const heavy = results.filter((r) => r.status === 'heavy');
 const matched = results.filter((r) => r.status === 'match');
 const skipped = results.filter((r) => r.status === 'skipped');
+// Not a verdict: a statement of coverage. These blocks are neither verified nor
+// declared, and counting them is what keeps "0 skipped" from meaning "0 problems".
+const uncheckable = results.filter((r) => r.status === 'uncheckable');
 const partiallyCompared = matched.filter((r) => r.declaredPrefix);
 
 if (asJson) {
@@ -458,6 +486,7 @@ if (asJson) {
     file, checked: results.length, matched: matched.length, mismatches: mismatches.length,
     elided: elided.length, historical: historical.length, write: writes.length,
     measurement: measurements.length, heavy: heavy.length, skipped: skipped.length,
+    uncheckable: uncheckable.length,
     comparedLines: matched.reduce((n, r) => n + (r.comparedLines ?? r.recordedLines ?? 0), 0),
     partialMatches: partiallyCompared.length, serverUp, results,
   }, null, 2));
@@ -466,6 +495,7 @@ if (asJson) {
   console.log(`  blocks checked ${results.length} — match ${matched.length}, MISMATCH ${mismatches.length}, ELIDED ${elided.length}\n`);
   console.log(`  declared, not compared  historical ${historical.length}, write ${writes.length}, measurement ${measurements.length}, heavy ${heavy.length}`);
   console.log(`  still skipped ${skipped.length}${withServer ? '' : '   (pass --with-server to verify the server-dependent ones)'}`);
+  console.log(`  not mechanically checkable ${uncheckable.length}   (no `+"`$ `"+` command line, or not the "one command, then its output" shape)`);
   if (partiallyCompared.length) console.log(`  partially compared (declared tail) ${partiallyCompared.length}`);
   console.log('');
   for (const r of elided) console.log(`  ELIDED    line ${r.line}: ${r.command}\n            ${r.why}\n`);
@@ -475,6 +505,9 @@ if (asJson) {
   for (const r of writes) console.log(`  write      line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
   for (const r of measurements) console.log(`  measurement line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
   for (const r of heavy) console.log(`  heavy      line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
+  // Printed always, like the declarations: a reader is entitled to know which blocks
+  // the numbers above do not cover.
+  for (const r of uncheckable) console.log(`  uncheckable line ${r.line}: ${r.command}\n            ${r.why}\n`);
   for (const r of mismatches) {
     console.log(`  MISMATCH  line ${r.line}: ${r.command}`);
     if (r.why) console.log(`            ${r.why}`);

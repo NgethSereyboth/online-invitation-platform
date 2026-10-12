@@ -55,8 +55,11 @@ either server. Only the byte numbers depend on compression.
 | `hover-audit.mjs` | forces `:hover` on each rule's trigger via CDP `CSS.forcePseudoState` and diffs the computed style of trigger + subjects. |
 | `important-lift-test.mjs` | removes one authored `!important` **declaration** at a time and compares the **full** computed style — decides whether a priority is load-bearing. A rule whose selector mixes `:hover` with another state (`.x:hover, .x.active`) is measured on **both** paths: the class the selector names is added, a pseudo-class it names is forced over CDP. A declaration is load-bearing if either path changes a value; only a state the instrument cannot synthesize leaves it unmeasured, and that reason is carried out with the row. |
 | `hover-verify.py` | entry point for both, across every page; `--all`, `--lift`, `--lift-runs=N` (a `demotable` verdict then needs every run of every page to agree), `--cross-page`. |
+| `lift-verdict-compare.py` | compare per-declaration lift verdicts across an explicit list of `lift-*.json` artifacts for ONE page, flagging `FLIP` where runs disagree. `--cross-page` cannot do this: it aggregates by page name, so N runs of one page read as N different pages. |
 | `state-style-diff.mjs` | snapshot the full computed style of everything matching a selector in the states you name (`plain`, `active`, `focus-visible`, `hover`) and `--compare=` two snapshots. This is the before/after check for a declaration whose only reachable path is a non-`:hover` state, which the hover row-level diff cannot cover. Comparison is by property **name**: Chrome enumerates registered custom properties in an unstable order, and a positional diff reports dozens of phantom changes. |
-| `css-cascade-winner.mjs` | who actually WINS a property for an element in each state, from the browser's matched-style list (cascade order, values, `!important` flags, the last important entry). Answers "is this declaration inert because it is overridden", which is the difference between a safe demotion and a lucky one. |
+| `css-cascade-winner.mjs` | who actually WINS a property for an element in each state, from the browser's matched-style list (cascade order, values, `!important` flags, the last important entry). Answers "is this declaration inert because it is overridden", which is the difference between a safe demotion and a lucky one. Runs with `@media(hover:hover)` **re-enabled and verified** by default (`--no-hover-emulation` keeps the old behaviour): a cascade read from a touch-first page cannot explain a hover declaration, and headless Chrome reports `(hover: hover)` as false. |
+| `demotion-recheck.mjs` | decide a demotion the sweep could not observe. Reads one rule's property with `:hover` forced and motion settled, then re-reads after the declaration loses its `!important` and after it is removed — in the page's default state and, with `--reveal`, with the `hidden` attributes removed so the element a user actually hovers has a box. Prints `elementsReadable`, and reads a verdict only on rendered elements. 
+| `lift-verdict-compare.py` | compare N `lift-*.json` runs of ONE page: per declaration, the verdict and diff count in each run, with `FLIP` where they disagree. The stability proof for a lift verdict. |
 | `computed-style-probe.mjs` | prove a CSS refactor changed no computed value: snapshot selectors before/after, or `--compare=` two saved runs. |
 
 ### Performance tracing
@@ -64,6 +67,7 @@ either server. Only the byte numbers depend on compression.
 | file | what it does |
 | --- | --- |
 | `style-layout-trace.mjs` | CDP trace around a page load: Recalculate Style vs Layout totals, the longest individual events with their `beginData`, and per-selector stats. |
+| `layout-stack-attribution.py` | attribute `Layout` / `UpdateLayoutTree` time to the JS frame that caused it, from the stack traces the trace already carries. The stack is at `args.beginData.stackTrace` (Blink's `SetCallStack` writes it into the event's own data dictionary), NOT at `args.stackTrace` — a reader that checks only the top level reports 0 and concludes the cause is unattributable. `--paths` prints where the stack actually is, which is the measurement that settles that question. |
 | `loader-ab.mjs` | A/B the deferred loader's serial promise chain against `Promise.all`, asserting the arm was actually patched. |
 
 ### Fonts
@@ -83,6 +87,7 @@ either server. Only the byte numbers depend on compression.
 | file | what it does |
 | --- | --- |
 | `analytics-wiring-gap.py` | collect every path the three analytics suites call and report whether the same literal appears in `src/python/server.py`. The feature itself is built in `src/python/features/analytics/`; this prints what was never wired. Read-only. |
+| `phase6-flag-mutations.py` | three mutations injected at the fixed flag test's own seams (500 from the admin PUT, the PUT flipping the wrong flag, the user never promoted). Every one must make `test_phase6_live_endpoint_feature_flag` fail; a survivor means the branch runs without being asserted, which is exactly how its 200-branch stayed unreachable. Exit 0 = all killed. |
 | `analytics-live-flag-probe.py` | boot the app server with the repo's own harness and exercise the analytics paths the shipped suites cannot reach: the live endpoint 403 → admin PUT flips `analytics_live_enabled` → 200 with `activeSessions`/`lastEventAt`, plus non-host 404, unknown-invitation 404 and invalid-sessionId 400 on ingestion. `test_phase6` cannot reach its own 200 branch because the admin write it tries is PUT-only and admin-only; this does. Exit 0 means all seven checks held. |
 | `playwright-check/` | the brief's `playwright.chromium.launch()` check, in its own directory with its own manifest, so the application's `package.json` is never touched. `node tools/playwright-check/launch-check.mjs` launches Playwright's own Chromium, loads a served page and prints `PLAYWRIGHT_LAUNCH_OK`. See its README. |
 
@@ -114,7 +119,30 @@ either server. Only the byte numbers depend on compression.
   system browser.
 * **A single measurement is not a measurement.** Geometry claims use
   `determinism-50x.py`; layout-shift claims use `--n=5`; the loader A/B refuses
-  to report unless the patched arm was verified patched.
+  to report unless the patched arm was verified patched; a lift verdict needs every
+  run of every page to agree (`--lift-runs=N`), and `lift-verdict-compare.py` is how
+  N runs of ONE page are compared with each other.
+* **A verdict is not evidence where nothing is observable.** `important-lift-test.mjs` no
+  longer calls a declaration inert when every element its rule reaches has no box: inside
+  a `display:none` subtree Chrome stops resolving used values, so `transform` reads `none`
+  whatever the cascade says and the leave-one-out returns an identical snapshot in every
+  run. Such a declaration is reported **unmeasured** (`rendered` = 0), with the count of
+  elements reached, and `tools/demotion-recheck.mjs --reveal` is what measures it in the
+  state a user can hover in. Repeating an observation that cannot observe anything does
+  not make it evidence — the expanded sweep's one unanimous candidate was exactly that.
+  The same probe also tears its own self-check fixture out of the page before the sweep:
+  the synthesized `div.ui-theme-menu.decl-fixture-host > button` matched the very rule used
+  as the fixture, so the probe was sweeping its own scaffolding.
+* **A probe must read at a settled moment.** `lib/motion-settle.mjs` — one frame,
+  every finite running animation on the elements about to be read, then two frames —
+  is injected into any probe that samples a computed style after forcing a state. A
+  property with a running transition makes `getComputedStyle` return the
+  *interpolated* value, so a read taken at the wrong moment is a per-run observation
+  rather than a property of the tree. `freezeMotion()` in `lib/browser.mjs` is not
+  enough on its own: route bundles re-declare `transition:…!important` and win that
+  cascade. The lift probe read immediately after `CSS.forcePseudoState` until this
+  was added, and disagreed with itself on 3 of 59 declarations across 5 runs of one
+  page.
 * **Every claim in a report carries the command that produced it.**
 * **An instrument that reports a wrong number gets fixed before its output is
   acted on.** `forced-layout-attribution.mjs` needed three corrections before

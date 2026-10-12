@@ -1,0 +1,99 @@
+INSTRUMENT REPAIR — the report-verify gate's own blind spot, and the A/B that
+shows closing it changed nothing else.
+
+The gate only mechanically checks a fenced block with exactly one leading '$ '
+line, and it used to drop every other block with a bare 'continue'. So a report
+could carry any number of uncheckable blocks and still print 'still skipped 0'.
+The rules for checking are unchanged; the blocks it cannot check are now counted,
+named, and printed.
+
+cmd: git diff 7e97f57 -- tools/report-verify.mjs   (the counter is the change)
+diff --git a/tools/report-verify.mjs b/tools/report-verify.mjs
+index 3d0260b..e16491c 100644
+--- a/tools/report-verify.mjs
++++ b/tools/report-verify.mjs
+@@ -332,7 +332,26 @@ const results = [];
+ for (const block of blocks) {
+   const dollar = block.body.map((l, i) => [l, i]).filter(([l]) => l.startsWith('$ '));
+   // Only the "one command, then its output" shape is mechanically checkable.
+-  if (dollar.length !== 1 || dollar[0][1] !== 0) continue;
++  //
++  // This used to `continue` silently, which was the gate's own blind spot: a report
++  // could carry any number of blocks this tool cannot check and still print
++  // "0 skipped". `skipped` was honest and incomplete at the same time. The checking
++  // rules are unchanged — only the hole is now counted and printed, so a claim of
++  // "0 skipped" can be read next to the number of blocks it does not cover.
++  if (dollar.length !== 1 || dollar[0][1] !== 0) {
++    let why;
++    if (!dollar.length) why = 'no `$ ` command line, so there is nothing to re-run';
++    else if (dollar[0][1] !== 0) why = 'the first `$ ` line is not the block\u2019s first line';
++    else why = `${dollar.length} \`$ \` lines: only the "one command, then its output" shape is checkable`;
++    results.push({
++      line: block.line,
++      command: (dollar[0] && dollar[0][0].slice(2)) || '(none)',
++      status: 'uncheckable',
++      why,
++      diffs: [],
++    });
++    continue;
++  }
+ 
+   // A shell-echoed multi-line command continues on `> ` lines. Reading those as
+   // output is what made the two-line `for` loop in §1.2 impossible to verify.
+@@ -451,6 +470,9 @@ const measurements = results.filter((r) => r.status === 'measurement');
+ const heavy = results.filter((r) => r.status === 'heavy');
+ const matched = results.filter((r) => r.status === 'match');
+ const skipped = results.filter((r) => r.status === 'skipped');
++// Not a verdict: a statement of coverage. These blocks are neither verified nor
++// declared, and counting them is what keeps "0 skipped" from meaning "0 problems".
++const uncheckable = results.filter((r) => r.status === 'uncheckable');
+ const partiallyCompared = matched.filter((r) => r.declaredPrefix);
+ 
+ if (asJson) {
+@@ -458,6 +480,7 @@ if (asJson) {
+     file, checked: results.length, matched: matched.length, mismatches: mismatches.length,
+     elided: elided.length, historical: historical.length, write: writes.length,
+     measurement: measurements.length, heavy: heavy.length, skipped: skipped.length,
++    uncheckable: uncheckable.length,
+     comparedLines: matched.reduce((n, r) => n + (r.comparedLines ?? r.recordedLines ?? 0), 0),
+     partialMatches: partiallyCompared.length, serverUp, results,
+   }, null, 2));
+@@ -466,6 +489,7 @@ if (asJson) {
+   console.log(`  blocks checked ${results.length} — match ${matched.length}, MISMATCH ${mismatches.length}, ELIDED ${elided.length}\n`);
+   console.log(`  declared, not compared  historical ${historical.length}, write ${writes.length}, measurement ${measurements.length}, heavy ${heavy.length}`);
+   console.log(`  still skipped ${skipped.length}${withServer ? '' : '   (pass --with-server to verify the server-dependent ones)'}`);
++  console.log(`  not mechanically checkable ${uncheckable.length}   (no `+"`$ `"+` command line, or not the "one command, then its output" shape)`);
+   if (partiallyCompared.length) console.log(`  partially compared (declared tail) ${partiallyCompared.length}`);
+   console.log('');
+   for (const r of elided) console.log(`  ELIDED    line ${r.line}: ${r.command}\n            ${r.why}\n`);
+@@ -475,6 +499,9 @@ if (asJson) {
+   for (const r of writes) console.log(`  write      line ${r.line}: ${r.command}\n            declared reason: ${r.why}\n`);
+
+A/B on the PRIOR report, previous tool vs this one. Same file, same tree, only the
+gate differs; exit status 0 both ways:
+
+cmd: node tools/report-verify-PREVIOUS.mjs docs/reviews/analytics-and-unanimity-report.md   (exit=0)
+cmd: node tools/report-verify.mjs          docs/reviews/analytics-and-unanimity-report.md   (exit=0)
+cmd: diff the two outputs
+  2c2
+  <   blocks checked 25 — match 19, MISMATCH 0, ELIDED 0
+  ---
+  >   blocks checked 27 — match 19, MISMATCH 0, ELIDED 0
+  5a6
+  >   not mechanically checkable 2   (no `$ ` command line, or not the "one command, then its output" shape)
+  23a25,30
+  > 
+  >   uncheckable line 255: cat tools/evidence/important-lift-state-expansion.txt
+  >             4 `$ ` lines: only the "one command, then its output" shape is checkable
+  > 
+  >   uncheckable line 613: cat tools/evidence/playwright-launch-check.txt
+  >             4 `$ ` lines: only the "one command, then its output" shape is checkable
+
+  Reading: the previous tool reported 25 blocks and 0 skipped; this one reports the
+  same 25 plus the 2 it was silently dropping, and names them. No block changed
+  status, no match became a mismatch, and the exit status is unchanged.
+
+  The prior report's own §6.6 quote says 'blocks checked 24 ... measurement 3'. It
+  was accurate when it was written — a gate run quoted inside the document it
+  verifies goes stale the moment the document gains the block that quotes it. This
+  pass leaves that quote alone (it is history) and notes the drift here.

@@ -1,0 +1,100 @@
+INSTRUMENT REPAIR — Goal 4: the Canva analysis extended to the public template
+surfaces. No login was attempted; nothing was copied; every number below is a
+measurement of a public page taken by the tools in this repository.
+
+Blocks are raw output; the command is named on the 'cmd:' line above each.
+
+=====================================================================
+1. THE SURFACES, AND THE FIRST FINDING
+=====================================================================
+cmd: node tools/canva-probe.mjs --targets=https://www.canva.com/templates/,https://www.canva.com/templates/invitations/ --prefix=goal4-templates --wait=6000
+     (both targets are visited; the trace covers the first)
+  200  https://www.canva.com/templates/
+      finalUrl   https://www.canva.com/templates/
+      title      Free templates | Canva
+      responses=189 resources=183 traceEvents=181065 elapsedMs=12809
+  200  https://www.canva.com/templates/invitations/
+      finalUrl   https://www.canva.com/templates/?query=invitations
+      title      Customize 20,077+ Invitations Templates Online - Canva
+      responses=74 resources=72 traceEvents=0 elapsedMs=8403
+
+  FINDING: the category PATH /templates/invitations/ is not a page. It 301/302s to
+  /templates/?query=invitations — Canva's template categories are a filtered listing,
+  addressed by query string. So 'the public template detail page' the prior report
+  named as the next surface is, on this site, the same listing route with a filter.
+  The filtered listing is what was traced next.
+
+=====================================================================
+2. THE FILTERED LISTING, MEASURED BY THE SAME INSTRUMENTS
+=====================================================================
+cmd: node tools/canva-probe.mjs --targets='https://www.canva.com/templates/?query=invitations' --prefix=goal4-invitations --wait=6000
+cmd: node tools/module-loading-strategy.mjs 'https://www.canva.com/templates/?query=invitations' --label=goal4-canva-invitations
+cmd: node tools/css-feature-inventory.mjs 'https://www.canva.com/templates/?query=invitations' --label=goal4-canva-invitations
+  CANVA_PROBE chrome=/usr/bin/google-chrome (kind=full)
+    200  https://www.canva.com/templates/?query=invitations  title="Customize 20,077+ Invitations Templates Online - Canva"  responses=103  resources=98  traceEvents=150325  13788ms
+  CANVA_SCRIPTS {"count": 40, "totalDecodedBytes": 5002142, "totalTransferBytes": 1715616}
+  CANVA_LAYOUT {"layoutEvents": 35, "withStackTrace": 0}
+  MODULE_LOADING_STRATEGY label=goal4-canva-invitations targets=1
+    200 https://www.canva.com/templates/?query=invitations
+      DECLARED scripts=11 (inline=4 src=7) module=0 async=0 defer=4 parserBlocking=3
+      DOM srcScripts=19 parserCreated=17 injected=12
+      preload(declared) module=0 script=6 style=0 other=0 prefetch=0 total=6
+      TIMING dcl=1645 load=5630 paint={"first-paint":1644,"first-contentful-paint":1644} scriptsTimed=19
+      CHAIN span=5948ms transfer=4844ms serialGap=1104ms lastEnd=6437ms
+    200 https://www.canva.com/templates/?query=invitations
+
+  ^ CANVA_LAYOUT now names the path it looked in (this pass's reader fix). On this
+    surface there are 35 Layout events and NONE carries a stack: Canva's public
+    template listing does no layout that begins from script. index.html has 78-79 of
+    106-107. That is the same asymmetry the prior pass measured as the forced-layout
+    proxy (80 vs 6), now shown directly.
+
+=====================================================================
+3. THE COMPARISON, WITH THE NEW ROWS
+=====================================================================
+cmd: node tools/css-feature-inventory.mjs --pages=index.html,public.html --label=project   (prior pass; artifacts/css-feature-inventory-project-index.json)
+cmd: python3 -c "...print the three inventories side by side..."
+construct                               project index.html                           canva /canva /templates/?query=invitations
+bytes                                               579408                            241072                            432095
+contentVisibility                                        6                                 0                                 0
+contain                                                  8                                 0                                 0
+containIntrinsicSize                                     4                                 0                                 0
+willChange                                               8                                 7                                 7
+translateZ                                               2                                 6                                 6
+backfaceVisibility                                       0                                 0                                 1
+isolation                                                7                                 7                                10
+layers                                                  65                                 9                                 9
+containerQueries                                         3                                 1                                 3
+containerType                                            1                                 1                                 4
+isSelector                                               2                                13                                13
+whereSelector                                            6                                73                                73
+hasSelector                                             29                                 0                                 6
+clamp                                                   22                                 3                                 3
+colorMix                                               316                                 0                                 0
+nesting                                                  0                                 0                                 0
+important                                             2985                                 7                                 7
+mediaBlocks                                            206                               324                               429
+keyframes                                               22                                39                                92
+customPropertyDecls                                    340                              1031                              1385
+styleRules                                            5245                              4289                              7434
+selectors                                             5245                              4289                              7434
+aspectRatio                                             21                                 1                                 6
+contentVisibilityAuto                                    5                                 0                                 0
+virtualScrollish                                        12                                16                                26
+
+cmd: python3 tools/perf-trace-compare.py --label mine=artifacts/goal3-index-run1-trace.json --label canva-home=artifacts/canva-trace.json --label canva-invitations=artifacts/goal4-invitations-trace.json
+TRACE_COMPARE {"mine": 128442, "canva-home": 189695, "canva-invitations": 150325}
+metric                                                 mine        canva-home canva-invitations
+trace events                                         128442            189695            150325
+style+layout union ms (main thread)                 2039.29            805.22           1347.22
+  style recalc union ms                             1056.97            525.12           1175.44
+  layout union ms                                    982.41             280.1            171.78
+  style recalc union ms (all threads)               1056.97            525.12           1175.44
+  layout union ms (all threads)                      982.41             280.1            171.78
+Script union ms (main thread)                        2737.7           2604.65           5379.64
+UpdateLayoutTree events                                 152               379                68
+Layout events                                           107                37                35
+RunTask events                                        17102             29315             25181
+Layouts nested in script (forced proxy)                  80                 6                12
+Layouts with stackTrace                                  79                 6                12
+
