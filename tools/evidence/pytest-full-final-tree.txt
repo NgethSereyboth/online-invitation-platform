@@ -1,0 +1,8 @@
+Full suite re-run on the final tree, AFTER the !important demotion (988637f) and the
+tools commits, i.e. on the tree this report's commits leave behind. Run because the
+68-passed run in tools/evidence/pytest-full-after-goal1.txt predates the demotion,
+and a passing run does not cover a later change to the generated bundle CSS.
+
+$ .venv/bin/python -m pytest tests/ -q
+....................................................................     [100%]
+68 passed in 133.32s (0:02:13)
