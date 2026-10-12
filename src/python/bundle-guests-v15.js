@@ -327,7 +327,7 @@ $('#guestList').innerHTML=filtered().map(g=>{const status=rsvpEnabled?esc(g.rsvp
 ;
 $('#search').oninput=render;$('#statusFilter').onchange=render;
 $('#addForm').onsubmit=async e=>{e.preventDefault();let data=Object.fromEntries(new FormData(e.target));data.tags=String(data.tags||'').split(',').map(x=>x.trim()).filter(Boolean);await addGuest(data);e.target.reset();render()};
-async function addGuest(data){if(server){await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`,{method:'POST',body:JSON.stringify(data)});guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`)}else{guests.unshift({id:crypto.randomUUID(),name:data.name,phone:data.phone,token:crypto.randomUUID().slice(0,12),personalLinkAvailable:true,rsvp_status:null,checked_in:false});localStorage.setItem(localKey,JSON.stringify(guests))}}
+async function addGuest(data,refresh=true){if(server){const created=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`,{method:'POST',body:JSON.stringify(data)});if(refresh)guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);return created||null}const local={id:crypto.randomUUID(),name:data.name,phone:data.phone,slug:'',token:crypto.randomUUID().slice(0,12),personalLinkAvailable:true,rsvp_status:null,checked_in:false};guests.unshift(local);localStorage.setItem(localKey,JSON.stringify(guests));return local}
 async function editGuest(id){let g=guests.find(x=>x.id===id);if(!g)return;const fields=[['name',_txt('Guest name','Guest name'),g.name],['phone',_txt('Phone number','Phone number'),g.phone||''],['email',_txt('Email','Email'),g.email||''],['groupName',_txt('Group','Group'),g.group_name||''],['householdId',_txt('Household','Household'),g.household_id||''],['tableName',_txt('Table','Table'),g.table_name||''],['seatLabel',_txt('Seat','Seat'),g.seat_label||''],['tags',_txt('Tags (comma separated)','Tags (comma separated)'),(g.tags||[]).join(', ')]];const form=document.createElement('form');form.innerHTML=`<h2>${_html('Edit guest','Edit guest')}</h2>${fields.map(([name,label,value])=>`<label>${esc(label)}<input name="${name}" value="${esc(value)}"></label>`).join('')}<div class="dialog-actions"><button type="button" data-cancel>${_html('Cancel','Cancel')}</button><button class="primary">${_html('Save','Save')}</button></div>`;$('#qrBody').replaceChildren(form);$('#qrModal').showModal();form.querySelector('[data-cancel]').onclick=()=>$('#qrModal').close();form.onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(form));data.tags=String(data.tags||'').split(',').map(x=>x.trim()).filter(Boolean);if(server){await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${id}`,{method:'PUT',body:JSON.stringify(data)});guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`)}else Object.assign(g,{name:data.name,phone:data.phone,email:data.email,group_name:data.groupName,household_id:data.householdId,table_name:data.tableName,seat_label:data.seatLabel,tags:data.tags});$('#qrModal').close();render()}}
 async function checkIn(id){let g=guests.find(x=>x.id===id),checkedIn=!g.checked_in;if(server){await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${id}/check-in`,{method:'PUT',body:JSON.stringify({checkedIn})});guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`)}else{g.checked_in=checkedIn;g.checked_in_at=checkedIn?Date.now():null;localStorage.setItem(localKey,JSON.stringify(guests))}render()}
 async function removeGuest(id){if(!(await uiConfirm(_txt('Remove this guest?','Remove this guest?'),{title:_txt('Remove guest','Remove guest'),danger:true,confirmText:_txt('Remove','Remove')})))return;if(server){await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${id}`,{method:'DELETE'});guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`)}else{guests=guests.filter(g=>g.id!==id);localStorage.setItem(localKey,JSON.stringify(guests))}render()}
@@ -393,8 +393,14 @@ function renderImportDialog(){
   const shown=entries.length>7?[...entries.slice(0,5),null,...entries.slice(-2)]:entries;
   const preview=shown.map(entry=>entry===null?`<div class="guest-row"><div><strong>…</strong></div></div>`:`<div class="guest-row"><div><strong>${esc(entry.name||_txt('(empty name)',''))}</strong>${entry.phone?`<br><small>${esc(entry.phone)}</small>`:''}</div></div>`).join('');
   const emptyWarning=blank.length?`<p class="hint">${esc(`${blank.length} row(s) have no name, so nothing was imported yet (rows ${blank.slice(0,8).join(', ')}${blank.length>8?'…':''})`)}</p>`:'';
+  // Re-import key (research §5.2): a sheet has no key of its own, so a row is
+  // matched on lower(name) within this invitation. A match is updated and keeps
+  // its frozen link; anything else is added. Nothing is merged or duplicated
+  // silently — the counts are stated before the write.
+  const existingByName=existingGuestIndex(),willUpdate=importable.filter(entry=>existingByName.has(entry.name.trim().toLowerCase())).length;
+  const updateWarning=importable.length?`<p class="hint">${esc(`${willUpdate} row(s) match a guest already in this list and will be updated with their links kept; ${importable.length-willUpdate} will be added.`)}</p>`:'';
   const duplicateWarning=duplicates.length?`<p class="hint">${esc(`${duplicates.length} duplicate name(s) in this file: ${duplicates.slice(0,5).join(', ')}${duplicates.length>5?'…':''}`)}</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-skip-duplicates ${state.skipDuplicates?'checked':''}> ${_html('Skip later duplicates (the default keeps both)','')}</label>`:'';
-  body.innerHTML=`<label class="sr-only" for="importColumn">${_html('Name column','')}</label><select id="importColumn">${options}</select>${emptyWarning}${duplicateWarning}<div class="guest-table">${preview}</div>`;
+  body.innerHTML=`<label class="sr-only" for="importColumn">${_html('Name column','')}</label><select id="importColumn">${options}</select>${emptyWarning}${duplicateWarning}${updateWarning}<div class="guest-table">${preview}</div>`;
   const select=body.querySelector('#importColumn');select.onchange=()=>{state.column=Number(select.value);renderImportDialog()};
   const skip=body.querySelector('[data-skip-duplicates]');if(skip)skip.onchange=()=>{state.skipDuplicates=skip.checked;renderImportDialog()};
   actions.innerHTML=`<button type="button" data-cancel>${_html('Cancel','បោះបង់')}</button><button type="button" class="ei-primary" data-import ${blank.length||!importable.length?'disabled':''}>${esc(`Import ${importable.length} guest(s)`)}</button>`;
@@ -411,12 +417,78 @@ async function openImport(file){
 }
 async function runImport(entries){
   const button=importDialog?.querySelector('[data-import]');if(button)button.disabled=true;
-  let added=0,failed=0;
-  try{for(const entry of entries){try{await addGuest({name:entry.name,phone:entry.phone});added++}catch(error){failed++}}}finally{closeImportDialog();render()}
-  const summary=`${added} ${_txt('guest(s) imported','')}${failed?` · ${failed} ${_txt('failed','')}`:''}`;
+  const existing=existingGuestIndex();let added=0,updated=0,failed=0;const touched=[];
+  try{
+    for(const entry of entries){
+      const match=server?existing.get(entry.name.trim().toLowerCase()):null;
+      try{
+        if(match){
+          // The frozen code is deliberately absent from this payload, so
+          // update_guest_details' COALESCE(?,slug) leaves it untouched.
+          await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(match.id)}`,{method:'PUT',body:JSON.stringify({name:match.name,phone:entry.phone||match.phone||'',email:match.email||'',groupName:match.group_name||'',householdId:match.household_id||'',tableName:match.table_name||'',seatLabel:match.seat_label||'',tags:match.tags||[]})});updated++;touched.push(match.id)
+        }else{const created=await addGuest({name:entry.name,phone:entry.phone},false);added++;if(created?.id)touched.push(created.id)}
+      }catch(error){failed++}
+    }
+  }finally{
+    if(server)guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);
+    closeImportDialog();render();
+  }
+  const summary=`${added} ${_txt('added','')} · ${updated} ${_txt('updated','')}${failed?` · ${failed} ${_txt('failed','')}`:''}`;
   if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary);
   $('#importFile').value='';
+  openLinkEditor(guests.filter(guest=>touched.includes(guest.id)));
 }
+/* ── Phase C: per-guest link codes, the mapping screen and the freeze ──
+   The code is a mnemonic, not the capability (research §4.1: OSWP's own source
+   says the same of its household code and excludes 0 1 i l o so it can be read
+   aloud). The 32-character ?g= token stays the capability and is unchanged.
+
+   `slugify`/`randomCode` mirror server-side clean_slug/short_code for the live
+   preview only. The server re-validates every submitted code and is
+   authoritative; nothing here decides what a guest's link is. */
+const SLUG_ALPHABET='23456789abcdefghjkmnpqrstuvwxyz';
+function existingGuestIndex(){const index=new Map();for(const guest of guests){const key=String(guest.name||'').trim().toLowerCase();if(key&&!index.has(key))index.set(key,guest)}return index}
+function slugify(value){return String(value??'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)}
+function randomCode(length=6){const bytes=new Uint8Array(length);(window.crypto||window.msCrypto).getRandomValues(bytes);let out='';for(const byte of bytes)out+=SLUG_ALPHABET[byte%SLUG_ALPHABET.length];return out}
+function proposedSlug(name,taken){const base=slugify(name)||randomCode(6);let candidate=base,index=2;while(taken.has(candidate)){candidate=`${base}-${index}`;index++}taken.add(candidate);return candidate}
+function validSlug(value){return /^[a-z0-9-]{1,60}$/.test(value)}
+let linkDialog=null,linkRows=[];
+function ensureLinkDialog(){if(linkDialog)return linkDialog;linkDialog=document.createElement('dialog');linkDialog.className='ei-dialog';linkDialog.style.width='min(760px,calc(100vw - 32px))';linkDialog.setAttribute('aria-modal','true');linkDialog.innerHTML='<div class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon">↗</span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="guest-import-body"></div><div class="ei-dialog-actions"></div></div>';document.body.append(linkDialog);linkDialog.addEventListener('close',()=>{linkRows=[]});return linkDialog}
+function closeLinkDialog(){linkDialog?.close()}
+function renderLinkDialog(){
+  if(!linkDialog)return;
+  const body=linkDialog.querySelector('.guest-import-body'),actions=linkDialog.querySelector('.ei-dialog-actions'),message=linkDialog.querySelector('.ei-dialog-message');
+  linkDialog.querySelector('h2').textContent=_txt('Guest links','');
+  const changed=linkRows.filter(row=>row.slug!==row.original);
+  message.innerHTML=_html(`Each guest gets their own link. Freezing keeps it: editing a name later changes the card and the page, but not a link you have already shared.${changed.length?` ${changed.length} code(s) changed and their old links will stop working.`:''}`,'');
+  body.innerHTML=`<div class="guest-table">${linkRows.map((row,index)=>`<div class="guest-row"><div><strong>${esc(row.name)}</strong><br><small>${esc(slugPreview(row))}</small></div><input data-code="${index}" maxlength="60" value="${esc(row.slug)}" aria-label="${esc(_txt('Guest link code',''))}"><button type="button" data-regenerate="${index}" title="${esc(_txt('Generate a new code',''))}">↻</button></div>`).join('')||`<p class="hint">${_html('No guests yet.','')}</p>`}</div>`;
+  body.querySelectorAll('[data-code]').forEach(input=>{const index=Number(input.dataset.code);input.onchange=()=>{const cleaned=slugify(input.value)||linkRows[index].original;if(!validSlug(cleaned)){input.value=linkRows[index].original;linkRows[index].slug=linkRows[index].original}else{linkRows[index].slug=cleaned;input.value=cleaned}renderLinkDialog()}});
+  body.querySelectorAll('[data-regenerate]').forEach(button=>{button.onclick=()=>{const index=Number(button.dataset.regenerate);const taken=new Set(linkRows.filter((_,position)=>position!==index).map(row=>row.slug));linkRows[index].slug=proposedSlug(linkRows[index].name,taken);renderLinkDialog()}});
+  actions.innerHTML=`<button type="button" data-cancel>${_html('Close','បិទ')}</button><button type="button" data-regenerate-all>${_html('Regenerate all','')}</button><button type="button" class="ei-primary" data-freeze>${_html('Freeze and generate','')}</button>`;
+  actions.querySelector('[data-cancel]').onclick=closeLinkDialog;
+  actions.querySelector('[data-regenerate-all]').onclick=()=>{const taken=new Set();linkRows.forEach(row=>{row.slug=proposedSlug(row.name,taken)});renderLinkDialog()};
+  actions.querySelector('[data-freeze]').onclick=freezeLinks;
+}
+function slugPreview(row){return `/${slug}/${row.slug}${row.original&&row.slug!==row.original?`  ·  ${_txt('was','')} /${slug}/${row.original}`:''}`}
+function openLinkEditor(list){
+  if(!server)return;
+  linkRows=(list&&list.length?list:guests).map(guest=>({id:guest.id,name:guest.name,slug:guest.slug||'',original:guest.slug||''})).filter(row=>row.id);
+  ensureLinkDialog();renderLinkDialog();
+  if(!linkDialog.open)linkDialog.showModal();
+}
+async function freezeLinks(){
+  const changed=linkRows.filter(row=>row.slug&&row.slug!==row.original);
+  const button=linkDialog?.querySelector('[data-freeze]');if(button)button.disabled=true;
+  let payload;
+  try{payload=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests/freeze`,{method:'POST',body:JSON.stringify({guests:changed.map(row=>({id:row.id,slug:row.slug}))})})}
+  catch(error){if(button)button.disabled=false;alert(_txt(error.message||'Action failed','Action failed'));return}
+  if(payload.conflicts&&payload.conflicts.length){if(button)button.disabled=false;linkDialog.querySelector('.ei-dialog-message').textContent=_txt(`These codes are already used in this invitation: ${payload.conflicts.join(', ')}`,'');return}
+  guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);
+  closeLinkDialog();render();
+  const summary=`${payload.updated} ${_txt('link(s) frozen','')}`;
+  if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary);
+}
+$('#linksBtn').onclick=()=>openLinkEditor(guests);
 if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.EInviteI18n.subscribe(render)};
 load();;(function(){
 'use strict';

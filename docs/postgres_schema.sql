@@ -203,6 +203,11 @@ ALTER TABLE guests ADD COLUMN IF NOT EXISTS token_salt TEXT NOT NULL DEFAULT '';
 ALTER TABLE guests ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE guests ADD COLUMN IF NOT EXISTS token_expires_at BIGINT;
 ALTER TABLE guests ADD COLUMN IF NOT EXISTS token_revoked_at BIGINT;
+-- Goal 2a (bulk guest import §5.6): the per-guest URL segment. Added with an empty
+-- default so the ALTER rewrites no existing row; server.py's
+-- _migrate_guest_slugs_postgres() backfills it and only then creates the unique
+-- index, which is why the index is not declared here.
+ALTER TABLE guests ADD COLUMN IF NOT EXISTS slug TEXT NOT NULL DEFAULT '';
 CREATE INDEX IF NOT EXISTS idx_guests_invitation ON guests(invitation_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_guests_token_hash ON guests(token_hash);
 

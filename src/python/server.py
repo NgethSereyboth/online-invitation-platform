@@ -1448,7 +1448,7 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_material_folders_invitation ON material_folders(invitation_id,relative_key);
                     CREATE TABLE IF NOT EXISTS material_import_jobs(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, owner_id TEXT NOT NULL, source_type TEXT NOT NULL, root_name TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'queued', total_files INTEGER NOT NULL DEFAULT 0, processed_files INTEGER NOT NULL DEFAULT 0, failed_files INTEGER NOT NULL DEFAULT 0, total_bytes INTEGER NOT NULL DEFAULT 0, processed_bytes INTEGER NOT NULL DEFAULT 0, failures_json TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, cancelled_at INTEGER);
                     CREATE INDEX IF NOT EXISTS idx_material_import_jobs_invitation ON material_import_jobs(invitation_id,created_at DESC);
-                    CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, email TEXT NOT NULL DEFAULT '', group_name TEXT NOT NULL DEFAULT '', household_id TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]', table_name TEXT NOT NULL DEFAULT '', seat_label TEXT NOT NULL DEFAULT '', token TEXT UNIQUE NOT NULL, token_hash TEXT, token_salt TEXT NOT NULL DEFAULT '', token_version INTEGER NOT NULL DEFAULT 1, token_expires_at INTEGER, token_revoked_at INTEGER, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER, delivery_status TEXT NOT NULL DEFAULT 'not-sent', opened_at INTEGER);
+                    CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, email TEXT NOT NULL DEFAULT '', group_name TEXT NOT NULL DEFAULT '', household_id TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]', table_name TEXT NOT NULL DEFAULT '', seat_label TEXT NOT NULL DEFAULT '', token TEXT UNIQUE NOT NULL, token_hash TEXT, token_salt TEXT NOT NULL DEFAULT '', token_version INTEGER NOT NULL DEFAULT 1, token_expires_at INTEGER, token_revoked_at INTEGER, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER, delivery_status TEXT NOT NULL DEFAULT 'not-sent', opened_at INTEGER, slug TEXT NOT NULL DEFAULT '');
                     CREATE TABLE IF NOT EXISTS user_templates(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, document_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, description TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]', favorite INTEGER NOT NULL DEFAULT 0, current_version INTEGER NOT NULL DEFAULT 1, thumbnail_json TEXT NOT NULL DEFAULT '{}', visibility TEXT NOT NULL DEFAULT 'private', published_at INTEGER, marketplace_status TEXT NOT NULL DEFAULT 'draft', license_type TEXT NOT NULL DEFAULT 'personal');
                     CREATE TABLE IF NOT EXISTS template_versions(id TEXT PRIMARY KEY, template_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, created_at INTEGER NOT NULL);
                     CREATE UNIQUE INDEX IF NOT EXISTS idx_template_versions_unique ON template_versions(template_id,version);
@@ -1609,6 +1609,12 @@ def connect_sqlite():
                     if "seat_label" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN seat_label TEXT NOT NULL DEFAULT ''")
                     if "delivery_status" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN delivery_status TEXT NOT NULL DEFAULT ''")
                     if "opened_at" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN opened_at INTEGER")
+                    # Goal 2a (§5.6): guests.slug is the per-guest URL segment. The
+                    # migration is additive (the column is added with an empty default,
+                    # so no existing row is rewritten by the ALTER), then backfilled,
+                    # and only then is the unique index created — creating it first would
+                    # fail on any invitation that already holds two empty slugs.
+                    _migrate_guest_slugs_sqlite(db)
                     # Migrate V11 plaintext guest credentials to one-way hashes while keeping old links valid.
                     for guest in db.execute("SELECT id,token,token_hash FROM guests WHERE token_hash IS NULL OR token_hash='' ").fetchall():
                         legacy=str(guest["token"] or "")
@@ -1741,6 +1747,9 @@ def _ensure_postgres_schema(connection):
         # attempts). The statement list is shared with the SQLite path so
         # the two backends cannot drift.
         _ensure_p2a_schema_postgres(connection)
+        # Goal 2a — the same guests.slug migration the SQLite path runs, so the
+        # two backends cannot drift (docs/postgres_schema.sql carries the ALTER).
+        _migrate_guest_slugs_postgres(connection)
         connection.commit();_PG_SCHEMA_READY=True
 
 @contextmanager
@@ -2619,6 +2628,57 @@ def clean_slug(value, fallback=None):
     if value:
         return value
     return short_code(6) if fallback is None else str(fallback)
+
+# ---------------------------------------------------------------------------
+# Goal 2a — the guests.slug migration (research §5.6)
+#
+# Additive and idempotent by construction: the column is only added when it is
+# missing, only rows whose slug is still empty are backfilled, and the unique
+# index is created with IF NOT EXISTS. Running it twice is a no-op — the second
+# call reports columnAdded=False, backfilled=0 and changes nothing.
+#
+# Collisions are resolved deterministically: rows are visited in (invitation_id,
+# id) order, the first occurrence keeps its code, later ones get -2, -3, exactly
+# the style create_invitation already uses for invitation slugs.
+# ---------------------------------------------------------------------------
+
+def _migrate_guest_slugs_sqlite(db):
+    """Add, backfill and index guests.slug on SQLite. Returns what it did."""
+    result={"columnAdded":False,"backfilled":0,"index":"idx_guests_slug"}
+    columns={row["name"] for row in db.execute("PRAGMA table_info(guests)")}
+    if "slug" not in columns:
+        db.execute("ALTER TABLE guests ADD COLUMN slug TEXT NOT NULL DEFAULT ''")
+        result["columnAdded"]=True
+    taken={}
+    for row in db.execute("SELECT invitation_id,slug FROM guests WHERE slug IS NOT NULL AND slug<>''").fetchall():
+        taken.setdefault(row["invitation_id"],set()).add(row["slug"])
+    for row in db.execute("SELECT id,invitation_id,name FROM guests WHERE slug IS NULL OR slug='' ORDER BY invitation_id,id").fetchall():
+        pool=taken.setdefault(row["invitation_id"],set())
+        code=guest_slug(row["name"],pool)
+        db.execute("UPDATE guests SET slug=? WHERE id=? AND (slug IS NULL OR slug='')",(code,row["id"]))
+        pool.add(code);result["backfilled"]+=1
+    db.execute(f"CREATE UNIQUE INDEX IF NOT EXISTS {result['index']} ON guests(invitation_id,slug)")
+    return result
+
+
+def _migrate_guest_slugs_postgres(connection):
+    """Add, backfill and index guests.slug on PostgreSQL. Same contract."""
+    result={"columnAdded":False,"backfilled":0,"index":"idx_guests_slug"}
+    existing={row["column_name"] for row in connection.execute("SELECT column_name FROM information_schema.columns WHERE table_name='guests'").fetchall()}
+    if "slug" not in existing:
+        connection.execute("ALTER TABLE guests ADD COLUMN slug TEXT NOT NULL DEFAULT ''",prepare=False)
+        result["columnAdded"]=True
+    taken={}
+    for row in connection.execute("SELECT invitation_id,slug FROM guests WHERE slug IS NOT NULL AND slug<>''").fetchall():
+        taken.setdefault(row["invitation_id"],set()).add(row["slug"])
+    for row in connection.execute("SELECT id,invitation_id,name FROM guests WHERE slug IS NULL OR slug='' ORDER BY invitation_id,id").fetchall():
+        pool=taken.setdefault(row["invitation_id"],set())
+        code=guest_slug(row["name"],pool)
+        connection.execute("UPDATE guests SET slug=%s WHERE id=%s AND (slug IS NULL OR slug='')",(code,row["id"]))
+        pool.add(code);result["backfilled"]+=1
+    connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_slug ON guests(invitation_id,slug)",prepare=False)
+    return result
+
 
 def guest_slug(name, taken=()):
     """The per-guest URL segment for ``name`` (research §5.1 and §5.2).
@@ -3952,6 +4012,7 @@ class Handler(SimpleHTTPRequestHandler):
             if material_failure:return self.report_material_import_failure(unquote(material_failure.group(1)),unquote(material_failure.group(2)))
             if path.startswith("/api/invitations/") and path.endswith("/uploads/start"): return self.start_resumable_upload(path.split("/")[3])
             if path.startswith("/api/uploads/") and path.endswith("/complete"): return self.complete_resumable_upload(path.split("/")[3])
+            if path.startswith("/api/invitations/") and path.endswith("/guests/freeze") and path.count("/")==5: return self.freeze_guest_links(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/guests") and path.count("/")==4: return self.add_guest(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/token/rotate") and "/guests/" in path: return self.rotate_guest_token(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/invitations/") and path.endswith("/token/revoke") and "/guests/" in path: return self.revoke_guest_token(path.split("/")[3],path.split("/")[5])
@@ -6730,10 +6791,20 @@ class Handler(SimpleHTTPRequestHandler):
         if not user:return
         if not self.rate_limit(f"invitation-guest-update:{user['id']}",60,60):return
         data=self.body(100_000);tags=data.get("tags",[]);tags=tags if isinstance(tags,list) else []
+        # Goal 2c/2d: the mapping screen lets the designer replace a generated code.
+        # The submitted code is re-validated and re-checked for collisions here — the
+        # form's validation is for the designer's benefit, this one is authoritative.
+        raw_slug=str(data.get("slug","") or "").strip();new_slug=None
+        if raw_slug:
+            candidate=clean_slug(raw_slug)
+            if not re.fullmatch(r"[a-z0-9-]{1,60}",candidate):raise ValueError("Invalid guest link code")
+            new_slug=candidate
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
-            changed=db.execute("UPDATE guests SET name=?,phone=?,email=?,group_name=?,household_id=?,tags_json=?,table_name=?,seat_label=? WHERE id=? AND invitation_id=?",(str(data.get("name","")).strip()[:120],str(data.get("phone","")).strip()[:40],str(data.get("email","")).strip()[:254],str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],guest_id,invite_id)).rowcount
-        self.json(200 if changed else 404,{"updated":bool(changed)})
+            if new_slug and db.execute("SELECT 1 FROM guests WHERE invitation_id=? AND slug=? AND id<>?",(invite_id,new_slug,guest_id)).fetchone():
+                return self.json(409,{"error":"That guest link code is already used in this invitation"})
+            changed=db.execute("UPDATE guests SET name=?,phone=?,email=?,group_name=?,household_id=?,tags_json=?,table_name=?,seat_label=?,slug=COALESCE(?,slug) WHERE id=? AND invitation_id=?",(str(data.get("name","")).strip()[:120],str(data.get("phone","")).strip()[:40],str(data.get("email","")).strip()[:254],str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],new_slug,guest_id,invite_id)).rowcount
+        self.json(200 if changed else 404,{"updated":bool(changed),"slug":new_slug or ""})
 
     def update_invitation_operations(self,invite_id):
         user=self.require_user()
@@ -7067,7 +7138,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not user:return
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
-            rows=db.execute("SELECT g.id,g.name,g.phone,g.email,g.group_name,g.household_id,g.tags_json,g.table_name,g.seat_label,g.delivery_status,g.opened_at,g.token_salt,g.token_version,g.token_expires_at,g.token_revoked_at,g.created_at,g.checked_in,g.checked_in_at,(SELECT status FROM rsvps r WHERE r.invitation_id=g.invitation_id AND lower(r.name)=lower(g.name) ORDER BY created_at DESC LIMIT 1) rsvp_status FROM guests g WHERE g.invitation_id=? ORDER BY g.created_at DESC",(invite_id,)).fetchall()
+            rows=db.execute("SELECT g.id,g.name,g.slug,g.phone,g.email,g.group_name,g.household_id,g.tags_json,g.table_name,g.seat_label,g.delivery_status,g.opened_at,g.token_salt,g.token_version,g.token_expires_at,g.token_revoked_at,g.created_at,g.checked_in,g.checked_in_at,(SELECT status FROM rsvps r WHERE r.invitation_id=g.invitation_id AND lower(r.name)=lower(g.name) ORDER BY created_at DESC LIMIT 1) rsvp_status FROM guests g WHERE g.invitation_id=? ORDER BY g.created_at DESC",(invite_id,)).fetchall()
         result=[]
         for row in rows:
             item=dict(row);token=None
@@ -7087,6 +7158,11 @@ class Handler(SimpleHTTPRequestHandler):
         if not name:raise ValueError("Guest name is required")
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
+            # Goal 2b (§5.1): the guest's URL segment is minted with the guest, so a
+            # personal link is shareable from the moment the row exists — and it is
+            # frozen: nothing downstream ever recomputes it from the name again.
+            taken={row["slug"] for row in db.execute("SELECT slug FROM guests WHERE invitation_id=? AND slug<>''",(invite_id,)).fetchall()}
+            slug=guest_slug(name,taken)
             guest_id=str(uuid.uuid4());salt=secrets.token_urlsafe(18);version=1;token=guest_token_value(guest_id,salt,version);token_hash=guest_token_hash(token);expires=None
             days=data.get("linkExpiresDays")
             if days not in (None,""):
@@ -7095,8 +7171,42 @@ class Handler(SimpleHTTPRequestHandler):
             # The legacy token column remains as a non-secret compatibility key only.
             sentinel="hashed-"+guest_id
             tags=data.get("tags",[]);tags=tags if isinstance(tags,list) else []
-            db.execute("INSERT INTO guests(id,invitation_id,name,phone,email,group_name,household_id,tags_json,table_name,seat_label,token,token_hash,token_salt,token_version,token_expires_at,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(guest_id,invite_id,name,str(data.get("phone","")).strip()[:40],str(data.get("email","")).strip()[:254],str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],sentinel,token_hash,salt,version,expires,int(time.time()*1000)))
-        self.json(201,{"id":guest_id,"name":name,"token":token,"tokenExpiresAt":expires})
+            db.execute("INSERT INTO guests(id,invitation_id,name,phone,email,group_name,household_id,tags_json,table_name,seat_label,token,token_hash,token_salt,token_version,token_expires_at,created_at,slug) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(guest_id,invite_id,name,str(data.get("phone","")).strip()[:40],str(data.get("email","")).strip()[:254],str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],sentinel,token_hash,salt,version,expires,int(time.time()*1000),slug))
+        self.json(201,{"id":guest_id,"name":name,"slug":slug,"token":token,"tokenExpiresAt":expires})
+
+    def freeze_guest_links(self,invite_id):
+        """Persist the designer's per-guest link codes — the mapping screen's action.
+
+        Research §5.1: a code is frozen at generation time, so editing a guest's name
+        later changes the card and the page but never the link already in a chat.
+        Codes are validated as URL-safe slugs and kept unique per invitation; a
+        conflict is reported (409) rather than silently renamed, so the screen can
+        ask the designer which one to keep.
+        """
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"invitation-guest-freeze:{user['id']}",30,60):return
+        data=self.body(2_000_000)
+        submitted=data.get("guests",[]);submitted=submitted if isinstance(submitted,list) else []
+        if len(submitted)>5000:raise ValueError("Freeze at most 5000 guests at a time")
+        updated=0;conflicts=[]
+        with connect() as db:
+            if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
+            for entry in submitted[:5000]:
+                if not isinstance(entry,dict):continue
+                guest_id=str(entry.get("id","") or "").strip()[:120]
+                raw=str(entry.get("slug","") or "").strip()
+                if not guest_id or not raw:continue
+                candidate=clean_slug(raw)
+                if not re.fullmatch(r"[a-z0-9-]{1,60}",candidate):raise ValueError("Invalid guest link code")
+                row=db.execute("SELECT slug FROM guests WHERE id=? AND invitation_id=?",(guest_id,invite_id)).fetchone()
+                if not row or row["slug"]==candidate:continue
+                if db.execute("SELECT 1 FROM guests WHERE invitation_id=? AND slug=? AND id<>?",(invite_id,candidate,guest_id)).fetchone():
+                    conflicts.append(candidate);continue
+                db.execute("UPDATE guests SET slug=? WHERE id=? AND invitation_id=?",(candidate,guest_id,invite_id));updated+=1
+            queued=0
+        self.audit("guests.links_frozen","invitation",invite_id,{"updated":updated,"conflicts":len(conflicts),"queued":queued})
+        self.json(200 if not conflicts else 409,{"updated":updated,"frozen":True,"conflicts":conflicts,"queued":queued})
 
     def rotate_guest_token(self,invite_id,guest_id):
         user=self.require_user()
