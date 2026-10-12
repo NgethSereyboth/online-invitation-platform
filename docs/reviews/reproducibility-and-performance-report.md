@@ -151,10 +151,10 @@ The first four:
 $ for f in dom-timeline layout-thrash-probe style-recalc-attribution lhci-single; do
 >   printf '%-24s %s\n' "$f" "$(git log --diff-filter=A --format='%h %s' -- tools/$f.mjs tools/$f.js | tail -1)"
 > done
-dom-timeline                e0d1cf0 fix(index): reserve the editor context row to cut CLS
-layout-thrash-probe         d7734c7 perf(index): cut forced style recalculations in the editor chrome
-style-recalc-attribution    d7734c7 perf(index): cut forced style recalculations in the editor chrome
-lhci-single                  d7734c7 perf(index): cut forced style recalculations in the editor chrome
+dom-timeline             e0d1cf0 fix(index): reserve the editor context row to cut CLS (0.263 -> 0.092 mean)
+layout-thrash-probe      d7734c7 perf(index): cut forced style recalculations in the editor chrome
+style-recalc-attribution d7734c7 perf(index): cut forced style recalculations in the editor chrome
+lhci-single              d7734c7 perf(index): cut forced style recalculations in the editor chrome
 ```
 
 ### 1.3 The fresh clone is green
@@ -216,6 +216,7 @@ this checkout and red in a clone, and the difference is not in `build.py`.
 
 ### 1.6 `make reproduce`
 
+<!-- report-verify: write — orchestrates the whole verification sequence: it builds, starts the gzip server, runs lhci and pytest. Not a read-only command, so it is declared rather than executed. -->
 ```
 $ make reproduce
 bash tools/reproduce.sh --port 8124
@@ -287,6 +288,7 @@ hypothesis is **wrong**, and the measurement says so before any change is made.
 
 ### 3.1 What the trace says the bucket is
 
+<!-- report-verify: measurement — prints per-call-frame milliseconds from a live CDP trace; the numbers move run to run by construction, so byte comparison can never hold. -->
 ```
 $ node tools/style-recalc-attribution.mjs index.html --wait=2000 --top=12 \
       --out=style-recalc-attribution-before.json --trace=artifacts/_trace-cache.json
@@ -300,6 +302,7 @@ Recalculate Style total:         10392 ms over 255 events  (66.8% of main-thread
 recalculations. Then the selector stats, which is the instrument that kills the
 CSS-size hypothesis:
 
+<!-- report-verify: measurement — same shape as the block above: recalc/layout sums in milliseconds read from a live trace. -->
 ```
 $ node tools/style-layout-trace.mjs index.html --top=25 --wait=2000 --label=before
 recalc sum  : 8264.8 ms over 261 events
@@ -420,6 +423,7 @@ Recalculate Style, from a CDP trace (tools/style-recalc-attribution.mjs)
   delta :  -17.2% of the total, -41% of the event count
 ```
 
+<!-- report-verify: measurement — a Lighthouse run: styleLayout and the score are one sample of a noisy process (three baseline runs in the closing pass spanned 1,565-1,723 ms). -->
 ```
 $ PAGE=index.html npx lhci collect --config=tools/lhci-single.js
 mainthread-work-breakdown  before: 3.6 s      after: 3.2 s
@@ -600,6 +604,7 @@ The audit also settles the two questions in the brief:
 
 ### 4.2 The used character set
 
+<!-- report-verify: prefix 21 — the first 21 lines are the used-codepoint totals and the per-source counts, which are stable; the tail lists sources with no tracked counterpart, which describes the working directory and changed when three untracked scratch files were moved out of the tree. -->
 ```
 $ python3 tools/subset-fonts.py codepoints --build-output-only
 used codepoints: 218 total  (148 Latin-class, 70 Khmer-class)
@@ -1031,6 +1036,7 @@ had swept in, rather than deleting anything.
 selector for each page, forces it with `CSS.forcePseudoState`, and diffs the
 computed style of the trigger and its subjects before and after.
 
+<!-- report-verify: historical — these per-page counts were produced by an earlier revision of tools/hover-audit.mjs in the same pass, before it emulated @media(hover:hover) and before it waited for transitions to settle. The finalized instrument reports different counts for the same pages (index 162 -> 224 with this instrument), so this block records that revision, not the tree. The corrected sweep is verified in docs/reviews/instrument-and-closure-report.md section 1. -->
 ```
 $ python3 tools/hover-verify.py --all --summary-only
 index        tested=271   change=162   noChange=109
@@ -1069,6 +1075,7 @@ hover, and compares the **entire** computed style of the trigger and its subject
 so "load-bearing" means "something in the computed style changes when this
 priority is removed". The 16-page sweep completed:
 
+<!-- report-verify: historical — same revision problem on the leave-one-out pass: these totals were produced by an instrument that enumerated CSSStyleDeclaration indexed properties, i.e. longhands, so 194 "declarations" on index is a longhand count. That defect is what this pass fixed; the corrected cross-page verdict is verified in docs/reviews/instrument-and-closure-report.md section 1. -->
 ```
 $ python3 tools/hover-verify.py --all --lift --summary-only
 index        tested=271   change=164   noChange=107 lift=194/76
@@ -1256,6 +1263,7 @@ kept unchanged — `script`, `stylesheet` and `total`, per page, in KiB. `assert
 still uses `budgetsFile` and not `assertions`, because Lighthouse CI rejects using
 both at once. The gate, run whole:
 
+<!-- report-verify: measurement — the release assertion run against all 16 routes; scores and millisecond buckets differ every run. -->
 ```
 $ npx lhci autorun --config=tools/lighthouserc.js
 autorun exit=0
@@ -1290,6 +1298,7 @@ already measured and rejected on its own terms.
 config read `process.env.PORT || 8124`, so `"0"` won and every URL became
 `http://127.0.0.1:0/...`:
 
+<!-- report-verify: measurement — same as above, all 16 routes through the release config. -->
 ```
 $ npx lhci collect --config=tools/lighthouserc.js
 Running Lighthouse 1 time(s) on http://127.0.0.1:0/index.html
