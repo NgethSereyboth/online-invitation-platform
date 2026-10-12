@@ -1,0 +1,6 @@
+FORCED_LAYOUT_ATTRIBUTION {"label":"exercise-before","url":"http://127.0.0.1:8124/index.html","exercise":".studio-panel-search input","distinctCallSites":72,"dirty":false,"writes":255,"reads":92,"forced":21,"forcedDetached":0,"wrapErrors":0}
+  top 4 call sites by forced reads:
+     15 forced      15 reads       0 writes  safeText (http://127.0.0.1:8124/bundle-index-v15.js:6174:54)
+      4 forced       6 reads       0 writes  text (http://127.0.0.1:8124/bundle-index-v15.js:5532:37)
+      1 forced       1 reads       0 writes  resize (http://127.0.0.1:8124/webgl-scene-backend-v22.js:18:157)
+      1 forced       1 reads       0 writes  rememberScroll (http://127.0.0.1:8124/bundle-index-v15.js:7637:113)

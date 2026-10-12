@@ -76,6 +76,22 @@ either server. Only the byte numbers depend on compression.
 | --- | --- |
 | `lighthouserc.js` | the only Lighthouse CI config. Run from the repo root: `npx lhci autorun --config=tools/lighthouserc.js`. |
 
+### Served mirror
+
+| file | what it does |
+| --- | --- |
+| `mirror-diff.py` | verify `src/python/` (the server's ROOT) against its sources **by sha256, not mtime**: `drifted`, `unmigrated`, `orphans`. Imports `SYNC_PLAN` from the syncer so the two cannot disagree about what is mirrored. Generator-owned artifacts (`bundle-*-v15.*`, `editor-suite.*`, the manifests) are excluded and counted separately; serve-root files with no upstream source are exempt **by name and with a reason**, printed, never deleted. Exit 1 on any real drift. |
+
+### Cross-site / attribution
+
+| file | what it does |
+| --- | --- |
+| `canva-probe.mjs` | CDP trace + JS/stylesheet inventory of any URL (`--prefix` names the three artifacts). Takes the same measurements on Canva's public pages and on this project's served pages so one analyzer can compare them. Never logs in; records the HTTP status so a wall is visible. |
+| `perf-trace-compare.py` | read two `*-trace.json` files and print one table: style-recalc / layout / script **union** time (union, not sum — recalc events nest), the longest tasks and layouts, and the count of layouts nested inside a script event (the forced-layout proxy). |
+| `forced-layout-attribution.mjs` | name the JS call sites that force synchronous layout, by instrumenting writes and layout-forcing reads in the DOM and recording the first non-probe stack frame. `--exercise=SELECTOR` measures one interaction (types into it) instead of the load. |
+| `css-feature-inventory.mjs` | count the modern-CSS constructs a URL ships (`content-visibility`, `contain`, `@layer`, `@container`, `:has(`, `color-mix(`, `!important`, …) from the CSS **text**, read via CDP so cross-origin sheets work. One instrument, both sites. |
+| `bundle-line-map.py` | map a bundle line number back to `src/<dir>/<file>:<line>`, replaying the generator's own concatenation. `--verify` re-derives every bundle and asserts each mapped source line's text occurs in the bundle line it was mapped to. |
+
 ## Conventions
 
 * **Outputs go to `artifacts/`** (gitignored), never to `/tmp`.
@@ -89,6 +105,11 @@ either server. Only the byte numbers depend on compression.
   `determinism-50x.py`; layout-shift claims use `--n=5`; the loader A/B refuses
   to report unless the patched arm was verified patched.
 * **Every claim in a report carries the command that produced it.**
+* **An instrument that reports a wrong number gets fixed before its output is
+  acted on.** `forced-layout-attribution.mjs` needed three corrections before
+  its top entries were real (detached-node reads, `.id`/`window.inner*` reads,
+  and `classList.toggle` no-ops that dirty nothing) — each is recorded in the
+  tool's own header, and in the pass report that used it.
 
 ## Node dependencies
 

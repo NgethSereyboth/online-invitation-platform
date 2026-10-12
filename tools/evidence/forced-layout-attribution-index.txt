@@ -1,0 +1,16 @@
+FORCED_LAYOUT_ATTRIBUTION {"label":"index","url":"http://127.0.0.1:8124/index.html","distinctCallSites":1017,"dirty":false,"writes":5410,"reads":1914,"forced":146,"forcedDetached":140,"wrapErrors":0}
+  top 14 call sites by forced reads:
+     51 forced      86 reads       0 writes  text (http://127.0.0.1:8124/bundle-index-v15.js:5532:37)
+     19 forced      90 reads       0 writes  typographyContentHTML (http://127.0.0.1:8124/bundle-index-v15.js:2169:123)
+     15 forced      15 reads       0 writes  safeText (http://127.0.0.1:8124/bundle-index-v15.js:6174:54)
+     12 forced      12 reads       0 writes  boxKey (http://127.0.0.1:8124/bundle-index-v15.js:626:38)
+      7 forced     105 reads       0 writes  http://127.0.0.1:8124/bundle-index-v15.js:10368:24
+      7 forced      36 reads       0 writes  typographyContentHTML (http://127.0.0.1:8124/bundle-index-v15.js:2169:141)
+      5 forced       5 reads       0 writes  http://127.0.0.1:8124/bundle-index-v15.js:7881:45
+      5 forced       5 reads       0 writes  renderPageDock (http://127.0.0.1:8124/bundle-index-v15.js:7889:78)
+      3 forced      58 reads       0 writes  availableSpace (http://127.0.0.1:8124/bundle-index-v15.js:588:44)
+      3 forced       8 reads       0 writes  updateCanvasView (http://127.0.0.1:8124/bundle-index-v15.js:4749:54)
+      3 forced       3 reads       0 writes  http://127.0.0.1:8124/bundle-index-v15.js:3469:47
+      2 forced       3 reads       0 writes  http://127.0.0.1:8124/bundle-index-v15.js:8754:160
+      2 forced       3 reads       0 writes  keepActivePageVisible (http://127.0.0.1:8124/bundle-index-v15.js:11320:39)
+      2 forced       2 reads       0 writes  HTMLButtonElement.fitCanvasToViewport (http://127.0.0.1:8124/bundle-index-v15.js:4771:154)

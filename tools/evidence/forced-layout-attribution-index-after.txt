@@ -1,0 +1,10 @@
+FORCED_LAYOUT_ATTRIBUTION {"label":"index-after","url":"http://127.0.0.1:8124/index.html","distinctCallSites":1017,"dirty":false,"writes":5458,"reads":1986,"forced":155,"forcedDetached":150,"wrapErrors":0}
+  top 8 call sites by forced reads:
+     57 forced      95 reads       0 writes  text (http://127.0.0.1:8124/bundle-index-v15.js:5532:37)
+     19 forced     102 reads       0 writes  typographyContentHTML (http://127.0.0.1:8124/bundle-index-v15.js:2169:123)
+     15 forced      15 reads       0 writes  safeText (http://127.0.0.1:8124/bundle-index-v15.js:6180:54)
+     15 forced      15 reads       0 writes  boxKey (http://127.0.0.1:8124/bundle-index-v15.js:626:38)
+      7 forced     105 reads       0 writes  http://127.0.0.1:8124/bundle-index-v15.js:10374:24
+      7 forced      36 reads       0 writes  typographyContentHTML (http://127.0.0.1:8124/bundle-index-v15.js:2169:141)
+      5 forced       5 reads       0 writes  http://127.0.0.1:8124/bundle-index-v15.js:7887:45
+      5 forced       5 reads       0 writes  renderPageDock (http://127.0.0.1:8124/bundle-index-v15.js:7895:78)

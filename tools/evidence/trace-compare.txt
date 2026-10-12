@@ -1,0 +1,16 @@
+TRACE_COMPARE {"canva": 189695, "project-index": 136014}
+metric                                                canva     project-index
+trace events                                         189695            136014
+style+layout union ms (main thread)                  805.22           2142.25
+  style recalc union ms                              525.12           1178.75
+  layout union ms                                     280.1            963.58
+  style recalc union ms (all threads)                525.12           1178.75
+  layout union ms (all threads)                       280.1            963.58
+Script union ms (main thread)                       2604.65           2745.82
+UpdateLayoutTree events                                 379               166
+Layout events                                            37               111
+RunTask events                                        29315             17636
+Layouts nested in script (forced proxy)                   6                77
+Layouts with stackTrace                                   0                 0
+
+--- canva: longest 10 main-thread tasks (ms) ---

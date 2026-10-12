@@ -1,0 +1,67 @@
+npm notice run npx
+npm notice run 'designlang' https://www.canva.com --out artifacts/canva-design --system-chrome --user-agent Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36
+
+  designlang
+  https://www.canva.com
+
+- Launching browser...
+[32m✔[39m Extraction complete!
+
+  Output files:
+  ✓ canva-com-design-language.md (33.4KB) — Markdown (AI-optimized)
+  ✓ canva-com-design-tokens.json (10.7KB) — Design Tokens (DTCG v1)
+  ✓ canva-com-tailwind.config.js (5.0KB) — Tailwind Config (v3)
+  ✓ canva-com-tailwind-v4.css (3.3KB) — Tailwind v4 @theme (CSS-first)
+  ✓ canva-com-tokens.d.ts (1.6KB) — TypeScript token types
+  ✓ canva-com-reset.css (2.1KB) — Brand-aware CSS reset
+  ✓ canva-com-gradients.css (7.7KB) — Extracted gradients (utility classes)
+  ✓ canva-com-gradients.json (11.0KB) — Extracted gradients (structured)
+  ✓ canva-com-AGENT.md (3.6KB) — Agent system prompt (paste into Claude/GPT/Cursor)
+  ✓ canva-com-motion.html (10.4KB) — Motion lab (interactive easing/duration/keyframe page)
+  ✓ canva-com-motion.framer.js (2.6KB) — Framer Motion presets (transitions + variants)
+  ✓ canva-com-motion.one.js (2.6KB) — Motion One presets (animate() + springs + scroll)
+  ✓ canva-com-motion.css (1.9KB) — Motion CSS (vars + keyframes + utilities + reduced-motion)
+  ✓ canva-com-motion.tailwind.js (2.3KB) — Tailwind motion preset (duration/easing/keyframes/animation)
+  ✓ canva-com-motion.gsap.js (2.5KB) — GSAP presets (CustomEase + reveals + ScrollTrigger)
+  ✓ canva-com-motion.waapi.js (2.5KB) — Web Animations API presets (zero-dependency, exact curves)
+  ✓ canva-com-variables.css (15.0KB) — CSS Variables
+  ✓ canva-com-preview.html (20.2KB) — Visual Preview
+  ✓ canva-com-figma-variables.json (10.5KB) — Figma Variables
+  ✓ canva-com-theme.js (4.2KB) — React Theme
+  ✓ canva-com-shadcn-theme.css (484B) — shadcn/ui Theme
+  ✓ canva-com-wordpress-theme.json (4.4KB) — WordPress Theme
+  ✓ canva-com-mcp.json (8.6KB) — MCP companion
+  ✓ canva-com-motion-tokens.json (1.1KB) — Motion Tokens
+  ✓ canva-com-anatomy.tsx (444B) — Component Anatomy (stubs)
+  ✓ canva-com-voice.json (1.7KB) — Brand Voice
+  ✓ canva-com-DESIGN.md (5.2KB) — DESIGN.md (agent-native)
+  ✓ canva-com-intent.json (4.6KB) — Page Intent + Section Roles
+  ✓ canva-com-visual-dna.json (1.3KB) — Visual DNA
+  ✓ canva-com-library.json (200B) — Component Library Detection
+  ✓ canva-com-seo.json (3.0KB) — SEO + Structured Data
+  ✓ canva-com-icon-system.json (2.7KB) — Icon System
+  ✓ canva-com-stack-intel.json (148B) — Stack Intel (CMS/analytics/experimentation)
+  ✓ canva-com-form-states.json (256B) — Forms + States
+  ✓ canva-com.brand.html (46.8KB) — Brand book (HTML)
+
+  Saved to /media/ngethsereyboth/LocalDisk/eInvite/einvite-platform/artifacts/canva-design
+
+  Summary:
+  Colors: 9 unique colors
+  Fonts: Canva Sans, Times New Roman
+  Spacing: 10 values (base: 4px)
+  Shadows: 6 unique shadows
+  Radii: 5 unique values
+  Breakpoints: 18 breakpoints
+  Components: 6 patterns detected
+  CSS Vars: 433 custom properties
+  Layout: 213 grids, 220 flex containers
+  Design Score: 94/100 (A) — 1 issues
+  Gradients: 24 unique gradients
+  Z-Index: 5 layers
+  Icons: 15 SVG icons (filled)
+  Font Files: 5 fonts (self-hosted)
+  Images: 33 images, 3 style patterns
+  A11y: 100% WCAG score (0 failing pairs)
+  Completed in 11.2s
+
