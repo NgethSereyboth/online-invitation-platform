@@ -1,0 +1,18 @@
+UNANIMITY_RULE_EVIDENCE 2026-10-12T06:37:12Z
+
+# artifacts/unanimity-demo: index.html, three full lift runs (lift-index.json, .run2, .run3)
+$ ARTIFACTS_DIR=artifacts/unanimity-demo LIFT_JSON=1 python3 tools/hover-verify.py --cross-page
+summary: {"pages": 1, "runsPerPage": {"index": 3}, "minRunsPerPage": 3, "declarations": 60, "demotable": 1, "keep": 23, "noEvidence": 36, "unstable": 0}
+demotable: input:hover, textarea:hover, select:hover / border-color longhands=4 diffs=0 redundantOn=['index']
+unstable: 0
+
+# NEGATIVE CONTROL 1 — flip one run of the demotable declaration to load-bearing (artifacts copied to /tmp/unanimity-control; the evidence dir is untouched)
+$ (run 2: redundant -> needed) ; python3 tools/hover-verify.py --cross-page
+summary: {"pages": 1, "runsPerPage": {"index": 3}, "minRunsPerPage": 3, "declarations": 60, "demotable": 0, "keep": 24, "noEvidence": 36, "unstable": 0}
+demotable: 0 -> the declaration is kept, because one run called it load-bearing
+
+# NEGATIVE CONTROL 2 — delete every copy of the demotable declaration from run 2 (the 'run could not reach the rule' case)
+$ (run 2: no bucket contains it) ; python3 tools/hover-verify.py --cross-page
+summary: {"pages": 1, "runsPerPage": {"index": 3}, "minRunsPerPage": 3, "declarations": 60, "demotable": 0, "keep": 23, "noEvidence": 36, "unstable": 1}
+unstable: input:hover, textarea:hover, select:hover / border-color [{"page": "index", "runs": [[1, "redundant"], [3, "redundant"]], "missingRuns": 1}]
+demotable: 0
