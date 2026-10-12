@@ -1,0 +1,121 @@
+$ sed -n 1429p src/python/server.py | cut -c1-700
+                    CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, email TEXT NOT NULL DEFAULT '', group_name TEXT NOT NULL DEFAULT '', household_id TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]', table_name TEXT NOT NULL DEFAULT '', seat_label TEXT NOT NULL DEFAULT '', token TEXT UNIQUE NOT NULL, token_hash TEXT, token_salt TEXT NOT NULL DEFAULT '', token_version INTEGER NOT NULL DEFAULT 1, token_expires_at INTEGER, token_revoked_at INTEGER, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER, delivery_status TEXT NOT NULL DEFAULT 'not-sent', opened_at INTEGER);
+
+$ sed -n 1408p src/python/server.py | cut -c1-330
+                    CREATE TABLE IF NOT EXISTS invitations(id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, draft_json TEXT NOT NULL, updated_at INTEGER NOT NULL, owner_id TEXT, archived INTEGER NOT NULL DEFAULT 0, views INTEGER NOT NULL DEFAULT 0, last_client_id TEXT, last_mutation_id TEXT, deleted_at INTEGER, purge_at INTEGER, 
+
+$ grep -o 'id="importFile".\{0,40\}' src/html/guests.html
+id="importFile" type="file" accept=".csv,text/csv"></la
+
+$ grep -c 'xlsx' src/html/guests.html src/js/guests.js || echo 'no xlsx matches'
+src/html/guests.html:0
+src/js/guests.js:0
+no xlsx matches
+
+$ sed -n 35p src/js/guests.js | cut -c1-200
+$('#importFile').onchange=async e=>{let rows=parseCsv(await e.target.files[0].text()),start=/name/i.test(rows[0]?.[0]||'')?1:0,added=0;for(let i=start;i<rows.length;i++){if(!rows[i][0])continue;await 
+
+$ sed -n 36p src/js/guests.js | cut -c1-160
+$('#exportBtn').onclick=()=>{let rows=[[_txt('Name','Name'),_txt('Phone','Phone'),_txt('Email','Email'),_txt('Group','Group'),_txt('Household','Household'),_txt
+
+$ sed -n 205p src/js/app.js | cut -c1-300
+title:{id:'title',type:'text',left:'8%',top:'10%',width:'84%',height:'110px',html:'Sophea & Dara',textStyleId:'display',typographyModelVersion:1,fontPairing:'serif-formal',font:'noto-serif',fontSize:64,textAutoFit:'fit',textAutoFitMax:88,textMinFontSize:18,fontWeight:'700',fontStyle:'normal',lineHei
+
+$ sed -n 12p src/js/template-bindings-v25.js | cut -c1-300
+function resolve(doc,obj){const binding=String(obj.contentBinding||'');if(!binding)return null;if(binding==='schedule')return schedule(doc,/km|khmer/i.test(`${obj.semanticRole||''} ${obj.textLocale||''}`));if(binding==='heroImage')return Object.values(doc.objects||{}).find(o=>o?.type==='image'&&o.sr
+
+$ sed -n 16,17p src/js/canva-scale-v31.js | cut -c1-220
+function mergeFields(template,row){return String(template??'').replace(/\{\{\s*([\w.-]+)\s*\}\}/g,(_,key)=>row[key]??'')}
+function buildPersonalizedJobs(rows,templateId,options={}){return rows.slice(0,Math.min(10000,Number(options.limit||1000))).map((row,index)=>({id:uid('bulk-job-item'),templateId,row,index,status:'queued',fingerprint:fing
+
+$ grep -c 'dataMergeV47:f.dataMergeV47!==false' src/js/document-schema-v32.js
+1
+
+$ grep -n 'def serve_public(self, slug)' src/python/server.py
+9475:    def serve_public(self, slug):
+
+$ sed -n 3536p src/python/server.py
+        if path.startswith("/i/"): return self.serve_public(path.split("/", 2)[2])
+
+$ grep -n 'einvite-invitation-slug\|/api/public/' src/js/public-page.js | cut -c1-170
+1:const slug=(document.querySelector('meta[name="einvite-invitation-slug"]')?.content||'').trim(),root=document.querySelector('#publicRoot'),life=window.EInviteLifecycle;
+55:try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({passwo
+67:async function loadPublic(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(!apiAvailable())return {document:offlineSeedDocument(),invitationId:'d
+69:function showPrivacyConsent(p,d){document.querySelectorAll('.guest-consent-banner').forEach(node=>node.remove());const needAnalytics=!!p.analyticsConsentRequired&&!con
+81:try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/gallery/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify
+85:try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/rsvps',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation
+87:try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitatio
+
+$ grep -n 'einvite-invitation-slug' src/html/public.html
+7:  <meta name="einvite-invitation-slug" content="__INVITATION_SLUG__">
+
+$ grep -n 'og:\|twitter:\|<title\|name="description"' src/html/public.html
+8:  <title>__INVITATION_TITLE__</title>
+9:  <meta name="description" content="__INVITATION_DESCRIPTION__">
+10:  <meta property="og:title" content="__INVITATION_TITLE__">
+11:  <meta property="og:description" content="__INVITATION_DESCRIPTION__">
+12:  <meta property="og:type" content="website">
+13:  <meta property="og:url" content="__INVITATION_PUBLIC_URL__">
+14:  <meta property="og:image" content="__INVITATION_OG_IMAGE__">
+15:  <meta property="og:image:type" content="__INVITATION_OG_TYPE__">
+16:  <meta property="og:image:width" content="1200">
+17:  <meta property="og:image:height" content="630">
+18:  <meta name="twitter:card" content="summary_large_image">
+19:  <meta name="twitter:title" content="__INVITATION_TITLE__">
+20:  <meta name="twitter:description" content="__INVITATION_DESCRIPTION__">
+21:  <meta name="twitter:image" content="__INVITATION_OG_IMAGE__">
+
+$ grep -rn 'xlsx\|SheetJS\|papaparse\|openpyxl' package.json docs/requirements-production.txt || echo 'no spreadsheet library in either manifest'
+no spreadsheet library in either manifest
+
+$ sed -n 2512,2514p src/python/server.py
+def clean_slug(value):
+    value = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
+    return value[:60] or "our-invitation"
+
+$ grep -n 'clean_slug' src/python/server.py | cut -c1-110
+496:    tenant=f"owners/{clean_slug(owner_id)}/" if owner_id else ""
+2512:def clean_slug(value):
+4011:        invite_id_new=str(uuid.uuid4());slug=clean_slug(data.get("slug") or f"ai-{category.lower().replac
+6025:        data = self.body(); document=validate_document(data.get("document",{})); invite_id = str(uuid.uui
+6054:        data=self.body(50_000);slug=clean_slug(data.get("slug",""))
+
+$ grep -n 'function guestUrl' src/js/guests.js | cut -c1-230
+18:function guestUrl(g){if(!g?.token)return'';return server?`${location.origin}/i/${encodeURIComponent(slug)}?g=${encodeURIComponent(g.token)}`:`${location.origin}${location.pathname.replace(/guests(?:\.html)?$/,'public.html')}?g=
+
+$ sed -n 9499p src/python/server.py | cut -c1-240
+        page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(tit
+
+$ grep -n 'def render_social_card_png_bytes\|def social_cache_path\|def invalidate_social_cache\|def warm_social_card_cache\|def available_social_image_format' src/python/server.py
+780:def available_social_image_format():
+864:def social_cache_path(invitation_id, version, fmt):
+868:def invalidate_social_cache(invitation_id):
+873:def render_social_card_png_bytes(invite_id, access_mode, document, fmt="og"):
+918:def warm_social_card_cache(invitation_id, access_mode, version, document):
+
+$ grep -n 'type: web\|runtime: python\|autoDeploy\|startCommand\|buildCommand\|healthCheckPath\|plan:' render.yaml
+6:  - type: web
+8:    runtime: python
+9:    plan: free
+19:    buildCommand: |
+22:    startCommand: cd src/python && python serve.py --host 0.0.0.0 --port $PORT
+49:    healthCheckPath: /
+50:    autoDeploy: true
+
+$ grep -n 'data-merge' src/js/future-studio-loader-v52.js | cut -c1-120
+2:const registry={editor:{label:'Editor',version:'V34',script:'unified-editor-v34.js',global:'EInviteUnifiedEditorV34'},
+
+$ grep -n 'generated_invitation_variants_v47\|data_merge_sources_v47' future_platform_v52/schema.py | cut -c1-200
+40:        """CREATE TABLE IF NOT EXISTS data_merge_sources_v47(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,name TEXT NOT NULL,source_type TEXT NOT NULL DEFAULT 'csv',co
+43:        """CREATE TABLE IF NOT EXISTS generated_invitation_variants_v47(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL,invitation_id TEXT NOT NULL,merge_job_id TEXT NOT NULL,row_key TEXT NOT NULL,g
+
+$ grep -n 'def _bulk_generation_job' future_platform_v52/service.py
+619:    def _bulk_generation_job(self, payload, progress, cancelled):
+
+$ grep -n 'api.telegram.org\|parse_mode\|disable_web_page_preview' src/python/delivery_channels/telegram_channel.py
+3:Uses the official Telegram Bot API (``POST https://api.telegram.org/bot{token}/sendMessage``).
+12:``parse_mode`` defaults to ``"HTML"`` so invitation snippets can include
+29:        self.api_origin = _env("EINVITE_TELEGRAM_API_ORIGIN", "https://api.telegram.org")
+47:            "parse_mode": str(channel_config.get("parse_mode") or "HTML"),
+48:            "disable_web_page_preview": bool(channel_config.get("disable_preview", False)),
+

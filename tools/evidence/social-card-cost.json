@@ -1,0 +1,71 @@
+{
+  "command": "python3 tools/social-card-cost.py --repeat 7",
+  "renderer": "src/python/server.py::render_social_card_png_bytes",
+  "cache": "DATA/social-cache/<invitation>-v<version>-<fmt>.png",
+  "fixture": {
+    "note": "minimal published-document shape; the renderer reads fields/socialCard/palette/accent only",
+    "khmer_source": "docs/i18n/TRANSLATIONS.csv",
+    "khmer_sample_chars": 12
+  },
+  "pillow": {
+    "pillow_version": "10.2.0",
+    "features_available": [
+      "fribidi",
+      "harfbuzz",
+      "libimagequant",
+      "libjpeg_turbo",
+      "raqm",
+      "transp_webp",
+      "webp_anim",
+      "webp_mux",
+      "xcb"
+    ],
+    "raqm": true,
+    "harfbuzz": true,
+    "fribidi": true
+  },
+  "khmer_font": {
+    "path": "/usr/share/fonts/truetype/noto/NotoSansKhmer-Regular.ttf",
+    "family": [
+      "Noto Sans Khmer",
+      "Regular"
+    ],
+    "is_khmer_font": true
+  },
+  "khmer_cmap_coverage": {
+    "checked": true,
+    "font": "/usr/share/fonts/truetype/noto/NotoSansKhmer-Regular.ttf",
+    "codepoints": 70,
+    "missing": 0,
+    "missing_codepoints": [],
+    "corpus_strings": 503
+  },
+  "renders": {
+    "og": {
+      "median_ms": 82.0,
+      "png_bytes": 25777,
+      "peak_rss_delta_kb": 6048
+    },
+    "square": {
+      "median_ms": 92.4,
+      "png_bytes": 25497,
+      "peak_rss_delta_kb": 4444
+    },
+    "story": {
+      "median_ms": 126.3,
+      "png_bytes": 29625,
+      "peak_rss_delta_kb": 7724
+    }
+  },
+  "overlay_cost": {
+    "note": "decode the cached og PNG + draw one Khmer line + re-encode",
+    "median_ms": 83.1,
+    "reencode_only_median_ms": 79.4,
+    "draw_marginal_ms": 3.7,
+    "png_bytes": 27583,
+    "base_png_bytes": 25777,
+    "peak_rss_delta_kb": 0
+  },
+  "repeat": 7,
+  "measured_at_utc": "2026-10-12T13:11:06Z"
+}
