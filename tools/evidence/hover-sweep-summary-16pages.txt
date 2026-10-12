@@ -1,0 +1,17 @@
+index        tested=271   change=226   noChange=45
+dashboard    tested=68    change=54    noChange=14
+public       tested=41    change=34    noChange=7
+admin        tested=34    change=32    noChange=2
+account      tested=34    change=31    noChange=3
+billing      tested=34    change=31    noChange=3
+verify       tested=25    change=20    noChange=5
+reset        tested=31    change=25    noChange=6
+privacy      tested=4     change=4     noChange=0
+guests       tested=51    change=37    noChange=14
+responses    tested=34    change=31    noChange=3
+analytics    tested=33    change=30    noChange=3
+materials    tested=50    change=34    noChange=16
+checkin      tested=22    change=18    noChange=4
+templates    tested=47    change=40    noChange=7
+designer     tested=34    change=32    noChange=2
+HOVER_VERIFY_TOTAL {"pages": 16, "hoverSelectors": 2107, "elementsTested": 813, "visibleChange": 679, "noVisibleChange": 134}

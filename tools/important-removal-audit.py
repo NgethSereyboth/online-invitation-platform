@@ -12,9 +12,14 @@ prints the whole file.
 
 This tool answers the question mechanically, per changed file:
 
-  * a CSS/JS file must be **byte-identical to HEAD after deleting every
+  * a CSS file must be **byte-identical to the base revision after deleting every
     `!important` token**. Then the edit is exactly its removals, and the count of
     removals and the byte delta are reported.
+  * a changed **JS** file is listed but not judged. This tool exists to keep a CSS
+    edit honest, and a JS file cannot be checked that way: a logic change is not an
+    `!important` edit, and claiming to verify one would be a lie told by a green
+    checkbox. Changed JS is named in the output, with its byte delta, so it is a
+    line a reader can follow into the commit that made it — not a silent omission.
   * a generated JSON manifest must differ **only** in size and digest fields, and
     those must agree with the files on disk: every recorded `*Bytes` must equal the
     current file's size, every recorded `*Sha256` must equal its current digest, and
@@ -240,12 +245,31 @@ def main(argv=None) -> int:
 
     entries = changed_entries(args.rev)
     failures: list[str] = []
+    not_judged: list[str] = []
     counts = {"modified": 0, "renamed": 0, "manifest": 0}
 
     # CSS/JS first: a manifest's size fields are checked by re-measuring the files it
     # names against the same revision, so its audit does not depend on this order.
     for status, path, old_path in entries:
-        if not path.endswith((".css", ".js")):
+        if path.endswith(".js"):
+            # A JS *rename* is still a movement of bytes, and "content identical" is
+            # checkable, so it is verified. A JS *modification* is a code change and
+            # is only named.
+            if status.startswith(("R", "C")) and old_path is not None:
+                same = blob(args.rev, old_path) == (REPO_ROOT / path).read_bytes()
+                print(f"  {'ok  ' if same else 'FAIL'} {path:<56} renamed from {old_path}; content {'identical' if same else 'CHANGED'}")
+                counts["renamed"] += 1
+                if not same:
+                    failures.append(path)
+            else:
+                # Modified, added or deleted: named, not judged. An added file here is
+                # typically a new tool (this pass added tools/lib/css-decl.js), and a
+                # CSS audit has no opinion about it.
+                delta = (REPO_ROOT / path).stat().st_size - len(blob(args.rev, path))
+                verb = {"M": "modified", "A": "added", "D": "deleted"}.get(status, status)
+                not_judged.append(f"{path} ({verb}, {delta:+d} B)")
+            continue
+        if not path.endswith(".css"):
             continue
         if status.startswith(("R", "C")) and old_path is not None:
             same = blob(args.rev, old_path) == (REPO_ROOT / path).read_bytes()
@@ -278,10 +302,14 @@ def main(argv=None) -> int:
             if not ok:
                 failures.append(path)
 
+    for note in not_judged:
+        print(f"  n/a  {note:<56} a JS change: out of scope here, see the commit that made it")
+
     total = sum(counts.values())
     print(
-        f"\nimportant-removal-audit: vs {args.rev} — {total} changed CSS/JS/JSON entry(s) "
-        f"({counts['modified']} modified, {counts['renamed']} renamed, {counts['manifest']} manifest(s)); failures={len(failures)}"
+        f"\nimportant-removal-audit: vs {args.rev} — {total} changed CSS/JSON entry(s) "
+        f"({counts['modified']} modified, {counts['renamed']} renamed, {counts['manifest']} manifest(s)); "
+        f"{len(not_judged)} JS change(s) not judged; failures={len(failures)}"
     )
     return 1 if failures else 0
 

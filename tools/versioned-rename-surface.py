@@ -52,8 +52,14 @@ def tracked(patterns: list[str]) -> list[str]:
 
 
 def tracked_names() -> list[str]:
-    """Every tracked path, once — the corpus a reference search scans."""
-    return tracked(["."])
+    """Every tracked path, once — the corpus a reference search scans.
+
+    `tools/evidence/` is excluded: those files *are* the tool's own output (this
+    tool's runs are recorded there, names and all), so counting them would make
+    every file it ever reported look like it has a live reference — including in
+    the list below the one being printed.
+    """
+    return [p for p in tracked(["."]) if not p.startswith("tools/evidence/")]
 
 
 def live_source_names() -> set[str]:

@@ -1,0 +1,32 @@
+@@@ dedf093
+dedf093 fix(tools): enumerate !important at shorthand level, then re-run the leave-one-out sweep
+ docs/page-assets-v15.json                          |  28 +-
+ docs/route-bundles-v15.json                        |  56 +-
+@@@ a851083
+a851083 perf(index): stop the overlay ResizeObserver re-arming on its own output
+ docs/page-assets-v15.json             |   2 +-
+ docs/route-bundles-v15.json           |   4 +-
+@@@ e044528
+e044528 chore(repro): make `make reproduce` step 2 run the tests, and resolve the v27_3_5 test
+ requirements-dev.txt                         |  38 +++++++
+ tests/conftest.py                            |  88 +++++++++++++++
+@@@ d8f1fab
+d8f1fab chore(tools): extend report-verify to continuations, server blocks and declarations
+ .../reproducibility-and-performance-report.md      |  17 +-
+ tools/report-verify.mjs                            | 252 ++++++++++++++++++---
+@@@ aa4fbe4
+ src/python/route-bundles-v15.json                  | 46 +++++++++++-----------
+ src/python/{stabilized-v14.css => stabilized.css}  |  0
+ 23 files changed, 69 insertions(+), 69 deletions(-)
+@@@ log9
+2bb56c1 chore(tools): two new instruments, a declaration kind, and the pass's raw evidence
+42cbaca chore(hygiene): decide the untracked set, and stop parking evidence in /tmp
+aa4fbe4 refactor: rename versioned files, batch 3 of N (10 files)
+d8f1fab chore(tools): extend report-verify to continuations, server blocks and declarations
+e044528 chore(repro): make `make reproduce` step 2 run the tests, and resolve the v27_3_5 test
+a851083 perf(index): stop the overlay ResizeObserver re-arming on its own output
+dedf093 fix(tools): enumerate !important at shorthand level, then re-run the leave-one-out sweep
+623b233 docs: record where the report and the port fix landed
+7446cec fix(tools): stop trusting an inherited PORT, and make the report's blocks re-runnable
+@@@ heavy
+210:const HEAVY = /^<!--\s*report-verify:\s*heavy\s*(?:[-—:]\s*)?(.*?)\s*-->$/;

@@ -1,0 +1,67 @@
+  ok   src/css/account-security.css                             renamed from src/css/account-security-v13.css; content identical
+  ok   src/css/bundle-account-v15.css                           identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-admin-v15.css                             identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-analytics-v15.css                         identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-billing-v15.css                           identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-dashboard-v15.css                         identical after !important strip; removed=6  bytes delta=-60
+  ok   src/css/bundle-designer-v15.css                          identical after !important strip; removed=4  bytes delta=-40
+  ok   src/css/bundle-guests-v15.css                            identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-index-v15.css                             identical after !important strip; removed=10  bytes delta=-100
+  ok   src/css/bundle-materials-v15.css                         identical after !important strip; removed=6  bytes delta=-60
+  ok   src/css/bundle-privacy-v15.css                           identical after !important strip; removed=1  bytes delta=-10
+  ok   src/css/bundle-reset-v15.css                             identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-responses-v15.css                         identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/bundle-templates-v15.css                         identical after !important strip; removed=4  bytes delta=-40
+  ok   src/css/bundle-verify-v15.css                            identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/canvas-plus.css                                  identical after !important strip; removed=2  bytes delta=-20
+  ok   src/css/editor-suite.css                                 identical after !important strip; removed=2  bytes delta=-20
+  ok   src/css/final-polish.css                                 identical after !important strip; removed=3  bytes delta=-30
+  ok   src/css/modern-ui.css                                    identical after !important strip; removed=1  bytes delta=-10
+  ok   src/css/organized/editor-canva.css                       renamed from src/css/organized/editor-canva-v13.css; content identical
+  ok   src/css/organized/guests-page.css                        renamed from src/css/organized/guests-page-v13.css; content identical
+  ok   src/css/organized/workflow-continuity.css                identical after !important strip; removed=1  bytes delta=-10
+  ok   src/css/stabilized.css                                   renamed from src/css/stabilized-v14.css; content identical
+  ok   src/css/studio-experience.css                            identical after !important strip; removed=1  bytes delta=-10
+  ok   src/css/workflow-creation-flow-v4.css                    identical after !important strip; removed=2  bytes delta=-20
+  ok   src/js/account-security.js                               renamed from src/js/account-security-v13.js; content identical
+  ok   src/js/checkin.js                                        renamed from src/js/checkin-v13.js; content identical
+  ok   src/js/editor-commands.js                                renamed from src/js/editor-commands-v13.js; content identical
+  ok   src/js/editor-shared-styles.js                           renamed from src/js/editor-shared-styles-v13.js; content identical
+  ok   src/js/mobile-editor.js                                  renamed from src/js/mobile-editor-v14.js; content identical
+  ok   src/js/photo-retouch.js                                  renamed from src/js/photo-retouch-v13.js; content identical
+  ok   src/python/account-security.css                          renamed from src/python/account-security-v13.css; content identical
+  ok   src/python/account-security.js                           renamed from src/python/account-security-v13.js; content identical
+  ok   src/python/build/editor-suite.css                        identical after !important strip; removed=2  bytes delta=-20
+  ok   src/python/bundle-account-v15.css                        identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-admin-v15.css                          identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-analytics-v15.css                      identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-billing-v15.css                        identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-dashboard-v15.css                      identical after !important strip; removed=6  bytes delta=-60
+  ok   src/python/bundle-designer-v15.css                       identical after !important strip; removed=4  bytes delta=-40
+  ok   src/python/bundle-guests-v15.css                         identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-index-v15.css                          identical after !important strip; removed=10  bytes delta=-100
+  ok   src/python/bundle-materials-v15.css                      identical after !important strip; removed=6  bytes delta=-60
+  ok   src/python/bundle-privacy-v15.css                        identical after !important strip; removed=1  bytes delta=-10
+  ok   src/python/bundle-reset-v15.css                          identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-responses-v15.css                      identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/bundle-templates-v15.css                      identical after !important strip; removed=4  bytes delta=-40
+  ok   src/python/bundle-verify-v15.css                         identical after !important strip; removed=3  bytes delta=-30
+  ok   src/python/checkin.js                                    renamed from src/python/checkin-v13.js; content identical
+  ok   src/python/editor-canva.css                              renamed from src/python/editor-canva-v13.css; content identical
+  ok   src/python/editor-commands.js                            renamed from src/python/editor-commands-v13.js; content identical
+  ok   src/python/editor-shared-styles.js                       renamed from src/python/editor-shared-styles-v13.js; content identical
+  ok   src/python/guests-page.css                               renamed from src/python/guests-page-v13.css; content identical
+  ok   src/python/mobile-editor.js                              renamed from src/python/mobile-editor-v14.js; content identical
+  ok   src/python/photo-retouch.js                              renamed from src/python/photo-retouch-v13.js; content identical
+  ok   src/python/stabilized.css                                renamed from src/python/stabilized-v14.css; content identical
+  ok   docs/page-assets-v15.json                                14 size/digest/source-name field(s) moved; pages.account.html.bytes 356445 -> 356415 (-30)
+  ok   docs/route-bundle-sources-v15.json                       23 size/digest/source-name field(s) moved; pages.account.html.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
+  ok   docs/route-bundles-v15.json                              53 size/digest/source-name field(s) moved; pages.account.html.sources.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
+  ok   src/python/build/page-assets-v15.json                    14 size/digest/source-name field(s) moved; pages.account.html.bytes 356445 -> 356415 (-30)
+  ok   src/python/route-bundles-v15.json                        53 size/digest/source-name field(s) moved; pages.account.html.sources.scripts[4] source name account-security-v13.js -> account-security.js (a rename in this diff)
+  n/a  src/js/bundle-index-v15.js (modified, +1178 B)           a JS change: out of scope here, see the commit that made it
+  n/a  src/js/professional-editor-v17.js (modified, +1178 B)    a JS change: out of scope here, see the commit that made it
+  n/a  src/python/bundle-index-v15.js (modified, +1178 B)       a JS change: out of scope here, see the commit that made it
+  n/a  tools/lib/css-decl.js (added, +5343 B)                   a JS change: out of scope here, see the commit that made it
+
+important-removal-audit: vs 623b233 — 61 changed CSS/JSON entry(s) (36 modified, 20 renamed, 5 manifest(s)); 4 JS change(s) not judged; failures=0
