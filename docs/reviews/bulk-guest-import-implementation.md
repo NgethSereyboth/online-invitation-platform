@@ -1037,7 +1037,7 @@ worked. `tests/import_decoding_test.py` is that carrier — ten cases, not eight
 reasons: the brief's step 1c asks for the Windows-Excel scenario proved end to end, which
 deserves its own test rather than being folded into a unit case, and the module enforces the
 project's no-invented-Khmer rule against its own fixtures rather than promising it. The
-completion check (§10.6) is what turned the second of those into an assertion:
+completion check (§10.5) is what turned the second of those into an assertion:
 
 ```
 $ .venv/bin/python -m pytest tests/import_decoding_test.py -v
@@ -1082,7 +1082,7 @@ five are present in `docs/i18n/TRANSLATIONS.csv`, and
 this is enforced rather than asserted in prose. They are used as fixture *data*, not as UI
 copy. The quoted-comma field in the Excel sheet reuses the corpus string `អ្នកប្រើ` followed
 by a Latin `, Jr`; an earlier draft concatenated Khmer into `អ្នកប្រើពិសេស`, which is exactly the
-kind of assembled string the rule forbids, and §10.6 records the correction.
+kind of assembled string the rule forbids, and §10.5 records the correction.
 
 One finding while writing it: the guest names the existing tests use (`សុខ ដារា`,
 `ចាន់ សុភា`, `ហេង សុវណ្ណ`) are **not** in `TRANSLATIONS.csv`. That does not contradict §2's
@@ -1218,7 +1218,7 @@ byte-for-byte what §9.1 already verified, the guest route answers with this pas
 and §9.1's argument applies unchanged: `tests/` and `docs/` are provably not served (they 404
 on production), so no further deploy verification can be extracted.
 
-### 10.6 Completion check — two corrections, and a second push
+### 10.5 Completion check — two corrections, and a second push
 
 The final completion check compared the deliverables against the brief and found two things
 in §10.1 that were not yet true. Both were fixed rather than reworded:
@@ -1243,12 +1243,39 @@ $ .venv/bin/python -m pytest tests/import_decoding_test.py -v      → 10 passed
 $ .venv/bin/python -m pytest tests/ -q                             → 85 passed in 139.80s  (pytest_exit=0)
 ```
 
-The commit, the push, and both health codes are recorded below once measured; §10.4's
-argument applies unchanged here, since this push ships one test file and this report and
-nothing else. Note on §10.4's counts: the `9 passed` / `84 passed` figures there belong to
-commit `d04c17a`, before correction 2 above. The final tree is the `10` / `85` recorded here.
+§10.4's argument applies unchanged here, since this push ships one test file and this report
+and nothing else. Note on §10.4's counts: the `9 passed` / `84 passed` figures there belong
+to commit `d04c17a`, before correction 2 above. The final tree is the `10` / `85` recorded
+here.
 
-### 10.5 What this pass leaves open
+### 10.6 The second push, as measured
+
+```
+$ git log --oneline -1
+7f51552 test: enforce corpus provenance for the import-decoding fixtures
+
+$ git push origin main
+   d2cf098..7f51552  main -> main
+push_exit=0
+push_started=2026-10-13T09:42:35+07:00   push_finished=2026-10-13T09:42:38+07:00
+
+$ curl -fsS -m 60 https://einvite-platform.onrender.com/api/health -w "\nstatus=%{http_code}\n"
+{"ok": true, "database": "sqlite", … "uptimeSeconds": 354}
+status=200
+$ sleep 5; curl -fsS -m 30 …/api/health -w "\nstatus=%{http_code}\n"
+{"ok": true, "database": "sqlite", … "uptimeSeconds": 360}
+status=200
+```
+
+Both probes are the ones the brief asked for, and both are `200`. As in §10.4 the
+`uptimeSeconds` values belong to the pre-deploy instance — a five-second gap cannot see a
+rollover — and per the brief this pass did not verify the deploy by any other means, so the
+rollover is not claimed here beyond noting that §10.4's polled sequence shows the platform's
+usual one-restart behaviour. What makes that harmless is the same argument as before: this
+push changes no served artefact (`tests/` and `docs/` 404 on production, §9.1), so the
+deployed bundle is byte-for-byte what §9.1 verified whichever instance answers.
+
+### 10.7 What this pass leaves open
 
 | gap | state |
 |---|---|
