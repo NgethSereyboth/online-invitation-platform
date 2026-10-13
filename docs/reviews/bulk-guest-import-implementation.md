@@ -1269,11 +1269,23 @@ status=200
 
 Both probes are the ones the brief asked for, and both are `200`. As in §10.4 the
 `uptimeSeconds` values belong to the pre-deploy instance — a five-second gap cannot see a
-rollover — and per the brief this pass did not verify the deploy by any other means, so the
-rollover is not claimed here beyond noting that §10.4's polled sequence shows the platform's
-usual one-restart behaviour. What makes that harmless is the same argument as before: this
-push changes no served artefact (`tests/` and `docs/` 404 on production, §9.1), so the
-deployed bundle is byte-for-byte what §9.1 verified whichever instance answers.
+rollover — and per the brief this pass did not go looking for the new instance. It was
+nevertheless observed, from the probes run after this section's own docs-only push at
+09:44:23: the answering instance reported `uptimeSeconds: 46`, so it had started at about
+09:43:37 — 59 s after the `7f51552` push, the same kind of rollover §10.4 measured (66 s,
+103 s and ~79 s for its own push, so this one came a little sooner). So the second push's
+deploy did roll over, and the restarted instance answers `200`:
+
+```
+$ curl -fsS -m 60 …/api/health …    → status=200   (uptimeSeconds 46, 2026-10-13T09:44:23+07:00)
+$ sleep 5; curl … /api/health …     → status=200   (uptimeSeconds 52)
+```
+
+What makes all of this harmless is the same argument as before: this push changes no served
+artefact (`tests/` and `docs/` 404 on production, §9.1), so the deployed bundle is
+byte-for-byte what §9.1 verified, whichever instance answers. Later docs-only pushes are not
+re-recorded here — §9.1 settles them, and re-recording each would make this section chase
+its own history.
 
 ### 10.7 What this pass leaves open
 
