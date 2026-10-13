@@ -439,7 +439,9 @@ Run after the last source change; each command's own exit status is reported.
 | 6 | `!important` counts, `842038b` vs `HEAD`, per file | total 82,969 → 82,969 (whole tracked tree: `git archive <rev> \| tar -x -C /tmp/<rev> && grep -ro '!important' /tmp/<rev> \| wc -l`); CSS-only 81,731 → 81,731; files whose count increased: **NONE** |
 | 7 | Migration idempotence | §3 — `RUN 2: {'columnAdded': False, 'backfilled': 0}`, second run a no-op |
 | 8 | `pytest tests/bulk_guest_import_test.py -v` | 2 passed (§4) |
-| 9 | `git status --short` | only this pass's files in the commits; the working tree holds only changes that were already there before the pass (`package.json`, `package-lock.json` and six untracked files from another session, left alone) |The whole set was re-run on 2026-10-13, after this report was first drafted, against an
+| 9 | `git status --short` | only this pass's files in the commits; the working tree holds only changes that were already there before the pass (`package.json`, `package-lock.json` and six untracked files from another session, left alone) |
+
+The whole set was re-run on 2026-10-13, after this report was first drafted, against an
 unmodified tree at `bb5e23f` (the same tree the feature commits left), and every row above
 reproduced: `build_exit=0`, `mirror_exit=0`, `pytest_exit=0` (`70 passed`), `collapsed=0/8`,
 both bundles under budget, no file's `!important` count increased, 2 passed, and a clean
@@ -587,4 +589,356 @@ and the font verdict for the deployed machine is what the `KHMER_FONT_STATUS` li
 | The eleven KH_PENDING strings | No approved Khmer exists in `TRANSLATIONS.csv` for them | one translation review |
 | Warm-job progress surface | The freeze response reports how many cards are queued, but nothing reports completion to the designer | small |
 | Production verification of a real guest link | Needs a published invitation with guests on the live service | operator action |
-| `v25_template_governance_browser_test.py`'s stale asset paths | Pre-existing, one-line fix per path, but it is another pass's file | small |
+| `v25_template_governance_browser_test.py`'s residual preflight blocker | The asset paths are fixed (§9.4); the fixture's own hero boxes still overflow, which is `tests/inline_editor_runtime_test.py`'s document | small, another pass's file |
+
+---
+
+## 9. Verification closure
+
+A second pass, run after the implementation report was committed, to close the gaps §7 and
+§6 reported as unverified rather than to add features. Base `0c01f09`. Nothing in `src/`
+changed; the changes are three test files, two `tools/` harnesses, the card-cost evidence,
+and this section.
+
+### 9.1 Push and deploy state
+
+`0c01f09` was local at the start of the pass and is what §6 recorded. Confirmed first, then
+pushed:
+
+```
+$ git log --oneline -5
+0c01f09 docs: report the bulk guest import implementation, with its measurements
+bb5e23f fix(public): only a valid code is a guest segment in /i/
+…
+$ git status --short          # only package.json, package-lock.json and six untracked
+                              # files that predate the pass, exactly as §5 row 9 records
+$ git status -sb | head -1
+## main...origin/main [ahead 1]
+
+$ date '+push_started=%Y-%m-%dT%H:%M:%S%z'
+push_started=2026-10-13T08:52:14+0700
+$ git push origin main
+remote: GitHub found 6 vulnerabilities on NgethSereyboth/online-invitation-platform's default branch (3 high, 2 moderate, 1 low). …
+To https://github.com/NgethSereyboth/online-invitation-platform.git
+   bb5e23f..0c01f09  main -> main
+push_exit=0
+push_finished=2026-10-13T08:52:17+0700
+```
+
+No force-push was needed and none was attempted. `render.yaml:50` is still
+`autoDeploy: true`, and the grep for a deploy hook still returns nothing outside the
+research report's own record of it, so the push is the trigger and no hook was called.
+
+**What this deploy changed in the application: nothing.**
+
+```
+$ git diff --stat bb5e23f..0c01f09
+docs/reviews/bulk-guest-import-implementation.md | 590 ++++++++++++++++++
+1 file changed, 590 insertions(+)
+src delta: 0 files
+```
+
+That matters for how the deploy can be verified. A docs-only commit produces a byte-identical
+application, so **no HTTP response can distinguish the new deployment from the old one** on
+its own. The two observations that do carry information:
+
+**(a) The instance was replaced.** `uptimeSeconds` in `/api/health` is the process's own age,
+so a rollover shows as a reset. Polled every 10 s from the push:
+
+```
+08:53:12 uptime=460      <-- the pre-deploy instance
+08:53:23 uptime=5        <-- replaced, 66 s after the push
+08:53:33 uptime=16
+08:53:44 uptime=26
+…
+08:56:10 uptime=173      <-- monotonic, one restart, no crash loop
+```
+
+The 08:53:12 sample is the decisive one: that instance had been up 460 s and answered 11 s
+earlier, so it had not slept (the free tier sleeps after 15 min idle) and this was not a
+wake — it was replaced, which is Render's documented rollover. The single monotonic series
+also rules out a restart loop.
+
+**(b) The deployed build is this tree's build.** The strongest evidence, and it did not need
+a commit marker or the Render API. This pass changed `src/js/app.js`, which is inside
+`bundle-index-v15.js`, and production serves that bundle at `/bundle-index-v15.js`:
+
+```
+$ curl -sS -o /tmp/prod-index-bundle.js -w "status=%{http_code} bytes=%{size_download}\n" \
+    https://einvite-platform.onrender.com/bundle-index-v15.js
+prod_bundle status=200 bytes=1136779
+local bytes=1136779 sha256=99721983669bcc214ee532690756e63c05eaab11ceb00bee0415f0ad8b6a3b8e
+prod  bytes=1136779 sha256=99721983669bcc214ee532690756e63c05eaab11ceb00bee0415f0ad8b6a3b8e
+IDENTICAL: production serves exactly this tree's index bundle
+  contentBinding     prod=3 local=3
+  bindingDetached    prod=2 local=2
+  guest.name         prod=1 local=1
+```
+
+Byte-for-byte equality with the local build, carrying the pass's own markers, is a stronger
+claim than the two-segment probe below: it says the deployed artefact *is* this commit's
+artefact, not merely that a route answers.
+
+**(c) The route probes**, and one correction to §6's reasoning. §6 asserted that the
+two-segment path's error body proves the new code is live without measuring what the old
+code returns there. That was testable, so it was tested: the pre-pass tree was extracted
+with `git archive 842038b` and its server run on a free port with a temporary data
+directory, then the same URL was put to both.
+
+```
+OLD (842038b) /api/public/nonexistent-slug/abc123/social-card-v1.png -> 404 {"error": "Published invitation not found"}
+NEW (HEAD)    /api/public/nonexistent-slug/abc123/social-card-v1.png -> 404 {"error": "Invitation not found"}
+```
+
+Different bodies, so the probe does discriminate — now measured rather than asserted. On
+production after the deploy:
+
+```
+$ curl -sS -m 30 -w "\nstatus=%{http_code}\n" \
+    https://einvite-platform.onrender.com/api/public/nonexistent-slug/abc123/social-card-v1.png
+{"error": "Invitation not found"}
+status=404
+$ curl -sS -m 30 -w "\nstatus=%{http_code}\n" \
+    https://einvite-platform.onrender.com/api/public/zzz/unmatched-deploy-probe
+{"error": "Published invitation not found"}
+status=404
+$ curl -sS -o /dev/null -m 30 -w "root=%{http_code} time=%{time_total}s\n" \
+    https://einvite-platform.onrender.com/
+root=200 time=0.449222s
+$ curl -sS -o /dev/null -m 30 -w "guest_page=%{http_code}\n" \
+    https://einvite-platform.onrender.com/i/deploy-probe-slug/abc123
+guest_page=200
+```
+
+`/api/health` returned `200` with `{"ok": true, "database": "sqlite", … "uptimeSeconds": …}`.
+No probe in this pass hit a routing-level 404, and no 5xx was seen at any point.
+
+### 9.2 Production per-guest card verification
+
+**Path taken: 2c.** Production was not used to create a guest, and the reason is worth
+stating precisely rather than hand-waving: (i) no credential of any kind is configured in
+this environment — `env | grep -iE 'einvite|render|token|secret'` matches only `PWD` and
+`OLDPWD`, and none of `RENDER_API`, `RENDER_DEPLOY`, or an `EINVITE_*` token is set; (ii) the
+deploy records (`docs/reviews/deploy-03-render.md`) hold no account, session or test
+invitation, and searching them for credentials is itself the check that none leaked into the
+repository — none did; (iii) the service exposes no listing of published invitations, so a
+real guest link cannot be found without creating one. Creating an account on the live service
+is a production write and is not covered by "credentials that are already configured", so it
+was not done.
+
+The five assertions were therefore run against the equivalent local path — the real server
+(`--host 127.0.0.1` on a free port), a temporary data directory, real SQLite, real HTTP, and
+the application's own Pillow renderer. A Khmer-titled invitation (`សុភា ចាន់` and `Sok Dara`
+as guests; the project slug came back `k42st7`, not the shared `our-invitation` constant):
+
+```
+=== A. does the two-segment probe discriminate the pre-pass server? ===  (see §9.1)
+
+=== B. five-assertion local end-to-end on this tree ===
+  invitation slug='k42st7' (not the shared constant: True)
+  latin code='sok-dara'  khmer code='uf7gmb'
+PASS  og:title carries the guest name — 'សុភា ចាន់ · Sok Dara &amp; Sophea'
+PASS  og:image is guest-scoped and versioned — http://127.0.0.1:40633/api/public/k42st7/uf7gmb/social-card-v1791856709616.png
+PASS  the guest card is 200 + PNG magic bytes — 200 32396B
+PASS  the guest card is 1200x630 — (1200, 630)
+PASS  the same guest card is byte-identical on a second fetch
+PASS  two guests differ only by their name reaching the pixels — guestA-vs-guestB=6225px guestA-vs-project=9102px
+PASS  two guests differ in one dense band, not a scattered or shifted card — rows 379..437 of 630 (span=59, differing=56, density=0.95)
+PASS  the Latin guest got a readable code — sok-dara
+PASS  the Khmer guest got an opaque code — uf7gmb
+
+GAP2C_SUMMARY checks=10 failed=0
+GAP2C_PASSED
+```
+
+The fifth assertion is the one the committed test did not make, and it is now permanent
+there — `differing_band()` in `tests/bulk_guest_import_test.py` compares two guests' cards and
+requires the differences to be one dense band (≤120 rows out of 630, ≥90 % of it differing),
+which is the region `render_social_card_png_bytes` draws `guest_name` in. Two things keep it
+from being decoration: re-rendering the same card must be byte-identical, which is what rules
+out noise as the cause; and the assertion has teeth, checked by mutation —
+`differing_band(card, card)` returns `None`, so comparing a card with itself would fail the
+assertion rather than pass it. The suite went from 70 to 75 tests with this and §9.3.
+
+The two empty first rows are the point of the exercise: the fixture's first draft of the
+band check asserted an arbitrary row count and failed on a correct card (56 differing rows in
+a 59-row span); the assertion was rewritten to test contiguity and density, not a magic
+number. No application code was changed to make it pass.
+
+**Limitation, stated plainly.** Production's per-guest card was *not* fetched. `/` and
+`/api/health` answer 200 there, the index bundle is byte-identical to this build (§9.1b), and
+the guest route answers with this pass's own body — but no published invitation with guests
+exists on the live service, so no real per-guest card was requested from it. To close it:
+either set a documented variable such as `EINVITE_TOKEN` (never in the repository), or publish
+a test invitation by hand and record its slug; then the same five assertions can be run
+against `https://einvite-platform.onrender.com` verbatim.
+
+### 9.3 The Khmer font WARN branch
+
+§7 finding 4 said the warning branch was not exercised because hiding the machine's Khmer
+font needs administrator rights. That framing was wrong: the branch is reachable
+in-process, because `khmer_font_status()` resolves through `khmer_font_candidates()`. New
+file `tests/khmer_font_fallback_test.py`, five tests, `0.83 s`:
+
+```
+$ .venv/bin/python -m pytest tests/khmer_font_fallback_test.py -v
+tests/khmer_font_fallback_test.py::test_khmer_face_resolves_and_the_ok_branch_prints PASSED      [ 20%]
+tests/khmer_font_fallback_test.py::test_a_latin_face_is_reported_as_unusable_for_khmer PASSED   [ 40%]
+tests/khmer_font_fallback_test.py::test_no_candidate_file_warns_and_names_where_to_vendor PASSED [ 60%]
+tests/khmer_font_fallback_test.py::test_unverifiable_face_is_not_reported_as_ready PASSED       [ 80%]
+tests/khmer_font_fallback_test.py::test_the_verdict_is_memoized_once_per_process PASSED         [100%]
+============================== 5 passed in 0.83s ===============================
+```
+
+What each asserts, and why the branch is worth covering at all:
+
+* **`ok`** — the resolved face really is the vendored one (`Path(resolved).is_relative_to(ROOT)`
+  and the filename), the printed line is `KHMER_FONT_STATUS ok … support=ready`, and
+  `image_font(32, khmer=True)` can measure `សុខ ដារា` with a non-zero width.
+* **`WARN` for a Latin-only face** — candidates are pointed at DejaVu, and the verdict must be
+  `the resolved face is not usable for Khmer, so guest names would render as empty boxes`.
+  This is risk 1's exact failure mode: the face *loads*, so nothing raises, and only the
+  verdict distinguishes it from success. The test asserts `image_font` still returns a font,
+  because that is precisely why an exception cannot be the signal.
+* **`WARN` when no file exists** — `resolved=(none)`, the reason, and the vendoring
+  instruction naming `KHMER_FONT_DIR`; plus `image_font` still returns a usable face, so a
+  missing Khmer font degrades card rendering rather than breaking it.
+* **`WARN` when the face cannot be verified** — with `fontTools.ttLib` made unimportable, the
+  reason is `fontTools is not installed, so the resolved face was not verified`. "Cannot
+  check" must not read as "ready".
+* **memoisation** — three calls print one line, so the startup verdict is not repeated.
+
+**No production code was changed, and no refactor was needed.** The brief suggested hoisting
+the candidate list to a module-level mutable so a test could patch it; that is unnecessary —
+`khmer_font_candidates` is a function taking `bold`, and patching the function is standard.
+Hoisting it would have changed production code for the test's convenience, which is exactly
+what this pass was told not to do.
+
+**One thing the test found, and one assertion it corrected.** `KHMER_FONT_DIR` is
+`src/python/vendor/noto-khmer` (the mirror), while the *resolved* face is the checkout copy at
+`vendor/noto-khmer` — the first candidate. So the `ok` line prints the source directory while
+the `WARN` line tells the reader to vendor under `KHMER_FONT_DIR`. Both trees are committed
+and identical, so following the instruction works; the first draft of the test asserted the
+wrong one and failed. Recorded as a cosmetic inconsistency in what the two lines name, not a
+defect. §7 finding 4 is superseded.
+
+### 9.4 The v25 governance browser test
+
+**Decision: (C) — leave it in place as a script-run test, with the reason named in the file
+itself.** Three defects were found, not the two §7 finding 5 reported, and the third one is
+why (A) was not achievable within this pass's scope.
+
+**Defect 1 — every asset path was wrong (FIXED, verified).** The file asked for its CSS and
+JS at `ROOT/name`, but they live under `src/css/` and `src/js/`, and `export-quality-v24.css`
+specifically under `src/css/organized/`. So it died on `FileNotFoundError` before asserting
+anything. Paths now resolve through `asset()`, which names every directory it searched when a
+file is missing. Verified: all twenty assets load and the flow reaches its version and binding
+assertions.
+
+**Defect 2 — the page had no usable origin (FIXED, verified).** `page.set_content` leaves an
+opaque `about:blank` document, where Chromium denies `localStorage` — which this test seeds —
+and nothing served the fixture's relative font requests, so the bundled faces never loaded and
+their substitute metrics overflowed the hero text. `open_editor()` now serves the fixture from
+`http://einvite.local/` by request interception, backed by the repository's real files (paths
+resolved under the repo root and rejected if they escape it). Verified: `localStorage` works
+and every font record reports `loaded: true`, with no `font-not-loaded` issue left. The same
+`set_content`-then-`localStorage` construct is in the v23/v25/v26 sibling browser tests, so
+that part is a property of the shared harness rather than of this file.
+
+**Defect 3 — a residual blocker, left visible rather than relaxed.** With both above fixed the
+flow runs to its print-preflight assertion and fails there:
+
+```
+AssertionError: {… 'status': 'blocked', 'fonts': [ … 'loaded': True … ],
+  'issues': [{'severity': 'error', 'code': 'quality-text-overflow', 'message': 'Text overflow: Layer'},
+             {'severity': 'error', 'code': 'quality-text-overflow', 'message': 'Text overflow: Layer'}], …}
+```
+
+The overflowing objects were identified rather than guessed: they are the inline fixture's own
+hero objects, `title` and `subtitle` (`id` from the DOM, `typographyOverflow='true'`), measured
+by `app.js:52`. Three attempts to reach `ready` were made and are recorded because two failed
+for informative reasons: growing those boxes in the document does **not** clear it — the seeded
+governed brand is `locked` with `allowedOverrides:['content','media']`, so the app refuses the
+geometry change, which is the brand lock working correctly; and no auto-fit command exists to
+invoke instead. That leaves the fixture's hero geometry in
+`tests/inline_editor_runtime_test.py`, which this pass has no business changing.
+
+The assertion was **not** relaxed, and the entry point that was briefly added was removed
+gainst: with the blocker, a collected `test_*` could only fail (breaking `pytest tests/`) or
+skip unconditionally (pretending). Verified current state:
+
+```
+$ .venv/bin/python -m pytest tests/v25_template_governance_browser_test.py -q
+no tests ran in 0.25s          # exit 5 — nothing collected, as for its ~30 sibling browser tests
+$ .venv/bin/python tests/v25_template_governance_browser_test.py
+V25_TEMPLATE_GOVERNANCE_BROWSER_SKIPPED BrowserType.launch: Executable doesn't exist …   # exit 0
+$ PLAYWRIGHT_CHROMIUM_EXECUTABLE=…/chromium-1248/chrome-linux64/chrome \
+    .venv/bin/python tests/v25_template_governance_browser_test.py
+AssertionError: {… 'status': 'blocked' …}      # exit 1 — runs the whole flow, then the documented blocker
+```
+
+So the file's real defect was the paths, and it is fixed; it now runs further than it ever has
+and fails loudly with a documented cause. §7 finding 5 is superseded.
+
+### 9.5 Per-harness re-run
+
+`tools/README.md` opens by saying that every script producing a number in `docs/reviews/` used
+to live in `/tmp` and that `tools/` exists so the reports stay reproducible. The implementation
+pass put its probes in `/tmp` anyway, so most of §2's quoted blocks cannot be re-run. The
+harnesses that do exist were re-run:
+
+| harness | re-run? | same? | notes |
+|---|---|---|---|
+| `tools/khmer-slug-probe.py` | yes, exit 0 | yes | `collapsed=0/8`, ASCII control `sok-dara`. The eight codes differ every run by design (they are drawn), which §2 Goal 0a already says. |
+| `tools/mirror-diff.py` | yes, exit 0 | yes | `0 drifted, 0 unmigrated, 0 orphans (19 named and exempt)` |
+| `tools/social-card-cost.py --repeat 7` | yes, exit 0 | bytes yes, ms no | All four `png_bytes` identical to the committed evidence (25777 / 25497 / 29625 / 27583), so the renderer's output is unchanged. `median_ms` for `og` across three runs today was 103.8, 92.2, 85.9 against the committed 82.0 — within run-to-run noise. |
+| `tools/og-contract-audit.py` | yes | **no — it was broken, now fixed** | See below. |
+| the pass's `/tmp` harnesses (import decoding, the Node binding harness, the Chromium editor and share harnesses, the OG and card harnesses) | no | n/a | Deleted by the pass; not reproducible. Their graduated assertions live in `tests/bulk_guest_import_test.py`; the rest have no permanent carrier. |
+
+**The harness this pass broke, and the fix.** `tools/og-contract-audit.py` exited 1 on the
+current tree and 0 on the pre-pass tree:
+
+```
+$ python3 tools/og-contract-audit.py           # current tree
+og-contract-audit: Handler.serve_public not found in server.py   exit=1
+$ (cd /tmp/pre && python3 tools/og-contract-audit.py)   # git archive 842038b
+OG_CONTRACT_AUDIT template=src/html/public.html placeholders=6 substituted=6 unsubstituted=0 orphans=0   exit=0
+```
+
+Cause, found in the harness rather than guessed: `serve_public_body()` searched for the literal
+string `"def serve_public(self, slug):"`, and Goal 4 changed that method to
+`serve_public(self, slug, guest_slug=None)`. The audit therefore stopped auditing the contract
+it exists to protect, on every run, while the server had the method all along — a signature is
+not the contract, the name is. It now matches on the method name. Verified three ways:
+
+```
+$ python3 tools/og-contract-audit.py            # repaired, current tree
+OG_CONTRACT_AUDIT template=src/html/public.html placeholders=6 substituted=6 unsubstituted=0 orphans=0
+… mirror src/python/public.html identical (source bc5cd076acd0eef6 / mirror bc5cd076acd0eef6)
+exit=0
+# Teeth check: inject a placeholder the server does not substitute, into the 842038b copy.
+OG_CONTRACT_AUDIT template=src/html/public.html placeholders=7 substituted=6 unsubstituted=1 orphans=0
+__INVITATION_BOGUS____INVITATION_TITLE__  UNSUBSTITUTED  (leaks verbatim into the response)
+exit=1
+# And the repaired matcher still passes on the unmutated pre-pass tree.
+exit=0
+```
+
+**The evidence file.** Running the card harness rewrites `tools/evidence/social-card-cost.json`,
+which is committed. The refreshed file is kept, because it records something real about this
+pass: `khmer_font.path` changed from the system
+`/usr/share/fonts/truetype/noto/NotoSansKhmer-Regular.ttf` to the vendored face — independent
+confirmation of Goal 0b, in the house evidence format. The harness was also changed to record
+that path **relative to the repository root** (`vendor/noto-khmer/NotoSansKhmer-Regular.ttf`),
+so the evidence does not carry one developer's absolute prefix, which is the reason
+`tools/README.md` gives for the directory existing; `grep -c '/media/ngethsereyboth'` over the
+file is now 0. Timings in it move between runs and are noise; the byte counts do not.
+
+### 9.6 What is still not verified
+
+| gap | why |
+|---|---|
+| A real per-guest card fetched from production | No published invitation with guests exists there and no credential is configured here (§9.2). |
+| The 13 import-decoding assertions (BOM sniffing, UTF-16, refusing an undecodable stream) | Their harness was in `/tmp` and is gone; the phase's decoding logic has no permanent carrier. A `.mjs` harness under `tools/` is the house-correct fix. |
+| The v25 print-preflight assertion | Blocked by the fixture's hero geometry under a locked brand (§9.4). |
+| Timing comparisons against the committed card-cost evidence | Single-machine medians; the bytes are stable, the milliseconds are not, and no baseline machine is recorded. |
