@@ -261,7 +261,10 @@ def test_windows_excel_utf16le_sheet_imports_khmer_names():
     rows = [
         f"{KHMER_NAME_HEADER},{KHMER_PHONE_HEADER}",
         *[f"{name},01{n:07d}" for n, name in enumerate(KHMER_NAMES)],
-        '"អ្នកប្រើពិសេស, Jr",010000099',  # a quoted comma, as a spreadsheet writes it
+        # A quoted comma, as a spreadsheet writes it. The Khmer in this field is the
+        # corpus string 'អ្នកប្រើ'; ', Jr' is Latin, so the rule below still holds: no Khmer
+        # here was assembled from parts.
+        f'"{KHMER_NAMES[0]}, Jr",010000099',
     ]
     text = "\r\n".join(rows) + "\r\n"
     result = decode(utf16le_bom(text), pipeline=True)
@@ -274,10 +277,22 @@ def test_windows_excel_utf16le_sheet_imports_khmer_names():
     assert result["duplicates"] == [], result["duplicates"]
 
     imported = [entry["name"] for entry in result["entries"]]
-    assert imported == [*KHMER_NAMES, "អ្នកប្រើពិសេស, Jr"], imported
+    assert imported == [*KHMER_NAMES, f"{KHMER_NAMES[0]}, Jr"], imported
     for name in KHMER_NAMES:
         assert name in imported, f"{name} did not survive the Windows-Excel path"
     assert not any("\ufffd" in name for name in imported), f"mojibake: {imported}"
     assert not any("Ã" in name for name in imported), f"double-decoded: {imported}"
     assert result["importable"] == 4, result["importable"]
     assert [entry["phone"] for entry in result["entries"]][0] == "010000000"
+
+
+def test_khmer_fixtures_are_corpus_strings():
+    """No invented Khmer — the project's hard rule, enforced rather than promised.
+
+    Every Khmer substring this module feeds the decoder is asserted to appear in
+    docs/i18n/TRANSLATIONS.csv. If a future edit invents a fixture name, this fails here
+    instead of quietly shipping Khmer that no reviewer approved.
+    """
+    corpus = (ROOT / "docs" / "i18n" / "TRANSLATIONS.csv").read_text(encoding="utf-8")
+    for value in (KHMER_NAME_HEADER, KHMER_PHONE_HEADER, *KHMER_NAMES):
+        assert value in corpus, f"fixture Khmer {value!r} is not in docs/i18n/TRANSLATIONS.csv"

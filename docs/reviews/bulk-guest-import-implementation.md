@@ -1033,23 +1033,26 @@ module, one constant, and this section.
 §9.6's first row was that phase A (file decoding) was the only phase of the feature whose
 evidence had no permanent carrier: the implementation pass proved it from a `/tmp` harness
 and then deleted that harness, so nothing in the repository showed the decoding path still
-worked. `tests/import_decoding_test.py` is that carrier — nine cases, not eight, because the
-brief's step 1c asks for the Windows-Excel scenario proved end to end and that deserves its
-own test rather than being folded into a unit case:
+worked. `tests/import_decoding_test.py` is that carrier — ten cases, not eight, for two
+reasons: the brief's step 1c asks for the Windows-Excel scenario proved end to end, which
+deserves its own test rather than being folded into a unit case, and the module enforces the
+project's no-invented-Khmer rule against its own fixtures rather than promising it. The
+completion check (§10.6) is what turned the second of those into an assertion:
 
 ```
 $ .venv/bin/python -m pytest tests/import_decoding_test.py -v
-collected 9 items
-tests/import_decoding_test.py::test_utf8_without_bom_decodes PASSED                      [ 11%]
-tests/import_decoding_test.py::test_utf8_with_bom_is_stripped PASSED                     [ 22%]
-tests/import_decoding_test.py::test_utf16le_with_bom_decodes PASSED                      [ 33%]
-tests/import_decoding_test.py::test_utf16be_with_bom_decodes PASSED                      [ 44%]
-tests/import_decoding_test.py::test_invalid_byte_sequence_is_refused PASSED              [ 55%]
-tests/import_decoding_test.py::test_empty_file_yields_nothing_to_import PASSED           [ 66%]
-tests/import_decoding_test.py::test_khmer_utf8_round_trips_byte_for_byte PASSED          [ 77%]
-tests/import_decoding_test.py::test_khmer_utf16le_round_trips_byte_for_byte PASSED       [ 88%]
-tests/import_decoding_test.py::test_windows_excel_utf16le_sheet_imports_khmer_names PASSED [100%]
-============================== 9 passed in 0.99s ===============================
+collected 10 items
+tests/import_decoding_test.py::test_utf8_without_bom_decodes PASSED                      [ 10%]
+tests/import_decoding_test.py::test_utf8_with_bom_is_stripped PASSED                     [ 20%]
+tests/import_decoding_test.py::test_utf16le_with_bom_decodes PASSED                      [ 30%]
+tests/import_decoding_test.py::test_utf16be_with_bom_decodes PASSED                      [ 40%]
+tests/import_decoding_test.py::test_invalid_byte_sequence_is_refused PASSED              [ 50%]
+tests/import_decoding_test.py::test_empty_file_yields_nothing_to_import PASSED           [ 60%]
+tests/import_decoding_test.py::test_khmer_utf8_round_trips_byte_for_byte PASSED          [ 70%]
+tests/import_decoding_test.py::test_khmer_utf16le_round_trips_byte_for_byte PASSED       [ 80%]
+tests/import_decoding_test.py::test_windows_excel_utf16le_sheet_imports_khmer_names PASSED [ 90%]
+tests/import_decoding_test.py::test_khmer_fixtures_are_corpus_strings PASSED             [100%]
+============================== 10 passed in 0.87s ===============================
 ```
 
 **How it executes the shipped code, and why not another way.** `decodeImportText` lives in
@@ -1074,8 +1077,12 @@ passing against a stale copy.
 
 **The Khmer fixtures are corpus strings, not invented ones.** `ឈ្មោះ` (name) and `ទូរស័ព្ទ`
 (phone) form the header row and `អ្នកប្រើ`, `គណនី` and `បញ្ចូលភ្ញៀវ` are the row values — all
-five are present in `docs/i18n/TRANSLATIONS.csv`, which the module asserts by construction
-rather than by copy-paste trust. They are used as fixture *data*, not as UI copy.
+five are present in `docs/i18n/TRANSLATIONS.csv`, and
+`test_khmer_fixtures_are_corpus_strings` now asserts that against the glossary itself, so
+this is enforced rather than asserted in prose. They are used as fixture *data*, not as UI
+copy. The quoted-comma field in the Excel sheet reuses the corpus string `អ្នកប្រើ` followed
+by a Latin `, Jr`; an earlier draft concatenated Khmer into `អ្នកប្រើពិសេស`, which is exactly the
+kind of assembled string the rule forbids, and §10.6 records the correction.
 
 One finding while writing it: the guest names the existing tests use (`សុខ ដារា`,
 `ចាន់ សុភា`, `ហេង សុវណ្ណ`) are **not** in `TRANSLATIONS.csv`. That does not contradict §2's
@@ -1094,7 +1101,8 @@ fixtures are the only Khmer in the tree that is not corpus-derived.
 | empty file | documented behaviour: empty text, no failure flag, zero rows, zero entries |
 | Khmer in UTF-8 | text identical and `text.encode('utf-8') == payload` |
 | Khmer in UTF-16LE | `b'\xff\xfe' + text.encode('utf-16-le') == payload` |
-| Windows Excel sheet | UTF-16LE + BOM, CRLF, Khmer header, a quoted comma: header detected (`start: 1`), Khmer header recognised as the name column, all four names intact, no `\ufffd` and no `Ã` anywhere, `importable: 4` |
+| Windows Excel sheet | UTF-16LE + BOM, CRLF, Khmer header, a quoted comma (`អ្នកប្រើ, Jr`): header detected (`start: 1`), Khmer header recognised as the name column, all four names intact, no `\ufffd` and no `Ã` anywhere, `importable: 4` |
+| fixtures vs the glossary | every Khmer substring in this module's fixtures appears in `docs/i18n/TRANSLATIONS.csv`; an invented name fails here |
 
 **The harness has teeth, checked by mutation** rather than assumed. `src/js/guests.js` was
 copied, one branch at a time was deleted from the copy, and the tests were run against it:
@@ -1113,7 +1121,11 @@ copied, one branch at a time was deleted from the copy, and the tests were run a
 ```
 
 Each case fails for its own reason and only its own branch: the two mutations fail disjoint
-sets.
+sets. The corpus check was mutation-tested too, since a test that reads the glossary is easy
+to write vacuously: a temporary probe copy with one fixture name replaced by invented Khmer
+(`គណនីមិនពិត`) failed exactly `test_khmer_fixtures_are_corpus_strings` —
+`AssertionError: fixture Khmer 'គណនីមិនពិត' is not in docs/i18n/TRANSLATIONS.csv` — and the
+probe file was deleted afterwards, so no mutated copy is left in the tree.
 
 ### 10.2 The v25 preflight blocker, recorded where a reader will find it
 
@@ -1150,7 +1162,7 @@ no authentication for a published invitation, so a recorded slug and guest code 
 sufficient and no credential needs to be configured at all.
 
 This pass created nothing on production, looked for no credentials, and did not authenticate,
-as instructed. The full suite: **84 passed** (75 before this pass, 9 added).
+as instructed. The full suite: **85 passed** (75 before this pass, 10 added).
 
 ### 10.4 Final state
 
@@ -1158,8 +1170,8 @@ as instructed. The full suite: **84 passed** (75 before this pass, 9 added).
 $ python3 build.py all --check > /tmp/check.log 2>&1; echo "exit=$?"
 exit=0     BUILD_OK editor bundles manifests mirror (check)      # no pipe, as required
 
-$ .venv/bin/python -m pytest tests/import_decoding_test.py -v      → 9 passed in 0.95s
-$ .venv/bin/python -m pytest tests/ -q                             → 84 passed in 138.21s  (pytest_exit=0)
+$ .venv/bin/python -m pytest tests/import_decoding_test.py -v      → 10 passed in 0.87s
+$ .venv/bin/python -m pytest tests/ -q                             → 85 passed in 139.80s  (pytest_exit=0)
 
 $ git status --short        # only package.json, package-lock.json and six untracked files
                             # that predate the feature; none touched
@@ -1205,6 +1217,36 @@ This push ships no application code — `git diff --name-only fe3e9e0..d04c17a` 
 byte-for-byte what §9.1 already verified, the guest route answers with this pass's own body,
 and §9.1's argument applies unchanged: `tests/` and `docs/` are provably not served (they 404
 on production), so no further deploy verification can be extracted.
+
+### 10.6 Completion check — two corrections, and a second push
+
+The final completion check compared the deliverables against the brief and found two things
+in §10.1 that were not yet true. Both were fixed rather than reworded:
+
+1. **"which the module asserts by construction" was an overstatement.** The module stated
+the fixture provenance in a comment; nothing checked it. Fixed by adding
+`test_khmer_fixtures_are_corpus_strings`, which reads `docs/i18n/TRANSLATIONS.csv` and fails
+if any fixture Khmer is absent — mutation-tested as described in §10.1. The count in §10.1
+is now ten.
+2. **One fixture contained assembled Khmer.** The quoted-comma row was
+`អ្នកប្រើពិសេស, Jr`; `អ្នកប្រើពិសេស` is not a glossary string, so that field violated the
+no-invented-Khmer rule even though every *other* fixture was corpus-derived. It now reuses
+`អ្នកប្រើ` with a Latin `, Jr`, and the corpus test guards it.
+
+The re-measured numbers on the final tree:
+
+```
+$ python3 build.py all --check > /tmp/check.log 2>&1; echo "exit=$?"
+exit=0     BUILD_OK editor bundles manifests mirror (check)
+
+$ .venv/bin/python -m pytest tests/import_decoding_test.py -v      → 10 passed in 0.87s
+$ .venv/bin/python -m pytest tests/ -q                             → 85 passed in 139.80s  (pytest_exit=0)
+```
+
+The commit, the push, and both health codes are recorded below once measured; §10.4's
+argument applies unchanged here, since this push ships one test file and this report and
+nothing else. Note on §10.4's counts: the `9 passed` / `84 passed` figures there belong to
+commit `d04c17a`, before correction 2 above. The final tree is the `10` / `85` recorded here.
 
 ### 10.5 What this pass leaves open
 
