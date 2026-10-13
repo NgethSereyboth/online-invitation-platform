@@ -24,8 +24,9 @@ rather than adding features. Three defects were found, in the order they surface
    preflight is ``blocked`` with two ``quality-text-overflow`` errors. Growing those
    boxes does not clear it, because the seeded governed brand is ``locked`` with
    ``allowedOverrides:['content','media']`` and the app refuses the geometry change —
-   the brand lock working. The blocker is commented at the assertion and measured in
-   ``docs/reviews/bulk-guest-import-implementation.md``, "Verification closure" §4.
+   the brand lock working. The blocker is named by :data:`PREFLIGHT_BLOCKED_BY` below,
+   appended to the failing assertion's message, and measured in
+   ``docs/reviews/bulk-guest-import-implementation.md`` §9.4 and §10.2.
 
 On collection: this file deliberately defines only ``main()``, like every other
 ``*_browser_test.py`` in ``tests/`` (~30 of them, including its v25 mobile and
@@ -49,6 +50,18 @@ BASE_CSS=['direct-manipulation-v24.css','content-browser-v24.css','smart-layout-
 BASE_JS=['direct-manipulation-v24.js','content-browser-v24.js','smart-layout-v24.js','brand-components-v24.js','collaboration-v24.js','export-quality-v24.js']
 V25_CSS=['adaptive-templates-v25.css','studio-governance-v25.css','print-readiness-v25.css','template-bindings-v25.css']
 V25_JS=['adaptive-templates-v25.js','studio-governance-v25.js','print-readiness-v25.js','template-bindings-v25.js']
+
+# Named once, here, so a future reader does not have to re-derive it: the one reason
+# this file's print-preflight step cannot pass today, and the two ways out.
+PREFLIGHT_BLOCKED_BY=(
+ "Brand lock: the seeded brand is 'locked' with "
+ "allowedOverrides=['content','media'], so the print preflight "
+ "cannot clear the hero-box overflow by growing the boxes. "
+ "See docs/reviews/bulk-guest-import-implementation.md §9.4. "
+ "To unblock: either (a) unlock the brand in the fixture, or "
+ "(b) invoke the app's auto-fit command as a designer would, "
+ "once such a command exists."
+)
 
 
 def asset(name:str)->str:
@@ -140,7 +153,7 @@ def flow(page):
  # See docs/reviews/bulk-guest-import-implementation.md, "Verification closure" §4.
  page.evaluate("""()=>{try{Object.defineProperty(document.fonts,'check',{configurable:true,value:()=>true})}catch{try{document.fonts.check=()=>true}catch{}}}""")
  page.evaluate("""()=>{const d=EInviteEditorBridge.cloneState();for(const map of [d.objects,...d.designPages.map(p=>p.objects)])for(const o of Object.values(map)){if(o.type==='image'&&!o.alt)o.alt='Invitation image'}d.fields.date=d.fields.date||'2027-01-01';EInviteEditorBridge.replaceState(d,{history:false,reason:'preflight-clean'})}""")
- preflight=page.evaluate("()=>EInvitePrintReadiness.inspect()");assert preflight['status'] in ('ready','review'),preflight
+ preflight=page.evaluate("()=>EInvitePrintReadiness.inspect()");assert preflight['status'] in ('ready','review'),(preflight,PREFLIGHT_BLOCKED_BY)
  page.evaluate("()=>EInvitePrintReadiness.markCurrent()");page.wait_for_timeout(60)
  final=page.evaluate("""()=>({status:EInviteEditorBridge.getState().printReadiness.status,compliance:EInviteStudioGovernance.compliance().map(x=>x.code)})""")
  assert final['status']=='ready' and 'print-preflight-required' not in final['compliance'],final

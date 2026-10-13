@@ -831,10 +831,25 @@ number. No application code was changed to make it pass.
 **Limitation, stated plainly.** Production's per-guest card was *not* fetched. `/` and
 `/api/health` answer 200 there, the index bundle is byte-identical to this build (§9.1b), and
 the guest route answers with this pass's own body — but no published invitation with guests
-exists on the live service, so no real per-guest card was requested from it. To close it:
-either set a documented variable such as `EINVITE_TOKEN` (never in the repository), or publish
-a test invitation by hand and record its slug; then the same five assertions can be run
-against `https://einvite-platform.onrender.com` verbatim.
+exists on the live service, so no real per-guest card was requested from it.
+
+**Exactly what would close it.** Two things, and neither is a code change:
+
+1. *A published invitation on production that has at least one guest whose code is frozen.*
+   `POST /api/invitations` → `POST /api/invitations/<id>/guests` →
+   `POST /api/invitations/<id>/guests/freeze` → `POST /api/invitations/<id>/publish`, then record
+   the invitation slug and that guest's code. The card route needs the frozen code (or any code:
+   an unknown one falls back to the project card, which is why a wrong guess cannot reveal a
+   guest).
+2. *A read path to fetch it.* Either a session token supplied as a documented environment
+   variable (`EINVITE_TOKEN`, never committed — the two read requests that matter,
+   `GET /i/<slug>/<code>` and `GET /api/public/<slug>/<code>/social-card-v<version>.png`, need
+   no authentication at all for a published invitation, so a recorded slug and code are
+   sufficient), or a manual `curl` by whoever publishes it.
+
+With those, the five assertions in §9.2 run against
+`https://einvite-platform.onrender.com` verbatim — only the base URL changes. This pass
+created nothing on production and looked for no credentials, as instructed.
 
 ### 9.3 The Khmer font WARN branch
 
@@ -955,7 +970,7 @@ harnesses that do exist were re-run:
 | `tools/khmer-slug-probe.py` | yes, exit 0 | yes | `collapsed=0/8`, ASCII control `sok-dara`. The eight codes differ every run by design (they are drawn), which §2 Goal 0a already says. |
 | `tools/mirror-diff.py` | yes, exit 0 | yes | `0 drifted, 0 unmigrated, 0 orphans (19 named and exempt)` |
 | `tools/social-card-cost.py --repeat 7` | yes, exit 0 | bytes yes, ms no | All four `png_bytes` identical to the committed evidence (25777 / 25497 / 29625 / 27583), so the renderer's output is unchanged. `median_ms` for `og` across three runs today was 103.8, 92.2, 85.9 against the committed 82.0 — within run-to-run noise. |
-| `tools/og-contract-audit.py` | yes | **no — it was broken, now fixed** | See below. |
+| `tools/og-contract-audit.py` | yes | **no — it was broken, now fixed** | See §9.5 below. |
 | the pass's `/tmp` harnesses (import decoding, the Node binding harness, the Chromium editor and share harnesses, the OG and card harnesses) | no | n/a | Deleted by the pass; not reproducible. Their graduated assertions live in `tests/bulk_guest_import_test.py`; the rest have no permanent carrier. |
 
 **The harness this pass broke, and the fix.** `tools/og-contract-audit.py` exited 1 on the
@@ -1005,3 +1020,134 @@ file is now 0. Timings in it move between runs and are noise; the byte counts do
 | The 13 import-decoding assertions (BOM sniffing, UTF-16, refusing an undecodable stream) | Their harness was in `/tmp` and is gone; the phase's decoding logic has no permanent carrier. A `.mjs` harness under `tools/` is the house-correct fix. |
 | The v25 print-preflight assertion | Blocked by the fixture's hero geometry under a locked brand (§9.4). |
 | Timing comparisons against the committed card-cost evidence | Single-machine medians; the bytes are stable, the milliseconds are not, and no baseline machine is recorded. |
+
+---
+
+## 10. Final closure
+
+A third pass, to close the two gaps §9.6 left. It adds no application code: one test
+module, one constant, and this section.
+
+### 10.1 Import decoding — a permanent harness at last
+
+§9.6's first row was that phase A (file decoding) was the only phase of the feature whose
+evidence had no permanent carrier: the implementation pass proved it from a `/tmp` harness
+and then deleted that harness, so nothing in the repository showed the decoding path still
+worked. `tests/import_decoding_test.py` is that carrier — nine cases, not eight, because the
+brief's step 1c asks for the Windows-Excel scenario proved end to end and that deserves its
+own test rather than being folded into a unit case:
+
+```
+$ .venv/bin/python -m pytest tests/import_decoding_test.py -v
+collected 9 items
+tests/import_decoding_test.py::test_utf8_without_bom_decodes PASSED                      [ 11%]
+tests/import_decoding_test.py::test_utf8_with_bom_is_stripped PASSED                     [ 22%]
+tests/import_decoding_test.py::test_utf16le_with_bom_decodes PASSED                      [ 33%]
+tests/import_decoding_test.py::test_utf16be_with_bom_decodes PASSED                      [ 44%]
+tests/import_decoding_test.py::test_invalid_byte_sequence_is_refused PASSED              [ 55%]
+tests/import_decoding_test.py::test_empty_file_yields_nothing_to_import PASSED           [ 66%]
+tests/import_decoding_test.py::test_khmer_utf8_round_trips_byte_for_byte PASSED          [ 77%]
+tests/import_decoding_test.py::test_khmer_utf16le_round_trips_byte_for_byte PASSED       [ 88%]
+tests/import_decoding_test.py::test_windows_excel_utf16le_sheet_imports_khmer_names PASSED [100%]
+============================== 9 passed in 0.99s ===============================
+```
+
+**How it executes the shipped code, and why not another way.** `decodeImportText` lives in
+`src/js/guests.js`, which is a browser script: it reads `window`, `document` and
+`localStorage` at load time and calls `load()` on its last line, so the file cannot be
+imported as-is. Two alternatives were considered and rejected. Loading it behind a
+hand-written DOM shim would test the shim as much as the decoder, and the shim has to
+survive `render()` reading `.options` off an element and `load()` awaiting a `fetch` that
+never resolves — a lot of surface for no added truth. Driving Chromium through Playwright
+is faithful but not portable here: the installed Playwright expects Chromium build 1228 and
+this machine has 1248, so a browser-based harness would skip rather than run in the default
+environment (§9.4 hit the same thing).
+
+So the module extracts the **exact source text** of the seven declarations it needs from
+`src/js/guests.js` — balancing braces and quotes over the real file — and pipes them to
+Node, which exposes the same WHATWG `TextDecoder` the browser does. Verified before relying
+on it: Node 22 with full ICU decodes `utf-8`, `utf-16le` and `utf-16be`, and
+`{fatal:true}` throws a `TypeError` on a malformed sequence, which is the behaviour the
+shipped code branches on. The extraction refuses to guess: each declaration must appear
+exactly once, or the test raises naming what it found, so a rename fails loudly instead of
+passing against a stale copy.
+
+**The Khmer fixtures are corpus strings, not invented ones.** `ឈ្មោះ` (name) and `ទូរស័ព្ទ`
+(phone) form the header row and `អ្នកប្រើ`, `គណនី` and `បញ្ចូលភ្ញៀវ` are the row values — all
+five are present in `docs/i18n/TRANSLATIONS.csv`, which the module asserts by construction
+rather than by copy-paste trust. They are used as fixture *data*, not as UI copy.
+
+One finding while writing it: the guest names the existing tests use (`សុខ ដារា`,
+`ចាន់ សុភា`, `ហេង សុវណ្ណ`) are **not** in `TRANSLATIONS.csv`. That does not contradict §2's
+Khmer-strings claim, which is about the shipped UI copy, but it does mean the older tests'
+fixtures are the only Khmer in the tree that is not corpus-derived.
+
+**What each case proves**, and the three assertions that keep the refusal honest:
+
+| case | assertion |
+|---|---|
+| UTF-8, no BOM | decodes to the exact text, `encoding: 'UTF-8'` |
+| UTF-8 with BOM | `'UTF-8 with BOM'`, and `\ufeff` must not reach the first cell |
+| UTF-16LE with BOM | `'UTF-16LE with BOM'`, exact text, CRLF preserved |
+| UTF-16BE with BOM | `'UTF-16BE with BOM'`, exact text, CRLF preserved |
+| invalid bytes | `failed: true`, empty text and encoding — and the refusal is enforced in three places: the decoder, `readImportFile`'s `if(decoded.failed)return{rows:[],source:'CSV',decodeFailure:true}` guard (asserted verbatim against the shipped source), and the user-facing message naming the three accepted encodings |
+| empty file | documented behaviour: empty text, no failure flag, zero rows, zero entries |
+| Khmer in UTF-8 | text identical and `text.encode('utf-8') == payload` |
+| Khmer in UTF-16LE | `b'\xff\xfe' + text.encode('utf-16-le') == payload` |
+| Windows Excel sheet | UTF-16LE + BOM, CRLF, Khmer header, a quoted comma: header detected (`start: 1`), Khmer header recognised as the name column, all four names intact, no `\ufffd` and no `Ã` anywhere, `importable: 4` |
+
+**The harness has teeth, checked by mutation** rather than assumed. `src/js/guests.js` was
+copied, one branch at a time was deleted from the copy, and the tests were run against it:
+
+```
+--- drop the UTF-16LE branch
+    FAIL  test_utf16le_with_bom_decodes   ({'text': '', 'encoding': '', 'failed': True})
+    FAIL  test_khmer_utf16le_round_trips_byte_for_byte
+    FAIL  test_windows_excel_utf16le_sheet_imports_khmer_names
+    PASS  test_utf8_with_bom_is_stripped          (correct: independent of that branch)
+--- drop the UTF-8 BOM branch
+    FAIL  test_utf8_with_bom_is_stripped   ({... 'encoding': 'UTF-8'})   <-- BOM leaked into the text
+    PASS  test_utf16le_with_bom_decodes           (correct: independent of that branch)
+--- unmutated
+    all five PASS
+```
+
+Each case fails for its own reason and only its own branch: the two mutations fail disjoint
+sets.
+
+### 10.2 The v25 preflight blocker, recorded where a reader will find it
+
+§9.4's blocker is now named once, as a module-level constant in
+`tests/v25_template_governance_browser_test.py`, including both ways out:
+
+```python
+PREFLIGHT_BLOCKED_BY=(
+ "Brand lock: the seeded brand is 'locked' with "
+ "allowedOverrides=['content','media'], so the print preflight "
+ "cannot clear the hero-box overflow by growing the boxes. "
+ "See docs/reviews/bulk-guest-import-implementation.md §9.4. "
+ "To unblock: either (a) unlock the brand in the fixture, or "
+ "(b) invoke the app's auto-fit command as a designer would, "
+ "once such a command exists."
+)
+```
+
+It is referenced from the file's docstring and appended to the failing assertion's message,
+so the reason travels with the failure instead of living only in this report. The preflight
+assertion itself is unchanged — the constant is added to its message, never to its condition.
+Verified after the edit: the file parses, the constant is defined, the docstring names it, the
+assertion carries it, there is still no `test_*` function in the file, and
+`pytest tests/v25_template_governance_browser_test.py -q` reports `no tests ran in 0.23s`
+(exit 5) — the deliberate state §9.4 chose.
+
+### 10.3 The production gap, stated so the next reader can close it
+
+§9.2 now names exactly what is missing rather than gesturing at it: a published invitation on
+production with at least one guest whose code is frozen, plus a read path. The useful detail
+that was not spelled out before is that the two read requests which matter —
+`GET /i/<slug>/<code>` and `GET /api/public/<slug>/<code>/social-card-v<version>.png` — need
+no authentication for a published invitation, so a recorded slug and guest code are
+sufficient and no credential needs to be configured at all.
+
+This pass created nothing on production, looked for no credentials, and did not authenticate,
+as instructed. The full suite: **84 passed** (75 before this pass, 9 added).
