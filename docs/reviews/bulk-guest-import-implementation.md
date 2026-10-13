@@ -713,6 +713,37 @@ guest_page=200
 `/api/health` returned `200` with `{"ok": true, "database": "sqlite", … "uptimeSeconds": …}`.
 No probe in this pass hit a routing-level 404, and no 5xx was seen at any point.
 
+**The second push, of this pass's own two commits**, was verified the same way. It also
+changes no application file (`git diff --name-only 0c01f09..a498830 -- src/` → 0), so the same
+reasoning applies and the rollover is again the evidence:
+
+```
+$ date '+push2_started=%Y-%m-%dT%H:%M:%S%z'
+push2_started=2026-10-13T09:14:19+0700
+$ git push origin main
+   0c01f09..a498830  main -> main
+push_exit=0
+push2_finished=2026-10-13T09:14:22+0700
+
+$ for i in $(seq 1 20); do … uptimeSeconds …; sleep 10; done
+09:14:30 uptime=1272
+09:15:54 uptime=1356
+09:16:05 uptime=8        <-- replaced, 103 s after the push
+09:16:15 uptime=18
+…
+09:17:50 uptime=113      <-- monotonic, one restart, no crash loop
+
+$ curl … /api/health                        status=200  {"ok": true, … "uptimeSeconds": 133}
+$ curl … /api/public/nonexistent-slug/abc123/social-card-v1.png
+{"error": "Invitation not found"}  status=404
+$ curl … /                              root=200
+$ curl … /i/deploy-probe-slug/abc123    guest_page=200
+$ sha256(src/js/bundle-index-v15.js) = sha256(production /bundle-index-v15.js)
+99721983669bcc214ee532690756e63c05eaab11ceb00bee0415f0ad8b6a3b8e   IDENTICAL
+```
+
+Both rollovers were single and clean; neither deploy produced a 5xx at any sampled moment.
+
 ### 9.2 Production per-guest card verification
 
 **Path taken: 2c.** Production was not used to create a guest, and the reason is worth
