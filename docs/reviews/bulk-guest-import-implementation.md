@@ -1151,3 +1151,66 @@ sufficient and no credential needs to be configured at all.
 
 This pass created nothing on production, looked for no credentials, and did not authenticate,
 as instructed. The full suite: **84 passed** (75 before this pass, 9 added).
+
+### 10.4 Final state
+
+```
+$ python3 build.py all --check > /tmp/check.log 2>&1; echo "exit=$?"
+exit=0     BUILD_OK editor bundles manifests mirror (check)      # no pipe, as required
+
+$ .venv/bin/python -m pytest tests/import_decoding_test.py -v      → 9 passed in 0.95s
+$ .venv/bin/python -m pytest tests/ -q                             → 84 passed in 138.21s  (pytest_exit=0)
+
+$ git status --short        # only package.json, package-lock.json and six untracked files
+                            # that predate the feature; none touched
+$ git log --oneline -1
+
+d04c17a test: add a permanent harness for import encoding detection
+
+$ git push origin main
+   fe3e9e0..d04c17a  main -> main
+push_exit=0
+push_started=2026-10-13T09:31:15+0700   push_finished=2026-10-13T09:31:17+0700
+
+$ curl -fsS -m 60 https://einvite-platform.onrender.com/api/health -w "\nstatus=%{http_code}\n"
+{"ok": true, "database": "sqlite", … "uptimeSeconds": 461}
+status=200
+$ sleep 5; curl -fsS -m 30 …/api/health -w "\nstatus=%{http_code}\n"
+{"ok": true, "database": "sqlite", … "uptimeSeconds": 467}
+status=200
+```
+
+Both probes are the ones the brief asked for, and both are `200`. They are also, as §9.1
+explains, the weak form of the evidence: the two `uptimeSeconds` values belong to the
+*pre-deploy* instance, so at five seconds after the push neither probe could have seen the
+new one. The rollover was therefore polled for, as the previous deploys' were:
+
+```
+09:31:33 uptime=476
+09:32:25 uptime=528
+09:32:36 uptime=13      <-- replaced, ~79 s after the push
+09:32:47 uptime=23
+…
+09:34:52 uptime=149     <-- monotonic, one restart, no crash loop
+
+$ curl … /api/health                        health=200
+$ curl … /api/public/nonexistent-slug/abc123/social-card-v1.png
+{"error": "Invitation not found"}   two_segment=404
+$ curl … /                              root=200
+```
+
+This push ships no application code — `git diff --name-only fe3e9e0..d04c17a` lists only
+`tests/import_decoding_test.py`,
+`tests/v25_template_governance_browser_test.py` and this report — so the deployed bundle is
+byte-for-byte what §9.1 already verified, the guest route answers with this pass's own body,
+and §9.1's argument applies unchanged: `tests/` and `docs/` are provably not served (they 404
+on production), so no further deploy verification can be extracted.
+
+### 10.5 What this pass leaves open
+
+| gap | state |
+|---|---|
+| Production per-guest card | Still unverified, and now enumerated in §10.3: one published invitation with one frozen guest code, and a recorded slug and code — no credential needed. |
+| The v25 print-preflight assertion | Still blocked by the fixture's hero geometry under a locked brand; named once by `PREFLIGHT_BLOCKED_BY` (§10.2) with both ways out. |
+| The import harness's extraction | It reads `src/js/guests.js` by name, so renaming `decodeImportText`, `parseCsv`, `csvCells`, `importStateFor`, `importEntries`, `importFindings` or `importRowsToImport` fails the module with a message naming what it found. That is intended — a silent skip is the failure mode it replaces — but it does mean the seven names are now part of the test's contract. |
+| Timing numbers | Unchanged from §9.6: single-machine medians, byte counts stable. |
