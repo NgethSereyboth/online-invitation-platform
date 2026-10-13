@@ -744,6 +744,38 @@ $ sha256(src/js/bundle-index-v15.js) = sha256(production /bundle-index-v15.js)
 
 Both rollovers were single and clean; neither deploy produced a 5xx at any sampled moment.
 
+**All three of this pass's pushes, in one place, and why the log stops here.**
+
+| push | commits | push | instance replaced | waited | probes |
+|---|---|---|---|---|---|
+| 1 | `0c01f09` | 08:52:17 | 08:53:23 (`uptimeSeconds` 460 → 5) | 66 s | `/` 200, health 200, two-segment 404 with this pass's body |
+| 2 | `ae861d1`, `a498830` | 09:14:22 | 09:16:05 (1356 → 8) | 103 s | health 200, two-segment 404, `/` 200, guest page 200 |
+| 3 | `1750516` (this addendum) | 09:19:0x | 09:19:52 (224 → 14) | ~90 s | health 200, two-segment 404, `/` 200 |
+
+Every one of the three changed no application file (`git diff --name-only <prev>..<push> -- src/`
+→ 0 each time), which is why the rollover is the evidence in all three cases and why the bundle
+hash is the only claim that would move if the application had changed.
+
+The log stops at three because a fourth push would only be this table growing, so here is the
+fact that closes it instead of an endless regress. The report's own commits touch `docs/` only,
+and `docs/` is **not** part of what production serves:
+
+```
+$ for p in /docs/reviews/bulk-guest-import-implementation.md /docs/ /tools/og-contract-audit.py /tests/bulk_guest_import_test.py; do
+    printf '  %-46s %s\n' "$p" "$(curl -sS -o /dev/null -m 25 -w '%{http_code}' https://einvite-platform.onrender.com$p)"; done
+  /docs/reviews/bulk-guest-import-implementation.md  404
+  /docs/                                            404
+  /tools/og-contract-audit.py                       404
+  /tests/bulk_guest_import_test.py                  404
+$ grep -n '^ROOT' src/python/server.py
+75:ROOT = Path(__file__).resolve().parent      # src/python
+```
+
+So a docs-only commit changes the repository and triggers Render's rebuild, but cannot alter one
+byte of any response — which is exactly why pushes 1 and 3 produced no observable change other
+than the instance replacement, and why no further deploy verification is needed for this section
+itself.
+
 ### 9.2 Production per-guest card verification
 
 **Path taken: 2c.** Production was not used to create a guest, and the reason is worth
