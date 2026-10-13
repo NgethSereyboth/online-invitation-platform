@@ -249,6 +249,23 @@ def main() -> int:
 
     only_ms, only_bytes, only_delta = timed(reencode_only, args.repeat)
 
+    def evidence_path(value):
+        """A font path as the evidence should record it.
+
+        Repo-relative when the file is inside the checkout, so the evidence does not
+        carry one developer's absolute prefix — the same reason tools/README.md gives
+        for this directory existing at all. Since the Khmer face is vendored under
+        vendor/noto-khmer/, the recorded value is now identical on every machine:
+        `vendor/noto-khmer/NotoSansKhmer-Regular.ttf`, not a system path.
+        """
+        if not value:
+            return value
+        resolved_path = Path(value).resolve()
+        try:
+            return str(resolved_path.relative_to(ROOT))
+        except ValueError:
+            return str(resolved_path)
+
     result = {
         "command": "python3 tools/social-card-cost.py --repeat %d" % args.repeat,
         "renderer": "src/python/server.py::render_social_card_png_bytes",
@@ -259,8 +276,8 @@ def main() -> int:
             "khmer_sample_chars": len(sample),
         },
         "pillow": features,
-        "khmer_font": resolved,
-        "khmer_cmap_coverage": coverage,
+        "khmer_font": {**resolved, "path": evidence_path(resolved.get("path"))},
+        "khmer_cmap_coverage": {**coverage, "font": evidence_path(coverage.get("font"))},
         "renders": renders,
         "overlay_cost": {
             "note": "decode the cached og PNG + draw one Khmer line + re-encode",

@@ -76,13 +76,25 @@ def serve_public_body(text: str) -> str:
     Scoped deliberately: ``__INVITATION_*__`` and ``.replace`` appear elsewhere in
     server.py's 10 000 lines, and a whole-file grep would let an unrelated hit
     stand in for the public page's own contract.
+
+    Matched on the method NAME, not on a signature. The bulk-guest-import pass
+    changed this method to ``serve_public(self, slug, guest_slug=None)`` for the
+    per-guest link, and this function used to search for the exact old signature
+    ``def serve_public(self, slug):`` — so the audit exited 1 with "Handler.serve_public
+    not found in server.py" against a server that had the method, on every run, and
+    stopped auditing the contract it exists to protect. A signature is not the
+    contract; the name is.
     """
-    start = text.find("def serve_public(self, slug):")
-    if start < 0:
+    match = re.search(r"\n    def serve_public\s*\(", text)
+    if not match:
         raise SystemExit("og-contract-audit: Handler.serve_public not found in server.py")
+    start = match.start() + 1
     end = text.find("\n    def _p2c_resolve_invitation", start)
     if end < 0:
-        end = len(text)
+        # The next method at the same indent level, so a renamed neighbour cannot
+        # silently extend this body to the end of the file.
+        following = re.search(r"\n    def ", text[start + 1:])
+        end = start + 1 + following.start() if following else len(text)
     return text[start:end]
 
 

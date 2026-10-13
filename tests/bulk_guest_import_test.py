@@ -22,6 +22,7 @@ Two tests:
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import os
 import re
@@ -85,6 +86,30 @@ def document(names: str, names_km: str, message: str = "Please join us."):
 def png_dimensions(payload: bytes):
     assert payload[:8] == b"\x89PNG\r\n\x1a\n", "the card is not a PNG"
     return struct.unpack(">II", payload[16:24])
+
+
+def differing_band(left_png: bytes, right_png: bytes):
+    """Rows and band span of the pixels two same-size cards disagree on.
+
+    Two guests' cards share one layout and differ only in the name line, so the
+    disagreement should be a single dense band wherever ``guest_name`` is drawn.
+    A scattered or shifted result would mean the name is not what is being drawn.
+    Returns ``None`` when the two payloads are pixel-identical.
+    """
+    from PIL import Image
+
+    left = Image.open(io.BytesIO(left_png)).convert("RGB")
+    right = Image.open(io.BytesIO(right_png)).convert("RGB")
+    assert left.size == right.size, (left.size, right.size)
+    width, height = left.size
+    left_bytes, right_bytes = left.tobytes(), right.tobytes()
+    rows = set()
+    for index in range(0, len(left_bytes), 3):
+        if left_bytes[index:index + 3] != right_bytes[index:index + 3]:
+            rows.add((index // 3) // width)
+    if not rows:
+        return None
+    return len(rows), max(rows) - min(rows) + 1, height
 
 
 def meta(html: str, key: str):
@@ -172,11 +197,26 @@ def test_bulk_import_end_to_end():
         assert cached, sorted(p.name for p in (data / "social-cache").glob("*.png"))
         assert (data / "social-cache" / cached[0]).read_bytes() == card
 
+        # 11b. The guest's name reaches the pixels, not only the markup. Two
+        #      guests' cards share one layout and differ only in that line, so the
+        #      differences must form one dense band — and re-rendering the same
+        #      card must be byte-identical, which rules out noise as the cause.
+        second, _ = client.request(f"/api/public/{slug}/{by_name[KHMER_NAMES[1]]['slug']}/social-card-v1.png", parse_json=False)
+        assert png_dimensions(second) == (1200, 630)
+        repeat, _ = client.request(image_path, parse_json=False)
+        assert repeat == card, "the same guest card rendered twice must be byte-identical"
+        band = differing_band(card, second)
+        assert band, "two different guest names produced pixel-identical cards"
+        differing_rows, span, height = band
+        assert span <= 120, f"the name must not move the whole card: differ on {span} of {height} rows"
+        assert differing_rows >= 0.9 * span, f"the differences are scattered, not one name line: {differing_rows}/{span} rows"
+
         # The project card is still served, and an unknown code falls back to it
         # rather than 404 (a wrong guess must not reveal whether a guest exists).
         project, _ = client.request(f"/api/public/{slug}/social-card-v1.png", parse_json=False)
         assert png_dimensions(project) == (1200, 630)
         assert project != card
+        assert differing_band(card, project), "the guest card must differ from the project card"
         fallback, _ = client.request(f"/api/public/{slug}/zzzzzz/social-card-v1.png", parse_json=False)
         assert fallback == project
 
