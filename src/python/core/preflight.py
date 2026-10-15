@@ -50,6 +50,23 @@ def _valid_proxy_ip(value: str) -> bool:
         return False
 
 
+def _networks_for(raw: str):
+    """Parse a comma-separated CIDR/IP list the way the runtime does.
+
+    A bare address is treated as a single-host network (/32 or /128), matching
+    ``core/admin_ip_allowlist`` and the trusted-proxy parsing in server.py.
+    """
+    import ipaddress
+    networks = []
+    for entry in [e.strip() for e in raw.split(",") if e.strip()]:
+        try:
+            networks.append(ipaddress.ip_network(entry, strict=False))
+        except ValueError:
+            addr = ipaddress.ip_address(entry)
+            networks.append(ipaddress.ip_network(f"{addr}/{32 if addr.version == 4 else 128}", strict=False))
+    return networks
+
+
 def load_env_file(path: Path) -> dict[str, str]:
     values: dict[str, str] = {}
     for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -214,10 +231,7 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
         else:
             try:
                 # Reuse the same parsing logic as the runtime
-                import ipaddress
-                entries = [e.strip() for e in admin_allowlist_raw.split(",") if e.strip()]
-                for entry in entries:
-                    network = ipaddress.ip_network(entry, strict=False)
+                for network in _networks_for(admin_allowlist_raw):
                     if network.prefixlen == 0:
                         errors.append(
                             "EINVITE_ADMIN_IP_ALLOWLIST contains a /0 network which "
@@ -228,10 +242,7 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
     elif admin_allowlist_raw:
         # Non-production: validate syntax but allow empty
         try:
-            import ipaddress
-            entries = [e.strip() for e in admin_allowlist_raw.split(",") if e.strip()]
-            for entry in entries:
-                network = ipaddress.ip_network(entry, strict=False)
+            for network in _networks_for(admin_allowlist_raw):
                 if network.prefixlen == 0:
                     warnings.append(
                         "EINVITE_ADMIN_IP_ALLOWLIST contains a /0 network which "
