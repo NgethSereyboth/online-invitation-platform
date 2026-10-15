@@ -17,8 +17,10 @@ def main() -> int:
     js=index['scripts'];css=index['styles']
     require(js.count('professional-editor-v17.js')==1,'professional editor JS must be bundled exactly once')
     require(css.count('professional-editor-v17.css')==1,'professional editor CSS must be bundled exactly once')
-    require(js[-2:]==['professional-editor-v17.js','editor-responsive-contract-v27.js'],'professional editor must own transforms before the final responsive/focus contract')
-    require(css[-4:]==['professional-editor-v17.css','zoom-layout-v22.css','graphics-runtime-v22.css','editor-responsive-contract-v27.css'],'professional styles must precede the dedicated zoom, GPU, and final responsive contract layers')
+    # v55 app-shell and v54 editor modules may load after these layers, so assert relative order, not the exact tail.
+    require(js.index('professional-editor-v17.js')<js.index('editor-responsive-contract-v27.js'),'professional editor must own transforms before the responsive/focus contract')
+    css_order=['professional-editor-v17.css','zoom-layout-v22.css','graphics-runtime-v22.css','editor-responsive-contract-v27.css']
+    require([css.index(name) for name in css_order]==sorted(css.index(name) for name in css_order),'professional styles must precede the dedicated zoom, GPU, and responsive contract layers')
 
     professional=(ROOT / "src" / "js" / "professional-editor-v17.js").read_text(encoding='utf-8')
     command_system=(ROOT / "src" / "js" / "editor-command-system-v23.js").read_text(encoding='utf-8')

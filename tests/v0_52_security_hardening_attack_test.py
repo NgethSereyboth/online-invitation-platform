@@ -88,7 +88,7 @@ def production_constant_probe():
         "EINVITE_UPLOAD_SIGNING_SECRET": "upload-security-probe-abcdefghijklmnopqrstuvwxyz012345",
         "EINVITE_MEDIA_SIGNING_SECRET": "media-security-probe-abcdefghijklmnopqrstuvwxyz0123456",
         "EINVITE_GUEST_TOKEN_SECRET": "guest-security-probe-abcdefghijklmnopqrstuvwxyz0123456",
-        "PYTHONPATH": str(ROOT/'src'/'python'),
+        "PYTHONPATH": os.pathsep.join([str(ROOT/'src'/'python'), str(ROOT)]),
         "PYTHONDONTWRITEBYTECODE": "1",
     }
     code = "import server;assert server.PRODUCTION_MODE and server.STRICT_SESSION_CSRF and not server.ALLOW_LOCAL_ADMIN_BOOTSTRAP"

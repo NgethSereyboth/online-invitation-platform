@@ -17,6 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 os.environ["EINVITE_DEV_AUTH_TOKENS"]="1"
 sys.path.insert(0, str(ROOT))
+# The repo-root server.py is a shim that starts the server; import the real module.
+sys.path.insert(0, str(ROOT / "src" / "python"))
 
 
 def free_port() -> int:

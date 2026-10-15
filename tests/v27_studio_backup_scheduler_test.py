@@ -20,5 +20,5 @@ with server.connect() as db:
  assert audit and audit['action']=='studio.backup_completed'
  assert (server.BACKUPS/run['archive_name']).is_file()
 print('V27_STUDIO_BACKUP_SCHEDULER_TEST_PASSED')'''
-  subprocess.run([sys.executable,'-c',code],cwd=ROOT/'src'/'python',check=True)
+  subprocess.run([sys.executable,'-c',code],cwd=ROOT/'src'/'python',env={**os.environ,'PYTHONPATH':os.pathsep.join([str(ROOT),str(ROOT/'src'/'python')])},check=True)
 if __name__=='__main__':run()

@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 import sys
 sys.path.insert(0,str(ROOT))
+sys.path.insert(0,str(ROOT/'src'/'python'))
 from typography_document_model import normalize_document_typography,DEFAULT_STYLES,STYLE_FIELDS
 
 def expect_reject(doc):

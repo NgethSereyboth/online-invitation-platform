@@ -2,7 +2,7 @@
 from __future__ import annotations
 import copy,json,sys
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
+ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT));sys.path.insert(0,str(ROOT/'src'/'python'))
 from rich_text_document_model import migrate_legacy,normalize_rich_text,export_plain_text,export_legacy_html
 
 def main():

@@ -3,8 +3,8 @@ from __future__ import annotations
 import os, sqlite3, tempfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-import sys;sys.path.insert(0,str(ROOT))
-import backup_restore
+import sys;sys.path.insert(0,str(ROOT));sys.path.insert(0,str(ROOT/'src'/'python'))
+from features import backup as backup_restore
 
 def run():
     with tempfile.TemporaryDirectory(prefix='einvite-backup-source-') as source, tempfile.TemporaryDirectory(prefix='einvite-backup-out-') as out:

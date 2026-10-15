@@ -2,6 +2,8 @@ from copy import deepcopy
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# The repo-root server.py is a shim that starts the server; import the real module.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "python"))
 from server import validate_document
 
 base = {

@@ -34,7 +34,7 @@ assert after('index.html','workflow-final-audit-v7.js','workflow-pro-editor-v6.j
 
 # Every local script/stylesheet referenced by the editor exists.
 for ref in re.findall(r'(?:src|href)=["\']([^"\']+)["\']', index):
-    if ref.startswith(('http://', 'https://', '//', 'data:')):
+    if ref.startswith(('http://', 'https://', '//', 'data:', '#')):
         continue
     assert resolve_repo_path(ref.split('?', 1)[0]).exists(), f'missing editor dependency: {ref}'
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministic V16 Windows portability and UI-layer checks."""
 from __future__ import annotations
-import hashlib,json,subprocess,sys
+import hashlib,json,re,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -11,19 +11,22 @@ def main()->int:
     manifest=json.loads((ROOT / "docs" / "route-bundles-v15.json").read_text(encoding='utf-8'))
     for page,item in manifest['pages'].items():
         for file_key,hash_key in [('javascript','scriptSha256'),('stylesheet','styleSha256')]:
-            payload=(ROOT/('src'/'js' if file_key=='javascript' else 'src'/'css')/item[file_key]).read_bytes()
+            payload=(ROOT/('src/js' if file_key=='javascript' else 'src/css')/item[file_key]).read_bytes()
             assert b'\r\n' not in payload,(page,item[file_key],'CRLF generated artifact')
             assert hashlib.sha256(payload).hexdigest()==item[hash_key],(page,item[file_key])
     source=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))['pages']['index.html']
-    assert source['scripts'].count('windows-ui-v16.js')==1 and source['scripts'].index('windows-ui-v16.js')<source['scripts'].index('professional-editor-v17.js')
-    assert source['styles'].count('windows-ui-v16.css')==1 and source['styles'].index('windows-ui-v16.css')<source['styles'].index('professional-editor-v17.css')
-    css=(ROOT/'windows-ui-v16.css').read_text(encoding='utf-8')
-    js=(ROOT/'windows-ui-v16.js').read_text(encoding='utf-8')
+    # v54 consolidated the former windows-ui-v16 chrome into editor/ui-layout.js and editor/editor-styles.css.
+    assert source['scripts'].count('editor/ui-layout.js')==1, 'ui-layout.js must be bundled exactly once'
+    assert source['styles'].count('editor/editor-styles.css')==1, 'editor-styles.css must be bundled exactly once'
+    css=(ROOT/'src'/'css'/'editor'/'editor-styles.css').read_text(encoding='utf-8')
+    js=(ROOT/'src'/'js'/'editor'/'ui-layout.js').read_text(encoding='utf-8')
     editor_source=(ROOT / "src" / "js" / "canvas-plus.js").read_text(encoding='utf-8')
     dashboard_enhancements=(ROOT / "src" / "js" / "dashboard-enhancements.js").read_text(encoding='utf-8')
-    for token in ('transform:none!important','workflow-page-chip:not(.active)','scrollbar-width:none','v16-toolbar-more-panel','safe-area-inset-bottom','#modal.final-dialog>.close{z-index:10001'):
+    # v54 scopes the dock reset under body.windows-ui-v54 (no !important); assert the rule itself.
+    assert re.search(r'body\.windows-ui-v54 \.stage-wrap > \.workflow-page-dock \{[^}]*transform: none;', css), 'page dock must reset transform'
+    for token in ('workflow-page-chip:not(.active)','scrollbar-width: none','v54-toolbar-more-panel','safe-area-inset-bottom','#modal.final-dialog > .close { z-index: 10001'):
         assert token in css,token
-    for token in ('v16ToolbarMore','keepActivePageVisible','keepActiveToolVisible','#eiTimelineLaunch','#v13OperationsBtn'):
+    for token in ('v54ToolbarMore','keepActivePageVisible','keepActiveToolVisible','#eiTimelineLaunch','#v13OperationsBtn'):
         assert token in js,token
     assert "window.__EINVITE_PAGE||document.body?.dataset.page||" in editor_source
     assert 'class="template-select-action"' in dashboard_enhancements
