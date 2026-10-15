@@ -2,7 +2,6 @@
 """Production configuration, container, readiness, and secret-safety contract."""
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import socket
@@ -14,14 +13,14 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src" / "python"))
 
 
 def load_preflight():
-    spec = importlib.util.spec_from_file_location("production_preflight", ROOT / "production_preflight.py")
-    assert spec and spec.loader
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    # production_preflight.py moved to src/python/core/preflight.py (the old
+    # top-level script was removed in 78258bf); import its new home.
+    from core import preflight
+    return preflight
 
 
 def valid_environment() -> dict[str, str]:
@@ -46,6 +45,7 @@ def valid_environment() -> dict[str, str]:
         "EINVITE_ALLOW_INSECURE_OBJECT_STORAGE": "1",
         "EINVITE_BACKUP_PROVIDER": "object",
         "EINVITE_TRUSTED_PROXY_IPS": "172.20.0.10",
+        "EINVITE_ADMIN_IP_ALLOWLIST": "10.0.0.0/8,192.168.1.5",
     }
 
 
@@ -66,9 +66,10 @@ def verify_live_readiness() -> None:
             "EINVITE_REDIS_URL": "",
             "EINVITE_OBJECT_STORAGE_PROVIDER": "local",
             "PYTHONUTF8": "1",
+            "PYTHONPATH": str(ROOT / "src" / "python") + os.pathsep + str(ROOT),
         }
         process = subprocess.Popen(
-            [sys.executable, str(ROOT / "server.py"), "--host", "127.0.0.1", "--port", str(port)],
+            [sys.executable, str(ROOT / "src" / "python" / "server.py"), "--host", "127.0.0.1", "--port", str(port)],
             cwd=ROOT,
             env=env,
             stdout=subprocess.DEVNULL,
@@ -112,9 +113,10 @@ def verify_invalid_production_fails_closed() -> None:
             "EINVITE_UPLOAD_SIGNING_SECRET": secrets["EINVITE_UPLOAD_SIGNING_SECRET"],
             "EINVITE_MEDIA_SIGNING_SECRET": secrets["EINVITE_MEDIA_SIGNING_SECRET"],
             "EINVITE_GUEST_TOKEN_SECRET": secrets["EINVITE_GUEST_TOKEN_SECRET"],
+            "PYTHONPATH": str(ROOT / "src" / "python") + os.pathsep + str(ROOT),
         }
         result = subprocess.run(
-            [sys.executable, str(ROOT / "server.py"), "--host", "127.0.0.1", "--port", "0"],
+            [sys.executable, str(ROOT / "src" / "python" / "server.py"), "--host", "127.0.0.1", "--port", "0"],
             cwd=ROOT,
             env=env,
             text=True,
@@ -165,14 +167,14 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="einvite-env-generator-") as folder:
         generated_path = Path(folder) / ".env.production"
         command = [sys.executable, str(ROOT / "src" / "python" / "build" / "prepare_production_env.py"), "--public-url", "https://events.example.test", "--output", str(generated_path), "--trusted-proxy-ips", "172.20.0.10"]
-        generated = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, encoding="utf-8", errors="replace", timeout=30)
+        generated = subprocess.run(command, cwd=ROOT, env={**os.environ, "PYTHONPATH": str(ROOT / "src" / "python") + os.pathsep + str(ROOT)}, text=True, capture_output=True, encoding="utf-8", errors="replace", timeout=30)
         assert generated.returncode == 0 and generated_path.is_file(), generated.stdout + generated.stderr
         generated_values = preflight.load_env_file(generated_path)
         assert preflight.audit_environment(generated_values)["ok"]
         assert "REPLACE_" not in generated_path.read_text(encoding="utf-8")
         protected_values = [generated_values[name] for name in preflight.SECRET_NAMES]
         assert len(set(protected_values)) == 3 and all(value not in generated.stdout for value in protected_values)
-        refused = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, encoding="utf-8", errors="replace", timeout=30)
+        refused = subprocess.run(command, cwd=ROOT, env={**os.environ, "PYTHONPATH": str(ROOT / "src" / "python") + os.pathsep + str(ROOT)}, text=True, capture_output=True, encoding="utf-8", errors="replace", timeout=30)
         assert refused.returncode != 0 and "Refusing to overwrite" in refused.stdout
 
     dockerignore = (ROOT / "deploy" / ".dockerignore").read_text(encoding="utf-8")

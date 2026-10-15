@@ -127,16 +127,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +157,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -288,8 +306,21 @@ window.alert=(message)=>{uiAlert(message)};
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- function getInvitationId(options={}){const direct=safe(explicitId);if(direct)return direct;if(options.allowRemembered===false)return '';return safe(localStorage.getItem(LAST_KEY))}
- function remember(id){id=safe(id);if(id)localStorage.setItem(LAST_KEY,id);return id}
+ // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
+ // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
+ // resolve it as if it were a real invitation: the signed-in editor asked the server for
+ // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
+ // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+ const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
+ function getInvitationId(options={}){
+   const direct=safe(explicitId);if(direct)return direct;
+   if(options.allowRemembered===false)return '';
+   const stored=safe(localStorage.getItem(LAST_KEY));
+   if(!stored)return '';
+   if(isLocalId(stored)){try{localStorage.removeItem(LAST_KEY)}catch(e){/* storage disabled */}return ''}
+   return stored
+ }
+ function remember(id){id=safe(id);if(id&&!isLocalId(id))localStorage.setItem(LAST_KEY,id);return id}
  function route(id,target='editor'){
    id=safe(id);target=String(target||'editor').toLowerCase();
    if(!id)return target==='materials'?'materials.html':'dashboard.html';
@@ -343,7 +374,7 @@ function shareChannelLinks(row){const url=guestShareUrl(row);if(!url)return'';co
 function filtered(){let q=$('#search').value.trim().toLowerCase(),filter=$('#statusFilter').value;return guests.filter(g=>{let text=`${g.name} ${g.phone||''} ${g.email||''} ${g.group_name||''} ${g.household_id||''} ${g.table_name||''} ${(g.tags||[]).join(' ')}`.toLowerCase(),status=g.rsvp_status||'';if(!text.includes(q))return false;if(!rsvpEnabled)return filter==='all'||filter==='checked'&&g.checked_in;return filter==='all'||filter==='yes'&&status.startsWith('Yes')||filter==='no'&&status.startsWith('Unable')||filter==='pending'&&!status||filter==='checked'&&g.checked_in})}
 function render(){let yes=guests.filter(g=>g.rsvp_status?.startsWith('Yes')).length,no=guests.filter(g=>g.rsvp_status?.startsWith('Unable')).length,pending=guests.length-yes-no,checked=guests.filter(g=>g.checked_in).length;$('#summary').innerHTML=rsvpEnabled?`<div class="metric"><strong>${guests.length}</strong>${_html('Invited','Invited')}</div><div class="metric"><strong>${yes}</strong>${_html('Attending','Attending')}</div><div class="metric"><strong>${no}</strong>${_html('Declined','Declined')}</div><div class="metric"><strong>${pending}</strong>${_html('Pending','Pending')}</div><div class="metric"><strong>${checked}</strong>${_html('Checked in','Checked in')}</div>`:`<div class="metric"><strong>${guests.length}</strong>${_html('Invited','Invited')}</div><div class="metric"><strong>${checked}</strong>${_html('Checked in','Checked in')}</div><div class="metric"><strong>${_html('Off','Off')}</strong>${_html('RSVP disabled','RSVP disabled')}</div>`;const filter=$('#statusFilter');if(filter){[...filter.options].forEach(o=>{if(['yes','no','pending'].includes(o.value))o.hidden=!rsvpEnabled});if(!rsvpEnabled&&['yes','no','pending'].includes(filter.value))filter.value='all'}
 $('#guestList').innerHTML=filtered().map(g=>{const status=rsvpEnabled?esc(g.rsvp_status||_txt('Awaiting reply','Awaiting reply')):(_txt(g.token_revoked_at?'Personal link revoked':(g.personalLinkAvailable?'Personal invitation ready':'Personal link needs rotation'),g.token_revoked_at?'Personal link revoked':(g.personalLinkAvailable?'Personal invitation ready':'Personal link needs rotation')));return`<div class="guest-row ${g.checked_in?'checked':''}"><div><strong>${esc(g.name)}</strong><br><small>${esc([g.phone,g.email,g.group_name&&`${_txt('Group:','Group:')} ${g.group_name}`,g.household_id&&`${_txt('Household:','Household:')} ${g.household_id}`,g.table_name&&`${_txt('Table:','Table:')} ${g.table_name}`,g.seat_label&&`${_txt('Seat:','Seat:')} ${g.seat_label}`].filter(Boolean).join(' · '))}</small>${(g.tags||[]).length?`<span class="tags">${(g.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</span>`:''}
-<div class="guest-meta">${g.checked_in?`${_html('Checked in','Checked in')}${g.check_in_at?` ${_html('at','at')} ${esc(new Date(g.check_in_at).toLocaleString())}`:''}`:''}${g.rsvp_status&&rsvpEnabled?`${_html('RSVP','RSVP')}: ${esc(g.rsvp_status)}`:''}${g.delivery_status?` · ${esc(g.delivery_status)}`:''}${g.opened_at?` · ${_html('Opened','Opened')}`:''}</div></div><span>${status}</span><button data-edit="${g.id}">${_html('Edit','Edit')}</button><button data-link="${g.id}">${g.personalLinkAvailable?_html('Link','Link'):_html('Rotate link','Rotate link')}</button><button data-qr="${g.id}" ${g.personalLinkAvailable?'':'disabled'}>${_html('QR','QR')}</button><button data-check="${g.id}">${g.checked_in?_html('Undo check-in','Undo check-in'):_html('Check in','Check in')}</button><button class="danger" data-delete="${g.id}">${_html('Remove','Remove')}</button><label class="guest-pick"><input type="checkbox" data-pick="${g.id}" ${pickedGuests.has(g.id)?'checked':''} aria-label="${esc(_txt('Select this guest for the link list',''))}"></label></div>`}).join('')||`<p class="empty">${_html('No guests match this filter.','No guests match this filter.')}</p>`}
+<div class="guest-meta">${g.checked_in?`${_html('Checked in','Checked in')}${g.check_in_at?` ${_html('at','at')} ${esc(new Date(g.check_in_at).toLocaleString())}`:''}`:''}${g.rsvp_status&&rsvpEnabled?`${_html('RSVP','RSVP')}: ${esc(g.rsvp_status)}`:''}${g.delivery_status?` · ${esc(g.delivery_status)}`:''}${g.opened_at?` · ${_html('Opened','Opened')}`:''}</div></div><span>${status}</span><button data-edit="${g.id}">${_html('Edit','Edit')}</button><button data-link="${g.id}">${g.personalLinkAvailable?_html('Link','Link'):_html('Rotate link','Rotate link')}</button><button data-qr="${g.id}" ${g.personalLinkAvailable?'':'disabled'}>${_html('QR','QR')}</button><button data-check="${g.id}">${g.checked_in?_html('Undo check-in','Undo check-in'):_html('Check in','Check in')}</button><button class="danger" data-delete="${g.id}">${_html('Remove','Remove')}</button><label class="guest-pick"><input type="checkbox" data-pick="${g.id}" ${pickedGuests.has(g.id)?'checked':''} aria-label="${esc(_txt('Select this guest for the link list','ជ្រើរើសភ្ញៀវនេះសម្រាប់បញ្ជីតំណ'))}"></label></div>`}).join('')||`<p class="empty">${_html('No guests match this filter.','No guests match this filter.')}</p>`}
 ;
 /* Goal 6b (§5.5): the selection drives "Copy all links". Checked guests are
    copied; with none checked the whole filtered list is, which is what a designer
@@ -362,7 +393,7 @@ function showQr(id){let g=guests.find(x=>x.id===id);if(!g?.token)return manageLi
 $('.close').onclick=()=>$('#qrModal').close();
 function parseCsv(text){let rows=[],row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){let c=text[i];if(c==='"'&&quoted&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')quoted=!quoted;else if(c===','&&!quoted){row.push(cell.trim());cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell.trim());if(row.some(Boolean))rows.push(row);return rows}
 $('#importFile').onchange=e=>{const file=e.target.files?.[0];if(file)openImport(file)};
-$('#exportBtn').onclick=()=>{let rows=[[_txt('Name','Name'),_txt('Phone','Phone'),_txt('Email','Email'),_txt('Group','Group'),_txt('Household','Household'),_txt('Table','Table'),_txt('Seat','Seat'),_txt('Tags','Tags'),rsvpEnabled?_txt('RSVP status','RSVP status'):_txt('Invitation mode','Invitation mode'),_txt('Checked in','Checked in'),_txt('Delivery','Delivery'),_txt('Opened','Opened'),_txt('Personal link','Personal link')],...guests.map(g=>[g.name,g.phone||'',g.email||'',g.group_name||'',g.household_id||'',g.table_name||'',g.seat_label||'',(g.tags||[]).join('|'),rsvpEnabled?(g.rsvp_status||_txt('Pending','Pending')):_txt('RSVP disabled','RSVP disabled'),g.checked_in?_txt('Yes','Yes'):_txt('No','No'),g.delivery_status||'',g.opened_at?new Date(g.opened_at).toISOString():'',guestUrl(g)])],csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='guest-list.csv';a.click();URL.createObjectURL(a.href)};
+$('#exportBtn').onclick=()=>{let rows=[[_txt('Name','Name'),_txt('Phone','Phone'),_txt('Email','Email'),_txt('Group','Group'),_txt('Household','Household'),_txt('Table','Table'),_txt('Seat','Seat'),_txt('Tags','Tags'),rsvpEnabled?_txt('RSVP status','RSVP status'):_txt('Invitation mode','Invitation mode'),_txt('Checked in','Checked in'),_txt('Delivery','Delivery'),_txt('Opened','Opened'),_txt('Personal link','Personal link')],...guests.map(g=>[g.name,g.phone||'',g.email||'',g.group_name||'',g.household_id||'',g.table_name||'',g.seat_label||'',(g.tags||[]).join('|'),rsvpEnabled?(g.rsvp_status||_txt('Pending','Pending')):_txt('RSVP disabled','RSVP disabled'),g.checked_in?_txt('Yes','Yes'):_txt('No','No'),g.delivery_status||'',g.opened_at?new Date(g.opened_at).toISOString():'',guestUrl(g)])],csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='guest-list.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
 /* ────────────────────────────────────────────────────────────────────────────
    Bulk guest import — the research pass's phase A (§5.7 of
    docs/reviews/bulk-guest-import-research.md).
@@ -399,24 +430,24 @@ function renderImportDialog(){
   const icon=dialog.querySelector('.ei-dialog-icon'),heading=dialog.querySelector('h2'),message=dialog.querySelector('.ei-dialog-message'),body=dialog.querySelector('.guest-import-body'),actions=dialog.querySelector('.ei-dialog-actions');
   if(!state){body.innerHTML='';actions.innerHTML='';return}
   if(state.failure){
-    icon.textContent='!';heading.textContent=_txt('Import guests','');
-    message.innerHTML=_html('The file could not be read.','');
+    icon.textContent='!';heading.textContent=_txt('Import guests','នាំចូលភ្ញៀវ');
+    message.innerHTML=_html('The file could not be read.','មិនអាចអានឯកសារបានទេ។');
     body.innerHTML=`<p class="hint">${esc(state.failure)}</p>`;
     actions.innerHTML=`<button type="button" class="ei-primary" data-cancel>${_html('Close','បិទ')}</button>`;
     actions.querySelector('[data-cancel]').onclick=closeImportDialog;return
   }
   if(state.decodeFailure){
-    icon.textContent='!';heading.textContent=_txt('Import guests','');
-    message.innerHTML=_html('This CSV is neither UTF-8, UTF-16LE nor UTF-16BE. Export the guest list as .xlsx and import that instead — a spreadsheet has no charset, so Khmer names survive it.','');
+    icon.textContent='!';heading.textContent=_txt('Import guests','នាំចូលភ្ញៀវ');
+    message.innerHTML=_html('This CSV is neither UTF-8, UTF-16LE nor UTF-16BE. Export the guest list as .xlsx and import that instead — a spreadsheet has no charset, so Khmer names survive it.','ឯកសារ CSV នេះមិនមែនជា UTF-8, UTF-16LE ឬ UTF-16BE ទេ។ សូមនាំចេញបញ្ជីភ្ញៀវជា .xlsx ហើយនាំចូលវិញ — ឯកសារ spreadsheet មិនមានការកំណត់អក្សរ ដូច្នេះឈ្មោះខ្មែរនៅរក្សាបាន។');
     body.innerHTML='';actions.innerHTML=`<button type="button" class="ei-primary" data-cancel>${_html('Close','បិទ')}</button>`;
     actions.querySelector('[data-cancel]').onclick=closeImportDialog;return
   }
   const{entries,blank,duplicates}=importFindings(state),importable=importRowsToImport(state),detected=state.header?String((state.rows[0]||[])[state.column]||'').trim():'';
-  icon.textContent='⇪';heading.textContent=_txt('Import guests','');
+  icon.textContent='⇪';heading.textContent=_txt('Import guests','នាំចូលភ្ញៀវ');
   message.innerHTML=_html(state.header?`Found ${entries.length} rows, name column detected as '${detected||'Column 1'}'.`:`Found ${entries.length} rows, no header row detected — choose the name column.`,'');
   const options=Array.from({length:state.columns},(_,index)=>`<option value="${index}" ${index===state.column?'selected':''}>${esc(`Column ${index+1} — ${String((state.rows[0]||[])[index]||'').slice(0,18)||'—'}`)}</option>`).join('');
   const shown=entries.length>7?[...entries.slice(0,5),null,...entries.slice(-2)]:entries;
-  const preview=shown.map(entry=>entry===null?`<div class="guest-row"><div><strong>…</strong></div></div>`:`<div class="guest-row"><div><strong>${esc(entry.name||_txt('(empty name)',''))}</strong>${entry.phone?`<br><small>${esc(entry.phone)}</small>`:''}</div></div>`).join('');
+  const preview=shown.map(entry=>entry===null?`<div class="guest-row"><div><strong>…</strong></div></div>`:`<div class="guest-row"><div><strong>${esc(entry.name||_txt('(empty name)','(គ្មានឈ្មោះ)'))}</strong>${entry.phone?`<br><small>${esc(entry.phone)}</small>`:''}</div></div>`).join('');
   const emptyWarning=blank.length?`<p class="hint">${esc(`${blank.length} row(s) have no name, so nothing was imported yet (rows ${blank.slice(0,8).join(', ')}${blank.length>8?'…':''})`)}</p>`:'';
   // Re-import key (research §5.2): a sheet has no key of its own, so a row is
   // matched on lower(name) within this invitation. A match is updated and keeps
@@ -424,8 +455,8 @@ function renderImportDialog(){
   // silently — the counts are stated before the write.
   const existingByName=existingGuestIndex(),willUpdate=importable.filter(entry=>existingByName.has(entry.name.trim().toLowerCase())).length;
   const updateWarning=importable.length?`<p class="hint">${esc(`${willUpdate} row(s) match a guest already in this list and will be updated with their links kept; ${importable.length-willUpdate} will be added.`)}</p>`:'';
-  const duplicateWarning=duplicates.length?`<p class="hint">${esc(`${duplicates.length} duplicate name(s) in this file: ${duplicates.slice(0,5).join(', ')}${duplicates.length>5?'…':''}`)}</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-skip-duplicates ${state.skipDuplicates?'checked':''}> ${_html('Skip later duplicates (the default keeps both)','')}</label>`:'';
-  body.innerHTML=`<label class="sr-only" for="importColumn">${_html('Name column','')}</label><select id="importColumn">${options}</select>${emptyWarning}${duplicateWarning}${updateWarning}<div class="guest-table">${preview}</div>`;
+  const duplicateWarning=duplicates.length?`<p class="hint">${esc(`${duplicates.length} duplicate name(s) in this file: ${duplicates.slice(0,5).join(', ')}${duplicates.length>5?'…':''}`)}</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-skip-duplicates ${state.skipDuplicates?'checked':''}> ${_html('Skip later duplicates (the default keeps both)','រំលងឈ្មោះស្ទួនពេលក្រោយ (ការកំណត់លំនាំដើមរក្សាទាំងពីរ)')}</label>`:'';
+  body.innerHTML=`<label class="sr-only" for="importColumn">${_html('Name column','ជួរឈ្មោះ')}</label><select id="importColumn">${options}</select>${emptyWarning}${duplicateWarning}${updateWarning}<div class="guest-table">${preview}</div>`;
   const select=body.querySelector('#importColumn');select.onchange=()=>{state.column=Number(select.value);renderImportDialog()};
   const skip=body.querySelector('[data-skip-duplicates]');if(skip)skip.onchange=()=>{state.skipDuplicates=skip.checked;renderImportDialog()};
   actions.innerHTML=`<button type="button" data-cancel>${_html('Cancel','បោះបង់')}</button><button type="button" class="ei-primary" data-import ${blank.length||!importable.length?'disabled':''}>${esc(`Import ${importable.length} guest(s)`)}</button>`;
@@ -458,7 +489,7 @@ async function runImport(entries){
     if(server)guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);
     closeImportDialog();render();
   }
-  const summary=`${added} ${_txt('added','')} · ${updated} ${_txt('updated','')}${failed?` · ${failed} ${_txt('failed','')}`:''}`;
+  const summary=`${added} ${_txt('added','បានបន្ថែម')} · ${updated} ${_txt('updated','បានធ្វើបច្ចុប្បន្នភាព')}${failed?` · ${failed} ${_txt('failed','បានបរាជ័យ')}`:''}`;
   if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary);
   $('#importFile').value='';
   openLinkEditor(guests.filter(guest=>touched.includes(guest.id)));
@@ -472,7 +503,7 @@ async function runImport(entries){
    preview only. The server re-validates every submitted code and is
    authoritative; nothing here decides what a guest's link is. */
 const SLUG_ALPHABET='23456789abcdefghjkmnpqrstuvwxyz';
-async function copyGuestLinks(){const list=pickedGuests.size?guests.filter(g=>pickedGuests.has(g.id)):guests,urls=list.map(guestShareUrl).filter(Boolean);if(!urls.length){alert(_txt('There are no guest links to copy yet.',''));return}await navigator.clipboard.writeText(urls.join('\n'));const summary=`${urls.length} ${_txt('link(s) copied','')}`;if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary)}
+async function copyGuestLinks(){const list=pickedGuests.size?guests.filter(g=>pickedGuests.has(g.id)):guests,urls=list.map(guestShareUrl).filter(Boolean);if(!urls.length){alert(_txt('There are no guest links to copy yet.','មិនទាន់មានតំណភ្ញៀវសម្រាប់ចម្លងទេ។'));return}await navigator.clipboard.writeText(urls.join('\n'));const summary=`${urls.length} ${_txt('link(s) copied','តំណបានចម្លង')}`;if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary)}
 function existingGuestIndex(){const index=new Map();for(const guest of guests){const key=String(guest.name||'').trim().toLowerCase();if(key&&!index.has(key))index.set(key,guest)}return index}
 function slugify(value){return String(value??'').toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)}
 function randomCode(length=6){const bytes=new Uint8Array(length);(window.crypto||window.msCrypto).getRandomValues(bytes);let out='';for(const byte of bytes)out+=SLUG_ALPHABET[byte%SLUG_ALPHABET.length];return out}
@@ -484,18 +515,18 @@ function closeLinkDialog(){linkDialog?.close()}
 function renderLinkDialog(){
   if(!linkDialog)return;
   const body=linkDialog.querySelector('.guest-import-body'),actions=linkDialog.querySelector('.ei-dialog-actions'),message=linkDialog.querySelector('.ei-dialog-message');
-  linkDialog.querySelector('h2').textContent=_txt('Guest links','');
+  linkDialog.querySelector('h2').textContent=_txt('Guest links','តំណភ្ញៀវ');
   const changed=linkRows.filter(row=>row.slug!==row.original);
   message.innerHTML=_html(`Each guest gets their own link. Freezing keeps it: editing a name later changes the card and the page, but not a link you have already shared.${changed.length?` ${changed.length} code(s) changed and their old links will stop working.`:''}`,'');
-  body.innerHTML=`<div class="guest-table">${linkRows.map((row,index)=>`<div class="guest-row"><div><strong>${esc(row.name)}</strong><br><small>${esc(slugPreview(row))}</small></div><input data-code="${index}" maxlength="60" value="${esc(row.slug)}" aria-label="${esc(_txt('Guest link code',''))}"><button type="button" data-regenerate="${index}" title="${esc(_txt('Generate a new code',''))}">↻</button><span class="share-channels">${shareChannelLinks(row)}</span></div>`).join('')||`<p class="hint">${_html('No guests yet.','')}</p>`}</div><p class="share-note hint">${_html('Send a bare link on its own: Telegram then shows the invitation preview, and any text beside it suppresses the card.','')}</p>`;
+  body.innerHTML=`<div class="guest-table">${linkRows.map((row,index)=>`<div class="guest-row"><div><strong>${esc(row.name)}</strong><br><small>${esc(slugPreview(row))}</small></div><input data-code="${index}" maxlength="60" value="${esc(row.slug)}" aria-label="${esc(_txt('Guest link code','លេខកូដតំណភ្ញៀវ'))}"><button type="button" data-regenerate="${index}" title="${esc(_txt('Generate a new code','បង្កើតលេខកូដថ្មី'))}">↻</button><span class="share-channels">${shareChannelLinks(row)}</span></div>`).join('')||`<p class="hint">${_html('No guests yet.','មិនទាន់មានភ្ញៀវនៅឡើយ។')}</p>`}</div><p class="share-note hint">${_html('Send a bare link on its own: Telegram then shows the invitation preview, and any text beside it suppresses the card.','ផ្ញើតំណទទេតែមួយដោយឡែក៖ Telegram នឹងបង្ហាញការមើលជាមុននៃការអញ្ជើញ ហើយអត្ថបទណាមួយនៅជាប់វានឹងលាក់កាតនោះ។')}</p>`;
   body.querySelectorAll('[data-code]').forEach(input=>{const index=Number(input.dataset.code);input.onchange=()=>{const cleaned=slugify(input.value)||linkRows[index].original;if(!validSlug(cleaned)){input.value=linkRows[index].original;linkRows[index].slug=linkRows[index].original}else{linkRows[index].slug=cleaned;input.value=cleaned}renderLinkDialog()}});
   body.querySelectorAll('[data-regenerate]').forEach(button=>{button.onclick=()=>{const index=Number(button.dataset.regenerate);const taken=new Set(linkRows.filter((_,position)=>position!==index).map(row=>row.slug));linkRows[index].slug=proposedSlug(linkRows[index].name,taken);renderLinkDialog()}});
-  actions.innerHTML=`<button type="button" data-cancel>${_html('Close','បិទ')}</button><button type="button" data-regenerate-all>${_html('Regenerate all','')}</button><button type="button" class="ei-primary" data-freeze>${_html('Freeze and generate','')}</button>`;
+  actions.innerHTML=`<button type="button" data-cancel>${_html('Close','បិទ')}</button><button type="button" data-regenerate-all>${_html('Regenerate all','បង្កើតឡើងវិញទាំងអស់')}</button><button type="button" class="ei-primary" data-freeze>${_html('Freeze and generate','ជួសជុល និងបង្កើត')}</button>`;
   actions.querySelector('[data-cancel]').onclick=closeLinkDialog;
   actions.querySelector('[data-regenerate-all]').onclick=()=>{const taken=new Set();linkRows.forEach(row=>{row.slug=proposedSlug(row.name,taken)});renderLinkDialog()};
   actions.querySelector('[data-freeze]').onclick=freezeLinks;
 }
-function slugPreview(row){return `/${slug}/${row.slug}${row.original&&row.slug!==row.original?`  ·  ${_txt('was','')} /${slug}/${row.original}`:''}`}
+function slugPreview(row){return `/${slug}/${row.slug}${row.original&&row.slug!==row.original?`  ·  ${_txt('was','ពីមុន')} /${slug}/${row.original}`:''}`}
 function openLinkEditor(list){
   if(!server)return;
   linkRows=(list&&list.length?list:guests).map(guest=>({id:guest.id,name:guest.name,slug:guest.slug||'',original:guest.slug||''})).filter(row=>row.id);
@@ -511,7 +542,7 @@ async function freezeLinks(){
   if(payload.conflicts&&payload.conflicts.length){if(button)button.disabled=false;linkDialog.querySelector('.ei-dialog-message').textContent=_txt(`These codes are already used in this invitation: ${payload.conflicts.join(', ')}`,'');return}
   guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);
   closeLinkDialog();render();
-  const summary=`${payload.updated} ${_txt('link(s) frozen','')}`;
+  const summary=`${payload.updated} ${_txt('link(s) frozen','តំណត្រូវបានជួសជុល')}`;
   if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary);
 }
 $('#linksBtn').onclick=()=>openLinkEditor(guests);

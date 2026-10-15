@@ -10,6 +10,10 @@ venv/
 .media-signing-secret
 .guest-token-secret
 .env
+# Any dotenv variant (including generated .env.production) stays untracked;
+# the committed templates are re-included explicitly.
+.env.*
+!.env.production.example
 .DS_Store
 tests.bak/
 .glm-staging/

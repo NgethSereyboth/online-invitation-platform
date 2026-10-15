@@ -127,16 +127,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +157,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -288,8 +306,21 @@ window.alert=(message)=>{uiAlert(message)};
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- function getInvitationId(options={}){const direct=safe(explicitId);if(direct)return direct;if(options.allowRemembered===false)return '';return safe(localStorage.getItem(LAST_KEY))}
- function remember(id){id=safe(id);if(id)localStorage.setItem(LAST_KEY,id);return id}
+ // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
+ // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
+ // resolve it as if it were a real invitation: the signed-in editor asked the server for
+ // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
+ // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+ const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
+ function getInvitationId(options={}){
+   const direct=safe(explicitId);if(direct)return direct;
+   if(options.allowRemembered===false)return '';
+   const stored=safe(localStorage.getItem(LAST_KEY));
+   if(!stored)return '';
+   if(isLocalId(stored)){try{localStorage.removeItem(LAST_KEY)}catch(e){/* storage disabled */}return ''}
+   return stored
+ }
+ function remember(id){id=safe(id);if(id&&!isLocalId(id))localStorage.setItem(LAST_KEY,id);return id}
  function route(id,target='editor'){
    id=safe(id);target=String(target||'editor').toLowerCase();
    if(!id)return target==='materials'?'materials.html':'dashboard.html';
@@ -311,7 +342,7 @@ let _analyticsData=null,_analyticsInvite=null;
 async function api(path){const r=await fetch(path,{credentials:'same-origin',headers:{}}),data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||'Request failed');return data}
 function last30Days(){const days=[];const now=new Date();for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);days.push(d.toISOString().slice(0,10))}return days}
 function render(data,invite){_analyticsData=data;_analyticsInvite=invite;const days=last30Days(),max=Math.max(1,...days.map(day=>Number(data.viewsByDay?.[day]||0))),statuses=Object.entries(data.rsvpStatuses||{}).sort((a,b)=>b[1]-a[1]),checkRate=data.guestListTotal?Math.round(data.checkedIn/data.guestListTotal*100):0;const names=invite.document?.fields?.names||_txt('Invitation','Invitation');$('#analyticsTitle').innerHTML=`${names} · ${location.origin}/i/${invite.slug}`;$('#analyticsRoot').innerHTML=`<div class="metric-grid"><div class="metric"><span>${b('Total views','Total views')}</span><strong>${data.totalViews||0}</strong><small>${b('All-time public opens','All-time public opens')}</small></div><div class="metric"><span>${b('Last 30 days','Last 30 days')}</span><strong>${data.views30Days||0}</strong><small>${b('Recent invitation opens','Recent invitation opens')}</small></div><div class="metric"><span>${data.rsvpEnabled===false?_txt('RSVP','RSVP'):_txt('RSVP responses','RSVP responses')}</span><strong>${data.rsvpEnabled===false?_txt('Disabled','Disabled'):(data.rsvpTotal||0)}</strong><small>${data.rsvpEnabled===false?b('Historical responses are preserved','Historical responses are preserved'):`${data.rsvpGuests||0} ${_txt('total responding guests','total responding guests')}`}</small></div><div class="metric"><span>${b('Checked in','Checked in')}</span><strong>${data.checkedIn||0}</strong><small>${data.guestListTotal||0} ${_txt('guests on list','guests on list')}</small></div></div><div class="analytics-grid"><section class="chart-card"><h2>${b('Views — last 30 days','Views — last 30 days')}</h2><div class="bars">${days.map(day=>{const value=Number(data.viewsByDay?.[day]||0),height=Math.max(1,Math.round(value/max*100));return`<div class="bar-wrap" data-label="${day}: ${value} ${_txt('view','view')}${value===1?'':'s'}"><span class="bar" style="height:${height}%"></span></div>`}).join('')}</div></section><aside class="summary-card"><h2>${b('RSVP breakdown','RSVP breakdown')}</h2>${data.rsvpEnabled===false?`<p>${b('RSVP disabled for this invitation. Historical response data remains available.','RSVP disabled for this invitation. Historical response data remains available.')}</p>`:statuses.length?statuses.map(([name,count])=>`<div class="status-row"><span>${esc(name)}</span><strong>${count}</strong></div>`).join(''):`<p>${b('No RSVP responses yet.','No RSVP responses yet.')}</p>`}<h2>${b('Guest check-in','Guest check-in')}</h2><div class="progress"><span style="width:${checkRate}%"></span></div><p><strong>${checkRate}%</strong> ${_txt('of listed guests checked in.','of listed guests checked in.')}</p><h2>${b('Publishing','Publishing')}</h2><p>${b('Public slug:','Public slug:')} <code>${esc(invite.slug)}</code></p><p>${b('Access:','Access:')} ${esc(invite.accessMode||'unlisted')}</p></aside></div>`}
-async function load(){if(!inviteId)return window.EInviteBackend?.message($('#analyticsRoot'),'<span class="i18n i18n-en">Open analytics from a specific invitation.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Open analytics from a specific invitation.</span>');if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return window.EInviteBackend.message($('#analyticsRoot '),'<span class="i18n i18n-en">Analytics requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Analytics requires the full application server.</span>');try{const [data,invite,me]=await Promise.all([api(`/api/invitations/${inviteId}/analytics`),api(`/api/invitations/${inviteId}`),api('/api/auth/me')]);if(!me.user)return location.href='dashboard.html';$('#analyticsAccount').textContent=me.user.email;render(data,invite)}catch(error){$('#analyticsRoot').innerHTML=`<div class="empty"><h2>${b('Analytics unavailable','Analytics unavailable')}</h2><p>${esc(error.message)}</p></div>`}}
+async function load(){if(!inviteId)return $('#analyticsRoot').innerHTML='<div class="empty"><h2><span class="i18n i18n-en">Open analytics from a specific invitation.</span><span class="i18n i18n-km khmer-text" lang="km">Open analytics from a specific invitation.</span></h2></div>';if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return window.EInviteBackend.message($('#analyticsRoot'),'<span class="i18n i18n-en">Analytics requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Analytics requires the full application server.</span>');try{const [data,invite,me]=await Promise.all([api(`/api/invitations/${inviteId}/analytics`),api(`/api/invitations/${inviteId}`),api('/api/auth/me')]);if(!me.user)return location.href='dashboard.html';$('#analyticsAccount').textContent=me.user.email;render(data,invite)}catch(error){$('#analyticsRoot').innerHTML=`<div class="empty"><h2>${b('Analytics unavailable','Analytics unavailable')}</h2><p>${esc(error.message)}</p></div>`}}
 function renderAll(){if(_analyticsData&&_analyticsInvite)render(_analyticsData,_analyticsInvite)}
 if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.EInviteI18n.subscribe(renderAll)}
 $('#refreshAnalytics').onclick=load;load();;(function(){

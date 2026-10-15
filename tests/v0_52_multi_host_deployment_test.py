@@ -20,42 +20,28 @@ def text(path: str) -> str:
 
 
 def verify_windows_contract() -> None:
-    manager = text("deploy-einvite-server.ps1")
+    # deploy-einvite-server.ps1 and DEPLOY_EINVITE_SERVER.bat were removed from
+    # the repo (78258bf) with no replacement; their checks were removed with
+    # them. The remaining Windows hosting scripts are still contract-checked.
     app = text("deploy/windows/start-einvite-windows-server.ps1")
     proxy = text("deploy/windows/start-einvite-caddy.ps1")
     caddy = text("deploy/windows/Caddyfile")
-    batch = text("DEPLOY_EINVITE_SERVER.bat")
-    assert all(target in manager for target in ("ValidateFiles", "DockerOnline", "WindowsServer"))
-    assert "New-ScheduledTaskPrincipal -UserId 'SYSTEM'" in manager
-    assert "Register-ScheduledTask -TaskName 'EInvite-Web'" in manager
-    assert "Register-ScheduledTask -TaskName 'EInvite-Caddy'" in manager
-    assert "-AllowPublicFirewall" not in manager  # parameter is a switch, never silently passed
-    assert "[switch]$AllowPublicFirewall" in manager
     assert "127.0.0.1" in app and "0.0.0.0" not in app
     assert "EINVITE_MALWARE_SCANNER_MODE = 'windows-defender'" in app
     assert "EINVITE_REQUIRE_MALWARE_SCAN = '1'" in app
     assert "EINVITE_ALLOWED_HOSTS" in app and "EINVITE_TRUSTED_PROXY_IPS" in app
     assert "caddy run" in proxy and "reverse_proxy 127.0.0.1" in caddy
-    assert "deploy-einvite-server.ps1" in batch
 
     powershell = shutil.which("powershell.exe") or shutil.which("powershell")
     if powershell:
         parser = (
             "$errors=$null;"
-            "$files=@('deploy-einvite-server.ps1','deploy/windows/start-einvite-windows-server.ps1','deploy/windows/start-einvite-caddy.ps1');"
+            "$files=@('deploy/windows/start-einvite-windows-server.ps1','deploy/windows/start-einvite-caddy.ps1');"
             "foreach($file in $files){[void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$null,[ref]$errors);"
             "if($errors.Count){$errors|ForEach-Object{$_.Message};exit 1}}"
         )
         parsed = subprocess.run([powershell, "-NoLogo", "-NoProfile", "-Command", parser], cwd=ROOT, text=True, capture_output=True, timeout=30)
         assert parsed.returncode == 0, parsed.stdout + parsed.stderr
-        checked = subprocess.run(
-            [powershell, "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "deploy-einvite-server.ps1"), "-Target", "ValidateFiles"],
-            cwd=ROOT,
-            text=True,
-            capture_output=True,
-            timeout=30,
-        )
-        assert checked.returncode == 0 and "MULTI_HOST_DEPLOYMENT_FILES_VALID" in checked.stdout, checked.stdout + checked.stderr
 
 
 def verify_docker_contract() -> None:
@@ -78,23 +64,17 @@ def verify_docker_contract() -> None:
 
 
 def verify_linux_and_docs() -> None:
-    installer = text("deploy/linux/install-einvite-linux.sh")
+    # deploy/linux/install-einvite-linux.sh was removed from the repo (78258bf)
+    # with no replacement; its checks were removed with it.
     service = text("deploy/linux/einvite.service.template")
     guide = text("docs/ONLINE_AND_SERVER_HOSTING.md")
     paas = text("deploy/paas/PAAS_DEPLOYMENT.md")
     report = text("docs/MULTI_HOST_DEPLOYMENT_REPORT.md")
-    assert "set -Eeuo pipefail" in installer and "Refusing to overwrite existing Caddy file" in installer
     assert "ProtectSystem=strict" in service and "NoNewPrivileges=true" in service
     assert "EINVITE_REQUIRE_MALWARE_SCAN=1" in service and "127.0.0.1" in service
     assert all(term in guide for term in ("Windows Server", "Docker", "Bare-metal Linux", "Container hosting platforms", "GitHub Pages"))
     assert all(term in paas for term in ("PostgreSQL", "Redis", "object storage", "ClamAV", "/api/health/ready"))
     assert "without modifying the project README" in report
-    # On Windows, `bash.exe` can be a WSL launcher that requires a separately
-    # provisioned distro/permission and is not evidence about shell syntax.
-    bash = shutil.which("bash") if os.name != "nt" else None
-    if bash:
-        syntax = subprocess.run([bash, "-n", str(ROOT / "deploy/linux/install-einvite-linux.sh")], cwd=ROOT, text=True, capture_output=True, timeout=30)
-        assert syntax.returncode == 0, syntax.stdout + syntax.stderr
 
 
 def verify_generated_host_contract() -> None:
@@ -110,7 +90,14 @@ def verify_generated_host_contract() -> None:
             "--trusted-proxy-ips",
             "172.31.52.10",
         ]
-        generated = subprocess.run(command, cwd=ROOT, text=True, capture_output=True, timeout=30)
+        generated = subprocess.run(
+            command,
+            cwd=ROOT,
+            env={**os.environ, "PYTHONPATH": str(ROOT / "src" / "python") + os.pathsep + str(ROOT)},
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
         assert generated.returncode == 0, generated.stdout + generated.stderr
         values = destination.read_text(encoding="utf-8")
         assert "EINVITE_ALLOWED_HOSTS=events.example.test" in values
@@ -133,16 +120,6 @@ def verify_generated_host_contract() -> None:
                 timeout=60,
             )
             assert configured.returncode == 0, configured.stdout + configured.stderr
-            powershell = shutil.which("powershell.exe") or shutil.which("powershell")
-            if powershell:
-                managed = subprocess.run(
-                    [powershell, "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "deploy-einvite-server.ps1"), "-Target", "DockerOnline", "-EnvironmentFile", str(destination), "-Domain", "events.example.test", "-CheckOnly"],
-                    cwd=ROOT,
-                    text=True,
-                    capture_output=True,
-                    timeout=60,
-                )
-                assert managed.returncode == 0 and "DOCKER_ONLINE_PLAN_VALID" in managed.stdout, managed.stdout + managed.stderr
 
 
 def main() -> int:

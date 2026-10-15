@@ -7,6 +7,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent))
 from v14_test_utils import app_server
 from v15_http_integration_test import Client
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'src'/'python'))
 from document_schema_v32 import CURRENT_VERSION
 
 

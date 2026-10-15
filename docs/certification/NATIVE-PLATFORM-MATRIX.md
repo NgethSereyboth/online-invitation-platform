@@ -196,7 +196,7 @@ This test is the **primary Linux acceptance gate** for §1 of the certification.
 A 48-line deterministic test (no Playwright, no network). Asserts:
 - The route bundles contain no CRLF line endings (line 15) — Windows portability.
 - The SHA-256 of every route bundle matches the manifest (line 16) — build integrity.
-- `windows-ui-v16.js` and `windows-ui-v16.css` are bundled before `professional-editor-v17.js`/`.css` on the index page (lines 18-19) — load-order contract.
+- v54 consolidated `windows-ui-v16.js`/`.css` into `editor/ui-layout.js` and `editor/editor-styles.css`, which are each bundled exactly once on the index page (`tests/v16_windows_ui_hardening_test.py` asserts this).
 - The Windows-specific CSS tokens (`transform:none!important`, `scrollbar-width:none`, `safe-area-inset-bottom`, `#modal.final-dialog>.close{z-index:10001}`) are present (line 24).
 - The Windows-specific JS tokens (`v16ToolbarMore`, `keepActivePageVisible`, `keepActiveToolVisible`, `#eiTimelineLaunch`, `#v13OperationsBtn`) are present (line 26).
 - `canvas-plus.js` reads `window.__EINVITE_PAGE||document.body?.dataset.page||` (line 28) — the editor chrome init contract.

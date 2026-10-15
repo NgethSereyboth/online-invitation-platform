@@ -3,3 +3,11 @@
 body.studio-experience.einvite-layout-mobile #canvasFrame{margin-left:auto!important;margin-right:auto!important}body.studio-experience.einvite-layout-compact #canvasViewport,body.studio-experience.einvite-layout-mobile #canvasViewport{padding-left:12px!important;padding-right:12px!important;max-width:100%!important}
 
 }
+
+/* Tool rail labels: never break a word mid-letter inside the 43px label box. */
+body.studio-experience .studio-rail-button > span:last-child{font-size:9px!important;line-height:1.1!important;letter-spacing:0!important;overflow-wrap:normal!important;word-break:normal!important;hyphens:none!important}
+
+/* Top bar: let its groups shrink so the language switch stays inside the viewport. */
+body.studio-experience .studio-topbar > *{min-width:0!important}
+body.studio-experience .studio-topbar-left{overflow:hidden}
+body.studio-experience .studio-topbar-right{min-width:max-content!important}

@@ -186,12 +186,18 @@ def compute_system_status(metrics_payload: Dict[str, Any], health_detail: Option
         if disk_check.get("ok") is False and disk_check.get("usedPercent", 0) >= 90:
             level = "red"
             messages.append(f"Disk is {int(disk_check.get('usedPercent', 0))}% full")
-        # Backup >48h old = red
+        # Backup >48h old (or never taken) = warning.
         backup_check = checks.get("backup", {})
-        if backup_check.get("ok") is False and backup_check.get("ageHours", 0) >= 48:
-            if level != "red":
-                level = "yellow"
-            messages.append(f"Last backup is {int(backup_check.get('ageHours', 0))}h old")
+        if backup_check.get("ok") is False:
+            age = backup_check.get("ageHours")
+            if age is None:
+                if level != "red":
+                    level = "yellow"
+                messages.append("No backup has been taken yet")
+            elif age >= 48:
+                if level != "red":
+                    level = "yellow"
+                messages.append(f"Last backup is {int(age)}h old")
         # Single warning (yellow) — e.g. backup >25h
         if level != "red":
             for warn_key in ("malware_scanner", "smtp", "redis", "object_storage"):

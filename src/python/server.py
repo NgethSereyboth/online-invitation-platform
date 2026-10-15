@@ -18,7 +18,13 @@ from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is
 from features.secrets import ensure_secret as v54_ensure_secret
 from features import settings
 from features.settings import get_setting_int, list_settings, set_setting
-from features.feature_flags import list_flags, set_flag, ensure_schema as ensure_feature_flags_schema, DEFAULT_FLAGS, is_enabled as feature_flag_enabled
+from features.feature_flags import list_flags, set_flag, ensure_schema as ensure_feature_flags_schema, DEFAULT_FLAGS, is_enabled as feature_flag_enabled, public_flags_for_tier
+# ROADMAP-v0.54-to-v1.0 Part 5 (§5.1, §5.6, §5.9) — admin dashboard stat
+# cards + p95 buffer, the cached health-detail payload and the abuse-report
+# queue. The feature modules ship the computation and schema; server.py owns
+# the routing (see docs/reviews/A2-2026-10-13.md for the route contract).
+from features.admin_metrics import (compute_metrics as admin_compute_metrics, compute_system_status as admin_compute_system_status, get_health_detail_cache as admin_health_cache_get, set_health_detail_cache as admin_health_cache_set, record_db_latency_ms as admin_record_db_latency)
+from features import reports as reports_feature
 from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from typography_contract import normalize_font_id, finite_number
@@ -1408,6 +1414,10 @@ _P2A_SCHEMA_STATEMENTS = [
     "CREATE TABLE IF NOT EXISTS poll_votes(id TEXT PRIMARY KEY, poll_id TEXT NOT NULL, option_id TEXT NOT NULL, guest_id TEXT, email TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL)",
     "CREATE INDEX IF NOT EXISTS idx_poll_votes_poll_option ON poll_votes(poll_id,option_id,created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_poll_votes_guest ON poll_votes(poll_id,guest_id,email)",
+    "CREATE TABLE IF NOT EXISTS gift_registry_items(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', description TEXT NOT NULL DEFAULT '', url TEXT NOT NULL DEFAULT '', price TEXT NOT NULL DEFAULT '', quantity INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, archived_at INTEGER)",
+    "CREATE INDEX IF NOT EXISTS idx_gift_registry_items_invitation ON gift_registry_items(invitation_id,archived_at)",
+    "CREATE TABLE IF NOT EXISTS gift_registry_claims(id TEXT PRIMARY KEY, item_id TEXT NOT NULL, guest_id TEXT, email TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', quantity INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, cancelled_at INTEGER)",
+    "CREATE INDEX IF NOT EXISTS idx_gift_registry_claims_item ON gift_registry_claims(item_id,cancelled_at)",
     # Shared photo album (feature #3).
     "CREATE TABLE IF NOT EXISTS album_photos(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, object_key TEXT NOT NULL, uploader_guest_id TEXT, uploader_email TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'pending', taken_at INTEGER, uploaded_at INTEGER NOT NULL, moderated_at INTEGER, moderated_by TEXT)",
     "CREATE INDEX IF NOT EXISTS idx_album_photos_invitation_status ON album_photos(invitation_id,status,uploaded_at DESC)",
@@ -1515,6 +1525,8 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_material_import_jobs_invitation ON material_import_jobs(invitation_id,created_at DESC);
                     CREATE TABLE IF NOT EXISTS guests(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, name TEXT NOT NULL, phone TEXT, email TEXT NOT NULL DEFAULT '', group_name TEXT NOT NULL DEFAULT '', household_id TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]', table_name TEXT NOT NULL DEFAULT '', seat_label TEXT NOT NULL DEFAULT '', token TEXT UNIQUE NOT NULL, token_hash TEXT, token_salt TEXT NOT NULL DEFAULT '', token_version INTEGER NOT NULL DEFAULT 1, token_expires_at INTEGER, token_revoked_at INTEGER, created_at INTEGER NOT NULL, checked_in INTEGER NOT NULL DEFAULT 0, checked_in_at INTEGER, delivery_status TEXT NOT NULL DEFAULT 'not-sent', opened_at INTEGER, slug TEXT NOT NULL DEFAULT '');
                     CREATE TABLE IF NOT EXISTS user_templates(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL, document_json TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, description TEXT NOT NULL DEFAULT '', tags_json TEXT NOT NULL DEFAULT '[]', favorite INTEGER NOT NULL DEFAULT 0, current_version INTEGER NOT NULL DEFAULT 1, thumbnail_json TEXT NOT NULL DEFAULT '{}', visibility TEXT NOT NULL DEFAULT 'private', published_at INTEGER, marketplace_status TEXT NOT NULL DEFAULT 'draft', license_type TEXT NOT NULL DEFAULT 'personal');
+                    CREATE TABLE IF NOT EXISTS marketplace_plugins(id TEXT PRIMARY KEY, name TEXT NOT NULL, version TEXT NOT NULL, author TEXT NOT NULL, author_key_id TEXT NOT NULL, author_public_key TEXT NOT NULL, manifest_json TEXT NOT NULL, bundle_srcdoc TEXT NOT NULL, bundle_size INTEGER NOT NULL DEFAULT 0, author_signature TEXT NOT NULL, marketplace_signature TEXT NOT NULL, submitted_at INTEGER NOT NULL, approved_at INTEGER, status TEXT NOT NULL DEFAULT 'pending');
+                    CREATE TABLE IF NOT EXISTS plugin_installations_v48(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, plugin_id TEXT NOT NULL, version TEXT NOT NULL, manifest_json TEXT NOT NULL, approved_permissions_json TEXT NOT NULL DEFAULT '[]', installed_at INTEGER NOT NULL, uninstalled_at INTEGER);
                     CREATE TABLE IF NOT EXISTS template_versions(id TEXT PRIMARY KEY, template_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, created_at INTEGER NOT NULL);
                     CREATE UNIQUE INDEX IF NOT EXISTS idx_template_versions_unique ON template_versions(template_id,version);
                     CREATE TABLE IF NOT EXISTS user_page_templates(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL DEFAULT 'General', page_json TEXT NOT NULL, favorite INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
@@ -1601,6 +1613,15 @@ def connect_sqlite():
                     if "storage_used_bytes" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN storage_used_bytes INTEGER NOT NULL DEFAULT 0")
                     if "stripe_customer_id" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT")
                     if "stripe_subscription_id" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT")
+                    # Canva onboarding (P5): epoch-ms timestamp set when the user connects Canva.
+                    if "canva_connected_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN canva_connected_at INTEGER")
+                    # Admin user management: suspension timestamp and forced-MFA flag.
+                    if "suspended_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN suspended_at INTEGER")
+                    if "force_mfa" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN force_mfa INTEGER NOT NULL DEFAULT 0")
+                    # Onboarding progress (P5): current step, skip flag, and completion time.
+                    if "onboarding_step" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN onboarding_step TEXT")
+                    if "onboarding_skipped" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN onboarding_skipped INTEGER NOT NULL DEFAULT 0")
+                    if "onboarding_completed_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN onboarding_completed_at INTEGER")
                     # V54.11 (sec-2) — Per-account login lockout (P1-B from ASVS
                     # L2 gap analysis §2.2). ``failed_login_attempts`` counts
                     # consecutive password failures in the current 15-minute
@@ -1655,6 +1676,12 @@ def connect_sqlite():
                     # "Edited after sending" badge and to gate the
                     # resend-notification endpoint.
                     if "edited_after_send_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN edited_after_send_at INTEGER")
+                    # ROADMAP Part 5 §5.3 — admin moderation state. A flagged
+                    # invitation is surfaced with status='flagged' in
+                    # /api/admin/invitations-v2 (see docs/reviews/A2-2026-10-13.md).
+                    if "flagged_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_at INTEGER")
+                    if "flag_reason" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flag_reason TEXT NOT NULL DEFAULT ''")
+                    if "flagged_by" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_by TEXT NOT NULL DEFAULT ''")
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_custom_domain ON invitations(custom_domain) WHERE custom_domain IS NOT NULL AND custom_domain<>''")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
@@ -1836,10 +1863,16 @@ def connect_postgres():
 
 @contextmanager
 def connect():
-    if DATABASE_KIND=="postgresql":
-        with connect_postgres() as db:yield db
-    else:
-        with connect_sqlite() as db:yield db
+    _connect_started=time.time()
+    try:
+        if DATABASE_KIND=="postgresql":
+            with connect_postgres() as db:yield db
+        else:
+            with connect_sqlite() as db:yield db
+    finally:
+        # ROADMAP Part 5 §5.1 — feed the dashboard's p95 card (rolling buffer
+        # in features/admin_metrics.py) without another instrumentation point.
+        admin_record_db_latency((time.time()-_connect_started)*1000.0)
 
 def ensure_analytics_ready(db):
     """Create the creator-analytics tables on first use.
@@ -2834,6 +2867,36 @@ def guest_token_value(guest_id, token_salt, token_version=1):
 def guest_token_hash(token):
     return hashlib.sha256(str(token or "").encode()).hexdigest()
 
+# ROADMAP Part 5 §5.8 — impersonation hand-back cookie. The cookie carries the
+# original admin id + expiry and is HMAC-signed with a dedicated server secret;
+# stop-impersonation verifies the signature before issuing a fresh admin
+# session, so a forged cookie can never pin another account.
+IMPERSONATION_COOKIE_NAME = "einvite_admin_origin"
+IMPERSONATION_TTL_MS = 30 * 60 * 1000
+IMPERSONATION_SECRET = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".impersonation-secret")
+
+def impersonation_sign(admin_id, expires_ms):
+    payload = f"{admin_id}|{int(expires_ms)}"
+    body = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
+    sig = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+    return f"{body}.{sig}"
+
+def impersonation_verify(value):
+    body, _, sig = str(value or "").partition(".")
+    if not body or not sig:
+        return None
+    expected = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    try:
+        admin_id, expires = base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)).decode().split("|", 1)
+        expires = int(expires)
+    except Exception:
+        return None
+    if expires <= int(time.time() * 1000):
+        return None
+    return {"uid": admin_id, "exp": expires}
+
 def redact_request_path(value):
     """Redact credentials and personalized guest tokens from request logs."""
     raw = str(value or "")
@@ -2869,6 +2932,74 @@ def fail_background_job(job_id,error,retry=True):
         row=db.execute("SELECT attempts FROM background_jobs WHERE id=?",(job_id,)).fetchone();attempts=int(row["attempts"] or 0) if row else 0
         state='queued' if retry and attempts<5 else 'failed';delay=min(60_000*(2**max(0,attempts-1)),3_600_000)
         db.execute("UPDATE background_jobs SET state=?,available_at=?,locked_at=NULL,last_error=?,updated_at=? WHERE id=?",(state,now+delay,str(error)[:2000],now,job_id))
+
+def process_admin_bulk_job(kind,payload):
+    """Execute one queued ``admin.bulk_*`` job (ROADMAP Part 5 §5.7).
+
+    Called by the media_worker job loop; raises on failure so the worker's
+    standard error path records ``last_error`` and retries. The jobs are
+    asynchronous by design — the API answers 202 + a job id and the work runs
+    out of the request thread.
+    """
+    payload=payload or {}
+    if kind=="admin.bulk_email":
+        subject=str(payload.get("subject") or "")[:200];body=str(payload.get("body") or "")[:10000]
+        total=max(0,min(int(payload.get("total") or 0),10000)) or 10000
+        with connect() as db:rows=db.execute("SELECT email FROM users WHERE deleted_at IS NULL AND suspended_at IS NULL ORDER BY created_at LIMIT ?",(total,)).fetchall()
+        sent=0
+        for r in rows:
+            if send_platform_email(r["email"],subject,body):sent+=1
+        return {"sent":sent,"recipients":len(rows)}
+    if kind=="admin.bulk_suspend":
+        reason=str(payload.get("reason") or "")[:500];user_ids=[str(u) for u in (payload.get("userIds") or [])][:1000];now=int(time.time()*1000);suspended=0
+        with connect() as db:
+            for uid in user_ids:
+                changed=db.execute("UPDATE users SET suspended_at=? WHERE id=? AND suspended_at IS NULL",(now,uid)).rowcount
+                if changed:
+                    db.execute("DELETE FROM sessions WHERE user_id=?",(uid,));suspended+=changed
+        write_audit_event(payload.get("adminId") or None,"admin.bulk_suspended","user","",{"reason":reason,"count":suspended})
+        return {"suspended":suspended}
+    if kind=="admin.bulk_export":
+        what=str(payload.get("what") or "users");fmt=str(payload.get("format") or "csv").lower()
+        sources={
+            "users":"SELECT id,email,role,plan,created_at FROM users ORDER BY created_at",
+            "invitations":"SELECT id,slug,owner_id,archived,is_published,updated_at FROM invitations ORDER BY updated_at",
+            "audit_events":"SELECT id,user_id,action,target_type,target_id,ip_address,created_at FROM audit_events ORDER BY created_at",
+            "reports":"SELECT id,reporter_id,target_type,target_id,reason,status,created_at FROM reports ORDER BY created_at",
+        }
+        if what not in sources:raise ValueError(f"Unsupported export target: {what}")
+        if fmt not in {"csv","json"}:raise ValueError(f"Unsupported export format: {fmt}")
+        with connect() as db:
+            if what=="reports":reports_feature.ensure_schema(db)
+            rows=[dict(r) for r in db.execute(sources[what]).fetchall()]
+        export_dir=DATA/"exports";export_dir.mkdir(parents=True,exist_ok=True)
+        target=export_dir/f"admin-{what}-{int(time.time()*1000)}.{fmt}"
+        if fmt=="json":
+            target.write_text(json.dumps(rows,ensure_ascii=False,default=str),encoding="utf-8")
+        else:
+            columns=list(rows[0].keys()) if rows else ["id"]
+            lines=[",".join(columns)]
+            for r in rows:
+                lines.append(",".join('"'+str(r.get(c,"" )).replace('"','""')+'"' for c in columns))
+            target.write_text("\n".join(lines)+"\n",encoding="utf-8")
+        return {"file":str(target),"rows":len(rows),"format":fmt}
+    if kind=="admin.bulk_prune":
+        what=str(payload.get("what") or "");days=max(1,min(int(payload.get("days") or 730),3650));cutoff=int(time.time()*1000)-days*24*60*60*1000
+        if what=="audit_events":
+            # The audit log is an append-only hash chain protected by DB
+            # triggers; retention pruning cannot delete from it. Report the
+            # skip instead of pretending rows were removed.
+            return {"deleted":0,"skipped":"audit_events are append-only (immutable hash chain) and cannot be pruned"}
+        with connect() as db:
+            if what=="sessions":deleted=db.execute("DELETE FROM sessions WHERE expires_at<=?",(int(time.time()*1000),)).rowcount
+            elif what=="auth_tokens":deleted=db.execute("DELETE FROM auth_tokens WHERE expires_at<=?",(int(time.time()*1000),)).rowcount
+            elif what=="background_jobs":deleted=db.execute("DELETE FROM background_jobs WHERE state IN ('done','failed') AND updated_at<=?",(cutoff,)).rowcount
+            elif what=="reports":
+                reports_feature.ensure_schema(db)
+                deleted=db.execute("DELETE FROM reports WHERE resolved_at IS NOT NULL AND resolved_at<=?",(cutoff,)).rowcount
+            else:raise ValueError(f"Unsupported prune target: {what}")
+        return {"deleted":deleted}
+    raise ValueError(f"Unsupported admin bulk job kind: {kind}")
 
 def schedule_media_derivatives(path,mime,sha256):
     if not str(mime).startswith('image/'):return None
@@ -3423,7 +3554,7 @@ class Handler(SimpleHTTPRequestHandler):
             non_admin_idle=non_admin_days*24*60*60*1000
             for token in tokens:
                 token_hash=hashlib.sha256(token.encode()).hexdigest()
-                row=db.execute("SELECT u.id,u.email,u.role,u.email_verified,u.plan,u.upload_enabled,u.mfa_enabled,u.deleted_at,u.session_never_expires,s.created_at session_created_at,s.last_seen_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.deleted_at IS NULL",(token_hash,now)).fetchone()
+                row=db.execute("SELECT u.id,u.email,u.role,u.email_verified,u.plan,u.upload_enabled,u.mfa_enabled,u.deleted_at,u.session_never_expires,s.created_at session_created_at,s.last_seen_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.deleted_at IS NULL AND u.suspended_at IS NULL",(token_hash,now)).fetchone()
                 if row:
                     if not row["session_never_expires"]:
                         idle_limit=ADMIN_SESSION_IDLE_MS if row["role"]=="admin" else non_admin_idle
@@ -3447,7 +3578,12 @@ class Handler(SimpleHTTPRequestHandler):
     def require_role(self,*roles):
         user=self.require_user()
         if not user:return None
-        if user["role"] not in roles:self.json(403,{"error":"Insufficient permissions"});return None
+        role=user["role"]
+        # Role hierarchy: a super_admin satisfies any admin-level requirement
+        # (ROADMAP Part 5 — the spec promotes the operator to super_admin and
+        # still expects every admin console route to work).
+        if role not in roles and not (role=="super_admin" and "admin" in roles):
+            self.json(403,{"error":"Insufficient permissions"});return None
         return user
     def owns(self, db, invite_id, user_id):
         return db.execute("SELECT 1 FROM invitations WHERE id=? AND owner_id=? AND deleted_at IS NULL",(invite_id,user_id)).fetchone() is not None
@@ -3483,6 +3619,11 @@ class Handler(SimpleHTTPRequestHandler):
                 current=self.user();uid=current["id"] if current else None
             if (getattr(self,"path","") or "").split("?",1)[0].startswith("/api/admin/"):
                 metadata={**(metadata or {}),"admin":True}
+            # ROADMAP Part 5 §5.8 — every action taken inside an impersonation
+            # session is stamped with the admin who is on the hook for it.
+            origin=self.impersonation_origin()
+            if origin:
+                metadata={**(metadata or {}),"impersonatedBy":origin["uid"]}
             write_audit_event(uid,action,target_type,target_id,metadata,self.client_ip())
         except Exception as exc:
             if JSON_LOGS:print(json.dumps({"level":"warning","event":"audit_write_failed","message":str(exc)}),flush=True)
@@ -3816,11 +3957,32 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/admin/overview": return self.admin_overview()
         if path == "/api/admin/ai/providers": return self.admin_ai_providers()
         if path == "/api/admin/users": return self.admin_users()
+        if path == "/api/admin/users-v2": return self.admin_users_v2()
         if path == "/api/admin/settings": return self.admin_settings()
         if path == "/api/admin/templates": return self.admin_templates()
         if path == "/api/admin/invitations": return self.admin_invitations()
         if path == "/api/admin/feature-flags": return self.admin_feature_flags()
+        # ROADMAP Part 5 §5.1–§5.7 (A2 contract): the versioned admin family the
+        # admin dashboard calls. Previously 404 for every caller — see
+        # docs/reviews/A2-2026-10-13.md.
+        if path == "/api/admin/metrics-v2": return self.admin_metrics_v2()
+        if path == "/api/admin/system-status": return self.admin_system_status()
+        if path == "/api/admin/invitations-v2": return self.admin_invitations_v2()
+        if path == "/api/admin/audit-events": return self.admin_audit_events()
+        if path == "/api/admin/health-detail": return self.admin_health_detail()
+        if path == "/api/admin/reports": return self.admin_reports_list()
+        admin_job_status_match = re.fullmatch(r"/api/admin/jobs/([^/]+)/?", path)
+        if admin_job_status_match: return self.admin_job_status(unquote(admin_job_status_match.group(1)))
+        if path == "/api/feature-flags": return self.public_feature_flags()
         if path == "/api/invitations": return self.list_invitations()
+        cal_ics_match = re.fullmatch(r"/api/invitations/([^/]+)/calendar\.ics/?", path)
+        if cal_ics_match: return self.calendar_ics(unquote(cal_ics_match.group(1)))
+        cal_google_match = re.fullmatch(r"/api/invitations/([^/]+)/calendar/google/?", path)
+        if cal_google_match: return self.calendar_google(unquote(cal_google_match.group(1)))
+        gift_list_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/?", path)
+        if gift_list_match: return self.list_gift_registry(unquote(gift_list_match.group(1)))
+        plugin_launch_match = re.fullmatch(r"/api/plugins/([^/]+)/launch/?", path)
+        if plugin_launch_match: return self.plugins_launch(unquote(plugin_launch_match.group(1)))
         if path == "/api/trash": return self.list_trash()
         if path == "/api/template-marketplace": return self.list_marketplace_templates()
         if path.startswith("/api/template-marketplace/") and path.count("/") == 3: return self.get_marketplace_template(path.split("/")[3])
@@ -3930,6 +4092,8 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/admin/templates/") and path.endswith("/visibility"): return self.admin_update_template_visibility(path.split("/")[4])
             if path.startswith("/api/admin/invitations/") and path.endswith("/published"): return self.admin_update_invitation_published(path.split("/")[4])
             if path == "/api/admin/feature-flags": return self.admin_update_feature_flags()
+            admin_report_resolve_match = re.fullmatch(r"/api/admin/reports/([^/]+)/?", path)
+            if admin_report_resolve_match: return self.admin_resolve_report(unquote(admin_report_resolve_match.group(1)))
             if "/guests/" in path and path.endswith("/check-in"): return self.check_in_guest(path.split("/")[3],path.split("/")[5])
             if "/rsvps/" in path: return self.update_rsvp(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/templates/") and path.count("/") == 3: return self.update_template(path.split("/")[3])
@@ -3947,6 +4111,8 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/invitations/") and path.endswith("/access"): return self.update_access(path.split("/")[3])
             if path.startswith("/api/invitations/") and path.endswith("/gallery-access"): return self.update_gallery_access(path.split("/")[3])
             # Phase 2a (V54.1) — guest-feature PUT endpoints (host edits).
+            gift_item_put_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/([^/]+)/?", path)
+            if gift_item_put_match: return self.update_gift_registry_item(unquote(gift_item_put_match.group(1)), unquote(gift_item_put_match.group(2)))
             if path.startswith("/api/invitations/") and "/signup-sheets/" in path and path.count("/")==5: return self.update_signup_sheet(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/invitations/") and "/polls/" in path and path.count("/")==5: return self.update_poll(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/invitations/"): return self.save_draft(path.split("/")[3])
@@ -3982,6 +4148,10 @@ class Handler(SimpleHTTPRequestHandler):
             if path.startswith("/api/studio/releases/") and path.count("/") == 4: return self.delete_studio_release(path.split("/")[4])
             if path.startswith("/api/templates/"): return self.delete_template(path.split("/")[3])
             # Phase 2a (V54.1) — guest-feature DELETE endpoints.
+            gift_claim_cancel_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/([^/]+)/claims/([^/]+)/?", path)
+            if gift_claim_cancel_match: return self.cancel_gift_registry_claim(unquote(gift_claim_cancel_match.group(1)), unquote(gift_claim_cancel_match.group(2)), unquote(gift_claim_cancel_match.group(3)))
+            gift_item_delete_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/([^/]+)/?", path)
+            if gift_item_delete_match: return self.delete_gift_registry_item(unquote(gift_item_delete_match.group(1)), unquote(gift_item_delete_match.group(2)))
             if path.startswith("/api/invitations/") and "/signup-sheets/" in path and "/claims/" in path and path.count("/")==7: return self.cancel_signup_claim(path.split("/")[3],path.split("/")[5],path.split("/")[7])
             if path.startswith("/api/invitations/") and "/signup-sheets/" in path and path.count("/")==5: return self.delete_signup_sheet(path.split("/")[3],path.split("/")[5])
             if path.startswith("/api/invitations/") and "/polls/" in path and path.count("/")==5: return self.delete_poll(path.split("/")[3],path.split("/")[5])
@@ -4123,6 +4293,42 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/billing/checkout": return self.billing_checkout()
             if path == "/api/account/tier/upgrade": return self.account_tier_upgrade()
             if path == "/api/invitations": return self.create_invitation()
+            admin_user_action_match = re.fullmatch(r"/api/admin/users/([^/]+)/(suspend|unsuspend|reset-password|force-mfa)/?", path)
+            if admin_user_action_match:
+                action = admin_user_action_match.group(2)
+                target_id = unquote(admin_user_action_match.group(1))
+                if action == "suspend": return self.admin_set_user_suspended(target_id, True)
+                if action == "unsuspend": return self.admin_set_user_suspended(target_id, False)
+                if action == "reset-password": return self.admin_send_password_reset(target_id)
+                return self.admin_force_mfa(target_id)
+            # ROADMAP Part 5 §5.3/§5.7/§5.8/§5.9 (A2 contract) — invitation
+            # moderation verbs, bulk operations, impersonation, step-up and the
+            # user-facing abuse report queue.
+            if path == "/api/admin/step-up": return self.admin_step_up()
+            if path == "/api/reports": return self.submit_report()
+            if path == "/api/admin/impersonate/stop": return self.admin_impersonate_stop()
+            admin_impersonate_match = re.fullmatch(r"/api/admin/impersonate/([^/]+)/?", path)
+            if admin_impersonate_match: return self.admin_impersonate_start(unquote(admin_impersonate_match.group(1)))
+            admin_invite_action_match = re.fullmatch(r"/api/admin/invitations/([^/]+)/(flag|unpublish|transfer)/?", path)
+            if admin_invite_action_match:
+                invite_id = unquote(admin_invite_action_match.group(1))
+                action = admin_invite_action_match.group(2)
+                if action == "flag": return self.admin_flag_invitation(invite_id)
+                if action == "unpublish": return self.admin_unpublish_invitation(invite_id)
+                return self.admin_transfer_invitation(invite_id)
+            admin_bulk_match = re.fullmatch(r"/api/admin/bulk-(email|suspend|export|prune)/?", path)
+            if admin_bulk_match: return self.admin_bulk_operation(admin_bulk_match.group(1))
+            if path == "/api/canva/import": return self.canva_import()
+            if path == "/api/canva/export": return self.canva_export()
+            if path == "/api/canva/oauth/callback": return self.canva_oauth_callback()
+            if path == "/api/onboarding/complete-step": return self.onboarding_complete_step()
+            if path == "/api/onboarding/skip": return self.onboarding_skip()
+            if path == "/api/plugins/install": return self.plugins_install()
+            if path == "/_marketplace/plugins/submit": return self.marketplace_submit()
+            gift_create_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/?", path)
+            if gift_create_match: return self.create_gift_registry_item(unquote(gift_create_match.group(1)))
+            gift_claim_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/([^/]+)/claim/?", path)
+            if gift_claim_match: return self.claim_gift_registry_item(unquote(gift_claim_match.group(1)), unquote(gift_claim_match.group(2)))
             if path == "/api/templates": return self.create_template()
             if path == "/api/page-templates": return self.create_page_template()
             if path == "/api/components": return self.create_component()
@@ -5245,6 +5451,106 @@ class Handler(SimpleHTTPRequestHandler):
             rows=db.execute("SELECT u.id,u.email,u.role,u.plan,u.upload_enabled,u.created_at,(SELECT COUNT(*) FROM invitations i WHERE i.owner_id=u.id) invitation_count,(SELECT COUNT(*) FROM user_templates t WHERE t.owner_id=u.id) template_count FROM users u ORDER BY u.created_at DESC LIMIT 1000").fetchall()
         self.json(200,[{"id":r["id"],"email":r["email"],"role":r["role"],"plan":r["plan"],"uploadEnabled":bool(r["upload_enabled"]),"createdAt":r["created_at"],"invitationCount":r["invitation_count"],"templateCount":r["template_count"]} for r in rows])
 
+    def _admin_gate(self, path, method):
+        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
+        client_ip = self.client_ip()
+        allowed, _ = check_admin_ip_allowed(client_ip)
+        if not allowed:
+            audit_admin_ip_denied(client_ip, path, method)
+            self.json(403, {"error": "Insufficient permissions"})
+            return None
+        return self.require_role("admin", "super_admin")
+
+    @staticmethod
+    def _mask_email(email):
+        local, _, domain = (email or "").partition("@")
+        if not domain:
+            return "***"
+        return f"{local[:1]}***@{domain}"
+
+    def admin_users_v2(self):
+        admin = self._admin_gate("/api/admin/users-v2", "GET")
+        if not admin: return
+        query = parse_qs(urlparse(self.path).query)
+        try:
+            limit = max(1, min(int((query.get("limit") or ["25"])[0]), 100))
+        except ValueError:
+            raise ValueError("Invalid limit")
+        unmask = (query.get("unmask") or ["0"])[0] == "1"
+        search = str((query.get("q") or [""])[0]).strip().lower()[:254]
+        cursor = (query.get("cursor") or [""])[0]
+        clauses, params = [], []
+        if search:
+            clauses.append("LOWER(u.email) LIKE ?")
+            params.append(f"%{search}%")
+        if cursor:
+            try:
+                cursor_created, cursor_id = cursor.split(":", 1)
+                cursor_created = int(cursor_created)
+            except ValueError:
+                raise ValueError("Invalid cursor")
+            clauses.append("(u.created_at < ? OR (u.created_at = ? AND u.id < ?))")
+            params.extend([cursor_created, cursor_created, cursor_id])
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        with connect() as db:
+            # where is built from fixed clause strings; user input is bound as parameters only.
+            rows = db.execute("SELECT u.id,u.email,u.role,u.plan,u.upload_enabled,u.created_at,u.suspended_at,u.force_mfa,(SELECT COUNT(*) FROM invitations i WHERE i.owner_id=u.id) invitation_count,(SELECT COUNT(*) FROM user_templates t WHERE t.owner_id=u.id) template_count FROM users u" + where + " ORDER BY u.created_at DESC, u.id DESC LIMIT ?", (*params, limit + 1)).fetchall()  # nosec B608
+        has_more = len(rows) > limit
+        rows = rows[:limit]
+        items = [{"id": r["id"], "email": r["email"] if unmask else self._mask_email(r["email"]), "role": r["role"], "plan": r["plan"], "uploadEnabled": bool(r["upload_enabled"]), "createdAt": r["created_at"], "suspended": r["suspended_at"] is not None, "forceMfa": bool(r["force_mfa"]), "invitationCount": r["invitation_count"], "templateCount": r["template_count"]} for r in rows]
+        if unmask:
+            self.audit("admin.users_unmasked", "user", "", {"count": len(items)}, user_id=admin["id"])
+        next_cursor = f"{rows[-1]['created_at']}:{rows[-1]['id']}" if has_more else None
+        self.json(200, {"items": items, "nextCursor": next_cursor, "hasMore": has_more})
+
+    def admin_set_user_suspended(self, user_id, suspended):
+        action = "suspend" if suspended else "unsuspend"
+        admin = self._admin_gate(f"/api/admin/users/{user_id}/{action}", "POST")
+        if not admin: return
+        if not self.rate_limit(f"admin-user-suspend:{admin['id']}", 30, 60): return
+        data = self.body(20_000)
+        reason = str(data.get("reason") or "").strip()[:500]
+        if user_id == admin["id"]:
+            return self.json(400, {"error": "You cannot suspend your own account"})
+        with connect() as db:
+            if suspended:
+                changed = db.execute("UPDATE users SET suspended_at=? WHERE id=?", (int(time.time() * 1000), user_id)).rowcount
+                if changed: db.execute("DELETE FROM sessions WHERE user_id=?", (user_id,))
+            else:
+                changed = db.execute("UPDATE users SET suspended_at=NULL WHERE id=?", (user_id,)).rowcount
+        if not changed:
+            return self.json(404, {"error": "User not found"})
+        self.audit(f"admin.user_{action}ed", "user", user_id, {"reason": reason}, user_id=admin["id"])
+        self.json(200, {"suspended": True} if suspended else {"unsuspended": True})
+
+    def admin_send_password_reset(self, user_id):
+        admin = self._admin_gate(f"/api/admin/users/{user_id}/reset-password", "POST")
+        if not admin: return
+        if not self.rate_limit(f"admin-user-reset:{admin['id']}", 20, 3600): return
+        with connect() as db:
+            row = db.execute("SELECT id,email FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row:
+            return self.json(404, {"error": "User not found"})
+        token = self._create_auth_token(row["id"], "password-reset", 30 * 60 * 1000)
+        url = auth_action_url("/reset.html", token)
+        sent = False
+        try:
+            sent = send_platform_email(row["email"], "Reset your E-invitation-website password", f"An administrator started a password reset for your E-invitation-website account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not expect this, contact support.")
+        except Exception as exc:
+            print(f"Admin password-reset email delivery failed: {exc}", flush=True)
+        self.audit("admin.user_password_reset_sent", "user", user_id, {"sent": bool(sent)}, user_id=admin["id"])
+        self.json(200, {"sent": bool(sent)})
+
+    def admin_force_mfa(self, user_id):
+        admin = self._admin_gate(f"/api/admin/users/{user_id}/force-mfa", "POST")
+        if not admin: return
+        with connect() as db:
+            changed = db.execute("UPDATE users SET force_mfa=1 WHERE id=?", (user_id,)).rowcount
+        if not changed:
+            return self.json(404, {"error": "User not found"})
+        self.audit("admin.user_mfa_forced", "user", user_id, {}, user_id=admin["id"])
+        self.json(200, {"forceMfa": True})
+
     def admin_templates(self):
         # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
         client_ip = self.client_ip()
@@ -5277,6 +5583,397 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception:title="Untitled invitation"
             result.append({"id":r["id"],"slug":r["slug"],"title":title,"ownerEmail":r["owner_email"],"published":bool(r["is_published"]),"archived":bool(r["archived"]),"views":r["views"],"accessMode":r["access_mode"],"updatedAt":r["updated_at"]})
         self.json(200,result)
+
+    # ── ROADMAP-v0.54-to-v1.0 Part 5 (§5.1–§5.9) — the versioned admin family.
+    # Route contract: docs/reviews/A2-2026-10-13.md. Reads go through
+    # ``_admin_gate`` (role admin/super_admin + IP allowlist); the destructive
+    # verbs go through ``require_admin_with_stepup`` (a password+TOTP step-up
+    # grant issued by POST /api/admin/step-up).
+
+    def _cookie_value(self, name):
+        raw_cookie=self.headers.get("Cookie","")
+        if not raw_cookie:return None
+        try:
+            cookie=SimpleCookie();cookie.load(raw_cookie)
+            morsel=cookie.get(name)
+            return morsel.value if morsel else None
+        except Exception as exc:
+            _log.debug("cleanup failed: %s", exc)
+            return None
+
+    def impersonation_origin(self):
+        """Verified {uid, exp} of the admin behind an impersonation session."""
+        return impersonation_verify(self._cookie_value(IMPERSONATION_COOKIE_NAME))
+
+    @staticmethod
+    def _session_cookie(token, csrf, max_age_seconds):
+        cookie=f"{SESSION_COOKIE_NAME}={token}; Path=/; Max-Age={int(max_age_seconds)}; HttpOnly; SameSite=Lax"
+        csrf_cookie=f"einvite_csrf={csrf}; Path=/; Max-Age={int(max_age_seconds)}; SameSite=Lax"
+        if COOKIE_SECURE:cookie+="; Secure";csrf_cookie+="; Secure"
+        return [cookie,csrf_cookie]
+
+    def _impersonation_cookie(self, value, clear=False):
+        cookie=f"{IMPERSONATION_COOKIE_NAME}={'' if clear else value}; Path=/; Max-Age={0 if clear else IMPERSONATION_TTL_MS//1000}; HttpOnly; SameSite=Lax"
+        if COOKIE_SECURE:cookie+="; Secure"
+        return cookie
+
+    def require_admin_with_stepup(self, path, method, *roles):
+        """Admin (optionally super-admin) plus a live step-up grant.
+
+        The grant is an ``auth_tokens`` row of kind ``admin-stepup`` issued
+        after password + TOTP verification; the lookup checks user_id + kind +
+        expires_at only (ROADMAP Part 4.2).
+        """
+        user=self._admin_gate(path,method)
+        if not user:return None
+        if roles and user["role"] not in roles:
+            self.json(403,{"error":"Insufficient permissions"});return None
+        now=int(time.time()*1000)
+        with connect() as db:
+            row=db.execute("SELECT 1 FROM auth_tokens WHERE user_id=? AND kind='admin-stepup' AND expires_at>?",(user["id"],now)).fetchone()
+        if not row:
+            self.json(403,{"error":"Step-up authentication required for this action","code":"step_up_required"});return None
+        return user
+
+    def admin_step_up(self):
+        user=self.require_user()
+        if not user:return
+        if user["role"] not in ("admin","super_admin"):
+            return self.json(403,{"error":"Insufficient permissions"})
+        if not self.rate_limit(f"admin-step-up:{user['id']}",10,300):return
+        data=self.body(20_000);password=str(data.get("password") or "");code=str(data.get("code") or "").strip()
+        with connect() as db:
+            row=db.execute("SELECT password_hash,salt,password_algo,mfa_enabled,mfa_secret FROM users WHERE id=?",(user["id"],)).fetchone()
+        valid=False
+        if row and password:
+            valid,_=account_verify_password(password,row["password_hash"],row["salt"],row["password_algo"] if "password_algo" in row.keys() else "")
+        if valid and row and row["mfa_enabled"]:
+            valid=bool(row["mfa_secret"] and code and verify_totp(row["mfa_secret"],code))
+        if not valid:
+            self.audit("admin.stepup_denied","user",user["id"],{},user_id=user["id"])
+            return self.json(401,{"error":"Step-up verification failed"})
+        self._create_auth_token(user["id"],"admin-stepup",30*60*1000)
+        self.audit("admin.stepup_granted","user",user["id"],{},user_id=user["id"])
+        self.json(200,{"stepUp":True,"expiresAt":int(time.time()*1000)+30*60*1000})
+
+    def admin_metrics_v2(self):
+        admin=self._admin_gate("/api/admin/metrics-v2","GET")
+        if not admin:return
+        with connect() as db:
+            payload=admin_compute_metrics(db,STARTED_AT)
+        self.json(200,payload)
+
+    def admin_system_status(self):
+        admin=self._admin_gate("/api/admin/system-status","GET")
+        if not admin:return
+        with connect() as db:
+            metrics=admin_compute_metrics(db,STARTED_AT)
+        self.json(200,admin_compute_system_status(metrics,self._health_detail_payload()))
+
+    def _health_detail_payload(self):
+        cached=admin_health_cache_get()
+        if cached is not None:return cached
+        checks={}
+        try:
+            with connect() as db:db.execute("SELECT 1")
+            checks["database"]={"ok":True,"engine":DATABASE_KIND}
+        except Exception as exc:
+            checks["database"]={"ok":False,"error":str(exc)[:200]}
+        checks["object_storage"]={"ok":True,"mode":"object" if object_storage_enabled() else "local"}
+        scanner=malware_scanner_status(probe=False)
+        checks["malware_scanner"]={"ok":bool(scanner.get("ready")),"mode":scanner.get("mode"),"required":bool(scanner.get("required"))}
+        smtp_configured=bool(platform_env("EINVITE_SMTP_HOST","").strip())
+        checks["smtp"]={"ok":smtp_configured,"configured":smtp_configured}
+        checks["redis"]={"ok":True,"mode":"redis" if redis_client() else "memory"}
+        newest=0
+        try:newest=max((p.stat().st_mtime for p in BACKUPS.iterdir() if p.is_file()),default=0)
+        except OSError:newest=0
+        age_hours=round((time.time()-newest)/3600.0,1) if newest else None
+        checks["backup"]={"ok":bool(newest) and age_hours is not None and age_hours<=48,"ageHours":age_hours}
+        try:
+            with connect() as db:
+                queued=db.execute("SELECT COUNT(*) c FROM background_jobs WHERE state='queued'").fetchone()["c"]
+                running=db.execute("SELECT COUNT(*) c FROM background_jobs WHERE state='running'").fetchone()["c"]
+                failed=db.execute("SELECT COUNT(*) c FROM background_jobs WHERE state='failed'").fetchone()["c"]
+            checks["background_jobs"]={"ok":True,"queued":queued,"running":running,"failed":failed}
+        except Exception as exc:
+            checks["background_jobs"]={"ok":False,"error":str(exc)[:200]}
+        try:
+            usage=shutil.disk_usage(str(DATA))
+            used_percent=round(100.0*usage.used/max(1,usage.total),1)
+            checks["disk"]={"ok":used_percent<90,"usedPercent":used_percent,"freeBytes":usage.free}
+        except Exception as exc:
+            checks["disk"]={"ok":False,"error":str(exc)[:200]}
+        checks["runtime"]={"ok":True,"python":sys.version.split()[0],"uptimeSeconds":int(time.time()-STARTED_AT)}
+        payload={
+            "checks":checks,
+            "howToFixHints":{
+                "database":"Check EINVITE_DATABASE_URL (or the data directory permissions) and restart the server.",
+                "object_storage":"Configure EINVITE_OBJECT_STORAGE_* for durable storage; local disk storage is used otherwise.",
+                "malware_scanner":"Install ClamAV or Microsoft Defender, or set EINVITE_MALWARE_SCANNER_COMMAND.",
+                "redis":"Set EINVITE_REDIS_URL for shared rate limiting; without it the server uses in-memory limits.",
+                "smtp":"Set EINVITE_SMTP_HOST and EINVITE_MAIL_FROM so transactional email can be delivered.",
+                "backup":"Run a backup into data/backups at least every 48 hours and verify the archive.",
+                "background_jobs":"Inspect /api/admin/jobs/<id>; retry or clear stuck rows.",
+                "disk":"Free disk space or extend the host volume.",
+                "runtime":"Check the server logs and restart the process if the runtime check reports errors.",
+            },
+            "computedAt":int(time.time()*1000),
+        }
+        admin_health_cache_set(payload)
+        return payload
+
+    def admin_health_detail(self):
+        admin=self._admin_gate("/api/admin/health-detail","GET")
+        if not admin:return
+        self.json(200,self._health_detail_payload())
+
+    @staticmethod
+    def _invitation_moderation_status(row):
+        if row["flagged_at"]:return "flagged"
+        if row["archived"]:return "archived"
+        if row["is_published"]:return "published"
+        return "draft"
+
+    def admin_invitations_v2(self):
+        admin=self._admin_gate("/api/admin/invitations-v2","GET")
+        if not admin:return
+        query=parse_qs(urlparse(self.path).query)
+        status=str((query.get("status") or [""])[0]).strip().lower()
+        status_clauses={
+            "flagged":"i.flagged_at IS NOT NULL",
+            "archived":"i.flagged_at IS NULL AND i.archived=1",
+            "published":"i.flagged_at IS NULL AND i.archived=0 AND i.is_published=1",
+            "draft":"i.flagged_at IS NULL AND i.archived=0 AND i.is_published=0",
+        }
+        if status and status not in status_clauses:raise ValueError("Invalid status")
+        try:limit=max(1,min(int((query.get("limit") or ["100"])[0]),200))
+        except ValueError:raise ValueError("Invalid limit")
+        where="i.deleted_at IS NULL"+(f" AND {status_clauses[status]}" if status else "")
+        with connect() as db:
+            rows=db.execute("SELECT i.id,i.slug,i.is_published,i.archived,i.views,i.updated_at,i.owner_id,i.flagged_at,i.flag_reason,i.draft_json,u.email owner_email FROM invitations i LEFT JOIN users u ON u.id=i.owner_id WHERE "+where+" ORDER BY i.updated_at DESC LIMIT ?",(limit,)).fetchall()  # nosec B608 — where is composed of fixed clause fragments only
+        items=[]
+        for r in rows:
+            try:document=json.loads(r["draft_json"] or "{}");title=document.get("fields",{}).get("names") or "Untitled invitation"
+            except Exception:title="Untitled invitation"
+            items.append({"id":r["id"],"slug":r["slug"],"title":title,"status":self._invitation_moderation_status(r),"ownerId":r["owner_id"],"ownerEmail":r["owner_email"],"published":bool(r["is_published"]),"archived":bool(r["archived"]),"flagged":bool(r["flagged_at"]),"flagReason":r["flag_reason"] or "","views":r["views"],"updatedAt":r["updated_at"]})
+        self.json(200,items)
+
+    def admin_flag_invitation(self, invite_id):
+        admin=self.require_admin_with_stepup(f"/api/admin/invitations/{invite_id}/flag","POST")
+        if not admin:return
+        if not self.rate_limit(f"admin-invite-flag:{admin['id']}",60,60):return
+        data=self.body(20_000);reason=str(data.get("reason") or "").strip()[:500];now=int(time.time()*1000)
+        with connect() as db:
+            changed=db.execute("UPDATE invitations SET flagged_at=?,flag_reason=?,flagged_by=?,updated_at=? WHERE id=? AND deleted_at IS NULL",(now,reason,admin["id"],now,invite_id)).rowcount
+        if not changed:return self.json(404,{"error":"Invitation not found"})
+        self.audit("admin.invitation_flagged","invitation",invite_id,{"reason":reason},user_id=admin["id"])
+        self.json(200,{"flagged":True,"reason":reason})
+
+    def admin_unpublish_invitation(self, invite_id):
+        admin=self.require_admin_with_stepup(f"/api/admin/invitations/{invite_id}/unpublish","POST")
+        if not admin:return
+        if not self.rate_limit(f"admin-invite-unpublish:{admin['id']}",60,60):return
+        self.body(20_000);now=int(time.time()*1000)
+        with connect() as db:
+            changed=db.execute("UPDATE invitations SET is_published=0,updated_at=? WHERE id=? AND deleted_at IS NULL",(now,invite_id)).rowcount
+        if not changed:return self.json(404,{"error":"Invitation not found"})
+        self.audit("admin.invitation_unpublished","invitation",invite_id,{},user_id=admin["id"])
+        self.json(200,{"unpublished":True})
+
+    def admin_transfer_invitation(self, invite_id):
+        admin=self.require_admin_with_stepup(f"/api/admin/invitations/{invite_id}/transfer","POST")
+        if not admin:return
+        if not self.rate_limit(f"admin-invite-transfer:{admin['id']}",60,60):return
+        data=self.body(20_000);new_owner=str(data.get("newOwnerId") or "").strip()
+        if not new_owner:raise ValueError("newOwnerId is required")
+        with connect() as db:
+            owner=db.execute("SELECT id FROM users WHERE id=? AND deleted_at IS NULL",(new_owner,)).fetchone()
+            if not owner:return self.json(400,{"error":"New owner not found"})
+            changed=db.execute("UPDATE invitations SET owner_id=?,updated_at=? WHERE id=? AND deleted_at IS NULL",(new_owner,int(time.time()*1000),invite_id)).rowcount
+        if not changed:return self.json(404,{"error":"Invitation not found"})
+        self.audit("admin.invitation_transferred","invitation",invite_id,{"newOwnerId":new_owner},user_id=admin["id"])
+        self.json(200,{"transferred":True,"ownerId":new_owner})
+
+    def admin_audit_events(self):
+        admin=self._admin_gate("/api/admin/audit-events","GET")
+        if not admin:return
+        query=parse_qs(urlparse(self.path).query)
+        def qp(name,default=""):
+            return str((query.get(name) or [default])[0])
+        try:limit=max(1,min(int(qp("limit","50") or 50),200))
+        except ValueError:raise ValueError("Invalid limit")
+        clauses=[];params=[]
+        for param,column in (("user","user_id"),("action","action"),("targetType","target_type"),("targetId","target_id")):
+            value=qp(param).strip()
+            if value:clauses.append(f"{column}=?");params.append(value[:200])
+        ip_value=qp("ip").strip()
+        if ip_value:clauses.append("ip_address=?");params.append(ip_value[:80])
+        if qp("adminOnly")=="1":
+            clauses.append("metadata_json LIKE ?");params.append('%"admin":true%')
+        for param,op in (("from",">="),("to","<=")):
+            raw=qp(param).strip()
+            if not raw:continue
+            try:
+                ts=int(raw) if raw.isdigit() else int(time.mktime(time.strptime(raw,"%Y-%m-%d"))*1000)
+            except ValueError:raise ValueError("Invalid date filter")
+            clauses.append(f"created_at{op}?");params.append(ts)
+        where=(" WHERE "+" AND ".join(clauses)) if clauses else ""
+        with connect() as db:
+            rows=db.execute("SELECT id,user_id,action,target_type,target_id,metadata_json,ip_address,created_at FROM audit_events"+where+" ORDER BY created_at DESC,id DESC LIMIT ?",(*params,limit)).fetchall()  # nosec B608 — where is composed of fixed clause fragments only
+        items=[]
+        for r in rows:
+            try:meta=json.loads(r["metadata_json"] or "{}")
+            except Exception:meta={}
+            items.append({"id":r["id"],"userId":r["user_id"],"action":r["action"],"targetType":r["target_type"],"targetId":r["target_id"],"metadata":meta,"ipAddress":r["ip_address"],"createdAt":r["created_at"]})
+        if qp("format").lower()=="csv":
+            import csv as _csv
+            buffer=io.StringIO();writer=_csv.writer(buffer)
+            writer.writerow(["id","timestamp_iso","user_id","action","target_type","target_id","ip_address","metadata"])
+            for r in rows:
+                writer.writerow([r["id"],time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime(r["created_at"]/1000.0)),r["user_id"] or "",r["action"],r["target_type"],r["target_id"],r["ip_address"],r["metadata_json"]])
+            body=buffer.getvalue().encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type","text/csv; charset=utf-8")
+            self.send_header("Content-Disposition",'attachment; filename="audit-events.csv"')
+            self.send_header("Cache-Control","no-store")
+            self.send_header("Content-Length",str(len(body)))
+            self.end_headers();self.wfile.write(body)
+            return
+        self.json(200,{"items":items,"count":len(items)})
+
+    def admin_job_status(self, job_id):
+        admin=self._admin_gate(f"/api/admin/jobs/{job_id}","GET")
+        if not admin:return
+        with connect() as db:
+            row=db.execute("SELECT id,kind,payload_json,state,attempts,last_error,created_at,updated_at FROM background_jobs WHERE id=?",(job_id,)).fetchone()
+        if not row:return self.json(404,{"error":"Job not found"})
+        try:payload=json.loads(row["payload_json"] or "{}")
+        except Exception:payload={}
+        self.json(200,{"id":row["id"],"kind":row["kind"],"state":row["state"],"payload":payload,"attempts":row["attempts"],"lastError":row["last_error"],"createdAt":row["created_at"],"updatedAt":row["updated_at"]})
+
+    def admin_bulk_operation(self, action):
+        admin=self.require_admin_with_stepup(f"/api/admin/bulk-{action}","POST","super_admin")
+        if not admin:return
+        if not self.rate_limit(f"admin-bulk:{admin['id']}",20,3600):return
+        data=self.body(50_000);payload={"adminId":admin["id"]}
+        if action=="email":
+            payload.update({"subject":str(data.get("subject") or "")[:200],"body":str(data.get("body") or "")[:10000],"total":max(0,min(int(data.get("total") or 0),10000))})
+        elif action=="suspend":
+            ids=data.get("userIds")
+            if not isinstance(ids,list) or not ids:raise ValueError("userIds must be a non-empty list")
+            payload.update({"userIds":[str(u) for u in ids][:1000],"reason":str(data.get("reason") or "")[:500]})
+        elif action=="export":
+            what=str(data.get("what") or "users");fmt=str(data.get("format") or "csv").lower()
+            if what not in {"users","invitations","audit_events","reports"}:raise ValueError("Unsupported export target")
+            if fmt not in {"csv","json"}:raise ValueError("Unsupported export format")
+            payload.update({"what":what,"format":fmt})
+        elif action=="prune":
+            what=str(data.get("what") or "")
+            if what not in {"audit_events","sessions","auth_tokens","background_jobs","reports"}:raise ValueError("Unsupported prune target")
+            payload.update({"what":what,"days":max(1,min(int(data.get("days") or 730),3650))})
+        job_id=enqueue_background_job(f"admin.bulk_{action}",payload)
+        self.audit(f"admin.bulk_{action}","job",job_id,{k:v for k,v in payload.items() if k!="adminId"},user_id=admin["id"])
+        self.json(202,{"jobId":job_id,"state":"queued"})
+
+    def admin_impersonate_start(self, user_id):
+        admin=self.require_admin_with_stepup(f"/api/admin/impersonate/{user_id}","POST","super_admin")
+        if not admin:return
+        if not self.rate_limit(f"admin-impersonate:{admin['id']}",10,600):return
+        self.body(20_000)
+        if user_id==admin["id"]:
+            return self.json(400,{"error":"You cannot impersonate your own account"})
+        with connect() as db:
+            target=db.execute("SELECT id,email,role FROM users WHERE id=? AND deleted_at IS NULL AND suspended_at IS NULL",(user_id,)).fetchone()
+        if not target:return self.json(404,{"error":"User not found"})
+        if target["role"] in ("admin","super_admin"):
+            return self.json(403,{"error":"Administrator accounts cannot be impersonated"})
+        now=int(time.time()*1000);expires=now+IMPERSONATION_TTL_MS
+        token=secrets.token_urlsafe(32);csrf=new_csrf_token();session_id=str(uuid.uuid4())
+        user_agent=str(self.headers.get("User-Agent") or "")[:500]
+        with connect() as db:
+            db.execute("INSERT INTO sessions(token_hash,id,user_id,expires_at,created_at,user_agent,ip_address,last_seen_at,device_name,csrf_hash) VALUES(?,?,?,?,?,?,?,?,?,?)",(hashlib.sha256(token.encode()).hexdigest(),session_id,target["id"],expires,now,user_agent,self.client_ip(),now,"Impersonation",hashlib.sha256(csrf.encode()).hexdigest()))
+        cookies=self._session_cookie(token,csrf,IMPERSONATION_TTL_MS//1000)
+        cookies.append(self._impersonation_cookie(impersonation_sign(admin["id"],expires)))
+        self.audit("admin.impersonate_start","user",target["id"],{"targetEmail":target["email"]},user_id=admin["id"])
+        self._session_replaced=True
+        self.json(200,{"impersonating":True,"user":{"id":target["id"],"email":target["email"],"role":target["role"]},"expiresAt":expires},{"Set-Cookie":cookies})
+
+    def admin_impersonate_stop(self):
+        origin=self.impersonation_origin()
+        if not origin:
+            return self.json(400,{"stopped":False,"error":"No active impersonation session"})
+        now=int(time.time()*1000)
+        # The impersonated session is discarded; the admin gets a fresh one.
+        for t in self.auth_tokens():
+            with connect() as db:db.execute("DELETE FROM sessions WHERE token_hash=?",(hashlib.sha256(t.encode()).hexdigest(),))
+        with connect() as db:
+            admin_row=db.execute("SELECT id,email,role,session_never_expires FROM users WHERE id=? AND deleted_at IS NULL AND suspended_at IS NULL",(origin["uid"],)).fetchone()
+        if not admin_row:
+            return self.json(400,{"stopped":False,"error":"The original admin account is no longer available"},{"Set-Cookie":[self._impersonation_cookie("",clear=True)]})
+        expires=now+(36500*24*60*60*1000 if admin_row["session_never_expires"] else 30*24*60*60*1000)
+        token=secrets.token_urlsafe(32);csrf=new_csrf_token();session_id=str(uuid.uuid4())
+        user_agent=str(self.headers.get("User-Agent") or "")[:500]
+        with connect() as db:
+            db.execute("INSERT INTO sessions(token_hash,id,user_id,expires_at,created_at,user_agent,ip_address,last_seen_at,device_name,csrf_hash) VALUES(?,?,?,?,?,?,?,?,?,?)",(hashlib.sha256(token.encode()).hexdigest(),session_id,admin_row["id"],expires,now,user_agent,self.client_ip(),now,(user_agent.split(" ",1)[0] or "Browser")[:80],hashlib.sha256(csrf.encode()).hexdigest()))
+        self.audit("admin.impersonate_stop","user",admin_row["id"],{},user_id=admin_row["id"])
+        cookies=self._session_cookie(token,csrf,30*24*60*60)
+        cookies.append(self._impersonation_cookie("",clear=True))
+        self._session_replaced=True
+        self.json(200,{"stopped":True,"user":{"id":admin_row["id"],"email":admin_row["email"],"role":admin_row["role"]}},{"Set-Cookie":cookies})
+
+    def submit_report(self):
+        user=self.require_user()
+        if not user:return
+        data=self.body(30_000)
+        with connect() as db:
+            reports_feature.ensure_schema(db)
+            if reports_feature.count_reports_by_reporter_24h(db,user["id"])>=5:
+                return self.json(429,{"error":"Too many reports today. Please try again later."})
+            report=reports_feature.create_report(db,user["id"],data.get("targetType"),data.get("targetId"),data.get("reason"),data.get("body"))
+        self.audit("report.created",report["targetType"],report["targetId"],{"reportId":report["id"],"reason":report["reason"]},user_id=user["id"])
+        self.json(201,report)
+
+    def admin_reports_list(self):
+        admin=self._admin_gate("/api/admin/reports","GET")
+        if not admin:return
+        query=parse_qs(urlparse(self.path).query)
+        status=str((query.get("status") or [""])[0]).strip().lower()
+        target_type=str((query.get("targetType") or [""])[0]).strip().lower() or None
+        if status and status not in reports_feature.STATUS_VALUES:raise ValueError("Invalid status")
+        try:limit=max(1,min(int((query.get("limit") or ["100"])[0]),200))
+        except ValueError:raise ValueError("Invalid limit")
+        cursor_raw=str((query.get("cursor") or [""])[0])
+        cursor=int(cursor_raw) if cursor_raw.isdigit() else None
+        with connect() as db:
+            reports_feature.ensure_schema(db)
+            items,next_cursor=reports_feature.list_reports(db,status=status or None,target_type=target_type,limit=limit,cursor=cursor)
+        self.json(200,{"items":items,"nextCursor":next_cursor})
+
+    def admin_resolve_report(self, report_id):
+        admin=self._admin_gate(f"/api/admin/reports/{report_id}","PUT")
+        if not admin:return
+        if not self.rate_limit(f"admin-report-resolve:{admin['id']}",60,60):return
+        data=self.body(20_000)
+        with connect() as db:
+            reports_feature.ensure_schema(db)
+            try:
+                report=reports_feature.resolve_report(db,report_id,str(data.get("status") or ""),admin["id"],str(data.get("resolutionNote") or ""))
+            except LookupError:
+                return self.json(404,{"error":"Report not found"})
+            except ValueError as exc:
+                return self.json(400,{"error":str(exc)})
+        self.audit("admin.report_resolved","report",report_id,{"status":report.get("status")},user_id=admin["id"])
+        self.json(200,report)
+
+    def public_feature_flags(self):
+        with connect() as db:
+            ensure_feature_flags_schema(db)
+            user=self.user()
+            tier=(user["plan"] if user and "plan" in user.keys() else None) or None
+            flags=public_flags_for_tier(db,tier)
+            maintenance=bool(feature_flag_enabled(db,"maintenance_mode"))
+        self.json(200,{"flags":flags,"maintenanceMode":maintenance})
 
     def admin_update_user_plan(self,user_id):
         # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
@@ -5468,6 +6165,7 @@ class Handler(SimpleHTTPRequestHandler):
             return
         updates=data["updates"]
         changed_flags=[]  # (key, old_value, new_value) for audit emission
+        updated_entries=[]  # post-update state of each changed flag, echoed back
         with connect() as db:
             ensure_feature_flags_schema(db)
             current_flags={f["key"]: f for f in list_flags(db)}
@@ -5492,18 +6190,17 @@ class Handler(SimpleHTTPRequestHandler):
                 value=u["value"]
                 old_value=latest_values.get(key)
                 if old_value != value:
-                    set_flag(db, key, value, admin["id"])
+                    updated_entries.append(set_flag(db, key, value, admin["id"]))
                     changed_flags.append((key, bool(old_value), bool(value)))
                     latest_values[key]=value
-            # Refresh the full snapshot after all writes committed in this transaction.
-            flags=list_flags(db)
         # 5. Emit one audit row per changed flag (audit uses a separate transaction).
         #    "admin": true is appended automatically by self.audit() because the path
         #    starts with /api/admin/.
         for key, old_value, new_value in changed_flags:
             self.audit("admin.feature_flag_set", "feature_flag", key, {"oldValue": old_value, "newValue": new_value, "key": key}, user_id=admin["id"])
-        # 6. Respond 200 with the same body shape as the GET, post-update.
-        self.json(200, {"updated": len(changed_flags), "flags": self._format_feature_flags(flags)})
+        # 6. Respond 200 echoing the updated entries (the spec asserts the
+        #    first echoed flag reflects the toggle it just made).
+        self.json(200, {"updated": len(changed_flags), "flags": self._format_feature_flags(updated_entries)})
 
     def _create_auth_token(self,user_id,kind,lifetime_ms):
         token=secrets.token_urlsafe(36);now=int(time.time()*1000);token_hash=hashlib.sha256(token.encode()).hexdigest()
@@ -9013,6 +9710,8 @@ class Handler(SimpleHTTPRequestHandler):
         passes rate-limit + bot-protection.
         """
         user = self.user()
+        if user is None and not allow_guest:
+            self.json(401, {"error": "Authentication required"}); return None
         with connect() as db:
             invitation = db.execute(
                 "SELECT id,slug,owner_id,access_mode,is_published,archived,deleted_at,access_password_hash FROM invitations WHERE id=?",
@@ -9031,7 +9730,8 @@ class Handler(SimpleHTTPRequestHandler):
                             "guest": {"id": None, "name": "", "email": ""},
                             "invitation": invitation, "is_published": bool(invitation["is_published"])}
             if not allow_guest:
-                self.json(401, {"error": "Authentication required"}); return None
+                # Logged-in non-member: same response as a missing invitation (no existence oracle).
+                self.json(404, {"error": "Invitation not found"}); return None
             if not invitation["is_published"] or invitation["archived"]:
                 self.json(404, {"error": "Invitation not found"}); return None
             # Guest mode: enforce access_token for password-protected invites.

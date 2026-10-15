@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministic integration checks for V15 route/lifecycle hardening."""
 from __future__ import annotations
-import hashlib,json,os,signal,shutil,socket,subprocess,sys,tempfile,time,urllib.request
+import hashlib,json,re,os,signal,shutil,socket,subprocess,sys,tempfile,time,urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -87,7 +87,7 @@ def main():
     assert assets['pages']['public.html']['bytes']>200_000  # root-relative assets are honestly counted
 
     sw=(ROOT / "src" / "js" / "service-worker.js").read_text(encoding='utf-8')
-    assert "CACHE='einvite-checkin-v15'" in sw
+    assert re.search(r"CACHE='einvite-checkin-v\d+'", sw)  # version bumps are intentional (v15 -> v16 in v54)
     assert "if(!STATIC.has(url.pathname))return" in sw
     assert "url.pathname.startsWith('/api/')" in sw
     assert "event.respondWith(networkFirst(request,request))" in sw

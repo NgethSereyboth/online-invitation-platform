@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
 def run(code,data,extra=None):
- env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_REQUIRE_EMAIL_VERIFICATION':'0',**(extra or {})}
+ env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_REQUIRE_EMAIL_VERIFICATION':'0','PYTHONPATH':os.pathsep.join([str(ROOT),str(ROOT/'src'/'python')]),**(extra or {})}
  return subprocess.run([sys.executable,'-c',code],cwd=ROOT/'src'/'python',env=env,text=True,encoding='utf-8',errors='replace',stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
 
 def main():

@@ -26,6 +26,15 @@ body:not(.guest) h2, body:not(.guest) h3{color:var(--app-text)!important}
 body:not(.guest) small{color:var(--app-muted)!important}
 body:not(.guest) label, body:not(.guest) p, body:not(.guest) li, body:not(.guest) strong, body:not(.guest) em, body:not(.guest) span{color:inherit}
 body:not(.guest) > header{position:sticky;top:0;z-index:2000;gap:10px;padding:12px 18px;min-height:64px}
+/* The topbar is a stacking context, so every popup it contains — including the `•••` menu at
+   z-index 12000 — is painted inside 2000 and cannot outrank a sibling context on its own. The
+   studio canvas toolbar is `position:relative; z-index:40` inside `main` (editor-styles.css) and
+   later in the DOM, and `app-shell-v55.css` redeclares this header at z-index 40 later in the route
+   bundle, so the toolbar won the 40/40 tie by document order and painted a full row of the open
+   menu (measured: 6 of 77 sampled menu points covered at 1440 and 1600, none at 1024).
+   Scoping this declaration to the studio experience makes the intended 2000 win on the editor route
+   without touching the header's order on the other four routes. */
+body.studio-experience:not(.guest) > header{position:sticky;top:0;z-index:2000}
 body:not(.guest) > header strong{font-size:18px;font-weight:800;letter-spacing:-.02em}
 body:not(.guest) > header button{min-height:40px;padding:10px 14px;border-radius:12px;font-weight:600;font-size:13px;line-height:1.15;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 body:not(.guest) > header a>button{background:transparent}
@@ -218,8 +227,18 @@ html[data-theme="dark"] body:not(.guest) .badge{background:var(--app-surface-3)!
 .canvas-header-status span{font-size:11px!important;white-space:nowrap}
 .canvas-icon-button{width:40px!important;min-width:40px!important;padding:0!important;font-size:19px!important}
 .canvas-header-more{position:relative;margin-left:2px}
-.canvas-header-more-trigger{width:42px!important;padding:0!important;font-size:16px!important;letter-spacing:1px}
-.canvas-header-more-menu{position:absolute;right:0;top:48px;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000}
+/* The trigger is also the anchor: the menu is placed from it, never from a hard-coded
+   top/right coordinate. Measured before this change (D1b): `right:0;top:48px` grew the
+   286px menu leftwards from the trigger's right edge, overlapping the left rail by 4px at
+   1024 and the 330-370px left panel by 210px at 1280 — and it was painted over the panel,
+   not beside it. Placing it below the trigger's right edge keeps it in the content column by
+   construction: it can never extend left of that edge. */
+.canvas-header-more-trigger{width:42px!important;padding:0!important;font-size:16px!important;letter-spacing:1px;anchor-name:--studio-more-trigger}
+.canvas-header-more-menu{position:absolute;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000;position-anchor:--studio-more-trigger;top:calc(anchor(bottom) + var(--space-1));right:auto;bottom:auto;left:anchor(right);position-try-fallbacks:--studio-more-above;width:min(286px,calc(100vw - var(--space-4)));max-height:min(620px,calc(100dvh - var(--space-16)));overflow:auto;overscroll-behavior:contain}
+/* Fallback for a trigger that is not at the top of the viewport: open upwards instead of
+   clipping. On the editor route the topbar is the first row, so the max-height above is what
+   actually protects that case; this rule is the generic one, verified in a fixture. */
+@position-try --studio-more-above{top:auto;bottom:calc(anchor(top) + var(--space-1));left:anchor(right)}
 .canvas-header-more-menu[hidden]{display:none}.canvas-header-more-menu>strong{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--app-muted)!important;padding:4px 6px}.canvas-header-more-menu button{width:100%;justify-content:flex-start!important;background:transparent!important;box-shadow:none!important}
 
 .canvas-transform-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.canvas-transform-grid label{margin:0!important}.canvas-transform-grid input[type=number]{width:100%;min-height:40px!important;padding:0 10px!important;border-radius:11px!important}.canvas-lock-ratio{display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--app-line);border-radius:11px;background:var(--app-surface-2)}.canvas-lock-ratio input{width:auto!important;min-height:auto!important}.canvas-transform-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.canvas-transform-actions button{min-height:38px!important;border-radius:11px!important;font-size:11px!important;font-weight:700!important}

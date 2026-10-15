@@ -7,8 +7,21 @@
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- function getInvitationId(options={}){const direct=safe(explicitId);if(direct)return direct;if(options.allowRemembered===false)return '';return safe(localStorage.getItem(LAST_KEY))}
- function remember(id){id=safe(id);if(id)localStorage.setItem(LAST_KEY,id);return id}
+ // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
+ // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
+ // resolve it as if it were a real invitation: the signed-in editor asked the server for
+ // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
+ // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+ const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
+ function getInvitationId(options={}){
+   const direct=safe(explicitId);if(direct)return direct;
+   if(options.allowRemembered===false)return '';
+   const stored=safe(localStorage.getItem(LAST_KEY));
+   if(!stored)return '';
+   if(isLocalId(stored)){try{localStorage.removeItem(LAST_KEY)}catch(e){/* storage disabled */}return ''}
+   return stored
+ }
+ function remember(id){id=safe(id);if(id&&!isLocalId(id))localStorage.setItem(LAST_KEY,id);return id}
  function route(id,target='editor'){
    id=safe(id);target=String(target||'editor').toLowerCase();
    if(!id)return target==='materials'?'materials.html':'dashboard.html';

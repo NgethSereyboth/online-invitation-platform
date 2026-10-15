@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """V11 media, sharing, responsive-image, and schema regression coverage."""
 from __future__ import annotations
-import io,json,os,socket,subprocess,sys,tempfile,time,urllib.error,urllib.parse,urllib.request
+import io,json,os,re,socket,subprocess,sys,tempfile,time,urllib.error,urllib.parse,urllib.request
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -58,7 +58,7 @@ def main():
             _,_,square=binary_request(base,f"/api/public/{invite['slug']}/social-card.png?format=square");assert Image.open(io.BytesIO(square)).size==(1080,1080)
             _,qr_type,qr=binary_request(base,f"/api/public/{invite['slug']}/qr-card.png");assert qr_type=='image/png' and Image.open(io.BytesIO(qr)).size==(1080,1080)
             _,responsive_type,resized=binary_request(base,f"/api/image/{Path(urllib.parse.urlparse(asset['url']).path).name}?w=480&format=webp");assert responsive_type=='image/webp';assert Image.open(io.BytesIO(resized)).width<=480
-            html=urllib.request.urlopen(base+f"/i/{invite['slug']}").read().decode();assert f'{base}/api/public/{invite["slug"]}/social-card.png' in html;assert '<meta property="og:image:width" content="1200">' in html;assert '<link rel="canonical"' in html
+            html=urllib.request.urlopen(base+f"/i/{invite['slug']}").read().decode();assert re.search(re.escape(f'{base}/api/public/{invite["slug"]}/social-card-v')+r'\d+\.png"', html), 'og:image must point at the versioned social card';assert '<meta property="og:image:width" content="1200">' in html;assert '<link rel="canonical"' in html
             guest=json_request(base,f"/api/invitations/{invite['id']}/guests",'POST',{'name':'Guest','phone':''},token,201);_,guest_qr_type,guest_qr=binary_request(base,f"/api/invitations/{invite['id']}/guests/{guest['id']}/qr.png",token);assert guest_qr_type=='image/png' and len(guest_qr)>500
             assert 'quickchart.io' not in (ROOT / "src" / "js" / "guests.js").read_text(encoding='utf-8')
             renderer=(ROOT / "src" / "js" / "renderer-core.js").read_text(encoding='utf-8');assert 'responsiveBase' in renderer and 'intrinsicWidth' in renderer and 'format=webp' in renderer and 'join' in renderer

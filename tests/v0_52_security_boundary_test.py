@@ -106,11 +106,13 @@ def verify_required_scanner_fails_closed():
             "EINVITE_MALWARE_SCANNER_COMMAND":"",
             "EINVITE_MALWARE_SCANNER_MODE":"none",
             "EINVITE_REQUIRE_MALWARE_SCAN":"1",
-            "PYTHONPATH":str(ROOT/'src'/'python'),
+            "PYTHONPATH":os.pathsep.join([str(ROOT/'src'/'python'),str(ROOT)]),
             "PYTHONUTF8":"1",
         }
         code=(
             "import server\n"
+            # Force the no-scanner path so the result does not depend on whether ClamAV is installed on this host.
+            "server.v54_detect_scanner=lambda *a,**k:{'available':False,'kind':None,'reason':'test: no scanner'}\n"
             "try: server.scan_material_bytes(b'not-a-real-upload','application/octet-stream','blocked.bin')\n"
             "except ValueError as exc:\n"
             " assert 'required' in str(exc).lower() and 'blocked' in str(exc).lower(); print('BLOCKED')\n"

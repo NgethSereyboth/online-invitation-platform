@@ -127,16 +127,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +157,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -288,8 +306,21 @@ window.alert=(message)=>{uiAlert(message)};
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- function getInvitationId(options={}){const direct=safe(explicitId);if(direct)return direct;if(options.allowRemembered===false)return '';return safe(localStorage.getItem(LAST_KEY))}
- function remember(id){id=safe(id);if(id)localStorage.setItem(LAST_KEY,id);return id}
+ // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
+ // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
+ // resolve it as if it were a real invitation: the signed-in editor asked the server for
+ // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
+ // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+ const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
+ function getInvitationId(options={}){
+   const direct=safe(explicitId);if(direct)return direct;
+   if(options.allowRemembered===false)return '';
+   const stored=safe(localStorage.getItem(LAST_KEY));
+   if(!stored)return '';
+   if(isLocalId(stored)){try{localStorage.removeItem(LAST_KEY)}catch(e){/* storage disabled */}return ''}
+   return stored
+ }
+ function remember(id){id=safe(id);if(id&&!isLocalId(id))localStorage.setItem(LAST_KEY,id);return id}
  function route(id,target='editor'){
    id=safe(id);target=String(target||'editor').toLowerCase();
    if(!id)return target==='materials'?'materials.html':'dashboard.html';

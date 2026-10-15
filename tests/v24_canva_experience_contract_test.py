@@ -14,10 +14,15 @@ for name,tokens in modules.items():
  for token in tokens:assert token in text,(name,token)
  assert "window.addEventListener('keydown'" not in text,name
 for name in ['direct-manipulation-v24.css','content-browser-v24.css','smart-layout-v24.css','brand-components-v24.css','collaboration-v24.css','export-quality-v24.css']:
- assert (ROOT/name).stat().st_size>500,name
+ path=ROOT/'src'/'css'/('organized' if name.startswith('export-quality') else '')/name
+ assert path.stat().st_size>500,name
 loader=(ROOT / "src" / "js" / "performance-loader-v22.js").read_text(encoding='utf-8')
-order=['workspace-experience-v24.js',*modules.keys()]
+# workspace-experience-v24.js was consolidated into editor/editor-core.js in v54;
+# it must no longer be a deferred script, and its replacement must exist.
+assert "'workspace-experience-v24.js'" not in loader and '"workspace-experience-v24.js"' not in loader
+assert (ROOT/'src'/'js'/'editor'/'editor-core.js').read_text(encoding='utf-8').count('EInviteWorkspaceExperience')>0
+order=[Path(k).name for k in modules]
 for name in order:assert name in loader,name
 assert [loader.index(x) for x in order]==sorted(loader.index(x) for x in order)
-assert loader.count('src/js/direct-manipulation-v24.js')==1
+assert loader.count('direct-manipulation-v24.js')==1
 print('V24_CANVA_EXPERIENCE_CONTRACT_TEST_PASSED')

@@ -171,7 +171,7 @@
   /* --- 4. Card polish ---------------------------------------------------- */
   const BADGE = {
     published: { en: 'Published', km: 'ផ្សាយ', icon: '●' },
-    draft: { en: 'Draft', km: null, icon: '◐' },
+    draft: { en: 'Draft', km: 'ព្រាង', icon: '◐' },
     archived: { en: 'Archived', km: 'បង្ងា', icon: '▤' }
   };
 

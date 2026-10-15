@@ -1,5 +1,25 @@
 /* Persistent design tools, contextual toolbar, and inline rich-text controls. */
-#canvasViewport{position:relative}.ei-tool-rail{position:sticky;left:12px;top:18px;z-index:70;width:46px;padding:6px;display:flex;flex-direction:column;gap:5px;border:1px solid var(--app-line);border-radius:15px;background:color-mix(in srgb,var(--app-surface) 93%,transparent);box-shadow:0 16px 44px rgba(0,0,0,.15);backdrop-filter:blur(18px);align-self:flex-start;margin:18px 0 -100%;transform:translateZ(0)}.ei-tool-rail button{width:34px;height:34px;padding:0!important;border-radius:10px!important;background:transparent!important;border:0!important;color:var(--app-muted)!important;display:grid!important;place-items:center;font-weight:800!important;font-size:14px!important;box-shadow:none!important}.ei-tool-rail button:hover{background:var(--app-surface-2)!important;color:var(--app-text)!important;transform:scale(1.06)!important}.ei-tool-rail button.active{background:linear-gradient(135deg,var(--app-accent),var(--app-accent-2))!important;color:#fff!important;box-shadow:0 8px 20px color-mix(in srgb,var(--app-accent) 28%,transparent)!important}.ei-tool-rail .sep{height:1px;background:var(--app-line);margin:3px 4px}.ei-tool-rail button span{font-size:9px;position:absolute;right:3px;bottom:1px;opacity:.75}.ei-tool-crosshair{cursor:crosshair!important}.ei-tool-zoom{cursor:zoom-in!important}.ei-tool-hand{cursor:grab!important}
+#canvasViewport{position:relative}.ei-tool-rail{position:sticky;left:var(--editor-rail-inset,12px);top:18px;z-index:70;width:46px;padding:6px;display:flex;flex-direction:column;gap:5px;border:1px solid var(--app-line);border-radius:15px;background:color-mix(in srgb,var(--app-surface) 93%,transparent);box-shadow:0 16px 44px rgba(0,0,0,.15);backdrop-filter:blur(18px);align-self:flex-start;margin:18px 0 -100%;transform:translateZ(0)}
+
+/* The rail is meant to float in the canvas viewport's reserved left gutter
+   (`.canvas-viewport{padding:52px 70px 100px}` = 12px inset + 46px rail + 12px
+   gap). A sticky box never leaves the flow, though: `left:12px` only pins it
+   while scrolling, so its static position stayed on the viewport's content-box
+   left edge — exactly where the centred `.canvas-frame` starts. Measured on
+   src/python/index.html: the rail painted over 46px of the invitation page at
+   1200px and 23px at 1280px, clearing it again from 1360px up. The offset
+   rules below move the rail's static position into the gutter and keep it
+   sticky, so it still follows the canvas while panning. Desktop only: at
+   ≤1180px the layout contract (editor-responsive-contract-v27.js: 1180 =
+   compact) shrinks the gutter to 12px and centres the canvas, so there is
+   nothing to offset.
+
+   `margin-left` alone does not work: Chrome resolves a sticky inset against the
+   box's *margin* box, so shrinking only the margin is cancelled by `left:12px`
+   and the rail snapped straight back onto the canvas (measured at 413px with
+   and without the margin). The inset has to shrink by the same amount for the
+   shift to survive. */
+@media(min-width:1181px){.ei-tool-rail{margin-left:calc(var(--editor-rail-inset,12px) - var(--editor-canvas-gutter,70px));left:calc(var(--editor-rail-inset,12px) - var(--editor-canvas-gutter,70px))}}.ei-tool-rail button{width:34px;height:34px;padding:0!important;border-radius:10px!important;background:transparent!important;border:0!important;color:var(--app-muted)!important;display:grid!important;place-items:center;font-weight:800!important;font-size:14px!important;box-shadow:none!important}.ei-tool-rail button:hover{background:var(--app-surface-2)!important;color:var(--app-text)!important;transform:scale(1.06)!important}.ei-tool-rail button.active{background:linear-gradient(135deg,var(--app-accent),var(--app-accent-2))!important;color:#fff!important;box-shadow:0 8px 20px color-mix(in srgb,var(--app-accent) 28%,transparent)!important}.ei-tool-rail .sep{height:1px;background:var(--app-line);margin:3px 4px}.ei-tool-rail button span{font-size:9px;position:absolute;right:3px;bottom:1px;opacity:.75}.ei-tool-crosshair{cursor:crosshair!important}.ei-tool-zoom{cursor:zoom-in!important}.ei-tool-hand{cursor:grab!important}
 /* Reserved box, same geometry in both states: see src/css/editor/editor-styles.css
    for the measurement (50px of shift on index.html per load). This is the
    pre-`windows-ui-v54` half of the same fix — the toolbar must already own its

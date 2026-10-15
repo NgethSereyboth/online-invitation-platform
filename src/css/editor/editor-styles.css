@@ -382,7 +382,7 @@ body.v54-alt-duplicating, body.v54-alt-duplicating * { cursor: copy; user-select
 /* Final editor refinement — predictable top bar + main height. */
 body.workspace-experience-v54 > .studio-topbar { height: 58px; min-height: 58px; max-height: 58px; flex-flow: row nowrap; overflow: visible; padding-block: 8px; }
 body.workspace-experience-v54.studio-design-mode > main { height: calc(100dvh - 88px); }
-body.workspace-experience-v54 .canvas-header-more-menu { width: min(286px, calc(100vw - 20px)); max-height: min(620px, calc(100dvh - 76px)); overflow: auto; padding: 8px; gap: 6px; }
+body.workspace-experience-v54 .canvas-header-more-menu { padding: 8px; gap: 6px; }
 .v54-header-menu-section { display: grid; gap: 4px; padding: 5px; }
 .v54-header-menu-section + .v54-header-menu-section { border-top: 1px solid var(--app-line, #e4e4e9); padding-top: 10px; }
 .v54-header-menu-section > strong { padding: 0 5px 3px; color: var(--app-muted, #8a8085); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
@@ -446,7 +446,7 @@ html[data-theme="dark"] .v54-footer-tools-menu { box-shadow: 0 22px 60px #000a; 
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #fitCanvas,
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > #panToggle,
   body.studio-experience.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar > .toolbar-divider { display: none; }
-  body.workspace-experience-v54 .v23-context-toolbar { width: 110px; max-width: 110px; flex: 0 0 110px; }
+  body.workspace-experience-v54 .v23-context-toolbar { flex: 0 0 auto; }
   body.workspace-experience-v54 .v23-context-toolbar > span { display: none; }
 }
 @media (max-width: 1180px) {
@@ -1128,6 +1128,11 @@ body[data-page="index"] > footer.studio-statusbar .studio-status-dot { width: 8p
    Without these two declarations the centre readout measured 1.35:1 and the
    keyboard hints 1.05:1. Both now use the same tokens as `strong`/`small` above. */
 body[data-page="index"] > footer.studio-statusbar .studio-status-center { margin: 0 auto; display: flex; gap: var(--space-2); color: var(--app-muted); }
+/* Footer tool buttons (Automation, Operations, … Styles) are flex children that
+   shrank to 26px at 1440 and clipped their labels to single letters. Keep them at
+   their content width; the row is wide enough at desktop sizes. */
+body[data-page="index"] > footer.studio-statusbar button { flex: 0 0 auto; white-space: nowrap; }
+body[data-page="index"] > footer.studio-statusbar > div:last-child { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
 body[data-page="index"] > footer.studio-statusbar kbd {
   font-family: var(--font-mono); font-size: var(--fs-mono); letter-spacing: var(--ls-mono);
   padding: 2px var(--space-1); border: 1px solid var(--app-line); border-radius: 6px;

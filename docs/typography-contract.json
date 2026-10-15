@@ -29,8 +29,8 @@
       "licenseId": "OFL-1.1",
       "licenseFile": "licenses/fonts/Noto-OFL-1.1.txt",
       "assetSha256": {
-        "400": "6932db6a846e5f3eedd70862935d1e382ffa25da0851563c3e7b82129ebefe23",
-        "700": "a9885073a1b8fcde1b37ac0c4497914e598cc9057344a552217b32e4c89f0866"
+        "400": "f54a80e0d925f4e82d0cf52b3249a4b1320137363e98018a6f65377d3390aa8c",
+        "700": "5fce99c92e68803bf3bf4f2c4a26ab0a649ddea0f11eaba28124d010183b69e5"
       }
     },
     "noto-serif": {
@@ -58,8 +58,8 @@
       "licenseId": "OFL-1.1",
       "licenseFile": "licenses/fonts/Noto-OFL-1.1.txt",
       "assetSha256": {
-        "400": "3c94a973daf5e7fd05cb205eab2171b0af0ba42496202d54e6cdd55e45a82221",
-        "700": "d7e6e94e00d65d77273e033e0eca185d9ab37d44d4505225f364ff1453cb7039"
+        "400": "0415cee63cb9ba43d5094caddd6d903d447cbc025dbe1c2a621f7855ffa1a99e",
+        "700": "f66ce4961c2ca74153ccf8be0e112ba679575b6aacc3155371483b019155d1b7"
       }
     },
     "noto-sans-khmer": {
@@ -87,8 +87,8 @@
       "licenseId": "OFL-1.1",
       "licenseFile": "licenses/fonts/Noto-OFL-1.1.txt",
       "assetSha256": {
-        "400": "53229761be85cb21c727d19ff81e959f3a35c32925d42f02829acf53dbdbf625",
-        "700": "0eb1923fffc493ed3af0e5cb4bc467ec1c7921ce9f845888ebd3b5755b86aecd"
+        "400": "4edee25cbc3ad5877820db657b57cf7df5fae06ae7ecc0513209d3617efe99a3",
+        "700": "8bb47df185665c501e5d264547b0f7eb235b4fba6063a48d4b721f48474d72e3"
       }
     },
     "noto-serif-khmer": {
@@ -116,8 +116,8 @@
       "licenseId": "OFL-1.1",
       "licenseFile": "licenses/fonts/Noto-OFL-1.1.txt",
       "assetSha256": {
-        "400": "db80eb1479b0cb726e5fd224ba2cde7b6f92825988f4ec1e89575d851011e625",
-        "700": "fe903cee1be19a931d38a575948897f7c0d0159a8c2c028af596ec928d7976ce"
+        "400": "980724e3fd5f924c86df268bf5cd5a4b1f500e3446ae579e741ba3df9d0e1b9f",
+        "700": "89d8d06b2425e7bc67292401d475d6f047706a13c462f24e291121a64b8f24c2"
       }
     },
     "serif-georgia": {

@@ -127,16 +127,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +157,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -256,7 +274,47 @@
       boot();
     }
   }
-})(typeof window !== "undefined" ? window : this);;(()=>{
+})(typeof window !== "undefined" ? window : this);;(() => {
+  'use strict';
+  // route-deferred-loader-v15 — injects the per-route deferred chunk after
+  // first paint. Bundled at the head of each route bundle, it derives the
+  // deferred bundle name from its own <script> URL (bundle-<page>-v15.js →
+  // bundle-<page>-deferred-v15.{js,css}) so no HTML/inline script is needed
+  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
+  // on the first user interaction, whichever comes first, so on-demand
+  // modules never delay first paint or the route-weight budget.
+  if (window.EInviteDeferredRouteLoaderV15) return;
+  // `ready` resolves once the deferred chunk has been evaluated (or failed to
+  // load), so consumers that lazily mount a deferred module can retry on it.
+  let resolveReady;
+  const ready = new Promise((res) => { resolveReady = res; });
+  window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
+  const current = document.currentScript;
+  const src = (current && current.src) || '';
+  const match = /bundle-([A-Za-z0-9_]+)-v15\.js/.exec(src);
+  if (!match) { resolveReady(); return; }
+  const prefix = src.slice(0, src.lastIndexOf('/') + 1);
+  const stem = match[1];
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `${prefix}bundle-${stem}-deferred-v15.css`;
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = `${prefix}bundle-${stem}-deferred-v15.js`;
+    script.addEventListener('load', () => resolveReady(), { once: true });
+    script.addEventListener('error', () => resolveReady(), { once: true });
+    document.head.appendChild(script);
+  }
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  idle(start, { timeout: 2000 });
+  for (const type of ['pointerdown', 'keydown', 'touchstart']) {
+    window.addEventListener(type, start, { once: true, passive: true, capture: true });
+  }
+})();;(()=>{
 'use strict';
 const ensureStack=()=>{let stack=document.querySelector('.ei-toast-stack');if(!stack){stack=document.createElement('div');stack.className='ei-toast-stack';stack.setAttribute('aria-live','polite');document.body.append(stack)}return stack};
 function toast(message,options={}){
@@ -507,8 +565,21 @@ if(window.EInviteUpload&&!Object.isFrozen(window.EInviteUpload))Object.assign(wi
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- function getInvitationId(options={}){const direct=safe(explicitId);if(direct)return direct;if(options.allowRemembered===false)return '';return safe(localStorage.getItem(LAST_KEY))}
- function remember(id){id=safe(id);if(id)localStorage.setItem(LAST_KEY,id);return id}
+ // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
+ // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
+ // resolve it as if it were a real invitation: the signed-in editor asked the server for
+ // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
+ // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+ const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
+ function getInvitationId(options={}){
+   const direct=safe(explicitId);if(direct)return direct;
+   if(options.allowRemembered===false)return '';
+   const stored=safe(localStorage.getItem(LAST_KEY));
+   if(!stored)return '';
+   if(isLocalId(stored)){try{localStorage.removeItem(LAST_KEY)}catch(e){/* storage disabled */}return ''}
+   return stored
+ }
+ function remember(id){id=safe(id);if(id&&!isLocalId(id))localStorage.setItem(LAST_KEY,id);return id}
  function route(id,target='editor'){
    id=safe(id);target=String(target||'editor').toLowerCase();
    if(!id)return target==='materials'?'materials.html':'dashboard.html';
@@ -530,7 +601,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt
 const formatBytes=n=>{n=Number(n||0);if(n<1024)return`${n} B`;if(n<1024**2)return`${(n/1024).toFixed(1)} KB`;return`${(n/1024**2).toFixed(1)} MB`};
 function typeOf(item){return item.mime?.startsWith('image/')?'image':item.mime?.startsWith('audio/')?'audio':item.mime?.startsWith('video/')?'video':item.mime?.startsWith('font/')?'font':'other'}
 async function load(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){window.EInviteBackend.message($('#grid'),'<span class="i18n i18n-en">Material storage and uploads require the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Material storage and uploads require the full application server.</span>');$('#uploadBtn').disabled=true;$('#uploadFile').disabled=true;$('#uploadFolderBtn').disabled=true;$('#uploadFolder').disabled=true;$('#uploadZipBtn').disabled=true;$('#uploadZip').disabled=true;return}try{[materials,invitations]=await Promise.all([api('/api/assets'),api('/api/invitations')]);renderInvitationOptions();render()}catch(error){$('#grid').innerHTML=`<div class="empty-library"><h2>Material library unavailable</h2><p>${esc(error.message)}</p></div>`}}
-function renderInvitationOptions(){const select=$('#uploadInvitation');select.innerHTML=invitations.filter(i=>!i.archived).map(i=>`<option value="${esc(i.id)}">${esc(i.title||i.slug||'Invitation')}</option>`).join('');if(!select.options.length)select.innerHTML='<option value=""><span class="i18n i18n-en">Create an invitation first</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Create an invitation first</span></option>';if(contextInviteId&&[...select.options].some(o=>o.value===contextInviteId))select.value=contextInviteId}
+function renderInvitationOptions(){const select=$('#uploadInvitation');select.innerHTML=invitations.filter(i=>!i.archived).map(i=>`<option value="${esc(i.id)}">${esc(i.title||i.slug||'Invitation')}</option>`).join('');if(!select.options.length)select.innerHTML='<option value="">Create an invitation first</option>';if(contextInviteId&&[...select.options].some(o=>o.value===contextInviteId))select.value=contextInviteId}
 function filtered(){const q=$('#search').value.trim().toLowerCase(),folder=$('#folderFilter').value.trim().toLowerCase(),type=$('#typeFilter').value,sort=$('#sort').value;let list=materials.filter(item=>{if(contextInviteId&&item.invitationId!==contextInviteId)return false;const kind=typeOf(item),hay=[item.name,item.folder,...(item.tags||[])].join(' ').toLowerCase();return(!q||hay.includes(q))&&(!folder||String(item.folder||'').toLowerCase().includes(folder))&&(type==='all'||type===kind||(type==='favorite'&&item.favorite))});list.sort((a,b)=>sort==='oldest'?a.createdAt-b.createdAt:sort==='name'?String(a.name).localeCompare(String(b.name)):sort==='size'?b.size-a.size:b.createdAt-a.createdAt);return list}
 function render(){const list=filtered(),bytes=materials.reduce((sum,x)=>sum+Number(x.size||0),0),favorites=materials.filter(x=>x.favorite).length;$('#summary').innerHTML=`<span>${materials.length} ${b('materials','សម្ភារែ')}</span><span>${formatBytes(bytes)} ${b('stored','បានរក្សាទុក')}</span><span>${favorites} ${_txt('favorite','ចំណាប់ចិត្ត')}${favorites===1?'':'s'}</span><span>${list.length} ${b('shown','បានបង្ហើញ')}</span>`;const grid=$('#grid');if(!list.length){grid.innerHTML=`<div class="empty-library"><h2>${b('No matching materials','No matching materials')}</h2><p>${b('Upload a file or change your filters.','Upload a file or change your filters.')}</p></div>`;return}grid.innerHTML=list.map(item=>{const kind=typeOf(item),thumb=kind==='image'?`<img src="${esc(item.url)}" alt="">`:kind==='video'?`<video src="${esc(item.url)}" muted preload="metadata"></video>`:kind==='font'?`<span class="audio-mark" aria-label="Font file">Aa</span>`:`<span class="audio-mark">♫</span>`;return`<article class="material-card-page"><div class="material-thumb">${thumb}${item.favorite?'<span class="favorite-mark">★</span>':''}</div><div class="material-info"><strong title="${esc(item.name)}">${esc(item.name)}</strong><div class="library-folder">${item.folder?`${b('Folder:','ថត:')} ${esc(item.folder)}`:b('No folder','No folder')} · ${formatBytes(item.size)}</div><div class="material-tags">${(item.tags||[]).slice(0,5).map(tag=>`<span>${esc(tag)}</span>`).join('')}</div></div><div class="actions"><a href="${esc(item.url)}" target="_blank" rel="noopener" class="button-link">${b('Open','បើក')}</a><button data-edit="${esc(item.id)}" type="button">${b('Edit','កែសម្រួល')}</button></div></article>`}).join('');grid.querySelectorAll('[data-edit]').forEach(button=>button.onclick=()=>openEdit(button.dataset.edit))}
 function openEdit(id){const item=materials.find(x=>x.id===id);if(!item)return;$('#editId').value=id;$('#editName').value=item.name||'';$('#editFolder').value=item.folder||'';$('#editTags').value=(item.tags||[]).join(', ');$('#editFavorite').checked=!!item.favorite;$('#editMeta').textContent=`${item.mime} · ${formatBytes(item.size)} · uploaded ${new Date(item.createdAt).toLocaleString()}`;$('#editDialog').showModal()}
@@ -840,73 +911,6 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
-if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
-function dashboard(){ /* retired in v55 */ }
-function materials(){
-  const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
-  const toggle=document.createElement('button');toggle.type='button';toggle.className='material-upload-toggle primary';toggle.innerHTML='<span>⇧</span> Upload files';head.append(toggle);upload.hidden=true;
-  toggle.onclick=()=>{upload.hidden=!upload.hidden;toggle.innerHTML=upload.hidden?'<span>⇧</span> Upload files':'<span>×</span> Close upload';if(!upload.hidden)setTimeout(()=>$('#uploadFile')?.focus(),50)};
-  const grid=$('#grid');
-  const observer=new MutationObserver(()=>{
-    const empty=$('.empty-library',grid);if(empty&&/Authentication required/i.test(empty.textContent)&&!empty.querySelector('.material-auth-action')){const a=document.createElement('a');a.href='dashboard.html';a.className='material-auth-action';a.innerHTML='<button type="button" class="primary">Sign in to use materials</button>';empty.append(a)}
-  });observer.observe(grid,{childList:true,subtree:true});
-}
-function editor(){
-  const main=$('body.studio-experience>main'),rail=$('.studio-tool-rail'),host=$('.studio-pane-host'),stage=$('#stage');if(!main||!rail||!host||!stage)return;
-  if(!$('[data-studio-tab="text"]',rail)){
-    const elementsBtn=$('[data-studio-tab="elements"]',rail);
-    const b=document.createElement('button');b.type='button';b.className='studio-rail-button';b.dataset.studioTab='text';b.innerHTML='<span class="studio-nav-icon">T</span><span>Text</span>';b.title='Text, fonts and typography';rail.insertBefore(b,elementsBtn||null);
-    const pane=document.createElement('section');pane.className='studio-pane studio-text-pane';pane.dataset.studioPane='text';pane.innerHTML=`
-      <div class="studio-pane-heading"><div><small>Create</small><h1>Text</h1></div></div>
-      <label class="refine-text-search"><span>⌕</span><input type="search" placeholder="Search fonts and combinations"></label>
-      <button type="button" class="refine-add-text">T &nbsp; Add a text box</button>
-      <button type="button" class="refine-magic-write">✦ Magic invitation writing</button>
-      <section class="refine-text-section"><div><h3>Default text styles</h3></div><div class="refine-text-presets">
-        <button class="refine-text-preset heading" data-refine-text="heading">Add a heading</button>
-        <button class="refine-text-preset subheading" data-refine-text="subheading">Add a subheading</button>
-        <button class="refine-text-preset body" data-refine-text="body">Add a little bit of body text</button>
-        <button class="refine-text-preset khmer" data-refine-text="khmer" lang="km">សិរីមង្គលអាពាហ៍ពិពាហ៍</button>
-      </div></section>
-      <section class="refine-text-section"><div><h3>Fonts</h3><small>Search · Khmer · Favorites</small></div><button type="button" class="refine-browse-fonts">Browse all fonts</button></section>
-      <section class="refine-text-section"><div><h3>Font combinations</h3><small>Quick invitation styles</small></div><div class="refine-font-combos">
-        <button class="refine-font-combo" data-combo="gold"><span style="font-family:Georgia,serif;color:#b48a20">GOLDEN<br>HOUR</span><small>Luxury serif</small></button>
-        <button class="refine-font-combo" data-combo="modern"><span style="font-family:Arial,sans-serif;font-weight:800">TITLE<br><i>HEADING</i></span><small>Modern contrast</small></button>
-        <button class="refine-font-combo" data-combo="romance"><span style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
-        <button class="refine-font-combo" data-combo="khmer"><span lang="km" style="font-family:'Noto Serif Khmer','Khmer OS Muol Light',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
-      </div></section>`;
-    host.append(pane);
-    function activate(id){
-      $$('[data-studio-tab]',rail).forEach(x=>x.classList.toggle('active',x.dataset.studioTab===id));
-      $$('[data-studio-pane]',host).forEach(x=>x.classList.toggle('active',x.dataset.studioPane===id));
-      localStorage.setItem('einvite-editor-left-tab',id);applyMode();
-    }
-    b.onclick=()=>activate('text');
-    $('.refine-add-text',pane).onclick=()=>$('#addText')?.click();
-    $$('.refine-text-preset',pane).forEach(btn=>btn.onclick=()=>{const source=$(`[data-text-preset="${btn.dataset.refineText}"]`);if(source)source.click();else $('#addText')?.click()});
-    $('.refine-browse-fonts',pane).onclick=()=>$('.ei-font-launch')?.click();
-    $('.refine-magic-write',pane).onclick=()=>{const ebtn=$('[data-studio-tab="event"]',rail);ebtn?.click();setTimeout(()=>$('#eiAiStudio textarea,.ei-ai-studio textarea')?.focus(),80)};
-    const comboMap={gold:{font:'serif-georgia',size:48,color:'#b48a20',text:'Golden Hour'},modern:{font:'sans-arial',size:44,color:'#202127',text:'Your Celebration'},romance:{font:'serif-georgia',size:46,color:'#426b52',text:'Bride & Groom'},khmer:{font:"noto-serif-khmer",size:38,color:'#9b6b13',text:'សិរីមង្គលអាពាហ៍ពិពាហ៍'}};
-    $$('.refine-font-combo',pane).forEach(btn=>btn.onclick=()=>{const c=comboMap[btn.dataset.combo];$('#addText')?.click();setTimeout(()=>{const sel=$('.object.selected,.object.multi-selected');if(!sel)return;const content=sel.querySelector('.content');if(content)content.textContent=c.text;sel.dataset.font=c.font;sel.dataset.fontSize=String(c.size);sel.dataset.color=c.color;try{applyObjectVisualStyle(sel);save()}catch{}},40)});
-    $('.refine-text-search input',pane).oninput=e=>{const q=e.target.value.toLowerCase();$$('.refine-text-preset,.refine-font-combo',pane).forEach(x=>x.hidden=!!q&&!x.textContent.toLowerCase().includes(q))};
-  }
-  function applyMode(){ /* centralized elsewhere */ }
-  const openInspector=()=>{if(innerWidth<=1180&&$('.object.selected,.object.multi-selected',stage))document.body.classList.add('inspector-open')};
-  stage.addEventListener('pointerup',()=>setTimeout(openInspector,0));
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.body.classList.remove('inspector-open')});
-  const inspector=$('.right');if(inspector&&!inspector.querySelector('.refine-inspector-close')){const c=document.createElement('button');c.type='button';c.className='refine-inspector-close';c.textContent='×';c.title='Close inspector';c.onclick=()=>document.body.classList.remove('inspector-open');inspector.prepend(c)}
-}
-if(page==='dashboard')dashboard();
-if(page==='materials')materials();
-if(page==='index')setTimeout(editor,0);
-})();;(()=>{
-'use strict';
-const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function dashboardFinal(){
   const grid=$('#inviteGrid'),view=$('#dashboardView'),header=$('body>header'); if(!grid||!view)return;
@@ -965,8 +969,13 @@ function editorFinal(){
   const stage=$('#stage'),host=$('.studio-pane-host'),rail=$('.studio-tool-rail');if(!stage||!host||!rail)return;
   const saveNow=()=>{try{typeof save==='function'&&save()}catch{}};const choose=o=>{try{typeof clearSelection==='function'&&clearSelection();typeof setSelection==='function'&&setSelection([o])}catch{}};
   const makeId=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-  const closePaneOnMobile=()=>{if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
-  const openPane=()=>document.body.classList.remove('mobile-pane-collapsed');
+  // The creation drawer is owned by editor-responsive-contract-v27 (EInviteResponsiveLayout): it
+  // derives `mobile-pane-collapsed` from body[data-editor-drawer] on every sync, so toggling the
+  // class by hand is reverted in the same tick and the handle looked dead. Delegate to the owner
+  // when it is present, and keep the class toggle only as the fallback for hosts without it.
+  const owner=()=>window.EInviteResponsiveLayout;
+  const closePaneOnMobile=()=>{if(owner()?.closeCreation){owner().closeCreation();return}if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
+  const openPane=()=>{if(owner()?.openCreation){owner().openCreation();return}document.body.classList.remove('mobile-pane-collapsed')};
   rail.addEventListener('click',openPane,true);
   if(!$('.fp-mobile-pane-handle')){const h=document.createElement('button');h.type='button';h.className='fp-mobile-pane-handle';h.textContent='›';h.title='Open creation panel';h.onclick=openPane;document.body.append(h)}
   $$('.studio-pane-heading',host).forEach(head=>{if(head.querySelector('.fp-mobile-pane-close'))return;const b=document.createElement('button');b.type='button';b.className='fp-mobile-pane-close';b.textContent='‹';b.title='Hide panel';b.onclick=closePaneOnMobile;head.append(b)});

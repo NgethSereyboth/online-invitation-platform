@@ -29,6 +29,15 @@ body:not(.guest) h2, body:not(.guest) h3{color:var(--app-text)!important}
 body:not(.guest) small{color:var(--app-muted)!important}
 body:not(.guest) label, body:not(.guest) p, body:not(.guest) li, body:not(.guest) strong, body:not(.guest) em, body:not(.guest) span{color:inherit}
 body:not(.guest) > header{position:sticky;top:0;z-index:2000;gap:10px;padding:12px 18px;min-height:64px}
+/* The topbar is a stacking context, so every popup it contains — including the `•••` menu at
+   z-index 12000 — is painted inside 2000 and cannot outrank a sibling context on its own. The
+   studio canvas toolbar is `position:relative; z-index:40` inside `main` (editor-styles.css) and
+   later in the DOM, and `app-shell-v55.css` redeclares this header at z-index 40 later in the route
+   bundle, so the toolbar won the 40/40 tie by document order and painted a full row of the open
+   menu (measured: 6 of 77 sampled menu points covered at 1440 and 1600, none at 1024).
+   Scoping this declaration to the studio experience makes the intended 2000 win on the editor route
+   without touching the header's order on the other four routes. */
+body.studio-experience:not(.guest) > header{position:sticky;top:0;z-index:2000}
 body:not(.guest) > header strong{font-size:18px;font-weight:800;letter-spacing:-.02em}
 body:not(.guest) > header button{min-height:40px;padding:10px 14px;border-radius:12px;font-weight:600;font-size:13px;line-height:1.15;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
 body:not(.guest) > header a>button{background:transparent}
@@ -221,8 +230,18 @@ html[data-theme="dark"] body:not(.guest) .badge{background:var(--app-surface-3)!
 .canvas-header-status span{font-size:11px!important;white-space:nowrap}
 .canvas-icon-button{width:40px!important;min-width:40px!important;padding:0!important;font-size:19px!important}
 .canvas-header-more{position:relative;margin-left:2px}
-.canvas-header-more-trigger{width:42px!important;padding:0!important;font-size:16px!important;letter-spacing:1px}
-.canvas-header-more-menu{position:absolute;right:0;top:48px;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000}
+/* The trigger is also the anchor: the menu is placed from it, never from a hard-coded
+   top/right coordinate. Measured before this change (D1b): `right:0;top:48px` grew the
+   286px menu leftwards from the trigger's right edge, overlapping the left rail by 4px at
+   1024 and the 330-370px left panel by 210px at 1280 — and it was painted over the panel,
+   not beside it. Placing it below the trigger's right edge keeps it in the content column by
+   construction: it can never extend left of that edge. */
+.canvas-header-more-trigger{width:42px!important;padding:0!important;font-size:16px!important;letter-spacing:1px;anchor-name:--studio-more-trigger}
+.canvas-header-more-menu{position:absolute;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000;position-anchor:--studio-more-trigger;top:calc(anchor(bottom) + var(--space-1));right:auto;bottom:auto;left:anchor(right);position-try-fallbacks:--studio-more-above;width:min(286px,calc(100vw - var(--space-4)));max-height:min(620px,calc(100dvh - var(--space-16)));overflow:auto;overscroll-behavior:contain}
+/* Fallback for a trigger that is not at the top of the viewport: open upwards instead of
+   clipping. On the editor route the topbar is the first row, so the max-height above is what
+   actually protects that case; this rule is the generic one, verified in a fixture. */
+@position-try --studio-more-above{top:auto;bottom:calc(anchor(top) + var(--space-1));left:anchor(right)}
 .canvas-header-more-menu[hidden]{display:none}.canvas-header-more-menu>strong{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--app-muted)!important;padding:4px 6px}.canvas-header-more-menu button{width:100%;justify-content:flex-start!important;background:transparent!important;box-shadow:none!important}
 
 .canvas-transform-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.canvas-transform-grid label{margin:0!important}.canvas-transform-grid input[type=number]{width:100%;min-height:40px!important;padding:0 10px!important;border-radius:11px!important}.canvas-lock-ratio{display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--app-line);border-radius:11px;background:var(--app-surface-2)}.canvas-lock-ratio input{width:auto!important;min-height:auto!important}.canvas-transform-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.canvas-transform-actions button{min-height:38px!important;border-radius:11px!important;font-size:11px!important;font-weight:700!important}
@@ -368,7 +387,27 @@ body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme
 
 /* ===== editor-pro.css ===== */
 /* Persistent design tools, contextual toolbar, and inline rich-text controls. */
-#canvasViewport{position:relative}.ei-tool-rail{position:sticky;left:12px;top:18px;z-index:70;width:46px;padding:6px;display:flex;flex-direction:column;gap:5px;border:1px solid var(--app-line);border-radius:15px;background:color-mix(in srgb,var(--app-surface) 93%,transparent);box-shadow:0 16px 44px rgba(0,0,0,.15);backdrop-filter:blur(18px);align-self:flex-start;margin:18px 0 -100%;transform:translateZ(0)}.ei-tool-rail button{width:34px;height:34px;padding:0!important;border-radius:10px!important;background:transparent!important;border:0!important;color:var(--app-muted)!important;display:grid!important;place-items:center;font-weight:800!important;font-size:14px!important;box-shadow:none!important}.ei-tool-rail button:hover{background:var(--app-surface-2)!important;color:var(--app-text)!important;transform:scale(1.06)!important}.ei-tool-rail button.active{background:linear-gradient(135deg,var(--app-accent),var(--app-accent-2))!important;color:#fff!important;box-shadow:0 8px 20px color-mix(in srgb,var(--app-accent) 28%,transparent)!important}.ei-tool-rail .sep{height:1px;background:var(--app-line);margin:3px 4px}.ei-tool-rail button span{font-size:9px;position:absolute;right:3px;bottom:1px;opacity:.75}.ei-tool-crosshair{cursor:crosshair!important}.ei-tool-zoom{cursor:zoom-in!important}.ei-tool-hand{cursor:grab!important}
+#canvasViewport{position:relative}.ei-tool-rail{position:sticky;left:var(--editor-rail-inset,12px);top:18px;z-index:70;width:46px;padding:6px;display:flex;flex-direction:column;gap:5px;border:1px solid var(--app-line);border-radius:15px;background:color-mix(in srgb,var(--app-surface) 93%,transparent);box-shadow:0 16px 44px rgba(0,0,0,.15);backdrop-filter:blur(18px);align-self:flex-start;margin:18px 0 -100%;transform:translateZ(0)}
+
+/* The rail is meant to float in the canvas viewport's reserved left gutter
+   (`.canvas-viewport{padding:52px 70px 100px}` = 12px inset + 46px rail + 12px
+   gap). A sticky box never leaves the flow, though: `left:12px` only pins it
+   while scrolling, so its static position stayed on the viewport's content-box
+   left edge — exactly where the centred `.canvas-frame` starts. Measured on
+   src/python/index.html: the rail painted over 46px of the invitation page at
+   1200px and 23px at 1280px, clearing it again from 1360px up. The offset
+   rules below move the rail's static position into the gutter and keep it
+   sticky, so it still follows the canvas while panning. Desktop only: at
+   ≤1180px the layout contract (editor-responsive-contract-v27.js: 1180 =
+   compact) shrinks the gutter to 12px and centres the canvas, so there is
+   nothing to offset.
+
+   `margin-left` alone does not work: Chrome resolves a sticky inset against the
+   box's *margin* box, so shrinking only the margin is cancelled by `left:12px`
+   and the rail snapped straight back onto the canvas (measured at 413px with
+   and without the margin). The inset has to shrink by the same amount for the
+   shift to survive. */
+@media(min-width:1181px){.ei-tool-rail{margin-left:calc(var(--editor-rail-inset,12px) - var(--editor-canvas-gutter,70px));left:calc(var(--editor-rail-inset,12px) - var(--editor-canvas-gutter,70px))}}.ei-tool-rail button{width:34px;height:34px;padding:0!important;border-radius:10px!important;background:transparent!important;border:0!important;color:var(--app-muted)!important;display:grid!important;place-items:center;font-weight:800!important;font-size:14px!important;box-shadow:none!important}.ei-tool-rail button:hover{background:var(--app-surface-2)!important;color:var(--app-text)!important;transform:scale(1.06)!important}.ei-tool-rail button.active{background:linear-gradient(135deg,var(--app-accent),var(--app-accent-2))!important;color:#fff!important;box-shadow:0 8px 20px color-mix(in srgb,var(--app-accent) 28%,transparent)!important}.ei-tool-rail .sep{height:1px;background:var(--app-line);margin:3px 4px}.ei-tool-rail button span{font-size:9px;position:absolute;right:3px;bottom:1px;opacity:.75}.ei-tool-crosshair{cursor:crosshair!important}.ei-tool-zoom{cursor:zoom-in!important}.ei-tool-hand{cursor:grab!important}
 /* Reserved box, same geometry in both states: see src/css/editor/editor-styles.css
    for the measurement (50px of shift on index.html per load). This is the
    pre-`windows-ui-v54` half of the same fix — the toolbar must already own its

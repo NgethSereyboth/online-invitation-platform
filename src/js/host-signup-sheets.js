@@ -513,3 +513,52 @@
 
   window.EInviteHostSignupSheets = { mount };
 })();
+
+
+/* Mounted here instead of in a page-level inline <script>: the server sends
+   `script-src 'self'` with no nonce or hash list, so the sign-up sheets mount block was refused
+   outright and logged a CSP violation on every dashboard load. This module is already part
+   of bundle-dashboard-v15.js, so moving the mount into it adds no request and no script tag.
+   The block below is byte-for-byte the inline block it replaces. */
+// Mount host signup-sheets panel for the active invitation (V2-UX-1, ROADMAP-V2 §3.1).
+// Coordinates with ux-2 (host-polls) — this panel is placed before the polls panel
+// in the event-section flow. Picks the invitation id from window.EINVITE_INVITATION_ID,
+// then the URL ?invitation=, then EInviteContext.getInvitationId() (localStorage).
+(function () {
+  function resolveInvitationId() {
+    if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
+    try {
+      var qp = new URLSearchParams(location.search).get('invitation');
+      if (qp) return decodeURIComponent(qp);
+    } catch (e) {}
+    try {
+      if (window.EInviteContext && typeof window.EInviteContext.getInvitationId === 'function') {
+        return window.EInviteContext.getInvitationId() || '';
+      }
+    } catch (e) {}
+    try { return localStorage.getItem('sovan-active-invite') || ''; } catch (e) { return ''; }
+  }
+  function mountPanel() {
+    var mountEl = document.getElementById('signup-sheets-mount');
+    if (!mountEl) return;
+    var panel = document.getElementById('signup-sheets-panel');
+    // Static mode (no application server): this panel's only data source is
+    // /api/invitations/{id}/signup-sheets, so every request can only 404.
+    // Keep the section hidden and skip the mount entirely.
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { if (panel) panel.hidden = true; return; }
+    if (panel) panel.hidden = false;
+    if (!window.EInviteHostSignupSheets || typeof window.EInviteHostSignupSheets.mount !== 'function') return;
+    var invitationId = resolveInvitationId();
+    if (!invitationId) {
+      // Show the empty-state ("Select an invitation first"). Still mount so the
+      // panel renders its bilingual heading + placeholder.
+      mountEl.innerHTML = '<p class="muted"><span class="i18n i18n-en">Select an invitation first to manage its sign-up sheets.</span><span class="i18n i18n-km khmer-text" lang="km">Select an invitation first to manage its sign-up sheets.</span></p>';
+      return;
+    }
+    try { window.EInviteHostSignupSheets.mount(mountEl, { invitationId: invitationId }); }
+    catch (e) { console.warn('host-signup-sheets mount failed', e); }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountPanel, { once: true });
+  } else { mountPanel(); }
+})();

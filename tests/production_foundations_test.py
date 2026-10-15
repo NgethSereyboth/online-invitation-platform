@@ -39,7 +39,7 @@ def cookie_from(headers):
 def run():
  port=free_port();base=f'http://127.0.0.1:{port}'
  with tempfile.TemporaryDirectory(prefix='einvite-prod-foundations-') as d:
-  secret='billing-secret';env={**os.environ,'EINVITE_DATA_DIR':d,'EINVITE_BILLING_WEBHOOK_SECRET':secret}
+  secret='billing-secret-test-value-0123';env={**os.environ,'EINVITE_DATA_DIR':d,'EINVITE_BILLING_WEBHOOK_SECRET':secret}
   env.pop('EINVITE_DEV_AUTH_TOKENS',None);env.pop('SOVAN_DEV_AUTH_TOKENS',None)
   p=subprocess.Popen([sys.executable,'-u','server.py','--host','127.0.0.1','--port',str(port)],cwd=ROOT,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
   try:

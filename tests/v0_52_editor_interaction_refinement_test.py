@@ -8,11 +8,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def read(name: str) -> str:
-    return (ROOT / name).read_text(encoding="utf-8")
+    for base in (ROOT, ROOT / "src" / "js", ROOT / "src" / "css", ROOT / "docs"):
+        candidate = base / name
+        if candidate.exists():
+            return candidate.read_text(encoding="utf-8")
+    raise FileNotFoundError(name)
 
 
 def main() -> int:
-    direct = read("direct-manipulation-v24.js")
+    direct = read("src/js/direct-manipulation-v24.js")
     inline_body = direct.split("function startInline", 1)[1].split("function finishInline", 1)[0]
     install_body = direct.split("function install", 1)[1].split("function destroy", 1)[0]
     assert "on(document,'dblclick',onDoubleClick,true)" in install_body

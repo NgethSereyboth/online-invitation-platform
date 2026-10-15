@@ -11,7 +11,10 @@ from urllib.parse import quote, urlparse
 from core.preflight import audit_environment, load_env_file
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-TEMPLATE = ROOT / ".env.production.example"
+# The template lives in deploy/; older checkouts kept it under src/. Resolve
+# whichever exists so the generator works on both layouts.
+_TEMPLATE_CANDIDATES = (ROOT.parent / "deploy" / ".env.production.example", ROOT / ".env.production.example")
+TEMPLATE = next((p for p in _TEMPLATE_CANDIDATES if p.is_file()), _TEMPLATE_CANDIDATES[0])
 
 
 def validate_origin(value: str) -> str:
@@ -31,6 +34,7 @@ def generate_values() -> dict[str, str]:
         "REPLACE_REDIS_PASSWORD": redis,
         "REPLACE_MINIO_ACCESS_KEY": minio_access,
         "REPLACE_MINIO_SECRET_KEY": minio_secret,
+        "REPLACE_LONG_RANDOM_SECRET_KEY": secrets.token_urlsafe(48),
         "REPLACE_UPLOAD_SIGNING_SECRET": secrets.token_urlsafe(48),
         "REPLACE_MEDIA_SIGNING_SECRET": secrets.token_urlsafe(48),
         "REPLACE_GUEST_TOKEN_SECRET": secrets.token_urlsafe(48),
@@ -39,7 +43,7 @@ def generate_values() -> dict[str, str]:
     }
 
 
-def create_environment(output: Path, public_url: str, trusted_proxy_ips: str = "") -> Path:
+def create_environment(output: Path, public_url: str, trusted_proxy_ips: str = "", admin_ip_allowlist: str = "") -> Path:
     output = output.resolve()
     if output.exists():
         raise FileExistsError(f"Refusing to overwrite existing environment file: {output}")
@@ -50,6 +54,7 @@ def create_environment(output: Path, public_url: str, trusted_proxy_ips: str = "
     if not public_hostname:
         raise ValueError("--public-url does not contain a hostname")
     text = text.replace("https://invite.example.com", public_origin)
+    text = text.replace("https://REPLACE_HOST/", f"https://{public_hostname}/")
     text = text.replace("EINVITE_ALLOWED_HOSTS=invite.example.com", f"EINVITE_ALLOWED_HOSTS={public_hostname}")
     # URL fields need percent-encoded passwords; replace them before the raw
     # credential placeholders used by Compose and provider SDKs.
@@ -66,12 +71,18 @@ def create_environment(output: Path, public_url: str, trusted_proxy_ips: str = "
         "REPLACE_REDIS_PASSWORD",
         "REPLACE_MINIO_ACCESS_KEY",
         "REPLACE_MINIO_SECRET_KEY",
+        "REPLACE_LONG_RANDOM_SECRET_KEY",
         "REPLACE_UPLOAD_SIGNING_SECRET",
         "REPLACE_MEDIA_SIGNING_SECRET",
         "REPLACE_GUEST_TOKEN_SECRET",
     ):
         text = text.replace(placeholder, generated[placeholder])
     text = text.replace("EINVITE_TRUSTED_PROXY_IPS=", f"EINVITE_TRUSTED_PROXY_IPS={trusted_proxy_ips.strip()}", 1)
+    # Admin routes must be IP-allowlisted in production (ROADMAP §4.2a). Default
+    # to the trusted-proxy sources so the generated file passes the preflight;
+    # operators can point --admin-ip-allowlist at their admin networks instead.
+    allowlist = (admin_ip_allowlist or trusted_proxy_ips).strip()
+    text = text.replace("EINVITE_ADMIN_IP_ALLOWLIST=", f"EINVITE_ADMIN_IP_ALLOWLIST={allowlist}", 1)
     # Optional billing integration is intentionally disabled by default in a generated
     # production environment. Operators can populate these values later; leaving
     # template placeholders would make the generated environment fail its own
@@ -81,11 +92,22 @@ def create_environment(output: Path, public_url: str, trusted_proxy_ips: str = "
         "EINVITE_BILLING_CHECKOUT_ENDPOINT",
         "EINVITE_BILLING_API_KEY",
         "EINVITE_BILLING_WEBHOOK_SECRET",
+        "EINVITE_STRIPE_SECRET_KEY",
+        "EINVITE_STRIPE_PUBLISHABLE_KEY",
+        "EINVITE_STRIPE_WEBHOOK_SECRET",
+        "EINVITE_STRIPE_PRICE_STANDARD_MONTH",
+        "EINVITE_STRIPE_PRICE_STANDARD_YEAR",
+        "EINVITE_STRIPE_PRICE_PRO_MONTH",
+        "EINVITE_STRIPE_PRICE_PRO_YEAR",
+        "EINVITE_STRIPE_PRICE_OVERAGE_GB",
     ):
         lines = text.splitlines()
         text = "\n".join((f"{key}=" if line.startswith(key + "=") else line) for line in lines) + ("\n" if text.endswith("\n") else "")
-    if "REPLACE_" in text:
-        raise RuntimeError("The production template contains an unhandled placeholder")
+    # Comments may mention placeholder names as prose; only real assignments
+    # are treated as unhandled placeholders.
+    unhandled = [line for line in text.splitlines() if "REPLACE_" in line and not line.lstrip().startswith("#")]
+    if unhandled:
+        raise RuntimeError("The production template contains an unhandled placeholder: " + unhandled[0].split("=", 1)[0])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(text, encoding="utf-8", newline="\n")
     try:
@@ -104,9 +126,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--public-url", required=True, help="Canonical external HTTPS origin")
     parser.add_argument("--output", type=Path, default=ROOT / ".env.production")
     parser.add_argument("--trusted-proxy-ips", default="", help="Comma-separated exact reverse-proxy source IPs")
+    parser.add_argument("--admin-ip-allowlist", default="", help="CIDRs/IPs allowed to reach /api/admin/* (defaults to --trusted-proxy-ips)")
     args = parser.parse_args(argv)
     try:
-        path = create_environment(args.output, args.public_url, args.trusted_proxy_ips)
+        path = create_environment(args.output, args.public_url, args.trusted_proxy_ips, args.admin_ip_allowlist)
     except Exception as exc:
         print(f"PRODUCTION_ENV_NOT_CREATED: {exc}")
         return 1

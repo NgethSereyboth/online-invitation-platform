@@ -13,11 +13,11 @@ def main()->int:
  sources=json.loads(read('docs/route-bundle-sources-v15.json'))['pages']['index.html']['scripts']
  assert 'performance-loader-v22.js' in sources
  loader=read('src/js/performance-loader-v22.js')
- for name in required[1:5]:assert name.removesuffix('-v22.js') in loader,name
+ for name in required[1:5]:assert Path(name).name.removesuffix('-v22.js') in loader,name
  assert 'gpu-loader' not in loader
  bridge=read('src/js/render-worker-bridge-v22.js');assert 'gpu-loader-v22.js' in bridge and 'loadGPU' in bridge
  gpu_loader=read('src/js/gpu-loader-v22.js')
- for name in required[7:]:assert name.removesuffix('-v22.js') in gpu_loader,name
+ for name in required[7:]:assert Path(name).name.removesuffix('-v22.js') in gpu_loader,name
  app=read('src/js/app.js');pro=read('src/js/professional-editor-v17.js')
  assert ('options.incremental === true' in app or 'options.incremental===true' in app) and 'EInviteIncrementalRenderer.applyDocument' in app
  assert 'EInviteInteractionScheduler' in pro and 'editor-gesture:' in pro

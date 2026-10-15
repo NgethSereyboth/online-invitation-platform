@@ -180,6 +180,7 @@
   }
 
   const mountedTabs = new Set();
+  const retriedTabs = new Set();
 
   function mountModule(tab){
     const map = {
@@ -198,6 +199,14 @@
     if (mod && typeof mod.mount === 'function' && !mountedTabs.has(tab)) {
       mountedTabs.add(tab);
       try { mod.mount(); } catch(e) { console.warn('[admin] module mount failed', tab, e); }
+      return;
+    }
+    // Interaction-only panels ship in the deferred route chunk (V15). If the
+    // chunk has not evaluated yet, retry once the loader signals it is ready.
+    const loader = window.EInviteDeferredRouteLoaderV15;
+    if (!mod && !retriedTabs.has(tab) && loader && loader.ready && typeof loader.ready.then === 'function') {
+      retriedTabs.add(tab);
+      loader.ready.then(() => mountModule(tab));
     }
   }
 
