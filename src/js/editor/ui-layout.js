@@ -267,11 +267,29 @@
    * If the button already exists in the HTML (pre-rendered for first paint),
    * just wire up its click handler and sync its state.
    */
+  /**
+   * What the sidebar toggle means at the current width.
+   *
+   * Above 820px it switches the rail between full labels and icon-only. At or below 820px the rail
+   * column is translated off-canvas on purpose, so that toggle has no visible effect — but the
+   * compact layout still owns a real "sidebar": the creation drawer in
+   * editor-responsive-contract-v27. Drive that instead of doing nothing.
+   */
+  function toggleSidebar() {
+    const owner = window.EInviteResponsiveLayout;
+    if (innerWidth <= 820 && owner && typeof owner.openCreation === 'function' && owner.mode && owner.mode() !== 'desktop') {
+      if (body.classList.contains('mobile-pane-collapsed')) owner.openCreation();
+      else owner.closeCreation();
+      return;
+    }
+    setSidebarCollapsed(!body.classList.contains('sidebar-collapsed'));
+  }
+
   function ensureSidebarCollapseButton() {
     const existing = $('#v54SidebarCollapse');
     if (existing) {
       // Wire up the click handler on the pre-rendered button.
-      existing.onclick = () => setSidebarCollapsed(!body.classList.contains('sidebar-collapsed'));
+      existing.onclick = toggleSidebar;
       setSidebarCollapsed(sidebarCollapsed());  // sync aria/title
       return;
     }
@@ -284,7 +302,7 @@
     button.setAttribute('aria-pressed', String(sidebarCollapsed()));
     button.title = sidebarCollapsed() ? 'Show labels' : 'Show icons only';
     button.innerHTML = '<span class="v54-collapse-label" aria-hidden="true">‹</span><span class="sr-only">Toggle sidebar labels</span>';
-    button.addEventListener('click', () => setSidebarCollapsed(!body.classList.contains('sidebar-collapsed')));
+    button.addEventListener('click', toggleSidebar);
     // Place at the top of the rail so it is always reachable.
     rail.prepend(button);
   }
@@ -311,7 +329,10 @@
     // this is cheap and does not move toolbar chrome.
     document.addEventListener('click', event => {
       if (event.target.closest('.workflow-page-chip,.workflow-page-add,#workflowV7DockFlow')) requestAnimationFrame(keepActivePageVisible);
-      if (event.target.closest('.ei-tool-rail button')) requestAnimationFrame(keepActiveToolVisible);
+      // The callback is wrapped: requestAnimationFrame invokes it with a DOMHighResTimeStamp,
+      // which used to land in keepActiveToolVisible's `root` parameter and throw
+      // "root.querySelectorAll is not a function" on every tool click.
+      if (event.target.closest('.ei-tool-rail button')) requestAnimationFrame(() => keepActiveToolVisible());
     }, true);
 
     // Re-check overflow only on resize, not on every state change.

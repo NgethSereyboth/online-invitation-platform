@@ -1,4 +1,64 @@
-;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
+;/*
+ * yjs-bridge-v54.js — publishes the vendored Y.js bundle as `window.Y`.
+ *
+ * vendor/yjs/y.js is an ES module, and the CSP (`script-src 'self'`) forbids
+ * inline scripts. This file is concatenated into the page's classic route
+ * bundle, so it uses dynamic import() instead of a static `import` statement.
+ * The /vendor/yjs/y.js <link rel="modulepreload"> with its SRI hash in the page
+ * head makes this import use the integrity-checked copy.
+ */
+(() => {
+  if (window.Y) return;
+  import('/vendor/yjs/y.js').then(
+    (Y) => {
+      window.Y = Y;
+      if (typeof Y.Doc !== 'function') {
+        console.error('[yjs-bridge] Y.Doc is missing: the vendored Y.js bundle did not load.');
+      }
+    },
+    (error) => console.error('[yjs-bridge] Failed to load Y.js:', error)
+  );
+})();;(() => {
+  'use strict';
+  // route-deferred-loader-v15 — injects the per-route deferred chunk after
+  // first paint. Bundled at the head of each route bundle, it derives the
+  // deferred bundle name from its own <script> URL (bundle-<page>-v15.js →
+  // bundle-<page>-deferred-v15.{js,css}) so no HTML/inline script is needed
+  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
+  // on the first user interaction, whichever comes first, so on-demand
+  // modules never delay first paint or the route-weight budget.
+  if (window.EInviteDeferredRouteLoaderV15) return;
+  // `ready` resolves once the deferred chunk has been evaluated (or failed to
+  // load), so consumers that lazily mount a deferred module can retry on it.
+  let resolveReady;
+  const ready = new Promise((res) => { resolveReady = res; });
+  window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
+  const current = document.currentScript;
+  const src = (current && current.src) || '';
+  const match = /bundle-([A-Za-z0-9_]+)-v15\.js/.exec(src);
+  if (!match) { resolveReady(); return; }
+  const prefix = src.slice(0, src.lastIndexOf('/') + 1);
+  const stem = match[1];
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `${prefix}bundle-${stem}-deferred-v15.css`;
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = `${prefix}bundle-${stem}-deferred-v15.js`;
+    script.addEventListener('load', () => resolveReady(), { once: true });
+    script.addEventListener('error', () => resolveReady(), { once: true });
+    document.head.appendChild(script);
+  }
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  idle(start, { timeout: 2000 });
+  for (const type of ['pointerdown', 'keydown', 'touchstart']) {
+    window.addEventListener(type, start, { once: true, passive: true, capture: true });
+  }
+})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
  * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
  *
  * Responsibilities:
@@ -127,16 +187,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +217,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -257,7 +335,7 @@
     }
   }
 })(typeof window !== "undefined" ? window : this);;(()=>{'use strict';
-const DATA={"version":"20.1","modelVersion":1,"defaultFontId":"noto-serif","defaultPairingId":"serif-formal","fonts":{"noto-sans":{"label":"Noto Sans","family":"EInvite Noto Sans","stack":"'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans','Noto Sans Khmer','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-latin-400.woff2","700":"assets/fonts/noto-sans-latin-700.woff2"},"stableId":"noto-sans","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"6932db6a846e5f3eedd70862935d1e382ffa25da0851563c3e7b82129ebefe23","700":"a9885073a1b8fcde1b37ac0c4497914e598cc9057344a552217b32e4c89f0866"}},"noto-serif":{"label":"Noto Serif","family":"EInvite Noto Serif","stack":"'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif','Noto Serif Khmer','Khmer UI',Georgia,serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-latin-400.woff2","700":"assets/fonts/noto-serif-latin-700.woff2"},"stableId":"noto-serif","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"3c94a973daf5e7fd05cb205eab2171b0af0ba42496202d54e6cdd55e45a82221","700":"d7e6e94e00d65d77273e033e0eca185d9ab37d44d4505225f364ff1453cb7039"}},"noto-sans-khmer":{"label":"Noto Sans Khmer","family":"EInvite Noto Sans Khmer","stack":"'EInvite Noto Sans Khmer','EInvite Noto Sans','Noto Sans Khmer','Noto Sans','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-khmer-400.woff2","700":"assets/fonts/noto-sans-khmer-700.woff2"},"stableId":"noto-sans-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"53229761be85cb21c727d19ff81e959f3a35c32925d42f02829acf53dbdbf625","700":"0eb1923fffc493ed3af0e5cb4bc467ec1c7921ce9f845888ebd3b5755b86aecd"}},"noto-serif-khmer":{"label":"Noto Serif Khmer","family":"EInvite Noto Serif Khmer","stack":"'EInvite Noto Serif Khmer','EInvite Noto Serif','Noto Serif Khmer','Noto Serif','Khmer UI',Georgia,serif","category":"serif","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-khmer-400.woff2","700":"assets/fonts/noto-serif-khmer-700.woff2"},"stableId":"noto-serif-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"db80eb1479b0cb726e5fd224ba2cde7b6f92825988f4ec1e89575d851011e625","700":"fe903cee1be19a931d38a575948897f7c0d0159a8c2c028af596ec928d7976ce"}},"serif-georgia":{"label":"Classic Serif (system)","family":"Georgia","stack":"Georgia,'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif Khmer','Khmer UI',serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"serif-georgia","sourceType":"system-fallback"},"sans-arial":{"label":"Modern Sans (system)","family":"Arial","stack":"Arial,'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-arial","sourceType":"system-fallback"},"sans-trebuchet":{"label":"Friendly (system)","family":"Trebuchet MS","stack":"'Trebuchet MS','EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-trebuchet","sourceType":"system-fallback"}},"pairings":{"serif-formal":{"label":"Formal Serif","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"serif-formal"},"sans-modern":{"label":"Modern Sans","en":"noto-sans","km":"noto-sans-khmer","recommended":true,"stableId":"sans-modern"},"modern-system":{"label":"Modern System Sans","en":"sans-arial","km":"noto-sans-khmer","legacyOnly":true,"stableId":"modern-system"},"ceremonial-khmer":{"label":"Khmer Ceremonial","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"ceremonial-khmer"},"classic-system":{"label":"Classic System Serif","en":"serif-georgia","km":"noto-serif-khmer","legacyOnly":true,"stableId":"classic-system"},"friendly-system":{"label":"Friendly System Sans","en":"sans-trebuchet","km":"noto-sans-khmer","legacyOnly":true,"stableId":"friendly-system"}},"colorTokens":["heading","text","accent","surface","muted","inverse"],"legacy":{"Georgia,serif":"serif-georgia","Georgia, serif":"serif-georgia","Arial,sans-serif":"sans-arial","Arial, sans-serif":"sans-arial","'Trebuchet MS',sans-serif":"sans-trebuchet","'Trebuchet MS', sans-serif":"sans-trebuchet","'Noto Serif Khmer','Khmer OS Battambang',serif":"noto-serif-khmer","'Noto Serif Khmer', 'Khmer OS Battambang', serif":"noto-serif-khmer","'Noto Sans Khmer','Khmer OS Battambang',sans-serif":"noto-sans-khmer","'Noto Sans Khmer', 'Khmer OS Battambang', sans-serif":"noto-sans-khmer","'Khmer OS Muol Light','Noto Serif Khmer',serif":"noto-serif-khmer","'Khmer OS Muol Light', 'Noto Serif Khmer', serif":"noto-serif-khmer","Noto Serif Khmer":"noto-serif-khmer","Noto Sans Khmer":"noto-sans-khmer","Georgia":"serif-georgia","Arial":"sans-arial","inherit":"noto-serif","":"noto-serif"},"maxTextStyles":64};
+const DATA={"version":"20.1","modelVersion":1,"defaultFontId":"noto-serif","defaultPairingId":"serif-formal","fonts":{"noto-sans":{"label":"Noto Sans","family":"EInvite Noto Sans","stack":"'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans','Noto Sans Khmer','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-latin-400.woff2","700":"assets/fonts/noto-sans-latin-700.woff2"},"stableId":"noto-sans","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"f54a80e0d925f4e82d0cf52b3249a4b1320137363e98018a6f65377d3390aa8c","700":"5fce99c92e68803bf3bf4f2c4a26ab0a649ddea0f11eaba28124d010183b69e5"}},"noto-serif":{"label":"Noto Serif","family":"EInvite Noto Serif","stack":"'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif','Noto Serif Khmer','Khmer UI',Georgia,serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-latin-400.woff2","700":"assets/fonts/noto-serif-latin-700.woff2"},"stableId":"noto-serif","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"0415cee63cb9ba43d5094caddd6d903d447cbc025dbe1c2a621f7855ffa1a99e","700":"f66ce4961c2ca74153ccf8be0e112ba679575b6aacc3155371483b019155d1b7"}},"noto-sans-khmer":{"label":"Noto Sans Khmer","family":"EInvite Noto Sans Khmer","stack":"'EInvite Noto Sans Khmer','EInvite Noto Sans','Noto Sans Khmer','Noto Sans','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-khmer-400.woff2","700":"assets/fonts/noto-sans-khmer-700.woff2"},"stableId":"noto-sans-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"4edee25cbc3ad5877820db657b57cf7df5fae06ae7ecc0513209d3617efe99a3","700":"8bb47df185665c501e5d264547b0f7eb235b4fba6063a48d4b721f48474d72e3"}},"noto-serif-khmer":{"label":"Noto Serif Khmer","family":"EInvite Noto Serif Khmer","stack":"'EInvite Noto Serif Khmer','EInvite Noto Serif','Noto Serif Khmer','Noto Serif','Khmer UI',Georgia,serif","category":"serif","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-khmer-400.woff2","700":"assets/fonts/noto-serif-khmer-700.woff2"},"stableId":"noto-serif-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"980724e3fd5f924c86df268bf5cd5a4b1f500e3446ae579e741ba3df9d0e1b9f","700":"89d8d06b2425e7bc67292401d475d6f047706a13c462f24e291121a64b8f24c2"}},"serif-georgia":{"label":"Classic Serif (system)","family":"Georgia","stack":"Georgia,'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif Khmer','Khmer UI',serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"serif-georgia","sourceType":"system-fallback"},"sans-arial":{"label":"Modern Sans (system)","family":"Arial","stack":"Arial,'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-arial","sourceType":"system-fallback"},"sans-trebuchet":{"label":"Friendly (system)","family":"Trebuchet MS","stack":"'Trebuchet MS','EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-trebuchet","sourceType":"system-fallback"}},"pairings":{"serif-formal":{"label":"Formal Serif","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"serif-formal"},"sans-modern":{"label":"Modern Sans","en":"noto-sans","km":"noto-sans-khmer","recommended":true,"stableId":"sans-modern"},"modern-system":{"label":"Modern System Sans","en":"sans-arial","km":"noto-sans-khmer","legacyOnly":true,"stableId":"modern-system"},"ceremonial-khmer":{"label":"Khmer Ceremonial","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"ceremonial-khmer"},"classic-system":{"label":"Classic System Serif","en":"serif-georgia","km":"noto-serif-khmer","legacyOnly":true,"stableId":"classic-system"},"friendly-system":{"label":"Friendly System Sans","en":"sans-trebuchet","km":"noto-sans-khmer","legacyOnly":true,"stableId":"friendly-system"}},"colorTokens":["heading","text","accent","surface","muted","inverse"],"legacy":{"Georgia,serif":"serif-georgia","Georgia, serif":"serif-georgia","Arial,sans-serif":"sans-arial","Arial, sans-serif":"sans-arial","'Trebuchet MS',sans-serif":"sans-trebuchet","'Trebuchet MS', sans-serif":"sans-trebuchet","'Noto Serif Khmer','Khmer OS Battambang',serif":"noto-serif-khmer","'Noto Serif Khmer', 'Khmer OS Battambang', serif":"noto-serif-khmer","'Noto Sans Khmer','Khmer OS Battambang',sans-serif":"noto-sans-khmer","'Noto Sans Khmer', 'Khmer OS Battambang', sans-serif":"noto-sans-khmer","'Khmer OS Muol Light','Noto Serif Khmer',serif":"noto-serif-khmer","'Khmer OS Muol Light', 'Noto Serif Khmer', serif":"noto-serif-khmer","Noto Serif Khmer":"noto-serif-khmer","Noto Sans Khmer":"noto-sans-khmer","Georgia":"serif-georgia","Arial":"sans-arial","inherit":"noto-serif","":"noto-serif"},"maxTextStyles":64};
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const ids=Object.freeze(Object.keys(DATA.fonts)),pairingIds=Object.freeze(Object.keys(DATA.pairings)),MAX_TEXT_STYLES=DATA.maxTextStyles||64;
 function finiteNumber(value,fallback,min,max){if(typeof value==='boolean'||value===null||value===''||Array.isArray(value)||(typeof value==='object'&&value!==null))return fallback;const number=typeof value==='number'?value:Number(value);return Number.isFinite(number)?Math.max(min,Math.min(max,number)):fallback}
@@ -593,8 +671,21 @@ window.alert=(message)=>{uiAlert(message)};
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- function getInvitationId(options={}){const direct=safe(explicitId);if(direct)return direct;if(options.allowRemembered===false)return '';return safe(localStorage.getItem(LAST_KEY))}
- function remember(id){id=safe(id);if(id)localStorage.setItem(LAST_KEY,id);return id}
+ // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
+ // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
+ // resolve it as if it were a real invitation: the signed-in editor asked the server for
+ // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
+ // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+ const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
+ function getInvitationId(options={}){
+   const direct=safe(explicitId);if(direct)return direct;
+   if(options.allowRemembered===false)return '';
+   const stored=safe(localStorage.getItem(LAST_KEY));
+   if(!stored)return '';
+   if(isLocalId(stored)){try{localStorage.removeItem(LAST_KEY)}catch(e){/* storage disabled */}return ''}
+   return stored
+ }
+ function remember(id){id=safe(id);if(id&&!isLocalId(id))localStorage.setItem(LAST_KEY,id);return id}
  function route(id,target='editor'){
    id=safe(id);target=String(target||'editor').toLowerCase();
    if(!id)return target==='materials'?'materials.html':'dashboard.html';
@@ -1008,7 +1099,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
   /* --- 4. Card polish ---------------------------------------------------- */
   const BADGE = {
     published: { en: 'Published', km: 'ផ្សាយ', icon: '●' },
-    draft: { en: 'Draft', km: null, icon: '◐' },
+    draft: { en: 'Draft', km: 'ព្រាង', icon: '◐' },
     archived: { en: 'Archived', km: 'បង្ងា', icon: '▤' }
   };
 
@@ -1421,8 +1512,13 @@ function editorFinal(){
   const stage=$('#stage'),host=$('.studio-pane-host'),rail=$('.studio-tool-rail');if(!stage||!host||!rail)return;
   const saveNow=()=>{try{typeof save==='function'&&save()}catch{}};const choose=o=>{try{typeof clearSelection==='function'&&clearSelection();typeof setSelection==='function'&&setSelection([o])}catch{}};
   const makeId=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-  const closePaneOnMobile=()=>{if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
-  const openPane=()=>document.body.classList.remove('mobile-pane-collapsed');
+  // The creation drawer is owned by editor-responsive-contract-v27 (EInviteResponsiveLayout): it
+  // derives `mobile-pane-collapsed` from body[data-editor-drawer] on every sync, so toggling the
+  // class by hand is reverted in the same tick and the handle looked dead. Delegate to the owner
+  // when it is present, and keep the class toggle only as the fallback for hosts without it.
+  const owner=()=>window.EInviteResponsiveLayout;
+  const closePaneOnMobile=()=>{if(owner()?.closeCreation){owner().closeCreation();return}if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
+  const openPane=()=>{if(owner()?.openCreation){owner().openCreation();return}document.body.classList.remove('mobile-pane-collapsed')};
   rail.addEventListener('click',openPane,true);
   if(!$('.fp-mobile-pane-handle')){const h=document.createElement('button');h.type='button';h.className='fp-mobile-pane-handle';h.textContent='›';h.title='Open creation panel';h.onclick=openPane;document.body.append(h)}
   $$('.studio-pane-heading',host).forEach(head=>{if(head.querySelector('.fp-mobile-pane-close'))return;const b=document.createElement('button');b.type='button';b.className='fp-mobile-pane-close';b.textContent='‹';b.title='Hide panel';b.onclick=closePaneOnMobile;head.append(b)});
@@ -1579,356 +1675,6 @@ function init(){
  observeDialogs();new MutationObserver(observeDialogs).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
-})();;/**
- * Phase 2a (V54.1) — Multi-channel delivery host dialog.
- *
- * Loaded on the dashboard / host pages. Lets the host pick channels (email
- * default, SMS / WhatsApp / Telegram when env-configured), select recipients
- * from the guest list, and dispatch the invitation. Vanilla JS, bilingual
- * EN + KH.
- *
- * Surface contract:
- *   window.EInviteDeliveryDialog.open({ invitationId, document })
- */
-(function () {
-  'use strict';
-
-  const STRINGS = {
-    title: { en: 'Send invitation', km: 'ផ្ញើការអញ្ជើញ' },
-    intro: {
-      en: 'Pick channels and recipients. Email is always available; SMS / WhatsApp / Telegram require configuration.',
-      km: 'ជ្រើសឆានែល និងអ្នកទទួល។ អ៊ីមែលអាចប្រើបានជានិច្ច; SMS / WhatsApp / Telegram ត្រូវការការកំណត់រចនាសម្ព័ន្ធ។',
-    },
-    channels: { en: 'Channels', km: 'ឆានែល' },
-    recipients: { en: 'Recipients', km: 'អ្នកទទួល' },
-    message: { en: 'Message (optional)', km: 'សារ (ស្រេចចិត្ត)' },
-    subject: { en: 'Subject', km: 'ប្រធានបទ' },
-    selectAll: { en: 'Select all', km: 'ជ្រើសទាំងអស់' },
-    send: { en: 'Send', km: 'ផ្ញើ' },
-    cancel: { en: 'Cancel', km: 'បោះបង់' },
-    sent: { en: 'sent', km: 'បានផ្ញើ' },
-    skipped: { en: 'skipped', km: 'រំលង' },
-    failed: { en: 'failed', km: 'បរាជ័យ' },
-    notConfigured: { en: 'Not configured', km: 'មិនបានកំណត់រចនាសម្ព័ន្ធ' },
-    close: { en: 'Close', km: 'បិទ' },
-  };
-
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const langText = (key, mode) => {
-    const en = (STRINGS[key] && STRINGS[key].en) || key;
-    const km = (STRINGS[key] && STRINGS[key].km) || en;
-    // Dashboard/editor surfaces are always switchable: emit dual spans and let
-    // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
-    // re-render, form state preserved).
-    return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
-  };
-  const detectLang = () => (document.documentElement.lang === 'km' ? 'km' : 'en');
-
-  function open(opts) {
-    if (!opts || !opts.invitationId) return;
-    const invitationId = opts.invitationId;
-    const lang = detectLang();
-    const overlay = document.createElement('div');
-    overlay.className = 'delivery-dialog-overlay';
-    overlay.innerHTML = `
-      <div class="delivery-dialog" role="dialog" aria-modal="true" aria-label="${esc(STRINGS.title.en)}">
-        <header><h2>${langText('title', lang)}</h2><button type="button" data-close>&times;</button></header>
-        <p class="muted">${langText('intro', lang)}</p>
-        <form>
-          <fieldset>
-            <legend>${langText('channels', lang)}</legend>
-            <div class="channel-list state">…</div>
-          </fieldset>
-          <fieldset>
-            <legend>${langText('recipients', lang)}</legend>
-            <label><input type="checkbox" data-select-all> ${langText('selectAll', lang)}</label>
-            <div class="recipient-list state">…</div>
-          </fieldset>
-          <label>${langText('subject', lang)}<input type="text" name="subject" maxlength="200"></label>
-          <label>${langText('message', lang)}<textarea name="message" rows="3" maxlength="5000"></textarea></label>
-          <footer>
-            <button type="button" data-close>${langText('cancel', lang)}</button>
-            <button type="submit">${langText('send', lang)}</button>
-          </footer>
-        </form>
-      </div>`;
-    document.body.appendChild(overlay);
-    overlay.querySelector('[data-close]').addEventListener('click', () => overlay.remove());
-    overlay.querySelector('.delivery-dialog').addEventListener('click', (ev) => ev.stopPropagation());
-    overlay.addEventListener('click', () => overlay.remove());
-
-    const channelList = overlay.querySelector('.channel-list');
-    const recipientList = overlay.querySelector('.recipient-list');
-    const selectAll = overlay.querySelector('[data-select-all]');
-    const form = overlay.querySelector('form');
-
-    // Load channels + recipients in parallel.
-    Promise.all([
-      fetch(`/api/invitations/${encodeURIComponent(invitationId)}/delivery-channels`).then((r) => r.json()),
-      fetch(`/api/invitations/${encodeURIComponent(invitationId)}/guests`).then((r) => r.json()),
-    ]).then(([channelData, guests]) => {
-      renderChannels(channelData.channels || []);
-      renderRecipients(guests || []);
-    }).catch((err) => {
-      channelList.innerHTML = `<p class="error">${esc(err.message)}</p>`;
-    });
-
-    selectAll.addEventListener('change', () => {
-      recipientList.querySelectorAll('input[type=checkbox]').forEach((cb) => { cb.checked = selectAll.checked; });
-    });
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const submit = form.querySelector('button[type=submit]');
-      submit.disabled = true;
-      const channels = Array.from(channelList.querySelectorAll('input[type=checkbox]:checked')).map((cb) => cb.value);
-      const recipients = Array.from(recipientList.querySelectorAll('input[type=checkbox]:checked')).map((cb) => JSON.parse(cb.value));
-      const data = Object.fromEntries(new FormData(form));
-      if (!channels.length || !recipients.length) {
-        alert('Select at least one channel and one recipient');
-        submit.disabled = false;
-        return;
-      }
-      try {
-        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/deliver`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            channels,
-            recipients,
-            message: data.message || '',
-            subject: data.subject || '',
-          }),
-        });
-        const result = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
-        const results = result.results || [];
-        const sent = results.filter((r) => r.status === 'sent').length;
-        const skipped = results.filter((r) => r.status === 'skipped').length;
-        const failed = results.filter((r) => r.status === 'failed').length;
-        alert(`${sent} ${STRINGS.sent.en}, ${skipped} ${STRINGS.skipped.en}, ${failed} ${STRINGS.failed.en}`);
-        overlay.remove();
-      } catch (err) {
-        alert(err.message);
-        submit.disabled = false;
-      }
-    });
-
-    function renderChannels(channels) {
-      channelList.innerHTML = channels.map((c) => `
-        <label>
-          <input type="checkbox" value="${esc(c.name)}" ${c.name === 'email' ? 'checked' : ''} ${c.available ? '' : 'disabled'}>
-          ${esc(c.label_en || c.name)}
-          ${c.available ? '' : `<span class="muted">(${langText('notConfigured', lang)})</span>`}
-        </label>`).join('');
-    }
-
-    function renderRecipients(guests) {
-      if (!guests.length) {
-        recipientList.innerHTML = `<p class="muted">No guests added yet.</p>`;
-        return;
-      }
-      recipientList.innerHTML = guests.map((g) => `
-        <label>
-          <input type="checkbox" value='${esc(JSON.stringify({ guestId: g.id, name: g.name, email: g.email || '', phone: g.phone || '' }))}'>
-          ${esc(g.name)} ${g.email ? `&lt;${esc(g.email)}&gt;` : ''} ${g.phone ? `(${esc(g.phone)})` : ''}
-        </label>`).join('');
-    }
-  }
-
-  window.EInviteDeliveryDialog = { open };
-})();;/**
- * Phase 2a (V54.4) — Post-send editing badge + edit-history view.
- *
- * Two surfaces:
- *
- *   1. Public "Edited after sending" badge — mounted on the public
- *      invitation page when the host has edited the invitation after
- *      delivering it. The badge shows the timestamp of the first
- *      post-send edit and is the wedge feature against Paperless Post
- *      and Evite, both of which lock the invitation after send.
- *
- *   2. Host edit-history view — mounted on the dashboard, shows the
- *      full diff history (added/changed/removed field paths) for every
- *      post-send edit, plus a "Resend update notification" button that
- *      triggers an "invitation updated" email to already-viewed guests.
- *
- * Bilingual EN + Khmer (KH) per ROADMAP ground rule 5.
- *
- * Surface contract:
- *   window.EInviteEditHistory.mountBadge(root, { invitationId, mode, sentAt, editedAfterSendAt })
- *   window.EInviteEditHistory.mountHistoryView(root, { invitationId, mode })
- */
-(function () {
-  'use strict';
-
-  const STRINGS = {
-    badgeLabel: { en: 'Edited after sending', km: 'បានកែប្រែបន្ទាប់ពីផ្ញើ' },
-    badgeTitle: {
-      en: 'The host updated this invitation after it was sent. Tap to view what changed.',
-      km: 'ម្ចាស់កម្មវិធីបានកែប្រែការអញ្ជើញនេះបន្ទាប់ពីបានផ្ញើ។ ចុចដើម្បីមើលអ្វីដែលបានផ្លាស់ប្រែ។',
-    },
-    historyTitle: { en: 'Edit history', km: 'ប្រវត្តិកែប្រែ' },
-    historyIntro: {
-      en: 'Every change you made after the invitation was first sent is recorded here. Guests who already opened the invitation can be notified of the update.',
-      km: 'ការផ្លាស់ប្រែណាមួយដែលអ្នកបានធ្វើបន្ទាប់ពីការអញ្ជើញត្រូវបានផ្ញើជាលើកដំបូងត្រូវបានកត់ត្រានៅទីនេះ។ ភ្ញៀវដែលបានបើកការអញ្ជើញរួចហើយអាចត្រូវបានជូនដំណឹងអំពីការផ្លាស់ប្រែ។',
-    },
-    empty: { en: 'No edits have been made after sending yet.', km: 'មិនទាន់មានការកែប្រែណាមួយបន្ទាប់ពីផ្ញើនៅឡើយទេ។' },
-    resend: { en: 'Resend update notification', km: 'ផ្ញើការជូនដំណឹងបច្ចុប្បន្នភាពឡើងវិញ' },
-    resendDone: {
-      en: 'Notification sent to {sent} guest(s).',
-      km: 'បានផ្ញើការជូនដំណឹងទៅ {sent} ភ្ញៀវ។',
-    },
-    resendFailed: { en: 'Could not resend the notification. Please try again.', km: 'មិនអាចផ្ញើការជូនដំណឹងឡើងវិញបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
-    diffAdded: { en: 'Added', km: 'បានបន្ថែម' },
-    diffChanged: { en: 'Changed', km: 'បានផ្លាស់ប្រែ' },
-    diffRemoved: { en: 'Removed', km: 'បានលុប' },
-    reason: { en: 'Reason', km: 'មូលហេតុ' },
-    versionLabel: { en: 'Version', km: 'កំណែ' },
-    loading: { en: 'Loading edit history…', km: 'កំពុងផ្ទុកប្រវត្តិកែប្រែ…' },
-    error: { en: 'Could not load edit history.', km: 'មិនអាចផ្ទុកប្រវត្តិកែប្រែបានទេ។' },
-  };
-
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // V2-UX-5 (P1-B, WCAG 3.1.2): emit lang="km" / lang="en" on every text fragment
-  // so screen readers pick the correct pronunciation engine. The Khmer span keeps
-  // the existing `khmer-text` class for CSS targeting via :lang(km) / [lang="km"].
-  const langText = (key, mode) => {
-    const en = (STRINGS[key] && STRINGS[key].en) || key;
-    const km = (STRINGS[key] && STRINGS[key].km) || en;
-    if (mode === 'en') return `<span class="i18n i18n-en" lang="en">${esc(en)}</span>`;
-    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
-    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
-  };
-  const formatTs = (ts) => {
-    if (!ts) return '';
-    try {
-      const d = new Date(Number(ts));
-      if (isNaN(d.getTime())) return '';
-      return d.toLocaleString();
-    } catch { return ''; }
-  };
-
-  /**
-   * Mount the "Edited after sending" badge on the public invitation page.
-   *
-   * The badge is rendered above the main invitation content. Clicking it
-   * scrolls to a small dialog explaining that the host updated the
-   * invitation after sending it. The badge is only rendered when
-   * ``editedAfterSendAt`` is set (i.e., the host has actually edited).
-   */
-  function mountBadge(root, opts) {
-    if (!root || !opts || !opts.invitationId) return;
-    if (!opts.editedAfterSendAt) return;  // No post-send edits → no badge.
-    const mode = opts.mode || 'both';
-    const badge = document.createElement('aside');
-    badge.className = 'invitation-edit-badge reveal';
-    badge.setAttribute('role', 'status');
-    badge.setAttribute('aria-live', 'polite');
-    badge.setAttribute('title', STRINGS.badgeTitle.en);
-    const when = formatTs(opts.editedAfterSendAt);
-    badge.innerHTML = `
-      <span class="edit-badge-icon" aria-hidden="true">✎</span>
-      <span class="edit-badge-text">${langText('badgeLabel', mode)}${when ? ` · ${esc(when)}` : ''}</span>
-    `;
-    // Insert as the first child of the root, above the cover/hero.
-    root.insertBefore(badge, root.firstChild);
-  }
-
-  /**
-   * Mount the host's full edit-history view (dashboard side).
-   *
-   * Fetches ``GET /api/invitations/{id}/edit-history`` and renders a
-   * chronological list of edits with the diff (added/changed/removed
-   * field paths) plus a "Resend update notification" button.
-   */
-  function mountHistoryView(root, opts) {
-    if (!root || !opts || !opts.invitationId) return;
-    const invitationId = opts.invitationId;
-    const mode = opts.mode || 'both';
-    const section = document.createElement('section');
-    section.className = 'invitation-edit-history guest-feature';
-    section.setAttribute('aria-label', STRINGS.historyTitle.en);
-    section.innerHTML = `
-      <h2>${langText('historyTitle', mode)}</h2>
-      <p class="muted">${langText('historyIntro', mode)}</p>
-      <button class="resend-notification primary" type="button" disabled>${langText('resend', mode)}</button>
-      <p class="resend-status" role="status" aria-live="polite"></p>
-      <ol class="edit-history-list">${langText('loading', mode)}</ol>
-    `;
-    root.appendChild(section);
-
-    const list = section.querySelector('.edit-history-list');
-    const resendBtn = section.querySelector('.resend-notification');
-    const resendStatus = section.querySelector('.resend-status');
-
-    fetch(`/api/invitations/${encodeURIComponent(invitationId)}/edit-history`, {
-      headers: { Accept: 'application/json' },
-    }).then((r) => r.json()).then((data) => {
-      const entries = (data && data.history) || [];
-      if (!entries.length) {
-        list.innerHTML = `<li class="muted">${langText('empty', mode)}</li>`;
-      } else {
-        list.innerHTML = entries.map(renderEntry).join('');
-      }
-      // Enable the resend button only when there is at least one post-send edit.
-      const canResend = !!(data && data.sentAt && entries.length);
-      resendBtn.disabled = !canResend;
-    }).catch(() => {
-      list.innerHTML = `<li class="error">${langText('error', mode)}</li>`;
-    });
-
-    resendBtn.addEventListener('click', async () => {
-      if (resendBtn.disabled) return;
-      resendBtn.disabled = true;
-      resendStatus.textContent = '';
-      try {
-        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/resend-notification`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ onlyViewed: false }),
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(payload.error || 'HTTP ' + res.status);
-        const sent = (payload && payload.sent) || 0;
-        const msg = (STRINGS.resendDone.en).replace('{sent}', String(sent));
-        const msgKm = (STRINGS.resendDone.km).replace('{sent}', String(sent));
-        resendStatus.innerHTML = mode === 'km'
-          ? `<span class="khmer-text" lang="km" lang="km">${esc(msgKm)}</span>`
-          : mode === 'both'
-            ? `<span lang="en">${esc(msg)}</span> <span class="khmer-text" lang="km" lang="km">${esc(msgKm)}</span>`
-            : `<span lang="en">${esc(msg)}</span>`;
-      } catch (err) {
-        resendStatus.innerHTML = `<span class="error">${langText('resendFailed', mode)}</span>`;
-      } finally {
-        resendBtn.disabled = false;
-      }
-    });
-  }
-
-  function renderEntry(entry) {
-    const when = formatTs(entry.editedAt);
-    const reason = entry.reason || '';
-    const diffItems = (entry.diff || []).map((d) => {
-      const path = d.path || '?';
-      const before = d.before;
-      const after = d.after;
-      const beforeStr = before === undefined || before === null ? `<em>${langText('diffRemoved', 'en')}</em>` : `<code>${esc(JSON.stringify(before))}</code>`;
-      const afterStr = after === undefined || after === null ? `<em>${langText('diffRemoved', 'en')}</em>` : `<code>${esc(JSON.stringify(after))}</code>`;
-      return `<li><span class="diff-path">${esc(path)}</span>: ${beforeStr} → ${afterStr}</li>`;
-    }).join('');
-    return `
-      <li class="edit-history-entry">
-        <header>
-          <strong>${esc(when)}</strong>
-          <span class="muted">v${esc(entry.documentVersion)}</span>
-        </header>
-        ${reason ? `<p class="edit-reason">${langText('reason', 'en')}: ${esc(reason)}</p>` : ''}
-        ${diffItems ? `<ul class="edit-diff">${diffItems}</ul>` : ''}
-      </li>`;
-  }
-
-  window.EInviteEditHistory = { mountBadge, mountHistoryView };
 })();;/**
  * V2-UX-1 (ROADMAP-V2 §3.1) — Host-side management UI for sign-up sheets.
  *
@@ -2443,6 +2189,55 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   }
 
   window.EInviteHostSignupSheets = { mount };
+})();
+
+
+/* Mounted here instead of in a page-level inline <script>: the server sends
+   `script-src 'self'` with no nonce or hash list, so the sign-up sheets mount block was refused
+   outright and logged a CSP violation on every dashboard load. This module is already part
+   of bundle-dashboard-v15.js, so moving the mount into it adds no request and no script tag.
+   The block below is byte-for-byte the inline block it replaces. */
+// Mount host signup-sheets panel for the active invitation (V2-UX-1, ROADMAP-V2 §3.1).
+// Coordinates with ux-2 (host-polls) — this panel is placed before the polls panel
+// in the event-section flow. Picks the invitation id from window.EINVITE_INVITATION_ID,
+// then the URL ?invitation=, then EInviteContext.getInvitationId() (localStorage).
+(function () {
+  function resolveInvitationId() {
+    if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
+    try {
+      var qp = new URLSearchParams(location.search).get('invitation');
+      if (qp) return decodeURIComponent(qp);
+    } catch (e) {}
+    try {
+      if (window.EInviteContext && typeof window.EInviteContext.getInvitationId === 'function') {
+        return window.EInviteContext.getInvitationId() || '';
+      }
+    } catch (e) {}
+    try { return localStorage.getItem('sovan-active-invite') || ''; } catch (e) { return ''; }
+  }
+  function mountPanel() {
+    var mountEl = document.getElementById('signup-sheets-mount');
+    if (!mountEl) return;
+    var panel = document.getElementById('signup-sheets-panel');
+    // Static mode (no application server): this panel's only data source is
+    // /api/invitations/{id}/signup-sheets, so every request can only 404.
+    // Keep the section hidden and skip the mount entirely.
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { if (panel) panel.hidden = true; return; }
+    if (panel) panel.hidden = false;
+    if (!window.EInviteHostSignupSheets || typeof window.EInviteHostSignupSheets.mount !== 'function') return;
+    var invitationId = resolveInvitationId();
+    if (!invitationId) {
+      // Show the empty-state ("Select an invitation first"). Still mount so the
+      // panel renders its bilingual heading + placeholder.
+      mountEl.innerHTML = '<p class="muted"><span class="i18n i18n-en">Select an invitation first to manage its sign-up sheets.</span><span class="i18n i18n-km khmer-text" lang="km">Select an invitation first to manage its sign-up sheets.</span></p>';
+      return;
+    }
+    try { window.EInviteHostSignupSheets.mount(mountEl, { invitationId: invitationId }); }
+    catch (e) { console.warn('host-signup-sheets mount failed', e); }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountPanel, { once: true });
+  } else { mountPanel(); }
 })();;/**
  * V2-UX-2 (ROADMAP-V2 §3.2) — Host-side management UI for polls.
  *
@@ -3084,6 +2879,54 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   }
 
   window.EInviteHostPolls = { mount };
+})();
+
+
+/* Mounted here instead of in a page-level inline <script>: the server sends
+   `script-src 'self'` with no nonce or hash list, so the guest polls mount block was refused
+   outright and logged a CSP violation on every dashboard load. This module is already part
+   of bundle-dashboard-v15.js, so moving the mount into it adds no request and no script tag.
+   The block below is byte-for-byte the inline block it replaces. */
+// Mount host polls panel for the active invitation (V2-UX-2, ROADMAP-V2 §3.2).
+// Placed AFTER the signup-sheets panel inside <main>. Shares the same
+// invitation-id resolver chain so both panels see the same active invitation.
+(function () {
+  function resolveInvitationId() {
+    if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
+    try {
+      var qp = new URLSearchParams(location.search).get('invitation');
+      if (qp) return decodeURIComponent(qp);
+    } catch (e) {}
+    try {
+      if (window.EInviteContext && typeof window.EInviteContext.getInvitationId === 'function') {
+        return window.EInviteContext.getInvitationId() || '';
+      }
+    } catch (e) {}
+    try { return localStorage.getItem('sovan-active-invite') || ''; } catch (e) { return ''; }
+  }
+  function mountPanel() {
+    var mountEl = document.getElementById('polls-mount');
+    if (!mountEl) return;
+    var panel = document.getElementById('polls-panel');
+    // Static mode (no application server): this panel's only data source is
+    // /api/invitations/{id}/polls, so every request can only 404.
+    // Keep the section hidden and skip the mount entirely.
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { if (panel) panel.hidden = true; return; }
+    if (panel) panel.hidden = false;
+    if (!window.EInviteHostPolls || typeof window.EInviteHostPolls.mount !== 'function') return;
+    var invitationId = resolveInvitationId();
+    if (!invitationId) {
+      // Show the empty-state ("Select an invitation first"). Still mount so the
+      // panel renders its bilingual heading + placeholder.
+      mountEl.innerHTML = '<p class="muted"><span class="i18n i18n-en">Select an invitation first to manage its polls.</span><span class="i18n i18n-km khmer-text" lang="km">Select an invitation first to manage its polls.</span></p>';
+      return;
+    }
+    try { window.EInviteHostPolls.mount(mountEl, { invitationId: invitationId }); }
+    catch (e) { console.warn('host-polls mount failed', e); }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountPanel, { once: true });
+  } else { mountPanel(); }
 })();;/**
  * V2-UX-7 (ROADMAP-V2 §3.7) — Toast notification system.
  *

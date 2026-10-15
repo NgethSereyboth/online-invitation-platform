@@ -84,6 +84,37 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
   --app-content-max:1200px;
   --app-card-h:280px;
 
+  /* --- Editor page dock — page-chip sizing (bug E1). The dock chip carries
+     the page number, the page thumbnail, the page name, and two absolutely
+     positioned affordances on the right: the v22 drag handle (right:25px,
+     22px wide) and the v4 "•••" page-actions button (right:5px, 20px wide),
+     which together own the last 47px. The chip was fixed at 112/118px, which
+     is smaller than its own grid tracks plus padding, so the tracks overflowed
+     and the number, thumbnail, name and handle glyphs printed over one
+     another. The minimum width is the sum of the parts below.
+
+     The order badge (`.workflow-v6-order-badge`, left:5px, 19px wide) is
+     deliberately suppressed inside the dock by page-experience-v22.css,
+     so the number column only has to hold the number itself. If that
+     suppression is ever lifted, the badge overlaps the number unless
+     `--editor-dock-chip-slot-number` grows to at least 36px. ------------- */
+  --editor-dock-chip-gap:6px;
+  --editor-dock-chip-slot-number:20px; /* .workflow-page-number: width 20px */
+  --editor-dock-chip-thumb:var(--space-10);
+  --editor-dock-chip-name-min:var(--space-12);
+  --editor-dock-chip-name-max:84px;
+  --editor-dock-chip-tools:47px;      /* v22 drag handle (25+22px) + v4 "•••" (5+20px) */
+  --editor-dock-chip-min:calc(var(--space-2) + var(--editor-dock-chip-slot-number) + var(--editor-dock-chip-gap) + var(--editor-dock-chip-thumb) + var(--editor-dock-chip-gap) + var(--editor-dock-chip-name-min) + var(--editor-dock-chip-tools));
+  --editor-dock-chip-min-compact:calc(var(--space-2) + var(--editor-dock-chip-thumb) + var(--editor-dock-chip-gap) + var(--editor-dock-chip-name-min) + var(--editor-dock-chip-tools));
+
+  /* --- Editor canvas — floating tool rail gutter (bug E3). studio-experience.css
+     reserves `.canvas-viewport{padding:52px 70px 100px}` so the tool rail can
+     float beside the page: 12px inset + 46px rail + 12px gap = 70px. Keep these
+     two in step with that padding; editor-pro.css uses them to place the sticky
+     rail's static position inside the gutter instead of on the canvas. ------- */
+  --editor-rail-inset:12px;
+  --editor-canvas-gutter:70px;
+
   /* --- Focus (§1.3) — the accent appears here and on the primary button --- */
   --app-ring:0 0 0 2px var(--app-surface),0 0 0 4px var(--app-accent);
   --app-ring-inset:0 0 0 2px var(--app-accent);

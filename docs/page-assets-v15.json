@@ -1,7 +1,7 @@
 {
   "pages": {
     "account.html": {
-      "bytes": 356395,
+      "bytes": 368402,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 411806,
+      "bytes": 419535,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -27,7 +27,7 @@
       ]
     },
     "analytics.html": {
-      "bytes": 347196,
+      "bytes": 356918,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -40,7 +40,7 @@
       ]
     },
     "billing.html": {
-      "bytes": 345488,
+      "bytes": 354480,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -53,7 +53,7 @@
       ]
     },
     "checkin.html": {
-      "bytes": 169299,
+      "bytes": 178509,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -66,7 +66,7 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 651064,
+      "bytes": 651513,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -79,7 +79,7 @@
       ]
     },
     "designer.html": {
-      "bytes": 366134,
+      "bytes": 375919,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -92,7 +92,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 379130,
+      "bytes": 390577,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -105,7 +105,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1622891,
+      "bytes": 1444955,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -118,7 +118,7 @@
       ]
     },
     "materials.html": {
-      "bytes": 416618,
+      "bytes": 421565,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -131,13 +131,10 @@
       ]
     },
     "privacy.html": {
-      "bytes": 169829,
-      "scriptCount": 4,
+      "bytes": 171038,
+      "scriptCount": 1,
       "scripts": [
-        "core/safe-dom.js",
-        "core/i18n.js",
-        "backend-mode-v14.js",
-        "core/theme.js"
+        "bundle-privacy-v15.js"
       ],
       "styleCount": 1,
       "styles": [
@@ -145,7 +142,7 @@
       ]
     },
     "public.html": {
-      "bytes": 383082,
+      "bytes": 386059,
       "scriptCount": 2,
       "scripts": [
         "backend-mode-v14.js",
@@ -157,7 +154,7 @@
       ]
     },
     "reset.html": {
-      "bytes": 336005,
+      "bytes": 344997,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -170,7 +167,7 @@
       ]
     },
     "responses.html": {
-      "bytes": 350613,
+      "bytes": 360334,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -183,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 388719,
+      "bytes": 397711,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -196,7 +193,7 @@
       ]
     },
     "verify.html": {
-      "bytes": 334462,
+      "bytes": 343454,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -232,8 +229,7 @@
         "bundle-billing-v15.js",
         "bundle-verify-v15.js",
         "bundle-reset-v15.js",
-        "core/safe-dom.js",
-        "core/i18n.js"
+        "bundle-privacy-v15.js"
       ],
       "styles": [
         "bundle-account-v15.css",

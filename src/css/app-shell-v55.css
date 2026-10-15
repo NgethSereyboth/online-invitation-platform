@@ -54,7 +54,10 @@ body[data-shell="a"]:has(> .app-rail:not([hidden])) > .app-rail { grid-area: rai
 body[data-shell="a"]:has(> .app-rail:not([hidden])) > main { grid-area: main; }
 body[data-shell="a"]:has(> .app-rail:not([hidden])) > .app-statusbar,
 body[data-shell="a"]:has(> .app-rail:not([hidden])) > .studio-statusbar { grid-area: status; }
-body[data-shell="a"].rail-collapsed { --app-rail-w: var(--app-rail-w-collapsed); }
+/* Collapsing is a ≥ 769 idea. Above 768 the rail is a column, so this changes the
+   column width; below it the rail is the fixed ☰ drawer, and a persisted
+   `rail-collapsed` used to open that drawer 64px wide with its labels hidden. */
+@media (min-width: 769px) { body[data-shell="a"].rail-collapsed { --app-rail-w: var(--app-rail-w-collapsed); } }
 
 body[data-shell="a"] > main {
   padding: var(--space-8);
@@ -497,12 +500,27 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 /* --- 11. Responsive: 1024 rail collapse · 768 drawer ------------------- */
 @media (max-width: 1024px) {
   body[data-shell="a"]:has(> .app-rail:not([hidden])) { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr); }
-  body.rail-collapsed .app-rail { --app-rail-w: var(--app-rail-w-collapsed); }
+  /* No `body.rail-collapsed .app-rail { --app-rail-w: … }` here any more: the only
+     consumer of that variable on the rail ELEMENT is the ≤768 drawer (width below), so
+     the rule could only ever shrink the drawer — measured at 390px with a persisted
+     `rail-collapsed`: a 64px drawer whose link text spilled out of it. Above 768 the
+     rail's width comes from the grid track, which §2's ≥769 `body[data-shell="a"]
+     .rail-collapsed` rule already handles. */
   .app-rail__label, .app-rail__count { display: none; }
   .app-rail a, .app-rail button.app-rail__item { justify-content: center; padding: 0; }
+  /* ≤1024 the shell pins the rail column to var(--app-rail-w-collapsed) itself, so the
+     collapse control has nothing left to do here (measured at 1024px: clicking it left
+     the rail 64px wide and every declaration it toggles already applied). It stays at
+     ≥1025, where the rail really is 240px or 64px. Shell-qualified and descendant, as in
+     the ≤768 block below: the buttons live in `.app-topbar-left`/`-right` and
+     `body:not(.guest) > header button` (0,1,3) sets their `display` (see that note). */
+  body:not(.guest) > header .app-rail-toggle { display: none; }
 }
 @media (max-width: 768px) {
   body[data-shell="a"]:has(> .app-rail:not([hidden])) { grid-template-columns: minmax(0, 1fr); grid-template-areas: "topbar" "main" "status"; }
+  /* Wins over §4's `.app-rail` by source order (equal specificity). That holds only
+     while no higher-specificity duplicate of §4's rule exists further down the file —
+     see the note in §13 before adding one. */
   .app-rail {
     position: fixed; top: var(--app-topbar-h); bottom: 0; left: 0;
     width: var(--app-rail-w); max-height: none; z-index: 60;
@@ -512,9 +530,36 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
   }
   body.rail-open .app-rail { transform: translateX(0); }
   body[data-shell="a"] > main { padding: var(--space-4); }
-  .app-rail-toggle { display: inline-flex; }
+  /* On a phone the rail IS the ☰ drawer, so the collapse control is not offered: its
+     only effect is to shrink the drawer to var(--app-rail-w-collapsed) — measured 64px
+     with every label already hidden — and because `rail-collapsed` is persisted, one
+     stray tap wedges navigation for the rest of the session. The drawer toggle is the
+     mobile control here; `@media (min-width: 769px)` hides it above 768.
+     These need a descendant combinator and the shell: the buttons live in
+     `.app-topbar-left`/`.app-topbar-right`, and `body:not(.guest) > header button`
+     (editor-suite.css / canvas-plus.css, 0,1,3) sets `display: inline-flex` on every
+     topbar button — the winner for `display` on both toggles. A bare `.app-rail-toggle`
+     (0,1,0) or a `>` form never reaches them, which is why the previous
+     `.app-rail-toggle { display: inline-flex }` here was inert, and why the bare
+     `.app-drawer-toggle { display: none }` in the 769+ rule lost and left a ☰ that does
+     nothing (nothing above 768 consumes `body.rail-open`) sitting in the desktop topbar. */
+  body:not(.guest) > header .app-rail-toggle { display: none; }
 }
-@media (min-width: 769px) { .app-drawer-toggle { display: none; } }
+@media (min-width: 769px) { body:not(.guest) > header .app-drawer-toggle { display: none; } }
+/* The 64px rail is an icon rail, and its link labels were never hidden: at 1024px the
+   rail's scrollWidth ran 17px past its clientWidth (`Dashboa…` / `Templat…` clipped
+   mid-word) and a collapsed rail did exactly the same at 1440px+ (80 vs 63).
+   `.app-rail__label` only wraps the "Workspace" heading; a link's own label is a bare
+   `.i18n` span, and because the icons are aria-hidden those spans ARE the accessible
+   name — so they are clipped, not removed: the reset's `.sr-only` declaration set.
+   Gated to ≥769 because below 768 the rail is the 240px ☰ drawer, where the labels are
+   the point, and `rail-collapsed` no longer changes a drawer's width. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-rail a .i18n { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+}
+@media (min-width: 769px) {
+  body.rail-collapsed .app-rail a .i18n { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+}
 @media (max-width: 480px) {
   body[data-shell="a"] > main { padding: var(--space-3); }
   .app-crumbs { display: none; }
@@ -568,8 +613,22 @@ body:not(.guest) > header #logoutBtn {
 }
 body:not(.guest) > header #logoutBtn:hover { background: var(--app-surface-2); border-color: var(--app-line-2); }
 
-/* The rail is a grid item, not a sticky column, in the shell skeleton. */
-body[data-shell="a"] > .app-rail { position: sticky; top: var(--app-topbar-h); max-height: calc(100vh - var(--app-topbar-h)); }
+/* The shell-A rail's sticky column (position/top/max-height) is declared once, in
+   §4's `.app-rail`. A duplicate used to sit here —
+   `body[data-shell="a"] > .app-rail { position: sticky; … }`, specificity (0,2,1) —
+   restating the same three declarations at a weight the ≤768 drawer could not reach:
+   the drawer's bare `.app-rail` is (0,1,0), so the rail's `position` stayed `sticky`
+   on a phone instead of becoming the `fixed` drawer §11 asks for. An in-flow sticky
+   rail is still a grid item, and its `grid-area: rail` names an area the ≤768
+   template no longer defines, so it closed over two implicit grid columns (0px and
+   240px) and starved the single explicit `minmax(0, 1fr)` column down to 150px.
+   Measured on materials.html at 390px: body resolved
+   `grid-template-columns: 150px 0px 240px`, the topbar and `main` were both 150px
+   wide inside a 390px viewport, and the off-canvas rail painted 150px of itself over
+   them. Removing the duplicate is the whole fix: §4 already declares the identical
+   values, so nothing changes for ≥769px, while the drawer now wins on source order —
+   the same "cascade fix, not a specificity arms race" reasoning as §14. Do not
+   reintroduce a shell-qualified rail rule below §11. */
 
 /* Auth shell (Skeleton B page with a card) ------------------------------- */
 .auth-mark {

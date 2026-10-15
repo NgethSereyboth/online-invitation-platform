@@ -1,4 +1,44 @@
-;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
+;(() => {
+  'use strict';
+  // route-deferred-loader-v15 — injects the per-route deferred chunk after
+  // first paint. Bundled at the head of each route bundle, it derives the
+  // deferred bundle name from its own <script> URL (bundle-<page>-v15.js →
+  // bundle-<page>-deferred-v15.{js,css}) so no HTML/inline script is needed
+  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
+  // on the first user interaction, whichever comes first, so on-demand
+  // modules never delay first paint or the route-weight budget.
+  if (window.EInviteDeferredRouteLoaderV15) return;
+  // `ready` resolves once the deferred chunk has been evaluated (or failed to
+  // load), so consumers that lazily mount a deferred module can retry on it.
+  let resolveReady;
+  const ready = new Promise((res) => { resolveReady = res; });
+  window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
+  const current = document.currentScript;
+  const src = (current && current.src) || '';
+  const match = /bundle-([A-Za-z0-9_]+)-v15\.js/.exec(src);
+  if (!match) { resolveReady(); return; }
+  const prefix = src.slice(0, src.lastIndexOf('/') + 1);
+  const stem = match[1];
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `${prefix}bundle-${stem}-deferred-v15.css`;
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = `${prefix}bundle-${stem}-deferred-v15.js`;
+    script.addEventListener('load', () => resolveReady(), { once: true });
+    script.addEventListener('error', () => resolveReady(), { once: true });
+    document.head.appendChild(script);
+  }
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  idle(start, { timeout: 2000 });
+  for (const type of ['pointerdown', 'keydown', 'touchstart']) {
+    window.addEventListener(type, start, { once: true, passive: true, capture: true });
+  }
+})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
  * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
  *
  * Responsibilities:
@@ -127,16 +167,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +197,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -662,6 +720,7 @@ window.alert=(message)=>{uiAlert(message)};
   }
 
   const mountedTabs = new Set();
+  const retriedTabs = new Set();
 
   function mountModule(tab){
     const map = {
@@ -680,6 +739,14 @@ window.alert=(message)=>{uiAlert(message)};
     if (mod && typeof mod.mount === 'function' && !mountedTabs.has(tab)) {
       mountedTabs.add(tab);
       try { mod.mount(); } catch(e) { console.warn('[admin] module mount failed', tab, e); }
+      return;
+    }
+    // Interaction-only panels ship in the deferred route chunk (V15). If the
+    // chunk has not evaluated yet, retry once the loader signals it is ready.
+    const loader = window.EInviteDeferredRouteLoaderV15;
+    if (!mod && !retriedTabs.has(tab) && loader && loader.ready && typeof loader.ready.then === 'function') {
+      retriedTabs.add(tab);
+      loader.ready.then(() => mountModule(tab));
     }
   }
 
@@ -735,8 +802,8 @@ window.alert=(message)=>{uiAlert(message)};
   const shell = () => window.EInviteAdminShell || {};
   const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const STRINGS = {
-    en: { title:'Users', search:'Search by email, role, or plan', prev:'Previous', next:'Next', suspend:'Suspend', unsuspend:'Unsuspend', resetPw:'Reset password', forceMfa:'Force MFA', impersonate:'Impersonate', confirmSuspend:'Suspend this user? Active sessions will be invalidated.', confirmResetPw:'Send a password-reset email to this user?', confirmForceMfa:'Force this user to re-enroll MFA on next login?', confirmImpersonate:'Start an impersonation session as this user? You will be logged in as them for 30 minutes.', suspendReason:'Reason', noUsers:'No users found.', role:'Role', plan:'Plan', created:'Created', lastActive:'Last active', invitations:'Invitations', status:'Status', actions:'Actions', tipStepUp:'Super-admin (step-up) required' },
-    km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះ? សessianសកម្មនឹងត្រូវបោះបង់។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលឡុកអិន下一次?', confirmImpersonate:'ចាប់ផ្ដើមសessianសាកល្បងក្នុងនាមអ្នកប្រើនេះ? អ្នកនឹងត្រូវបានឡុកអិនក្នុងនាមពួកគេរយៈពេល ៣០ នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការ super-admin (step-up)' }
+    en: { title:'Users', search:'Search by email, role, or plan', prev:'Previous', next:'Next', suspend:'Suspend', unsuspend:'Unsuspend', resetPw:'Reset password', forceMfa:'Force MFA', impersonate:'Impersonate', confirmSuspend:'Suspend this user? Active sessions will be invalidated.', confirmResetPw:'Send a password-reset email to this user?', confirmForceMfa:'Force this user to re-enroll MFA on next login?', confirmImpersonate:'Start an impersonation session as this user? You will be logged in as them for 30 minutes.', suspendReason:'Reason', noUsers:'No users found.', role:'Role', plan:'Plan', created:'Created', lastActive:'Last active', invitations:'Invitations', status:'Status', actions:'Actions', tipStepUp:'Super-admin (step-up) required', allowUploads:'Allow uploads', saveUploads:'Save uploads' },
+    km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះ? សessianសកម្មនឹងត្រូវបោះបង់។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលឡុកអិន下一次?', confirmImpersonate:'ចាប់ផ្ដើមសessianសាកល្បងក្នុងនាមអ្នកប្រើនេះ? អ្នកនឹងត្រូវបានឡុកអិនក្នុងនាមពួកគេរយៈពេល ៣០ នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការ super-admin (step-up)', allowUploads:'អនុញ្ញាតឱ្យផ្ទុកឡើង', saveUploads:'រក្សាទុកការផ្ទុកឡើង' }
   };
   function t(key, ...args) {
     var out = window.EInviteI18n
@@ -748,13 +815,14 @@ window.alert=(message)=>{uiAlert(message)};
 
   async function load(){
     const api = shell().api;
-    const params = new URLSearchParams({ limit: '50' });
-    if (state.q) params.set('q', state.q);
-    if (state.nextCursor) params.set('cursor', String(state.nextCursor));
+    // The server serves the unversioned list as a bare array (see docs/reviews/A2-2026-10-13.md).
+    // It has no search or paging, so both are applied here.
     try {
-      const data = await api.get(`/api/admin/users-v2?${params}`);
-      state.items = data.items || [];
-      state.hasMore = !!data.hasMore;
+      const rows = await api.get('/api/admin/users');
+      const q = (state.q || '').trim().toLowerCase();
+      state.items = (Array.isArray(rows) ? rows : []).filter(u => !q || [u.email, u.role, u.plan].some(v => String(v || '').toLowerCase().includes(q)));
+      state.nextCursor = null;
+      state.hasMore = false;
     } catch(e) {
       state.items = [];
       state.hasMore = false;
@@ -766,7 +834,8 @@ window.alert=(message)=>{uiAlert(message)};
     const host = document.getElementById('usersPanel');
     if (!host) return;
     const rows = state.items.map(u => {
-      const status = u.suspended ? `<span class="ei-tag ei-tag-warn">${t('suspended')}</span>` : `<span class="ei-tag ei-tag-ok">${t('active')}</span>`;
+      // The list endpoint does not report suspension, so show a status only when it is known.
+      const status = typeof u.suspended !== 'boolean' ? '—' : u.suspended ? `<span class="ei-tag ei-tag-warn">${t('suspended')}</span>` : `<span class="ei-tag ei-tag-ok">${t('active')}</span>`;
       const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—';
       const last = u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : '—';
       return `<tr data-user-id="${esc(u.id)}">
@@ -779,6 +848,8 @@ window.alert=(message)=>{uiAlert(message)};
           ${u.suspended
             ? `<button data-action="unsuspend">${t('unsuspend')}</button>`
             : `<button data-action="suspend" data-reason-prompt="${esc(t('suspendReason'))}">${t('suspend')}</button>`}
+          <label class="admin-upload-toggle"><input type="checkbox" data-upload-enabled ${u.uploadEnabled ? 'checked' : ''}> ${esc(t('allowUploads'))}</label>
+          <button data-action="save-uploads" data-save-uploads>${t('saveUploads')}</button>
           <button data-action="reset-password">${t('resetPw')}</button>
           <button data-action="force-mfa">${t('forceMfa')}</button>
           <button data-action="impersonate" title="${esc(t('tipStepUp'))}">${t('impersonate')}</button>
@@ -828,6 +899,10 @@ window.alert=(message)=>{uiAlert(message)};
         if (!confirm(t('confirmImpersonate'))) return;
         const res = await api.send(`/api/admin/impersonate/${encodeURIComponent(userId)}`, 'POST', {});
         if (res && res.impersonating) window.location.reload();
+      } else if (action === 'save-uploads') {
+        const checkbox = row.querySelector('[data-upload-enabled]');
+        const enabled = !!(checkbox && checkbox.checked);
+        await api.send(`/api/admin/users/${encodeURIComponent(userId)}/uploads`, 'PUT', { enabled });
       }
       await load(); render();
     } catch(e) {
@@ -1390,79 +1465,6 @@ window.alert=(message)=>{uiAlert(message)};
 
   async function mount(){ render(); }
   window.EInviteAdminBulkOps = Object.freeze({ version: 65, mount, render, trackJob });
-})();;/* v0.65.3 — impersonation (ROADMAP §5.8)
- * Super-admin logs in as another user. 30-minute hard cap. Red banner
- * everywhere when active. Every action audited with `impersonated_by`.
- */
-(function(){
-  'use strict';
-  if (window.EInviteAdminImpersonate && window.EInviteAdminImpersonate.version >= 65) return;
-  const shell = () => window.EInviteAdminShell || {};
-  const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const STRINGS = {
-    en: { title:'Impersonation', description:'Start an impersonation session as another user. The session expires after 30 minutes and every action is audit-logged.', userId:'User id to impersonate', start:'Start impersonation', stop:'Stop impersonation', confirmStart:'Start impersonation session? You will be logged in as this user for 30 minutes. Every action will be audit-logged.', notActive:'No active impersonation session.', requireSuperAdmin:'Super-admin access required.', current:'Current session', adminOriginId:'Original admin id' },
-    km: { title:'ការសាកល្បងក្នុងនាម', description:'ចាប់ផ្ដើមសessianក្នុងនាមអ្នកប្រើផ្សេងទៀត។ សessianនឹងផុតកំណត់បន្ទាប់ពី ៣០ នាទី ហើយសកម្មភាពនីមួយៗត្រូវបានកត់ត្រាសវនកម្ម។', userId:'លេខសម្គាល់អ្នកប្រើដែលត្រូវសាកល្បង', start:'ចាប់ផ្ដើម', stop:'បញ្ឈប់', confirmStart:'ចាប់ផ្ដើមសessian? អ្នកនឹងត្រូវបានឡុកអិនក្នុងនាមអ្នកប្រើនេះរយៈពេល ៣០ នាទី។', notActive:'មិនមានសessianសកម្មទេ។', requireSuperAdmin:'ត្រូវការ super-admin។', current:'សessianបច្ចុប្បន្ន', adminOriginId:'លេខសម្គាល់អ្នកគ្រប់គ្រងដើម' }
-  };
-  function t(key, ...args) {
-    var out = window.EInviteI18n
-      ? window.EInviteI18n.t(key, STRINGS, ...args)
-      : ((STRINGS[(document.documentElement.lang || 'en').toString().toLowerCase().startsWith('km') ? 'km' : 'en'] || STRINGS.en)[key] || key);
-    return typeof out === 'function' ? out(...args) : out;
-  }
-  let state = { current: null };
-
-  async function loadCurrent(){
-    const api = shell().api;
-    try {
-      const me = await api.get('/api/auth/me');
-      state.current = (me && me.user && me.user.impersonating) ? me.user : null;
-    } catch(e) { state.current = null; }
-  }
-
-  function render(){
-    const host = document.getElementById('impersonatePanel');
-    if (!host) return;
-    const current = state.current ? `
-      <p><strong>${esc(t('current'))}:</strong> ${esc(state.current.email)} <small>(${esc(t('adminOriginId'))}: ${esc(state.current.impersonatedBy || '—')})</small></p>
-      <button id="impersonateStop">${esc(t('stop'))}</button>
-    ` : `<p>${esc(t('notActive'))}</p>`;
-    host.innerHTML = `
-      <h2>${esc(t('title'))}</h2>
-      <p>${esc(t('description'))}</p>
-      <p class="ei-help">${esc(t('requireSuperAdmin'))}</p>
-      ${current}
-      <hr>
-      <form id="impersonateStartForm">
-        <label>${esc(t('userId'))}<input type="text" name="userId" required></label>
-        <button type="submit">${esc(t('start'))}</button>
-      </form>`;
-    const form = document.getElementById('impersonateStartForm');
-    if (form) form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!confirm(t('confirmStart'))) return;
-      const fd = new FormData(form);
-      const userId = fd.get('userId');
-      try {
-        const api = shell().api;
-        const res = await api.send(`/api/admin/impersonate/${encodeURIComponent(userId)}`, 'POST', {});
-        if (res && res.impersonating) window.location.reload();
-      } catch(err) { alert(err.message || 'Impersonation failed'); }
-    });
-    const stopBtn = document.getElementById('impersonateStop');
-    if (stopBtn) stopBtn.addEventListener('click', async () => {
-      try { await shell().api.send('/api/admin/impersonate/stop', 'POST', {}); window.location.href = '/admin.html'; }
-      catch(e) { alert(e.message); }
-    });
-  }
-
-  async function mount(){
-    try { await loadCurrent(); } catch(e) {}
-    render();
-    // Surface the red banner globally if active.
-    const banner = document.getElementById('impersonationBanner');
-    if (banner) banner.hidden = !state.current;
-  }
-  window.EInviteAdminImpersonate = Object.freeze({ version: 65, mount, render, loadCurrent });
 })();;/* v0.66.0 — reports queue (ROADMAP §5.9)
  * Users can report abusive invitations/users. Admins see a queue and resolve.
  */

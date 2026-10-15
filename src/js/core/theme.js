@@ -8,6 +8,18 @@
   }catch(e){}
 })();
 
+/* Pre-paint language bootstrap: moved out of every page's inline <head> script on
+   2026-10-13 because the server's CSP (`script-src 'self'`, no nonce, no hash list — see
+   server.py CSP_HEADER) refuses inline blocks, so the correction never ran. It has to stay
+   here and stay small: it loads in the <head> of 15 of 16 routes and the route script
+   budgets are measured maxima. Rationale and measurements: docs/reviews/C1-2026-10-13.md.
+   Behaviour is byte-for-byte the inline block it replaces. */
+(function(){try{
+  var el=document.documentElement,lang=localStorage.getItem('einvite-lang');
+  if(!lang){var nav=navigator.language||(navigator.languages&&navigator.languages[0])||'';lang=nav.toLowerCase().indexOf('km')===0?'km':'en'}
+  el.lang=lang;
+}catch(e){}})();
+
 
 // V13 browser security bridge: attach the per-session double-submit CSRF token
 // to same-origin mutation requests. Authentication still relies exclusively on

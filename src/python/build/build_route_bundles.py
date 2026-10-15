@@ -173,10 +173,22 @@ def build(write: bool) -> dict:
         css_name = f"bundle-{stem}-v15.css"
         js = js_bundle(entry["scripts"])
         css = css_bundle(entry["styles"])
+        # Deferred chunks: on-demand modules that route-deferred-loader-v15.js
+        # injects after first paint. They are generated like the startup
+        # bundles but never referenced from HTML, so they stay out of the
+        # page-asset manifest and its weight budgets.
+        deferred_js_name = f"bundle-{stem}-deferred-v15.js"
+        deferred_css_name = f"bundle-{stem}-deferred-v15.css"
+        has_deferred = bool(entry.get("deferredScripts") or entry.get("deferredStyles"))
+        deferred_js = js_bundle(entry.get("deferredScripts") or []) if has_deferred else ""
+        deferred_css = css_bundle(entry.get("deferredStyles") or []) if has_deferred else ""
         if write:
             # JS bundles mirror into src/js/ (repo truth); CSS bundles into src/css/.
             write_both(js_name, js, [SERVER_DIR, JS_DIR])
             write_both(css_name, css, [SERVER_DIR, CSS_DIR])
+            if has_deferred:
+                write_both(deferred_js_name, deferred_js, [SERVER_DIR, JS_DIR])
+                write_both(deferred_css_name, deferred_css, [SERVER_DIR, CSS_DIR])
         result["pages"][page] = {
             "javascript": js_name,
             "stylesheet": css_name,
@@ -186,6 +198,15 @@ def build(write: bool) -> dict:
             "scriptSha256": digest(js),
             "styleSha256": digest(css),
         }
+        if has_deferred:
+            result["pages"][page].update({
+                "deferredJavascript": deferred_js_name,
+                "deferredJavascriptBytes": len(encoded(deferred_js)),
+                "deferredJavascriptSha256": digest(deferred_js),
+                "deferredStylesheet": deferred_css_name,
+                "deferredStylesheetBytes": len(encoded(deferred_css)),
+                "deferredStylesheetSha256": digest(deferred_css),
+            })
     if write:
         text = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
         atomic_write(MANIFEST_SERVER, text)
@@ -212,8 +233,13 @@ def main(argv=None) -> int:
                 print(f"ROUTE_BUNDLE_MANIFEST_OUT_OF_DATE {manifest_path}")
                 return 1
         # Verify every generated bundle file exists in BOTH locations and matches its hash.
+        pairs = (("javascript", "scriptSha256"), ("stylesheet", "styleSha256"),
+                 ("deferredJavascript", "deferredJavascriptSha256"),
+                 ("deferredStylesheet", "deferredStylesheetSha256"))
         for page, item in expected["pages"].items():
-            for key, hash_key in (("javascript", "scriptSha256"), ("stylesheet", "styleSha256")):
+            for key, hash_key in pairs:
+                if key not in item:
+                    continue
                 name = item[key]
                 mirror_dir = JS_DIR if name.endswith(".js") else CSS_DIR
                 for location in (SERVER_DIR, mirror_dir):

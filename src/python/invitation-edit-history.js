@@ -191,3 +191,123 @@
 
   window.EInviteEditHistory = { mountBadge, mountHistoryView };
 })();
+
+
+/* Mounted here instead of in a page-level inline <script>: the server sends
+   `script-src 'self'` with no nonce or hash list, so the edit history mount block was refused
+   outright and logged a CSP violation on every dashboard load. This module is already part
+   of bundle-dashboard-v15.js, so moving the mount into it adds no request and no script tag.
+   The block below is byte-for-byte the inline block it replaces. */
+// Mount edit-history view for the active invitation (V2-UX-3, ROADMAP-V2 §3.3).
+// Placed AFTER the editor area (the dashboardView + create dialogs) and BEFORE
+// the signup-sheets + polls panels inside <main>, so the host sees the diff
+// history between the editor and the guest-feature panels. Shares the same
+// invitation-id resolver chain as ux-1/ux-2 so all panels see the same active
+// invitation. Wires window.EInviteEditHistory.mountHistoryView (which renders
+// its own <section> with header + intro + resend button + diff list) plus
+// mountBadge (which renders the "Edited after sending · <timestamp>" badge
+// above the mount when the host has actually edited after sending). The
+// editedAfterSendAt timestamp is fetched once from the edit-history endpoint
+// (the same endpoint the history view itself uses) and surfaced via the
+// badge + the #edit-history-meta line at the top of the panel.
+(function () {
+  function resolveInvitationId() {
+    if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
+    try {
+      var qp = new URLSearchParams(location.search).get('invitation');
+      if (qp) return decodeURIComponent(qp);
+    } catch (e) {}
+    try {
+      if (window.EInviteContext && typeof window.EInviteContext.getInvitationId === 'function') {
+        return window.EInviteContext.getInvitationId() || '';
+      }
+    } catch (e) {}
+    try { return localStorage.getItem('sovan-active-invite') || ''; } catch (e) { return ''; }
+  }
+  function detectMode() {
+    if (window.EInviteLang) return window.EInviteLang;
+    var htmlLang = String(document.documentElement.lang || '').toLowerCase();
+    if (htmlLang === 'km' || htmlLang.indexOf('km-') === 0) return 'km';
+    return 'both';
+  }
+  function formatTs(ts) {
+    if (!ts) return '';
+    try { var d = new Date(Number(ts)); if (isNaN(d.getTime())) return ''; return d.toLocaleString(); }
+    catch (e) { return ''; }
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function setMeta(metaEl, mode, sentAt, editedAfterSendAt) {
+    if (!metaEl) return;
+    if (!sentAt && !editedAfterSendAt) { metaEl.innerHTML = ''; return; }
+    var sentEn = sentAt ? 'Sent ' + formatTs(sentAt) : '';
+    var sentKm = sentAt ? 'បានផ្ញើ ' + formatTs(sentAt) : '';
+    var editedEn = editedAfterSendAt ? 'Edited after sending ' + formatTs(editedAfterSendAt) : '';
+    var editedKm = editedAfterSendAt ? 'បានកែប្រែបន្ទាប់ពីផ្ញើ ' + formatTs(editedAfterSendAt) : '';
+    var partsEn = [sentEn, editedEn].filter(Boolean).join(' · ');
+    var partsKm = [sentKm, editedKm].filter(Boolean).join(' · ');
+    if (mode === 'km') {
+      metaEl.innerHTML = '<span lang="km" class="khmer-text">' + esc(partsKm) + '</span>';
+    } else if (mode === 'en') {
+      metaEl.innerHTML = '<span>' + esc(partsEn) + '</span>';
+    } else {
+      metaEl.innerHTML = '<span>' + esc(partsEn) + '</span> <span lang="km" class="khmer-text">' + esc(partsKm) + '</span>';
+    }
+  }
+  function mountPanel() {
+    var panel = document.getElementById('edit-history-panel');
+    if (!panel) return;
+    var mountEl = document.getElementById('edit-history-mount');
+    var badgeEl = document.getElementById('edited-after-send-badge');
+    var metaEl = document.getElementById('edit-history-meta');
+    if (!mountEl || !badgeEl) return;
+    // Static mode (no application server): both the history view and the badge
+    // read /api/invitations/{id}/edit-history, so skip both fetches.
+    if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { panel.hidden = true; return; }
+    if (!window.EInviteEditHistory || typeof window.EInviteEditHistory.mountHistoryView !== 'function') {
+      console.warn('EInviteEditHistory not available — edit-history panel will not mount.');
+      return;
+    }
+    var invitationId = resolveInvitationId();
+    if (!invitationId) {
+      mountEl.innerHTML = '<p class="muted"><span class="i18n i18n-en">Select an invitation first to view its edit history.</span><span class="i18n i18n-km khmer-text" lang="km">Select an invitation first to view its edit history.</span></p>';
+      panel.hidden = false;
+      return;
+    }
+    panel.hidden = false;
+    var mode = detectMode();
+    // (1) Mount the history view — it renders its own <section> with header +
+    // intro + resend-notification button + diff list inside #edit-history-mount.
+    try {
+      window.EInviteEditHistory.mountHistoryView(mountEl, { invitationId: invitationId, mode: mode });
+    } catch (e) { console.warn('edit-history mount failed', e); }
+    // (2) Fetch the same endpoint to get sentAt + editedAfterSendAt so we can
+    // render the badge + the meta line at the top of the panel. The history
+    // view does its own fetch for the diff list; this one is for the badge.
+    try {
+      fetch('/api/invitations/' + encodeURIComponent(invitationId) + '/edit-history', {
+        headers: { Accept: 'application/json' }
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+        if (!data) return;
+        var sentAt = data.sentAt || null;
+        var editedAfterSendAt = data.editedAfterSendAt || null;
+        setMeta(metaEl, mode, sentAt, editedAfterSendAt);
+        if (!editedAfterSendAt) return; // No post-send edits → no badge.
+        try {
+          window.EInviteEditHistory.mountBadge(badgeEl, {
+            invitationId: invitationId,
+            editedAfterSendAt: editedAfterSendAt,
+            sentAt: sentAt,
+            mode: mode
+          });
+        } catch (e) { console.warn('edit-history badge mount failed', e); }
+      }).catch(function () { /* Badge is best-effort; ignore fetch errors. */ });
+    } catch (e) { /* Badge fetch is best-effort. */ }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountPanel, { once: true });
+  } else { mountPanel(); }
+})();

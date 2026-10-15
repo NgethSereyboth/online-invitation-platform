@@ -1,4 +1,57 @@
-;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
+;(()=>{'use strict';
+if(window.EInviteLifecycle)return;
+const cleanups=new Set();let closed=false;
+function add(fn){if(typeof fn!=='function')return()=>{};if(closed){try{fn()}catch{};return()=>{}}cleanups.add(fn);return()=>cleanups.delete(fn)}
+function interval(fn,ms,...args){const id=setInterval(fn,ms,...args);add(()=>clearInterval(id));return id}
+function timeout(fn,ms,...args){const id=setTimeout(()=>{cleanups.delete(cancel);fn(...args)},ms);const cancel=()=>clearTimeout(id);add(cancel);return id}
+function observer(instance,target,options){instance.observe(target,options);add(()=>instance.disconnect());return instance}
+function controller(){const value=new AbortController();add(()=>value.abort());return value}
+function cleanup(){if(closed)return;closed=true;for(const fn of [...cleanups].reverse())try{fn()}catch{}cleanups.clear()}
+add(()=>document.querySelectorAll('audio,video').forEach(media=>{try{media.pause()}catch{}}));
+window.addEventListener('pagehide',event=>{if(!event.persisted)cleanup()});
+window.addEventListener('beforeunload',cleanup,{once:true});
+window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get closed(){return closed}};
+})();;(() => {
+  'use strict';
+  // route-deferred-loader-v15 — injects the per-route deferred chunk after
+  // first paint. Bundled at the head of each route bundle, it derives the
+  // deferred bundle name from its own <script> URL (bundle-<page>-v15.js →
+  // bundle-<page>-deferred-v15.{js,css}) so no HTML/inline script is needed
+  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
+  // on the first user interaction, whichever comes first, so on-demand
+  // modules never delay first paint or the route-weight budget.
+  if (window.EInviteDeferredRouteLoaderV15) return;
+  // `ready` resolves once the deferred chunk has been evaluated (or failed to
+  // load), so consumers that lazily mount a deferred module can retry on it.
+  let resolveReady;
+  const ready = new Promise((res) => { resolveReady = res; });
+  window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
+  const current = document.currentScript;
+  const src = (current && current.src) || '';
+  const match = /bundle-([A-Za-z0-9_]+)-v15\.js/.exec(src);
+  if (!match) { resolveReady(); return; }
+  const prefix = src.slice(0, src.lastIndexOf('/') + 1);
+  const stem = match[1];
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `${prefix}bundle-${stem}-deferred-v15.css`;
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = `${prefix}bundle-${stem}-deferred-v15.js`;
+    script.addEventListener('load', () => resolveReady(), { once: true });
+    script.addEventListener('error', () => resolveReady(), { once: true });
+    document.head.appendChild(script);
+  }
+  const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+  idle(start, { timeout: 2000 });
+  for (const type of ['pointerdown', 'keydown', 'touchstart']) {
+    window.addEventListener(type, start, { once: true, passive: true, capture: true });
+  }
+})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
  * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
  *
  * Responsibilities:
@@ -127,16 +180,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +210,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -257,20 +328,7 @@
     }
   }
 })(typeof window !== "undefined" ? window : this);;(()=>{'use strict';
-if(window.EInviteLifecycle)return;
-const cleanups=new Set();let closed=false;
-function add(fn){if(typeof fn!=='function')return()=>{};if(closed){try{fn()}catch{};return()=>{}}cleanups.add(fn);return()=>cleanups.delete(fn)}
-function interval(fn,ms,...args){const id=setInterval(fn,ms,...args);add(()=>clearInterval(id));return id}
-function timeout(fn,ms,...args){const id=setTimeout(()=>{cleanups.delete(cancel);fn(...args)},ms);const cancel=()=>clearTimeout(id);add(cancel);return id}
-function observer(instance,target,options){instance.observe(target,options);add(()=>instance.disconnect());return instance}
-function controller(){const value=new AbortController();add(()=>value.abort());return value}
-function cleanup(){if(closed)return;closed=true;for(const fn of [...cleanups].reverse())try{fn()}catch{}cleanups.clear()}
-add(()=>document.querySelectorAll('audio,video').forEach(media=>{try{media.pause()}catch{}}));
-window.addEventListener('pagehide',event=>{if(!event.persisted)cleanup()});
-window.addEventListener('beforeunload',cleanup,{once:true});
-window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get closed(){return closed}};
-})();;(()=>{'use strict';
-const DATA={"version":"20.1","modelVersion":1,"defaultFontId":"noto-serif","defaultPairingId":"serif-formal","fonts":{"noto-sans":{"label":"Noto Sans","family":"EInvite Noto Sans","stack":"'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans','Noto Sans Khmer','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-latin-400.woff2","700":"assets/fonts/noto-sans-latin-700.woff2"},"stableId":"noto-sans","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"6932db6a846e5f3eedd70862935d1e382ffa25da0851563c3e7b82129ebefe23","700":"a9885073a1b8fcde1b37ac0c4497914e598cc9057344a552217b32e4c89f0866"}},"noto-serif":{"label":"Noto Serif","family":"EInvite Noto Serif","stack":"'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif','Noto Serif Khmer','Khmer UI',Georgia,serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-latin-400.woff2","700":"assets/fonts/noto-serif-latin-700.woff2"},"stableId":"noto-serif","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"3c94a973daf5e7fd05cb205eab2171b0af0ba42496202d54e6cdd55e45a82221","700":"d7e6e94e00d65d77273e033e0eca185d9ab37d44d4505225f364ff1453cb7039"}},"noto-sans-khmer":{"label":"Noto Sans Khmer","family":"EInvite Noto Sans Khmer","stack":"'EInvite Noto Sans Khmer','EInvite Noto Sans','Noto Sans Khmer','Noto Sans','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-khmer-400.woff2","700":"assets/fonts/noto-sans-khmer-700.woff2"},"stableId":"noto-sans-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"53229761be85cb21c727d19ff81e959f3a35c32925d42f02829acf53dbdbf625","700":"0eb1923fffc493ed3af0e5cb4bc467ec1c7921ce9f845888ebd3b5755b86aecd"}},"noto-serif-khmer":{"label":"Noto Serif Khmer","family":"EInvite Noto Serif Khmer","stack":"'EInvite Noto Serif Khmer','EInvite Noto Serif','Noto Serif Khmer','Noto Serif','Khmer UI',Georgia,serif","category":"serif","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-khmer-400.woff2","700":"assets/fonts/noto-serif-khmer-700.woff2"},"stableId":"noto-serif-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"db80eb1479b0cb726e5fd224ba2cde7b6f92825988f4ec1e89575d851011e625","700":"fe903cee1be19a931d38a575948897f7c0d0159a8c2c028af596ec928d7976ce"}},"serif-georgia":{"label":"Classic Serif (system)","family":"Georgia","stack":"Georgia,'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif Khmer','Khmer UI',serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"serif-georgia","sourceType":"system-fallback"},"sans-arial":{"label":"Modern Sans (system)","family":"Arial","stack":"Arial,'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-arial","sourceType":"system-fallback"},"sans-trebuchet":{"label":"Friendly (system)","family":"Trebuchet MS","stack":"'Trebuchet MS','EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-trebuchet","sourceType":"system-fallback"}},"pairings":{"serif-formal":{"label":"Formal Serif","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"serif-formal"},"sans-modern":{"label":"Modern Sans","en":"noto-sans","km":"noto-sans-khmer","recommended":true,"stableId":"sans-modern"},"modern-system":{"label":"Modern System Sans","en":"sans-arial","km":"noto-sans-khmer","legacyOnly":true,"stableId":"modern-system"},"ceremonial-khmer":{"label":"Khmer Ceremonial","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"ceremonial-khmer"},"classic-system":{"label":"Classic System Serif","en":"serif-georgia","km":"noto-serif-khmer","legacyOnly":true,"stableId":"classic-system"},"friendly-system":{"label":"Friendly System Sans","en":"sans-trebuchet","km":"noto-sans-khmer","legacyOnly":true,"stableId":"friendly-system"}},"colorTokens":["heading","text","accent","surface","muted","inverse"],"legacy":{"Georgia,serif":"serif-georgia","Georgia, serif":"serif-georgia","Arial,sans-serif":"sans-arial","Arial, sans-serif":"sans-arial","'Trebuchet MS',sans-serif":"sans-trebuchet","'Trebuchet MS', sans-serif":"sans-trebuchet","'Noto Serif Khmer','Khmer OS Battambang',serif":"noto-serif-khmer","'Noto Serif Khmer', 'Khmer OS Battambang', serif":"noto-serif-khmer","'Noto Sans Khmer','Khmer OS Battambang',sans-serif":"noto-sans-khmer","'Noto Sans Khmer', 'Khmer OS Battambang', sans-serif":"noto-sans-khmer","'Khmer OS Muol Light','Noto Serif Khmer',serif":"noto-serif-khmer","'Khmer OS Muol Light', 'Noto Serif Khmer', serif":"noto-serif-khmer","Noto Serif Khmer":"noto-serif-khmer","Noto Sans Khmer":"noto-sans-khmer","Georgia":"serif-georgia","Arial":"sans-arial","inherit":"noto-serif","":"noto-serif"},"maxTextStyles":64};
+const DATA={"version":"20.1","modelVersion":1,"defaultFontId":"noto-serif","defaultPairingId":"serif-formal","fonts":{"noto-sans":{"label":"Noto Sans","family":"EInvite Noto Sans","stack":"'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans','Noto Sans Khmer','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-latin-400.woff2","700":"assets/fonts/noto-sans-latin-700.woff2"},"stableId":"noto-sans","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"f54a80e0d925f4e82d0cf52b3249a4b1320137363e98018a6f65377d3390aa8c","700":"5fce99c92e68803bf3bf4f2c4a26ab0a649ddea0f11eaba28124d010183b69e5"}},"noto-serif":{"label":"Noto Serif","family":"EInvite Noto Serif","stack":"'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif','Noto Serif Khmer','Khmer UI',Georgia,serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2015 Google LLC. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-latin-400.woff2","700":"assets/fonts/noto-serif-latin-700.woff2"},"stableId":"noto-serif","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"0415cee63cb9ba43d5094caddd6d903d447cbc025dbe1c2a621f7855ffa1a99e","700":"f66ce4961c2ca74153ccf8be0e112ba679575b6aacc3155371483b019155d1b7"}},"noto-sans-khmer":{"label":"Noto Sans Khmer","family":"EInvite Noto Sans Khmer","stack":"'EInvite Noto Sans Khmer','EInvite Noto Sans','Noto Sans Khmer','Noto Sans','Khmer UI',Arial,sans-serif","category":"sans","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-sans-khmer-400.woff2","700":"assets/fonts/noto-sans-khmer-700.woff2"},"stableId":"noto-sans-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"4edee25cbc3ad5877820db657b57cf7df5fae06ae7ecc0513209d3617efe99a3","700":"8bb47df185665c501e5d264547b0f7eb235b4fba6063a48d4b721f48474d72e3"}},"noto-serif-khmer":{"label":"Noto Serif Khmer","family":"EInvite Noto Serif Khmer","stack":"'EInvite Noto Serif Khmer','EInvite Noto Serif','Noto Serif Khmer','Noto Serif','Khmer UI',Georgia,serif","category":"serif","scripts":["Khmer","Latin-fallback"],"weights":[400,700],"bundled":true,"license":"SIL Open Font License 1.1","copyright":"Copyright 2016 Google Inc. All Rights Reserved.","assets":{"400":"assets/fonts/noto-serif-khmer-400.woff2","700":"assets/fonts/noto-serif-khmer-700.woff2"},"stableId":"noto-serif-khmer","sourceType":"bundled","licenseId":"OFL-1.1","licenseFile":"licenses/fonts/Noto-OFL-1.1.txt","assetSha256":{"400":"980724e3fd5f924c86df268bf5cd5a4b1f500e3446ae579e741ba3df9d0e1b9f","700":"89d8d06b2425e7bc67292401d475d6f047706a13c462f24e291121a64b8f24c2"}},"serif-georgia":{"label":"Classic Serif (system)","family":"Georgia","stack":"Georgia,'EInvite Noto Serif','EInvite Noto Serif Khmer','Noto Serif Khmer','Khmer UI',serif","category":"serif","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"serif-georgia","sourceType":"system-fallback"},"sans-arial":{"label":"Modern Sans (system)","family":"Arial","stack":"Arial,'EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-arial","sourceType":"system-fallback"},"sans-trebuchet":{"label":"Friendly (system)","family":"Trebuchet MS","stack":"'Trebuchet MS','EInvite Noto Sans','EInvite Noto Sans Khmer','Noto Sans Khmer','Khmer UI',sans-serif","category":"sans","scripts":["Latin","Khmer-fallback"],"weights":[400,700],"bundled":false,"legacyOnly":true,"license":"Operating-system font; bundled Noto fallbacks remain available","assets":{},"stableId":"sans-trebuchet","sourceType":"system-fallback"}},"pairings":{"serif-formal":{"label":"Formal Serif","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"serif-formal"},"sans-modern":{"label":"Modern Sans","en":"noto-sans","km":"noto-sans-khmer","recommended":true,"stableId":"sans-modern"},"modern-system":{"label":"Modern System Sans","en":"sans-arial","km":"noto-sans-khmer","legacyOnly":true,"stableId":"modern-system"},"ceremonial-khmer":{"label":"Khmer Ceremonial","en":"noto-serif","km":"noto-serif-khmer","recommended":true,"stableId":"ceremonial-khmer"},"classic-system":{"label":"Classic System Serif","en":"serif-georgia","km":"noto-serif-khmer","legacyOnly":true,"stableId":"classic-system"},"friendly-system":{"label":"Friendly System Sans","en":"sans-trebuchet","km":"noto-sans-khmer","legacyOnly":true,"stableId":"friendly-system"}},"colorTokens":["heading","text","accent","surface","muted","inverse"],"legacy":{"Georgia,serif":"serif-georgia","Georgia, serif":"serif-georgia","Arial,sans-serif":"sans-arial","Arial, sans-serif":"sans-arial","'Trebuchet MS',sans-serif":"sans-trebuchet","'Trebuchet MS', sans-serif":"sans-trebuchet","'Noto Serif Khmer','Khmer OS Battambang',serif":"noto-serif-khmer","'Noto Serif Khmer', 'Khmer OS Battambang', serif":"noto-serif-khmer","'Noto Sans Khmer','Khmer OS Battambang',sans-serif":"noto-sans-khmer","'Noto Sans Khmer', 'Khmer OS Battambang', sans-serif":"noto-sans-khmer","'Khmer OS Muol Light','Noto Serif Khmer',serif":"noto-serif-khmer","'Khmer OS Muol Light', 'Noto Serif Khmer', serif":"noto-serif-khmer","Noto Serif Khmer":"noto-serif-khmer","Noto Sans Khmer":"noto-sans-khmer","Georgia":"serif-georgia","Arial":"sans-arial","inherit":"noto-serif","":"noto-serif"},"maxTextStyles":64};
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 const ids=Object.freeze(Object.keys(DATA.fonts)),pairingIds=Object.freeze(Object.keys(DATA.pairings)),MAX_TEXT_STYLES=DATA.maxTextStyles||64;
 function finiteNumber(value,fallback,min,max){if(typeof value==='boolean'||value===null||value===''||Array.isArray(value)||(typeof value==='object'&&value!==null))return fallback;const number=typeof value==='number'?value:Number(value);return Number.isFinite(number)?Math.max(min,Math.min(max,number)):fallback}
@@ -1509,199 +1567,12 @@ window.EInviteGuestJourney={enhance};
   }
 
   window.EInviteAlbum = { enhance };
-})();;/**
- * Phase 2a (V54.4) — Post-send editing badge + edit-history view.
- *
- * Two surfaces:
- *
- *   1. Public "Edited after sending" badge — mounted on the public
- *      invitation page when the host has edited the invitation after
- *      delivering it. The badge shows the timestamp of the first
- *      post-send edit and is the wedge feature against Paperless Post
- *      and Evite, both of which lock the invitation after send.
- *
- *   2. Host edit-history view — mounted on the dashboard, shows the
- *      full diff history (added/changed/removed field paths) for every
- *      post-send edit, plus a "Resend update notification" button that
- *      triggers an "invitation updated" email to already-viewed guests.
- *
- * Bilingual EN + Khmer (KH) per ROADMAP ground rule 5.
- *
- * Surface contract:
- *   window.EInviteEditHistory.mountBadge(root, { invitationId, mode, sentAt, editedAfterSendAt })
- *   window.EInviteEditHistory.mountHistoryView(root, { invitationId, mode })
- */
-(function () {
-  'use strict';
-
-  const STRINGS = {
-    badgeLabel: { en: 'Edited after sending', km: 'បានកែប្រែបន្ទាប់ពីផ្ញើ' },
-    badgeTitle: {
-      en: 'The host updated this invitation after it was sent. Tap to view what changed.',
-      km: 'ម្ចាស់កម្មវិធីបានកែប្រែការអញ្ជើញនេះបន្ទាប់ពីបានផ្ញើ។ ចុចដើម្បីមើលអ្វីដែលបានផ្លាស់ប្រែ។',
-    },
-    historyTitle: { en: 'Edit history', km: 'ប្រវត្តិកែប្រែ' },
-    historyIntro: {
-      en: 'Every change you made after the invitation was first sent is recorded here. Guests who already opened the invitation can be notified of the update.',
-      km: 'ការផ្លាស់ប្រែណាមួយដែលអ្នកបានធ្វើបន្ទាប់ពីការអញ្ជើញត្រូវបានផ្ញើជាលើកដំបូងត្រូវបានកត់ត្រានៅទីនេះ។ ភ្ញៀវដែលបានបើកការអញ្ជើញរួចហើយអាចត្រូវបានជូនដំណឹងអំពីការផ្លាស់ប្រែ។',
-    },
-    empty: { en: 'No edits have been made after sending yet.', km: 'មិនទាន់មានការកែប្រែណាមួយបន្ទាប់ពីផ្ញើនៅឡើយទេ។' },
-    resend: { en: 'Resend update notification', km: 'ផ្ញើការជូនដំណឹងបច្ចុប្បន្នភាពឡើងវិញ' },
-    resendDone: {
-      en: 'Notification sent to {sent} guest(s).',
-      km: 'បានផ្ញើការជូនដំណឹងទៅ {sent} ភ្ញៀវ។',
-    },
-    resendFailed: { en: 'Could not resend the notification. Please try again.', km: 'មិនអាចផ្ញើការជូនដំណឹងឡើងវិញបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
-    diffAdded: { en: 'Added', km: 'បានបន្ថែម' },
-    diffChanged: { en: 'Changed', km: 'បានផ្លាស់ប្រែ' },
-    diffRemoved: { en: 'Removed', km: 'បានលុប' },
-    reason: { en: 'Reason', km: 'មូលហេតុ' },
-    versionLabel: { en: 'Version', km: 'កំណែ' },
-    loading: { en: 'Loading edit history…', km: 'កំពុងផ្ទុកប្រវត្តិកែប្រែ…' },
-    error: { en: 'Could not load edit history.', km: 'មិនអាចផ្ទុកប្រវត្តិកែប្រែបានទេ។' },
-  };
-
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // V2-UX-5 (P1-B, WCAG 3.1.2): emit lang="km" / lang="en" on every text fragment
-  // so screen readers pick the correct pronunciation engine. The Khmer span keeps
-  // the existing `khmer-text` class for CSS targeting via :lang(km) / [lang="km"].
-  const langText = (key, mode) => {
-    const en = (STRINGS[key] && STRINGS[key].en) || key;
-    const km = (STRINGS[key] && STRINGS[key].km) || en;
-    if (mode === 'en') return `<span class="i18n i18n-en" lang="en">${esc(en)}</span>`;
-    if (mode === 'km') return `<span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
-    return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
-  };
-  const formatTs = (ts) => {
-    if (!ts) return '';
-    try {
-      const d = new Date(Number(ts));
-      if (isNaN(d.getTime())) return '';
-      return d.toLocaleString();
-    } catch { return ''; }
-  };
-
-  /**
-   * Mount the "Edited after sending" badge on the public invitation page.
-   *
-   * The badge is rendered above the main invitation content. Clicking it
-   * scrolls to a small dialog explaining that the host updated the
-   * invitation after sending it. The badge is only rendered when
-   * ``editedAfterSendAt`` is set (i.e., the host has actually edited).
-   */
-  function mountBadge(root, opts) {
-    if (!root || !opts || !opts.invitationId) return;
-    if (!opts.editedAfterSendAt) return;  // No post-send edits → no badge.
-    const mode = opts.mode || 'both';
-    const badge = document.createElement('aside');
-    badge.className = 'invitation-edit-badge reveal';
-    badge.setAttribute('role', 'status');
-    badge.setAttribute('aria-live', 'polite');
-    badge.setAttribute('title', STRINGS.badgeTitle.en);
-    const when = formatTs(opts.editedAfterSendAt);
-    badge.innerHTML = `
-      <span class="edit-badge-icon" aria-hidden="true">✎</span>
-      <span class="edit-badge-text">${langText('badgeLabel', mode)}${when ? ` · ${esc(when)}` : ''}</span>
-    `;
-    // Insert as the first child of the root, above the cover/hero.
-    root.insertBefore(badge, root.firstChild);
-  }
-
-  /**
-   * Mount the host's full edit-history view (dashboard side).
-   *
-   * Fetches ``GET /api/invitations/{id}/edit-history`` and renders a
-   * chronological list of edits with the diff (added/changed/removed
-   * field paths) plus a "Resend update notification" button.
-   */
-  function mountHistoryView(root, opts) {
-    if (!root || !opts || !opts.invitationId) return;
-    const invitationId = opts.invitationId;
-    const mode = opts.mode || 'both';
-    const section = document.createElement('section');
-    section.className = 'invitation-edit-history guest-feature';
-    section.setAttribute('aria-label', STRINGS.historyTitle.en);
-    section.innerHTML = `
-      <h2>${langText('historyTitle', mode)}</h2>
-      <p class="muted">${langText('historyIntro', mode)}</p>
-      <button class="resend-notification primary" type="button" disabled>${langText('resend', mode)}</button>
-      <p class="resend-status" role="status" aria-live="polite"></p>
-      <ol class="edit-history-list">${langText('loading', mode)}</ol>
-    `;
-    root.appendChild(section);
-
-    const list = section.querySelector('.edit-history-list');
-    const resendBtn = section.querySelector('.resend-notification');
-    const resendStatus = section.querySelector('.resend-status');
-
-    fetch(`/api/invitations/${encodeURIComponent(invitationId)}/edit-history`, {
-      headers: { Accept: 'application/json' },
-    }).then((r) => r.json()).then((data) => {
-      const entries = (data && data.history) || [];
-      if (!entries.length) {
-        list.innerHTML = `<li class="muted">${langText('empty', mode)}</li>`;
-      } else {
-        list.innerHTML = entries.map(renderEntry).join('');
-      }
-      // Enable the resend button only when there is at least one post-send edit.
-      const canResend = !!(data && data.sentAt && entries.length);
-      resendBtn.disabled = !canResend;
-    }).catch(() => {
-      list.innerHTML = `<li class="error">${langText('error', mode)}</li>`;
-    });
-
-    resendBtn.addEventListener('click', async () => {
-      if (resendBtn.disabled) return;
-      resendBtn.disabled = true;
-      resendStatus.textContent = '';
-      try {
-        const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/resend-notification`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ onlyViewed: false }),
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(payload.error || 'HTTP ' + res.status);
-        const sent = (payload && payload.sent) || 0;
-        const msg = (STRINGS.resendDone.en).replace('{sent}', String(sent));
-        const msgKm = (STRINGS.resendDone.km).replace('{sent}', String(sent));
-        resendStatus.innerHTML = mode === 'km'
-          ? `<span class="khmer-text" lang="km" lang="km">${esc(msgKm)}</span>`
-          : mode === 'both'
-            ? `<span lang="en">${esc(msg)}</span> <span class="khmer-text" lang="km" lang="km">${esc(msgKm)}</span>`
-            : `<span lang="en">${esc(msg)}</span>`;
-      } catch (err) {
-        resendStatus.innerHTML = `<span class="error">${langText('resendFailed', mode)}</span>`;
-      } finally {
-        resendBtn.disabled = false;
-      }
-    });
-  }
-
-  function renderEntry(entry) {
-    const when = formatTs(entry.editedAt);
-    const reason = entry.reason || '';
-    const diffItems = (entry.diff || []).map((d) => {
-      const path = d.path || '?';
-      const before = d.before;
-      const after = d.after;
-      const beforeStr = before === undefined || before === null ? `<em>${langText('diffRemoved', 'en')}</em>` : `<code>${esc(JSON.stringify(before))}</code>`;
-      const afterStr = after === undefined || after === null ? `<em>${langText('diffRemoved', 'en')}</em>` : `<code>${esc(JSON.stringify(after))}</code>`;
-      return `<li><span class="diff-path">${esc(path)}</span>: ${beforeStr} → ${afterStr}</li>`;
-    }).join('');
-    return `
-      <li class="edit-history-entry">
-        <header>
-          <strong>${esc(when)}</strong>
-          <span class="muted">v${esc(entry.documentVersion)}</span>
-        </header>
-        ${reason ? `<p class="edit-reason">${langText('reason', 'en')}: ${esc(reason)}</p>` : ''}
-        ${diffItems ? `<ul class="edit-diff">${diffItems}</ul>` : ''}
-      </li>`;
-  }
-
-  window.EInviteEditHistory = { mountBadge, mountHistoryView };
 })();;const slug=(document.querySelector('meta[name="einvite-invitation-slug"]')?.content||'').trim(),root=document.querySelector('#publicRoot'),life=window.EInviteLifecycle;
+// The server substitutes the real slug into the meta tag when it serves a published invitation. If
+// the page is opened straight from disk or from the static build, the tag still holds the template
+// placeholder ("__INVITATION_SLUG__"): treat that as "no server invitation" instead of requesting
+// /api/public/__INVITATION_SLUG__, which only produced a 404 in the console on every load.
+const slugUsable=!!slug&&!/^__.+__$/.test(slug);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const khmerFor=(date,time='00:00')=>{try{if(!window.momentkh||!date)return'';let[y,m,d]=date.split('-').map(Number),[h,min]=time.split(':').map(Number);return momentkh.format(momentkh.fromGregorian(y,m,d,h||0,min||0))}catch{return''}};
 const animationName=preset=>{const map={'fade-up':'fadeUp','soft-zoom':'softZoom','slide-left':'slideLeft','blur-in':'blurIn','bounce-in':'bounceIn','flip-in':'flipIn',float:'float',none:''};return Object.prototype.hasOwnProperty.call(map,preset)?map[preset]:'fadeUp'};
@@ -1749,7 +1620,13 @@ function orderedPhotos(d){let objects=d.objects||{},photos=Object.entries(object
 function galleryMarkup(d){if(d.settings?.galleryEnabled===false)return'';if(d.galleryProtection?.enabled&&d.galleryProtection?.locked)return`<section class="photo-gallery gallery-locked reveal" style="${combinedSectionStyle(d,'gallery')}" aria-label="Protected photo gallery"><div class="gallery-lock-card"><span aria-hidden="true">🔒</span><h2>${langText('Private photo gallery','វិចិត្រសាលរូបថតឯកជន',d.languageMode||'both')}</h2><p>${langText('Enter the gallery password to view these photos.','បញ្ចូលពាក្យសម្ងាត់វិចិត្រសាលដើម្បីមើលរូបថតទាំងនេះ។',d.languageMode||'both')}</p><form id="galleryUnlockForm"><label>${langText('Gallery password','ពាក្យសម្ងាត់វិចិត្រសាល',d.languageMode||'both')}<input name="password" type="password" required minlength="8" autocomplete="current-password"></label><button class="primary">${langText('Open gallery','បើកវិចិត្រសាល',d.languageMode||'both')}</button><p class="hint" data-gallery-error></p></form></div></section>`;let photos=orderedPhotos(d);if(!photos.length)return'';return`<section class="photo-gallery gallery-${esc(d.galleryStyle||'grid')} reveal" style="${combinedSectionStyle(d,'gallery')}" aria-label="Photo gallery">${photos.map((photo,index)=>{let animation=animationName(photo.animation),duration=Math.max(300,Math.min(3000,+(photo.duration||900))),delay=Math.min(index*.12,.72);return`<figure class="gallery-photo"><img src="${esc(photo.src)}"${responsiveImageAttrs(photo)} alt="${esc(photo.alt||`Celebration photo ${index+1}`)}" loading="lazy" decoding="async" class="reveal" style="animation-name:${animation};animation-duration:${duration}ms;animation-delay:${delay}s;object-fit:${esc(photo.imageFit||'cover')};object-position:${Number(photo.imagePositionX??50)}% ${Number(photo.imagePositionY??50)}%;filter:${imageFilterStyle(photo)}">${photo.caption?`<figcaption>${esc(photo.caption)}</figcaption>`:''}</figure>`}).join('')}</section>`}
 function normalizedTelegram(value){let raw=String(value||'').trim();if(!raw)return'';if(/^https:\/\/t\.me\/[A-Za-z0-9_]{5,}$/i.test(raw))return raw;let username=raw.replace(/^@/,'');return/^[A-Za-z0-9_]{5,}$/.test(username)?`https://t.me/${username}`:''}
 function contactMarkup(d,mode){if(d.settings?.contactEnabled===false)return'';let phone=String(d.contactPhone||'').trim(),telegram=normalizedTelegram(d.contactTelegram),phoneHref=/^[+0-9() .-]{5,30}$/.test(phone)?`tel:${phone.replace(/[^+0-9]/g,'')}`:'';if(!phoneHref&&!telegram)return'';return`<section class="contact-section reveal" style="${combinedSectionStyle(d,'contact')}"><h2>${langText('Contact the hosts','ទំនាក់ទំនងម្ចាស់កម្មវិធី',mode)}</h2><div class="contact-actions">${phoneHref?`<a href="${esc(phoneHref)}">☎ ${langText('Call','ទូរស័ព្ទ',mode)}</a>`:''}${telegram?`<a href="${esc(telegram)}" target="_blank" rel="noopener">✈ Telegram</a>`:''}</div></section>`}
-function bindLanguageSwitch(mode,documentModel={}){const key=`einvite-guest-language:${slug}`,guest=root.querySelector('.guest')||root,projectTypography=async lang=>{const fields=documentModel.fields||{},gregorian=(()=>{const dt=new Date((fields.date||'')+'T00:00:00');return isNaN(dt)?(fields.date||''):dt.toLocaleDateString(undefined,{dateStyle:'long'})})();for(const [id,object] of Object.entries(documentModel.objects||{})){const node=root.querySelector(`.published-text[data-object-id="${CSS.escape(id)}"]`);if(!node)continue;let content=object.html||'';if(id==='title')content=lang==='km'?(fields.namesKm||fields.names||''):(fields.names||'');else if(id==='subtitle')content=lang==='km'?(fields.messageKm||fields.message||''):(fields.message||'');else if(id==='details')content=`${esc(gregorian)}${fields.time?` · ${esc(fields.time)}`:''}<br>${esc(lang==='km'?(fields.venueKm||fields.venue||''):(fields.venue||''))}`;const flow=node.querySelector('.typography-flow');if(flow)flow.innerHTML=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.renderObject(object,documentModel,{locale:lang}):EInviteRenderer.sanitizeRichText(content);const renderedText=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.text(object.richText):EInviteRenderer.plainText(content);const model=TypographyDocumentModel.resolveObjectTypography(documentModel,object,{text:renderedText,locale:lang});TypographyLayoutService.applyToElement(node,model);await EInviteFontRegistry?.ensureReady?.([model.font]);TypographyLayoutService.fitAndDiagnose(node,model)}} ,setLanguage=async lang=>{lang=lang==='km'?'km':'en';document.documentElement.lang=lang;guest.dataset.language=lang;root.dataset.language=lang;root.classList.toggle('guest-language-km',lang==='km');document.querySelectorAll('[data-follow-guest-language]').forEach(node=>node.dataset.language=lang);root.querySelectorAll('[data-guest-lang]').forEach(button=>{const active=button.dataset.guestLang===lang;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});root.querySelectorAll('option[data-en]').forEach(option=>option.textContent=option.dataset[lang]||option.dataset.en);await projectTypography(lang);if(mode==='both')try{localStorage.setItem(key,lang)}catch{}};if(mode==='both'){root.querySelectorAll('[data-guest-lang]').forEach(button=>button.onclick=()=>setLanguage(button.dataset.guestLang));let saved='';try{saved=localStorage.getItem(key)||''}catch{}setLanguage(saved==='km'?'km':'en')}else setLanguage(mode==='km'?'km':'en')}
+function bindLanguageSwitch(mode,documentModel={}){const key=`einvite-guest-language:${slug}`,guest=root.querySelector('.guest')||root,projectTypography=async lang=>{const fields=documentModel.fields||{},gregorian=(()=>{const dt=new Date((fields.date||'')+'T00:00:00');return isNaN(dt)?(fields.date||''):dt.toLocaleDateString(undefined,{dateStyle:'long'})})();for(const [id,object] of Object.entries(documentModel.objects||{})){const node=root.querySelector(`.published-text[data-object-id="${CSS.escape(id)}"]`);if(!node)continue;let content=object.html||'';if(id==='title')content=lang==='km'?(fields.namesKm||fields.names||''):(fields.names||'');else if(id==='subtitle')content=lang==='km'?(fields.messageKm||fields.message||''):(fields.message||'');else if(id==='details')content=`${esc(gregorian)}${fields.time?` · ${esc(fields.time)}`:''}<br>${esc(lang==='km'?(fields.venueKm||fields.venue||''):(fields.venue||''))}`;const flow=node.querySelector('.typography-flow');if(flow)flow.innerHTML=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.renderObject(object,documentModel,{locale:lang}):EInviteRenderer.sanitizeRichText(content);const renderedText=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.text(object.richText):EInviteRenderer.plainText(content);const model=TypographyDocumentModel.resolveObjectTypography(documentModel,object,{text:renderedText,locale:lang});TypographyLayoutService.applyToElement(node,model);await EInviteFontRegistry?.ensureReady?.([model.font]);TypographyLayoutService.fitAndDiagnose(node,model)}} ,setLanguage=async lang=>{lang=lang==='km'?'km':'en';document.documentElement.lang=lang;guest.dataset.language=lang;root.dataset.language=lang;root.classList.toggle('guest-language-km',lang==='km');document.querySelectorAll('[data-follow-guest-language]').forEach(node=>node.dataset.language=lang);root.querySelectorAll('[data-guest-lang]').forEach(button=>{const active=button.dataset.guestLang===lang;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});root.querySelectorAll('option[data-en]').forEach(option=>option.textContent=option.dataset[lang]||option.dataset.en);await projectTypography(lang);if(mode==='both')try{localStorage.setItem(key,lang)}catch{}};if(mode==='both'){root.querySelectorAll('[data-guest-lang]').forEach(button=>button.onclick=()=>setLanguage(button.dataset.guestLang));let saved='';try{saved=localStorage.getItem(key)||''}catch{}
+  /* No per-invitation choice yet: fall back to the app-wide preference (`einvite-lang`, the key
+     every other route uses) instead of always starting in English, so the guest-language toggle
+     and the rendered content cannot disagree. A guest who picks a language here still wins on
+     this invitation via `key`. */
+  if(!saved)try{saved=localStorage.getItem('einvite-lang')||''}catch{}
+  setLanguage(saved==='km'?'km':'en')}else setLanguage(mode==='km'?'km':'en')}
 let countdownTimer=0;function startCountdown(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=0}let box=root?.querySelector('.countdown');if(!box)return;let target=new Date(box.dataset.target).getTime(),tick=()=>{let left=Math.max(0,target-Date.now()),values={days:Math.floor(left/864e5),hours:Math.floor(left/36e5)%24,minutes:Math.floor(left/6e4)%60,seconds:Math.floor(left/1e3)%60};Object.entries(values).forEach(([unit,value])=>{let el=box.querySelector(`[data-unit="${unit}"]`);if(el)el.textContent=String(value).padStart(2,'0')});if(left<=0&&countdownTimer){clearInterval(countdownTimer);countdownTimer=0}};tick();if(target>Date.now()){countdownTimer=(life?.interval||setInterval)(tick,1000);life?.add?.(()=>{countdownTimer=0})}}
 const palettePresets={rose:{background:'#fff6f3',surface:'#fffdfc',text:'#3d292f',heading:'#9d4555'},gold:{background:'#fff9eb',surface:'#fffdf7',text:'#4b3716',heading:'#a87616'},emerald:{background:'#eef8f1',surface:'#ffffff',text:'#29443a',heading:'#1f7158'},midnight:{background:'#100e19',surface:'#211b2d',text:'#f4efff',heading:'#c8b5ff'},'ivory-navy':{background:'#f7f2e8',surface:'#fffdf8',text:'#263248',heading:'#1f365d'}};
 function paletteRootStyle(d){if(!d.palettePreset||d.palettePreset==='template')return'';let p=d.palette||palettePresets[d.palettePreset]||palettePresets.rose,valid=v=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'#fff';return`--palette-background:${valid(p.background)};--palette-surface:${valid(p.surface)};--palette-text:${valid(p.text)};--palette-heading:${valid(p.heading)};--palette-accent:${valid(d.accent||p.heading)}`}
@@ -1767,7 +1644,7 @@ settings:{rsvpMaxGuests:4,rsvpCloseDate:'',rsvpQuestions:{meal:true,transport:fa
 rsvpFields:[{id:'attendance',label:'Will you attend?',labelKm:'',type:'select',options:['Yes, I will attend','Sorry, I cannot attend'],required:true}],
 gallery:[],customBlocks:[]};
 }
-async function loadPublic(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(!apiAvailable())return {document:offlineSeedDocument(),invitationId:'demo-invitation',guest:null,studioBrand:null,editedAfterSendAt:null,analyticsConsentRequired:false,externalMediaConsentRequired:false};let accessToken=publicAccessToken;const controller=life?.controller?.()||new AbortController();for(let attempt=0;attempt<2;attempt++){const headers={};if(guestToken)headers['X-Invitation-Guest']=guestToken;if(accessToken)headers['X-Invitation-Access']=accessToken;if(galleryAccessToken)headers['X-Gallery-Access']=galleryAccessToken;const response=await fetch('/api/public/'+encodeURIComponent(slug),{headers,cache:'no-store',signal:controller.signal});if(response.ok)return response.json();const data=await response.json().catch(()=>({}));if(response.status===403&&data.protected){accessToken=await passwordGate();publicAccessToken=accessToken;continue}throw Error(data.error||'Invitation unavailable')}throw Error('Invitation access could not be verified')}
+async function loadPublic(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(!apiAvailable()||!slugUsable)return {document:offlineSeedDocument(),invitationId:'demo-invitation',guest:null,studioBrand:null,editedAfterSendAt:null,analyticsConsentRequired:false,externalMediaConsentRequired:false};let accessToken=publicAccessToken;const controller=life?.controller?.()||new AbortController();for(let attempt=0;attempt<2;attempt++){const headers={};if(guestToken)headers['X-Invitation-Guest']=guestToken;if(accessToken)headers['X-Invitation-Access']=accessToken;if(galleryAccessToken)headers['X-Gallery-Access']=galleryAccessToken;const response=await fetch('/api/public/'+encodeURIComponent(slug),{headers,cache:'no-store',signal:controller.signal});if(response.ok)return response.json();const data=await response.json().catch(()=>({}));if(response.status===403&&data.protected){accessToken=await passwordGate();publicAccessToken=accessToken;continue}throw Error(data.error||'Invitation unavailable')}throw Error('Invitation access could not be verified')}
 function consentPreference(kind){return localStorage.getItem(`einvite-consent:${slug}:${kind}`)==='granted'}
 function showPrivacyConsent(p,d){document.querySelectorAll('.guest-consent-banner').forEach(node=>node.remove());const needAnalytics=!!p.analyticsConsentRequired&&!consentPreference('analytics'),needExternal=!!p.externalMediaConsentRequired&&!consentPreference('external-media');if(!needAnalytics&&!needExternal)return;const bar=document.createElement('aside');bar.className='guest-consent-banner';bar.dataset.followGuestLanguage='true';bar.dataset.language=root.dataset.language||(d.languageMode==='km'?'km':'en');bar.setAttribute('role','dialog');bar.setAttribute('aria-label','Privacy choices');bar.innerHTML=`<div><strong>${langText('Privacy choices','ជម្រើសឯកជនភាព',d.languageMode||'both')}</strong><p>${langText('Choose whether this invitation may record an anonymous visit and load external media such as YouTube or SoundCloud.','ជ្រើសរើសថាតើការអញ្ជើញនេះអាចកត់ត្រាការចូលមើលអនាមិក និងផ្ទុកមេឌៀខាងក្រៅដូចជា YouTube ឬ SoundCloud ដែរឬទេ។',d.languageMode||'both')}</p><a href="/privacy.html" target="_blank" rel="noopener">${langText('Privacy details','ព័ត៌មានឯកជនភាព',d.languageMode||'both')}</a></div><div class="guest-consent-actions">${needAnalytics?`<button type="button" data-consent="analytics">${langText('Allow analytics','អនុញ្ញាតវិភាគ',d.languageMode||'both')}</button>`:''}${needExternal?`<button type="button" data-consent="external-media">${langText('Allow external media','អនុញ្ញាតមេឌៀខាងក្រៅ',d.languageMode||'both')}</button>`:''}<button type="button" data-consent="continue">${langText('Continue without optional consent','បន្តដោយមិនយល់ព្រមជម្រើសបន្ថែម',d.languageMode||'both')}</button></div>`;document.body.append(bar);bar.querySelector('[data-consent=analytics]')?.addEventListener('click',async()=>{localStorage.setItem(`einvite-consent:${slug}:analytics`,'granted');if(apiAvailable())try{await fetch('/api/public/'+encodeURIComponent(slug)+'/view',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch{}bar.querySelector('[data-consent=analytics]')?.remove();if(!bar.querySelector('[data-consent=external-media]'))bar.remove()});bar.querySelector('[data-consent=external-media]')?.addEventListener('click',()=>{localStorage.setItem(`einvite-consent:${slug}:external-media`,'granted');location.reload()});bar.querySelector('[data-consent=continue]')?.addEventListener('click',()=>bar.remove())}
 loadPublic().then(async p=>{
@@ -1794,14 +1671,70 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
   // were not bundled (dev-only public pages).
   // Phase 2a (V54.4) — also mount the "Edited after sending" badge so
   // guests can see the invitation was updated after the host first sent it.
-  if(p.invitationId){
+  // Only mount the server-backed guest features (sign-up sheets, polls, album) when the page is
+  // actually bound to a published invitation. In the seed/static case the seed's `demo-invitation`
+  // id made each of those modules fetch a resource that does not exist, producing three 404s.
+  if(p.invitationId&&slugUsable&&apiAvailable()){
     const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||''};
     try{window.EInviteSignupSheets?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('signup-sheets enhance failed',err)}
     try{window.EInvitePolls?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('polls enhance failed',err)}
     try{window.EInviteAlbum?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('album enhance failed',err)}
     try{window.EInviteEditHistory?.mountBadge(root,{invitationId:p.invitationId,mode,editedAfterSendAt:p.editedAfterSendAt||0})}catch(err){console?.warn?.('edit-history badge failed',err)}
   }
-}).catch(()=>root.innerHTML='<h1>Invitation unavailable</h1><p>This invitation has not been published.</p>');;(()=>{
+}).catch(()=>root.innerHTML='<h1>Invitation unavailable</h1><p>This invitation has not been published.</p>');
+
+
+/* Guest language sync, moved out of a page-level inline <script> for the same reason as the
+   dashboard mounts: `script-src 'self'` refuses inline blocks, so this correction never ran and
+   logged a CSP violation on every guest-page load. It is part of bundle-public-v15.js already. */
+(function () {
+    var root = document.getElementById('publicRoot');
+    if (!root) return;
+    var applyLang = function (value) {
+      var lang = value === 'km' ? 'km' : 'en';
+      if (document.documentElement.lang !== lang) {
+        document.documentElement.lang = lang;
+      }
+    };
+    /* The guest topbar is outside #publicRoot — the only place public-page.js
+       looks for [data-guest-lang] buttons — so the topbar delegates to the
+       renderer's own switch instead of duplicating the language logic or moving
+       the brand inside the invitation. */
+    var syncTopbar = function (lang) {
+      var buttons = document.querySelectorAll('[data-guest-lang-proxy]');
+      for (var i = 0; i < buttons.length; i++) {
+        var active = buttons[i].getAttribute('data-guest-lang-proxy') === lang;
+        buttons[i].classList.toggle('active', active);
+        buttons[i].setAttribute('aria-pressed', String(active));
+      }
+    };
+    if (root.dataset && root.dataset.language) { applyLang(root.dataset.language); syncTopbar(root.dataset.language); }
+    document.querySelectorAll('[data-guest-lang-proxy]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var lang = button.getAttribute('data-guest-lang-proxy');
+        var real = root.querySelector('.language-switch [data-guest-lang="' + lang + '"]');
+        if (real) real.click();
+        else { root.dataset.language = lang; applyLang(lang); syncTopbar(lang); }
+      });
+    });
+    if (typeof MutationObserver === 'function') {
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          if (records[i].attributeName === 'data-language') {
+            var lang = root.getAttribute('data-language');
+            applyLang(lang);
+            syncTopbar(lang === 'km' ? 'km' : 'en');
+            return;
+          }
+        }
+      }).observe(root, { attributes: true, attributeFilter: ['data-language'] });
+    }
+    /* The renderer creates its language switch asynchronously, so reflect its
+       state once it lands (and keep the topbar in sync afterwards). */
+    window.addEventListener('load', function () {
+      syncTopbar(root.dataset.language === 'km' ? 'km' : 'en');
+    });
+  })();;(()=>{
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));

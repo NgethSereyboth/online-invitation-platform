@@ -64,7 +64,20 @@ const pageMenu=$('.workflow-v4-popover.open');if(pageMenu){pageMenu.classList.re
 const context=$('.ui-context-menu:not([hidden]),.ei-context-menu:not([hidden]),#workflowV5ContextMenu.open');if(context){context.hidden=true;context.classList.remove('open');return true}
 const flow=$('#workflowV6Flow.open');if(flow){flow.classList.remove('open');return true}
 const position=$('#workflowV6Position.open');if(position){position.classList.remove('open');return true}
-if(document.body.classList.contains('inspector-open')){document.body.classList.remove('inspector-open');return true}
+const moreMenu=$('.canvas-header-more-menu:not([hidden])');if(moreMenu){moreMenu.hidden=true;const moreTrigger=$('.canvas-header-more-trigger');moreTrigger?.setAttribute('aria-expanded','false');if(moreMenu.contains(document.activeElement)||document.activeElement===moreTrigger)moreTrigger?.focus();return true}
+// An active drawing tool is a mode the editor owns, so the ladder has to own it too: without this
+// branch Escape was consumed while the tool stayed active (measured: the rect tool was still
+// `rect` after the key, and nothing else had closed), which reads as a broken key. Ranked above the
+// inspector and the selection because a mode is the most transient thing on screen.
+const drawTool=window.EInviteToolController?.activeTool;if(drawTool&&drawTool!=='select'&&drawTool!=='hand'){activateTool('select');return true}
+// Close through the responsive layout when it owns the drawer: its observer reads `inspector-open` as the
+// drawer state and re-adds the class on the next sync, so a bare class removal reopened the inspector.
+if(document.body.classList.contains('inspector-open')){if(window.EInviteResponsiveLayout?.closeInspector)window.EInviteResponsiveLayout.closeInspector();else document.body.classList.remove('inspector-open');return true}
+// The creation drawer is the left pane on the mobile layout (<=820px). Its open state is the same kind of
+// transient drawer as the inspector, and the only way to close it was the sidebar toggle. Measured at 700px:
+// the drawer stayed open after Escape. Only on the mobile layout, where the drawer really is a drawer; at
+// compact widths the pane is always visible, so consuming the key there would hide nothing.
+if(window.EInviteResponsiveLayout?.mode?.()==='mobile'&&document.body.dataset.editorDrawer==='creation'&&window.EInviteResponsiveLayout.closeCreation){window.EInviteResponsiveLayout.closeCreation();return true}
 if(selected().length){window.EInviteEditorBridge?.select?.([]);return true}
 return false;
 }
@@ -75,7 +88,7 @@ function loadUI(){if(window.EInviteCommandUI)return Promise.resolve(window.EInvi
 function addDefaults(){registerMany([
 {id:'ui.quickActions',title:'Open Quick Actions',category:'Workspace',keywords:['search','commands','palette'],bindings:{standard:['Mod+K','/'],canva:['Mod+K','/'],photoshop:['Mod+K','/']},allowWhileTyping:false,run:()=>openUI('commands')},
 {id:'ui.shortcutSettings',title:'Keyboard shortcuts and profiles',category:'Workspace',keywords:['keys','profiles','settings'],bindings:{standard:['?','Shift+?'],canva:['?','Shift+?'],photoshop:['?','Shift+?']},run:()=>openUI('shortcuts')},
-{id:'ui.escape',title:'Cancel or close',category:'Workspace',bindings:{standard:['Escape'],canva:['Escape'],photoshop:['Escape']},repeatable:true,run:()=>closeTopLayer()},
+{id:'ui.escape',title:'Cancel or close',category:'Workspace',bindings:{standard:['Escape'],canva:['Escape'],photoshop:['Escape']},repeatable:true,consumeOnlyWhenHandled:true,run:()=>closeTopLayer()},
 {id:'history.undo',title:'Undo',category:'Edit',allowWhileTyping:true,bindings:{standard:['Mod+Z'],canva:['Mod+Z'],photoshop:['Mod+Z']},run:()=>pro('undoSelection')||(typeof window.EInviteEditorBridge?.undo==='function'?window.EInviteEditorBridge.undo():clickNative('#undoBtn'))},
 {id:'history.redo',title:'Redo',category:'Edit',allowWhileTyping:true,bindings:{standard:['Mod+Shift+Z','Mod+Y'],canva:['Mod+Shift+Z','Mod+Y'],photoshop:['Mod+Shift+Z','Mod+Y']},run:()=>pro('redoSelection')||(typeof window.EInviteEditorBridge?.redo==='function'?window.EInviteEditorBridge.redo():clickNative('#redoBtn'))},
 {id:'edit.copy',title:'Copy selection',category:'Edit',bindings:{standard:['Mod+C'],canva:['Mod+C'],photoshop:['Mod+C']},enabled:()=>selected().length>0,run:()=>pro('copySelection')||window.EInviteCommands?.copySelection?.()},
@@ -132,6 +145,19 @@ const command=commands.get(id);if(!command)return;if((id==='canvas.panHold'||id.
 const typing=isTypingTarget(event.target);if(typing&&!command.allowWhileTyping)return;
 if(event.repeat&&!command.repeatable)return;
 const state=commandState(command,context(event));if(!state.enabled)return;
+// `ui.escape` is the dismiss ladder and the only command registered with `consumeOnlyWhenHandled`.
+// A ladder that consumed Escape even when it had nothing of its own to close made every other
+// Escape owner in the app unreachable, because this listener is capture-phase on `window` and sits
+// above all of them: measured — the toolbar's `<details>` popover stayed open, and no listener
+// downstream of here ever saw the key (`saw: []`). So the ladder runs first and the event is only
+// consumed when it actually closed something.
+if(command.consumeOnlyWhenHandled){
+let handled=false;try{handled=command.run(context(event))!==false}catch(error){console.error('[V23 command]',id,error)}
+notify('executed',{commandId:id,result:handled});
+if(!handled)return;
+if(command.preventDefault!==false)event.preventDefault();if(command.stopPropagation!==false){event.stopPropagation();event.stopImmediatePropagation()}
+return;
+}
 if(command.preventDefault!==false)event.preventDefault();if(command.stopPropagation!==false){event.stopPropagation();event.stopImmediatePropagation()}
 execute(id,{event});
 }

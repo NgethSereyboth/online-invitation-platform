@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><script src="core/theme.js"></script><script>(function(){try{var e=document.documentElement,v=localStorage.getItem('einvite-lang');if(!v){var n=navigator.language||(navigator.languages&&navigator.languages[0])||"";v=n.toLowerCase().indexOf("km")===0?"km":"en"}e.lang=v}catch(x){}})();</script><script src="backend-mode-v14.js"></script>
+<head><script src="core/theme.js"></script><script src="backend-mode-v14.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -82,7 +82,17 @@
       <a href="dashboard.html" class="button-link"><strong>E-invitation-website</strong></a>
       <span class="studio-document-title" id="documentTitle"><span class="i18n i18n-en">Untitled design</span><span class="i18n i18n-km khmer-text" lang="km">Untitled design</span></span>
     </div>
-    <div class="canvas-header-more"><summary><span class="i18n i18n-en">More</span><span class="i18n i18n-km khmer-text" lang="km">More</span></summary></div>
+    <div class="canvas-header-more"><button type="button" class="canvas-header-more-trigger" aria-label="More editor actions" aria-haspopup="true" aria-expanded="false">•••</button>
+      <div class="canvas-header-more-menu" hidden>
+        <div class="v54-header-menu-section v54-header-menu-project"><strong>Project</strong>
+          <button id="backupBtn">Backup</button>
+          <button id="restoreBtn">Restore</button>
+          <input id="restoreFile" type="file" accept="application/json" hidden>
+        </div>
+        <div class="v54-header-menu-section v54-header-menu-actions"><strong>Editor</strong></div>
+        <div class="v54-header-menu-section v54-header-menu-advanced"><strong>Advanced tools</strong></div>
+      </div>
+    </div>
     <div class="studio-topbar-right">
       <span id="saveState"><span class="i18n i18n-en">Saved locally</span><span class="i18n i18n-km khmer-text" lang="km">Saved locally</span></span>
       <span id="serverState"><span class="i18n i18n-en">Local mode</span><span class="i18n i18n-km khmer-text" lang="km">Local mode</span></span>
@@ -90,18 +100,9 @@
       <button id="redoBtn" title="Redo (Ctrl+Y)"><span class="i18n i18n-en">Redo</span><span class="i18n i18n-km khmer-text" lang="km">Redo</span></button>
       <button id="previewBtn"><span class="i18n i18n-en">Guest preview</span><span class="i18n i18n-km khmer-text" lang="km">Guest preview</span></button>
       <button id="publishBtn" class="primary"><span class="i18n i18n-en">Publish snapshot</span><span class="i18n i18n-km khmer-text" lang="km">Publish snapshot</span></button>
-      <button id="eiAiTopButton" class="primary">AI</button>
+      <button id="eiAiTopButton" class="primary" data-deferred-tool="ai" data-open-ai="write" title="Open AI Project Operator (Ctrl/Cmd + .)">AI</button>
       <button id="studioCommandBtn" title="Command palette">⌘K</button>
       <button id="v54InspectorDrawer" class="app-drawer-toggle" type="button" title="Inspector" aria-label="Toggle inspector" aria-expanded="false"><span aria-hidden="true">▤</span></button>
-    </div>
-    <div class="canvas-header-more-menu">
-      <div class="v54-header-menu-section v54-header-menu-project"><strong>Project</strong>
-        <button id="backupBtn">Backup</button>
-        <button id="restoreBtn">Restore</button>
-        <input id="restoreFile" type="file" accept="application/json" hidden>
-      </div>
-      <div class="v54-header-menu-section v54-header-menu-actions"><strong>Editor</strong></div>
-      <div class="v54-header-menu-section v54-header-menu-advanced"><strong>Advanced tools</strong></div>
     </div>
   </header>
   <main id="main" tabindex="-1">

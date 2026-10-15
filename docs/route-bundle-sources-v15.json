@@ -35,7 +35,11 @@
       ]
     },
     "admin.html": {
+      "deferredScripts": [
+        "pages/admin/impersonate.js"
+      ],
       "scripts": [
+        "route-deferred-loader-v15.js",
         "core/i18n.js",
         "ui-dialogs.js",
         "toast.js",
@@ -46,7 +50,6 @@
         "pages/admin/audit-log.js",
         "pages/admin/system-health.js",
         "pages/admin/bulk-operations.js",
-        "pages/admin/impersonate.js",
         "pages/admin/reports.js",
         "modern-ui.js",
         "final-experience.js",
@@ -147,7 +150,14 @@
       ]
     },
     "dashboard.html": {
+      "deferredScripts": [
+        "delivery-dialog.js",
+        "invitation-edit-history.js"
+      ],
+      "deferredStyles": [],
       "scripts": [
+        "yjs-bridge-v54.js",
+        "route-deferred-loader-v15.js",
         "core/i18n.js",
         "typography-contract.js",
         "typography-document-model.js",
@@ -164,8 +174,6 @@
         "final-polish.js",
         "dashboard-empty-state.js",
         "accessibility-polish.js",
-        "delivery-dialog.js",
-        "invitation-edit-history.js",
         "host-signup-sheets.js",
         "host-polls.js",
         "toast.js",
@@ -196,6 +204,7 @@
     },
     "designer.html": {
       "scripts": [
+        "yjs-bridge-v54.js",
         "core/i18n.js",
         "ui-dialogs.js",
         "designer.js",
@@ -251,9 +260,34 @@
       ]
     },
     "index.html": {
+      "deferredScripts": [
+        "workflow-refine.js",
+        "workflow-continuity.js",
+        "workflow-ux-v5.js",
+        "workflow-pro-editor-v6.js",
+        "workflow-final-audit-v7.js",
+        "editor-canva-v13.js",
+        "photo-editor-v13.js",
+        "photo-retouch.js",
+        "timeline-v13.js",
+        "product-operations-v13.js"
+      ],
+      "deferredStyles": [
+        "workflow-refine.css",
+        "workflow-continuity.css",
+        "workflow-ux-v5.css",
+        "workflow-pro-editor-v6.css",
+        "workflow-final-audit-v7.css",
+        "editor-canva.css",
+        "photo-editor-v13.css",
+        "photo-retouch.css",
+        "timeline.css",
+        "product-operations.css"
+      ],
       "scripts": [
-        "core/i18n.js",
         "runtime-lifecycle-v15.js",
+        "route-deferred-loader-v15.js",
+        "core/i18n.js",
         "performance-loader-v22.js",
         "editor-command-system-v23.js",
         "typography-contract.js",
@@ -283,12 +317,7 @@
         "ux-refine.js",
         "final-polish.js",
         "editor-layout-stability.js",
-        "workflow-refine.js",
-        "workflow-continuity.js",
         "workflow-creation-flow-v4.js",
-        "workflow-ux-v5.js",
-        "workflow-pro-editor-v6.js",
-        "workflow-final-audit-v7.js",
         "opening-scenes.js",
         "guest-layouts.js",
         "social-card.js",
@@ -297,19 +326,14 @@
         "accessibility-polish.js",
         "editor-commands.js",
         "typography-editor-v20.js",
-        "editor-canva-v13.js",
         "editor-shared-styles.js",
-        "photo-editor-v13.js",
-        "photo-retouch.js",
-        "timeline-v13.js",
-        "product-operations-v13.js",
         "mobile-editor.js",
         "professional-editor-v17.js",
-        "editor-responsive-contract-v27.js",
         "editor/editor-core.js",
         "editor/ui-layout.js",
         "editor/ui-components.js",
-        "ui/app-shell.js"
+        "ui/app-shell.js",
+        "editor-responsive-contract-v27.js"
       ],
       "styles": [
         "typography-fonts.css",
@@ -326,37 +350,32 @@
         "theme-hardening.css",
         "ux-refine.css",
         "final-polish.css",
-        "workflow-refine.css",
         "editor-layout-stability.css",
-        "workflow-continuity.css",
         "workflow-creation-flow-v4.css",
-        "workflow-ux-v5.css",
-        "workflow-pro-editor-v6.css",
-        "workflow-final-audit-v7.css",
         "style-kits.css",
-        "editor-canva.css",
         "editor-shared-styles.css",
         "opening-scenes.css",
         "storyboard.css",
         "social-card.css",
         "accessibility.css",
-        "photo-editor-v13.css",
-        "photo-retouch.css",
-        "timeline.css",
-        "product-operations.css",
         "stabilized.css",
         "editor-ux-refinement-v0_52.css",
         "professional-editor-v17.css",
         "zoom-layout-v22.css",
         "graphics-runtime-v22.css",
-        "editor-responsive-contract-v27.css",
         "editor/editor-styles.css",
-        "app-shell-v55.css"
+        "app-shell-v55.css",
+        "editor-responsive-contract-v27.css"
       ]
     },
     "materials.html": {
+      "deferredScripts": [
+        "ux-refine.js"
+      ],
+      "deferredStyles": [],
       "scripts": [
         "core/i18n.js",
+        "route-deferred-loader-v15.js",
         "ui-dialogs.js",
         "upload-client.js",
         "upload-folder-client-v53.js",
@@ -364,7 +383,6 @@
         "materials.js",
         "modern-ui.js",
         "final-experience.js",
-        "ux-refine.js",
         "final-polish.js",
         "accessibility-polish.js",
         "ui/app-shell.js"
@@ -403,9 +421,14 @@
       ]
     },
     "public.html": {
+      "deferredScripts": [
+        "invitation-edit-history.js"
+      ],
+      "deferredStyles": [],
       "scripts": [
-        "core/i18n.js",
         "runtime-lifecycle-v15.js",
+        "route-deferred-loader-v15.js",
+        "core/i18n.js",
         "typography-contract.js",
         "custom-font-core-v22.js",
         "typography-document-model.js",
@@ -422,7 +445,6 @@
         "signup-sheets.js",
         "polls.js",
         "album.js",
-        "invitation-edit-history.js",
         "public-page.js",
         "ux-refine.js",
         "ui/app-shell.js"

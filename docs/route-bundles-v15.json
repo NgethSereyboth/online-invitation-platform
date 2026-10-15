@@ -2,8 +2,8 @@
   "pages": {
     "account.html": {
       "javascript": "bundle-account-v15.js",
-      "scriptBytes": 95859,
-      "scriptSha256": "66f863ea90e491e20545f47c432d734c60ee53327b4c90fc322c9b6a03ab8090",
+      "scriptBytes": 100263,
+      "scriptSha256": "596e5eda61180cb620e1f4c991a42b56796ee25b7dcf50fd46d44e45eeb97689",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -33,16 +33,26 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 256549,
-      "styleSha256": "3dd9051197d5d7f65ed1c6e3739b278a839e9ea6525f02cb5059731b5d578bb4",
+      "styleBytes": 258179,
+      "styleSha256": "4c34744273f993576ffae88c1213ee9990b49b145aba1fa0cfe7471031516d7d",
       "stylesheet": "bundle-account-v15.css"
     },
     "admin.html": {
+      "deferredJavascript": "bundle-admin-deferred-v15.js",
+      "deferredJavascriptBytes": 4772,
+      "deferredJavascriptSha256": "842272050eb0ac746edfee8205377b789b45a52fe1bf95e9c921648442576d1f",
+      "deferredStylesheet": "bundle-admin-deferred-v15.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-admin-v15.js",
-      "scriptBytes": 150990,
-      "scriptSha256": "9875d1f9cff9d29e2db2351b1caed44b5d996879f83b987de9ba4fb9b4f8f8c5",
+      "scriptBytes": 151116,
+      "scriptSha256": "b5a8725a7ca7489ecd57c47e60f00f294683326091979859678d3cb335ba3fc3",
       "sources": {
+        "deferredScripts": [
+          "pages/admin/impersonate.js"
+        ],
         "scripts": [
+          "route-deferred-loader-v15.js",
           "core/i18n.js",
           "ui-dialogs.js",
           "toast.js",
@@ -53,7 +63,6 @@
           "pages/admin/audit-log.js",
           "pages/admin/system-health.js",
           "pages/admin/bulk-operations.js",
-          "pages/admin/impersonate.js",
           "pages/admin/reports.js",
           "modern-ui.js",
           "final-experience.js",
@@ -78,14 +87,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 256829,
-      "styleSha256": "6d3f9b8def29a69cb55da0b42e9b25f2bd1e7f646ea5c293bbfac7a283d51c64",
+      "styleBytes": 258459,
+      "styleSha256": "a15231bc35299aca4487189b1bca102c8f9f7e72c898e15b15c6ce4fa5cc08cd",
       "stylesheet": "bundle-admin-v15.css"
     },
     "analytics.html": {
       "javascript": "bundle-analytics-v15.js",
-      "scriptBytes": 86067,
-      "scriptSha256": "86abdb4d1f4e727ebf35d7479736650ec8c0d1c521b832d1b61ae517207364fc",
+      "scriptBytes": 88186,
+      "scriptSha256": "26ebb51532a5286018e523aa942aeb32a095963f2bd736732f9bc0e5411e5f21",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -115,14 +124,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 257142,
-      "styleSha256": "e16c769435c3493f7c46806fb3a706f30747851ea5b88fe39de039373482b742",
+      "styleBytes": 258772,
+      "styleSha256": "a530da847227253a64a3cb4b125ec85c6d26891e02313de0dce32cdb12885d04",
       "stylesheet": "bundle-analytics-v15.css"
     },
     "billing.html": {
       "javascript": "bundle-billing-v15.js",
-      "scriptBytes": 82799,
-      "scriptSha256": "39fcff01c0687bf18bad1b1cf9eb525f8b5680b6bafc35b7b2a9785ffcc53a33",
+      "scriptBytes": 84188,
+      "scriptSha256": "c6b5c8421a0fc824238538590a472213cd8fda5118ab1cb94631b45459931681",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -149,14 +158,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 258702,
-      "styleSha256": "fd1d76f2076c5dd7b8fdf5989d3c8651f35715bbbc479005fde71dbb6b22a7ab",
+      "styleBytes": 260332,
+      "styleSha256": "c6e8bda021062a87db8c9723499e4cc8e728ae933fcbc5424630540771860024",
       "stylesheet": "bundle-billing-v15.css"
     },
     "checkin.html": {
       "javascript": "bundle-checkin-v15.js",
-      "scriptBytes": 36591,
-      "scriptSha256": "5ed6de9322c79d0a0302791c17f8e3faa29f2b561d80df18950cede6e5b58aad",
+      "scriptBytes": 38709,
+      "scriptSha256": "2b7613bf709719a34fda510d62bf5bfa21c0cc0d339d7c5d278eaeafc0a7180f",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -177,16 +186,29 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 128721,
-      "styleSha256": "9589a5211d8193e6455bc1a6b39e07f44ba440e492930455082e04ade711c289",
+      "styleBytes": 129840,
+      "styleSha256": "41967b0e7f5bdbac5b5b0365224dc944a654dd5ecc9c48c2db2dfdea78f6b3c8",
       "stylesheet": "bundle-checkin-v15.css"
     },
     "dashboard.html": {
+      "deferredJavascript": "bundle-dashboard-deferred-v15.js",
+      "deferredJavascriptBytes": 24752,
+      "deferredJavascriptSha256": "229ce3d95844d4858134f895ce78eddba53823a29b9318aab5e117c327a16452",
+      "deferredStylesheet": "bundle-dashboard-deferred-v15.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-dashboard-v15.js",
-      "scriptBytes": 337907,
-      "scriptSha256": "966f41b6e774b5d34dee348cec242a1b9066b4e01d9f9c1e3a5e0a73fc28b922",
+      "scriptBytes": 330590,
+      "scriptSha256": "b2afde0f2c1ce5d29993899c50c46e17aee5f610842fb768fc819bcaf49bbfcd",
       "sources": {
+        "deferredScripts": [
+          "delivery-dialog.js",
+          "invitation-edit-history.js"
+        ],
+        "deferredStyles": [],
         "scripts": [
+          "yjs-bridge-v54.js",
+          "route-deferred-loader-v15.js",
           "core/i18n.js",
           "typography-contract.js",
           "typography-document-model.js",
@@ -203,8 +225,6 @@
           "final-polish.js",
           "dashboard-empty-state.js",
           "accessibility-polish.js",
-          "delivery-dialog.js",
-          "invitation-edit-history.js",
           "host-signup-sheets.js",
           "host-polls.js",
           "toast.js",
@@ -233,16 +253,17 @@
           "toast.css"
         ]
       },
-      "styleBytes": 309170,
-      "styleSha256": "d2cb24aa56e1503f7c4e9c5d53cd515494a8dc2742a21823276f9fba9b1cbbdc",
+      "styleBytes": 310963,
+      "styleSha256": "67fa8d01e00b7d493ddc9e0a2be6b4c5b2ddd048c1a30368d0902835b20db527",
       "stylesheet": "bundle-dashboard-v15.css"
     },
     "designer.html": {
       "javascript": "bundle-designer-v15.js",
-      "scriptBytes": 78094,
-      "scriptSha256": "990ede1575639f1e539f52cf4bcc6ee924aab34fa6d06b8d6f25de728dbebf9e",
+      "scriptBytes": 80276,
+      "scriptSha256": "031da115a9139b49e53b04fba3812e6630baeb0dc9359a17b7fde4770ea9b451",
       "sources": {
         "scripts": [
+          "yjs-bridge-v54.js",
           "core/i18n.js",
           "ui-dialogs.js",
           "designer.js",
@@ -268,14 +289,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 284053,
-      "styleSha256": "a398fa245f168593e0a0143f6042cbb2ef24dc4802f983a729174413d708fd10",
+      "styleBytes": 285683,
+      "styleSha256": "be0bc4527c39a9a84009c60a8dbcc38501fce3861391dbd4d36cccba66c1e23b",
       "stylesheet": "bundle-designer-v15.css"
     },
     "guests.html": {
       "javascript": "bundle-guests-v15.js",
-      "scriptBytes": 118109,
-      "scriptSha256": "7e19ff621727ebc9350bbcaa89f87124c1c96fad7c8e3b2b80b3faa8aead0e67",
+      "scriptBytes": 121953,
+      "scriptSha256": "6ca14d0f2c29934d8c1619dddf13f490cc536b7f8d8d0915db777468da1ba01e",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -305,18 +326,49 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 257034,
-      "styleSha256": "4f7a38132552042f25544bd6ad2669f73543e40ae65836c233dc0b240f0e2174",
+      "styleBytes": 258664,
+      "styleSha256": "3ca73a950dd40e8180a7d1a77b36d6d7e4fa51aec79de583b5ca01f9d688c8bf",
       "stylesheet": "bundle-guests-v15.css"
     },
     "index.html": {
+      "deferredJavascript": "bundle-index-deferred-v15.js",
+      "deferredJavascriptBytes": 146518,
+      "deferredJavascriptSha256": "7f6250dd938941bcba0815a1dfc431eb616a4c771312f14e30460488aeb7c0a5",
+      "deferredStylesheet": "bundle-index-deferred-v15.css",
+      "deferredStylesheetBytes": 50436,
+      "deferredStylesheetSha256": "c0de3d4e46658992c14d4eac99b833f1f18f4695c4db5c17a1934d34e04c5960",
       "javascript": "bundle-index-v15.js",
-      "scriptBytes": 1136779,
-      "scriptSha256": "99721983669bcc214ee532690756e63c05eaab11ceb00bee0415f0ad8b6a3b8e",
+      "scriptBytes": 1000519,
+      "scriptSha256": "06499f559e584cd0e5d930717eb78a31b16c9c44a01be861c5f46c168619d806",
       "sources": {
+        "deferredScripts": [
+          "workflow-refine.js",
+          "workflow-continuity.js",
+          "workflow-ux-v5.js",
+          "workflow-pro-editor-v6.js",
+          "workflow-final-audit-v7.js",
+          "editor-canva-v13.js",
+          "photo-editor-v13.js",
+          "photo-retouch.js",
+          "timeline-v13.js",
+          "product-operations-v13.js"
+        ],
+        "deferredStyles": [
+          "workflow-refine.css",
+          "workflow-continuity.css",
+          "workflow-ux-v5.css",
+          "workflow-pro-editor-v6.css",
+          "workflow-final-audit-v7.css",
+          "editor-canva.css",
+          "photo-editor-v13.css",
+          "photo-retouch.css",
+          "timeline.css",
+          "product-operations.css"
+        ],
         "scripts": [
-          "core/i18n.js",
           "runtime-lifecycle-v15.js",
+          "route-deferred-loader-v15.js",
+          "core/i18n.js",
           "performance-loader-v22.js",
           "editor-command-system-v23.js",
           "typography-contract.js",
@@ -346,12 +398,7 @@
           "ux-refine.js",
           "final-polish.js",
           "editor-layout-stability.js",
-          "workflow-refine.js",
-          "workflow-continuity.js",
           "workflow-creation-flow-v4.js",
-          "workflow-ux-v5.js",
-          "workflow-pro-editor-v6.js",
-          "workflow-final-audit-v7.js",
           "opening-scenes.js",
           "guest-layouts.js",
           "social-card.js",
@@ -360,19 +407,14 @@
           "accessibility-polish.js",
           "editor-commands.js",
           "typography-editor-v20.js",
-          "editor-canva-v13.js",
           "editor-shared-styles.js",
-          "photo-editor-v13.js",
-          "photo-retouch.js",
-          "timeline-v13.js",
-          "product-operations-v13.js",
           "mobile-editor.js",
           "professional-editor-v17.js",
-          "editor-responsive-contract-v27.js",
           "editor/editor-core.js",
           "editor/ui-layout.js",
           "editor/ui-components.js",
-          "ui/app-shell.js"
+          "ui/app-shell.js",
+          "editor-responsive-contract-v27.js"
         ],
         "styles": [
           "typography-fonts.css",
@@ -389,45 +431,46 @@
           "theme-hardening.css",
           "ux-refine.css",
           "final-polish.css",
-          "workflow-refine.css",
           "editor-layout-stability.css",
-          "workflow-continuity.css",
           "workflow-creation-flow-v4.css",
-          "workflow-ux-v5.css",
-          "workflow-pro-editor-v6.css",
-          "workflow-final-audit-v7.css",
           "style-kits.css",
-          "editor-canva.css",
           "editor-shared-styles.css",
           "opening-scenes.css",
           "storyboard.css",
           "social-card.css",
           "accessibility.css",
-          "photo-editor-v13.css",
-          "photo-retouch.css",
-          "timeline.css",
-          "product-operations.css",
           "stabilized.css",
           "editor-ux-refinement-v0_52.css",
           "professional-editor-v17.css",
           "zoom-layout-v22.css",
           "graphics-runtime-v22.css",
-          "editor-responsive-contract-v27.css",
           "editor/editor-styles.css",
-          "app-shell-v55.css"
+          "app-shell-v55.css",
+          "editor-responsive-contract-v27.css"
         ]
       },
-      "styleBytes": 482125,
-      "styleSha256": "1e61856dd1748a8fe529237cfc81863b37a52a525a5295ea41f6b7e8fc682938",
+      "styleBytes": 434476,
+      "styleSha256": "a9811e5643aa6e8f814c94b72ad34fe31a6742634cd6ad8841c4061846fc967b",
       "stylesheet": "bundle-index-v15.css"
     },
     "materials.html": {
+      "deferredJavascript": "bundle-materials-deferred-v15.js",
+      "deferredJavascriptBytes": 7388,
+      "deferredJavascriptSha256": "10229967392f7c69949d5d6dc4d2680bba6bde7d45b787051814de7041514797",
+      "deferredStylesheet": "bundle-materials-deferred-v15.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-materials-v15.js",
-      "scriptBytes": 136263,
-      "scriptSha256": "3199c0d1a889414196c5bc3b0a7558442eb665e30b9c8cf7370aa82d003531a4",
+      "scriptBytes": 133444,
+      "scriptSha256": "7868bdd7028e30b60d4623c7b6c50ef6531168be3b7632e050ca8d5a5c265106",
       "sources": {
+        "deferredScripts": [
+          "ux-refine.js"
+        ],
+        "deferredStyles": [],
         "scripts": [
           "core/i18n.js",
+          "route-deferred-loader-v15.js",
           "ui-dialogs.js",
           "upload-client.js",
           "upload-folder-client-v53.js",
@@ -435,7 +478,6 @@
           "materials.js",
           "modern-ui.js",
           "final-experience.js",
-          "ux-refine.js",
           "final-polish.js",
           "accessibility-polish.js",
           "ui/app-shell.js"
@@ -458,14 +500,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 276368,
-      "styleSha256": "897bf6ef916b9e42bc344334ffb8e9e4ed68878602407144bd454d0125781ef2",
+      "styleBytes": 278161,
+      "styleSha256": "cb4a776bdb1f7378f080d3287427b89f7c138a90062e17d615c9ced95077a3ae",
       "stylesheet": "bundle-materials-v15.css"
     },
     "privacy.html": {
       "javascript": "bundle-privacy-v15.js",
-      "scriptBytes": 17575,
-      "scriptSha256": "790ffe9aa745d407913904a433e5d72ef2f37ce0c4996ce0dc97e4ef39b8f7ab",
+      "scriptBytes": 18964,
+      "scriptSha256": "a0b913277d73576ced62b7bd412562d89fc30a95671faad63b9596cd1b6fd068",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -481,18 +523,29 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 150955,
-      "styleSha256": "90c4df6c6ecc51a8e3c70613240957555f75712b55b54eb74b9d3ff7856c1edd",
+      "styleBytes": 152074,
+      "styleSha256": "57486ad360f1385700f9c747599b11e1c2b4380ed8dbd3c6b1ee590a2c9ce4fc",
       "stylesheet": "bundle-privacy-v15.css"
     },
     "public.html": {
+      "deferredJavascript": "bundle-public-deferred-v15.js",
+      "deferredJavascriptBytes": 16969,
+      "deferredJavascriptSha256": "ae2bf338fcc08ae77bf45da81cc7bc5e336d0ce95b54e19906c339406fbc21c3",
+      "deferredStylesheet": "bundle-public-deferred-v15.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public-v15.js",
-      "scriptBytes": 251960,
-      "scriptSha256": "db6ac543087a317842cc8f86b7359d18ffed6386f462b625a38d8a4e1d085d32",
+      "scriptBytes": 248623,
+      "scriptSha256": "d3d5965626f85788ce4f14d7b2da3019cb67425ffbf76af41b6d1fa618055bfc",
       "sources": {
+        "deferredScripts": [
+          "invitation-edit-history.js"
+        ],
+        "deferredStyles": [],
         "scripts": [
-          "core/i18n.js",
           "runtime-lifecycle-v15.js",
+          "route-deferred-loader-v15.js",
+          "core/i18n.js",
           "typography-contract.js",
           "custom-font-core-v22.js",
           "typography-document-model.js",
@@ -509,7 +562,6 @@
           "signup-sheets.js",
           "polls.js",
           "album.js",
-          "invitation-edit-history.js",
           "public-page.js",
           "ux-refine.js",
           "ui/app-shell.js"
@@ -526,14 +578,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 128899,
-      "styleSha256": "fe3c5134a86cc19bffc50d92b164a8f69e2a85d3a1049421f3d316279857501e",
+      "styleBytes": 130018,
+      "styleSha256": "28c72259d130dfa4f13394b6d1971822f748540a0b3e0bc29438fbcd5f868caa",
       "stylesheet": "bundle-public-v15.css"
     },
     "reset.html": {
       "javascript": "bundle-reset-v15.js",
-      "scriptBytes": 77514,
-      "scriptSha256": "ec535591756ed4b8e81f4e6b4bb701f609bd59787a331227bf29b3eee210a8c1",
+      "scriptBytes": 78903,
+      "scriptSha256": "ddc5a63b0cf074c2d8d4b8068335ef797af49c817521d257b17f71e2af2cc27c",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -560,14 +612,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 254504,
-      "styleSha256": "2d0e7a353f64e5f0100d331867aba28c6c470a700383f853e6b49e970015af3d",
+      "styleBytes": 256134,
+      "styleSha256": "8278d3cd90a305fa6404625379ab8c566b78de5900443fb3cb3e6ab69d51805c",
       "stylesheet": "bundle-reset-v15.css"
     },
     "responses.html": {
       "javascript": "bundle-responses-v15.js",
-      "scriptBytes": 89419,
-      "scriptSha256": "9e5b6c4ad312e73eb7b1b70a4083985c3314220297c172e0d8bf23e2766c2b4f",
+      "scriptBytes": 91537,
+      "scriptSha256": "0466fcd2144c18e216f0f5e631085c76b7f3fdb7d9d24d3b08bdb79962c4652f",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -597,14 +649,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 257207,
-      "styleSha256": "8299b57602fe0582234c2ac04db4a68cfcc4d6fda3ad2897092492c63675036f",
+      "styleBytes": 258837,
+      "styleSha256": "b0114d20e18bdc496f351fed6880f5f294adbb28bbe268949d0ccf4004fc95d1",
       "stylesheet": "bundle-responses-v15.css"
     },
     "templates.html": {
       "javascript": "bundle-templates-v15.js",
-      "scriptBytes": 97012,
-      "scriptSha256": "e5536b99040b264e58f9ff41ea37fa663c5305af58e09b8484db0766d8fecba2",
+      "scriptBytes": 98401,
+      "scriptSha256": "e8626141a2535b64d9119c7a7f382b14a18a9e1e7bb60234e532b353818c3d1a",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -635,14 +687,14 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 287720,
-      "styleSha256": "4e67d7b6e0c007f204bec70372328188fbda58e31075d7f62587eaa990954386",
+      "styleBytes": 289350,
+      "styleSha256": "108c04bccecef2490e01d151927688d17334ffc679f0aabb0e9dcbaf9df8229a",
       "stylesheet": "bundle-templates-v15.css"
     },
     "verify.html": {
       "javascript": "bundle-verify-v15.js",
-      "scriptBytes": 76074,
-      "scriptSha256": "abc0527f745a6a01404674f6927385c91a53c7649f5b34355a2a7b89347c94b3",
+      "scriptBytes": 77463,
+      "scriptSha256": "35c3ffb2d9fdc14f8e3f877c0d2e884397b356f3c5c9538b784166bc336c9d99",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -669,8 +721,8 @@
           "app-shell-v55.css"
         ]
       },
-      "styleBytes": 254401,
-      "styleSha256": "1bd6b840ba3cf53d5447ff06aeb17488c4d070827904ce6d1455e8b9ac65a77f",
+      "styleBytes": 256031,
+      "styleSha256": "1c632de3bc73287c7c6511a691edb233599ae9d5cbd0d684eae53d6b5f568f02",
       "stylesheet": "bundle-verify-v15.css"
     }
   },

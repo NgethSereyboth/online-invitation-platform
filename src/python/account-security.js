@@ -11,7 +11,7 @@ async function load(){
  try{
   const [security,sessions,passkeys,audit,studio]=await Promise.all([api('/api/account/security'),api('/api/account/sessions'),api('/api/account/passkeys'),api('/api/account/audit'),api('/api/account/studio')]);
   $('#v13PasswordAlgo').textContent=security.passwordAlgorithm||'Unknown';$('#v13MfaState').textContent=security.mfaEnabled?'Enabled':'Not enabled';$('#v13PasskeyCount').textContent=String(security.passkeyCount||0);renderSessions(sessions);renderPasskeys(passkeys);renderAudit(audit);renderPrivacy(security.privacy||{});renderStudio(studio||{});$('#v13MfaEnable').hidden=security.mfaEnabled;$('#v13MfaDisable').hidden=!security.mfaEnabled;
- }catch(error){$('#v13SecurityStatus').textContent=error.message}
+ }catch(error){const status=$('#v13SecurityStatus');if(status)status.textContent=error.message}
 }
 function renderSessions(items){const root=$('#v13Sessions');root.innerHTML=items.length?'':'<p class="download-note">No active sessions.</p>';items.forEach(s=>{const row=document.createElement('div');row.className='v13-row';row.innerHTML=`<div><strong>${esc(s.deviceName||'Browser')} ${s.current?'<span class="v13-session-current">Current</span>':''}</strong><small>${esc(s.ipAddress||'Unknown IP')} · Last active ${esc(fmt(s.lastSeenAt||s.createdAt))}</small></div><button type="button" ${s.current?'data-current':''}>${s.current?'Sign out here':'Revoke'}</button>`;row.querySelector('button').onclick=async()=>{try{await api('/api/account/sessions/'+encodeURIComponent(s.id),{method:'DELETE'});if(s.current)location.href='dashboard.html';else load()}catch(e){$('#v13SecurityStatus').textContent=e.message}};root.append(row)})}
 function renderPasskeys(items){const root=$('#v13Passkeys');root.innerHTML=items.length?'':'<p class="download-note">No passkeys registered yet.</p>';items.forEach(k=>{const row=document.createElement('div');row.className='v13-row';row.innerHTML=`<div><strong>${esc(k.name||'Passkey')}</strong><small>Added ${esc(fmt(k.createdAt))} · Last used ${esc(fmt(k.lastUsedAt))}</small></div><button type="button">Remove</button>`;row.querySelector('button').onclick=async()=>{if(!confirm('Remove this passkey?'))return;await api('/api/account/passkeys/'+encodeURIComponent(k.id),{method:'DELETE'});load()};root.append(row)})}
@@ -35,6 +35,11 @@ $('#v13CancelDelete').onclick=async()=>{try{await api('/api/account/delete/cance
     window.EInviteBackend.message('#v13SecurityRoot','Account sessions, MFA, passkeys, privacy export, and studio identity require the full application server.');
     return;
   }
+  // Signed out there is nothing here to show: every endpoint this module calls is session-only, and
+  // the account page's own signed-out path replaces <main>, which used to leave `load()`'s catch
+  // writing into a detached #v13SecurityStatus (pageerror on account.html, found by
+  // `node tools/page-errors.mjs --all`). Skip the work instead of failing it.
+  if(window.EInviteBackend?.isAvailable?.()&&!(await window.EInviteBackend.hasSession()))return;
   load();
 })();
 })();

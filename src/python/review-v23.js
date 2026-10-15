@@ -22,7 +22,7 @@ function announce(message,icon='✦'){
  live.textContent='';requestAnimationFrame(()=>live.textContent=message);
 }
 async function api(path,options={}){
- if(!backendOnline())throw Error('Team review requires the full application server.');
+ if(!backendOnline())throw Error('Team review requires the full application server.');if(window.EInviteBackend?.isAvailable?.()&&!(await window.EInviteBackend.hasSession()))throw Error('Team review requires you to sign in.');
  const response=await fetch(path,{credentials:'same-origin',cache:'no-store',...options,headers:{'Content-Type':'application/json',...(options.headers||{})}});
  const data=await response.json().catch(()=>({}));
  if(!response.ok)throw Error(data.error||`Request failed (${response.status})`);

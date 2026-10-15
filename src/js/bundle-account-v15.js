@@ -127,16 +127,23 @@
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
+  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
+  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
+  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
+  // the delegated click handler and `syncSwitch` use.
+  var switchCount = 0;
   function makeSwitch() {
+    var first = switchCount === 0;
+    switchCount++;
     var wrap = doc.createElement("div");
     wrap.className = "language-switch";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", "Select interface language");
     var enBtn = doc.createElement("button");
-    enBtn.type = "button"; enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
+    enBtn.type = "button"; if (first) enBtn.id = "lang-en"; enBtn.setAttribute("data-lang", "en");
     enBtn.setAttribute("aria-label", "Switch to English"); enBtn.textContent = "English";
     var kmBtn = doc.createElement("button");
-    kmBtn.type = "button"; kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
+    kmBtn.type = "button"; if (first) kmBtn.id = "lang-km"; kmBtn.setAttribute("data-lang", "km");
     kmBtn.setAttribute("aria-label", "ប្ដូះបើកភាសាខ្មែរ"); kmBtn.setAttribute("lang", "km"); kmBtn.textContent = "ខ្មែរ";
     wrap.appendChild(enBtn); wrap.appendChild(kmBtn);
     return wrap;
@@ -150,22 +157,33 @@
       b.classList.toggle("active", on);
     }
   }
+  // One delegated listener instead of one per injected switch. The editor rebuilds its header
+  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
+  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
+  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
+  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
+  // survives re-renders and duplicate mounts.
+  var delegated = false;
+  function onLanguageClick(e) {
+    var target = e.target;
+    var b = target && target.closest ? target.closest("[data-lang]") : null;
+    if (!b || !b.closest || !b.closest(".language-switch")) return;
+    e.preventDefault();
+    if (global.EInviteI18n && global.EInviteI18n.set) global.EInviteI18n.set(b.getAttribute("data-lang"));
+  }
   function injectSwitches() {
     if (!doc.querySelectorAll) return;
+    if (!delegated && doc.addEventListener) { doc.addEventListener("click", onLanguageClick); delegated = true; }
     var headers = doc.querySelectorAll("header");
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
-      sw.addEventListener("click", function (e) {
-        var b = e.target.closest("[data-lang]");
-        if (!b) return;
-        EInviteI18n.set(b.getAttribute("data-lang"));
-      });
       h.appendChild(sw);
-      syncSwitch(sw, lang);
     }
+    var all = doc.querySelectorAll(".language-switch");
+    for (var j = 0; j < all.length; j++) syncSwitch(all[j], lang);
     applyFormFields();
   }
   function boot() {
@@ -397,7 +415,31 @@ function installAppearanceSetting(){
 }
 async function request(path,options={}){const r=await fetch(path,{...options,credentials:'same-origin',headers:{'Content-Type':'application/json',}}),data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.error||'Request failed');return data}
 async function showUploadPermission(){try{if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return;const me=await request('/api/auth/me');if(!me.user)return;let row=$('#accountUploadPermission')?.closest('div');if(!row){row=document.createElement('div');const label=document.createElement('small'),value=document.createElement('strong');label.textContent=_txt('Upload permission','Upload permission');value.id='accountUploadPermission';row.append(label,value);$('#accountPlan')?.closest('div')?.after(row)}const enabled=Boolean(me.user.uploadEnabled??me.user.upload_enabled??true);_accountState.uploadEnabled=enabled;$('#accountUploadPermission').textContent=enabled?_txt('Allowed','Allowed'):_txt('Disabled by administrator','Disabled by administrator')}catch(_){}}
-async function init(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){window.EInviteBackend.message(document.querySelector('main')||document.body,'<span class="i18n i18n-en">Account security, sessions, MFA, passkeys, privacy export, and server storage require the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Account security, sessions, MFA, passkeys, privacy export, and server storage require the full application server.</span>');return}try{const [me,usage]=await Promise.all([request('/api/auth/me'),request('/api/account/usage')]);if(!me.user)throw Error('Sign in required');$('#accountEmail').textContent=me.user.email;$('#accountRole').textContent=me.user.role||'customer';$('#accountPlan').textContent=(usage.plan||me.user.plan||'free').replace(/^./,c=>c.toUpperCase());const verified=Boolean(me.user.emailVerified??me.user.email_verified);_accountState.verified=verified;$('#emailVerificationStatus').textContent=verified?_txt('Verified','Verified'):_txt('Not verified','Not verified');$('#requestVerification').hidden=verified;const u=usage.usage||{},l=usage.limits||{};$('#usageInvitations').textContent=`${u.invitations||0} / ${l.invitations??'—'}`;$('#usageTemplates').textContent=`${u.templates||0} / ${l.templates??'—'}`;$('#usageStorage').textContent=`${fmtBytes(u.storageBytes)} / ${fmtBytes(l.storageBytes)}`;$('#usageNote').textContent=usage.enforced?_txt('Your plan limits are currently enforced.','Your plan limits are currently enforced.'):_txt('Usage limits are informational in this development build; an administrator can assign plans manually.','Usage limits are informational in this development build; an administrator can assign plans manually.');_accountState.enforced=usage.enforced}catch(error){window.EInviteBackend?.message(document.querySelector('main')||document.body,error.message||_txt('Sign in through the full application server to manage this account.','Sign in through the full application server to manage this account.'))}}
+/* Signed-out state (inventory A4). This page used to answer a missing session by calling
+   `EInviteBackend.message(main, error.message)`, and that helper hard-codes the heading "Full server
+   required" — so on a server that was answering /api/health 200, a signed-out visitor was told the
+   server was missing, under a 401 body's text (measured: "Full server required" + "Authentication
+   required", main's 8 cards replaced by that one box). Since A1 the shell answers gated requests
+   locally with the same 401 the server would send, which is what fed the notice. The page now shows
+   the state it actually means: keep the page frame, hide the session-only grid, offer a way in. */
+function renderSignedOut(){
+ const main=document.querySelector('main')||document.body,existing=main.querySelector('.account-signed-out');if(existing)return existing;
+ main.querySelector('.server-required-v14')?.remove();
+ const grid=main.querySelector('.account-grid');if(grid)grid.hidden=true;
+ main.querySelectorAll('.account-card').forEach(card=>{if(!card.classList.contains('account-signed-out'))card.hidden=true});
+ const panel=document.createElement('section');panel.className='account-card account-signed-out';panel.dataset.signedOut='1';
+ const title=document.createElement('h2');title.textContent=_txt('Sign in','Sign in');
+ const note=document.createElement('p');note.className='download-note';note.textContent=_txt('Sign in through the full application server to manage this account.','Sign in through the full application server to manage this account.');
+ const link=document.createElement('a');link.className='button-link account-sign-in';link.href='dashboard.html';link.setAttribute('rel','noopener');
+ const button=document.createElement('button');button.type='button';button.className='primary';button.textContent=_txt('Sign in','Sign in');
+ link.append(button);panel.append(title,note,link);
+ if(grid)grid.before(panel);else main.append(panel);
+ return panel;
+}
+/* Status notices (inventory A4): EInviteBackend.message() replaces the host's children, so it must
+   never receive <main> itself — that would delete the account chrome. Give it a dedicated host. */
+function noticeHost(){const main=document.querySelector('main')||document.body,host=document.createElement('div');host.className='account-notice';main.prepend(host);return host}
+async function init(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){document.querySelector('.account-grid')&&(document.querySelector('.account-grid').hidden=true);window.EInviteBackend.message(noticeHost(),_txt('Account security, sessions, MFA, passkeys, privacy export, and server storage require the full application server.','Account security, sessions, MFA, passkeys, privacy export, and server storage require the full application server.'));return}if(window.EInviteBackend?.hasSession&&!(await window.EInviteBackend.hasSession())){renderSignedOut();return}try{const [me,usage]=await Promise.all([request('/api/auth/me'),request('/api/account/usage')]);if(!me.user)throw Error('Sign in required');$('#accountEmail').textContent=me.user.email;$('#accountRole').textContent=me.user.role||'customer';$('#accountPlan').textContent=(usage.plan||me.user.plan||'free').replace(/^./,c=>c.toUpperCase());const verified=Boolean(me.user.emailVerified??me.user.email_verified);_accountState.verified=verified;$('#emailVerificationStatus').textContent=verified?_txt('Verified','Verified'):_txt('Not verified','Not verified');$('#requestVerification').hidden=verified;const u=usage.usage||{},l=usage.limits||{};$('#usageInvitations').textContent=`${u.invitations||0} / ${l.invitations??'—'}`;$('#usageTemplates').textContent=`${u.templates||0} / ${l.templates??'—'}`;$('#usageStorage').textContent=`${fmtBytes(u.storageBytes)} / ${fmtBytes(l.storageBytes)}`;$('#usageNote').textContent=usage.enforced?_txt('Your plan limits are currently enforced.','Your plan limits are currently enforced.'):_txt('Usage limits are informational in this development build; an administrator can assign plans manually.','Usage limits are informational in this development build; an administrator can assign plans manually.');_accountState.enforced=usage.enforced}catch(error){if(/authentication required|unauthenticated|sign in required|401/i.test(String(error?.message||''))){renderSignedOut();return}window.EInviteBackend?.message(noticeHost(),error.message||_txt('Sign in through the full application server to manage this account.','Sign in through the full application server to manage this account.'))}}
 $('#passwordForm').onsubmit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target)),status=$('#passwordStatus');if(data.newPassword!==data.confirmPassword){status.textContent=_txt('The new passwords do not match.','The new passwords do not match.');return}status.textContent=_txt('Changing password…','Changing password…');try{await request('/api/auth/password',{method:'PUT',body:JSON.stringify({currentPassword:data.currentPassword,newPassword:data.newPassword})});e.target.reset();status.textContent=_txt('Password changed. Other signed-in sessions were ended.','Password changed. Other signed-in sessions were ended.')}catch(err){status.textContent=err.message}}
 $('#exportAccount').onclick=async()=>{const status=$('#exportStatus');status.textContent=_txt('Preparing export…','Preparing export…');try{const data=await request('/api/account/export'),blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`e-invitation-website-account-export-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);status.textContent=_txt('Export downloaded.','Export downloaded.')}catch(err){status.textContent=err.message}}
 installAppearanceSetting();init();showUploadPermission();
@@ -416,7 +458,7 @@ async function load(){
  try{
   const [security,sessions,passkeys,audit,studio]=await Promise.all([api('/api/account/security'),api('/api/account/sessions'),api('/api/account/passkeys'),api('/api/account/audit'),api('/api/account/studio')]);
   $('#v13PasswordAlgo').textContent=security.passwordAlgorithm||'Unknown';$('#v13MfaState').textContent=security.mfaEnabled?'Enabled':'Not enabled';$('#v13PasskeyCount').textContent=String(security.passkeyCount||0);renderSessions(sessions);renderPasskeys(passkeys);renderAudit(audit);renderPrivacy(security.privacy||{});renderStudio(studio||{});$('#v13MfaEnable').hidden=security.mfaEnabled;$('#v13MfaDisable').hidden=!security.mfaEnabled;
- }catch(error){$('#v13SecurityStatus').textContent=error.message}
+ }catch(error){const status=$('#v13SecurityStatus');if(status)status.textContent=error.message}
 }
 function renderSessions(items){const root=$('#v13Sessions');root.innerHTML=items.length?'':'<p class="download-note">No active sessions.</p>';items.forEach(s=>{const row=document.createElement('div');row.className='v13-row';row.innerHTML=`<div><strong>${esc(s.deviceName||'Browser')} ${s.current?'<span class="v13-session-current">Current</span>':''}</strong><small>${esc(s.ipAddress||'Unknown IP')} · Last active ${esc(fmt(s.lastSeenAt||s.createdAt))}</small></div><button type="button" ${s.current?'data-current':''}>${s.current?'Sign out here':'Revoke'}</button>`;row.querySelector('button').onclick=async()=>{try{await api('/api/account/sessions/'+encodeURIComponent(s.id),{method:'DELETE'});if(s.current)location.href='dashboard.html';else load()}catch(e){$('#v13SecurityStatus').textContent=e.message}};root.append(row)})}
 function renderPasskeys(items){const root=$('#v13Passkeys');root.innerHTML=items.length?'':'<p class="download-note">No passkeys registered yet.</p>';items.forEach(k=>{const row=document.createElement('div');row.className='v13-row';row.innerHTML=`<div><strong>${esc(k.name||'Passkey')}</strong><small>Added ${esc(fmt(k.createdAt))} · Last used ${esc(fmt(k.lastUsedAt))}</small></div><button type="button">Remove</button>`;row.querySelector('button').onclick=async()=>{if(!confirm('Remove this passkey?'))return;await api('/api/account/passkeys/'+encodeURIComponent(k.id),{method:'DELETE'});load()};root.append(row)})}
@@ -440,6 +482,11 @@ $('#v13CancelDelete').onclick=async()=>{try{await api('/api/account/delete/cance
     window.EInviteBackend.message('#v13SecurityRoot','Account sessions, MFA, passkeys, privacy export, and studio identity require the full application server.');
     return;
   }
+  // Signed out there is nothing here to show: every endpoint this module calls is session-only, and
+  // the account page's own signed-out path replaces <main>, which used to leave `load()`'s catch
+  // writing into a detached #v13SecurityStatus (pageerror on account.html, found by
+  // `node tools/page-errors.mjs --all`). Skip the work instead of failing it.
+  if(window.EInviteBackend?.isAvailable?.()&&!(await window.EInviteBackend.hasSession()))return;
   load();
 })();
 })();;(function(){

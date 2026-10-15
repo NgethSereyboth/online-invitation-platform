@@ -1,4 +1,9 @@
 const slug=(document.querySelector('meta[name="einvite-invitation-slug"]')?.content||'').trim(),root=document.querySelector('#publicRoot'),life=window.EInviteLifecycle;
+// The server substitutes the real slug into the meta tag when it serves a published invitation. If
+// the page is opened straight from disk or from the static build, the tag still holds the template
+// placeholder ("__INVITATION_SLUG__"): treat that as "no server invitation" instead of requesting
+// /api/public/__INVITATION_SLUG__, which only produced a 404 in the console on every load.
+const slugUsable=!!slug&&!/^__.+__$/.test(slug);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const khmerFor=(date,time='00:00')=>{try{if(!window.momentkh||!date)return'';let[y,m,d]=date.split('-').map(Number),[h,min]=time.split(':').map(Number);return momentkh.format(momentkh.fromGregorian(y,m,d,h||0,min||0))}catch{return''}};
 const animationName=preset=>{const map={'fade-up':'fadeUp','soft-zoom':'softZoom','slide-left':'slideLeft','blur-in':'blurIn','bounce-in':'bounceIn','flip-in':'flipIn',float:'float',none:''};return Object.prototype.hasOwnProperty.call(map,preset)?map[preset]:'fadeUp'};
@@ -46,7 +51,13 @@ function orderedPhotos(d){let objects=d.objects||{},photos=Object.entries(object
 function galleryMarkup(d){if(d.settings?.galleryEnabled===false)return'';if(d.galleryProtection?.enabled&&d.galleryProtection?.locked)return`<section class="photo-gallery gallery-locked reveal" style="${combinedSectionStyle(d,'gallery')}" aria-label="Protected photo gallery"><div class="gallery-lock-card"><span aria-hidden="true">🔒</span><h2>${langText('Private photo gallery','វិចិត្រសាលរូបថតឯកជន',d.languageMode||'both')}</h2><p>${langText('Enter the gallery password to view these photos.','បញ្ចូលពាក្យសម្ងាត់វិចិត្រសាលដើម្បីមើលរូបថតទាំងនេះ។',d.languageMode||'both')}</p><form id="galleryUnlockForm"><label>${langText('Gallery password','ពាក្យសម្ងាត់វិចិត្រសាល',d.languageMode||'both')}<input name="password" type="password" required minlength="8" autocomplete="current-password"></label><button class="primary">${langText('Open gallery','បើកវិចិត្រសាល',d.languageMode||'both')}</button><p class="hint" data-gallery-error></p></form></div></section>`;let photos=orderedPhotos(d);if(!photos.length)return'';return`<section class="photo-gallery gallery-${esc(d.galleryStyle||'grid')} reveal" style="${combinedSectionStyle(d,'gallery')}" aria-label="Photo gallery">${photos.map((photo,index)=>{let animation=animationName(photo.animation),duration=Math.max(300,Math.min(3000,+(photo.duration||900))),delay=Math.min(index*.12,.72);return`<figure class="gallery-photo"><img src="${esc(photo.src)}"${responsiveImageAttrs(photo)} alt="${esc(photo.alt||`Celebration photo ${index+1}`)}" loading="lazy" decoding="async" class="reveal" style="animation-name:${animation};animation-duration:${duration}ms;animation-delay:${delay}s;object-fit:${esc(photo.imageFit||'cover')};object-position:${Number(photo.imagePositionX??50)}% ${Number(photo.imagePositionY??50)}%;filter:${imageFilterStyle(photo)}">${photo.caption?`<figcaption>${esc(photo.caption)}</figcaption>`:''}</figure>`}).join('')}</section>`}
 function normalizedTelegram(value){let raw=String(value||'').trim();if(!raw)return'';if(/^https:\/\/t\.me\/[A-Za-z0-9_]{5,}$/i.test(raw))return raw;let username=raw.replace(/^@/,'');return/^[A-Za-z0-9_]{5,}$/.test(username)?`https://t.me/${username}`:''}
 function contactMarkup(d,mode){if(d.settings?.contactEnabled===false)return'';let phone=String(d.contactPhone||'').trim(),telegram=normalizedTelegram(d.contactTelegram),phoneHref=/^[+0-9() .-]{5,30}$/.test(phone)?`tel:${phone.replace(/[^+0-9]/g,'')}`:'';if(!phoneHref&&!telegram)return'';return`<section class="contact-section reveal" style="${combinedSectionStyle(d,'contact')}"><h2>${langText('Contact the hosts','ទំនាក់ទំនងម្ចាស់កម្មវិធី',mode)}</h2><div class="contact-actions">${phoneHref?`<a href="${esc(phoneHref)}">☎ ${langText('Call','ទូរស័ព្ទ',mode)}</a>`:''}${telegram?`<a href="${esc(telegram)}" target="_blank" rel="noopener">✈ Telegram</a>`:''}</div></section>`}
-function bindLanguageSwitch(mode,documentModel={}){const key=`einvite-guest-language:${slug}`,guest=root.querySelector('.guest')||root,projectTypography=async lang=>{const fields=documentModel.fields||{},gregorian=(()=>{const dt=new Date((fields.date||'')+'T00:00:00');return isNaN(dt)?(fields.date||''):dt.toLocaleDateString(undefined,{dateStyle:'long'})})();for(const [id,object] of Object.entries(documentModel.objects||{})){const node=root.querySelector(`.published-text[data-object-id="${CSS.escape(id)}"]`);if(!node)continue;let content=object.html||'';if(id==='title')content=lang==='km'?(fields.namesKm||fields.names||''):(fields.names||'');else if(id==='subtitle')content=lang==='km'?(fields.messageKm||fields.message||''):(fields.message||'');else if(id==='details')content=`${esc(gregorian)}${fields.time?` · ${esc(fields.time)}`:''}<br>${esc(lang==='km'?(fields.venueKm||fields.venue||''):(fields.venue||''))}`;const flow=node.querySelector('.typography-flow');if(flow)flow.innerHTML=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.renderObject(object,documentModel,{locale:lang}):EInviteRenderer.sanitizeRichText(content);const renderedText=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.text(object.richText):EInviteRenderer.plainText(content);const model=TypographyDocumentModel.resolveObjectTypography(documentModel,object,{text:renderedText,locale:lang});TypographyLayoutService.applyToElement(node,model);await EInviteFontRegistry?.ensureReady?.([model.font]);TypographyLayoutService.fitAndDiagnose(node,model)}} ,setLanguage=async lang=>{lang=lang==='km'?'km':'en';document.documentElement.lang=lang;guest.dataset.language=lang;root.dataset.language=lang;root.classList.toggle('guest-language-km',lang==='km');document.querySelectorAll('[data-follow-guest-language]').forEach(node=>node.dataset.language=lang);root.querySelectorAll('[data-guest-lang]').forEach(button=>{const active=button.dataset.guestLang===lang;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});root.querySelectorAll('option[data-en]').forEach(option=>option.textContent=option.dataset[lang]||option.dataset.en);await projectTypography(lang);if(mode==='both')try{localStorage.setItem(key,lang)}catch{}};if(mode==='both'){root.querySelectorAll('[data-guest-lang]').forEach(button=>button.onclick=()=>setLanguage(button.dataset.guestLang));let saved='';try{saved=localStorage.getItem(key)||''}catch{}setLanguage(saved==='km'?'km':'en')}else setLanguage(mode==='km'?'km':'en')}
+function bindLanguageSwitch(mode,documentModel={}){const key=`einvite-guest-language:${slug}`,guest=root.querySelector('.guest')||root,projectTypography=async lang=>{const fields=documentModel.fields||{},gregorian=(()=>{const dt=new Date((fields.date||'')+'T00:00:00');return isNaN(dt)?(fields.date||''):dt.toLocaleDateString(undefined,{dateStyle:'long'})})();for(const [id,object] of Object.entries(documentModel.objects||{})){const node=root.querySelector(`.published-text[data-object-id="${CSS.escape(id)}"]`);if(!node)continue;let content=object.html||'';if(id==='title')content=lang==='km'?(fields.namesKm||fields.names||''):(fields.names||'');else if(id==='subtitle')content=lang==='km'?(fields.messageKm||fields.message||''):(fields.message||'');else if(id==='details')content=`${esc(gregorian)}${fields.time?` · ${esc(fields.time)}`:''}<br>${esc(lang==='km'?(fields.venueKm||fields.venue||''):(fields.venue||''))}`;const flow=node.querySelector('.typography-flow');if(flow)flow.innerHTML=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.renderObject(object,documentModel,{locale:lang}):EInviteRenderer.sanitizeRichText(content);const renderedText=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.text(object.richText):EInviteRenderer.plainText(content);const model=TypographyDocumentModel.resolveObjectTypography(documentModel,object,{text:renderedText,locale:lang});TypographyLayoutService.applyToElement(node,model);await EInviteFontRegistry?.ensureReady?.([model.font]);TypographyLayoutService.fitAndDiagnose(node,model)}} ,setLanguage=async lang=>{lang=lang==='km'?'km':'en';document.documentElement.lang=lang;guest.dataset.language=lang;root.dataset.language=lang;root.classList.toggle('guest-language-km',lang==='km');document.querySelectorAll('[data-follow-guest-language]').forEach(node=>node.dataset.language=lang);root.querySelectorAll('[data-guest-lang]').forEach(button=>{const active=button.dataset.guestLang===lang;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});root.querySelectorAll('option[data-en]').forEach(option=>option.textContent=option.dataset[lang]||option.dataset.en);await projectTypography(lang);if(mode==='both')try{localStorage.setItem(key,lang)}catch{}};if(mode==='both'){root.querySelectorAll('[data-guest-lang]').forEach(button=>button.onclick=()=>setLanguage(button.dataset.guestLang));let saved='';try{saved=localStorage.getItem(key)||''}catch{}
+  /* No per-invitation choice yet: fall back to the app-wide preference (`einvite-lang`, the key
+     every other route uses) instead of always starting in English, so the guest-language toggle
+     and the rendered content cannot disagree. A guest who picks a language here still wins on
+     this invitation via `key`. */
+  if(!saved)try{saved=localStorage.getItem('einvite-lang')||''}catch{}
+  setLanguage(saved==='km'?'km':'en')}else setLanguage(mode==='km'?'km':'en')}
 let countdownTimer=0;function startCountdown(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=0}let box=root?.querySelector('.countdown');if(!box)return;let target=new Date(box.dataset.target).getTime(),tick=()=>{let left=Math.max(0,target-Date.now()),values={days:Math.floor(left/864e5),hours:Math.floor(left/36e5)%24,minutes:Math.floor(left/6e4)%60,seconds:Math.floor(left/1e3)%60};Object.entries(values).forEach(([unit,value])=>{let el=box.querySelector(`[data-unit="${unit}"]`);if(el)el.textContent=String(value).padStart(2,'0')});if(left<=0&&countdownTimer){clearInterval(countdownTimer);countdownTimer=0}};tick();if(target>Date.now()){countdownTimer=(life?.interval||setInterval)(tick,1000);life?.add?.(()=>{countdownTimer=0})}}
 const palettePresets={rose:{background:'#fff6f3',surface:'#fffdfc',text:'#3d292f',heading:'#9d4555'},gold:{background:'#fff9eb',surface:'#fffdf7',text:'#4b3716',heading:'#a87616'},emerald:{background:'#eef8f1',surface:'#ffffff',text:'#29443a',heading:'#1f7158'},midnight:{background:'#100e19',surface:'#211b2d',text:'#f4efff',heading:'#c8b5ff'},'ivory-navy':{background:'#f7f2e8',surface:'#fffdf8',text:'#263248',heading:'#1f365d'}};
 function paletteRootStyle(d){if(!d.palettePreset||d.palettePreset==='template')return'';let p=d.palette||palettePresets[d.palettePreset]||palettePresets.rose,valid=v=>/^#[0-9a-f]{6}$/i.test(v||'')?v:'#fff';return`--palette-background:${valid(p.background)};--palette-surface:${valid(p.surface)};--palette-text:${valid(p.text)};--palette-heading:${valid(p.heading)};--palette-accent:${valid(d.accent||p.heading)}`}
@@ -64,7 +75,7 @@ settings:{rsvpMaxGuests:4,rsvpCloseDate:'',rsvpQuestions:{meal:true,transport:fa
 rsvpFields:[{id:'attendance',label:'Will you attend?',labelKm:'',type:'select',options:['Yes, I will attend','Sorry, I cannot attend'],required:true}],
 gallery:[],customBlocks:[]};
 }
-async function loadPublic(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(!apiAvailable())return {document:offlineSeedDocument(),invitationId:'demo-invitation',guest:null,studioBrand:null,editedAfterSendAt:null,analyticsConsentRequired:false,externalMediaConsentRequired:false};let accessToken=publicAccessToken;const controller=life?.controller?.()||new AbortController();for(let attempt=0;attempt<2;attempt++){const headers={};if(guestToken)headers['X-Invitation-Guest']=guestToken;if(accessToken)headers['X-Invitation-Access']=accessToken;if(galleryAccessToken)headers['X-Gallery-Access']=galleryAccessToken;const response=await fetch('/api/public/'+encodeURIComponent(slug),{headers,cache:'no-store',signal:controller.signal});if(response.ok)return response.json();const data=await response.json().catch(()=>({}));if(response.status===403&&data.protected){accessToken=await passwordGate();publicAccessToken=accessToken;continue}throw Error(data.error||'Invitation unavailable')}throw Error('Invitation access could not be verified')}
+async function loadPublic(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(!apiAvailable()||!slugUsable)return {document:offlineSeedDocument(),invitationId:'demo-invitation',guest:null,studioBrand:null,editedAfterSendAt:null,analyticsConsentRequired:false,externalMediaConsentRequired:false};let accessToken=publicAccessToken;const controller=life?.controller?.()||new AbortController();for(let attempt=0;attempt<2;attempt++){const headers={};if(guestToken)headers['X-Invitation-Guest']=guestToken;if(accessToken)headers['X-Invitation-Access']=accessToken;if(galleryAccessToken)headers['X-Gallery-Access']=galleryAccessToken;const response=await fetch('/api/public/'+encodeURIComponent(slug),{headers,cache:'no-store',signal:controller.signal});if(response.ok)return response.json();const data=await response.json().catch(()=>({}));if(response.status===403&&data.protected){accessToken=await passwordGate();publicAccessToken=accessToken;continue}throw Error(data.error||'Invitation unavailable')}throw Error('Invitation access could not be verified')}
 function consentPreference(kind){return localStorage.getItem(`einvite-consent:${slug}:${kind}`)==='granted'}
 function showPrivacyConsent(p,d){document.querySelectorAll('.guest-consent-banner').forEach(node=>node.remove());const needAnalytics=!!p.analyticsConsentRequired&&!consentPreference('analytics'),needExternal=!!p.externalMediaConsentRequired&&!consentPreference('external-media');if(!needAnalytics&&!needExternal)return;const bar=document.createElement('aside');bar.className='guest-consent-banner';bar.dataset.followGuestLanguage='true';bar.dataset.language=root.dataset.language||(d.languageMode==='km'?'km':'en');bar.setAttribute('role','dialog');bar.setAttribute('aria-label','Privacy choices');bar.innerHTML=`<div><strong>${langText('Privacy choices','ជម្រើសឯកជនភាព',d.languageMode||'both')}</strong><p>${langText('Choose whether this invitation may record an anonymous visit and load external media such as YouTube or SoundCloud.','ជ្រើសរើសថាតើការអញ្ជើញនេះអាចកត់ត្រាការចូលមើលអនាមិក និងផ្ទុកមេឌៀខាងក្រៅដូចជា YouTube ឬ SoundCloud ដែរឬទេ។',d.languageMode||'both')}</p><a href="/privacy.html" target="_blank" rel="noopener">${langText('Privacy details','ព័ត៌មានឯកជនភាព',d.languageMode||'both')}</a></div><div class="guest-consent-actions">${needAnalytics?`<button type="button" data-consent="analytics">${langText('Allow analytics','អនុញ្ញាតវិភាគ',d.languageMode||'both')}</button>`:''}${needExternal?`<button type="button" data-consent="external-media">${langText('Allow external media','អនុញ្ញាតមេឌៀខាងក្រៅ',d.languageMode||'both')}</button>`:''}<button type="button" data-consent="continue">${langText('Continue without optional consent','បន្តដោយមិនយល់ព្រមជម្រើសបន្ថែម',d.languageMode||'both')}</button></div>`;document.body.append(bar);bar.querySelector('[data-consent=analytics]')?.addEventListener('click',async()=>{localStorage.setItem(`einvite-consent:${slug}:analytics`,'granted');if(apiAvailable())try{await fetch('/api/public/'+encodeURIComponent(slug)+'/view',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch{}bar.querySelector('[data-consent=analytics]')?.remove();if(!bar.querySelector('[data-consent=external-media]'))bar.remove()});bar.querySelector('[data-consent=external-media]')?.addEventListener('click',()=>{localStorage.setItem(`einvite-consent:${slug}:external-media`,'granted');location.reload()});bar.querySelector('[data-consent=continue]')?.addEventListener('click',()=>bar.remove())}
 loadPublic().then(async p=>{
@@ -91,7 +102,10 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
   // were not bundled (dev-only public pages).
   // Phase 2a (V54.4) — also mount the "Edited after sending" badge so
   // guests can see the invitation was updated after the host first sent it.
-  if(p.invitationId){
+  // Only mount the server-backed guest features (sign-up sheets, polls, album) when the page is
+  // actually bound to a published invitation. In the seed/static case the seed's `demo-invitation`
+  // id made each of those modules fetch a resource that does not exist, producing three 404s.
+  if(p.invitationId&&slugUsable&&apiAvailable()){
     const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||''};
     try{window.EInviteSignupSheets?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('signup-sheets enhance failed',err)}
     try{window.EInvitePolls?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('polls enhance failed',err)}
@@ -99,3 +113,56 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
     try{window.EInviteEditHistory?.mountBadge(root,{invitationId:p.invitationId,mode,editedAfterSendAt:p.editedAfterSendAt||0})}catch(err){console?.warn?.('edit-history badge failed',err)}
   }
 }).catch(()=>root.innerHTML='<h1>Invitation unavailable</h1><p>This invitation has not been published.</p>');
+
+
+/* Guest language sync, moved out of a page-level inline <script> for the same reason as the
+   dashboard mounts: `script-src 'self'` refuses inline blocks, so this correction never ran and
+   logged a CSP violation on every guest-page load. It is part of bundle-public-v15.js already. */
+(function () {
+    var root = document.getElementById('publicRoot');
+    if (!root) return;
+    var applyLang = function (value) {
+      var lang = value === 'km' ? 'km' : 'en';
+      if (document.documentElement.lang !== lang) {
+        document.documentElement.lang = lang;
+      }
+    };
+    /* The guest topbar is outside #publicRoot — the only place public-page.js
+       looks for [data-guest-lang] buttons — so the topbar delegates to the
+       renderer's own switch instead of duplicating the language logic or moving
+       the brand inside the invitation. */
+    var syncTopbar = function (lang) {
+      var buttons = document.querySelectorAll('[data-guest-lang-proxy]');
+      for (var i = 0; i < buttons.length; i++) {
+        var active = buttons[i].getAttribute('data-guest-lang-proxy') === lang;
+        buttons[i].classList.toggle('active', active);
+        buttons[i].setAttribute('aria-pressed', String(active));
+      }
+    };
+    if (root.dataset && root.dataset.language) { applyLang(root.dataset.language); syncTopbar(root.dataset.language); }
+    document.querySelectorAll('[data-guest-lang-proxy]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var lang = button.getAttribute('data-guest-lang-proxy');
+        var real = root.querySelector('.language-switch [data-guest-lang="' + lang + '"]');
+        if (real) real.click();
+        else { root.dataset.language = lang; applyLang(lang); syncTopbar(lang); }
+      });
+    });
+    if (typeof MutationObserver === 'function') {
+      new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i++) {
+          if (records[i].attributeName === 'data-language') {
+            var lang = root.getAttribute('data-language');
+            applyLang(lang);
+            syncTopbar(lang === 'km' ? 'km' : 'en');
+            return;
+          }
+        }
+      }).observe(root, { attributes: true, attributeFilter: ['data-language'] });
+    }
+    /* The renderer creates its language switch asynchronously, so reflect its
+       state once it lands (and keep the topbar in sync afterwards). */
+    window.addEventListener('load', function () {
+      syncTopbar(root.dataset.language === 'km' ? 'km' : 'en');
+    });
+  })();

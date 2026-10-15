@@ -60,8 +60,13 @@ function editorFinal(){
   const stage=$('#stage'),host=$('.studio-pane-host'),rail=$('.studio-tool-rail');if(!stage||!host||!rail)return;
   const saveNow=()=>{try{typeof save==='function'&&save()}catch{}};const choose=o=>{try{typeof clearSelection==='function'&&clearSelection();typeof setSelection==='function'&&setSelection([o])}catch{}};
   const makeId=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-  const closePaneOnMobile=()=>{if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
-  const openPane=()=>document.body.classList.remove('mobile-pane-collapsed');
+  // The creation drawer is owned by editor-responsive-contract-v27 (EInviteResponsiveLayout): it
+  // derives `mobile-pane-collapsed` from body[data-editor-drawer] on every sync, so toggling the
+  // class by hand is reverted in the same tick and the handle looked dead. Delegate to the owner
+  // when it is present, and keep the class toggle only as the fallback for hosts without it.
+  const owner=()=>window.EInviteResponsiveLayout;
+  const closePaneOnMobile=()=>{if(owner()?.closeCreation){owner().closeCreation();return}if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
+  const openPane=()=>{if(owner()?.openCreation){owner().openCreation();return}document.body.classList.remove('mobile-pane-collapsed')};
   rail.addEventListener('click',openPane,true);
   if(!$('.fp-mobile-pane-handle')){const h=document.createElement('button');h.type='button';h.className='fp-mobile-pane-handle';h.textContent='›';h.title='Open creation panel';h.onclick=openPane;document.body.append(h)}
   $$('.studio-pane-heading',host).forEach(head=>{if(head.querySelector('.fp-mobile-pane-close'))return;const b=document.createElement('button');b.type='button';b.className='fp-mobile-pane-close';b.textContent='‹';b.title='Hide panel';b.onclick=closePaneOnMobile;head.append(b)});

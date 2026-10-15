@@ -1182,7 +1182,39 @@
     // selection (and blocks the tap that is supposed to open the inspector
     // drawer). Close it here; the trigger and click-outside still drive it.
     menu.hidden = true;
-    $('.canvas-header-more-trigger')?.setAttribute('aria-expanded', 'false');
+    const moreTrigger = $('.canvas-header-more-trigger', more);
+    moreTrigger?.setAttribute('aria-expanded', 'false');
+    // Wire the trigger exactly once: organizeHeader re-runs on every resize, and
+    // a fresh listener per run would stack up on document. Escape is handled by the
+    // command system's `ui.escape` (window capture, `ownsGlobalKeyboard`), which closes
+    // this menu through closeTopLayer(); the document listener below is the fallback for
+    // any route that loads the studio without command-system-v23.
+    if (moreTrigger && !more.dataset.moreTriggerWired) {
+      more.dataset.moreTriggerWired = '1';
+      moreTrigger.onclick = () => {
+        menu.hidden = !menu.hidden;
+        moreTrigger.setAttribute('aria-expanded', String(!menu.hidden));
+      };
+      // Capture phase, deliberately. `#stage` owns a capture-phase `pointerdown` handler that ends in
+      // `stopImmediatePropagation()` when the pointer lands on an object (professional-editor-v17.js,
+      // the object-drag start), so a bubble-phase listener here never sees a click on the canvas.
+      // Measured at 1280: a click on a canvas object at (640, 648) left the menu open
+      // (`hidden:false`, `aria-expanded="true"`) while a click on empty chrome closed it.
+      // Focus is deliberately not moved on a pointer dismissal — the user just clicked elsewhere, and
+      // the canvas owns selection rather than focus. The keyboard path below returns focus.
+      document.addEventListener('pointerdown', event => {
+        if (!more.contains(event.target)) {
+          menu.hidden = true;
+          moreTrigger.setAttribute('aria-expanded', 'false');
+        }
+      }, true);
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || menu.hidden) return;
+        menu.hidden = true;
+        moreTrigger.setAttribute('aria-expanded', 'false');
+        moreTrigger.focus();
+      });
+    }
 
     // Tag device buttons with a single-letter short label for compact toolbars.
     $$('.studio-canvas-toolbar [data-device]').forEach(button => {
