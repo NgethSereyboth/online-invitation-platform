@@ -29,6 +29,10 @@ def run_job(job):
         server.cleanup_expired_security_rows()
     elif kind=='storage.delete':
         server.delete_stored_asset(payload.get('path',''),payload.get('sha256',''))
+    elif kind.startswith('admin.bulk_'):
+        # ROADMAP Part 5 §5.7 — queued admin bulk operations (email/suspend/
+        # export/prune) run out of the request thread like every other job.
+        server.process_admin_bulk_job(kind,payload)
     else:
         raise ValueError(f'Unsupported background job kind: {kind}')
 
