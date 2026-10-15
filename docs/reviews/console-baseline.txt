@@ -1,0 +1,40 @@
+# Console + network baseline — app root, captured 2026-10-13
+
+Produced by `artifacts/console-baseline.mjs` (puppeteer-core via tools/lib/browser.mjs) against
+the running server at http://127.0.0.1:4175. Re-run it with:
+
+    BASE_URL=http://127.0.0.1:4175 node artifacts/console-baseline.mjs
+
+Page errors and failed requests are the two classes the mission calls out; both are counted per
+load, so any entry below is a regression rather than a baseline.
+
+History: the first capture of this file recorded 10 console messages / 8 failed requests on
+index.html, 9 / 1 on dashboard.html, 2 / 2 on materials.html and 3 / 1 on public.html — every one
+of them a session-only fetch fired by a signed-out page (inventory A1). What each request was, and
+what the fix changed, is written up in docs/reviews/A1-2026-10-13.md. The console lines that remain
+are a Chrome verbose DOM hint ("Password field is not contained in a form") and the software-WebGL
+deprecation warning; neither is an error.
+
+=== index.html @1280 ===
+console: 2   page errors: 0   failed requests: 0
+-- console --
+[verbose] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[warn] []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content.
+
+=== index.html @390 ===
+console: 2   page errors: 0   failed requests: 0
+-- console --
+[verbose] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[warn] []Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader flag to opt in to lower security guarantees for trusted content.
+
+=== dashboard.html @1280 ===
+console: 2   page errors: 0   failed requests: 0
+-- console --
+[verbose] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+[verbose] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o
+
+=== materials.html @1280 ===
+console: 0   page errors: 0   failed requests: 0
+
+=== public.html @1280 ===
+console: 0   page errors: 0   failed requests: 0
