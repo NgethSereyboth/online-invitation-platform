@@ -13,9 +13,9 @@ def main()->int:
   for width,height in [(360,800),(390,844),(430,932)]:
    page=browser.new_page(viewport={'width':width,'height':height});ready(page,width,height)
    page.evaluate("""()=>{window.EInviteContext={getInvitationId:()=> 'invite-1'};window.EInviteBackend={isAvailable:()=>false}}""")
-   page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent-v28.css").read_text(encoding='utf-8'))
-   page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding='utf-8'))
-   page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent-v28.js").read_text(encoding='utf-8'))
+   page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent.css").read_text(encoding='utf-8'))
+   page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding='utf-8'))
+   page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent.js").read_text(encoding='utf-8'))
    page.evaluate("EInviteAICreativeAgent.open(document.querySelector('#stage'))");page.wait_for_timeout(100)
    result=page.evaluate("""()=>{const p=document.querySelector('#eiAgentPanel'),r=p.getBoundingClientRect(),buttons=[...p.querySelectorAll('button')].filter(b=>b.offsetParent);return{role:p.getAttribute('role'),modal:p.getAttribute('aria-modal'),left:r.left,right:r.right,width:innerWidth,overflow:document.documentElement.scrollWidth-innerWidth,minTarget:Math.min(...buttons.map(b=>Math.min(b.getBoundingClientRect().width,b.getBoundingClientRect().height))),inert:[...document.body.children].some(n=>n!==p&&n.inert)}}""")
    assert result['role']=='dialog' and result['modal']=='true' and result['left']>=-0.5 and result['right']<=width+0.5 and result['overflow']<=1 and result['minTarget']>=43.5 and result['inert'],(width,result)

@@ -21,16 +21,16 @@ def main()->int:
         try:
             page=browser.new_page(viewport={'width':1100,'height':760});page.set_default_timeout(40_000);errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
-            assets={'custom-fonts-v22.js':source('custom-fonts-v22.js'),'font-browser.js':source('font-browser.js')}
+            assets={'custom-fonts.js':source('custom-fonts.js'),'font-browser.js':source('font-browser.js')}
             def js_handler(body):
                 def handle(route):route.fulfill(status=200,content_type='application/javascript',body=body)
                 return handle
             def css_handler(route):route.fulfill(status=200,content_type='text/css',body='')
             for name,body in assets.items():page.route(f'http://einvite.test/{name}',js_handler(body))
-            for name in ('font-browser.css','custom-fonts-v22.css'):page.route(f'http://einvite.test/{name}',css_handler)
+            for name in ('font-browser.css','custom-fonts.css'):page.route(f'http://einvite.test/{name}',css_handler)
             html=f"""<!doctype html><meta charset='utf-8'><label>Font<select id='font'></select></label><div id='stage'></div>
 <script>window.__doc={{customFonts:{{}}}};window.EInviteEditorBridge={{getState:()=>__doc,transact:(label,fn)=>fn(__doc)}};window.EInviteEditorState={{applyTextProperty:(k,v)=>window.__applied=[k,v]}};window.EInviteContext={{getInvitationId:()=>\"invite-test\"}};window.uiConfirm=async()=>true;window.__fontBytes=Uint8Array.from(atob(\"{woff}\"),c=>c.charCodeAt(0));window.__fontUrl=URL.createObjectURL(new Blob([__fontBytes],{{type:\"font/woff2\"}}));window.EInviteUpload={{uploadFont:async(id,file,options)=>{{options.onProgress?.({{phase:\"uploading\",percent:100}});return{{id:\"asset-font\",url:__fontUrl,sha256:\"abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890\",family:\"DejaVu Sans Uploaded\",weight:400,style:\"normal\",scripts:[\"Latin\"],sourceFormat:\"ttf\",originalBytes:file.size,optimizedBytes:50000,savingsPercent:65,glyphCount:1000,size:50000}}}}}};</script>
-<script>{source('typography-contract.js')}</script><script>{source('custom-font-core-v22.js')}</script><script>{source('font-browser-loader-v22.js')}</script>"""
+<script>{source('typography-contract.js')}</script><script>{source('custom-font-core.js')}</script><script>{source('font-browser-loader.js')}</script>"""
             html=html.replace("<meta charset='utf-8'>","<base href='http://einvite.test/'><meta charset='utf-8'>")
             page.set_content(html,wait_until='load')
             assert page.locator('.ei-font-launch').count()==1

@@ -75,7 +75,7 @@ def main()->int:
   print('REPAIR_BROWSER offline-review',flush=True)
   # Static/offline review never calls review APIs and never starts polling.
   page.evaluate("""()=>{window.__reviewFetches=0;window.__reviewIntervals=0;window.serverInvite={id:'offline-contract'};window.EInviteBackend={ready:Promise.resolve(),isAvailable:()=>false};const f=window.fetch;window.fetch=(...a)=>{window.__reviewFetches++;return f(...a)};const si=window.setInterval;window.setInterval=(...a)=>{window.__reviewIntervals++;return si(...a)}}""")
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "organized" / "review-v23.css"));page.add_script_tag(path=str(ROOT / "src" / "js" / "review-v23.js"));page.wait_for_timeout(180)
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "organized" / "review.css"));page.add_script_tag(path=str(ROOT / "src" / "js" / "review.js"));page.wait_for_timeout(180)
   page.evaluate("()=>EInviteReviewWorkflow.open()");page.wait_for_timeout(120)
   page.evaluate("()=>EInviteReviewWorkflow.refresh()");page.wait_for_timeout(80)
   counters=page.evaluate("()=>({fetches:__reviewFetches,intervals:__reviewIntervals,error:EInviteReviewWorkflow.context.readiness,text:document.querySelector('#v23ReviewDrawer')?.innerText||''})")

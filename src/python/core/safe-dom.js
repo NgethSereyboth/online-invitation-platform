@@ -6,7 +6,7 @@
  * fix each callsite ad-hoc, use these functions everywhere.
  *
  * Apply this file as `src/js/core/safe-dom.js` and add it to the FIRST
- * bundle source in docs/route-bundle-sources-v15.json so it loads before
+ * bundle source in docs/route-bundle-sources.json so it loads before
  * any page code.
  *
  * See: docs/security/SECURITY-FIX-GUIDE.md §4.2

@@ -12,7 +12,7 @@ def main()->int:
   except Exception as exc:return skipped('V22_1_7_GPU_FALLBACK',exc)
   try:
    page=browser.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_content('<div id=stage style="position:relative;width:400px;height:300px"></div><aside class=right></aside><script>EInviteLifecycle={add(){}};const g=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(t,o){return t==="webgl2"?null:g.call(this,t,o)}</script>')
-   for name in ['performance-observability-v22.js','gpu-texture-cache-v22.js','webgl-scene-backend-v22.js','gpu-projection-v22.js','adaptive-gpu-quality-v22.js']:page.add_script_tag(content=src(name))
+   for name in ['performance-observability.js','gpu-texture-cache.js','webgl-scene-backend.js','gpu-projection.js','adaptive-gpu-quality.js']:page.add_script_tag(content=src(name))
    page.wait_for_function('()=>window.EInviteGraphicsDiagnostics')
    result=page.evaluate('()=>({scene:EInviteWebGLScene,projection:EInviteGPUProjection,graphics:EInviteGraphicsDiagnostics.snapshot(),panel:document.querySelector(".ei-graphics-diagnostics")?.textContent||""})')
    assert result['scene']['available'] is False and result['projection']['available'] is False,result

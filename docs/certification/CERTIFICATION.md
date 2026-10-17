@@ -23,17 +23,19 @@ The matrix covers **clean install + V53.1 → V54 upgrade + V54 → V53.1 rollba
 | N1 | Windows 11 (consumer) | `scripts/setup-einvite-complete.ps1` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Windows 11 · `tests/v16_windows_ui_hardening_test.py` | — |
 | N2 | Windows Server 2022 | `scripts/setup-einvite-complete.ps1` + `deploy/windows/start-einvite-windows-server.ps1` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Windows Server 2022 | — |
 | N3 | Windows Server 2025 (or current) | `scripts/setup-einvite-complete.ps1` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Windows Server 2025 | — |
-| N4 | Ubuntu 22.04 LTS | `deploy/linux/install-einvite-laptop.sh` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Ubuntu 22.04 · `tests/v14_live_server_acceptance_test.py` | — |
+| N4 | Ubuntu 22.04 LTS | `deploy/linux/install-einvite-laptop.sh` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Ubuntu 22.04 · `tests/v14_live_server_acceptance_test.py` (explicit route list only) | — |
 | N5 | Ubuntu 24.04 LTS | `deploy/linux/install-einvite-laptop.sh` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Ubuntu 24.04 | — |
 | N6 | Debian 12 | `deploy/linux/install-einvite-laptop.sh` | V53.1 → V54 | V54 → V53.1 | pending | [`NATIVE-PLATFORM-MATRIX.md`](./NATIVE-PLATFORM-MATRIX.md) §Debian 12 | — |
 
 **Acceptance gates per platform (all six must hold):**
 1. The server boots and reports `E-invitation-website: http://<host>:<port>` (see `server.py` startup banner).
 2. `/api/health/live` returns 200 within 10 seconds of boot.
-3. All 16 server-rendered HTML pages return HTTP 200 with `Content-Security-Policy: script-src 'self'` and no `require-trusted-types-for` directive (asserted by `tests/v14_live_server_acceptance_test.py`).
-4. The stdlib test suite passes (deterministic subset, no Playwright required): `python3 tests/v16_windows_ui_hardening_test.py` + the security regression suite (`tests/security_regression_test.py`, `tests/v0_52_security_boundary_test.py`).
+3. Treat `tests/v14_live_server_acceptance_test.py` as partial route evidence, not a complete status/CSP sweep: it asserts `script-src 'self'` and no `require-trusted-types-for` on the dashboard and six secondary pages (materials, responses, analytics, check-in, account, and templates). It checks only the absence of `require-trusted-types-for` on the public invitation, and separately exercises the editor and guest/QR workflows (the QR image endpoint is asserted to return 200). It does not assert HTTP 200 and both CSP conditions for every visited URL, or cover all 16 HTML pages.
+4. The deterministic subset passes (no Playwright required): `python tests/v16_windows_ui_hardening_test.py` + `python -m pytest tests/security_regression_test.py tests/v0_52_security_boundary_test.py -q`.
 5. The on-startup fail-closed malware scanner is detected: ClamAV (`clamdscan`/`clamd` on Linux) **or** Microsoft Defender (`MpCmdRun.exe` on Windows). See `src/python/security_scanner_v54.py`.
 6. `production_preflight.py --check-dependencies` returns 0.
+
+**Coverage note:** A successful run on one current host does not certify the six OS rows. Record each OS-specific install/upgrade/rollback execution and its test evidence separately; browser route coverage is limited to the route list in the test, not every HTML page.
 
 ---
 
@@ -41,7 +43,7 @@ The matrix covers **clean install + V53.1 → V54 upgrade + V54 → V53.1 rollba
 
 Full procedure and per-browser acceptance gates live in [`BROWSER-MATRIX.md`](./BROWSER-MATRIX.md). This section is the executive summary.
 
-The project is **build-tool-free** (vanilla JS, no transpiler, no bundler). Browser compatibility is therefore primarily a function of (a) CSS feature support, (b) WebCrypto support for ES256 passkeys, and (c) WebGL support for the V22 scene model. See `tests/browser_runtime.py` and `tests/inline_editor_runtime_test.py` for the existing automated coverage (Chromium only — the matrix below extends that to the other browsers).
+The project is **build-tool-free** (vanilla JS, no transpiler, no bundler). Browser compatibility is therefore primarily a function of (a) CSS feature support, (b) WebCrypto support for ES256 passkeys, and (c) WebGL support for the V22 scene model. See `tests/browser_runtime.py`, `tests/inline_editor_runtime_test.py`, and `tests/v14_live_server_acceptance_test.py` for existing Chromium coverage. These are local test artifacts/procedures, not evidence that the full multi-browser matrix has been executed; all B1–B6 remain pending until their gates are run and recorded.
 
 | ID | Browser | Version target | Status | Evidence | Sign-off |
 |----|---------|----------------|--------|----------|----------|
@@ -53,10 +55,10 @@ The project is **build-tool-free** (vanilla JS, no transpiler, no bundler). Brow
 | B6 | Chrome Android | latest stable (Android 13+) | pending | [`BROWSER-MATRIX.md`](./BROWSER-MATRIX.md) §Chrome Android | — |
 
 **Per-browser acceptance gates (all six must hold):**
-1. All 16 HTML pages render without `console.error` (excluding third-party favicon/YouTube/SoundCloud origin errors — see `tests/v14_live_server_acceptance_test.py::serious_console`).
+1. Every route exercised in the selected browser test renders without `console.error` (excluding third-party favicon/YouTube/SoundCloud origin errors — see `tests/v14_live_server_acceptance_test.py::serious_console`). The current live acceptance test visits its explicit route list; it does not visit every server-rendered HTML page.
 2. The editor (`/dashboard.html` → editor route) loads with `document.documentElement.dataset.editorReady === 'true'`.
 3. The public RSVP form `POST /api/public/{slug}/rsvps` submits and the host sees the row in `/api/invitations/{id}/rsvps`.
-4. The AI agent panel (`src/js/ai-creative-agent-v28.js` + `src/js/ai-assistant-loader-v27.js`) renders without runtime errors; the tool-registry loads.
+4. The AI agent panel (`src/js/ai-creative-agent.js` + `src/js/ai-assistant-loader.js`) renders without runtime errors; the tool-registry loads.
 5. Bilingual EN↔KH toggle works on all bilingual pages; the toggle persists in `localStorage` and re-renders without a full page reload.
 6. No CSP violation report in the browser dev-tools console (the CSP is `script-src 'self'` — see `server.py::end_headers`).
 

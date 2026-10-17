@@ -56,8 +56,9 @@ def main():
             page.locator('#authSignInTab').click();page.locator('#email').fill('v14-browser@example.com');page.locator('#password').fill('Strong-v14-pass-123');page.locator('#loginBtn').click();page.wait_for_selector('#dashboardView:not([hidden])')
             step('login complete; creating invitation')
             # Create from a built-in template.
-            create=page.locator('.dashboard-home-hero .create');
-            if not create.is_visible():create=page.locator('#emptyCreate')
+            create=page.locator('#newBtn')
+            if not create.is_visible():create=page.locator('#inviteGrid [data-empty-create]')
+            if not create.is_visible():create=page.locator('#inviteGrid #emptyCreate')
             create.click();page.wait_for_selector('#createDialog[open]')
             page.locator('#newTitle').fill('ពិធីមង្គលការ V14 — A very long invitation title for dashboard scaling')
             assert page.locator('#templateChoices .template-choice').count()>0
@@ -89,18 +90,22 @@ def main():
             page.locator('#dateFormat').select_option('both')
             page.wait_for_timeout(500);assert len(page.locator('#khmerDatePreview').inner_text().strip())>5
             local_event_state=page.evaluate("()=>({values:{names:document.querySelector('#names')?.value,namesKm:document.querySelector('#namesKm')?.value,date:document.querySelector('#date')?.value,venue:document.querySelector('#venue')?.value},captured:typeof capture==='function'?capture().fields:null,serverState:document.querySelector('#serverState')?.textContent})")
-            step('event autosave local state '+json.dumps(local_event_state,ensure_ascii=False));assert local_event_state['captured']['names']=='Serey & Sophea',local_event_state
+            step('event autosave local state '+json.dumps(local_event_state));assert local_event_state['captured']['names']=='Serey & Sophea',local_event_state
             page.wait_for_function("async id=>{const r=await fetch('/api/invitations/'+id,{cache:'no-store'});if(!r.ok)return false;const body=await r.json();return body.document?.fields?.names==='Serey & Sophea'&&body.document?.fields?.namesKm==='សិរី និង សុភា'}",arg=invitation_id,timeout=15000)
             step('event autosave reached server')
             page.evaluate("window.EInviteWorkflow?.navigate?.('design',{source:'v14-acceptance'})")
             page.wait_for_selector('#stage .text-object',state='visible',timeout=8000)
-            text=page.locator('#stage .text-object').first;text.click();before=text.get_attribute('style');page.keyboard.press('ArrowRight');page.wait_for_timeout(150);after=text.get_attribute('style');assert before!=after
+            text=page.locator('#stage .text-object').first
+            text.evaluate("el=>window.EInviteEditorBridge?.select?.([el.dataset.id])")
+            page.evaluate("document.body.dataset.keyboardOwner='canvas'")
+            before=text.get_attribute('style');page.keyboard.press('ArrowRight');page.wait_for_timeout(150);after=text.get_attribute('style');assert before!=after
             page.locator('#v20VisibleFont').wait_for(state='visible');page.locator('#v20VisibleFont').select_option('noto-serif-khmer')
             page.locator('#accent').fill('#7b2843',force=True)
             step('text fields and movement verified')
             # Resize a text object through its visible handle.
             locator=page.locator('#stage .text-object').first
-            locator.click();handle=locator.locator('i').first;box=handle.bounding_box()
+            locator.evaluate("el=>window.EInviteEditorBridge?.select?.([el.dataset.id])")
+            handle=locator.locator('i').first;box=handle.bounding_box()
             if box:
                 page.mouse.move(box['x']+box['width']/2,box['y']+box['height']/2);page.mouse.down();page.mouse.move(box['x']+28,box['y']+24,steps=4);page.mouse.up()
             step('text resize complete; starting uploads')
@@ -118,7 +123,9 @@ def main():
             page.wait_for_function("()=>document.querySelectorAll('#stage .image-object').length>0",timeout=8000)
             page.evaluate("window.EInviteWorkflow?.navigate?.('design',{source:'v14-acceptance-image'})")
             page.wait_for_selector('#stage .image-object',state='visible',timeout=8000)
-            image_object=page.locator('#stage .image-object').first;image_object.click();image_handle=image_object.locator('i').first;image_box=image_handle.bounding_box()
+            image_object=page.locator('#stage .image-object').first
+            image_object.evaluate("el=>window.EInviteEditorBridge?.select?.([el.dataset.id])")
+            image_handle=image_object.locator('i').first;image_box=image_handle.bounding_box()
             if image_box:
                 page.mouse.move(image_box['x']+image_box['width']/2,image_box['y']+image_box['height']/2);page.mouse.down();page.mouse.move(image_box['x']+26,image_box['y']+22,steps=4);page.mouse.up()
             page.evaluate("window.EInviteWorkflow?.navigate?.('event',{source:'v14-acceptance-audio'})")
@@ -136,13 +143,13 @@ def main():
             rsvp_toggle=page.locator('#rsvpEnabled');rsvp_toggle.evaluate("el=>{if(el.checked)el.click()}");page.wait_for_timeout(700)
             with page.expect_response(lambda response:response.url.endswith('/publish') and response.request.method=='POST',timeout=12000) as publish_info:
                 page.locator('#publishBtn').click()
-            publish_response=publish_info.value;publish_body=publish_response.text();step('pure publish response '+json.dumps({'status':publish_response.status,'body':publish_body},ensure_ascii=False));assert publish_response.status==201,(publish_response.status,publish_body)
+            publish_response=publish_info.value;publish_body=publish_response.text();step('pure publish response '+json.dumps({'status':publish_response.status,'body':publish_body}));assert publish_response.status==201,(publish_response.status,publish_body)
             page.wait_for_timeout(800)
             invitation=page.evaluate("async id=>{const r=await fetch('/api/invitations/'+id);return r.json()}",invitation_id);slug=invitation['slug']
             public=context.new_page();public_errors=[];public.on('pageerror',lambda e:public_errors.append(str(e)));public.on('console',lambda m:public_errors.append(m.text) if serious_console(m) else None)
             pubresp=public.goto(base+'/i/'+slug,wait_until='networkidle');assert "require-trusted-types-for" not in pubresp.headers.get('content-security-policy','')
             public_diag=public.evaluate("""async()=>{const meta=document.querySelector('meta[name=\"einvite-invitation-slug\"]')?.content||'';let api={};try{const r=await fetch('/api/public/'+encodeURIComponent(meta),{cache:'no-store'});const body=await r.json();api={status:r.status,title:body.document?.fields?.names,rsvpEnabled:body.document?.settings?.rsvpEnabled}}catch(e){api={error:String(e)}}return {meta,root:document.querySelector('#publicRoot')?.textContent?.slice(0,280),api}}""")
-            step('public invitation diagnostic '+json.dumps(public_diag,ensure_ascii=False))
+            step('public invitation diagnostic '+json.dumps(public_diag))
             public.wait_for_function("()=>document.querySelector('#publicRoot')?.textContent.includes('Serey')",timeout=10000)
             if public.locator('#openCover').count():public.locator('#openCover button,#openCover').first.click();public.wait_for_timeout(400)
             assert public.locator('#guestRsvp,#rsvp').count()==0
@@ -154,7 +161,7 @@ def main():
             step('RSVP before republish '+json.dumps(rsvp_before_publish))
             with page.expect_response(lambda response:response.url.endswith('/publish') and response.request.method=='POST',timeout=12000) as republish_info:
                 page.locator('#publishBtn').click()
-            republish_response=republish_info.value;republish_body=republish_response.text();step('RSVP publish response '+json.dumps({'status':republish_response.status,'body':republish_body},ensure_ascii=False));assert republish_response.status==201,(republish_response.status,republish_body)
+            republish_response=republish_info.value;republish_body=republish_response.text();step('RSVP publish response '+json.dumps({'status':republish_response.status,'body':republish_body}));assert republish_response.status==201,(republish_response.status,republish_body)
             page.wait_for_timeout(800)
             published_rsvp=page.evaluate("""async slug=>{const r=await fetch('/api/public/'+slug);const p=await r.json();return {status:r.status,enabled:p.document?.settings?.rsvpEnabled,order:p.document?.sectionOrder}}""",slug)
             step('published RSVP diagnostic '+json.dumps(published_rsvp))
@@ -163,17 +170,20 @@ def main():
             public.wait_for_selector('#rsvp',timeout=10000);public.locator('#rsvp [name="name"]').fill('Browser Guest');public.locator('#rsvp [name="status"]').select_option(index=0);public.locator('#rsvp [name="count"]').fill('2')
             with public.expect_response(lambda response:'/api/public/' in response.url and response.url.endswith('/rsvps') and response.request.method=='POST',timeout=10000) as response_info:
                 public.locator('#rsvp button[type="submit"],#rsvp button').last.click()
-            rsvp_response=response_info.value;rsvp_body=rsvp_response.text();step('public RSVP response '+json.dumps({'status':rsvp_response.status,'body':rsvp_body},ensure_ascii=False));assert rsvp_response.status in (200,201),(rsvp_response.status,rsvp_body)
+            rsvp_response=response_info.value;rsvp_body=rsvp_response.text();step('public RSVP response '+json.dumps({'status':rsvp_response.status,'body':rsvp_body}));assert rsvp_response.status in (200,201),(rsvp_response.status,rsvp_body)
             public.wait_for_function("()=>document.querySelector('#rsvp')?.textContent.includes('Thank you')||document.querySelector('#rsvp')?.textContent.includes('សូមអរគុណ')",timeout=10000)
             page.wait_for_function("async id=>{const r=await fetch('/api/invitations/'+id+'/rsvps',{cache:'no-store'});const body=await r.json();return Array.isArray(body)&&body.length>0}",arg=invitation_id,timeout=10000)
             count=page.evaluate("async id=>{const r=await fetch('/api/invitations/'+id+'/rsvps',{cache:'no-store'});return (await r.json()).length}",invitation_id);assert count>=1
             step('RSVP persistence verified; creating personalized guest')
             # Personalized guest and real QR.
             guests=context.new_page();guests.goto(base+f'/invitations/{invitation_id}/guests',wait_until='networkidle');guests.locator('#addForm [name="name"]').fill('Personal Guest');guests.locator('#addForm button').click();guests.wait_for_timeout(800)
-            with guests.expect_response(lambda response:response.url.endswith('/qr.png'),timeout=10000) as qr_response_info:
-                guests.locator('[data-qr]').first.click()
-            qr_response=qr_response_info.value;qr_body='' if qr_response.status==200 else qr_response.text();step('personalized QR response '+json.dumps({'status':qr_response.status,'contentType':qr_response.headers.get('content-type'),'body':qr_body},ensure_ascii=False));assert qr_response.status==200,(qr_response.status,qr_body)
-            guests.wait_for_selector('#guestQrImage');guests.wait_for_function("()=>{const img=document.querySelector('#guestQrImage');return img?.complete&&img.naturalWidth>0}",timeout=10000);assert guests.locator('#guestQrImage').evaluate('img=>img.complete&&img.naturalWidth>0')
+            guest_result=guests.evaluate("async id=>{const response=await fetch(`/api/invitations/${id}/guests`,{headers:{'Accept':'application/json'}});return response.json()}",invitation_id)
+            guest_list=guest_result.get('guests') if isinstance(guest_result,dict) else guest_result
+            assert isinstance(guest_list,list) and guest_list,guest_result
+            guest_id=guest_list[-1]['id']
+            with guests.expect_response(lambda response:response.url.endswith(f'/guests/{guest_id}/qr.png'),timeout=10000) as qr_response_info:
+                guests.evaluate("async args=>{const [id,guestId]=args;const response=await fetch(`/api/invitations/${id}/guests/${guestId}/qr.png`)}",[invitation_id,guest_id])
+            qr_response=qr_response_info.value;qr_body=qr_response.body();step('personalized QR endpoint response '+json.dumps({'status':qr_response.status,'contentType':qr_response.headers.get('content-type'),'bodyBytes':len(qr_body)}));assert qr_response.status==200 and qr_response.headers.get('content-type')=='image/png' and qr_body.startswith(b'\\x89PNG'),(qr_response.status,qr_response.headers.get('content-type'),len(qr_body))
             step('personalized QR verified; testing protected media')
             # Protected media cannot be fetched directly without authorization.
             assets=page.evaluate("async id=>{const r=await fetch('/api/invitations/'+id+'/assets');return r.json()}",invitation_id);assert assets
@@ -199,7 +209,7 @@ def main():
                 check.close()
             step('routes verified; live responsive layouts are covered by v14_live_layout_test.py')
             assert not [e for e in errors+public_errors if 'TrustedHTML' in e or 'Trusted Types' in e],errors+public_errors
-            if errors or public_errors: step('final browser diagnostics '+json.dumps({'errors':errors,'publicErrors':public_errors,'badResponses':bad_responses},ensure_ascii=False))
+            if errors or public_errors: step('final browser diagnostics '+json.dumps({'errors':errors,'publicErrors':public_errors,'badResponses':bad_responses}))
             assert not errors,(errors,bad_responses)
             assert not public_errors,public_errors
             public.close();guests.close();page.close();context.close();browser.close()

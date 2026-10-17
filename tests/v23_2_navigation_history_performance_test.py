@@ -7,8 +7,8 @@ ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
  browser=launch_chromium(p);page=browser.new_page(viewport={'width':1440,'height':1000})
  page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
- for css in ['page-experience-v22.css','navigation-history-v23.css']:page.add_style_tag(path=str(ROOT/css))
- for js in ['page-experience-v22.js','navigation-history-v23.js']:page.add_script_tag(path=str(ROOT/js))
+ for css in ['page-experience.css','navigation-history.css']:page.add_style_tag(path=str(ROOT/css))
+ for js in ['page-experience.js','navigation-history.js']:page.add_script_tag(path=str(ROOT/js))
  page.wait_for_timeout(250)
  result=page.evaluate("""async()=>{
   const d=EInviteEditorBridge.getState();d.designPages=Array.from({length:120},(_,i)=>({id:`perf-${i}`,name:`Page ${i+1}`,enabled:true,objects:{[`o-${i}`]:{type:'text',text:`Page ${i+1}`,left:'10%',top:'10%',width:'30%',height:'10%',zIndex:1}}}));EInviteEditorSchema.syncLegacy(d);EInviteEditorBridge.render();EInvitePageExperience.render({force:true});await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));

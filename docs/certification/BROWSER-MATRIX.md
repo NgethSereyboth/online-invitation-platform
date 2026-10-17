@@ -5,13 +5,13 @@
 > **Build-tool-free constraint.** The platform is **vanilla JS** — no bundler, no transpiler, no framework. Browser compatibility is therefore primarily a function of:
 > - **CSS feature support** — the editor uses CSS `grid`, `flexbox`, `clamp()`, `min()/max()/calc()`, `aspect-ratio`, `:has()`, container queries (limited — only `@container` for the timeline panel), CSS nesting (only in `editor-styles.css`). The `theme-hardening.css` + `accessibility-v12.css` files contain the fallback declarations for older engines.
 > - **WebCrypto support** — ES256 passkey registration + authentication via `navigator.credentials.create()` / `.get()` (see `src/js/account-security-v13.js`). Requires WebAuthn Level 1 + WebCrypto subtle ECDSA.
-> - **WebGL support** — the V22 scene model (`src/js/scene-model-v22.js` + `src/js/webgl-scene-backend-v22.js`) requires WebGL 2.0 for the GPU raster path; the software fallback (`src/js/scene-render-worker-v22.js`) runs in a Web Worker if WebGL is unavailable. See `tests/v22_1_7_gpu_fallback_test.py` for the fallback contract.
+> - **WebGL support** — the V22 scene model (`src/js/scene-model.js` + `src/js/webgl-scene-backend.js`) requires WebGL 2.0 for the GPU raster path; the software fallback (`src/js/scene-render-worker.js`) runs in a Web Worker if WebGL is unavailable. See `tests/v22_1_7_gpu_fallback_test.py` for the fallback contract.
 >
 > **Existing automated coverage.**
 > - `tests/browser_runtime.py` — the cross-platform Playwright Chromium launcher used by every browser-runtime test in the suite. Exports `launch_chromium(playwright)` (with `--no-sandbox` on Linux + `OPENSSL_CONF` work-around on Windows), `dismiss_editor_onboarding(page)`, `open_event_details(page)`, and `wait_for_reachable_control(page, selector)` (diagnoses pointer-events + z-index + scroll-into-view races). See [`tests/browser_runtime.py`](../../tests/browser_runtime.py).
 > - `tests/inline_editor_runtime_test.py` — a 429-line real-Chromium DOM/runtime smoke for the editor. Inlines the app's local CSS/JS via `page.set_content()` (the test environment blocks network navigation to localhost) and executes the real editor in Chromium. Catches runtime races that static tests cannot. See [`tests/inline_editor_runtime_test.py`](../../tests/inline_editor_runtime_test.py).
 >
-> **Coverage gap.** Both existing automated tests run only on Chromium (Playwright's bundled Chromium). The matrix below extends that to Firefox, Safari, Edge, Safari iOS, and Chrome Android via manual + Playwright-multi-browser procedures.
+> **Coverage gap.** Existing automated browser tests run only on Playwright's bundled Chromium. Their existence does not mean they ran as part of this audit, and the written procedures below are not execution evidence. The matrix below defines how to extend checks to Firefox, Safari, Edge, Safari iOS, and Chrome Android; each browser remains pending until a dated run record captures version, environment, gates, failures, and evidence.
 
 ---
 
@@ -20,7 +20,7 @@
 | ID | Browser | Version target | Engine | Automation |
 |----|---------|----------------|--------|------------|
 | B1 | Chrome (desktop) | latest stable | Blink + V8 | `tests/browser_runtime.py::launch_chromium` (existing) + `tests/inline_editor_runtime_test.py` (existing). Playwright `channel: 'chrome'` for the system Chrome. |
-| B2 | Firefox (desktop) | latest ESR + latest stable | Gecko + SpiderMonkey | Playwright `channel: 'firefox'` (ESR + stable channels). Manual: load `about:config` and disable `privacy.resistFingerprinting` for the test profile (it breaks the WebGL renderer fingerprint used by `gpu-projection-v22.js`). |
+| B2 | Firefox (desktop) | latest ESR + latest stable | Gecko + SpiderMonkey | Playwright `channel: 'firefox'` (ESR + stable channels). Manual: load `about:config` and disable `privacy.resistFingerprinting` for the test profile (it breaks the WebGL renderer fingerprint used by `gpu-projection.js`). |
 | B3 | Safari (desktop) | latest stable (macOS 14+) | WebKit + JavaScriptCore | Manual + `playwright-webkit` (the WebKit bundle is the closest automation analog to Safari; a true Safari test requires macOS + `safaridriver`). |
 | B4 | Edge (desktop) | latest stable | Blink + V8 (Chromium-based since 2020) | Playwright `channel: 'msedge'`. |
 | B5 | Safari iOS | latest stable (iOS 17+) | WebKit (mobile) | Manual on a real device or `BrowserStack` / `LambdaTest` iOS Safari session. iOS Simulator Safari is also acceptable for the desktop-only gates (G3-G5); the WebGL + WebAuthn gates require a real device. |
@@ -34,12 +34,12 @@ A browser is certified only when **all six** of the following hold.
 
 | # | Gate | How to verify |
 |---|------|---------------|
-| G1 | All 16 HTML pages render with no `console.error` | Open each page in the browser; capture the dev-tools console. Third-party favicon/YouTube/SoundCloud origin errors are excluded (see `tests/v14_live_server_acceptance_test.py::serious_console` — the predicate returns False for any console message containing `favicon`, `youtube`, `soundcloud`, or `net::err_name_not_resolved`). |
+| G1 | Every required HTML page renders with no `console.error` | Open each page named in the test run's declared route inventory; capture the dev-tools console. `tests/v14_live_server_acceptance_test.py` captures serious console errors for dashboard, public invitation, and six secondary pages; it loads the editor and guest pages in the workflow but does not capture those same console diagnostics there. It does not visit all 16 HTML pages. Third-party favicon/YouTube/SoundCloud origin errors are excluded (see `serious_console`). Record additional page checks before claiming complete page coverage. |
 | G2 | The editor loads with `document.documentElement.dataset.editorReady === 'true'` | Open `/dashboard.html` → log in or register → create invitation from a built-in template → open the editor. The `<html>` element gains `data-editor-ready="true"` when `editor-core.js` finishes its init handshake (see `tests/inline_editor_runtime_test.py` line 12 for the assertion contract). |
 | G3 | The public RSVP form submits | Open `/i/{slug}` → fill the RSVP form (name, status = "Yes, joyfully", count = 1) → submit. The browser network tab should show `POST /api/public/{slug}/rsvps` returning 201 with `{"id":"...","saved":true,"updated":false}`. The host dashboard (`/invitations/{id}/responses`) should show the new RSVP row within one refresh. |
-| G4 | The AI agent panel renders | Open the editor → click the AI agent icon (toolbar). The panel should render without runtime errors; the tool registry (`src/js/ai-agent-tool-registry-v28.js`) should load (visible in the network tab as `ai-creative-agent-v28.js` + `ai-assistant-loader-v27.js`); typing a prompt and clicking "Plan" should call `POST /api/invitations/{id}/ai/plan` and return a plan with at least one tool call. |
+| G4 | The AI agent panel renders | Open the editor → click the AI agent icon (toolbar). The panel should render without runtime errors; the tool registry (`src/js/ai-agent-tool-registry.js`) should load (visible in the network tab as `ai-creative-agent.js` + `ai-assistant-loader.js`); typing a prompt and clicking "Plan" should call `POST /api/invitations/{id}/ai/plan` and return a plan with at least one tool call. |
 | G5 | Bilingual EN↔KH toggle works | On any bilingual page (dashboard, editor, public), click the language toggle (top-right `EN | ភាសាខ្មែរ` pill). The page should re-render in the chosen script without a full page reload; the choice persists in `localStorage['einvite.lang']` across sessions. Verify Khmer text shaping: `សិរី និង សុភា` should render with correct complex-text shaping (no broken conjuncts, no missing vowel signs) — see [`docs/i18n/KHMER-TYPOGRAPHY.md`](../i18n/KHMER-TYPOGRAPHY.md) for the W3C reference. |
-| G6 | No CSP violation report in the dev-tools console | The CSP is `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; frame-src 'self'` (see `server.py::end_headers`). If a browser blocks an inline script or a third-party origin, a CSP violation report appears in the console. There must be **zero** violation reports across all 16 pages. |
+| G6 | No CSP violation report in the dev-tools console | The CSP is `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'; frame-src 'self'` (see `server.py::end_headers`). Check the console for every page in the declared route inventory. The live acceptance test does not attach CSP-violation-specific checks to every visited page and does not cover all 16 pages, so it is not evidence for this gate; record browser-specific results separately. |
 
 ---
 
@@ -81,7 +81,7 @@ A browser is certified only when **all six** of the following hold.
 **Requirement:** macOS 14 (Sonoma) or later. Safari 17+ is required because:
 - Safari 16.4 introduced `:has()` selector support.
 - Safari 17 introduced WebAuthn PRF (Platform Rendered Function) extensions used by the passkey flow.
-- Safari 17.4 introduced `WebCrypto subtle ECDSA P-256` in a worker (used by `scene-render-worker-v22.js` for the GPU fallback path — verified by `tests/v22_1_7_gpu_fallback_test.py`).
+- Safari 17.4 introduced `WebCrypto subtle ECDSA P-256` in a worker (used by `scene-render-worker.js` for the GPU fallback path — verified by `tests/v22_1_7_gpu_fallback_test.py`).
 
 **Procedure:**
 1. Use `playwright-webkit` (the WebKit bundle is the closest automation analog to Safari) OR `safaridriver` (Safari's WebDriver implementation, bundled with macOS).
@@ -122,7 +122,7 @@ A browser is certified only when **all six** of the following hold.
 
 ### 3.6 Chrome Android
 
-**Requirement:** Android 13+ on a real device (or Android Emulator for the desktop-equivalent gates). Chrome on Android is the same Blink engine as desktop Chrome — the gates that fail on Android are usually touch-event-related (the editor's `direct-manipulation-v24.js` was written for pointer events, which Chrome Android supports since v55).
+**Requirement:** Android 13+ on a real device (or Android Emulator for the desktop-equivalent gates). Chrome on Android is the same Blink engine as desktop Chrome — the gates that fail on Android are usually touch-event-related (the editor's `direct-manipulation.js` was written for pointer events, which Chrome Android supports since v55).
 
 **Procedure:**
 1. On a real Android device:
@@ -132,7 +132,7 @@ A browser is certified only when **all six** of the following hold.
    - Open the host dashboard, register, log in.
 2. For the editor (gate G2): open the editor on a phone in portrait orientation. Verify the editor chrome collapses to the mobile layout (`mobile-editor-v14.js`).
 3. For the AI agent panel (gate G4): use `chrome://inspect` to remote-debug the panel from a desktop Chrome. Verify the panel renders + a plan is returned.
-4. **Android-specific note:** Chrome Android limits the WebGL context to a single concurrent context per page. The V22 scene model opens ONE WebGL context (`src/js/webgl-scene-backend-v22.js`); verify no `WebGL context lost` event fires during the editor session.
+4. **Android-specific note:** Chrome Android limits the WebGL context to a single concurrent context per page. The V22 scene model opens ONE WebGL context (`src/js/webgl-scene-backend.js`); verify no `WebGL context lost` event fires during the editor session.
 
 ---
 
@@ -150,7 +150,7 @@ A browser is certified only when **all six** of the following hold.
 | `IntersectionObserver` | 51+ | 55+ | 55+ | 12.1+ (Safari iOS 12.2+) | 15+ | 12.2+ | 51+ |
 | `<img loading="lazy">` | 76+ | 75+ | 75+ | 15.4+ (Safari iOS 15.4+) | 79+ | 15.4+ | 76+ |
 
-The `:has()` selector and Firefox ESR 115 is the **only** known feature gap. The editor's `editor-suite.js` includes a `CSS.supports('selector(:has(*))')` runtime check that activates the `.is-active` class fallback when `:has()` is unsupported — verified by `tests/v16_windows_ui_hardening_test.py` line 24 (the `transform:none!important` token is the fallback declaration).
+The `:has()` selector and Firefox ESR 115 are a documented compatibility risk with a claimed fallback, not a demonstrated cross-browser result. Static token checks in `tests/v16_windows_ui_hardening_test.py` do not verify the fallback's appearance or behavior in Firefox ESR. Treat the actual runtime behavior as unverified until tested in that browser and recorded.
 
 ---
 

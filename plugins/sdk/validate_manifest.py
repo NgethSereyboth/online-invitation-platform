@@ -46,7 +46,7 @@ SCHEMA_VERSION = "1.0.0"
 PHASE = "4a (V54.6)"
 
 # ─── Forbidden field names (PLUGIN-SPEC.md §2.3) ─────────────────────────
-# Union of the V48 runtime forbidden set (src/js/plugin-runtime-v48.js) and
+# Union of the V48 runtime forbidden set (src/js/plugin-runtime.js) and
 # the additional DOM-API tokens added in Phase 4a.
 FORBIDDEN_FIELDS = frozenset({
     "script", "javascript", "code", "eval", "html", "cssText",

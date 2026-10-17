@@ -18,7 +18,7 @@ def main()->int:
    page.on('pageerror',lambda e:errors.append(str(e)))
    page.set_content(build(),wait_until='load',timeout=60000);page.wait_for_function('()=>window.EInviteProfessionalEditor&&window.EInviteEditorBridge');page.wait_for_timeout(1600)
    if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click();page.wait_for_timeout(120)
-   for name in ['performance-observability-v22.js','interaction-scheduler-v22.js','incremental-scene-renderer-v22.js']:
+   for name in ['performance-observability.js','interaction-scheduler.js','incremental-scene-renderer.js']:
     page.add_script_tag(content=source(name))
    page.wait_for_function('()=>window.EInvitePerformance&&window.EInviteInteractionScheduler&&window.EInviteIncrementalRenderer')
    page.evaluate("()=>{window.__inc=0;addEventListener('einvite:incremental-render',()=>__inc++);EInviteEditorBridge.select(['title'])}");page.wait_for_timeout(150)

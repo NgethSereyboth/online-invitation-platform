@@ -11,7 +11,7 @@ def main()->int:
   try:browser=launch_chromium(p)
   except Exception as exc:return skipped('V22_1_5_TEXTURE_CACHE',exc)
   try:
-   page=browser.new_page();page.set_content('<canvas id=c width=64 height=64></canvas><canvas id=g width=64 height=64></canvas>');page.add_script_tag(content=src('tests/gpu_mock_webgl.js'));page.add_script_tag(content=src('gpu-texture-cache-v22.js'))
+   page=browser.new_page();page.set_content('<canvas id=c width=64 height=64></canvas><canvas id=g width=64 height=64></canvas>');page.add_script_tag(content=src('tests/gpu_mock_webgl.js'));page.add_script_tag(content=src('gpu-texture-cache.js'))
    result=page.evaluate('''async()=>{const gl=g.getContext('webgl2'),x=c.getContext('2d');x.fillStyle='red';x.fillRect(0,0,64,64);const cache=EInviteGPUTextureCache.create(gl,{maxBytes:32768});const a=await cache.acquire('same',c),b=await cache.acquire('same',c);cache.release('same');cache.release('same');for(let i=0;i<12;i++){const q=document.createElement('canvas');q.width=q.height=512;const z=q.getContext('2d');z.fillStyle=`rgb(${i*40},20,80)`;z.fillRect(0,0,64,64);await cache.acquire('k'+i,q);cache.release('k'+i)}cache.evict();const d=cache.diagnostics();cache.destroy();return{same:a.texture===b.texture,d,after:cache.diagnostics()}}''')
    assert result['same'] is True,result
    assert result['d']['hits']>=1 and result['d']['misses']>=13,result

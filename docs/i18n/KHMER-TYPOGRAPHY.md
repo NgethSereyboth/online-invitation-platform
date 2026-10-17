@@ -32,12 +32,12 @@ Source: <https://www.w3.org/International/sealreq/khmer/> (W3C Internationalizat
 
 | W3C guidance | eInvite implementation | File / value |
 |---|---|---|
-| Khmer requires **software shaping** (HarfBuzz / DirectWrite / CoreText). Browsers ship shapers; do **not** disable OpenType features. | `font-feature-settings` left at defaults for Khmer blocks; `font-variant-ligatures: common-ligatures contextual` for `.preview[lang="km"]` in the font browser card preview. Never `font-feature-settings: "liga" off` on Khmer text. | `src/css/custom-fonts-v22.css:6` |
+| Khmer requires **software shaping** (HarfBuzz / DirectWrite / CoreText). Browsers ship shapers; do **not** disable OpenType features. | `font-feature-settings` left at defaults for Khmer blocks; `font-variant-ligatures: common-ligatures contextual` for `.preview[lang="km"]` in the font browser card preview. Never `font-feature-settings: "liga" off` on Khmer text. | `src/css/custom-fonts.css:6` |
 | Khmer needs **taller line-height than Latin** — do not inherit the Latin value. | Latin default `line-height: 1.4–1.5`; Khmer default **`line-height: 1.6`** for body, `1.5` for headings. Set per-script via `:lang(km)` selector — see §4. | `src/css/typography-fonts.css` (declaration block) + per-page CSS |
-| **Vertical metrics**: Khmer has tall ascenders + descenders — `unitsPerEm` up to 2048; ascender ~1700, descender ~−700 typical in Noto Khmer. | Each font registry entry records `recommendedLineHeight` (Khmer = `1.42–1.6`; Latin = `1.3`); the font browser applies `preview.style.lineHeight = Math.max(1.2, recommendedLineHeight)` | `src/js/custom-fonts-v22.js:16` (`recommendedLineHeight: finite(...scripts.includes('Khmer')?1.42:1.3, 1.15, 1.8)`) |
+| **Vertical metrics**: Khmer has tall ascenders + descenders — `unitsPerEm` up to 2048; ascender ~1700, descender ~−700 typical in Noto Khmer. | Each font registry entry records `recommendedLineHeight` (Khmer = `1.42–1.6`; Latin = `1.3`); the font browser applies `preview.style.lineHeight = Math.max(1.2, recommendedLineHeight)` | `src/js/custom-fonts.js:16` (`recommendedLineHeight: finite(...scripts.includes('Khmer')?1.42:1.3, 1.15, 1.8)`) |
 | **Font-size floor**: Khmer body text below 16px loses subscript legibility. | The V20 typography contract clamps `fontSize` to `[8, 200]`; the editor UX default is 32px. Document 16px floor for Khmer body text in `font-browser.js` preview. | `src/js/typography-contract.js:13` |
-| **Letter-spacing**: Khmer **must** be `normal` — positive letter-spacing breaks abugida clusters. | `.preview[lang="km"]` rule sets `letter-spacing: normal` (default) and `word-break: normal; overflow-wrap: normal; line-break: strict`. | `src/css/custom-fonts-v22.css:6` |
-| **OpenType features**: 13 features in Noto Sans Khmer (`ccmp`, `liga`, `clig`, `kern`, `mark`, `mkmk`, `locl`, `ccmp`, `akhn`, `pref`, `pstf`, `blwf`, `abvs`/`blws` — the Khmer-specific shaping features). | We do NOT disable any of these for bundled Noto. We DO surface `khmerFeatures[]` in the per-font metadata for uploaded custom fonts so the registry can flag fonts missing shaping tables. | `src/js/custom-fonts-v22.js:16` (`khmerFeatures` field) + `assets/fonts/registry.json` `opentype_features` field |
+| **Letter-spacing**: Khmer **must** be `normal` — positive letter-spacing breaks abugida clusters. | `.preview[lang="km"]` rule sets `letter-spacing: normal` (default) and `word-break: normal; overflow-wrap: normal; line-break: strict`. | `src/css/custom-fonts.css:6` |
+| **OpenType features**: 13 features in Noto Sans Khmer (`ccmp`, `liga`, `clig`, `kern`, `mark`, `mkmk`, `locl`, `ccmp`, `akhn`, `pref`, `pstf`, `blwf`, `abvs`/`blws` — the Khmer-specific shaping features). | We do NOT disable any of these for bundled Noto. We DO surface `khmerFeatures[]` in the per-font metadata for uploaded custom fonts so the registry can flag fonts missing shaping tables. | `src/js/custom-fonts.js:16` (`khmerFeatures` field) + `assets/fonts/registry.json` `opentype_features` field |
 | **Numbers**: Khmer has its own digit set `U+17E0–17E9`. Do not force Latin digits in Khmer content. | Editor surfaces a `languageMode` selector (`en` / `km` / `both`) at `src/html/index.html:66`. The Khmer lunar-date preview uses Khmer digits where `dateFormat` is `both` or `khmer`. | `src/html/index.html:66–72` |
 | **Font fallback**: pair Khmer primary with a Khmer fallback (not Latin). | Each font registry entry's `stack` lists a Khmer family before/after the primary, never a Latin-only fallback for Khmer content. See `assets/fonts/registry.json` `stack` field per entry. | `docs/typography-contract.json` `fonts.*.stack` |
 | **ZWNJ / ZWJ**: Khmer uses `U+200D` ZWJ rarely and `U+200C` ZWNJ essentially never; document that the editor must not strip these. | The V13 rich-text sanitizer allow-lists both characters. | `src/python/server.py:729-799` (`_RichTextSanitizer`) |
@@ -234,7 +234,7 @@ what is at stake:
 
 The font registry at `assets/fonts/registry.json` records which of these features each bundled
 font exposes (`opentype_features` field). Uploaded custom fonts are probed for `khmerFeatures[]`
-at `src/js/custom-fonts-v22.js:16`.
+at `src/js/custom-fonts.js:16`.
 
 ---
 
@@ -277,5 +277,5 @@ hero text.
 
 *Cross-references: `docs/a11y/WCAG-AA-AUDIT.md`, `docs/FONT_LICENSES_AND_REGISTRY.md`,
 `docs/typography-contract.json`, `assets/fonts/registry.json`, `src/css/typography-fonts.css`,
-`src/css/custom-fonts-v22.css`, `src/js/custom-fonts-v22.js`, `src/js/font-browser.js`,
+`src/css/custom-fonts.css`, `src/js/custom-fonts.js`, `src/js/font-browser.js`,
 `licenses/fonts/Noto-OFL-1.1.txt`.*

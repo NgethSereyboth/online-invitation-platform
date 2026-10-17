@@ -18,8 +18,8 @@ def main()->int:
    {id:'asset-b',name:'Khmer Pattern',type:'image/png',serverUrl:b,folder:'Decor',tags:['khmer'],width:300,height:200},
    {id:'asset-c',name:'Portrait Photo',type:'image/png',serverUrl:c,folder:'People',tags:['portrait'],width:300,height:200}
   ];window.usableAssetUrl=async a=>a.serverUrl}""",[PNG,PNG,PNG])
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "asset-workflow-v23.css"))
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "asset-workflow-v23.js"))
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "asset-workflow.css"))
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "asset-workflow.js"))
   page.wait_for_timeout(350)
   assert page.evaluate("()=>EInviteAssetWorkflow?.version===23.4")
   assert page.evaluate("()=>EInviteCommandRegistry.conflicts.length")==0

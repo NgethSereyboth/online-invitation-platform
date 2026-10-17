@@ -12,21 +12,21 @@ def require(condition: bool, message: str) -> None:
 
 
 def main() -> int:
-    sources=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))
+    sources=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'))
     index=sources['pages']['index.html']
     js=index['scripts'];css=index['styles']
-    require(js.count('professional-editor-v17.js')==1,'professional editor JS must be bundled exactly once')
-    require(css.count('professional-editor-v17.css')==1,'professional editor CSS must be bundled exactly once')
+    require(js.count('professional-editor.js')==1,'professional editor JS must be bundled exactly once')
+    require(css.count('professional-editor.css')==1,'professional editor CSS must be bundled exactly once')
     # v55 app-shell and v54 editor modules may load after these layers, so assert relative order, not the exact tail.
-    require(js.index('professional-editor-v17.js')<js.index('editor-responsive-contract-v27.js'),'professional editor must own transforms before the responsive/focus contract')
-    css_order=['professional-editor-v17.css','zoom-layout-v22.css','graphics-runtime-v22.css','editor-responsive-contract-v27.css']
+    require(js.index('professional-editor.js')<js.index('editor-responsive-contract.js'),'professional editor must own transforms before the responsive/focus contract')
+    css_order=['professional-editor.css','zoom-layout.css','graphics-runtime.css','editor-responsive-contract.css']
     require([css.index(name) for name in css_order]==sorted(css.index(name) for name in css_order),'professional styles must precede the dedicated zoom, GPU, and responsive contract layers')
 
-    professional=(ROOT / "src" / "js" / "professional-editor-v17.js").read_text(encoding='utf-8')
-    command_system=(ROOT / "src" / "js" / "editor-command-system-v23.js").read_text(encoding='utf-8')
-    style=(ROOT / "src" / "css" / "organized" / "professional-editor-v17.css").read_text(encoding='utf-8')
+    professional=(ROOT / "src" / "js" / "professional-editor.js").read_text(encoding='utf-8')
+    command_system=(ROOT / "src" / "js" / "editor-command-system.js").read_text(encoding='utf-8')
+    style=(ROOT / "src" / "css" / "organized" / "professional-editor.css").read_text(encoding='utf-8')
     app=(ROOT / "src" / "js" / "app.js").read_text(encoding='utf-8')
-    schema=(ROOT / "src" / "js" / "editor-schema-v13.js").read_text(encoding='utf-8')
+    schema=(ROOT / "src" / "js" / "editor-schema.js").read_text(encoding='utf-8')
     collaboration=(ROOT / "src" / "js" / "collaboration.js").read_text(encoding='utf-8')
     collaboration_live=(ROOT / "src" / "js" / "collaboration-live.js").read_text(encoding='utf-8')
     require('version:17' in professional and 'ownsPointerInteractions:true' in professional and 'ownsKeyboardInteractions:true' in professional,'authoritative ownership flags missing')
@@ -48,7 +48,7 @@ def main() -> int:
     node_script=r"""
 const fs=require('fs'),vm=require('vm');
 global.window=global;global.structuredClone=global.structuredClone||((v)=>JSON.parse(JSON.stringify(v)));
-vm.runInThisContext(fs.readFileSync(process.argv[2],'utf8'),{filename:'editor-schema-v13.js'});
+vm.runInThisContext(fs.readFileSync(process.argv[2],'utf8'),{filename:'editor-schema.js'});
 const source={schemaVersion:12,objects:{shared:{type:'text',left:'12%',top:'18%',width:'40%',height:'10%',rotation:'bad',zIndex:2}},designPages:[{id:'p1',name:'Page',objects:{shared:{type:'image',left:'-2%',top:'bad',width:'-5%',height:'20%',zIndex:1}}}],sceneGraph:{groups:{g1:{name:'Nested',children:['shared'],locked:true,collapsed:true}}}};
 const a=EInviteEditorSchema.migrate(structuredClone(source));
 if(a.schemaVersion!==13)throw Error('schema version changed incorrectly');
@@ -69,7 +69,7 @@ console.log('NODE_V17_SCHEMA_OK');
 """
     with tempfile.TemporaryDirectory(prefix='einvite-v17-node-') as tmp:
         script=Path(tmp)/'check.js';script.write_text(node_script,encoding='utf-8',newline='\n')
-        result=subprocess.run(['node',str(script),str(ROOT / "src" / "js" / "editor-schema-v13.js")],cwd=ROOT,text=True,capture_output=True,encoding='utf-8',errors='replace')
+        result=subprocess.run(['node',str(script),str(ROOT / "src" / "js" / "editor-schema.js")],cwd=ROOT,text=True,capture_output=True,encoding='utf-8',errors='replace')
         require(result.returncode==0,result.stdout+result.stderr)
         require('NODE_V17_SCHEMA_OK' in result.stdout,'node migration check did not complete')
 

@@ -117,7 +117,7 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
 
 /* Guest language sync, moved out of a page-level inline <script> for the same reason as the
    dashboard mounts: `script-src 'self'` refuses inline blocks, so this correction never ran and
-   logged a CSP violation on every guest-page load. It is part of bundle-public-v15.js already. */
+   logged a CSP violation on every guest-page load. It is part of bundle-public.js already. */
 (function () {
     var root = document.getElementById('publicRoot');
     if (!root) return;

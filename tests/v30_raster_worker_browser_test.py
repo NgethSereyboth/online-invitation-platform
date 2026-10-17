@@ -9,7 +9,7 @@ from pathlib import Path
 from browser_runtime import launch_chromium
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKER = (ROOT / "src" / "js" / "raster-worker-v30.js").read_text(encoding="utf-8")
+WORKER = (ROOT / "src" / "js" / "raster-worker.js").read_text(encoding="utf-8")
 
 
 def main() -> int:
@@ -60,7 +60,7 @@ def main() -> int:
         assert result["applied"] == ["new"], result
         browser.close()
 
-    workspace = (ROOT / "src" / "js" / "raster-workspace-v30.js").read_text(encoding="utf-8")
+    workspace = (ROOT / "src" / "js" / "raster-workspace.js").read_text(encoding="utf-8")
     for token in ("typeof OffscreenCanvas==='undefined'", "Using bounded Canvas 2D preview", "data.jobId!==workerJobId", "workerGeneration", "URL.revokeObjectURL"):
         assert token in workspace, token
     print("V30_RASTER_WORKER_BROWSER_TEST_PASSED")

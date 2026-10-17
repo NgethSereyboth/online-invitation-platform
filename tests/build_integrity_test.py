@@ -10,17 +10,17 @@ def run():
     bundle=(ROOT / "src" / "js" / "editor-suite.js").read_text(encoding='utf-8')
     styles=(ROOT / "src" / "css" / "editor-suite.css").read_text(encoding='utf-8')
     html=(ROOT / "src" / "html" / "index.html").read_text(encoding='utf-8')
-    route_sources=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))['pages']['index.html']['scripts']
+    route_sources=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'))['pages']['index.html']['scripts']
     assert '/* ===== collaboration.js ===== */' not in bundle
     assert '/* ===== collaboration-live.js ===== */' not in bundle
     assert '/* ===== collaboration.css ===== */' in styles
     assert '/* ===== collaboration-live.css ===== */' in styles
     assert route_sources.count('collaboration.js')==1
     assert route_sources.count('collaboration-live.js')==1
-    assert html.count('<script src="bundle-index-v15.js"></script>')==1
-    commands=(ROOT / "src" / "js" / "editor-command-system-v23.js").read_text(encoding='utf-8')
-    assert route_sources.count('editor-command-system-v23.js')==1
-    assert route_sources.index('editor-command-system-v23.js')<route_sources.index('app.js')
+    assert html.count('<script src="bundle-index.js"></script>')==1
+    commands=(ROOT / "src" / "js" / "editor-command-system.js").read_text(encoding='utf-8')
+    assert route_sources.count('editor-command-system.js')==1
+    assert route_sources.index('editor-command-system.js')<route_sources.index('app.js')
     assert "window.addEventListener('keydown',keydown,true)" in commands
     assert 'EInviteRenderer?.sanitizeRichText' in bundle
     print('BUILD_INTEGRITY_TEST_PASSED')

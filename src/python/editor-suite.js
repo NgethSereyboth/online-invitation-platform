@@ -408,7 +408,7 @@ function editorEnhancements(){
     }catch{}
   };
 
-  // Keyboard commands are owned by editor-command-system-v23.js.
+  // Keyboard commands are owned by editor-command-system.js.
 
   // Alt-drag duplicate
   let dragState=null;

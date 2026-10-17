@@ -524,7 +524,7 @@ The sweep is idempotent — running it twice in the same second produces the sam
 
 ## 8. Frontend changes (Phase 1a Stage 3)
 
-The agent UI in `src/js/ai-creative-agent-v28.js` must:
+The agent UI in `src/js/ai-creative-agent.js` must:
 
 1. Detect when a plan contains a JIT-eligible tool call.
 2. Show a JIT elevation request dialog before `authorize_tool_call()` is invoked:

@@ -392,6 +392,27 @@ def run():
     return 0
 
 
+def test_evaluate_accepts_serialized_grants():
+    """The documented evaluate() API accepts persisted grant strings."""
+    from ai_agent.scopes import evaluate
+
+    grants = ["event:123:publish", "guest:*:delete"]
+    assert evaluate(grants, "event", "123", "publish") is True
+    assert evaluate(grants, "event", "124", "publish") is False
+    assert evaluate(grants, "guest", "guest-7", "delete") is True
+
+
+def test_evaluate_ignores_malformed_serialized_grants():
+    """Malformed persisted grants fail closed without hiding valid grants."""
+    from ai_agent.scopes import evaluate
+
+    assert evaluate(["EVENT:123:publish"], "event", "123", "publish") is False
+    assert evaluate(
+        ["EVENT:123:publish", "event:123:publish"],
+        "event", "123", "publish",
+    ) is True
+
+
 def test_ai_resource_scopes():
     """Pytest-compatible entry point."""
     rc = run()

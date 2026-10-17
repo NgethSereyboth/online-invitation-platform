@@ -16,10 +16,10 @@ def main()->int:
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():
    page.locator('#finalTourDismiss').click();page.wait_for_timeout(80)
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "asset-workflow-v23.css"))
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "asset-workflow-v23.js"))
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "photo-workflow-v23.css"))
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-workflow-v23.js"))
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "asset-workflow.css"))
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "asset-workflow.js"))
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "photo-workflow.css"))
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-workflow.js"))
   page.wait_for_timeout(400)
   assert page.evaluate("()=>EInvitePhotoWorkflow?.version==='23.5.3'")
   assert page.evaluate("()=>EInviteCommandRegistry.conflicts.length")==0

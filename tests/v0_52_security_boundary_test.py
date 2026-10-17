@@ -66,7 +66,7 @@ def verify_private_files_are_not_web_files():
                 "/data/invites.db","/data/.guest-token-secret","/data/",
                 "/tests/security_regression_test.py","/backup.py",
                 "/host-einvite-laptop.ps1","/V0_52_RELEASE_FILE_HASHES.sha256",
-                "/BUILD_INFO.json","/route-bundles-v15.json","/page-assets-v15.json",
+                "/BUILD_INFO.json","/route-bundles.json","/page-assets.json",
                 "/licenses/%2e%2e/server.py",
             ):
                 status,_,body=request(base+path)
@@ -77,7 +77,7 @@ def verify_private_files_are_not_web_files():
             assert status==421 and json.loads(body)["code"]=="host_rejected",(status,body)
 
             for path in (
-                "/bundle-index-v15.css","/service-worker.js",
+                "/bundle-index.css","/service-worker.js",
                 "/vendor/momentkh.js",
                 "/assets/fonts/noto-sans-latin-400.woff2",
                 "/licenses/fonts/Noto-OFL-1.1.txt",

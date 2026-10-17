@@ -1,0 +1,1067 @@
+@layer components {
+/* ============================================================================
+   app-shell.css — shared design system + application shell.
+
+   Loaded LAST in every page bundle (docs/route-bundle-sources.json) so the
+   shell wins the cascade without a single forced declaration. Everything here is
+   token-driven (src/css/tokens.css) and therefore dark-mode-correct by
+   construction: no hard-coded hex except the two audit-approved values marked
+   "audit §11.4".
+
+   Two skeletons, sixteen pages (dispatch §2):
+     data-shell="a"  topbar · [rail] · content · [inspector] · [status bar]
+     data-shell="b"  minimal topbar · centred flow
+
+   Density rule: 14px body, 11px caption. Nothing in the chrome is smaller.
+   ========================================================================= */
+
+/* --- 1. Base ------------------------------------------------------------- */
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-latin);
+  font-size: var(--fs-body-md);
+  line-height: var(--lh-body-md);
+  letter-spacing: var(--ls-body-md);
+  color: var(--app-text);
+  background: var(--app-bg);
+  -webkit-font-smoothing: antialiased;
+}
+body :lang(km), body .khmer-text { line-height: 1.6; font-size: 1.06em; }
+
+/* --- 2. Skeleton A: application shell ------------------------------------ */
+body[data-shell="a"] {
+  display: grid;
+  grid-template-rows: var(--app-topbar-h) minmax(0, 1fr) auto;
+  min-height: 100vh;
+  background: var(--app-bg);
+}
+body[data-shell="a"] > header { grid-row: 1; }
+body[data-shell="a"] > main   { grid-row: 2; min-width: 0; }
+body[data-shell="a"] > .app-statusbar,
+body[data-shell="a"] > .studio-statusbar { grid-row: 3; }
+
+/* Rail + content columns (rail is optional — pages without one stay single-column). */
+body[data-shell="a"]:has(> .app-rail:not([hidden])) {
+  grid-template-columns: var(--app-rail-w) minmax(0, 1fr);
+  grid-template-areas: "topbar topbar" "rail main" "status status";
+}
+/* No rail (or a hidden one): a single max-content column would let a wide child
+   push the document past the viewport, so pin the column. */
+body[data-shell="a"]:not(:has(> .app-rail:not([hidden]))) { grid-template-columns: minmax(0, 1fr); }
+body[data-shell="a"]:has(> .app-rail:not([hidden])) > header { grid-area: topbar; }
+body[data-shell="a"]:has(> .app-rail:not([hidden])) > .app-rail { grid-area: rail; }
+body[data-shell="a"]:has(> .app-rail:not([hidden])) > main { grid-area: main; }
+body[data-shell="a"]:has(> .app-rail:not([hidden])) > .app-statusbar,
+body[data-shell="a"]:has(> .app-rail:not([hidden])) > .studio-statusbar { grid-area: status; }
+/* Collapsing is a ≥ 769 idea. Above 768 the rail is a column, so this changes the
+   column width; below it the rail is the fixed ☰ drawer, and a persisted
+   `rail-collapsed` used to open that drawer 64px wide with its labels hidden. */
+@media (min-width: 769px) { body[data-shell="a"].rail-collapsed { --app-rail-w: var(--app-rail-w-collapsed); } }
+
+body[data-shell="a"] > main {
+  padding: var(--space-8);
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+/* The editor owns its own grid inside <main> (rail + canvas + inspector). */
+body[data-page="index"] > main { max-width: none; margin: 0; padding: 0; }
+
+/* --- 3. Topbar (56px, always) -------------------------------------------- */
+body:not(.guest) > header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--app-topbar-h);
+  min-height: var(--app-topbar-h);
+  padding: 0 var(--space-4);
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-line);
+  color: var(--app-text);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  backdrop-filter: none;
+}
+body:not(.guest) > header strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-title-sm);
+  font-weight: var(--fw-bold);
+  color: var(--app-text);
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+.app-topbar-left, .app-topbar-right { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
+.app-topbar-left { flex: 0 1 auto; }
+.app-topbar-right { margin-left: auto; }
+
+/* Breadcrumbs: Workspace / Invitation / Page — three levels maximum. */
+.app-crumbs { display: flex; align-items: center; gap: var(--space-1); min-width: 0; color: var(--app-muted); font-size: var(--fs-body-sm); }
+.app-crumbs a { color: var(--app-muted); text-decoration: none; padding: 2px 4px; border-radius: var(--radius-sm); }
+.app-crumbs a:hover { color: var(--app-text); background: var(--app-surface-3); }
+.app-crumbs [aria-current="page"] { color: var(--app-text); font-weight: var(--fw-semibold); }
+.app-crumbs .sep { color: var(--app-faint); }
+
+/* Browser chrome inside the topbar (links + buttons) — icon buttons are 36px. */
+body:not(.guest) > header > a,
+body:not(.guest) > header > button,
+body:not(.guest) > header .ui-theme-button,
+body:not(.guest) > header .ui-app-launcher-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--app-text);
+  font-size: var(--fs-body-md);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out),
+              border-color var(--motion-1) var(--ease-out), box-shadow var(--motion-1) var(--ease-out);
+}
+body:not(.guest) > header > a:hover,
+body:not(.guest) > header > button:hover,
+body:not(.guest) > header .ui-theme-button:hover,
+body:not(.guest) > header .ui-app-launcher-button:hover { background: var(--app-surface-3); }
+body:not(.guest) > header > a:active,
+body:not(.guest) > header > button:active { transform: translateY(1px); }
+body:not(.guest) > header > a.button-link { border-color: var(--app-line); background: var(--app-surface); }
+body:not(.guest) > header > a.button-link:hover { background: var(--app-surface-2); border-color: var(--app-line-2); }
+body:not(.guest) > header > button.primary,
+body:not(.guest) > header > a.button-link.primary {
+  background: var(--app-accent);
+  /* audit §11.4 — white on the accent needs the darkened mix in dark mode. */
+  color: #fff;
+  border-color: transparent;
+}
+html[data-theme="dark"] body:not(.guest) > header > button.primary,
+html[data-theme="dark"] body:not(.guest) > header > a.button-link.primary {
+  background: color-mix(in srgb, var(--app-accent) 65%, #1f0a11);
+}
+
+/* Rail toggle + drawer toggle buttons (36px hit area, 20px glyph). */
+.app-rail-toggle, .app-drawer-toggle {
+  width: 36px; height: 36px; padding: 0;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--app-muted);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.app-rail-toggle:hover, .app-drawer-toggle:hover { background: var(--app-surface-3); color: var(--app-text); }
+
+/* Breadcrumb/primary-action slot reserved inside the topbar. */
+.app-topbar-action { margin-left: var(--space-2); }
+
+/* --- 4. Left rail --------------------------------------------------------- */
+.app-rail {
+  background: var(--app-surface);
+  border-right: 1px solid var(--app-line);
+  padding: var(--space-3) var(--space-2) var(--space-6);
+  overflow: hidden auto;
+  position: sticky;
+  top: var(--app-topbar-h);
+  align-self: start;
+  max-height: calc(100vh - var(--app-topbar-h));
+}
+.app-rail__group { margin-top: var(--space-3); }
+.app-rail__label {
+  display: block;
+  margin: var(--space-3) var(--space-2) var(--space-1);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-caption);
+  letter-spacing: var(--ls-caption);
+  text-transform: uppercase;
+  color: var(--app-faint);
+}
+.app-rail a, .app-rail button.app-rail__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--app-text);
+  font-size: var(--fs-body-md);
+  font-weight: var(--fw-medium);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.app-rail a:hover, .app-rail button.app-rail__item:hover { background: var(--app-surface-2); }
+.app-rail a[aria-current="page"] { background: var(--app-accent-soft); color: var(--app-accent); font-weight: var(--fw-semibold); }
+.app-rail .app-rail__icon { width: 20px; text-align: center; font-size: 16px; color: var(--app-muted); }
+.app-rail a[aria-current="page"] .app-rail__icon { color: var(--app-accent); }
+.app-rail__count { margin-left: auto; font-size: var(--fs-body-sm); color: var(--app-faint); font-variant-numeric: tabular-nums; }
+
+body.rail-collapsed .app-rail { padding-left: var(--space-1); padding-right: var(--space-1); }
+body.rail-collapsed .app-rail__label,
+body.rail-collapsed .app-rail__count { display: none; }
+body.rail-collapsed .app-rail a, body.rail-collapsed .app-rail button.app-rail__item { justify-content: center; padding: 0; }
+
+/* --- 5. Skeleton B: focused flow ----------------------------------------- */
+/* ``minmax(0, 1fr)`` matters: an implicit grid column is sized to max-content, so a
+   400px auth card inside a 390px viewport would widen <main> instead of clamping. */
+body[data-shell="b"] { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--app-topbar-h) minmax(0, 1fr); min-height: 100vh; }
+body[data-shell="b"] > main { display: block; padding: var(--space-10) var(--space-4) var(--space-16); }
+.auth-card {
+  width: 400px;
+  max-width: 100%;
+  margin: var(--space-10) auto var(--space-16);
+  padding: var(--space-8);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow-sm);
+}
+.auth-card__brand { display: flex; justify-content: center; margin-bottom: var(--space-4); }
+
+/* A policy document is a reading surface: one column, generous leading, no cards. */
+body[data-page="privacy"] > main { padding: var(--space-10) var(--space-4) var(--space-16); }
+body[data-page="privacy"] article { max-width: 720px; margin: 0 auto; }
+body[data-page="privacy"] article h1 { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); line-height: var(--lh-title-lg); letter-spacing: var(--ls-title-lg); margin: 0 0 var(--space-4); }
+body[data-page="privacy"] article h2 { font-size: var(--fs-title-md); font-weight: var(--fw-title-md); margin: var(--space-8) 0 var(--space-2); }
+body[data-page="privacy"] article p { font-size: var(--fs-body-lg); line-height: var(--lh-body-lg); color: var(--app-text); }
+.auth-card h1 { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); line-height: var(--lh-title-lg); letter-spacing: var(--ls-title-lg); margin: 0 0 var(--space-2); text-align: center; }
+.auth-card h2 { font-size: var(--fs-title-md); font-weight: var(--fw-title-md); line-height: var(--lh-title-md); letter-spacing: var(--ls-title-md); margin: 0 0 var(--space-2); text-align: center; }
+.auth-card > p { margin: 0 0 var(--space-6); text-align: center; color: var(--app-muted); font-size: var(--fs-body-md); }
+.auth-card form { display: grid; gap: var(--space-3); }
+.auth-card label { font-size: var(--fs-body-md); font-weight: var(--fw-medium); color: var(--app-text); }
+.auth-card .auth-card__actions { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+.auth-card__divider { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-5) 0; color: var(--app-faint); font-size: var(--fs-body-sm); }
+.auth-card__divider::before, .auth-card__divider::after { content: ""; flex: 1; height: 1px; background: var(--app-line); }
+.auth-card__links { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); font-size: var(--fs-body-sm); }
+.auth-card__links a { color: var(--app-accent); text-decoration: none; border-radius: var(--radius-sm); }
+.auth-card__links a:hover { text-decoration: underline; }
+.auth-card .status[role="status"], .auth-card__status { margin: var(--space-3) 0 0; font-size: var(--fs-body-sm); color: var(--app-muted); }
+
+/* Segmented control (auth tabs, filter rows, admin tabs). */
+.segmented { display: inline-flex; padding: 3px; gap: 2px; background: var(--app-surface-3); border-radius: var(--radius-sm); }
+.segmented button {
+  min-height: 32px; padding: 0 var(--space-3);
+  border: 0; border-radius: calc(var(--radius-sm) - 3px);
+  background: transparent; color: var(--app-muted);
+  font-size: var(--fs-body-md); font-weight: var(--fw-medium); cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.segmented button:hover { color: var(--app-text); background: color-mix(in srgb, var(--app-surface) 60%, transparent); }
+.segmented button.active, .segmented button[aria-selected="true"] {
+  background: var(--app-surface); color: var(--app-text);
+  box-shadow: var(--app-shadow-sm);
+}
+.auth-card .segmented { display: flex; width: 100%; margin-bottom: var(--space-6); }
+
+/* --- 6. Page header / toolbar / content patterns (§3 groups 2 + 5) ------- */
+.page-head, .dash-head, .library-head, .studio-head, .response-top, .analytics-head, .billing-head, .app-page-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-6);
+}
+.page-head h1, .dash-head h1, .library-head h1, .studio-head h1, .analytics-head h1, .billing-head h1, .app-page-head h1,
+main > h1:first-child {
+  margin: 0;
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-title-lg);
+  line-height: var(--lh-title-lg);
+  letter-spacing: var(--ls-title-lg);
+}
+.page-head__actions, .page-head > .button-link + *, .app-page-head__actions { margin-left: auto; display: flex; align-items: center; gap: var(--space-2); }
+main > h1:first-child + p { margin: var(--space-2) 0 var(--space-6); color: var(--app-muted); max-width: 68ch; }
+
+.toolbar, .library-toolbar, .dash-filterbar, .admin-toolbar, .studio-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin: 0 0 var(--space-5);
+}
+.toolbar input[type="search"], .toolbar input[type="text"], .toolbar select,
+.library-toolbar input, .library-toolbar select,
+.dash-filterbar input, .dash-filterbar select,
+.admin-search {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line-2);
+  border-radius: var(--radius-sm);
+  color: var(--app-text);
+  font-size: var(--fs-body-md);
+  transition: border-color var(--motion-1) var(--ease-out), box-shadow var(--motion-1) var(--ease-out);
+}
+.toolbar input[type="search"] { width: 240px; }
+.toolbar input:focus-visible, .toolbar select:focus-visible, .library-toolbar input:focus-visible,
+.library-toolbar select:focus-visible, .admin-search:focus-visible {
+  outline: none; border-color: var(--app-accent); box-shadow: var(--app-ring);
+}
+
+/* Card grid — no ragged rows: every grid card is --app-card-h tall. */
+.card-grid, .invite-grid, .material-grid, .material-grid-page, .template-grid, .designer-grid, .plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+  margin: 0 0 var(--space-8);
+}
+.card, .invite-card, .material-card-page, .workspace-card, .stat-card, .template-card {
+  display: flex;
+  flex-direction: column;
+  min-height: var(--app-card-h);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow-sm);
+  overflow: hidden;
+  transition: box-shadow var(--motion-2) var(--ease-out), transform var(--motion-2) var(--ease-out),
+              border-color var(--motion-2) var(--ease-out);
+}
+.card:hover, .invite-card:hover, .material-card-page:hover, .workspace-card:hover, .template-card:hover {
+  box-shadow: var(--app-shadow-card-hover);
+  border-color: var(--app-line-2);
+  transform: scale(1.02);
+}
+.card:focus-within, .invite-card:focus-within { box-shadow: var(--app-ring); }
+.card__thumb, .invite-cover, .material-thumb, .card-media {
+  aspect-ratio: 16 / 9;
+  background: var(--app-surface-2);
+  border-bottom: 1px solid var(--app-line);
+  overflow: hidden;
+}
+.card__thumb img, .invite-cover img, .card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card__body, .invite-body, .material-info { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.card__title, .invite-body h3, .card__body strong { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); line-height: var(--lh-title-sm); }
+.card__title, .card__meta, .invite-body h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card__meta, .invite-body small, .muted { color: var(--app-muted); font-size: var(--fs-body-sm); }
+.card__actions { margin-top: auto; display: flex; gap: var(--space-2); opacity: 1; padding: 0 var(--space-4) var(--space-4); }
+.card__overflow {
+  position: absolute; top: var(--space-2); right: var(--space-2);
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border: 0; border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--app-surface) 88%, transparent);
+  color: var(--app-muted); cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.card__overflow:hover { background: var(--app-surface); color: var(--app-text); box-shadow: var(--app-shadow-sm); }
+
+/* Status dot + badge: colour is never the only signal (icon or text always present). */
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--app-muted); flex: 0 0 auto; }
+.status-dot--good { background: var(--app-good); }
+.status-dot--warn { background: var(--app-warn); }
+.status-dot--danger { background: var(--danger); }
+.status-dot--info { background: var(--app-info); }
+.badge, .pill, .app-badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--app-surface-3);
+  color: var(--app-muted);
+  font-size: var(--fs-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption);
+  white-space: nowrap;
+}
+.badge--good { background: color-mix(in srgb, var(--app-good) 14%, var(--app-surface)); color: color-mix(in srgb, var(--app-good) 72%, var(--app-text)); }
+.badge--warn { background: color-mix(in srgb, var(--app-warn) 16%, var(--app-surface)); color: color-mix(in srgb, var(--app-warn) 72%, var(--app-text)); }
+.badge--danger { background: color-mix(in srgb, var(--danger) 14%, var(--app-surface)); color: color-mix(in srgb, var(--danger) 72%, var(--app-text)); }
+.badge--info { background: color-mix(in srgb, var(--app-info) 14%, var(--app-surface)); color: color-mix(in srgb, var(--app-info) 72%, var(--app-text)); }
+
+/* Tables: sticky header, 48px rows, hover row. */
+.app-table, table.data, .v13-list table, .admin-panel table, main table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body-md);
+  background: var(--app-surface);
+}
+.app-table thead th, table.data thead th, .v13-list table thead th, .admin-panel table thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--app-surface-2);
+  color: var(--app-muted);
+  font-size: var(--fs-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption);
+  text-transform: uppercase;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--app-line);
+}
+.app-table tbody td, table.data tbody td { padding: var(--space-3); border-bottom: 1px solid var(--app-line); height: 48px; }
+.app-table tbody tr:hover, table.data tbody tr:hover { background: var(--app-surface-2); }
+
+/* --- 7. Controls: hover / focus / active / disabled ---------------------- */
+button, .button-link, input[type="submit"], input[type="button"], input[type="reset"] {
+  font-family: inherit;
+  font-size: var(--fs-body-md);
+  transition: background var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out),
+              color var(--motion-1) var(--ease-out), box-shadow var(--motion-1) var(--ease-out),
+              transform var(--motion-1) var(--ease-out);
+}
+button:not(:disabled):active, .button-link:active { transform: translateY(1px); }
+button:disabled, .button-link[aria-disabled="true"], input:disabled {
+  opacity: 0.55; cursor: not-allowed; transform: none;
+}
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+button.primary, .button-link.primary, input[type="submit"].primary {
+  background: var(--app-accent);
+  border-color: transparent;
+  color: #fff; /* audit §11.4 */
+  font-weight: var(--fw-semibold);
+}
+html[data-theme="dark"] button.primary,
+html[data-theme="dark"] .button-link.primary { background: color-mix(in srgb, var(--app-accent) 65%, #1f0a11); }
+button.primary:hover, .button-link.primary:hover { background: color-mix(in srgb, var(--app-accent) 88%, #000); }
+html[data-theme="dark"] button.primary:hover,
+html[data-theme="dark"] .button-link.primary:hover { background: color-mix(in srgb, var(--app-accent) 75%, #1f0a11); }
+button.full, .button-link.full, .auth-card button:not([type="button"]):not(.plain) { width: 100%; }
+form label { display: block; font-size: var(--fs-body-md); font-weight: var(--fw-medium); margin-bottom: var(--space-3); }
+form label > span:first-child { display: block; margin-bottom: var(--space-1); }
+input, select, textarea {
+  width: 100%;
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--app-surface);
+  border: 1px solid var(--app-line-2);
+  border-radius: var(--radius-sm);
+  color: var(--app-text);
+  font-family: inherit;
+  font-size: var(--fs-body-md);
+  transition: border-color var(--motion-1) var(--ease-out), box-shadow var(--motion-1) var(--ease-out), background var(--motion-1) var(--ease-out);
+}
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--app-accent) 32%, var(--app-line-2)); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--app-accent); box-shadow: var(--app-ring); }
+input:disabled, textarea:disabled { background: var(--app-surface-3); color: var(--app-faint); }
+::placeholder { color: var(--app-faint); opacity: 1; }
+select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--app-muted) 50%), linear-gradient(135deg, var(--app-muted) 50%, transparent 50%); background-position: calc(100% - 16px) 16px, calc(100% - 11px) 16px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: var(--space-8); }
+
+/* Link-styled action inside a card — full width so the card action is never a stub. */
+.card-action, .card__actions .button-link, .card__actions button { width: 100%; justify-content: center; }
+
+/* --- 8. Async states: loading / empty / error / success ------------------ */
+.state, .state--loading, .state--empty, .state--error {
+  display: grid; place-items: center; gap: var(--space-2);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+}
+.state__icon { font-size: 28px; line-height: 1; color: var(--app-accent); }
+.state--error .state__icon { color: var(--danger); }
+.state h2, .state__title { font-size: var(--fs-title-md); font-weight: var(--fw-title-md); }
+.state p, .state__body { margin: 0; color: var(--app-muted); max-width: 46ch; }
+.state__action { margin-top: var(--space-3); }
+.state--inline { background: transparent; border: 0; padding: var(--space-6) var(--space-3); }
+.state--success { border-color: color-mix(in srgb, var(--app-good) 40%, var(--app-line)); }
+.state--success .state__icon { color: var(--app-good); }
+
+/* Skeleton loading: mirrors the real card's shape (never a grey rectangle). */
+.skeleton { position: relative; overflow: hidden; background: var(--app-surface-2); border-radius: var(--radius-sm); }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--app-surface-3) 80%, transparent), transparent);
+  transform: translateX(-100%);
+  animation: shell-shimmer 1400ms var(--ease-out) infinite;
+}
+.skeleton-card { display: flex; flex-direction: column; min-height: var(--app-card-h); border: 1px solid var(--app-line); border-radius: var(--radius-md); background: var(--app-surface); overflow: hidden; }
+.skeleton-card .skeleton--media { aspect-ratio: 16 / 9; border-radius: 0; border-bottom: 1px solid var(--app-line); }
+.skeleton-card .skeleton--line { height: 12px; margin: var(--space-2) var(--space-4) 0; }
+.skeleton-card .skeleton--line:last-child { width: 45%; margin-bottom: var(--space-4); }
+@keyframes shell-shimmer { to { transform: translateX(100%); } }
+
+/* --- 9. Status bar (32px, only when there is state) ---------------------- */
+.app-statusbar {
+  display: flex; align-items: center; gap: var(--space-4);
+  min-height: var(--app-statusbar-h);
+  padding: 0 var(--space-4);
+  background: transparent;
+  color: var(--app-muted);
+  font-size: var(--fs-body-sm);
+  border-top: 1px solid var(--app-line);
+}
+.app-statusbar__item { display: inline-flex; align-items: center; gap: var(--space-2); }
+.app-statusbar__spacer { margin-left: auto; }
+
+/* --- 10. Overlays ------------------------------------------------------- */
+dialog { border: 1px solid var(--app-line); border-radius: var(--radius-xl); box-shadow: var(--app-shadow-xl); background: var(--app-surface); color: var(--app-text); }
+dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
+
+/* --- 11. Responsive: 1024 rail collapse · 768 drawer ------------------- */
+@media (max-width: 1024px) {
+  body[data-shell="a"]:has(> .app-rail:not([hidden])) { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr); }
+  /* No `body.rail-collapsed .app-rail { --app-rail-w: … }` here any more: the only
+     consumer of that variable on the rail ELEMENT is the ≤768 drawer (width below), so
+     the rule could only ever shrink the drawer — measured at 390px with a persisted
+     `rail-collapsed`: a 64px drawer whose link text spilled out of it. Above 768 the
+     rail's width comes from the grid track, which §2's ≥769 `body[data-shell="a"]
+     .rail-collapsed` rule already handles. */
+  .app-rail__label, .app-rail__count { display: none; }
+  .app-rail a, .app-rail button.app-rail__item { justify-content: center; padding: 0; }
+  /* ≤1024 the shell pins the rail column to var(--app-rail-w-collapsed) itself, so the
+     collapse control has nothing left to do here (measured at 1024px: clicking it left
+     the rail 64px wide and every declaration it toggles already applied). It stays at
+     ≥1025, where the rail really is 240px or 64px. Shell-qualified and descendant, as in
+     the ≤768 block below: the buttons live in `.app-topbar-left`/`-right` and
+     `body:not(.guest) > header button` (0,1,3) sets their `display` (see that note). */
+  body:not(.guest) > header .app-rail-toggle { display: none; }
+}
+@media (max-width: 768px) {
+  body[data-shell="a"]:has(> .app-rail:not([hidden])) { grid-template-columns: minmax(0, 1fr); grid-template-areas: "topbar" "main" "status"; }
+  /* Wins over §4's `.app-rail` by source order (equal specificity). That holds only
+     while no higher-specificity duplicate of §4's rule exists further down the file —
+     see the note in §13 before adding one. */
+  .app-rail {
+    position: fixed; top: var(--app-topbar-h); bottom: 0; left: 0;
+    width: var(--app-rail-w); max-height: none; z-index: 60;
+    transform: translateX(-100%);
+    transition: transform var(--motion-3) var(--ease-out);
+    box-shadow: var(--app-shadow-xl);
+  }
+  body.rail-open .app-rail { transform: translateX(0); }
+  body[data-shell="a"] > main { padding: var(--space-4); }
+  /* On a phone the rail IS the ☰ drawer, so the collapse control is not offered: its
+     only effect is to shrink the drawer to var(--app-rail-w-collapsed) — measured 64px
+     with every label already hidden — and because `rail-collapsed` is persisted, one
+     stray tap wedges navigation for the rest of the session. The drawer toggle is the
+     mobile control here; `@media (min-width: 769px)` hides it above 768.
+     These need a descendant combinator and the shell: the buttons live in
+     `.app-topbar-left`/`.app-topbar-right`, and `body:not(.guest) > header button`
+     (editor-suite.css / canvas-plus.css, 0,1,3) sets `display: inline-flex` on every
+     topbar button — the winner for `display` on both toggles. A bare `.app-rail-toggle`
+     (0,1,0) or a `>` form never reaches them, which is why the previous
+     `.app-rail-toggle { display: inline-flex }` here was inert, and why the bare
+     `.app-drawer-toggle { display: none }` in the 769+ rule lost and left a ☰ that does
+     nothing (nothing above 768 consumes `body.rail-open`) sitting in the desktop topbar. */
+  body:not(.guest) > header .app-rail-toggle { display: none; }
+}
+@media (min-width: 769px) { body:not(.guest) > header .app-drawer-toggle { display: none; } }
+/* The 64px rail is an icon rail, and its link labels were never hidden: at 1024px the
+   rail's scrollWidth ran 17px past its clientWidth (`Dashboa…` / `Templat…` clipped
+   mid-word) and a collapsed rail did exactly the same at 1440px+ (80 vs 63).
+   `.app-rail__label` only wraps the "Workspace" heading; a link's own label is a bare
+   `.i18n` span, and because the icons are aria-hidden those spans ARE the accessible
+   name — so they are clipped, not removed: the reset's `.sr-only` declaration set.
+   Gated to ≥769 because below 768 the rail is the 240px ☰ drawer, where the labels are
+   the point, and `rail-collapsed` no longer changes a drawer's width. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app-rail a .i18n { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+}
+@media (min-width: 769px) {
+  body.rail-collapsed .app-rail a .i18n { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+}
+@media (max-width: 480px) {
+  body[data-shell="a"] > main { padding: var(--space-3); }
+  .app-crumbs { display: none; }
+}
+
+/* --- 12. Motion preferences -------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+    scroll-behavior: auto;
+  }
+  .skeleton::after { animation: none; }
+  /* §1.5d — every hover lift in this sheet is neutralised, including the
+     canonical .card-hover utility defined in tokens.css. */
+  .card-hover, .card-hover:hover, .card-hover:focus-within,
+  .card:hover, .invite-card:hover, .material-card-page:hover,
+  .workspace-card:hover, .template-card:hover { transform: none; }
+}
+
+/* --- 13. Shell details: brand, account chip, injected controls ------------ */
+.app-brand { display: inline-flex; align-items: center; gap: var(--space-2); text-decoration: none; padding: 0 var(--space-1); border-radius: var(--radius-sm); }
+.app-brand strong { font-family: var(--font-display); font-size: var(--fs-title-sm); font-weight: var(--fw-bold); color: var(--app-text); }
+.app-account {
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--fs-body-sm); color: var(--app-muted);
+}
+.app-account:empty { display: none; }
+.app-theme-toggle {
+  width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--app-muted); font-size: 15px; cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.app-theme-toggle:hover { background: var(--app-surface-3); color: var(--app-text); }
+.app-rail__spacer { display: block; height: var(--space-2); }
+
+/* Controls injected by modern-ui.js are divs, so the header-child rule above
+   cannot reach them: give their wrappers (and their buttons) the same metrics. */
+body:not(.guest) > header .ui-theme,
+body:not(.guest) > header .ui-app-launcher { display: flex; align-items: center; }
+body:not(.guest) > header .ui-theme-menu,
+body:not(.guest) > header .ui-app-launcher-menu { z-index: 60; }
+body:not(.guest) > header > .ui-theme { margin-left: var(--space-1); }
+body:not(.guest) > header #logoutBtn {
+  height: 36px; padding: 0 var(--space-3);
+  border: 1px solid var(--app-line); border-radius: var(--radius-sm);
+  background: var(--app-surface); color: var(--app-text);
+  font-size: var(--fs-body-md); cursor: pointer;
+}
+body:not(.guest) > header #logoutBtn:hover { background: var(--app-surface-2); border-color: var(--app-line-2); }
+
+/* The shell-A rail's sticky column (position/top/max-height) is declared once, in
+   §4's `.app-rail`. A duplicate used to sit here —
+   `body[data-shell="a"] > .app-rail { position: sticky; … }`, specificity (0,2,1) —
+   restating the same three declarations at a weight the ≤768 drawer could not reach:
+   the drawer's bare `.app-rail` is (0,1,0), so the rail's `position` stayed `sticky`
+   on a phone instead of becoming the `fixed` drawer §11 asks for. An in-flow sticky
+   rail is still a grid item, and its `grid-area: rail` names an area the ≤768
+   template no longer defines, so it closed over two implicit grid columns (0px and
+   240px) and starved the single explicit `minmax(0, 1fr)` column down to 150px.
+   Measured on materials.html at 390px: body resolved
+   `grid-template-columns: 150px 0px 240px`, the topbar and `main` were both 150px
+   wide inside a 390px viewport, and the off-canvas rail painted 150px of itself over
+   them. Removing the duplicate is the whole fix: §4 already declares the identical
+   values, so nothing changes for ≥769px, while the drawer now wins on source order —
+   the same "cascade fix, not a specificity arms race" reasoning as §14. Do not
+   reintroduce a shell-qualified rail rule below §11. */
+
+/* Auth shell (Skeleton B page with a card) ------------------------------- */
+.auth-mark {
+  display: inline-grid; place-items: center; width: 32px; height: 32px;
+  border-radius: var(--radius-sm); background: var(--app-accent-soft); color: var(--app-accent); font-size: 16px;
+}
+.auth-card__brand strong { font-size: var(--fs-body-md); font-weight: var(--fw-semibold); }
+
+/* --- 14. Accent discipline: the primary button is flat accent, never a gradient
+   (dispatch §1.3 "no gradients as decoration"). These selectors outrank the
+   legacy gradient rules without needing a priority override. */
+.auth-card button.primary,
+.auth-card .button-link.primary,
+body:not(.guest) main button.primary,
+body:not(.guest) main .button-link.primary,
+body[data-shell="b"] main button.primary {
+  background-image: none;
+  background-color: var(--app-accent);
+  color: #fff;                     /* audit §11.4 */
+  border-color: transparent;
+  font-weight: var(--fw-semibold);
+}
+html[data-theme="dark"] .auth-card button.primary,
+html[data-theme="dark"] body:not(.guest) main button.primary,
+html[data-theme="dark"] body[data-shell="b"] main button.primary {
+  background-color: color-mix(in srgb, var(--app-accent) 65%, #1f0a11);
+}
+.auth-card button.primary:hover,
+body:not(.guest) main button.primary:hover { background-color: color-mix(in srgb, var(--app-accent) 88%, #000); }
+html[data-theme="dark"] .auth-card button.primary:hover,
+html[data-theme="dark"] body:not(.guest) main button.primary:hover { background-color: color-mix(in srgb, var(--app-accent) 75%, #1f0a11); }
+
+/* The legacy two-pane auth container is replaced by the single centred card.
+   The old containers carried the `.login`, `.auth-page` and `.verify-page` hooks,
+   which legacy id-scoped rules style with forced declarations (display:grid, 30px radius,
+   1040px max-width). Those hooks are gone from the markup, so the legacy rules do
+   not match at all and this block wins without a single priority override.
+   This is a cascade fix, not a specificity arms race. */
+.auth-view {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-8) var(--space-4) var(--space-16);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.auth-view .auth-card { margin-left: auto; margin-right: auto; }
+
+/* Signed-out dashboard: the rail, breadcrumbs and account controls belong to the
+   signed-in view, so Skeleton A degrades to Skeleton B until #dashboardView is
+   revealed. app-shell.js owns the body class; no rule here hides content that
+   the JS cannot restore. */
+body.auth-mode > .app-rail,
+body.auth-mode > .app-rail[data-rail-auto],
+body.auth-mode > header .app-crumbs,
+body.auth-mode > header .app-rail-toggle,
+body.auth-mode > header .app-drawer-toggle,
+body.auth-mode > header #logoutBtn { display: none; }
+body.auth-mode > main { max-width: 100%; }
+
+/* --- 15. Dashboard (dispatch Group 2) ----------------------------------- */
+
+/* Welcome row: Title large left, actions right. One primary action maximum. */
+body[data-page="dashboard"] .dash-head {
+  display: flex; align-items: center; gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+body[data-page="dashboard"] .dash-head h1 {
+  margin: 0 auto 0 0;
+  font-size: var(--fs-title-lg);
+  font-weight: var(--fw-title-lg);
+  line-height: var(--lh-title-lg);
+  letter-spacing: var(--ls-title-lg);
+  color: var(--app-text);
+}
+body[data-page="dashboard"] .dash-quickstart { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: 0 0 var(--space-5); }
+body[data-page="dashboard"] .dash-quickstart button {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  min-height: 36px; padding: 0 var(--space-3);
+  border: 1px solid var(--app-line); border-radius: var(--radius-sm);
+  background: var(--app-surface); color: var(--app-text);
+  font-size: var(--fs-body-md); cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out);
+}
+body[data-page="dashboard"] .dash-quickstart button:hover { background: var(--app-surface-2); border-color: var(--app-line-2); }
+body[data-page="dashboard"] .dash-quickstart button .i18n:first-of-type:empty { display: none; }
+
+/* Filter row: search (240px) + segmented control. */
+.dashboard-filterbar {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  margin: 0 0 var(--space-5);
+}
+.app-search {
+  position: relative; display: inline-flex; align-items: center; gap: var(--space-2);
+  width: 240px; min-height: 36px; padding: 0 var(--space-3);
+  border: 1px solid var(--app-line); border-radius: var(--radius-sm);
+  background: var(--app-surface); color: var(--app-muted);
+}
+.app-search:focus-within { border-color: var(--app-accent); box-shadow: 0 0 0 3px var(--app-accent-soft); }
+.app-search__icon { font-size: 14px; line-height: 1; }
+.app-search input {
+  width: 100%; border: 0; background: transparent; color: var(--app-text);
+  font-size: var(--fs-body-md); padding: 0; min-height: 32px;
+}
+.app-search input:focus { outline: none; }
+
+/* Card grid: uniform 280px cards, 20px gutter, no ragged rows. */
+body[data-page="dashboard"] #inviteGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+  max-width: none; margin: 0;
+  align-items: start;
+}
+body[data-page="dashboard"] #inviteGrid .invite-card {
+  position: relative;
+  height: 280px;
+  display: flex; flex-direction: column;
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--app-shadow-sm);
+  transition: box-shadow var(--motion-2) var(--ease-out), transform var(--motion-2) var(--ease-out), border-color var(--motion-2) var(--ease-out);
+}
+body[data-page="dashboard"] #inviteGrid .invite-card:hover,
+body[data-page="dashboard"] #inviteGrid .invite-card:focus-within {
+  box-shadow: var(--app-shadow-card-hover);
+  border-color: var(--app-line-2);
+  transform: scale(1.02);
+}
+body[data-page="dashboard"] #inviteGrid .invite-cover {
+  display: block; width: 100%; aspect-ratio: 16 / 9; height: auto;
+  padding: 0; border: 0; border-bottom: 1px solid var(--app-line);
+  background: var(--app-surface-2);
+  background-image: none;
+  color: var(--app-text); cursor: pointer; overflow: hidden;
+}
+body[data-page="dashboard"] #inviteGrid .invite-cover::after { content: none; }
+body[data-page="dashboard"] #inviteGrid .invite-body {
+  flex: 1; min-height: 0; padding: var(--space-3) var(--space-4) var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-1);
+}
+body[data-page="dashboard"] #inviteGrid .invite-body h2,
+body[data-page="dashboard"] #inviteGrid .invite-body strong {
+  margin: 0; font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); line-height: var(--lh-title-sm);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--app-text);
+}
+body[data-page="dashboard"] #inviteGrid .stats {
+  margin: 0; display: flex; gap: var(--space-2);
+  font-size: var(--fs-body-sm); color: var(--app-muted);
+}
+body[data-page="dashboard"] #inviteGrid .invite-quick {
+  margin-top: auto; display: flex; gap: var(--space-1);
+  opacity: 0; transition: opacity var(--motion-2) var(--ease-out);
+}
+body[data-page="dashboard"] #inviteGrid .invite-card:hover .invite-quick,
+body[data-page="dashboard"] #inviteGrid .invite-card:focus-within .invite-quick { opacity: 1; }
+.app-iconbtn {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  min-height: 32px; padding: 0 var(--space-2);
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--app-muted);
+  font-size: var(--fs-body-sm); text-decoration: none; cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.app-iconbtn:hover { background: var(--app-surface-3); color: var(--app-text); }
+
+/* Status badges: state only, always paired with an icon glyph. */
+.app-badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  align-self: flex-start; padding: 2px var(--space-2);
+  border-radius: var(--radius-sm); border: 1px solid var(--app-line);
+  background: var(--app-surface-2); color: var(--app-muted);
+  font-size: var(--fs-caption); font-weight: var(--fw-medium); letter-spacing: 0.02em;
+}
+.app-badge--published { color: var(--app-good); border-color: color-mix(in srgb, var(--app-good) 34%, var(--app-line)); }
+.app-badge--draft { color: var(--app-warn); border-color: color-mix(in srgb, var(--app-warn) 34%, var(--app-line)); }
+.app-badge--archived { color: var(--app-faint); }
+body[data-page="dashboard"] #inviteGrid .invite-overflow__toggle {
+  width: 32px; height: 32px; border-radius: var(--radius-sm);
+  color: var(--app-muted); font-size: 16px;
+}
+body[data-page="dashboard"] #inviteGrid .invite-overflow__toggle:hover { background: var(--app-surface-3); color: var(--app-text); }
+body[data-page="dashboard"] #inviteGrid .invite-overflow__menu {
+  background: var(--app-surface); border: 1px solid var(--app-line);
+  border-radius: var(--radius-md); box-shadow: var(--app-shadow-xl); padding: var(--space-1);
+}
+body[data-page="dashboard"] #inviteGrid .invite-overflow__menu button { font-size: var(--fs-body-md); border-radius: var(--radius-sm); }
+body[data-page="dashboard"] #inviteGrid .invite-overflow__menu button:hover { background: var(--app-surface-2); }
+
+/* Loading skeletons mirror the real card: same height, same cover ratio, two lines. */
+body[data-page="dashboard"] #inviteGrid .skeleton-card {
+  height: 280px; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--app-surface); border: 1px solid var(--app-line); border-radius: var(--radius-md);
+}
+.skeleton-card__cover { display: block; width: 100%; aspect-ratio: 16 / 9; background: var(--app-surface-2); }
+.skeleton-card__line { display: block; height: 12px; margin: var(--space-3) var(--space-4) 0; border-radius: var(--radius-sm); background: var(--app-surface-3); }
+.skeleton-card__line--short { width: 45%; }
+.skeleton-card__cover, .skeleton-card__line { position: relative; overflow: hidden; }
+.skeleton-card__cover::after, .skeleton-card__line::after {
+  content: ""; position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--app-surface) 70%, transparent), transparent);
+  animation: shell-shimmer 1.6s infinite;
+}
+
+/* Empty / error states fill the grid row instead of collapsing it. */
+body[data-page="dashboard"] #inviteGrid .empty-state,
+body[data-page="dashboard"] #inviteGrid .error-state { grid-column: 1 / -1; }
+.empty-state__icon svg { width: 96px; height: 72px; color: var(--app-accent); opacity: 1; }
+.error-state .empty-state__icon { color: var(--app-warn); font-size: 1.75rem; opacity: 1; }
+.dashboard-no-results { grid-column: 1 / -1; margin: 0; text-align: center; color: var(--app-muted); }
+
+/* The shell already pads <main>; the legacy .dash wrapper must not pad again. */
+body[data-page="dashboard"] #dashboardView { max-width: none; margin: 0; padding: 0; }
+body[data-page="dashboard"] #inviteGrid .invite-overflow { position: absolute; top: var(--space-2); right: var(--space-2); z-index: 2; }
+body[data-page="dashboard"] #inviteGrid .invite-overflow__toggle {
+  background: color-mix(in srgb, var(--app-surface) 88%, transparent);
+  border: 1px solid var(--app-line);
+}
+
+/* Management pages reuse the same toolbar/segmented grammar. */
+body[data-shell="a"] main > .page-head {
+  display: flex; align-items: center; gap: var(--space-4); margin: 0 0 var(--space-4);
+}
+body[data-shell="a"] main > .page-head h1 { margin: 0 auto 0 0; }
+
+/* --- 16. Guest invitation page (dispatch Group 4) ------------------------
+   Skeleton B, content-first. The invitation keeps its own template background
+   (the product's visual anchor); what changes is the column, the rhythm and the
+   card treatment of the guest-facing sections below the hero. */
+body[data-page="public"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--app-topbar-h) minmax(0, 1fr);
+  background: var(--app-bg);
+}
+.guest-topbar {
+  display: flex; align-items: center; gap: var(--space-2);
+  height: var(--app-topbar-h); min-height: var(--app-topbar-h);
+  padding: 0 var(--space-4);
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--app-surface) 86%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--app-line) 72%, transparent);
+}
+.guest-topbar .app-brand { margin-right: auto; }
+.guest-topbar .app-brand strong { font-family: var(--font-latin); font-size: var(--fs-body-md); font-weight: var(--fw-semibold); }
+.guest-topbar__lang { display: inline-flex; padding: 3px; gap: 2px; background: var(--app-surface-3); border-radius: var(--radius-sm); }
+.guest-topbar__lang button {
+  min-height: 28px; padding: 0 var(--space-3);
+  border: 0; border-radius: calc(var(--radius-sm) - 3px);
+  background: transparent; color: var(--app-muted);
+  font-size: var(--fs-body-sm); font-weight: var(--fw-medium); cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
+}
+.guest-topbar__lang button:hover { color: var(--app-text); }
+.guest-topbar__lang button.active { background: var(--app-surface); color: var(--app-text); box-shadow: var(--app-shadow-sm); }
+.guest-topbar__lang button:lang(km) { font-family: var(--font-khmer); }
+
+/* 720px column, 48px between sections, 64px of air at the top and bottom.
+   Scoped through `main#publicRoot` on purpose: the guest bundle has a
+   `main#publicRoot.guest > * { max-width: 100% }` guard, and an id beats a class
+   in the cascade — so the column rule has to carry the same id to be the one
+   that wins. No priority override, just an honest selector. */
+body[data-page="public"] main#publicRoot.guest { padding-bottom: var(--space-16); }
+body[data-page="public"] main#publicRoot.guest > section:not(.guest-hero),
+body[data-page="public"] main#publicRoot.guest > form,
+body[data-page="public"] main#publicRoot.guest > .custom-blocks {
+  width: 100%; max-width: 720px; margin-left: auto; margin-right: auto;
+}
+body[data-page="public"] main#publicRoot.guest > section + section { margin-top: var(--space-12); }
+body[data-page="public"] main#publicRoot.guest > section > h2 { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); letter-spacing: 0; }
+
+/* Guest-facing cards: RSVP, album, sign-up sheets, polls, contact. */
+body[data-page="public"] main#publicRoot.guest > form,
+body[data-page="public"] main#publicRoot.guest > .photo-gallery,
+body[data-page="public"] main#publicRoot.guest > .contact-section,
+body[data-page="public"] main#publicRoot.guest .venue-card,
+body[data-page="public"] main#publicRoot.guest .custom-info-block {
+  background: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow-sm);
+}
+/* A single-column form stretched to 720px reads as broken; the card is 560px and
+   centred, which is the same card at a width a thumb can reach across. */
+body[data-page="public"] main#publicRoot.guest > form {
+  display: grid; gap: var(--space-3);
+  width: 100%; max-width: 560px; margin: var(--space-8) auto;
+  padding: var(--space-6);
+}
+body[data-page="public"] main#publicRoot.guest > form label { margin: 0; font-size: var(--fs-body-md); font-weight: var(--fw-medium); }
+body[data-page="public"] main#publicRoot.guest > form label > span:first-child { display: block; margin-bottom: var(--space-1); }
+body[data-page="public"] main#publicRoot.guest > form button:not(.plain) { width: 100%; min-height: 40px; }
+body[data-page="public"] main#publicRoot.guest > .photo-gallery,
+body[data-page="public"] main#publicRoot.guest > .contact-section { padding: var(--space-5); }
+
+/* Demo-mode badge: shown by the shell when the static fallback dataset is used. */
+.guest-demo-badge {
+  position: fixed; right: var(--space-3); bottom: var(--space-3); z-index: 60;
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--app-line); border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--app-surface) 92%, transparent);
+  color: var(--app-muted); font-size: var(--fs-caption); letter-spacing: var(--ls-caption);
+}
+/* Shown by CSS, driven by backend-mode.js (html[data-backend-mode="offline"]),
+   so no page needs a bespoke fetch just to decide whether to admit it is static. */
+.guest-demo-badge { display: none; }
+html[data-backend-mode="offline"] .guest-demo-badge { display: inline-flex; }
+.guest-demo-badge .status-dot { background: var(--app-warn); }
+
+/* --- 17. Check-in page (dispatch Group 4) -------------------------------- */
+body[data-page="checkin"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--app-topbar-h) minmax(0, 1fr);
+}
+body[data-page="checkin"] > .checkin-header {
+  display: flex; align-items: center; gap: var(--space-3);
+  height: var(--app-topbar-h); min-height: var(--app-topbar-h);
+  padding: 0 var(--space-4);
+  background: var(--app-surface); border-bottom: 1px solid var(--app-line);
+  position: sticky; top: 0; z-index: 40;
+}
+body[data-page="checkin"] > .checkin-header strong { font-size: var(--fs-title-xs); font-weight: var(--fw-title-xs); margin-right: auto; }
+body[data-page="checkin"] .network-pill,
+body[data-page="checkin"] .status-pill {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  padding: 2px var(--space-2); border-radius: var(--radius-sm);
+  background: var(--app-surface-2); border: 1px solid var(--app-line);
+  color: var(--app-muted); font-size: var(--fs-caption); letter-spacing: var(--ls-caption);
+}
+body[data-page="checkin"] .checkin-shell {
+  width: 100%; max-width: 480px; margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-16);
+}
+body[data-page="checkin"] .checkin-hero {
+  display: flex; align-items: flex-start; gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+body[data-page="checkin"] .checkin-hero h1 { margin: 0; font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); line-height: var(--lh-title-lg); }
+body[data-page="checkin"] .checkin-hero p { margin: var(--space-1) 0 0; color: var(--app-muted); font-size: var(--fs-body-md); }
+body[data-page="checkin"] .checkin-hero button { margin-left: auto; flex: 0 0 auto; }
+body[data-page="checkin"] .checkin-tools { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+body[data-page="checkin"] .checkin-search { display: grid; gap: var(--space-1); font-size: var(--fs-body-md); font-weight: var(--fw-medium); }
+body[data-page="checkin"] .checkin-search input { min-height: 40px; }
+body[data-page="checkin"] .checkin-stats { display: flex; gap: var(--space-2); flex-wrap: wrap; color: var(--app-muted); font-size: var(--fs-body-sm); }
+body[data-page="checkin"] .checkin-notice { min-height: 20px; margin: 0 0 var(--space-3); color: var(--app-muted); font-size: var(--fs-body-sm); }
+body[data-page="checkin"] .checkin-list > * {
+  display: flex; align-items: center; gap: var(--space-3);
+  min-height: 56px; padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--app-line);
+}
+body[data-page="checkin"] .checkin-list > *:hover { background: var(--app-surface-2); }
+body[data-page="checkin"] .scanner-shell { width: 320px; max-width: 100%; margin: 0 auto; display: grid; gap: var(--space-3); }
+body[data-page="checkin"] #scannerVideo {
+  width: 320px; height: 320px; max-width: 100%;
+  aspect-ratio: 1 / 1; object-fit: cover; display: block;
+  background: #101116;
+  border: 1px solid var(--app-line); border-radius: var(--radius-md);
+  box-shadow: var(--app-shadow-sm);
+}
+
+/* --- 18. Admin page (dispatch Group 6) ----------------------------------- */
+body[data-page="admin"] .admin-page { max-width: var(--app-content-max); }
+body[data-page="admin"] .admin-tabs {
+  display: flex; align-items: center; gap: var(--space-1);
+  flex-wrap: nowrap; overflow-x: auto;
+  margin: 0 0 var(--space-5);
+  border-bottom: 1px solid var(--app-line);
+  scrollbar-width: none;
+}
+body[data-page="admin"] .admin-tabs::-webkit-scrollbar { display: none; }
+body[data-page="admin"] .admin-tabs button {
+  min-height: 44px; padding: 0 var(--space-3);
+  border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  background: transparent; color: var(--app-muted);
+  font-size: var(--fs-body-md); font-weight: var(--fw-medium); white-space: nowrap; cursor: pointer;
+  transition: color var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out), background var(--motion-1) var(--ease-out);
+}
+body[data-page="admin"] .admin-tabs button:hover { color: var(--app-text); background: var(--app-surface-2); }
+body[data-page="admin"] .admin-tabs button.active,
+body[data-page="admin"] .admin-tabs button[aria-selected="true"] { color: var(--app-accent); border-bottom-color: var(--app-accent); }
+body[data-page="admin"] .admin-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4); margin: 0 0 var(--space-5);
+}
+body[data-page="admin"] .admin-metrics > * {
+  padding: var(--space-4); background: var(--app-surface);
+  border: 1px solid var(--app-line); border-radius: var(--radius-md); box-shadow: var(--app-shadow-sm);
+}
+body[data-page="admin"] .admin-search { width: 240px; margin: 0 0 var(--space-4); }
+body[data-page="admin"] .admin-panel { display: none; }
+body[data-page="admin"] .admin-panel.active { display: block; }
+body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
+
+/* Feature-flag switches: a real control, not a checkbox. */
+.flag-switch {
+  position: relative; display: inline-flex; align-items: center;
+  width: 36px; height: 20px; flex: 0 0 auto;
+  border: 1px solid var(--app-line-2); border-radius: 999px;
+  background: var(--app-surface-3); cursor: pointer;
+  transition: background var(--motion-1) var(--ease-out), border-color var(--motion-1) var(--ease-out);
+}
+.flag-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--app-surface); box-shadow: var(--app-shadow-sm);
+  transition: transform var(--motion-1) var(--ease-out);
+}
+.flag-switch[aria-checked="true"], .flag-switch.on { background: var(--app-accent); border-color: transparent; }
+.flag-switch[aria-checked="true"]::after, .flag-switch.on::after { transform: translateX(16px); }
+.flag-switch[disabled] { opacity: .55; cursor: not-allowed; }
+
+/* Management toolbars reuse the segmented control for filter tabs. */
+.dashboard-filter-tabs, .filters {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  margin: 0 0 var(--space-4);
+}
+.filters input, .filters select {
+  min-height: 36px; width: auto; min-width: 200px;
+  border: 1px solid var(--app-line-2); border-radius: var(--radius-sm);
+  background: var(--app-surface); color: var(--app-text); font-size: var(--fs-body-md);
+}
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin: 0 0 var(--space-8); }
+.stat-card { padding: var(--space-5); min-height: 0; }
+.stat-card strong { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
+.stat-card span { color: var(--app-muted); font-size: var(--fs-body-sm); }
+
+
+}

@@ -7,26 +7,26 @@ ROOT=Path(__file__).resolve().parents[1]
 def read(name:str)->str:return (ROOT/name).read_text(encoding='utf-8')
 
 def main()->int:
- required=['src/js/performance-loader-v22.js','src/js/performance-observability-v22.js','src/js/interaction-scheduler-v22.js','src/js/incremental-scene-renderer-v22.js','src/js/render-worker-bridge-v22.js','src/js/scene-render-worker-v22.js','src/js/gpu-loader-v22.js','src/js/gpu-texture-cache-v22.js','src/js/webgl-scene-backend-v22.js','src/js/gpu-projection-v22.js','src/js/adaptive-gpu-quality-v22.js']
+ required=['src/js/performance-loader.js','src/js/performance-observability.js','src/js/interaction-scheduler.js','src/js/incremental-scene-renderer.js','src/js/render-worker-bridge.js','src/js/scene-render-worker.js','src/js/gpu-loader.js','src/js/gpu-texture-cache.js','src/js/webgl-scene-backend.js','src/js/gpu-projection.js','src/js/adaptive-gpu-quality.js']
  for name in required:
   assert (ROOT/name).is_file(),name
- sources=json.loads(read('docs/route-bundle-sources-v15.json'))['pages']['index.html']['scripts']
- assert 'performance-loader-v22.js' in sources
- loader=read('src/js/performance-loader-v22.js')
+ sources=json.loads(read('docs/route-bundle-sources.json'))['pages']['index.html']['scripts']
+ assert 'performance-loader.js' in sources
+ loader=read('src/js/performance-loader.js')
  for name in required[1:5]:assert Path(name).name.removesuffix('-v22.js') in loader,name
  assert 'gpu-loader' not in loader
- bridge=read('src/js/render-worker-bridge-v22.js');assert 'gpu-loader-v22.js' in bridge and 'loadGPU' in bridge
- gpu_loader=read('src/js/gpu-loader-v22.js')
+ bridge=read('src/js/render-worker-bridge.js');assert 'gpu-loader.js' in bridge and 'loadGPU' in bridge
+ gpu_loader=read('src/js/gpu-loader.js')
  for name in required[7:]:assert Path(name).name.removesuffix('-v22.js') in gpu_loader,name
- app=read('src/js/app.js');pro=read('src/js/professional-editor-v17.js')
+ app=read('src/js/app.js');pro=read('src/js/professional-editor.js')
  assert ('options.incremental === true' in app or 'options.incremental===true' in app) and 'EInviteIncrementalRenderer.applyDocument' in app
  assert 'EInviteInteractionScheduler' in pro and 'editor-gesture:' in pro
  assert "'compositor'" in pro and 'peTransformPreview' in pro
  assert 'EInviteIncrementalRenderer?.queryRect' in pro
  assert "event.type==='pointercancel'" in pro
- manifest=json.loads(read('docs/page-assets-v15.json'))['pages']['index.html']
+ manifest=json.loads(read('docs/page-assets.json'))['pages']['index.html']
  assert manifest['bytes']<=1_420_000,manifest
- gpu=read('src/js/webgl-scene-backend-v22.js');textures=read('src/js/gpu-texture-cache-v22.js');adaptive=read('src/js/adaptive-gpu-quality-v22.js');projection=read('src/js/gpu-projection-v22.js')
+ gpu=read('src/js/webgl-scene-backend.js');textures=read('src/js/gpu-texture-cache.js');adaptive=read('src/js/adaptive-gpu-quality.js');projection=read('src/js/gpu-projection.js')
  assert "powerPreference:'high-performance'" in gpu and 'webglcontextlost' in gpu and 'setEnabled' in gpu
  assert 'maxBytes' in textures and 'Cross-origin GPU texture blocked' in textures and 'evict()' in textures
  assert 'renderPickBuffer' in projection and 'u_pick' in gpu and 'gpuMaskSrc' in gpu

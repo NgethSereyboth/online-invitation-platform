@@ -8,7 +8,7 @@ from pathlib import Path
 from browser_runtime import launch_chromium
 
 ROOT = Path(__file__).resolve().parents[1]
-LOADER = (ROOT / "src" / "js" / "advanced-public-loader-v32.js").read_text(encoding="utf-8")
+LOADER = (ROOT / "src" / "js" / "advanced-public-loader.js").read_text(encoding="utf-8")
 MOMENT = (ROOT / "vendor/momentkh.js").read_text(encoding="utf-8")
 
 

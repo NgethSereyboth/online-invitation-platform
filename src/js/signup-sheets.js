@@ -1,7 +1,7 @@
 /**
  * Phase 2a (V54.1) — Sign-up sheets guest UI.
  *
- * Loaded on the public invitation page (bundle-public-v15.js). Renders a
+ * Loaded on the public invitation page (bundle-public.js). Renders a
  * <section> per sheet showing slots, claim counts, and a claim form. Vanilla
  * JS — no chart library, no framework. Bilingual EN + KH strings per
  * ROADMAP ground rule 5.

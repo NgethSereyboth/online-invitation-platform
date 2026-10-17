@@ -15,7 +15,7 @@
  *      field). Local drag throttles to 60Hz render + 10Hz CRDT replication
  *      so a continuous resize doesn't flood the channel.
  *   3. The "isDragging" flag is presence-channel data, NOT Y.js data —
- *      goes through collaboration-presence-v52.js so other users see the
+ *      goes through collaboration-presence.js so other users see the
  *      drag-in-progress avatar immediately, without waiting for content sync.
  *
  * Public API (window.EInviteCRDTV52RichMedia):

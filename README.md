@@ -13,8 +13,8 @@ A self-hosted, professional invitation design & event management platform. Bilin
 einvite-platform/
 ├── src/                      # Source code
 │   ├── css/                  # Stylesheets (design tokens + per-page sheets;
-│   │                         #   bundle-*-v15.css and editor-suite.css are GENERATED)
-│   ├── js/                   # JavaScript modules (bundle-*-v15.js and
+│   │                         #   bundle-*.css and editor-suite.css are GENERATED)
+│   ├── js/                   # JavaScript modules (bundle-*.js and
 │   │                         #   editor-suite.js are GENERATED)
 │   ├── html/                 # HTML pages (16 + manifest.webmanifest)
 │   └── python/               # Python backend (26 source files + synced bundles)
@@ -141,7 +141,7 @@ git clone <YOUR_REPO_URL> einvite-platform && cd einvite-platform \
 
 ```bash
 # Generate production secrets into .env.production
-python3 src/python/prepare_production_env.py
+python3 src/python/build/prepare_production_env.py
 
 # Start with the production overlay
 docker compose --env-file .env.production \
@@ -240,7 +240,7 @@ directory map and a "where does new code go" decision tree.
 
 ## 🖼️ Screenshots
 
-> Placeholder — the maintainer should add captures to `docs/screenshots/`. Reference sandbox captures from prior QA rounds exist at `/home/z/my-project/download/editor-landing.png` and `editor-proxy-interactive.png` but are dev-time captures, not production-quality screenshots.
+> Screenshots coming soon — the maintainer should add production-quality captures to `docs/screenshots/`. No screenshot images are committed yet.
 
 | Path | What to show |
 |---|---|

@@ -1,0 +1,730 @@
+{
+  "pages": {
+    "account.html": {
+      "javascript": "bundle-account.js",
+      "scriptBytes": 100259,
+      "scriptSha256": "e0c5409e3cf9984ea818b74bd3e6a250ede4df9916116aef88b6e4f50357b2c9",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "core/safe-dom.js",
+          "ui-dialogs.js",
+          "account.js",
+          "account-security.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "account-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "account-security.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 258175,
+      "styleSha256": "b26253b520751437bb737158e410d9ab78f213463b83cd30f34956c44209ddfa",
+      "stylesheet": "bundle-account.css"
+    },
+    "admin.html": {
+      "deferredJavascript": "bundle-admin-deferred.js",
+      "deferredJavascriptBytes": 4772,
+      "deferredJavascriptSha256": "842272050eb0ac746edfee8205377b789b45a52fe1bf95e9c921648442576d1f",
+      "deferredStylesheet": "bundle-admin-deferred.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "javascript": "bundle-admin.js",
+      "scriptBytes": 151245,
+      "scriptSha256": "dc6005f64d2a63e9f7d00999c9ec564b93b4e37d9ae1990edcba71a5040c73b0",
+      "sources": {
+        "deferredScripts": [
+          "pages/admin/impersonate.js"
+        ],
+        "scripts": [
+          "route-deferred-loader.js",
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "toast.js",
+          "pages/admin/admin.js",
+          "pages/admin/users.js",
+          "pages/admin/invitations.js",
+          "pages/admin/feature-flags.js",
+          "pages/admin/audit-log.js",
+          "pages/admin/system-health.js",
+          "pages/admin/bulk-operations.js",
+          "pages/admin/reports.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "monitoring.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "admin-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "monitoring.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 258455,
+      "styleSha256": "147fce9f829d4114e5efcaaad02d86e1b1034160d91d7855b87c0134871a0312",
+      "stylesheet": "bundle-admin.css"
+    },
+    "analytics.html": {
+      "javascript": "bundle-analytics.js",
+      "scriptBytes": 88186,
+      "scriptSha256": "26ebb51532a5286018e523aa942aeb32a095963f2bd736732f9bc0e5411e5f21",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "invitation-context.js",
+          "analytics.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "accessibility-polish.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "analytics-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "accessibility.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 258768,
+      "styleSha256": "3c7a6e6353a72aea75012697acbcfdd4de642e79a4a8b19ab1937252ce8d45e6",
+      "stylesheet": "bundle-analytics.css"
+    },
+    "billing.html": {
+      "javascript": "bundle-billing.js",
+      "scriptBytes": 84188,
+      "scriptSha256": "c6b5c8421a0fc824238538590a472213cd8fda5118ab1cb94631b45459931681",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "billing.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "billing-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 260328,
+      "styleSha256": "ef9cac4a03dad1b30d3edb7ca816b1f52715d168d2ce81e2784933ff95d53e50",
+      "stylesheet": "bundle-billing.css"
+    },
+    "checkin.html": {
+      "javascript": "bundle-checkin.js",
+      "scriptBytes": 38709,
+      "scriptSha256": "2b7613bf709719a34fda510d62bf5bfa21c0cc0d339d7c5d278eaeafc0a7180f",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "invitation-context.js",
+          "checkin.js",
+          "accessibility-polish.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "accessibility.css",
+          "checkin.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 129836,
+      "styleSha256": "c732545773dc6a2448ddb7e1792a5f43820d53899da7f174456dc048af28881f",
+      "stylesheet": "bundle-checkin.css"
+    },
+    "dashboard.html": {
+      "deferredJavascript": "bundle-dashboard-deferred.js",
+      "deferredJavascriptBytes": 24748,
+      "deferredJavascriptSha256": "843c36bf0072c2e4639f0b2007d2df08dddb47e69bdc2f0d22dddc1972dda75d",
+      "deferredStylesheet": "bundle-dashboard-deferred.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "javascript": "bundle-dashboard.js",
+      "scriptBytes": 330699,
+      "scriptSha256": "bda16c9cffd262f95a4667b1151a33d24c079861ca5e125a8475cb6857d79696",
+      "sources": {
+        "deferredScripts": [
+          "delivery-dialog.js",
+          "invitation-edit-history.js"
+        ],
+        "deferredStyles": [],
+        "scripts": [
+          "yjs-bridge.js",
+          "route-deferred-loader.js",
+          "core/i18n.js",
+          "typography-contract.js",
+          "typography-document-model.js",
+          "typography-layout-service.js",
+          "renderer-core.js",
+          "ui-dialogs.js",
+          "invitation-context.js",
+          "dashboard.js",
+          "dashboard-enhancements.js",
+          "dashboard-polish.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "final-polish.js",
+          "dashboard-empty-state.js",
+          "accessibility-polish.js",
+          "host-signup-sheets.js",
+          "host-polls.js",
+          "toast.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "typography-fonts.css",
+          "typography-system.css",
+          "styles.css",
+          "dashboard-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "final-polish.css",
+          "dashboard-empty-state.css",
+          "accessibility.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "guest-features.css",
+          "app-shell.css",
+          "toast.css"
+        ]
+      },
+      "styleBytes": 310959,
+      "styleSha256": "e71296c202183416511e52ae57b41761aae561a725c34f485e9971898b8b6003",
+      "stylesheet": "bundle-dashboard.css"
+    },
+    "designer.html": {
+      "javascript": "bundle-designer.js",
+      "scriptBytes": 80272,
+      "scriptSha256": "d36c309a019e20f4e1245dabfedf302832073e2a1d11da1437204fd08f39b866",
+      "sources": {
+        "scripts": [
+          "yjs-bridge.js",
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "designer.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "studio-experience.css",
+          "designer-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 285679,
+      "styleSha256": "96a2a912c2048b6e57583a8b0ce69eb2a78298d7ab3a1f319bb35f27a1a6d437",
+      "stylesheet": "bundle-designer.css"
+    },
+    "guests.html": {
+      "javascript": "bundle-guests.js",
+      "scriptBytes": 121945,
+      "scriptSha256": "72618d271fea63f389313e3ccc1cd34858f90db1bae69807c65db6aca0b4bf4b",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "invitation-context.js",
+          "guests.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "accessibility-polish.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "guests-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "accessibility.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 258660,
+      "styleSha256": "61778278970268d765c0acbeab6e4d1b116f4185d9ac41a07f3ae9cbaba47765",
+      "stylesheet": "bundle-guests.css"
+    },
+    "index.html": {
+      "deferredJavascript": "bundle-index-deferred.js",
+      "deferredJavascriptBytes": 146514,
+      "deferredJavascriptSha256": "f217a726adbe6998a46dc0c0f9cd0823ff8c5c8c22bc605dfeb4df7fb8dcb0e3",
+      "deferredStylesheet": "bundle-index-deferred.css",
+      "deferredStylesheetBytes": 50436,
+      "deferredStylesheetSha256": "c0de3d4e46658992c14d4eac99b833f1f18f4695c4db5c17a1934d34e04c5960",
+      "javascript": "bundle-index.js",
+      "scriptBytes": 1040568,
+      "scriptSha256": "c75059394013543fd50b17bde4e3f1d64d4451959e2c8ea5ccca253777546a39",
+      "sources": {
+        "deferredScripts": [
+          "workflow-refine.js",
+          "workflow-continuity.js",
+          "workflow-ux.js",
+          "workflow-pro-editor.js",
+          "workflow-final-audit.js",
+          "editor-canva.js",
+          "photo-editor-v13.js",
+          "photo-retouch.js",
+          "timeline.js",
+          "product-operations.js"
+        ],
+        "deferredStyles": [
+          "workflow-refine.css",
+          "workflow-continuity.css",
+          "workflow-ux.css",
+          "workflow-pro-editor.css",
+          "workflow-final-audit.css",
+          "editor-canva.css",
+          "photo-editor-v13.css",
+          "photo-retouch.css",
+          "timeline.css",
+          "product-operations.css"
+        ],
+        "scripts": [
+          "runtime-lifecycle.js",
+          "route-deferred-loader.js",
+          "core/i18n.js",
+          "performance-loader.js",
+          "editor-command-system.js",
+          "typography-contract.js",
+          "custom-font-core.js",
+          "typography-document-model.js",
+          "typography-layout-service.js",
+          "renderer-core.js",
+          "timeline-runtime.js",
+          "scene-model.js",
+          "editor-schema.js",
+          "experience-schema.js",
+          "document-schema.js",
+          "vendor/momentkh.js",
+          "storage.js",
+          "ui-dialogs.js",
+          "upload-client.js",
+          "invitation-context.js",
+          "app.js",
+          "studio-experience.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "editor-suite.js",
+          "ai-editor-action-service.js",
+          "editor-deferred-tools-bootstrap.js",
+          "collaboration.js",
+          "collaboration-live.js",
+          "ux-refine.js",
+          "final-polish.js",
+          "editor-layout-stability.js",
+          "workflow-creation-flow-v4.js",
+          "opening-scenes.js",
+          "guest-layouts.js",
+          "social-card.js",
+          "storyboard.js",
+          "style-kits.js",
+          "accessibility-polish.js",
+          "editor-commands.js",
+          "typography-editor.js",
+          "editor-shared-styles.js",
+          "mobile-editor.js",
+          "professional-editor.js",
+          "editor/editor-core.js",
+          "editor/ui-layout.js",
+          "editor/ui-components.js",
+          "ui/app-shell.js",
+          "editor-responsive-contract.js"
+        ],
+        "styles": [
+          "typography-fonts.css",
+          "typography-system.css",
+          "styles.css",
+          "studio-experience.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "editor-suite.css",
+          "ai-assistant-loader.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "final-polish.css",
+          "editor-layout-stability.css",
+          "workflow-creation-flow.css",
+          "style-kits.css",
+          "editor-shared-styles.css",
+          "opening-scenes.css",
+          "storyboard.css",
+          "social-card.css",
+          "accessibility.css",
+          "stabilized.css",
+          "editor-ux-refinement.css",
+          "professional-editor.css",
+          "zoom-layout.css",
+          "graphics-runtime.css",
+          "editor/editor-styles.css",
+          "app-shell.css",
+          "editor-responsive-contract.css"
+        ]
+      },
+      "styleBytes": 438371,
+      "styleSha256": "fca89915e6063924c98bc7c93cde171894524034337114e2a0947e2b57eae3cc",
+      "stylesheet": "bundle-index.css"
+    },
+    "materials.html": {
+      "deferredJavascript": "bundle-materials-deferred.js",
+      "deferredJavascriptBytes": 7388,
+      "deferredJavascriptSha256": "10229967392f7c69949d5d6dc4d2680bba6bde7d45b787051814de7041514797",
+      "deferredStylesheet": "bundle-materials-deferred.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "javascript": "bundle-materials.js",
+      "scriptBytes": 133573,
+      "scriptSha256": "d0146ac179ba622c9e59447468c43ab930a4bb7e209dddbaf0863f350dc15034",
+      "sources": {
+        "deferredScripts": [
+          "ux-refine.js"
+        ],
+        "deferredStyles": [],
+        "scripts": [
+          "core/i18n.js",
+          "route-deferred-loader.js",
+          "ui-dialogs.js",
+          "upload-client.js",
+          "upload-folder-client.js",
+          "invitation-context.js",
+          "materials.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "final-polish.js",
+          "accessibility-polish.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "materials-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "final-polish.css",
+          "accessibility.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 278157,
+      "styleSha256": "155ef3bfb1407ecbdf5bea72e4eb05c030e2cd25138371db90786bf8946e549b",
+      "stylesheet": "bundle-materials.css"
+    },
+    "privacy.html": {
+      "javascript": "bundle-privacy.js",
+      "scriptBytes": 18964,
+      "scriptSha256": "a0b913277d73576ced62b7bd412562d89fc30a95671faad63b9596cd1b6fd068",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "privacy.css",
+          "zoom-layout-pages.css",
+          "tokens.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 152070,
+      "styleSha256": "d05febc770b0f8d3acbb1603cc26959e35e44d8e618433d25d7216e0189176bd",
+      "stylesheet": "bundle-privacy.css"
+    },
+    "public.html": {
+      "deferredJavascript": "bundle-public-deferred.js",
+      "deferredJavascriptBytes": 16965,
+      "deferredJavascriptSha256": "fe7b97191d2bd6fd5d53e24a0c4e9f6468065079f0d267123b92616ee2bc35ae",
+      "deferredStylesheet": "bundle-public-deferred.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "javascript": "bundle-public.js",
+      "scriptBytes": 248724,
+      "scriptSha256": "49ea93d2b786de83ba098f68d183966ca50442d54e3990d26daad384502157b7",
+      "sources": {
+        "deferredScripts": [
+          "invitation-edit-history.js"
+        ],
+        "deferredStyles": [],
+        "scripts": [
+          "runtime-lifecycle.js",
+          "route-deferred-loader.js",
+          "core/i18n.js",
+          "typography-contract.js",
+          "custom-font-core.js",
+          "typography-document-model.js",
+          "typography-layout-service.js",
+          "rich-text-renderer.js",
+          "renderer-core.js",
+          "experience-schema.js",
+          "document-schema.js",
+          "advanced-public-loader.js",
+          "opening-scenes.js",
+          "guest-layouts.js",
+          "public-share-panel.js",
+          "guest-journey.js",
+          "signup-sheets.js",
+          "polls.js",
+          "album.js",
+          "public-page.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "typography-fonts.css",
+          "rich-text-renderer.css",
+          "styles.css",
+          "opening-scenes.css",
+          "guest-layouts.css",
+          "guest-journey.css",
+          "guest-features.css",
+          "tokens.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 130018,
+      "styleSha256": "28c72259d130dfa4f13394b6d1971822f748540a0b3e0bc29438fbcd5f868caa",
+      "stylesheet": "bundle-public.css"
+    },
+    "reset.html": {
+      "javascript": "bundle-reset.js",
+      "scriptBytes": 78903,
+      "scriptSha256": "ddc5a63b0cf074c2d8d4b8068335ef797af49c817521d257b17f71e2af2cc27c",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "reset.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "reset-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 256130,
+      "styleSha256": "c9df8537b3e7e2a493ab77cd246acf34af24566678b02f2a1e0919e2d94b7e9e",
+      "stylesheet": "bundle-reset.css"
+    },
+    "responses.html": {
+      "javascript": "bundle-responses.js",
+      "scriptBytes": 91537,
+      "scriptSha256": "0466fcd2144c18e216f0f5e631085c76b7f3fdb7d9d24d3b08bdb79962c4652f",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "invitation-context.js",
+          "responses.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "accessibility-polish.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "responses-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "accessibility.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 258833,
+      "styleSha256": "69f52eb4bfeced95d60a59e57ae383972f6747acf292b1ebf597ecef6deec91d",
+      "stylesheet": "bundle-responses.css"
+    },
+    "templates.html": {
+      "javascript": "bundle-templates.js",
+      "scriptBytes": 98401,
+      "scriptSha256": "e8626141a2535b64d9119c7a7f382b14a18a9e1e7bb60234e532b353818c3d1a",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "builtin-templates.js",
+          "templates.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "accessibility-polish.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "studio-experience.css",
+          "templates-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "accessibility.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 289346,
+      "styleSha256": "77b779c3dda4df50ac41ed00730531fc66c4a39df1e18143426e65e8536017a8",
+      "stylesheet": "bundle-templates.css"
+    },
+    "verify.html": {
+      "javascript": "bundle-verify.js",
+      "scriptBytes": 77463,
+      "scriptSha256": "35c3ffb2d9fdc14f8e3f877c0d2e884397b356f3c5c9538b784166bc336c9d99",
+      "sources": {
+        "scripts": [
+          "core/i18n.js",
+          "ui-dialogs.js",
+          "verify.js",
+          "modern-ui.js",
+          "final-experience.js",
+          "ux-refine.js",
+          "ui/app-shell.js"
+        ],
+        "styles": [
+          "styles.css",
+          "verify-page.css",
+          "modern-ui.css",
+          "compact-theme.css",
+          "final-experience.css",
+          "canvas-plus.css",
+          "ui-dialogs.css",
+          "tokens.css",
+          "theme-hardening.css",
+          "ux-refine.css",
+          "stabilized.css",
+          "zoom-layout-pages.css",
+          "app-shell.css"
+        ]
+      },
+      "styleBytes": 256027,
+      "styleSha256": "fa3e79a45e1a266c8da33b3fa7d24a00f79db917e23d51c4fcf29f5678e04a6d",
+      "stylesheet": "bundle-verify.css"
+    }
+  },
+  "version": 15
+}

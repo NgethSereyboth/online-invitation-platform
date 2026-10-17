@@ -18,7 +18,7 @@ def main():
    assert actual['scriptCount']<=budget['scripts'],(route,page,'scripts',actual['scriptCount'],budget['scripts'])
    assert actual['styleCount']<=budget['styles'],(route,page,'styles',actual['styleCount'],budget['styles'])
    assert actual['bytes']<=budget['bytes'],(route,page,'bytes',actual['bytes'],budget['bytes'])
- expected=json.loads((ROOT / "docs" / "page-assets-v15.json").read_text(encoding='utf-8'))
+ expected=json.loads((ROOT / "docs" / "page-assets.json").read_text(encoding='utf-8'))
  assert expected==data
  print('V16_PERFORMANCE_BUDGET_TEST_PASSED');return 0
 if __name__=='__main__':raise SystemExit(main())

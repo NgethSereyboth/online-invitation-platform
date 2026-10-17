@@ -380,7 +380,7 @@ Write `scripts/migrate_structure.py` that:
 After the moves:
 
 - Grep every `.js` file for the old paths and rewrite.
-- Update `docs/route-bundle-sources-v15.json` (the bundle manifest) — every old path must be replaced.
+- Update `docs/route-bundle-sources.json` (the bundle manifest) — every old path must be replaced.
 - Update `src/html/*.html` `<script src>` and `<link href>` tags.
 - Update `tests/*.py` that reference source files by path.
 
@@ -692,7 +692,7 @@ Do not copy their visuals — match their *interaction quality*.
 
 **What:** Press Ctrl+K (or Cmd+K on macOS) → a searchable list of every action in the editor. Type to filter, Enter to run.
 
-**Technologies:** The existing `command-palette-v23.js` (renamed during Part 2 to `src/js/editor/chrome/command-palette.js`). Extend the command registry.
+**Technologies:** The existing `command-palette.js` (renamed during Part 2 to `src/js/editor/chrome/command-palette.js`). Extend the command registry.
 
 **Files:**
 
@@ -740,7 +740,7 @@ Do not copy their visuals — match their *interaction quality*.
 
 **What:** See other users' cursors with their name label and a colored dot. Cursors move in real time.
 
-**Files:** `src/js/editor/collab/presence.js` — extend existing `collaboration-presence-v52.js`
+**Files:** `src/js/editor/collab/presence.js` — extend existing `collaboration-presence.js`
 
 **Implementation notes:**
 

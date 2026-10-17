@@ -95,7 +95,7 @@ either server. Only the byte numbers depend on compression.
 
 | file | what it does |
 | --- | --- |
-| `mirror-diff.py` | verify `src/python/` (the server's ROOT) against its sources **by sha256, not mtime**: `drifted`, `unmigrated`, `orphans`. Imports `SYNC_PLAN` from the syncer so the two cannot disagree about what is mirrored. Generator-owned artifacts (`bundle-*-v15.*`, `editor-suite.*`, the manifests) are excluded and counted separately; serve-root files with no upstream source are exempt **by name and with a reason**, printed, never deleted. Exit 1 on any real drift. |
+| `mirror-diff.py` | verify `src/python/` (the server's ROOT) against its sources **by sha256, not mtime**: `drifted`, `unmigrated`, `orphans`. Imports `SYNC_PLAN` from the syncer so the two cannot disagree about what is mirrored. Generator-owned artifacts (`bundle-*.*`, `editor-suite.*`, the manifests) are excluded and counted separately; serve-root files with no upstream source are exempt **by name and with a reason**, printed, never deleted. Exit 1 on any real drift. |
 
 ### Cross-site / attribution
 

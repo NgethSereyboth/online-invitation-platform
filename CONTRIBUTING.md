@@ -27,8 +27,8 @@ fill in what you need. Never commit a filled `.env`.
 ```bash
 python3 build.py all              # regenerate everything (dependency order)
 python3 build.py editor           # editor-suite.{js,css}
-python3 build.py bundles          # bundle-*-v15.{js,css} for the 16 routes
-python3 build.py manifests        # page-assets-v15.json (server + docs)
+python3 build.py bundles          # bundle-*.{js,css} for the 16 routes
+python3 build.py manifests        # page-assets.json (server + docs)
 python3 build.py all --check      # verify, write nothing; non-zero if stale
 ```
 
@@ -63,7 +63,7 @@ Some tests need a browser. They check `EINVITE_REQUIRE_BROWSER` and print
 ## 4. Hard rules
 
 1. **Never edit a generated file by hand.** That means:
-   - `src/css/bundle-*-v15.css`, `src/js/bundle-*-v15.js`
+   - `src/css/bundle-*.css`, `src/js/bundle-*.js`
    - `src/css/editor-suite.{js,css}`, `src/js/editor-suite.js`
    - everything under `src/python/` that mirrors a `src/js/` or `src/css/`
      source (the server's `ROOT` is `src/python/`, so the mirrors are what is
@@ -80,7 +80,17 @@ Some tests need a browser. They check `EINVITE_REQUIRE_BROWSER` and print
    `BUDGETS` (`src/python/build/build_page_manifests.py`), fix the page or raise
    the budget *deliberately* and say so in the commit. Never raise a budget just
    to make a gate green.
-6. **No branching ceremony in this repo:** work happens on `main`.
+6. **No version suffixes in source file names.** A module or stylesheet under
+   `src/js/` or `src/css/` must not be named `something-v22.js` or
+   `something-v0_52.css`. A version in a *file name* records when the file was
+   written, which nobody can act on later; the same number in *data* (a schema
+   version, a migration number, a plugin manifest field, a protocol route
+   segment) is a contract and belongs where it is. `tests/version_free_source_names_test.py`
+   enforces this, and `tests/versioned_name_allowlist.json` carries the short
+   list of legacy names still awaiting a human-chosen replacement. Generated
+   bundles (`bundle-*.{js,css}`) are named by the generators and are not
+   hand-named.
+7. **No branching ceremony in this repo:** work happens on `main`.
 
 ## 5. Directory structure
 
@@ -95,8 +105,8 @@ src/
     components/              shared UI primitives
   css/
     tokens.css               design tokens — the single source of truth
-    app-shell-v55.css        shell, topbar, rail, card primitives
-    bundle-*-v15.css         GENERATED per-route bundles
+    app-shell.css        shell, topbar, rail, card primitives
+    bundle-*.css         GENERATED per-route bundles
     editor/  pages/  components/  organized/
   html/                      page sources
   python/
@@ -115,10 +125,10 @@ Is it a design value (colour, size, radius, motion, shadow)?
 
 Is it styling for one page?
   -> src/css/pages/<page>.css, and add it to that page's `styles` list in
-     docs/route-bundle-sources-v15.json, then `python3 build.py bundles`.
+     docs/route-bundle-sources.json, then `python3 build.py bundles`.
 
 Is it styling shared by several pages?
-  -> the nearest existing shared sheet (src/css/app-shell-v55.css for shell and
+  -> the nearest existing shared sheet (src/css/app-shell.css for shell and
      card primitives, src/css/components/ for smaller primitives), then add it
      to each affected route's `styles` list.
 
@@ -133,7 +143,7 @@ Is it a build/verification concern?
      policy script under scripts/, or a test under tests/.
 
 Does it change a route's asset set or byte weight?
-  -> update docs/route-bundle-sources-v15.json, run `python3 build.py all`, and
+  -> update docs/route-bundle-sources.json, run `python3 build.py all`, and
      check the page against BUDGETS before you commit.
 ```
 

@@ -13,7 +13,7 @@ def main()->int:
   page.on('pageerror',lambda error:errors.append(str(error)))
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click();page.wait_for_timeout(80)
-  for name in ('asset-workflow-v23.css','photo-workflow-v23.css','photo-style-library-v23.css','review-v23.css'):page.add_style_tag(path=str(ROOT/name))
+  for name in ('asset-workflow.css','photo-workflow.css','photo-style-library.css','review.css'):page.add_style_tag(path=str(ROOT/name))
   page.evaluate("""()=>{
    window.EInviteBackend={ready:Promise.resolve(),isAvailable:()=>true};window.serverInvite={id:'review-browser'};
    const comments=[],approvals=[];let seq=0,revision=100,fingerprint='fingerprint-100';
@@ -39,7 +39,7 @@ def main()->int:
     return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
    };
   }""")
-  for name in ('asset-workflow-v23.js','photo-workflow-v23.js','photo-style-library-v23.js','review-v23.js'):page.add_script_tag(path=str(ROOT/name))
+  for name in ('asset-workflow.js','photo-workflow.js','photo-style-library.js','review.js'):page.add_script_tag(path=str(ROOT/name))
   page.wait_for_timeout(450)
   assert page.evaluate("()=>EInviteReviewWorkflow?.version==='23.8.3'")
   assert page.evaluate("()=>EInviteCommandRegistry.conflicts.length")==0

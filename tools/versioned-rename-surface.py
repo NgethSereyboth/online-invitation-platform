@@ -13,7 +13,7 @@ That rule was applied by hand twice, and hand application is how a pass ends up
 renaming a file a hash manifest records. This tool recomputes the surface each time:
 
   * every versioned CSS/JS file that is not a generated bundle;
-  * which of them the live source list (`docs/route-bundle-sources-v15.json`) names,
+  * which of them the live source list (`docs/route-bundle-sources.json`) names,
     i.e. which ones actually ship;
   * which are referenced by `tests/` (the exclude class), and by everything else;
   * for each survivor, whether its name is *shadowed*: a same-basename file exists
@@ -41,7 +41,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 VERSIONED = re.compile(r"-v[0-9][0-9_]*[a-z]*\.(css|js)$")
-SOURCE_LIST = REPO_ROOT / "docs" / "route-bundle-sources-v15.json"
+SOURCE_LIST = REPO_ROOT / "docs" / "route-bundle-sources.json"
 
 
 def tracked(patterns: list[str]) -> list[str]:
@@ -54,13 +54,13 @@ def tracked(patterns: list[str]) -> list[str]:
 def bundle_inputs() -> tuple[set[str], set[str]]:
     """(route-bundle source names, editor-bundle source names) — both bundle systems.
 
-    Route bundles read docs/route-bundle-sources-v15.json. The editor bundle has no
+    Route bundles read docs/route-bundle-sources.json. The editor bundle has no
     JSON manifest; its source list is the quoted filename list inside
     src/python/build/build_editor_bundle.py, so that file is scanned for quoted
     `*.js` / `*.css` names. A name appearing in either set is shipped by a bundle,
     which is what makes a blocked rename "both sides live" rather than a queue item.
     """
-    route_path = REPO_ROOT / "docs" / "route-bundle-sources-v15.json"
+    route_path = REPO_ROOT / "docs" / "route-bundle-sources.json"
     route: set[str] = set()
     if route_path.is_file():
         spec = json.loads(route_path.read_text(encoding="utf-8"))
@@ -156,7 +156,7 @@ def main(argv=None) -> int:
     # A blocked rename has two very different meanings, and reporting them as one
     # class is how the previous pass left `organized/` as a question rather than a
     # decision. `bundle_inputs()` reads BOTH bundle systems — the 16 route bundles
-    # (docs/route-bundle-sources-v15.json) and the editor bundle
+    # (docs/route-bundle-sources.json) and the editor bundle
     # (src/python/build/build_editor_bundle.py, scanned for its quoted source list)
     # — so each side of a collision can be called live or dead by measurement.
     route_inputs, editor_inputs = bundle_inputs()

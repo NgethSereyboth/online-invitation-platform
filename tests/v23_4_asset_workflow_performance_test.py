@@ -12,7 +12,7 @@ def main()->int:
   browser=launch_chromium(p);page=browser.new_page(viewport={'width':1440,'height':1000})
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
   page.evaluate("""p=>{window.__assetReads=0;window.__largeAssets=Array.from({length:1500},(_,i)=>({id:`asset-${i}`,name:`Asset ${i}`,type:'image/png',serverUrl:p,folder:i%2?'Wedding':'Decor',favorite:i%17===0,width:300,height:200}));window.listAllAssets=async()=>{window.__assetReads++;return window.__largeAssets};window.usableAssetUrl=async a=>a.serverUrl}""",PNG)
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "asset-workflow-v23.js"));page.wait_for_timeout(220)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "asset-workflow.js"));page.wait_for_timeout(220)
   result=page.evaluate("""async()=>{const a=performance.now();await EInviteAssetWorkflow.open({mode:'insert'});const b=performance.now();return{openMs:b-a,cards:document.querySelectorAll('.v23-asset-card').length,reads:window.__assetReads}}""")
   assert result['cards']==120,result
   assert result['openMs']<700,result

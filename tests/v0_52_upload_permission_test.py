@@ -154,8 +154,8 @@ def run() -> int:
 
     admin_source = (ROOT / "src" / "js" / "admin.js").read_text(encoding="utf-8")
     account_source = (ROOT / "src" / "js" / "account.js").read_text(encoding="utf-8")
-    admin_bundle = (ROOT / "src" / "js" / "bundle-admin-v15.js").read_text(encoding="utf-8")
-    account_bundle = (ROOT / "src" / "js" / "bundle-account-v15.js").read_text(encoding="utf-8")
+    admin_bundle = (ROOT / "src" / "js" / "bundle-admin.js").read_text(encoding="utf-8")
+    account_bundle = (ROOT / "src" / "js" / "bundle-account.js").read_text(encoding="utf-8")
     schema = (ROOT / "docs" / "postgres_schema.sql").read_text(encoding="utf-8")
     assert all(marker in admin_source for marker in ("data-upload-enabled", "data-save-uploads", "/uploads", "Allow uploads"))
     assert "Disabled by administrator" in account_source

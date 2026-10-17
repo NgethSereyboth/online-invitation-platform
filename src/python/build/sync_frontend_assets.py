@@ -9,7 +9,7 @@ so they must be copied into ``src/python/`` before the server can serve them.
 
 This helper is idempotent: it only copies when the destination is missing or
 stale (``dest_mtime < src_mtime``), so re-running it after a build is cheap and
-safe. Generated bundle artifacts (``bundle-*-v15.js/.css``, ``editor-suite.*``)
+safe. Generated bundle artifacts (``bundle-*.js/.css``, ``editor-suite.*``)
 are NOT copied here — they are produced by ``build_route_bundles.py`` and
 ``build_editor_bundle.py`` directly into ``src/python/``.
 
@@ -22,7 +22,7 @@ Two defects this script used to have, and what replaced them
    a content comparison (byte equality), so "stale" and "differs" are the same
    question.
 2. **Generated artifacts could be overwritten.** `src/css/organized/` still holds
-   five stale `bundle-*-v15.css` files (e.g. 71,045 bytes against the generated
+   five stale `bundle-*.css` files (e.g. 71,045 bytes against the generated
    128,721), and because the organised glob is synced *after* the top-level one,
    that glob could claim `src/python/bundle-*.css` and overwrite a generated,
    hash-verified bundle with an old copy. Anything matching `GENERATED` is
@@ -61,8 +61,8 @@ LICENSES_DIR = REPO_ROOT / "licenses"
 # truth, and verify them by sha256 in their own --check. Mirroring them from
 # src/css/ or src/css/organized/ can only ever overwrite them.
 GENERATED = re.compile(
-    r"^(?:bundle-[a-z0-9_-]+-v15\.(?:js|css)|editor-suite\.(?:js|css)|"
-    r"route-bundles-v15\.json|page-assets-v15\.json)$"
+    r"^(?:bundle-[a-z0-9_-]+\.(?:js|css)|editor-suite\.(?:js|css)|"
+    r"route-bundles\.json|page-assets\.json)$"
 )
 
 # Each entry: (source_dir, dest_dir, glob_pattern, recursive).
@@ -73,8 +73,8 @@ GENERATED = re.compile(
 #
 # JS/CSS source files are flattened (src/js/foo.js -> src/python/foo.js) so
 # that individually-referenced scripts (the manifest's `earlyScripts` such as
-# `core/theme.js` and `backend-mode-v14.js`, plus dynamically-loaded modules
-# like `rich-text-contract.js`, `command-palette-v23.js`, etc.) resolve at the
+# `core/theme.js` and `backend-mode.js`, plus dynamically-loaded modules
+# like `rich-text-contract.js`, `command-palette.js`, etc.) resolve at the
 # server root. The CSS organised subfolder mirrors its files flat too; where a
 # name collides between src/css/ and src/css/organized/, the organised copy
 # wins (it is the canonical reorganised set) — so organised is synced AFTER
@@ -174,6 +174,44 @@ def sync_all() -> dict:
     return summary
 
 
+def mirror_drift() -> tuple[list[str], list[tuple[str, int, int]], int]:
+    """Measure mirror drift without writing anything.
+
+    Returns ``(drifted, per_source, up_to_date_total)`` where ``drifted`` holds
+    repo-relative destination paths whose bytes do not match their source, and
+    ``per_source`` holds ``(source dir name, drifted count, up_to_date count)``
+    for the per-tree report line.
+
+    This is the single implementation of the mirror gate: ``main(--check)``
+    prints it and exits non-zero, and ``tests/served_asset_resolution_test.py``
+    calls it directly. Both used to be at risk of disagreeing -- and a test that
+    shelled out to this script instead of calling it proved flaky on Windows,
+    where a redirected parent handle makes ``subprocess`` raise WinError 6.
+    """
+    drifted: list[str] = []
+    per_source: list[tuple[str, int, int]] = []
+    total_skipped = 0
+    for src_dir, dest_dir, pattern, recursive in SYNC_PLAN:
+        drifted_here = 0
+        up_to_date = 0
+        if src_dir.is_dir():
+            for src in src_dir.glob(pattern):
+                if not src.is_file():
+                    continue
+                if not recursive and GENERATED.match(src.name):
+                    continue
+                rel = src.relative_to(src_dir)
+                dest = dest_dir / rel if recursive else dest_dir / src.name
+                if _needs_copy(src, dest):
+                    drifted_here += 1
+                    drifted.append(str(dest.relative_to(REPO_ROOT)))
+                else:
+                    up_to_date += 1
+        per_source.append((src_dir.name, drifted_here, up_to_date))
+        total_skipped += up_to_date
+    return drifted, per_source, total_skipped
+
+
 def main(argv=None) -> int:
     """Entry point: ``--check`` reports drift without copying; otherwise sync."""
     ap = argparse.ArgumentParser(description=__doc__)
@@ -183,26 +221,9 @@ def main(argv=None) -> int:
         # --check is the mirror gate: it reports every destination whose bytes do
         # not match its source and exits non-zero, so a stale mirror fails the
         # build instead of being served. It mutates nothing.
-        drifted: list[str] = []
-        total_skipped = 0
-        for src_dir, dest_dir, pattern, recursive in SYNC_PLAN:
-            drifted_here = 0
-            up_to_date = 0
-            if src_dir.is_dir():
-                for src in src_dir.glob(pattern):
-                    if not src.is_file():
-                        continue
-                    if not recursive and GENERATED.match(src.name):
-                        continue
-                    rel = src.relative_to(src_dir)
-                    dest = dest_dir / rel if recursive else dest_dir / src.name
-                    if _needs_copy(src, dest):
-                        drifted_here += 1
-                        drifted.append(str(dest.relative_to(REPO_ROOT)))
-                    else:
-                        up_to_date += 1
-            total_skipped += up_to_date
-            print(f"{src_dir.name}: drifted={drifted_here} up_to_date={up_to_date}")
+        drifted, per_source, total_skipped = mirror_drift()
+        for name, drifted_here, up_to_date in per_source:
+            print(f"{name}: drifted={drifted_here} up_to_date={up_to_date}")
         if drifted:
             print(f"MIRROR_CHECK_FAILED {len(drifted)} stale destination(s)")
             for path in drifted:

@@ -3,7 +3,7 @@
 This module is intentionally dependency free and preserves unknown fields while
 validating the new professional scene, raster, collaboration, and platform
 metadata boundaries. It complements the browser migration in
-``document-schema-v32.js`` and is used at every server persistence boundary.
+``document-schema.js`` and is used at every server persistence boundary.
 """
 from __future__ import annotations
 

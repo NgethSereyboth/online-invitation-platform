@@ -61,16 +61,16 @@ def run():
 
         # Real bundled pages and headers.
         page_expectations={
-            '/dashboard.html':'bundle-dashboard-v15.js',
-            '/index.html':'bundle-index-v15.js',
-            '/public.html':'bundle-public-v15.js',
-            '/account.html':'bundle-account-v15.js',
-            '/materials.html':'bundle-materials-v15.js',
-            '/templates.html':'bundle-templates-v15.js',
-            '/guests.html':'bundle-guests-v15.js',
-            '/responses.html':'bundle-responses-v15.js',
-            '/analytics.html':'bundle-analytics-v15.js',
-            '/checkin.html':'bundle-checkin-v15.js',
+            '/dashboard.html':'bundle-dashboard.js',
+            '/index.html':'bundle-index.js',
+            '/public.html':'bundle-public.js',
+            '/account.html':'bundle-account.js',
+            '/materials.html':'bundle-materials.js',
+            '/templates.html':'bundle-templates.js',
+            '/guests.html':'bundle-guests.js',
+            '/responses.html':'bundle-responses.js',
+            '/analytics.html':'bundle-analytics.js',
+            '/checkin.html':'bundle-checkin.js',
         }
         for path,bundle in page_expectations.items():
             raw,headers=client.request(path,parse_json=False)
@@ -80,7 +80,7 @@ def run():
             assert "require-trusted-types-for" not in csp
             assert "script-src 'self'" in csp and "script-src 'self' 'unsafe-inline'" not in csp
 
-        for asset,mime in [('/bundle-index-v15.js','javascript'),('/bundle-index-v15.css','text/css'),('/bundle-public-v15.js','javascript')]:
+        for asset,mime in [('/bundle-index.js','javascript'),('/bundle-index.css','text/css'),('/bundle-public.js','javascript')]:
             raw,headers=client.request(asset,parse_json=False)
             assert len(raw)>1000
             assert mime in headers.get_content_type() or mime in headers.get('Content-Type','')
@@ -99,14 +99,14 @@ def run():
         invite_id=invitation['id'];slug=invitation['slug']
 
         # Management routes must serve the root-bundled editor and related pages.
-        for suffix,bundle in [('editor','bundle-index-v15.js'),('guests','bundle-guests-v15.js'),('responses','bundle-responses-v15.js'),('analytics','bundle-analytics-v15.js'),('materials','bundle-materials-v15.js')]:
+        for suffix,bundle in [('editor','bundle-index.js'),('guests','bundle-guests.js'),('responses','bundle-responses.js'),('analytics','bundle-analytics.js'),('materials','bundle-materials.js')]:
             raw,_=client.request(f'/invitations/{invite_id}/{suffix}',parse_json=False)
             assert bundle in raw.decode('utf-8')
 
         client.request(f'/api/invitations/{invite_id}/publish','POST',{'document':invite_doc},201)
         public_page,_=client.request(f'/i/{slug}',parse_json=False)
         public_html=public_page.decode('utf-8')
-        assert 'bundle-public-v15.js' in public_html
+        assert 'bundle-public.js' in public_html
         assert slug in public_html
         public_doc,_=client.request(f'/api/public/{slug}')
         assert public_doc['document']['fields']['names']=='V15 HTTP Couple'

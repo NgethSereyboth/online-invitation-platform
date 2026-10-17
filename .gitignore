@@ -9,6 +9,7 @@ venv/
 .upload-signing-secret
 .media-signing-secret
 .guest-token-secret
+.impersonation-secret
 .env
 # Any dotenv variant (including generated .env.production) stays untracked;
 # the committed templates are re-included explicitly.
@@ -111,6 +112,14 @@ docs/perf/lighthouse-budgets.local.json
 /fixture-public.html
 /test-i18n-beacon.html
 
+# Android local SDK/site configuration and generated build output.
+/android/.android-sdk/
+/android/local.properties
+/android/local.properties.*.tmp
+/android/.gradle/
+/android/build/
+/android/app/build/
+
 # Freebuff/agent session metadata: one file, regenerated per session, not part of
 # the product.
 .freebuff/
@@ -136,3 +145,4 @@ _i18n_all_result.json
 # still sitting in the tree.
 src/html/*-test-*.html
 src/python/fixture-*.html
+.agents/

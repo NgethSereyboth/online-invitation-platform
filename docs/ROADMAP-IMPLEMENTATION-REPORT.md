@@ -203,7 +203,7 @@ These are preserved in the `.git` history of the final zip.
 | Design doc | `docs/collab/CRDT-DESIGN.md` (13 sections + Mermaid sequence diagram) — why Y.js, 3-phase migration plan (A dual-write / B dual-read / C remove V31), Y.js type mapping (Y.Map registers, Y.Array sequences, Y.Text only at leaf prose), snapshot publishing → V32 immutable publications, backwards compat |
 | `crdt-yjs-indexeddb.js` | y-indexeddb wrapper, 3 IndexedDB object stores, 30s/100-update compaction, localStorage fallback |
 | `crdt-yjs-undo.js` | Per-user `Y.UndoManager` with `trackedOrigins = new Set([localClientId])` — the core V31 limitation called out in ROADMAP §7.4b; bilingual EN+KH labels |
-| `collaboration-presence-v52.js` | Dedicated ephemeral channel, 3s heartbeat (was 5s), 7s grace (within ROADMAP's 5–10s window), WebSocket + short-poll fallback |
+| `collaboration-presence.js` | Dedicated ephemeral channel, 3s heartbeat (was 5s), 7s grace (within ROADMAP's 5–10s window), WebSocket + short-poll fallback |
 | `crdt-yjs-rich-media.js` | Custom Y.js types for images/embeds; asset BYTES never enter CRDT (only V32 object_key strings); `assertNoAssetBytes(ydoc)` CI guard |
 | Backend endpoints | 5 new routes (`GET/POST /api/invitations/{id}/collaboration/v52/{snapshot,updates,presence,checkpoints}`); schema 18→19; 2 new tables (`collaboration_updates_v52` + `collaboration_snapshots_v52`) for both SQLite and PostgreSQL; V31 endpoints 100% untouched |
 | Offline merge test | `tests/v52_crdt_offline_merge_test.py` — 6 scenarios, dependency-free `YjsShim` binary encoder — all 6 PASS |
@@ -246,7 +246,7 @@ These are preserved in the `.git` history of the final zip.
 |---|---|---|---|
 | **§2.5 sec-5** Enforce JIT elevation (close Phase 1a stub) | V54.13 | `ai_agent/jit_elevation.py` — `evaluate()` no longer returns True unconditionally; real `jit_elevations` table lookup + lazy `sweep_expired()` + `request_elevation()` with auto-approval rules (`AUTO_APPROVED_TOOLS = {"publish.prepare"}`); `ai_agent/service.py::authorize_tool_call` now calls `is_jit_eligible(tool_id)` → `evaluate(...)`; 3 new routes (`POST /api/ai-agent/jit/approve`, `POST /api/ai-agent/jit/deny`, `GET /api/ai-agent/jit/pending`) | `tests/ai_jit_enforcement_test.py` (8 phases — manual approval, expiry, read/edit skip JIT, auto-approval, deny, host-only auth, audit events, negative-proof monkey-patch) |
 | **§2.6 sec-6** Resource-scoped permissions Stage 3 | V54.15 | New `ai_agent/scopes.py` — `Grant.parse()` + `Grant.matches()` (wildcard on resource_id + action); `ai_agent/capabilities.py` — `availability()` runs legacy first then grant check (authoritative when user has grant, legacy fallback otherwise); shadow-eval logging (`shadow_eval_divergence` + `no_grant_legacy_authoritative`); new `agent_grants` table + 3 routes (`GET/POST/DELETE /api/account/grants`) | `tests/ai_resource_scopes_test.py` (9 scenarios — grant matches, wildcard, no-grant legacy, divergence logging, revocation) |
-| **§3.1 ux-1** Host-side signup sheets UI | V54.14 | New `src/js/host-signup-sheets.js` (295 lines) — list view, create/edit modal with dynamic slot rows, delete, view claims with full email PII host-only; `src/html/dashboard.html` `<section id="signup-sheets-panel">`; `docs/route-bundle-sources-v15.json` updated; `src/css/modern-ui.css` +50 token-driven rules | Bundle `--check` passes |
+| **§3.1 ux-1** Host-side signup sheets UI | V54.14 | New `src/js/host-signup-sheets.js` (295 lines) — list view, create/edit modal with dynamic slot rows, delete, view claims with full email PII host-only; `src/html/dashboard.html` `<section id="signup-sheets-panel">`; `docs/route-bundle-sources.json` updated; `src/css/modern-ui.css` +50 token-driven rules | Bundle `--check` passes |
 | **§3.2 ux-2** Host-side polls UI | V54.16 | New `src/js/host-polls.js` (528 lines) — list view, create/edit modal with 2-20 options + multi-select + visibility toggle, delete, close-now, view results bar chart; `src/html/dashboard.html` `<section id="polls-panel">` | Bundle `--check` passes |
 
 ---
@@ -380,7 +380,7 @@ These are preserved in the `.git` history of the final zip.
 | `src/js/crdt-yjs-indexeddb.js` | JS module | Y.js IndexedDB persistence — V54.7 |
 | `src/js/crdt-yjs-undo.js` | JS module | Per-user Y.UndoManager — V54.7 |
 | `src/js/crdt-yjs-rich-media.js` | JS module | Y.js rich media sync — V54.7 |
-| `src/js/collaboration-presence-v52.js` | JS module | Dedicated presence channel (3s heartbeat, 7s grace) — V54.7 |
+| `src/js/collaboration-presence.js` | JS module | Dedicated presence channel (3s heartbeat, 7s grace) — V54.7 |
 | `src/js/plugin_sandbox_host.js` | JS module | Plugin sandbox host runtime — V54.33 |
 | `ai_agent/jit_elevation.py` | Module | JIT elevation enforcement — V54.13 |
 | `ai_agent/scopes.py` | Module | Resource-scoped permissions (Grant.parse + matches) — V54.15 |

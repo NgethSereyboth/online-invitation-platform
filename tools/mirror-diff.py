@@ -33,7 +33,7 @@ definition of what is mirrored) and reports three classes:
     orphans      mirror file with no source (a deleted or renamed source's copy)
 
 Generated artifacts are exempt, and the exemption is printed rather than hidden:
-`bundle-*-v15.{js,css}`, `editor-suite.{js,css}` and the two manifest JSONs are
+`bundle-*.{js,css}`, `editor-suite.{js,css}` and the two manifest JSONs are
 written *directly* into `src/python/` by the generators, so they are not mirror
 content at all. They are listed in `GENERATED` below and counted separately.
 
@@ -60,8 +60,8 @@ SYNCER = ROOT / "src" / "python" / "build" / "sync_frontend_assets.py"
 # manifest, so this tool neither compares nor judges them (and it says how many
 # it saw, rather than leaving the reader to wonder).
 GENERATED = re.compile(
-    r"^(?:bundle-[a-z0-9_-]+-v15\.(?:js|css)|editor-suite\.(?:js|css)|"
-    r"route-bundles-v15\.json|page-assets-v15\.json)$"
+    r"^(?:bundle-[a-z0-9_-]+\.(?:js|css)|editor-suite\.(?:js|css)|"
+    r"route-bundles\.json|page-assets\.json)$"
 )
 
 # Serve-root files with no source in src/html, src/css or src/js. They are NOT
@@ -83,7 +83,7 @@ ORPHAN_EXEMPT = {
     "src/python/test-d.html": "hand-authored test page in the serve root; tracked, no upstream source",
     "src/python/test-i18n-beacon.html": "hand-authored test page in the serve root; tracked, no upstream source",
     "src/python/test-i18n-click.html": "hand-authored test page in the serve root; tracked, no upstream source",
-    "src/python/workflow-creation-flow-v3.css": "tracked pre-v4 stylesheet kept in the serve root; no upstream source, superseded by workflow-creation-flow-v4.css",
+    "src/python/workflow-creation-flow-v3.css": "tracked pre-v4 stylesheet kept in the serve root; no upstream source, superseded by workflow-creation-flow.css",
 }
 
 

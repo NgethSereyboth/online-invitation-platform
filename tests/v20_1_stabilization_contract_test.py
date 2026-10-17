@@ -28,7 +28,7 @@ def main():
  polish=(ROOT / "src" / "js" / "final-polish.js").read_text(encoding='utf-8');assert "!art.closest('.invite-card')" in polish
  app=(ROOT / "src" / "js" / "app.js").read_text(encoding='utf-8')
  for token in ("textStyleId:'display'","textStyleId:'subheading'","textStyleId:'body'","id:'hero',type:'image'"):assert token in app
- editor=(ROOT / "src" / "js" / "typography-editor-v20.js").read_text(encoding='utf-8');refresh=editor[editor.index('function refresh()'):]
+ editor=(ROOT / "src" / "js" / "typography-editor.js").read_text(encoding='utf-8');refresh=editor[editor.index('function refresh()'):]
  assert 'normalizeDocument(doc,{mutate:true})' not in refresh.split('function ',1)[0]
  assert 'data-style-limit-action' in editor and 'MAX_TEXT_STYLES' in editor
  layout=(ROOT / "src" / "js" / "typography-layout-service.js").read_text(encoding='utf-8');assert "return null" in layout[layout.index('function effectiveBackground'):layout.index('function diagnose')]

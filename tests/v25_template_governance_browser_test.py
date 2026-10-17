@@ -6,7 +6,7 @@ rather than adding features. Three defects were found, in the order they surface
 
 1. **Every asset path was wrong.** The file asked for its CSS and JS at the
    repository root (``ROOT/name``), but they live under ``src/css/`` and ``src/js/``
-   — and ``export-quality-v24.css`` specifically under ``src/css/organized/``. So
+   — and ``export-quality.css`` specifically under ``src/css/organized/``. So
    the test died on ``FileNotFoundError`` before any assertion ran. Paths now
    resolve through :func:`asset`, which reports every directory it searched.
    FIXED and verified: all twenty assets now load and the flow reaches its version
@@ -46,10 +46,10 @@ from urllib.parse import unquote,urlsplit
 from browser_runtime import launch_chromium, skipped
 from inline_editor_runtime_test import build_inline_editor
 ROOT=Path(__file__).resolve().parents[1]
-BASE_CSS=['direct-manipulation-v24.css','content-browser-v24.css','smart-layout-v24.css','brand-components-v24.css','collaboration-v24.css','export-quality-v24.css']
-BASE_JS=['direct-manipulation-v24.js','content-browser-v24.js','smart-layout-v24.js','brand-components-v24.js','collaboration-v24.js','export-quality-v24.js']
-V25_CSS=['adaptive-templates-v25.css','studio-governance-v25.css','print-readiness-v25.css','template-bindings-v25.css']
-V25_JS=['adaptive-templates-v25.js','studio-governance-v25.js','print-readiness-v25.js','template-bindings-v25.js']
+BASE_CSS=['direct-manipulation.css','content-browser.css','smart-layout.css','brand-components.css','collaboration-v24.css','export-quality.css']
+BASE_JS=['direct-manipulation.js','content-browser.js','smart-layout.js','brand-components.js','collaboration-v24.js','export-quality.js']
+V25_CSS=['adaptive-templates.css','studio-governance.css','print-readiness.css','template-bindings.css']
+V25_JS=['adaptive-templates.js','studio-governance.js','print-readiness.js','template-bindings.js']
 
 # Named once, here, so a future reader does not have to re-derive it: the one reason
 # this file's print-preflight step cannot pass today, and the two ways out.

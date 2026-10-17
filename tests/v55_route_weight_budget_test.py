@@ -40,7 +40,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BUDGET_FILE = ROOT / "docs" / "perf" / "lighthouse-budgets.json"
 SERVED = ROOT / "src" / "python"
-MANIFEST = ROOT / "docs" / "page-assets-v15.json"
+MANIFEST = ROOT / "docs" / "page-assets.json"
 
 
 def find(rel: str) -> Path | None:

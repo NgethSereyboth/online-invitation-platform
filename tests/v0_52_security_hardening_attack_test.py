@@ -107,7 +107,7 @@ def main():
         anonymous, _ = client()
 
         # Public file and operational-intelligence disclosure probes.
-        for path in ("/BUILD_INFO.json", "/route-bundles-v15.json", "/server.py", "/.env.production"):
+        for path in ("/BUILD_INFO.json", "/route-bundles.json", "/server.py", "/.env.production"):
             call(anonymous, base, path, expected=404)
         _, _, health = call(anonymous, base, "/api/health", expected=200)
         assert health == {"ok": True}, health

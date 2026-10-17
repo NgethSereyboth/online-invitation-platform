@@ -12,10 +12,10 @@ def main()->int:
   page.on('pageerror',lambda error:errors.append(str(error)))
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000);page.wait_for_timeout(900)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click()
-  for name in ('studio-governance-v25.css','studio-operations-v26.css'):page.add_style_tag(path=str(ROOT/name))
+  for name in ('studio-governance.css','studio-operations.css'):page.add_style_tag(path=str(ROOT/name))
   page.evaluate("""()=>{localStorage.setItem('einvite-v25-studio-resources',JSON.stringify([{id:'brand-v26',kind:'brand',name:'Official Brand',category:'Government',payload:{primary:'#183a64'},governance:{locked:false,allowedOverrides:['content']},status:'approved',version:2,createdAt:Date.now(),updatedAt:Date.now()}]));window.EInviteFeedback=window.EInviteFeedback||{toast:()=>{}};window.__prompts=['August 2026 Release','Controlled government invitation rollout'];window.uiPrompt=async()=>window.__prompts.shift()||'';window.uiConfirm=async()=>true}""")
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-governance-v25.js"));page.wait_for_timeout(120)
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-operations-v26.js"));page.wait_for_timeout(180)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-governance.js"));page.wait_for_timeout(120)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-operations.js"));page.wait_for_timeout(180)
   versions=page.evaluate("()=>({governance:EInviteStudioGovernance.version,operations:EInviteStudioOperations.version,conflicts:EInviteCommandRegistry.conflicts.length})")
   assert versions=={'governance':25.1,'operations':26,'conflicts':0},versions
   created=page.evaluate("()=>EInviteStudioOperations.createRelease()");assert created['status']=='draft' and len(created['manifest'])==1,created

@@ -12,7 +12,7 @@ const $=s=>document.querySelector(s),inviteId=window.EInviteContext?.getInvitati
 /* Goal 6b (§5.5): the batch-share selection. Declared here, with the other
    module-level state, because the wiring that reads it runs before the
    spreadsheet/link-code sections below — a const declared further down is in
-   the temporal dead zone at that point (measured: bundle-guests-v15.js threw
+   the temporal dead zone at that point (measured: bundle-guests.js threw
    "Cannot access 'pickedGuests' before initialization" and the list never
    rendered). */
 const pickedGuests=new Set();
@@ -72,7 +72,7 @@ $('#exportBtn').onclick=()=>{let rows=[[_txt('Name','Name'),_txt('Phone','Phone'
 
    SheetJS is loaded lazily from the vendored build only when a spreadsheet is
    actually chosen, so the guests route keeps its 3-script / 440,000-byte page
-   budget (docs/route-bundle-sources-v15.json, src/python/build/build_page_manifests.py).
+   budget (docs/route-bundle-sources.json, src/python/build/build_page_manifests.py).
 
    Khmer below comes from docs/i18n/TRANSLATIONS.csv where an approved string
    exists; every string passed with an EMPTY Khmer slot is listed as KH_PENDING

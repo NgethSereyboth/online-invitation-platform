@@ -6,8 +6,8 @@ from browser_runtime import launch_chromium,skipped
 ROOT=Path(__file__).resolve().parents[1]
 def build():
  html=(ROOT / "src" / "html" / "dashboard.html").read_text(encoding='utf-8')
- css=(ROOT / "src" / "css" / "bundle-dashboard-v15.css").read_text(encoding='utf-8')
- js=(ROOT / "src" / "js" / "bundle-dashboard-v15.js").read_text(encoding='utf-8').replace('</script>','<\\/script>')
+ css=(ROOT / "src" / "css" / "bundle-dashboard.css").read_text(encoding='utf-8')
+ js=(ROOT / "src" / "js" / "bundle-dashboard.js").read_text(encoding='utf-8').replace('</script>','<\\/script>')
  pre=r'''<script>const __m=new Map([['sovan-account-v1',JSON.stringify({email:'tester@example.com',role:'admin',plan:'Pro'})],['sovan-multi-invites-v1',JSON.stringify([{id:'one',title:'One',type:'Wedding',status:'Draft',views:1,rsvps:0,updatedAt:new Date().toISOString()}])],['sovan-invite-draft-v3:one',JSON.stringify({fields:{names:'One'},objects:{title:{type:'text',html:'One',textStyleId:'display',typographyModelVersion:1,fontPairing:'serif-formal',font:'noto-serif',fontSize:64}},designPages:[]})]]);const localStorage={getItem:k=>__m.get(String(k))??null,setItem:(k,v)=>__m.set(String(k),String(v)),removeItem:k=>__m.delete(String(k)),clear:()=>__m.clear()};const sessionStorage={getItem:()=>null,setItem:()=>{},removeItem:()=>{}};window.fetch=async()=>({ok:false,status:404,json:async()=>({})});window.alert=()=>{};window.confirm=()=>true;window.prompt=()=>'';window.scrollTo=()=>{};if(!crypto.randomUUID)crypto.randomUUID=()=>Math.random().toString(16).slice(2)+'-0000-4000-8000-000000000000';</script>'''
  html=re.sub(r'<script src="[^"]+"></script>','',html);html=re.sub(r'<link[^>]+>','',html)
  html=html.replace('</head>',f'<style>{css}</style>{pre}</head>').replace('</body>',f'<script>{js}</script></body>')

@@ -6,69 +6,52 @@
 | **Group** | `invitation` |
 | **Risk tier** | `high` |
 | **Permission tier** | `manage` |
-| **Executor** | `server` |
+| **Executor** | `client` |
 | **Binding** | `PUT /api/invitations/{invitationId}/archive` (internal-api) |
 | **Reversible** | `True` |
 | **Confirmation required** | `True` |
-| **Source file** | `ai_agent/tools.py` (in `_defs()`, after `materials.insert_into_page`) |
-| **Binding file** | `ai_agent/capabilities.py:TOOL_BINDINGS["invitation.archive"]` |
-| **Special: editable while archived** | `ai_agent/capabilities.py:EDIT_WHILE_ARCHIVED = {"invitation.archive"}` — this is the only `manage`-tier tool that remains available on an archived invitation (so it can be un-archived). |
+| **Source file** | `ai_agent/tools.py` — `TOOLS['invitation.archive']` |
+| **Binding file** | `ai_agent/capabilities.py` — `TOOL_BINDINGS['invitation.archive']` |
 
 ### 1. What it touches
 
-- **Data**: `invitations.archived` (write), `invitations.archived_at`, `invitations.updated_at`. Archiving does NOT delete the invitation, but it removes it from active dashboard lists and blocks all `edit` / `manage` tools except `invitation.archive` itself.
-- **Services**: `PUT /api/invitations/{invitationId}/archive` flips the archived flag. The endpoint is enforced by `src/python/server.py` (invitation routes) which performs the same ownership / collaboration check.
-- **Files**: no file-system side effects. Stored assets are retained.
-- **Side effects**: archiving an *published* invitation does not un-publish it — the public page remains reachable at its custom domain until the host explicitly unpublishes. **This is a documented pitfall** the host must be warned about.
+- **Operation:** Archive or restore the current invitation.
+- **Data and inputs:** the current invitation's archived state and dashboard visibility. The schema accepts: `archived`; values are validated against the registered bounded schema.
+- **Execution boundary:** `internal-api` — `PUT /api/invitations/{invitationId}/archive`. This story does not assume any unlisted external destination or side effect.
 
 ### 2. Worst case if malicious
 
-If a prompt-injected or compromised agent successfully invoked `invitation.archive` with `archived=true` on a *published* invitation `inv_X`, the attacker could:
-
-- **Hide the invitation from the host's dashboard** while the publication remains live at its public URL. The host may not notice the discrepancy for days, during which the public page continues to collect guest RSVPs and PII.
-- **Lock out collaborators**: a designer or content-editor who was actively editing the invitation loses access to all `edit` and `manage` tools (except `invitation.archive` itself), blocking work in progress.
-- **Trigger a denial-of-service** on the host's event preparation workflow by archiving all of the host's invitations in a single plan (up to 40 tool calls per plan, per `validate_tool_calls(maximum=40)`).
-
-Blast radius: **invitation-scoped for visibility, but the host's entire event preparation workflow is affected if multiple invitations are archived in one plan**. Data affected: **workflow availability + visibility**.
+If a prompt-injected or compromised agent persuaded an authorized user to approve `invitation.archive` with attacker-chosen but schema-valid arguments, it could hide an active invitation from the host and collaborators while leaving its public page live, so event operations and guest responses diverge from the host's view. The immediate scope is the authorized invitation/page/resource described above; repeated calls can multiply the effect only within the same underlying permissions and rate limits. Treat model-provided content and target IDs as untrusted until verified against the host's intent.
 
 ### 3. Containment
 
-- **Schema validation**: `archived` is a `boolean` (constrained). No free-form arguments.
-- **Permission tier**: `manage` — owner / manager only.
-- **Confirmation boundary**: `reversible=True` but `confirmation=True` and `risk="high"` → `destructiveAccepted=True` required.
-- **Authorization token**: 30-second single-use, bound to `(userId, invitationId, toolId="invitation.archive", planId, index)`.
-- **HTTP-binding match**: `http_request_matches_tool` verifies the request is `PUT /api/invitations/{invitationId}/archive` with the matching `invitationId` from the plan.
-- **Audit event**: `ai.plan_confirmed` / `ai.tool_authorized` / `ai.tool_authorization_consumed` with `target_type="invitation"`, `target_id=inv_X`, `metadata={"archived": true}`.
-- **Edit-while-archived exception**: `EDIT_WHILE_ARCHIVED = {"invitation.archive"}` ensures the un-archive path always works.
+- **Input validation:** `ai_agent/tools.py::validate_tool_call()` applies this tool's registered required fields, types, enums, and declared bounds; the shared validator rejects unknown top-level arguments and recursively blocks several executable-markup, shell/SQL, and destination-key patterns. Nested objects declared with `additionalProperties: true` are permissive, so this shared validation is not a substitute for executor-specific validation.
+- **Permission check:** `manage` is the declared minimum permission. Capability discovery filters tools, then `ai_agent/service.py::confirm_plan()` and `authorize_tool_call()` re-check the user's current access immediately before authorization.
+- **Plan/revision gate:** approval is bound to this plan's exact tool index, user, invitation, and document revision/fingerprint; stale plans are rejected. A high-risk tool call also needs separate destructive-action confirmation before execution.
+- **One-shot authorization:** `authorize_tool_call()` issues a 30-second token bound to `(userId, invitationId, toolId, planId, index)`; it is consumed once (`ai_agent/service.py::consume_tool_authorization()`).
+- **Endpoint binding:** the invocation must match the declared HTTP method/path through `http_request_matches_tool()`; invitation/resource IDs are constrained to the approved binding pattern.
+- **JIT elevation:** this tool is listed in `ai_agent/jit_elevation.py::JIT_ELIGIBLE_TOOLS`; it requires an active five-minute database grant before a one-shot authorization token is issued. Evaluation binds the grant to user/tool/resource and consumes it once (`ai_agent/jit_elevation.py::JITElevationManager.evaluate`). This tool requires manual approval; it is not in `AUTO_APPROVED_TOOLS`.
+- **Audit trail:** when the production audit callback is configured, plan confirmation, tool authorization, token consumption, and JIT state transitions are recorded through `src/python/server.py::write_audit_event` in the hash-chained audit log. Rate limits and workspace AI policy apply to the agent request path.
 
 ### 4. Reversible
 
-- **Yes**: per `ToolDefinition.reversible = True`.
-- **How**: invoke `invitation.archive` with `archived=false` on the same invitation. The tool is the only `manage`-tier tool available while archived, so the host can always recover.
-- **Time to undo**: seconds.
-- **Side effects of undo**: none — the archived flag is flipped back; the dashboard re-lists the invitation.
+- **Registry declaration:** `True`.
+- **Recovery:** The tool registry marks this operation reversible. Capture the pre-operation values and target IDs; restore them with the corresponding inverse/editor action or invitation history where available, then verify the resulting page and guest-visible preview.
 
-### 5. Mitigation (Phase 1a + future)
+### 5. Mitigation and residual risk
 
-- **Resource-scoped permission**: `invitation:{id}:archive` and `invitation:{id}:unarchive` (separate grants).
-- **JIT elevation**: 5-minute TTL grant with mandatory `reason`.
-- **Anomaly detection**: dashboard detects when more than 3 invitations are archived in a 5-minute window (potential bulk abuse).
-- **Warning on archive-while-published**: the confirmation dialog must surface the warning "This invitation is currently published at `{public_url}`. Archiving does NOT unpublish it. Guests will continue to see the invitation. Unpublish first if you want to take it offline." (EN) / "ការផ្តល់ការអបអរនេះត្រូវបានបោះពុម្ពផ្សាយ។ ការទុកក្នុងប័ណ្ណសំគាល់មិនមែនជាការលុបចោលទេ។ ភ្ញៀវនឹងបន្តឃើញការអបអរ។ សូមលុបផ្សាយជាមុនប្រសិនបើអ្នកចង់យកវាចេញ។" (KH).
+- Before confirmation, show the exact target IDs and meaningful argument summary; reject a stale target, changed document fingerprint, or caller whose invitation permission has changed.
+- Keep the host-facing action limited to the declared `internal-api` executor and validate every referenced page, asset, guest, or external-effect target against the current invitation/workspace ownership.
+- **Residual test gap:** the general registry/plan tests verify the shared agent contract, not necessarily this specific executor's complete downstream behavior. A tool-specific executor test should cover the malicious outcome described above before treating that behavior as independently certified.
 
 ### 6. Test coverage
 
-- `tests/v28_agent_tool_contract_test.py` — registry contract.
-- `tests/v28_agent_server_contract_test.py` — plan + authorize + consume flow.
-- `tests/v28_agent_storage_test.py` — plan lifecycle.
-- `tests/v28_agent_conversation_browser_test.py` — confirmation UX.
-- `tests/v53_1_ai_project_operator_contract_test.py` — operator contract.
-
-Gap: no test covers the "archive-while-published" pitfall. Add a UI-level test in Phase 1b.
+- `tests/v28_agent_tool_contract_test.py` — registry completeness, schema bounds, and executor bindings.
+- `tests/v28_agent_server_contract_test.py` — plan, confirmation, and authorization flow.
+- `tests/ai_resource_scopes_test.py` — resource-grant behavior (where mapped).
+- `tests/ai_jit_enforcement_test.py` — JIT lifecycle (only applies to JIT-eligible tools).
+- **Tool-specific test:** no dedicated end-to-end executor test is asserted by this document; add/identify one for `invitation.archive` in the relevant route/editor subsystem.
 
 ### 7. AISVS cross-reference
 
-- `C9.2.4` — destructive confirmation (even though reversible, the high risk tier triggers destructive confirmation).
-- `C9.3.3` — exact-target confirmation (invitationId is captured in `affectedPages` / target set).
-- `C9.3.5` — non-reversible + confirmation (this tool is reversible, but confirmation is still required).
-- `C10.2.1` — HTTP binding match.
-- `C10.3.2` — JIT elevation (Phase 1a).
+`C9.1.1` (complete tool inventory), `C9.2.1` (permission enforcement), `C9.2.3` (authorization re-check), `C9.3.3` (exact-target confirmation), `C9.2.4` (high-risk confirmation), `C10.3.2` (JIT elevation), `C10.2.1` (tool-to-endpoint binding), `C10.5.1` (untrusted provider/input data). See `docs/ai/AISVS-C9-C10-MAPPING.md`. These are control mappings, not a claim that this individual tool has a dedicated test or an external MCP transport.

@@ -15,8 +15,8 @@ def main()->int:
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():
    page.locator('#finalTourDismiss').click();page.wait_for_timeout(80)
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-workflow-v23.js"))
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-style-library-v23.js"))
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-workflow.js"))
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-style-library.js"))
   page.wait_for_timeout(220)
   page.evaluate("()=>{const image=document.querySelector('#stage .image-object');clearSelection();setSelection([image])}")
   start=page.evaluate('performance.now()')

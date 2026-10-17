@@ -82,6 +82,18 @@ class SmsChannel(DeliveryChannel):
             return SendResult(channel=self.name, status="failed",
                               error=str(data.get("error_message") or data))
         sid = str(data.get("sid") or "")
-        status = "sent" if data.get("status") in {"sent", "delivered", "queued"} else "queued"
+        if not sid:
+            return SendResult(channel=self.name, status="failed",
+                              error="Provider response did not include a message SID",
+                              raw=data)
+        provider_status = str(data.get("status") or "").lower()
+        if provider_status in {"queued", "accepted", "scheduled", "sending"}:
+            status = "queued"
+        elif provider_status in {"sent", "delivered"}:
+            status = "sent"
+        else:
+            return SendResult(channel=self.name, status="failed",
+                              error=f"Unrecognized provider status: {provider_status or 'missing'}",
+                              provider_message_id=sid, raw=data)
         return SendResult(channel=self.name, status=status,
                           provider_message_id=sid, raw=data)

@@ -11,7 +11,7 @@ def main()->int:
   browser=launch_chromium(p);page=browser.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000);page.wait_for_timeout(800)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click()
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "studio-automation-v27.css"))
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "studio-automation.css"))
   page.evaluate("""()=>{
     window.__EInviteForceOnline=true;window.__bulkCount=0;
     window.EInviteFeedback=window.EInviteFeedback||{toast:()=>{}};window.uiConfirm=async()=>true;
@@ -35,7 +35,7 @@ def main()->int:
       return {ok:true,status:200,json:async()=>data,text:async()=>JSON.stringify(data),headers:new Headers()};
     };
   }""")
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-automation-v27.js"));page.wait_for_timeout(200)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-automation.js"));page.wait_for_timeout(200)
   info=page.evaluate("()=>({version:EInviteStudioAutomation.version,conflicts:EInviteCommandRegistry.conflicts.length})");assert info=={'version':27,'conflicts':0},info
   page.evaluate("()=>EInviteStudioAutomation.open('remediation')");page.wait_for_timeout(150);assert page.locator('.v27-automation-dialog').is_visible();assert page.locator('.v27-table>div').count()==3
   page.locator('[data-bulk-noncurrent]').click();page.wait_for_timeout(250);assert page.evaluate('()=>window.__bulkCount')==1

@@ -12,9 +12,9 @@ def main()->int:
   except Exception as exc:return skipped('V28_AGENT_CONVERSATION_BROWSER',exc)
   page=browser.new_page();page.set_default_timeout(12000);ready(page)
   page.evaluate("""()=>{window.EInviteContext={getInvitationId:()=> 'invite-1'};window.EInviteBackend={isAvailable:()=>false}}""")
-  page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent-v28.css").read_text(encoding='utf-8'))
-  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding='utf-8'))
-  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent-v28.js").read_text(encoding='utf-8'))
+  page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent.css").read_text(encoding='utf-8'))
+  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding='utf-8'))
+  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent.js").read_text(encoding='utf-8'))
   page.evaluate("()=>EInviteAICreativeAgent.open('write',{opener:document.querySelector('#stage')})")
   panel=page.locator('#eiAgentPanel');panel.wait_for(state='visible');assert panel.get_attribute('aria-labelledby')=='eiAgentTitle'
   page.locator('[data-agent-input]').fill('Check mobile overflow');page.locator('[data-agent-action=send]').click();page.wait_for_timeout(250)

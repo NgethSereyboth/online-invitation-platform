@@ -9,7 +9,7 @@ Repository layout
 -----------------
 HTML pages live in ``src/html/``; browser assets live in ``src/js/``,
 ``src/css/`` (+ ``src/css/organized/``), and ``vendor/``. The output manifest
-``page-assets-v15.json`` is written to BOTH ``src/python/`` (where the server
+``page-assets.json`` is written to BOTH ``src/python/`` (where the server
 reads it) AND ``docs/`` (repo source of truth).
 """
 from __future__ import annotations
@@ -34,8 +34,8 @@ HTML_DIR = REPO_ROOT / "src" / "html"
 DOCS_DIR = REPO_ROOT / "docs"
 
 # Output manifest: written to both locations.
-OUTPUT_SERVER = SCRIPT_DIR / "page-assets-v15.json"
-OUTPUT_DOCS = DOCS_DIR / "page-assets-v15.json"
+OUTPUT_SERVER = SCRIPT_DIR / "page-assets.json"
+OUTPUT_DOCS = DOCS_DIR / "page-assets.json"
 
 # Map each route name to the list of HTML pages that belong to it.
 ROUTES = {
@@ -51,18 +51,18 @@ ROUTES = {
 # rounded up to the next 5,000 bytes. The previous numbers were not aspirational,
 # they were a category error: BUDGETS["editor"]["bytes"] was 1_420_000 and
 # BUDGETS["public-guest"]["bytes"] was 260_000, which are the *route-bundle JS*
-# ceilings (bundle-index-v15.js and bundle-public-v15.js respectively) applied to
+# ceilings (bundle-index.js and bundle-public.js respectively) applied to
 # *whole-page* totals. A page total also counts the route CSS bundle and the two
-# shared scripts the bundle does not contain (core/theme.js, backend-mode-v14.js),
+# shared scripts the bundle does not contain (core/theme.js, backend-mode.js),
 # so the old gate was unsatisfiable by construction and had never passed once:
 #
-#   public.html  249_994 (bundle-public-v15.js) is the entire old 260_000 budget,
-#                while the page also loads bundle-public-v15.css (128_899) and
-#                backend-mode-v14.js (2_249) -> 381_142.
+#   public.html  249_994 (bundle-public.js) is the entire old 260_000 budget,
+#                while the page also loads bundle-public.css (128_899) and
+#                backend-mode.js (2_249) -> 381_142.
 #   index.html   1_129_296 + 481_963 (bundle-index js + css) already exceeds
 #                1_420_000 before the page's other two scripts are counted.
 #
-# Ceilings below were measured from docs/page-assets-v15.json after the
+# Ceilings below were measured from docs/page-assets.json after the
 # dashboard second-stylesheet consolidation and the versioned-name rename batch:
 #
 #   route              measured     ceiling   scripts  styles
@@ -74,7 +74,7 @@ ROUTES = {
 #
 # Counts are route maxima, because tests/v14_performance_budget_test.py applies
 # the route budget to every page in the route: account-admin's 4 is privacy.html
-# (core/safe-dom.js + core/i18n.js + core/theme.js + backend-mode-v14.js), while
+# (core/safe-dom.js + core/i18n.js + core/theme.js + backend-mode.js), while
 # its other five pages load 3. The declarative single source of truth for the
 # Chrome-driven gate stays docs/perf/lighthouse-budgets.json (see the header of
 # tests/v55_route_weight_budget_test.py).

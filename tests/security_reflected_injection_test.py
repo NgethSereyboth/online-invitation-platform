@@ -250,7 +250,7 @@ def run():
             f'{slug_page[:1200]!r}')
 
         # The raw attack payload must NOT appear anywhere in the HTML.
-        # (public.html has a legitimate <script src="bundle-public-v15.js">
+        # (public.html has a legitimate <script src="bundle-public.js">
         # tag, so we check for the SPECIFIC attack substring rather than
         # the bare '<script>' token.)
         assert attack_slug not in slug_page, (

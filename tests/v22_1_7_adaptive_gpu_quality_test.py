@@ -13,7 +13,7 @@ def main()->int:
   except Exception as exc:return skipped('V22_1_7_ADAPTIVE_GPU_QUALITY',exc)
   try:
    page=browser.new_page();page.set_content(html);page.add_script_tag(content=src('tests/gpu_mock_webgl.js'))
-   for name in ['performance-observability-v22.js','gpu-texture-cache-v22.js','webgl-scene-backend-v22.js','gpu-projection-v22.js','adaptive-gpu-quality-v22.js']:page.add_script_tag(content=src(name))
+   for name in ['performance-observability.js','gpu-texture-cache.js','webgl-scene-backend.js','gpu-projection.js','adaptive-gpu-quality.js']:page.add_script_tag(content=src(name))
    page.wait_for_function('()=>window.EInviteGraphicsDiagnostics&&document.querySelector(".ei-graphics-diagnostics")')
    result=page.evaluate('''()=>{const d=EInviteGraphicsDiagnostics;d.setQuality('low');const low=d.snapshot();d.setQuality('off');const off=d.snapshot();d.setQuality('high');const high=d.snapshot();dispatchEvent(new CustomEvent('einvite:gpu-context-lost'));dispatchEvent(new CustomEvent('einvite:gpu-context-lost'));const lost=d.snapshot();const text=document.querySelector('.ei-graphics-diagnostics').textContent;d.destroy();EInviteGPUProjection.destroy();EInviteWebGLScene.destroy();EInvitePerformance.destroy();return{low,off,high,lost,text,panel:!!document.querySelector('.ei-graphics-diagnostics')}}''')
    assert result['low']['quality']['level']=='low' and result['low']['webgl']['qualityScale']==.6,result

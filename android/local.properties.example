@@ -1,0 +1,3 @@
+# Copy to local.properties (ignored by git), then set this to your public HTTPS origin.
+# Example: einvite.siteUrl=https://invite.example.com
+einvite.siteUrl=https://einvite-platform.onrender.com

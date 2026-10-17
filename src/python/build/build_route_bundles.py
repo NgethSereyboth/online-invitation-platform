@@ -9,10 +9,10 @@ serves static files from ``src/python/`` (its ``ROOT``). This builder therefore:
 
 * reads source JS/CSS files from the repo layout (``src/js``, ``src/css``,
   ``src/css/organized``, ``vendor/``),
-* writes the generated ``bundle-<page>-v15.js``/``.css`` artifacts into BOTH
+* writes the generated ``bundle-<page>.js``/``.css`` artifacts into BOTH
   ``src/python/`` (so the server can serve them) AND ``src/js``/``src/css``
   (so the generated artifacts in the repo source of truth stay current),
-* writes the manifest ``route-bundles-v15.json`` into BOTH ``src/python/``
+* writes the manifest ``route-bundles.json`` into BOTH ``src/python/``
   (where the server reads it) AND ``docs/`` (repo source of truth).
 
 The build is byte-deterministic: every output is normalised to UTF-8/LF and the
@@ -42,10 +42,10 @@ ASSETS_DIR = REPO_ROOT / "assets"
 DOCS_DIR = REPO_ROOT / "docs"
 
 # Source manifest (repo source of truth) lives in docs/, NOT src/python/.
-SOURCES = DOCS_DIR / "route-bundle-sources-v15.json"
+SOURCES = DOCS_DIR / "route-bundle-sources.json"
 # Output manifest is mirrored to both locations.
-MANIFEST_SERVER = SERVER_DIR / "route-bundles-v15.json"
-MANIFEST_DOCS = DOCS_DIR / "route-bundles-v15.json"
+MANIFEST_SERVER = SERVER_DIR / "route-bundles.json"
+MANIFEST_DOCS = DOCS_DIR / "route-bundles.json"
 
 
 def resolve_js_source(path: str) -> Path:
@@ -160,7 +160,7 @@ def write_both(name: str, content: str, dirs: list[Path]) -> None:
 def build(write: bool) -> dict:
     """Build the route-bundle manifest (and optionally write artifacts).
 
-    When ``write`` is True, every generated ``bundle-<page>-v15.js``/``.css`` is
+    When ``write`` is True, every generated ``bundle-<page>.js``/``.css`` is
     written to BOTH ``src/python/`` (server) and ``src/js``/``src/css`` (repo),
     and the manifest JSON is written to BOTH ``src/python/`` and ``docs/``.
     Returns the manifest dict (always populated, regardless of ``write``).
@@ -169,16 +169,16 @@ def build(write: bool) -> dict:
     result: dict = {"version": 15, "pages": {}}
     for page, entry in sorted(spec["pages"].items()):
         stem = Path(page).stem
-        js_name = f"bundle-{stem}-v15.js"
-        css_name = f"bundle-{stem}-v15.css"
+        js_name = f"bundle-{stem}.js"
+        css_name = f"bundle-{stem}.css"
         js = js_bundle(entry["scripts"])
         css = css_bundle(entry["styles"])
-        # Deferred chunks: on-demand modules that route-deferred-loader-v15.js
+        # Deferred chunks: on-demand modules that route-deferred-loader.js
         # injects after first paint. They are generated like the startup
         # bundles but never referenced from HTML, so they stay out of the
         # page-asset manifest and its weight budgets.
-        deferred_js_name = f"bundle-{stem}-deferred-v15.js"
-        deferred_css_name = f"bundle-{stem}-deferred-v15.css"
+        deferred_js_name = f"bundle-{stem}-deferred.js"
+        deferred_css_name = f"bundle-{stem}-deferred.css"
         has_deferred = bool(entry.get("deferredScripts") or entry.get("deferredStyles"))
         deferred_js = js_bundle(entry.get("deferredScripts") or []) if has_deferred else ""
         deferred_css = css_bundle(entry.get("deferredStyles") or []) if has_deferred else ""

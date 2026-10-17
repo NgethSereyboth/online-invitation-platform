@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def main()->int:
  script=textwrap.dedent(r'''
   const fs=require('fs'),vm=require('vm');global.window=global;
-  for(const file of ['typography-contract.js','editor-schema-v13.js','typography-layout-service.js','renderer-core.js'])vm.runInThisContext(fs.readFileSync(file,'utf8'));
+  for(const file of ['typography-contract.js','editor-schema.js','typography-layout-service.js','renderer-core.js'])vm.runInThisContext(fs.readFileSync(file,'utf8'));
   const normalized=EInviteEditorSchema.normalizeObject('khmer',{type:'text',fontSize:44,textAlign:'bad',textAutoFit:'fit',textAutoFitMax:999,textMinFontSize:-5,textWrap:'bad',textColumns:9,textColumnGap:-4},'hero');
   const legacy=EInviteEditorSchema.normalizeObject('legacy',{type:'text',font:'Arial,sans-serif',html:'Legacy'},'hero');
   const rendered=EInviteRenderer.renderObject({type:'text',html:'សូមស្វាគមន៍ <strong>Welcome</strong>',font:'sans-arial',fontSize:28,textAlign:'justify',textWrap:'pretty',textColumns:3,textColumnGap:18,textAutoFit:'fit',textAutoFitMax:46,textMinFontSize:12,left:'0%',top:'0%',width:'100%',height:'120px'},{id:'khmer'});

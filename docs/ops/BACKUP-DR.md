@@ -421,10 +421,12 @@ To *truly* purge a version (e.g., GDPR right-to-erasure), the application must i
 
 ## 5. First quarterly DR drill plan
 
+> **Status: PLANNED — no completed drill report is checked into this repository.** The RPO/RTO targets are objectives, not verified commitments, until a dated staging restore is run, measured, and recorded under `docs/ops/drill-reports/`.
+
 ### 5.1 Schedule
 
 - **Cadence:** quarterly.
-- **First drill:** Q1 — see `docs/ops/drill-reports/2026-Q1.md` (created on drill day).
+- **First drill:** Planned for Q1 — `docs/ops/drill-reports/2026-Q1.md` is a report template/example path and does not indicate a completed drill. A dated report with actual measured results must be filed after execution.
 - **Drill owner:** on-call engineer rotation.
 - **Sign-off:** engineering lead + at least one witness.
 
@@ -564,7 +566,7 @@ For production PostgreSQL clusters, this script is **not** the primary backup �
 
 ## 9. Second quarterly DR drill (Phase 3)
 
-> This is the **second** quarterly DR drill. The first was planned in §5 above (Phase 1c deliverable). The ROADMAP (§6, Phase 3 — Production Certification) requires that "this should be the second or third drill by now (first was in Phase 1)." The Phase 3 drill differs from the Phase 1c drill in three ways:
+> **Status: PLANNED — this second exercise must not be described as completed until the first drill has a dated report and this exercise also has measured results.** This is the proposed second quarterly drill. The first is planned in §5 above (Phase 1c deliverable). The ROADMAP (§6, Phase 3 — Production Certification) requires that "this should be the second or third drill by now (first was in Phase 1)." The Phase 3 drill differs from the Phase 1c drill in three ways:
 >
 > 1. **Scenario is corruption, not disk failure.** The Phase 1c scenario was a simulated primary disk failure (`kill -9` of postgres + `rm -rf $PGDATA` + loss of WAL spool). The Phase 3 scenario is a simulated **primary DB corruption** — the postgres process is running, the data directory exists, but a subset of pages in `rsvps` or `audit_events` are corrupt. This tests the operator's ability to **detect** corruption (not just respond to a crash) and to restore from the pgBackRest repo without losing the uncorrupted rows written after the corrupt write.
 > 2. **The canary set is extended.** Phase 1c checked row counts + the bucket listing. Phase 3 additionally validates the `audit_events` hash-chain integrity (zero broken `prev_hash` links) — this is the canary that proves the audit log was not tampered with during the corruption window.
@@ -573,7 +575,7 @@ For production PostgreSQL clusters, this script is **not** the primary backup �
 ### 9.1 Schedule
 
 - **Cadence:** quarterly (unchanged from Phase 1c §5.1).
-- **Second drill:** Q2 — see `docs/ops/drill-reports/2026-Q2.md` (created on drill day).
+- **Second drill:** Planned for Q2, contingent on a completed first drill — `docs/ops/drill-reports/2026-Q2.md` is a report template/example path, not evidence of an executed exercise.
 - **Drill owner:** on-call engineer rotation (different engineer from the Q1 drill if the rotation has turned over).
 - **Sign-off:** engineering lead + at least one witness. The witness MUST NOT be the drill owner (separation of duties).
 

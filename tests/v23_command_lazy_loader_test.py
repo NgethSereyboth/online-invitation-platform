@@ -8,9 +8,9 @@ ROOT=Path(__file__).resolve().parents[1]
 def main()->int:
  try:from playwright.sync_api import sync_playwright
  except Exception as exc:return skipped('V23_COMMAND_LAZY_LOADER',exc)
- core=(ROOT / "src" / "js" / "editor-command-system-v23.js").read_text(encoding='utf-8')
- ui=(ROOT / "src" / "js" / "command-palette-v23.js").read_text(encoding='utf-8')
- css=(ROOT / "src" / "css" / "command-palette-v23.css").read_text(encoding='utf-8')
+ core=(ROOT / "src" / "js" / "editor-command-system.js").read_text(encoding='utf-8')
+ ui=(ROOT / "src" / "js" / "command-palette.js").read_text(encoding='utf-8')
+ css=(ROOT / "src" / "css" / "command-palette.css").read_text(encoding='utf-8')
  requests={'js':0,'css':0}
  html=f"""<!doctype html><html><head><base href='http://einvite.test/'><meta charset='utf-8'></head><body><div id='stage'><div class='object' data-id='layer-1'></div></div><select id='zoomLevel'><option value='1'>100%</option></select><script>
  const __s=new Map();const localStorage={{getItem:k=>__s.has(String(k))?__s.get(String(k)):null,setItem:(k,v)=>__s.set(String(k),String(v)),removeItem:k=>__s.delete(String(k))}};
@@ -26,8 +26,8 @@ def main()->int:
    page.on('pageerror',lambda e:errors.append(str(e)))
    def serve_js(route):requests['js']+=1;route.fulfill(status=200,content_type='application/javascript',body=ui)
    def serve_css(route):requests['css']+=1;route.fulfill(status=200,content_type='text/css',body=css)
-   page.route('http://einvite.test/command-palette-v23.js',serve_js)
-   page.route('http://einvite.test/command-palette-v23.css',serve_css)
+   page.route('http://einvite.test/command-palette.js',serve_js)
+   page.route('http://einvite.test/command-palette.css',serve_css)
    page.set_content(html,wait_until='load')
    assert page.locator('.v23-command-surface').count()==0
    page.keyboard.press('Control+K')

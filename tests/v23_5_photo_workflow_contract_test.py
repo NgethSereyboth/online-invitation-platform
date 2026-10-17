@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-js=(ROOT / "src" / "js" / "photo-workflow-v23.js").read_text(encoding='utf-8')
-css=(ROOT / "src" / "css" / "photo-workflow-v23.css").read_text(encoding='utf-8')
-loader=(ROOT / "src" / "js" / "performance-loader-v22.js").read_text(encoding='utf-8')
-assets=(ROOT / "src" / "js" / "asset-workflow-v23.js").read_text(encoding='utf-8')
+js=(ROOT / "src" / "js" / "photo-workflow.js").read_text(encoding='utf-8')
+css=(ROOT / "src" / "css" / "photo-workflow.css").read_text(encoding='utf-8')
+loader=(ROOT / "src" / "js" / "performance-loader.js").read_text(encoding='utf-8')
+assets=(ROOT / "src" / "js" / "asset-workflow.js").read_text(encoding='utf-8')
 assert "const VERSION='23.5.3'" in js
 for token in [
  'image.editPhoto','image.copyLook','image.pasteLook','image.resetAdjustments',
@@ -16,8 +16,8 @@ for token in [
  assert token in js,token
 assert "window.addEventListener('keydown'" not in js
 assert "document.addEventListener('keydown'" not in js
-assert 'photo-workflow-v23.js' in loader
-assert loader.index('asset-workflow-v23.js') < loader.index('photo-workflow-v23.js')
+assert 'photo-workflow.js' in loader
+assert loader.index('asset-workflow.js') < loader.index('photo-workflow.js')
 assert "commandButton('image.editPhoto','Edit photo',true)" in assets
 for token in ['.v23-photo-workflow','.v23-photo-presets','.v23-photo-preview','.v23-photo-composition','.photo-workflow-v23']:
  assert token in css,token

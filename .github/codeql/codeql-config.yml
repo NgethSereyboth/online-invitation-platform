@@ -10,8 +10,8 @@ name: "eInvite CodeQL Config"
 paths-ignore:
   - src/python/bundle-*.js
   - src/python/bundle-*.css
-  - src/js/bundle-*-v15.js
-  - src/js/bundle-*-v15.css
+  - src/js/bundle-*.js
+  - src/js/bundle-*.css
   - src/python/vendor/**
   - vendor/**
   - src/python/editor-suite.js

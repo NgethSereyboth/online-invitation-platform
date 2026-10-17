@@ -38,7 +38,7 @@ def main():
                 check.wait_for_selector('#stage .object',timeout=20000)
                 if check.locator('#finalTourDismiss').count() and check.locator('#finalTourDismiss').is_visible(): check.locator('#finalTourDismiss').click()
                 if width==390:
-                    check.wait_for_selector('#mobileEditorV14Bar',state='visible');check.locator('#mobileToolsMode').click();assert check.locator('aside.left').get_attribute('aria-hidden')=='false';assert check.locator('aside.right').get_attribute('aria-hidden')=='true';check.locator('#mobileQuickMode').click();assert check.locator('aside.left').get_attribute('aria-hidden')=='true';assert check.locator('aside.right').get_attribute('aria-hidden')=='false'
+                    check.wait_for_selector('#mobileEditorV14Bar',state='visible');check.locator('#mobileToolsMode').click();check.wait_for_function("()=>document.body.dataset.mobileEditorMode==='tools'");assert check.locator('aside.left').get_attribute('aria-hidden')=='false';assert check.locator('aside.right').get_attribute('aria-hidden')=='true';check.locator('#mobileQuickMode').click();check.wait_for_function("()=>document.body.dataset.mobileEditorMode==='quick'");assert check.locator('aside.left').get_attribute('aria-hidden')=='true';assert check.locator('aside.right').get_attribute('aria-hidden')=='false'
             else:
                 check.wait_for_function("()=>document.querySelector('#publicRoot')?.textContent.includes('V14 Layout Invitation')",timeout=15000)
             overflow=check.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');assert overflow<=4,(kind,width,overflow)

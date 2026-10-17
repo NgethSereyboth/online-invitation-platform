@@ -3,7 +3,7 @@
 /* Radii (§1.2) — aligned to Canva. 8px is Canva's named `radiusElement` token,
    and 16px/9999px are the panel and pill values Canva actually ships in its own
    CSS. --radius-lg had zero consumers. --radius-xl's only consumer is
-   `dialog { border-radius: ... }` in app-shell-v55.css, kept at 16px so a modal
+   `dialog { border-radius: ... }` in app-shell.css, kept at 16px so a modal
    does not become fully pill-shaped; --radius-pill is new and consumer-free. */
 /* Phase 2b WCAG AA: light-mode --text-3 was #8e919b (3.15:1 on white, fails AA for normal text).
    Bumped to #6c707a (4.96:1) — see docs/a11y/WCAG-AA-AUDIT.md §4.
@@ -15,7 +15,7 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
 /* ============================================================================
    V55 design system — Canva-derived scale (dispatch §1).
    Tokens only; no component rules here. Component/shell rules live in
-   src/css/app-shell-v55.css, which is loaded LAST in every page bundle.
+   src/css/app-shell.css, which is loaded LAST in every page bundle.
    ========================================================================= */
 :root{
   /* --- Font families (self-hosted only; CSP font-src 'self' data:) --------- */
@@ -94,7 +94,7 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
      another. The minimum width is the sum of the parts below.
 
      The order badge (`.workflow-v6-order-badge`, left:5px, 19px wide) is
-     deliberately suppressed inside the dock by page-experience-v22.css,
+     deliberately suppressed inside the dock by page-experience.css,
      so the number column only has to hold the number itself. If that
      suppression is ever lifted, the badge overlaps the number unless
      `--editor-dock-chip-slot-number` grows to at least 36px. ------------- */
@@ -199,7 +199,7 @@ html[data-theme="dark"]{
 /* --- .card-hover (§1.5c) — the single hover-lift utility.
    Cards lift by transform only (no layout-affecting property) over --motion-2
    with --ease-out. The reduced-motion guard for it lives next to the other
-   hover transforms in app-shell-v55.css. ------------------------------- */
+   hover transforms in app-shell.css. ------------------------------- */
 .card-hover{transition:transform var(--motion-2) var(--ease-out),box-shadow var(--motion-2) var(--ease-out),border-color var(--motion-2) var(--ease-out)}
 .card-hover:hover,.card-hover:focus-within{transform:scale(1.02);box-shadow:var(--app-shadow-card-hover);border-color:var(--app-line-2)}
 /* Khmer never gets negative tracking and always gets the Khmer family first

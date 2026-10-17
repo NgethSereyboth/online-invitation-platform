@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><script src="core/theme.js"></script><script src="backend-mode-v14.js"></script>
+<head><script src="core/theme.js"></script><script src="backend-mode.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -8,8 +8,8 @@
   <!--
     v54 editor architecture (see src/js/editor/ and src/css/editor/):
 
-      Editor chrome is bundled into bundle-index-v15.{js,css} via
-      docs/route-bundle-sources-v15.json. The former versioned files
+      Editor chrome is bundled into bundle-index.{js,css} via
+      docs/route-bundle-sources.json. The former versioned files
       `windows-ui-v16.{js,css}` and `workspace-experience-v24.{js,css}`
       have been consolidated into the documented modules below:
 
@@ -27,7 +27,7 @@
       references to the editor files here — they are already concatenated
       into the bundle in the correct order.
   -->
-  <link rel="stylesheet" href="bundle-index-v15.css">
+  <link rel="stylesheet" href="bundle-index.css">
   
 
 
@@ -62,7 +62,7 @@
 <body data-shell="a" data-page="index" class="studio-experience"><a class="skip-link" href="#main">Skip to content</a>
   <!--
     V2-UX-8 (ROADMAP-V2 §3.8) — Mobile responsiveness pass.
-    The editor has a responsive contract (editor-responsive-contract-v27.css:
+    The editor has a responsive contract (editor-responsive-contract.css:
     einvite-layout-mobile / einvite-layout-compact classes collapse the side
     panels into drawers), but the dense toolbar + side panels are best used on
     a desktop screen. This bilingual banner is hidden by default and shown only
@@ -287,6 +287,7 @@ rsvp</textarea></label>
       <div id="canvasViewport" class="canvas-viewport">
         <div id="canvasFrame" class="canvas-frame">
           <div class="ruler ruler-x" aria-hidden="true"></div><div class="ruler ruler-y" aria-hidden="true"></div>
+          <div id="stageTransform">
           <div id="stage" class="stage">
             <div class="safe-margin-overlay" aria-hidden="true"><span>Safe area</span></div>
             <div class="decor">✦</div>
@@ -295,6 +296,8 @@ rsvp</textarea></label>
         <div class="object image-object" data-id="hero" style="left:12%;top:49%;width:76%;height:250px"><img alt="Wedding flowers" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23eac7b8'/%3E%3Cstop offset='1' stop-color='%239d4555'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23g)'/%3E%3Ccircle cx='270' cy='280' r='120' fill='%23f9eee5' opacity='.8'/%3E%3Ccircle cx='490' cy='270' r='150' fill='%23d98c9a' opacity='.7'/%3E%3Ctext x='400' y='530' text-anchor='middle' font-family='serif' font-size='34' fill='white'%3EOur Celebration%3C/text%3E%3C/svg%3E"><i></i></div>
         <div class="object text-object" data-id="details" data-text-style-id="body" data-typography-model-version="1" data-font-pairing="sans-modern" data-font="noto-sans" data-font-size="18" data-text-auto-fit="none" data-text-auto-fit-max="22" data-text-min-font-size="12" data-font-weight="400" data-line-height="1.5" data-text-wrap="pretty" style="left:12%;top:83%;width:76%;height:90px"><div class="content details">27 December 2026<br>The Riverside Ballroom, Phnom Penh</div><i></i></div>
           </div>
+          </div>
+          <div id="canvasMeasurements" aria-hidden="true"></div>
         </div>
       </div>
     </section>
@@ -403,7 +406,7 @@ rsvp</textarea></label>
     </aside>
   </main>
   <dialog id="modal" aria-modal="true" aria-labelledby="modalHeading"><button class="close" type="button" aria-label="Close guest preview">×</button><div id="modalBody"></div><h2 id="modalHeading" class="sr-only">Guest preview</h2></dialog>
-  <script src="bundle-index-v15.js"></script>
+  <script src="bundle-index.js"></script>
   
   
   

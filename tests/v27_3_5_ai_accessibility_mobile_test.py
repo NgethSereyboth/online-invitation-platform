@@ -14,9 +14,9 @@ def main()->int:
   except Exception as exc:return skipped('V27_3_5_AI_ACCESSIBILITY_MOBILE',exc)
   page=browser.new_page();page.set_default_timeout(12000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)));ready(page,390,844)
   page.evaluate("""()=>{const b=document.createElement('button');b.id='currentAiOpener';b.textContent='Open agent';document.body.append(b);window.EInviteContext={getInvitationId:()=> 'invite-1'};window.EInviteBackend={isAvailable:()=>false,ready:Promise.resolve()}}""")
-  page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent-v28.css").read_text(encoding='utf-8'))
-  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding='utf-8'))
-  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent-v28.js").read_text(encoding='utf-8'))
+  page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent.css").read_text(encoding='utf-8'))
+  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding='utf-8'))
+  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent.js").read_text(encoding='utf-8'))
   opener=page.locator('#currentAiOpener');baseline=page.evaluate("()=>[...document.body.children].filter(e=>e.id!=='eiAgentPanel'&&e.inert).length")
   for width,height in SIZES:
    page.set_viewport_size({'width':width,'height':height});opener.focus();page.evaluate("()=>EInviteAICreativeAgent.open('write',{opener:document.querySelector('#currentAiOpener')})")
@@ -32,7 +32,7 @@ def main()->int:
   page.evaluate('()=>EInviteAICreativeAgent.destroy()');page.close()
   page=browser.new_page(viewport={'width':390,'height':844});page.set_default_timeout(12000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_content('<button id="currentAiOpener">Open agent</button><div id="stage" tabindex="0"></div>')
   page.evaluate("""()=>{window.__aiAborted=false;document.documentElement.dataset.serverConnected='true';window.EInviteContext={getInvitationId:()=> 'invite-1'};window.EInviteBackend={isAvailable:()=>true,ready:Promise.resolve()};window.fetch=(url,opt={})=>{if(String(url).includes('/messages'))return new Promise((resolve,reject)=>opt.signal.addEventListener('abort',()=>{window.__aiAborted=true;reject(new DOMException('Aborted','AbortError'))},{once:true}));if(String(url).includes('/ai-agent/status'))return Promise.resolve(new Response(JSON.stringify({providerMode:'fake',providerDisclosure:'Fake provider',preferences:{enabled:true,retentionDays:0}}),{status:200,headers:{'Content-Type':'application/json'}}));if(String(url).endsWith('/ai/threads'))return Promise.resolve(new Response(JSON.stringify({threads:[{id:'thread-1',title:'Test'}]}),{status:200,headers:{'Content-Type':'application/json'}}));return Promise.resolve(new Response(JSON.stringify({id:'thread-1',title:'Test',messages:[]}),{status:200,headers:{'Content-Type':'application/json'}}))}}""")
-  page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent-v28.css").read_text(encoding='utf-8'));page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding='utf-8'));page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent-v28.js").read_text(encoding='utf-8'))
+  page.add_style_tag(content=(ROOT / "src" / "css" / "ai-creative-agent.css").read_text(encoding='utf-8'));page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding='utf-8'));page.add_script_tag(content=(ROOT / "src" / "js" / "ai-creative-agent.js").read_text(encoding='utf-8'))
   page.evaluate("()=>EInviteAICreativeAgent.open('write',{opener:document.querySelector('#currentAiOpener')})")
   page.locator('[data-agent-input]').fill('Test cancellation');page.locator('[data-agent-action=send]').click();page.wait_for_function("()=>document.querySelector('#eiAgentPanel').dataset.busy==='true'");page.evaluate('()=>EInviteAICreativeAgent.close()');page.wait_for_function('()=>window.__aiAborted===true')
   assert page.locator('#eiAgentPanel').count()==1;page.evaluate('()=>EInviteAICreativeAgent.destroy()');assert page.locator('#eiAgentPanel').count()==0

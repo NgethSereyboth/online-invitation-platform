@@ -156,17 +156,16 @@ def parse_grants(grant_strings: Iterable[str]) -> list[Grant]:
 
 
 def evaluate(
-    grants: Iterable[Grant],
+    grants: Iterable[Grant | str],
     required_resource_type: str,
     required_resource_id: str,
     required_action: str,
 ) -> bool:
     """Return True if ANY grant in ``grants`` covers the required permission.
 
-    This is the pure (no-I/O) entry point used by the runtime grant
-    check in ``capabilities.availability``.  The grants list is built by
-    ``build_access_snapshot`` from the ``agent_grants`` table rows for
-    the current user.
+    Accepts parsed :class:`Grant` objects or serialized grant strings from
+    ``agent_grants``. Malformed entries are ignored so invalid persisted data
+    cannot grant access or prevent other valid grants from being evaluated.
     """
     try:
         required = Grant(required_resource_type, required_resource_id, required_action)
@@ -177,4 +176,16 @@ def evaluate(
             f"Invalid required permission: {required_resource_type!r}:"
             f"{required_resource_id!r}:{required_action!r}: {exc}"
         ) from exc
-    return any(g.matches(required) for g in grants)
+    for grant in grants:
+        if isinstance(grant, Grant):
+            parsed = grant
+        elif isinstance(grant, str):
+            try:
+                parsed = Grant.parse(grant)
+            except GrantParseError:
+                continue
+        else:
+            continue
+        if parsed.matches(required):
+            return True
+    return False

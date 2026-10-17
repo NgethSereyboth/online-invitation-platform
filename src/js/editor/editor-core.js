@@ -536,7 +536,7 @@
     }
     const layout = window.EInviteResponsiveLayout;
     const narrow = !layout || typeof layout.mode !== 'function' || layout.mode() !== 'desktop';
-    // `editor-responsive-contract-v27.js` owns the narrow-viewport drawer and
+    // `editor-responsive-contract.js` owns the narrow-viewport drawer and
     // reveals the pane from its own transform rules. Its API takes a boolean
     // (`openInspector: o => set('inspector', o)`) — calling it with no argument
     // is a no-op that leaves the panel translated off-screen (G6), so pass it.
@@ -787,13 +787,26 @@
    * Ctrl/Cmd + wheel zooms the canvas at the pointer location.
    * @param {WheelEvent} event
    */
+  const motion = window.EInviteMotion;
+  const wheelBatcher = motion.createFrameBatcher(
+    (a, b) => ({ delta: a.delta + b.delta, clientX: b.clientX, clientY: b.clientY }),
+    value => {
+      // Preserve the old per-event wheel response in P1; P5 adopts the new clamp.
+      controller.setZoom(controller.zoom * Math.exp(-value.delta * 0.0024), {
+        clientX: value.clientX, clientY: value.clientY, source: 'wheel'
+      });
+      scheduleUpdate();
+    }
+  );
+  const settleWheel = motion.debounce(() => wheelBatcher.flush(), motion.MOTION.WHEEL_SETTLE_MS);
+  cleanup.push(() => { settleWheel.cancel(); wheelBatcher.destroy(); });
   function wheelZoom(event) {
+    if (window.EInviteMotion?.input) { window.EInviteMotion.input.wheel(event); return; }
     if (!(event.ctrlKey || event.metaKey)) return;
     event.preventDefault();
     event.stopPropagation();
-    const factor = Math.exp(-clamp(event.deltaY, -120, 120) * 0.0024);
-    controller.setZoom(controller.zoom * factor, { clientX: event.clientX, clientY: event.clientY, source: 'wheel' });
-    scheduleUpdate();
+    wheelBatcher.accumulate({delta: clamp(event.deltaY, -120, 120), clientX: event.clientX, clientY: event.clientY});
+    settleWheel();
   }
 
   // =========================================================================
@@ -852,14 +865,22 @@
    * accidentally duplicating on a plain click.
    * @param {PointerEvent} event
    */
+  const duplicateBatcher = motion.createFrameBatcher((a, b) => b, applyDuplicateDrag);
+  cleanup.push(() => duplicateBatcher.destroy());
   function moveDuplicateDrag(event) {
+    if (!duplicateDrag || event.pointerId !== duplicateDrag.pointerId) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    duplicateBatcher.accumulate(event);
+  }
+  function applyDuplicateDrag(event) {
     const drag = duplicateDrag;
     if (!drag || event.pointerId !== drag.pointerId) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     const screenDx = event.clientX - drag.startX;
     const screenDy = event.clientY - drag.startY;
-    if (!drag.active && Math.hypot(screenDx, screenDy) < 4) return;
+    if (!drag.active && Math.abs(screenDx) < 3 && Math.abs(screenDy) < 3) return;
     drag.active = true;
     drag.dx = screenDx / drag.scale;
     drag.dy = screenDy / drag.scale;
@@ -951,6 +972,7 @@
    * @param {boolean} [cancel=false]
    */
   function endDuplicateDrag(event, cancel = false) {
+    duplicateBatcher.flush();
     const drag = duplicateDrag;
     if (!drag || event.pointerId !== drag.pointerId) return;
     event.preventDefault();
@@ -970,6 +992,7 @@
    * @param {PointerEvent} event
    */
   function startMiddlePan(event) {
+    if (window.EInviteMotion?.input) return;
     if (event.button !== 1) return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -979,16 +1002,22 @@
   }
 
   /** Move the canvas viewport according to the active middle-pan gesture. */
+  const middlePanBatcher = motion.createFrameBatcher((a, b) => b, event => {
+    if (!middlePan || event.pointerId !== middlePan.pointerId) return;
+    viewport.scrollLeft = middlePan.left - (event.clientX - middlePan.x);
+    viewport.scrollTop = middlePan.top - (event.clientY - middlePan.y);
+  });
+  cleanup.push(() => middlePanBatcher.destroy());
   function moveMiddlePan(event) {
     if (!middlePan || event.pointerId !== middlePan.pointerId) return;
     event.preventDefault();
-    viewport.scrollLeft = middlePan.left - (event.clientX - middlePan.x);
-    viewport.scrollTop = middlePan.top - (event.clientY - middlePan.y);
+    middlePanBatcher.accumulate(event);
   }
 
   /** Release the middle-pan gesture. */
   function endMiddlePan(event) {
     if (!middlePan || event.pointerId !== middlePan.pointerId) return;
+    middlePanBatcher.flush();
     middlePan = null;
     viewport.classList.remove('v54-middle-panning');
   }
@@ -1196,7 +1225,7 @@
         moreTrigger.setAttribute('aria-expanded', String(!menu.hidden));
       };
       // Capture phase, deliberately. `#stage` owns a capture-phase `pointerdown` handler that ends in
-      // `stopImmediatePropagation()` when the pointer lands on an object (professional-editor-v17.js,
+      // `stopImmediatePropagation()` when the pointer lands on an object (professional-editor.js,
       // the object-drag start), so a bubble-phase listener here never sees a click on the canvas.
       // Measured at 1280: a click on a canvas object at (640, 648) left the menu open
       // (`hidden:false`, `aria-expanded="true"`) while a click on empty chrome closed it.

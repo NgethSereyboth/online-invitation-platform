@@ -11,7 +11,7 @@ def main()->int:
   try:browser=launch_chromium(p)
   except Exception as exc:return skipped('V28_AGENT_REGISTRY_BROWSER',exc)
   page=browser.new_page();ready(page);page.add_init_script("window.EInviteContext={getInvitationId:()=> 'invite-1'}")
-  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding='utf-8'))
+  page.add_script_tag(content=(ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding='utf-8'))
   page.wait_for_function('()=>window.EInviteAgentToolRegistry')
   result=page.evaluate("""async()=>{const B=EInviteEditorBridge,S=EInviteAIActionService,R=EInviteAgentToolRegistry;B.select(['title']);const before=S.fingerprint(B.getState());const plan={toolCalls:[{id:'rich_text.replace',arguments:{pageId:'hero',objectIds:['title'],text:'សូមអញ្ជើញចូលរួម',mode:'preserve'}},{id:'object.create_text',arguments:{pageId:'hero',text:'Caption',style:{textStyleId:'caption'}}}]};const prepared=await R.prepare(plan);const done=await R.execute(plan);const after=S.fingerprint(B.getState());B.undo();return{preview:prepared.preview?.ok,actions:done.actionCount,before,after,undo:S.fingerprint(B.getState()),text:B.getState().objects.title.text}}""")
   assert result['preview'] and result['actions']==2 and result['after']!=result['before'] and result['undo']==result['before'],result

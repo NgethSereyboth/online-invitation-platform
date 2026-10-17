@@ -9,8 +9,8 @@ def source(name:str)->str:return (ROOT/name).read_text(encoding='utf-8')
 def main()->int:
  try:from playwright.sync_api import sync_playwright
  except Exception as exc:return skipped('V22_1_PERFORMANCE_BENCHMARK',exc)
- worker=base64.b64encode(source('scene-render-worker-v22.js').encode()).decode()
- html=f'''<!doctype html><meta charset="utf-8"><style>html,body{{margin:0}}#stage{{position:relative;width:1600px;height:1200px;contain:layout paint style}}.object{{position:absolute;box-sizing:border-box}}</style><div id="stage"></div><script>window.EInviteLifecycle={{add:()=>{{}},cleanup:()=>{{}}}};window.EInviteRenderWorkerURL=URL.createObjectURL(new Blob([atob("{worker}")],{{type:'application/javascript'}}));</script><script>{source('performance-observability-v22.js')}</script><script>{source('interaction-scheduler-v22.js')}</script><script>{source('incremental-scene-renderer-v22.js')}</script><script>{source('render-worker-bridge-v22.js')}</script>'''
+ worker=base64.b64encode(source('scene-render-worker.js').encode()).decode()
+ html=f'''<!doctype html><meta charset="utf-8"><style>html,body{{margin:0}}#stage{{position:relative;width:1600px;height:1200px;contain:layout paint style}}.object{{position:absolute;box-sizing:border-box}}</style><div id="stage"></div><script>window.EInviteLifecycle={{add:()=>{{}},cleanup:()=>{{}}}};window.EInviteRenderWorkerURL=URL.createObjectURL(new Blob([atob("{worker}")],{{type:'application/javascript'}}));</script><script>{source('performance-observability.js')}</script><script>{source('interaction-scheduler.js')}</script><script>{source('incremental-scene-renderer.js')}</script><script>{source('render-worker-bridge.js')}</script>'''
  with sync_playwright() as p:
   try:browser=launch_chromium(p)
   except Exception as exc:return skipped('V22_1_PERFORMANCE_BENCHMARK',exc)

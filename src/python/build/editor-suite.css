@@ -32,7 +32,7 @@ body:not(.guest) > header{position:sticky;top:0;z-index:2000;gap:10px;padding:12
 /* The topbar is a stacking context, so every popup it contains — including the `•••` menu at
    z-index 12000 — is painted inside 2000 and cannot outrank a sibling context on its own. The
    studio canvas toolbar is `position:relative; z-index:40` inside `main` (editor-styles.css) and
-   later in the DOM, and `app-shell-v55.css` redeclares this header at z-index 40 later in the route
+   later in the DOM, and `app-shell.css` redeclares this header at z-index 40 later in the route
    bundle, so the toolbar won the 40/40 tie by document order and painted a full row of the open
    menu (measured: 6 of 77 sampled menu points covered at 1440 and 1600, none at 1024).
    Scoping this declaration to the studio experience makes the intended 2000 win on the editor route
@@ -398,7 +398,7 @@ body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme
    1200px and 23px at 1280px, clearing it again from 1360px up. The offset
    rules below move the rail's static position into the gutter and keep it
    sticky, so it still follows the canvas while panning. Desktop only: at
-   ≤1180px the layout contract (editor-responsive-contract-v27.js: 1180 =
+   ≤1180px the layout contract (editor-responsive-contract.js: 1180 =
    compact) shrinks the gutter to 12px and centres the canvas, so there is
    nothing to offset.
 
@@ -417,6 +417,44 @@ body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme
 .ei-rich-toolbar{position:fixed;z-index:20000;display:none;align-items:center;gap:4px;padding:5px;border:1px solid var(--app-line);border-radius:12px;background:color-mix(in srgb,var(--app-surface) 96%,transparent);box-shadow:0 15px 45px rgba(0,0,0,.18);backdrop-filter:blur(18px)}.ei-rich-toolbar.visible{display:flex}.ei-rich-toolbar button{width:32px;height:32px;padding:0!important;border:0!important;border-radius:8px!important;background:transparent!important;color:var(--app-text)!important;box-shadow:none!important;font-size:12px!important}.ei-rich-toolbar button:hover{background:var(--app-surface-2)!important;transform:none!important}.ei-rich-toolbar .sep{width:1px;height:22px;background:var(--app-line)}.canvas-inline-editing{outline:1px dashed color-mix(in srgb,var(--app-accent) 72%,transparent)!important;outline-offset:4px;cursor:text!important;user-select:text!important}
 .ei-frame-placeholder img{opacity:.78}.ei-frame-placeholder:after{content:'Double-click to choose a photo';position:absolute;inset:auto 10px 12px;z-index:4;padding:7px 9px;border-radius:9px;background:#111a;color:#fff;font:600 10px/1.25 Inter,system-ui;text-align:center;pointer-events:none}
 @media(max-width:780px){.ei-tool-rail{position:absolute;left:7px;top:7px;flex-direction:row;width:auto;max-width:calc(100% - 14px);overflow:auto;margin:0}.ei-tool-rail .sep{width:1px;height:26px;margin:4px 3px}.ei-context-toolbar{order:20;width:100%;border-left:0;border-top:1px solid var(--app-line);padding:7px 0 0;margin-top:5px}}
+
+/* Canvas motion: one promoted layer, with static measurement chrome beside it. */
+#canvasViewport{contain:layout paint;overscroll-behavior:contain;isolation:isolate}
+#canvasViewport #canvasFrame{position:static;width:0!important;height:0!important;min-width:0;min-height:0;margin:0}
+#stageTransform{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;transition:none;filter:none;backdrop-filter:none;box-shadow:none}
+#stageTransform #stage{position:relative;left:0;top:0;margin:0;transform:none!important;transition:none!important}
+#stageTransform.gesture{transition:none}
+#canvasMeasurements{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+#canvasZoomSlider{width:100px;min-width:64px;height:28px;margin:0;padding:0;accent-color:var(--app-accent,#3E7C6B)}
+#canvasZoomReadout{font-size:12px;font-variant-numeric:tabular-nums;min-width:42px}
+#canvasViewport :focus-visible,.toolbar :focus-visible{outline:2px solid #3E7C6B;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){#stageTransform,#canvasMeasurements *{transition:none!important;animation:none!important}}
+
+/* Drafting instruments stay in screen space: one-pixel lines at every zoom. */
+#canvasMeasurements{--motion-guide:#3B6FB6;color:var(--motion-guide);font-size:12px;font-variant-numeric:tabular-nums}
+.motion-line{position:absolute;pointer-events:none;background:var(--motion-guide);box-shadow:none}
+.motion-line.motion-x{width:1px}.motion-line.motion-y{height:1px}
+.motion-distance{position:absolute;left:4px;top:4px;white-space:nowrap;background:var(--app-surface,#FAF9F6);color:var(--motion-guide);padding:1px 4px;border:1px solid currentColor;border-radius:2px;font-size:12px;font-variant-numeric:tabular-nums;line-height:16px}
+.motion-guide{opacity:.7}.motion-guide:not(.locked){pointer-events:auto;touch-action:none}
+.motion-guide.motion-x::before{content:'';position:absolute;inset:0 -11px}.motion-guide.motion-y::before{content:'';position:absolute;inset:-11px 0}
+.motion-guide.motion-x{cursor:ew-resize}.motion-guide.motion-y{cursor:ns-resize}
+.motion-guide:focus-visible{opacity:1;outline:2px solid #3E7C6B;outline-offset:3px}
+.motion-margin{position:absolute;pointer-events:none;border:1px dashed var(--motion-guide);background:transparent}
+.motion-ruler{position:absolute;pointer-events:auto;touch-action:none;background:var(--app-surface,#FAF9F6);color:var(--app-muted,#6E7278);font-size:12px;overflow:hidden}
+.motion-ruler-x{left:24px;right:0;top:0;height:24px;cursor:ns-resize;border-bottom:1px solid var(--app-line,#ddd)}
+.motion-ruler-y{top:24px;bottom:0;left:0;width:24px;cursor:ew-resize;border-right:1px solid var(--app-line,#ddd)}
+.motion-ruler-tick{position:absolute;font-variant-numeric:tabular-nums;pointer-events:none}
+.motion-ruler-x .motion-ruler-tick{height:5px;bottom:0;border-left:1px solid currentColor}.motion-ruler-y .motion-ruler-tick{width:5px;right:0;border-top:1px solid currentColor}
+.motion-ruler-x .major{height:18px;padding-left:3px}.motion-ruler-y .major{width:20px;padding-top:2px;writing-mode:vertical-rl}
+.motion-measurement-settings{margin-top:12px;padding:8px;border:1px solid var(--app-line,#ddd);font-size:14px}.motion-measurement-settings summary{cursor:pointer;min-height:24px}.motion-measurement-settings label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}.motion-measurement-settings input{width:64px;margin:0;min-height:24px}.motion-measurement-settings input[type=checkbox]{width:24px;height:24px}
+#stageTransform .safe-margin-overlay{display:none!important}
+
+#canvasViewport.pan-mode,#canvasViewport.ei-tool-hand{cursor:grab}
+#canvasViewport.motion-panning,#canvasViewport.motion-panning *{cursor:grabbing!important;user-select:none!important}
+#canvasViewport.motion-panning,#canvasViewport.ei-tool-hand{touch-action:none}
+#stageTransform .object,.pe-handle,.pe-rotate{touch-action:none}
+body.pe-pointer-interaction #stageTransform .object{cursor:move}
+#canvasViewport .motion-ruler,#canvasViewport .motion-guide{overscroll-behavior:contain}
 
 /* V19 advanced typography */
 .typography-v19-controls{border:1px solid var(--line,#d8cfcc);border-radius:10px;padding:10px;margin:12px 0}.typography-v19-controls legend{padding:0 6px;font-weight:700;color:var(--ink,#2c2326)}.typography-v19-controls button{width:100%;min-height:40px}.typography-v19-controls .hint{margin:8px 0 0;line-height:1.45}.object .content[data-typography-v19="true"]{overflow:hidden;overflow-wrap:anywhere}.published-text[data-typography-v19="true"]{overflow:hidden;overflow-wrap:anywhere}

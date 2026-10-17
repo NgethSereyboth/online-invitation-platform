@@ -98,11 +98,11 @@ def main()->int:
         assert blocked.get('error')=='model_directory_inside_public_root'
 
     # Every registered tool has a concrete client/server dispatch reference.
-    registry=(ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding='utf-8')
-    action_service=(ROOT / "src" / "js" / "ai-editor-action-service-v27.js").read_text(encoding='utf-8')
-    action_extension=(ROOT / "src" / "js" / "ai-editor-action-extension-v53.js").read_text(encoding='utf-8')
-    loader=(ROOT / "src" / "js" / "ai-assistant-loader-v27.js").read_text(encoding='utf-8')
-    route_sources=(ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8')
+    registry=(ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding='utf-8')
+    action_service=(ROOT / "src" / "js" / "ai-editor-action-service.js").read_text(encoding='utf-8')
+    action_extension=(ROOT / "src" / "js" / "ai-editor-action-extension.js").read_text(encoding='utf-8')
+    loader=(ROOT / "src" / "js" / "ai-assistant-loader.js").read_text(encoding='utf-8')
+    route_sources=(ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8')
     missing=[tool_id for tool_id in by_id if tool_id not in registry]
     assert not missing, missing
     assert 'materials.retry_import' not in by_id and 'materials.retry_import' not in registry
@@ -112,11 +112,11 @@ def main()->int:
     for column in ('feedback_learning','memory_enabled','knowledge_enabled'):
         assert f'ALTER TABLE ai_preferences ADD COLUMN IF NOT EXISTS {column}' in postgres, column
     assert 'updateImageFrame' in action_extension
-    assert 'ai-editor-action-extension-v53.js' in loader and 'upload-folder-client-v53.js' in loader
+    assert 'ai-editor-action-extension.js' in loader and 'upload-folder-client.js' in loader
     import json as _json
     _sources=_json.loads(route_sources)
-    assert 'upload-folder-client-v53.js' in _sources['pages']['materials.html']['scripts']
-    assert 'upload-folder-client-v53.js' not in _sources['pages']['index.html']['scripts']
+    assert 'upload-folder-client.js' in _sources['pages']['materials.html']['scripts']
+    assert 'upload-folder-client.js' not in _sources['pages']['index.html']['scripts']
     for marker in ('updatePageStyle','updateOpeningScene','updateEventDetails','image.configure_frame','gallery.arrange','backgroundAssetId'):
         assert marker in registry or marker in action_service or marker in action_extension, marker
 

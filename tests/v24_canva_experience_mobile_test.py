@@ -5,8 +5,8 @@ from pathlib import Path
 from browser_runtime import launch_chromium
 from inline_editor_runtime_test import build_inline_editor
 ROOT=Path(__file__).resolve().parents[1]
-CSS=['direct-manipulation-v24.css','content-browser-v24.css','smart-layout-v24.css','brand-components-v24.css','collaboration-v24.css','export-quality-v24.css']
-JS=['direct-manipulation-v24.js','content-browser-v24.js','smart-layout-v24.js','brand-components-v24.js','collaboration-v24.js','export-quality-v24.js']
+CSS=['direct-manipulation.css','content-browser.css','smart-layout.css','brand-components.css','collaboration-v24.css','export-quality.css']
+JS=['direct-manipulation.js','content-browser.js','smart-layout.js','brand-components.js','collaboration-v24.js','export-quality.js']
 def main()->int:
  from playwright.sync_api import sync_playwright
  with sync_playwright() as p:

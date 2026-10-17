@@ -440,10 +440,14 @@ class JITElevationManager:
             # Mark the grant consumed (one-shot). The consumed_at IS NULL filter
             # in the SELECT above + this UPDATE together implement the one-shot
             # contract: a grant authorises exactly one tool execution.
-            db.execute(
-                "UPDATE jit_elevations SET consumed_at=? WHERE id=? AND consumed_at IS NULL",
-                (now_ms, row["id"]),
+            cursor = db.execute(
+                "UPDATE jit_elevations SET consumed_at=? "
+                "WHERE id=? AND status='granted' AND expires_at > ? "
+                "AND revoked_at IS NULL AND consumed_at IS NULL",
+                (now_ms, row["id"], now_ms),
             )
+            if cursor.rowcount != 1:
+                return False
         self._emit_audit(
             row["user_id"], "jit.consumed", row["resource_type"], row["resource_id"], {
                 "elevationId": row["id"], "toolId": row["tool_id"], "action": row["action"],

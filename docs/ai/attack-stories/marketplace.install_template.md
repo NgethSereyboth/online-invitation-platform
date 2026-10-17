@@ -8,74 +8,50 @@
 | **Permission tier** | `manage` |
 | **Executor** | `client` |
 | **Binding** | `POST /api/platform/v52/marketplace/install` (platform-api) |
-| **Reversible** | `True` (default) |
+| **Reversible** | `True` |
 | **Confirmation required** | `True` |
-| **Source file** | `ai_agent/tools.py` (in `_defs()`, after `editor.apply_workspace`) |
-| **Binding file** | `ai_agent/capabilities.py:TOOL_BINDINGS["marketplace.install_template"]` |
-| **Feature gate** | `marketplace` (`ai_agent/capabilities.py:FEATURE_TOOL_PREFIXES["marketplace"] = ("marketplace.",)`) — only available when the `marketplace_templates_v36` table exists. |
+| **Source file** | `ai_agent/tools.py` — `TOOLS['marketplace.install_template']` |
+| **Binding file** | `ai_agent/capabilities.py` — `TOOL_BINDINGS['marketplace.install_template']` |
 
 ### 1. What it touches
 
-- **Data**: `marketplace_templates_v36` (read — template metadata, signature, version, author), `user_templates` / `user_page_templates` (write — installed template becomes available to the host), `studio_resources` (write — template assets are copied into the workspace's studio library).
-- **Services**: `POST /api/platform/v52/marketplace/install` registers the installation. A `marketplace-package-v36` background job (per `future_platform_v52/service.py`) unpackages the template, verifies its manifest, copies assets, and registers a version-pinned template record.
-- **Files**: template packages are ZIP archives stored under the workspace's object storage area. Asset versions reference stored-object versions (`platform_v32/storage.py::ObjectStorage`).
-- **Side effects**: installed templates appear in the host's template picker and can be used as the basis for new invitations. Each new invitation based on the template inherits its design tokens, fonts, and asset references.
+- **Operation:** Install an authorized marketplace template package for the workspace.
+- **Data and inputs:** a selected authorized marketplace template package and workspace installation record. The schema accepts: `templateId`, `externalLicenseReference`; values are validated against the registered bounded schema.
+- **Execution boundary:** `platform-api` — `POST /api/platform/v52/marketplace/install`. This story does not assume any unlisted external destination or side effect.
 
 ### 2. Worst case if malicious
 
-If a prompt-injected or compromised agent successfully invoked `marketplace.install_template` with an attacker-supplied `templateId`, the attacker could:
-
-- **Install a malicious template** that:
-  - Contains a malicious SVG or font asset with embedded `<script>` payload (XSS in the editor at template-insert time).
-  - References asset URLs that resolve to attacker-controlled endpoints (SSRF / exfiltration via the asset loader).
-  - Carries a benign-looking manifest but a tampered asset body (signature mismatch is currently a Phase 4a control, not yet enforced).
-  - Embeds a template-bound plugin manifest that auto-installs a malicious plugin when the host uses the template.
-- **Supply-chain attack at scale**: a single compromised template may be used by hundreds of hosts who install it through the marketplace, giving the attacker a foothold in every workspace that adopts the template.
-- **License / pricing fraud**: install a paid template with a faked `externalLicenseReference` to bypass the marketplace billing check.
-- **Resource exhaustion**: install a 5000-asset template that exhausts the workspace's storage quota and blocks legitimate invitations from being created.
-
-Blast radius: **workspace-wide on install, potentially platform-wide if the malicious template propagates through shared invitations** (a host who shares an invitation based on a malicious template with another workspace can infect the recipient). Data affected: **supply-chain + PII via XSS + storage abuse**.
+If a prompt-injected or compromised agent persuaded an authorized user to approve `marketplace.install_template` with attacker-chosen but schema-valid arguments, it could install a deceptive or vulnerable template that alters new invitations, misrepresents licensing, or introduces unsafe content into a host's workspace. The immediate scope is the authorized invitation/page/resource described above; repeated calls can multiply the effect only within the same underlying permissions and rate limits. Treat model-provided content and target IDs as untrusted until verified against the host's intent.
 
 ### 3. Containment
 
-- **Schema validation**: `templateId` is a stable-id (120 chars). `externalLicenseReference` is `string(200)`.
-- **Permission tier**: `manage` — owner / manager only.
-- **Confirmation boundary**: `confirmation=True` (medium-risk triggers `exactTargetsAccepted=True`). `reversible=True` so `destructiveAccepted` is not required.
-- **Feature gate**: requires the `marketplace_templates_v36` table.
-- **Authorization token**: 30-second single-use, bound to the exact plan index.
-- **HTTP-binding match**: `http_request_matches_tool` verifies `POST /api/platform/v52/marketplace/install`.
-- **Background job**: `marketplace-package-v36` runs in the bounded job queue (`platform_v32/jobs.py::JobQueue`) with retry limits, idempotency keys, and cancellation.
-- **Malware scanning**: the uploaded package is scanned by `src/python/security_scanner_v54.py` before unpacking.
-- **Audit event**: `ai.plan_confirmed` / `ai.tool_authorized` with `metadata={"templateId": ..., "externalLicenseReference": ...}`.
+- **Input validation:** `ai_agent/tools.py::validate_tool_call()` applies this tool's registered required fields, types, enums, and declared bounds; the shared validator rejects unknown top-level arguments and recursively blocks several executable-markup, shell/SQL, and destination-key patterns. Nested objects declared with `additionalProperties: true` are permissive, so this shared validation is not a substitute for executor-specific validation.
+- **Permission check:** `manage` is the declared minimum permission. Capability discovery filters tools, then `ai_agent/service.py::confirm_plan()` and `authorize_tool_call()` re-check the user's current access immediately before authorization.
+- **Plan/revision gate:** approval is bound to this plan's exact tool index, user, invitation, and document revision/fingerprint; stale plans are rejected. This tool has no high-risk destructive confirmation boundary; review its exact arguments and targets before accepting the plan.
+- **One-shot authorization:** `authorize_tool_call()` issues a 30-second token bound to `(userId, invitationId, toolId, planId, index)`; it is consumed once (`ai_agent/service.py::consume_tool_authorization()`).
+- **Endpoint binding:** the invocation must match the declared HTTP method/path through `http_request_matches_tool()`; invitation/resource IDs are constrained to the approved binding pattern.
+- **JIT elevation:** this tool is listed in `ai_agent/jit_elevation.py::JIT_ELIGIBLE_TOOLS`; it requires an active five-minute database grant before a one-shot authorization token is issued. Evaluation binds the grant to user/tool/resource and consumes it once (`ai_agent/jit_elevation.py::JITElevationManager.evaluate`). This tool requires manual approval; it is not in `AUTO_APPROVED_TOOLS`.
+- **Audit trail:** when the production audit callback is configured, plan confirmation, tool authorization, token consumption, and JIT state transitions are recorded through `src/python/server.py::write_audit_event` in the hash-chained audit log. Rate limits and workspace AI policy apply to the agent request path.
 
 ### 4. Reversible
 
-- **Yes**: per `ToolDefinition.reversible = True`.
-- **How**: `DELETE /api/platform/v52/marketplace/installations/{id}` uninstalls the template. This removes the template from the host's picker and decrements the installation count.
-- **Time to undo**: seconds.
-- **Side effects of undo**: invitations that were *already created* from the template retain their content (the template is copied at create-time, not referenced). Asset versions remain in storage; they can be garbage-collected when no invitation references them.
+- **Registry declaration:** `True`.
+- **Recovery:** The tool registry marks this operation reversible. Capture the pre-operation values and target IDs; restore them with the corresponding inverse/editor action or invitation history where available, then verify the resulting page and guest-visible preview.
 
-### 5. Mitigation (Phase 1a + future)
+### 5. Mitigation and residual risk
 
-- **Resource-scoped permission**: `workspace:{id}:marketplace:install`, `workspace:{id}:marketplace:uninstall`. Template-scoped permissions become `template:{templateId}:instantiate` (a separate grant for using the template to create a new invitation).
-- **JIT elevation**: 5-minute TTL grant with mandatory `reason`. **Out-of-band confirmation** when installing a template whose author is not a Verified Vendor (per `docs/ROADMAP.md` §7 Phase 4a Verified Vendor badge).
-- **Signature enforcement** (Phase 4a): refuse any template whose signature does not verify against the eInvite marketplace CA. The signed manifest must include a SHA256 of every asset body; mismatches are rejected at unpack-time.
-- **Asset URL allowlist**: any URL referenced in a template asset must resolve to the platform's own object-storage origin (`{originBase}/api/platform/v32/objects/{key}`) or a verified CDN. External URLs are refused.
-- **SVG / font sanitization**: strip `<script>` tags, `onload` handlers, and external references from SVG and font assets before storing. Use `defusedxml` or equivalent for parsing.
-- **Anomaly detection**: dashboard detects when a single template is installed by an unusual number of distinct workspaces within a 24-hour window (potential viral spread of a malicious template).
+- Before confirmation, show the exact target IDs and meaningful argument summary; reject a stale target, changed document fingerprint, or caller whose invitation permission has changed.
+- Keep the host-facing action limited to the declared `platform-api` executor and validate every referenced page, asset, guest, or external-effect target against the current invitation/workspace ownership.
+- **Residual test gap:** the general registry/plan tests verify the shared agent contract, not necessarily this specific executor's complete downstream behavior. A tool-specific executor test should cover the malicious outcome described above before treating that behavior as independently certified.
 
 ### 6. Test coverage
 
-- `tests/v28_agent_tool_contract_test.py` — registry contract.
-- `tests/v28_agent_server_contract_test.py` — plan + authorize + consume flow.
-- `tests/v28_agent_conversation_browser_test.py` — confirmation UX.
-
-Gap: no test covers the SVG-script / font-payload attack. Add a sanitization test in Phase 1b.
+- `tests/v28_agent_tool_contract_test.py` — registry completeness, schema bounds, and executor bindings.
+- `tests/v28_agent_server_contract_test.py` — plan, confirmation, and authorization flow.
+- `tests/ai_resource_scopes_test.py` — resource-grant behavior (where mapped).
+- `tests/ai_jit_enforcement_test.py` — JIT lifecycle (only applies to JIT-eligible tools).
+- **Tool-specific test:** no dedicated end-to-end executor test is asserted by this document; add/identify one for `marketplace.install_template` in the relevant route/editor subsystem.
 
 ### 7. AISVS cross-reference
 
-- `C9.2.4` — confirmation (medium-risk → `exactTargetsAccepted`).
-- `C9.3.3` — exact-target confirmation (`templateId` is captured).
-- `C10.4.4` — signed and verified on install (Phase 4a).
-- `C10.5.1` — template content treated as untrusted data.
-- `C10.6.3` — no executable markup in template assets (sanitization).
+`C9.1.1` (complete tool inventory), `C9.2.1` (permission enforcement), `C9.2.3` (authorization re-check), `C9.3.3` (exact-target confirmation), `C10.3.2` (JIT elevation), `C10.2.1` (tool-to-endpoint binding), `C10.5.1` (untrusted provider/input data). See `docs/ai/AISVS-C9-C10-MAPPING.md`. These are control mappings, not a claim that this individual tool has a dedicated test or an external MCP transport.

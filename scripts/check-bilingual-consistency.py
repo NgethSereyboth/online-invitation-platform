@@ -730,7 +730,7 @@ def render_markdown(
         "- **Pattern B (per-locale):** `STRINGS = { en: { key1: '...' }, km: { key1: '...' } }`"
     )
     lines.append(
-        "  — used by `collaboration-presence-v52.js`, `crdt-yjs-indexeddb.js`, "
+        "  — used by `collaboration-presence.js`, `crdt-yjs-indexeddb.js`, "
         "`crdt-yjs-rich-media.js`, `crdt-yjs-undo.js`, `guest-journey.js`, and "
         "all `pages/admin/*` modules."
     )

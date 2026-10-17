@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def page_html(theme: str) -> str:
     modern = html.escape((ROOT / "src" / "css" / "modern-ui.css").read_text(encoding="utf-8"), quote=False)
-    future = html.escape((ROOT / "src" / "css" / "future-studio-v52.css").read_text(encoding="utf-8"), quote=False)
-    loader = (ROOT / "src" / "js" / "future-studio-loader-v52.js").read_text(encoding="utf-8").replace("</script>", "<\\/script>")
+    future = html.escape((ROOT / "src" / "css" / "future-studio.css").read_text(encoding="utf-8"), quote=False)
+    loader = (ROOT / "src" / "js" / "future-studio-loader.js").read_text(encoding="utf-8").replace("</script>", "<\\/script>")
     return f"""<!doctype html><html data-theme=\"{theme}\"><head><meta charset=\"utf-8\">
 <style>{modern}</style><style>{future}</style>
 <script>window.EInviteLifecycle={{add(){{}}}};window.EInviteEditorBridge={{getState:()=>({{id:'inv-dark'}})}};
@@ -30,8 +30,8 @@ window.EInviteUnifiedEditorV34={{unmount(){{}},async mount(root){{
  const empty=document.createElement('div');empty.className='v52-empty';empty.textContent='No queued jobs';
  card.append(heading,text,field,table,empty);root.append(card);
 }}}};</script>
-<script data-einvite-future=\"future-ui-v0_52.js\" data-loaded=\"1\"></script>
-<script data-einvite-future=\"unified-editor-v34.js\" data-loaded=\"1\"></script>
+<script data-einvite-future=\"future-ui.js\" data-loaded=\"1\"></script>
+<script data-einvite-future=\"unified-editor.js\" data-loaded=\"1\"></script>
 </head><body><main id=\"background\"><button id=\"open\">Open platform</button></main>
 <script>{loader}</script></body></html>"""
 

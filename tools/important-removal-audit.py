@@ -136,11 +136,11 @@ CANDIDATE_ROOTS = ("src/python", "src/js", "src/css", "docs", ".")
 # rest are named in the `n/a` section, so an unrelated change is visible rather than
 # silently ignored.
 GENERATED_MANIFESTS = (
-    "docs/page-assets-v15.json",
-    "docs/route-bundles-v15.json",
-    "docs/route-bundle-sources-v15.json",
-    "src/python/build/page-assets-v15.json",
-    "src/python/route-bundles-v15.json",
+    "docs/page-assets.json",
+    "docs/route-bundles.json",
+    "docs/route-bundle-sources.json",
+    "src/python/build/page-assets.json",
+    "src/python/route-bundles.json",
 )
 
 # Sibling keys whose value names the file an entry's size/digest fields describe.
@@ -192,7 +192,7 @@ def audit_manifest(path: str, rev: str, renames: dict[str, str]) -> tuple[bool, 
         the rebuild that just happened, not a remembered number.
 
     `renames` is the diff's own rename map. A manifest that records *source names*
-    (`route-bundle-sources-v15.json` is the hand-maintained one) legitimately moves
+    (`route-bundle-sources.json` is the hand-maintained one) legitimately moves
     those strings when a batch renames a file, and only when the move is exactly
     `old-name -> new-name` for a rename this diff performed is it accepted.
     """

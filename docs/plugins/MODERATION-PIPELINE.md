@@ -79,7 +79,7 @@ The automated pipeline runs in a sandboxed CI-like environment. Every check prod
 - Validates `manifest.json` against `plugins/sdk/manifest.schema.json` (see `PLUGIN-SPEC.md` §6).
 - FAILs on any schema violation.
 - Rejects unknown top-level fields (`additionalProperties: false`).
-- Rejects forbidden field names anywhere in the recursive tree (`PLUGIN-SPEC.md` §2.3): `script, javascript, code, eval, html, cssText, filesystemPath, networkUrl, sql, srcdoc, onload, onclick, innerHTML, outerHTML, document_cookie, window_location`. Matches the V48 runtime's existing forbidden set in `src/js/plugin-runtime-v48.js:forbidden` (extended with the additional DOM-API tokens).
+- Rejects forbidden field names anywhere in the recursive tree (`PLUGIN-SPEC.md` §2.3): `script, javascript, code, eval, html, cssText, filesystemPath, networkUrl, sql, srcdoc, onload, onclick, innerHTML, outerHTML, document_cookie, window_location`. Matches the V48 runtime's existing forbidden set in `src/js/plugin-runtime.js:forbidden` (extended with the additional DOM-API tokens).
 - Rejects manifests deeper than 12 levels of nesting or with arrays longer than 500 entries (matches V48 runtime `scan()` depth/length caps).
 
 ### 3.2 Dependency audit
@@ -376,7 +376,7 @@ All maintainer actions are logged as `moderation.*` audit events (visible in the
 - `docs/plugins/PLUGIN-SPEC.md` — manifest format (drives §3.1 schema validation).
 - `docs/plugins/PLUGIN-SIGNING.md` — signature verification (drives §3.5 entrypoint signature check) + CRL (drives §4.6 takedown).
 - `docs/plugins/PLUGIN-SANDBOX.md` — runtime isolation (drives §4.3 security audit: the sandbox must enforce what the manifest declares).
-- `src/js/plugin-runtime-v48.js:forbidden` — the V48 forbidden-field set extended in §3.3.
+- `src/js/plugin-runtime.js:forbidden` — the V48 forbidden-field set extended in §3.3.
 - `src/python/security_scanner_v54.py` — the malware scanner applied to `asset:upload` calls from a sandboxed plugin.
 - `src/python/secrets_v54.py` — the secrets vault that plugins must NOT bundle (§4.3 security audit).
 - `docs/ops/BACKUP-DR.md` — marketplace ObjectStorage backup (vendor verification documents are stored in the same encrypted ObjectStorage).

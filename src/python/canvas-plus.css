@@ -29,7 +29,7 @@ body:not(.guest) > header{position:sticky;top:0;z-index:2000;gap:10px;padding:12
 /* The topbar is a stacking context, so every popup it contains — including the `•••` menu at
    z-index 12000 — is painted inside 2000 and cannot outrank a sibling context on its own. The
    studio canvas toolbar is `position:relative; z-index:40` inside `main` (editor-styles.css) and
-   later in the DOM, and `app-shell-v55.css` redeclares this header at z-index 40 later in the route
+   later in the DOM, and `app-shell.css` redeclares this header at z-index 40 later in the route
    bundle, so the toolbar won the 40/40 tie by document order and painted a full row of the open
    menu (measured: 6 of 77 sampled menu points covered at 1440 and 1600, none at 1024).
    Scoping this declaration to the studio experience makes the intended 2000 win on the editor route

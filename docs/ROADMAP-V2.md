@@ -263,7 +263,7 @@ Security and UX/UI come first. Do not start Phase 3 execution, Phase 4 wiring, o
 **Files:**
 - New `src/js/host-signup-sheets.js`
 - `src/html/dashboard.html`
-- `docs/route-bundle-sources-v15.json` (add to dashboard bundle)
+- `docs/route-bundle-sources.json` (add to dashboard bundle)
 
 **Task:**
 - [ ] Add a "Sign-up sheets" panel to the dashboard (inside the event section).
@@ -284,7 +284,7 @@ Security and UX/UI come first. Do not start Phase 3 execution, Phase 4 wiring, o
 **Files:**
 - New `src/js/host-polls.js`
 - `src/html/dashboard.html`
-- `docs/route-bundle-sources-v15.json`
+- `docs/route-bundle-sources.json`
 
 **Task:**
 - [ ] Add a "Polls" panel to the dashboard.
@@ -441,7 +441,7 @@ These are carry-overs the earlier phases marked complete but which are not actua
 - [ ] Add `<script integrity="sha384-…" src="/vendor/yjs/y.js"></script>` (and the two others) to `src/html/editor.html` and `src/html/dashboard.html`.
 - [ ] Ensure `sync_frontend_assets.py` mirrors `vendor/yjs/` into `src/python/vendor/yjs/`.
 - [ ] Verify `window.Y` is defined on editor load.
-- [ ] Verify `crdt-yjs-indexeddb.js`, `crdt-yjs-undo.js`, `crdt-yjs-rich-media.js`, `collaboration-presence-v52.js` all initialize without the "window.Y missing" error.
+- [ ] Verify `crdt-yjs-indexeddb.js`, `crdt-yjs-undo.js`, `crdt-yjs-rich-media.js`, `collaboration-presence.js` all initialize without the "window.Y missing" error.
 - [ ] Add a headless test that opens two editor tabs (Playwright) and verifies a text edit in one appears in the other via Y.js.
 
 **Acceptance:** Two browser tabs converge; offline edit in one merges on reconnect; no console errors.

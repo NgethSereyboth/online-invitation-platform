@@ -53,13 +53,13 @@ def main()->int:
  assert info.get('compatibilityFloor')=='V27.3.5';assert 'pending' in info['certification']['releaseCertification'].lower()
  assert set(info['requiredPendingMarkers'])=={'EINVITATION_V0_52_ALL_REQUIRED_REVIEW_CHECKS_PASSED','EINVITATION_V0_52_RELEASE_CHECK_PASSED','EINVITATION_V0_52_WINDOWS_RELEASE_CHECK_PASSED','EINVITATION_V0_52_LINUX_RELEASE_CHECK_PASSED'}
  assert not set(info['requiredPendingMarkers']).intersection(info.get('releaseMarkers',[]));assert digest(ROOT/'README.md')==README_SHA
- routes=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'));scripts=routes['pages']['index.html']['scripts'];styles=routes['pages']['index.html']['styles']
- assert 'editor-deferred-tools-bootstrap-v0_52.js' in scripts and 'ai-editor-action-service-v27.js' in scripts
- for heavy in ['ai-assistant-loader-v27.js','ai-creative-agent-v28.js','ai-agent-tool-registry-v28.js','advanced-editor-loader-v32.js','font-browser-loader-v22.js']:assert heavy not in scripts,heavy
- bootstrap=(ROOT / "src" / "js" / "editor-deferred-tools-bootstrap-v0_52.js").read_text(encoding='utf-8');assert all(x in bootstrap for x in ('ai-assistant-loader-v27.js','advanced-editor-loader-v32.js','font-browser-loader-v22.js'))
- loader=(ROOT / "src" / "js" / "ai-assistant-loader-v27.js").read_text(encoding='utf-8');assert 'ai-creative-agent-v28.js' in loader and 'ai-agent-tool-registry-v28.js' in loader and 'ai-creative-agent-v28.css' in loader
- agent=(ROOT / "src" / "js" / "ai-creative-agent-v28.js").read_text(encoding='utf-8');assert '<style' not in agent.lower() and "createElement('style')" not in agent and 'Regenerate with current selection' in agent and 'Preview against current selection' in agent
- service=(ROOT / "src" / "js" / "ai-editor-action-service-v27.js").read_text(encoding='utf-8');assert "type==='replaceText'" in service and 'bridge().transact' in service and 'STALE_REVISION' in service and 'crypto.randomUUID' in service
+ routes=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'));scripts=routes['pages']['index.html']['scripts'];styles=routes['pages']['index.html']['styles']
+ assert 'editor-deferred-tools-bootstrap.js' in scripts and 'ai-editor-action-service.js' in scripts
+ for heavy in ['ai-assistant-loader.js','ai-creative-agent.js','ai-agent-tool-registry.js','advanced-editor-loader.js','font-browser-loader.js']:assert heavy not in scripts,heavy
+ bootstrap=(ROOT / "src" / "js" / "editor-deferred-tools-bootstrap.js").read_text(encoding='utf-8');assert all(x in bootstrap for x in ('ai-assistant-loader.js','advanced-editor-loader.js','font-browser-loader.js'))
+ loader=(ROOT / "src" / "js" / "ai-assistant-loader.js").read_text(encoding='utf-8');assert 'ai-creative-agent.js' in loader and 'ai-agent-tool-registry.js' in loader and 'ai-creative-agent.css' in loader
+ agent=(ROOT / "src" / "js" / "ai-creative-agent.js").read_text(encoding='utf-8');assert '<style' not in agent.lower() and "createElement('style')" not in agent and 'Regenerate with current selection' in agent and 'Preview against current selection' in agent
+ service=(ROOT / "src" / "js" / "ai-editor-action-service.js").read_text(encoding='utf-8');assert "type==='replaceText'" in service and 'bridge().transact' in service and 'STALE_REVISION' in service and 'crypto.randomUUID' in service
  server=(ROOT/'src'/'python'/'server.py').read_text(encoding='utf-8');assert 'providerMode":"connected"' in server and 'providerMode":"fallback"' in server and 'provider":"template"' in server
  route=route_budget_utils.assert_index_route_within_budget();size=route['bytes']['total'];cert=info['certification'];assert cert['editorRouteBytes']+cert['editorRouteHeadroom']==cert['editorRouteLimit'],cert;print(f"V0_52_BUILD_INFO_ROUTE limit={cert['editorRouteLimit']} recordedBytes={cert['editorRouteBytes']} recordedHeadroom={cert['editorRouteHeadroom']} currentTotal={size}")
  for name in REQUIRED_TESTS:assert (ROOT/'tests'/name).exists(),name

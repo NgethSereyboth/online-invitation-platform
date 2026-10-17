@@ -2810,7 +2810,7 @@ def guest_slug(name, taken=()):
 # are.
 #
 # The substitution reuses the merge semantics the editor already ships rather
-# than inventing a second dialect: canva-scale-v31.js mergeFields is
+# than inventing a second dialect: canva-scale.js mergeFields is
 # ``/\{\{\s*([\w.-]+)\s*\}\}/g`` with a missing key becoming ''.
 # ---------------------------------------------------------------------------
 _MERGE_TOKEN = re.compile(r"\{\{\s*([\w.-]+)\s*\}\}")
@@ -3767,7 +3767,7 @@ class Handler(SimpleHTTPRequestHandler):
         )
         if not platform_route:return False
         try:
-            if path=="/api/health/live":return self.json(200,{"ok":True,"status":"live",**({"version":"0.52"} if DISCLOSE_HEALTH_DETAILS else {})})
+            if path=="/api/health/live":return self.json(200,{"ok":True,"status":"live"})
             service=get_platform_v32_service()
             if path=="/api/health/ready":
                 errors=list(service.config.validate());checks={"configuration":not errors}
@@ -9478,9 +9478,18 @@ class Handler(SimpleHTTPRequestHandler):
         scheme="https" if COOKIE_SECURE or forwarded_https else "http"
         return f"{scheme}://{host}{path if path.startswith('/') else '/'+path}"
 
+    @staticmethod
+    def _safe_inline_filename(filename):
+        """Return an ASCII quoted filename with header delimiters neutralized."""
+        clean = Path(str(filename or "")).name
+        clean = clean.encode("ascii", "ignore").decode("ascii")
+        clean = re.sub(r'["\\;]+', "_", clean)
+        clean = re.sub(r"[\x00-\x1f\x7f]", "_", clean).strip(" .")
+        return clean[:180] or "download"
+
     def send_binary(self, status, body, content_type, cache_control="public,max-age=300", filename=None):
         self.send_response(status);self.send_header("Content-Type",content_type);self.send_header("Cache-Control",cache_control)
-        if filename:self.send_header("Content-Disposition",f'inline; filename="{filename}"')
+        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"')
         self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def media_access_scope(self, path):
@@ -9517,7 +9526,7 @@ class Handler(SimpleHTTPRequestHandler):
         if modified_at:
             stamp=float(modified_at)/1000 if float(modified_at)>10_000_000_000 else float(modified_at)
             self.send_header("Last-Modified",formatdate(stamp,usegmt=True))
-        if filename:self.send_header("Content-Disposition",f'inline; filename="{filename}"')
+        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"')
         self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def serve_asset(self, path):

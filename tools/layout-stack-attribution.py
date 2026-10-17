@@ -48,7 +48,7 @@ Method
       attributable fraction is explicit instead of implied.
 
 A caller is keyed by `functionName@file:line`, with the file reduced to its
-basename and its query string removed so `bundle-index-v15.js` from the served
+basename and its query string removed so `bundle-index.js` from the served
 origin and from a cache-busted URL aggregate together.
 
 Usage

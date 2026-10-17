@@ -8,13 +8,13 @@ ROOT=Path(__file__).resolve().parents[1]
 def main()->int:
     subprocess.run([sys.executable,'build_route_bundles.py'],cwd=ROOT,check=True)
     subprocess.run([sys.executable,'build_route_bundles.py','--check'],cwd=ROOT,check=True)
-    manifest=json.loads((ROOT / "docs" / "route-bundles-v15.json").read_text(encoding='utf-8'))
+    manifest=json.loads((ROOT / "docs" / "route-bundles.json").read_text(encoding='utf-8'))
     for page,item in manifest['pages'].items():
         for file_key,hash_key in [('javascript','scriptSha256'),('stylesheet','styleSha256')]:
             payload=(ROOT/('src/js' if file_key=='javascript' else 'src/css')/item[file_key]).read_bytes()
             assert b'\r\n' not in payload,(page,item[file_key],'CRLF generated artifact')
             assert hashlib.sha256(payload).hexdigest()==item[hash_key],(page,item[file_key])
-    source=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))['pages']['index.html']
+    source=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'))['pages']['index.html']
     # v54 consolidated the former windows-ui-v16 chrome into editor/ui-layout.js and editor/editor-styles.css.
     assert source['scripts'].count('editor/ui-layout.js')==1, 'ui-layout.js must be bundled exactly once'
     assert source['styles'].count('editor/editor-styles.css')==1, 'editor-styles.css must be bundled exactly once'

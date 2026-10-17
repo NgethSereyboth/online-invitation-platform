@@ -2,10 +2,10 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-js = (ROOT / "src" / "js" / "page-experience-v22.js").read_text(encoding='utf-8')
-css = (ROOT / "src" / "css" / "page-experience-v22.css").read_text(encoding='utf-8')
-loader = (ROOT / "src" / "js" / "performance-observability-v22.js").read_text(encoding='utf-8')
-workspace = (ROOT / "src" / "css" / "workspace-v21.css").read_text(encoding='utf-8')
+js = (ROOT / "src" / "js" / "page-experience.js").read_text(encoding='utf-8')
+css = (ROOT / "src" / "css" / "page-experience.css").read_text(encoding='utf-8')
+loader = (ROOT / "src" / "js" / "performance-observability.js").read_text(encoding='utf-8')
+workspace = (ROOT / "src" / "css" / "workspace.css").read_text(encoding='utf-8')
 combined = js + css + workspace
 
 required = [
@@ -36,10 +36,10 @@ required = [
 ]
 for term in required:
     assert term in combined, f'missing V22.2 contract term: {term}'
-commands=(ROOT / "src" / "js" / "editor-command-system-v23.js").read_text(encoding='utf-8')
+commands=(ROOT / "src" / "js" / "editor-command-system.js").read_text(encoding='utf-8')
 assert "id:'page.addBlank'" in commands and "Mod+Enter" in commands
-assert 'page-experience-v22.js' in loader
-assert 'page-experience-v22.css' not in loader, 'CSS must be loaded by the lazy page module'
+assert 'page-experience.js' in loader
+assert 'page-experience.css' not in loader, 'CSS must be loaded by the lazy page module'
 assert 'dataTransfer' not in js, 'Page reorder must not rely on browser-specific HTML5 drag/drop'
 assert '72dvh' in workspace and '640px' in workspace
 assert '.v22-page-dock' not in combined, 'A second competing page dock must not be introduced'

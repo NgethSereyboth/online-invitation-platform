@@ -190,7 +190,7 @@ The host hard-refuses:
 - Single-signed plugins (only `signature` present, no `marketplace_signature`, or `marketplace_signature.sig` is all zeros / empty).
 - Plugins where the marketplace CA signature was produced by a key that does not match the host's pinned CA public key (i.e. someone tried to mint their own "marketplace").
 
-There is no developer-mode bypass in production (`EINVITE_ALLOW_UNSIGNED_PLUGINS=1` is rejected by `production_preflight` in the same pattern as `EINVITE_ALLOW_NO_SCANNER=1` — see V54 worklog). Dev-only unsigned plugins are allowed in the existing V48 manifest-registration UI (`src/js/plugin-platform-v48.js:registerManifest()`) and are confined to a separate "Development plugins" section that cannot reach the marketplace listing.
+There is no developer-mode bypass in production (`EINVITE_ALLOW_UNSIGNED_PLUGINS=1` is rejected by `production_preflight` in the same pattern as `EINVITE_ALLOW_NO_SCANNER=1` — see V54 worklog). Dev-only unsigned plugins are allowed in the existing V48 manifest-registration UI (`src/js/plugin-platform.js:registerManifest()`) and are confined to a separate "Development plugins" section that cannot reach the marketplace listing.
 
 ---
 

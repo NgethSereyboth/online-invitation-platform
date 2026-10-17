@@ -12,7 +12,7 @@ def main()->int:
   page=browser.new_page(viewport={'width':1440,'height':1000})
   errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
-  page.set_content(html,wait_until='load',timeout=30000);page.add_style_tag(path=str(__import__('pathlib').Path(__file__).resolve().parents[1]/'professional-workflow-v23.css'));page.add_script_tag(path=str(__import__('pathlib').Path(__file__).resolve().parents[1]/'professional-workflow-v23.js'));page.wait_for_timeout(300)
+  page.set_content(html,wait_until='load',timeout=30000);page.add_style_tag(path=str(__import__('pathlib').Path(__file__).resolve().parents[1]/'professional-workflow.css'));page.add_script_tag(path=str(__import__('pathlib').Path(__file__).resolve().parents[1]/'professional-workflow.js'));page.wait_for_timeout(300)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click()
   assert page.evaluate("()=>!!EInviteProfessionalWorkflow&&EInviteProfessionalWorkflow.version===23.1")
   assert page.evaluate("()=>EInviteCommandRegistry.conflicts.length") == 0

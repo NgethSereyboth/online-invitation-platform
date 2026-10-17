@@ -13,7 +13,7 @@ DOC={
   'subtitle':{'id':'subtitle','type':'text','html':'English subtitle','left':'12%','top':'31%','width':'76%','height':'100px','textStyleId':'subheading','typographyModelVersion':1,'fontPairing':'sans-modern','font':'noto-sans','fontSize':28,'textAutoFit':'fit','textAutoFitMax':36,'textMinFontSize':14,'showInHero':True}
  },'designPages':[]}
 def build(saved=''):
- html=(ROOT / "src" / "html" / "public.html").read_text(encoding='utf-8');css=(ROOT / "src" / "css" / "bundle-public-v15.css").read_text(encoding='utf-8');js=(ROOT / "src" / "js" / "bundle-public-v15.js").read_text(encoding='utf-8').replace('</script>','<\\/script>')
+ html=(ROOT / "src" / "html" / "public.html").read_text(encoding='utf-8');css=(ROOT / "src" / "css" / "bundle-public.css").read_text(encoding='utf-8');js=(ROOT / "src" / "js" / "bundle-public.js").read_text(encoding='utf-8').replace('</script>','<\\/script>')
  payload=json.dumps({'document':DOC,'guest':None,'analyticsConsentRequired':False,'externalMediaConsentRequired':False},ensure_ascii=False)
  entries=f"[['einvite-guest-language:test','{saved}']]" if saved else '[]'
  pre=f'''<script>const __m=new Map({entries});const localStorage={{getItem:k=>__m.get(String(k))??null,setItem:(k,v)=>__m.set(String(k),String(v)),removeItem:k=>__m.delete(String(k))}};const sessionStorage={{getItem:()=>null,setItem:()=>{{}},removeItem:()=>{{}}}};window.fetch=async()=>({{ok:true,status:200,json:async()=>({payload})}});window.scrollTo=()=>{{}};if(!crypto.randomUUID)crypto.randomUUID=()=>"test-id";</script>'''

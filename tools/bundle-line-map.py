@@ -5,7 +5,7 @@ Why this exists
 ---------------
 Every instrument that observes the *running page* reports bundle coordinates:
 `tools/forced-layout-attribution.mjs` names the hottest forced-layout site as
-`bundle-index-v15.js:11092:22`, and a CDP stack frames a hot selector the same
+`bundle-index.js:11092:22`, and a CDP stack frames a hot selector the same
 way. A human cannot edit line 11092 of a 12,000-line concatenation. This tool
 replays the generator's own concatenation
 (`src/python/build/build_route_bundles.py`: each source is `";" + text.rstrip()`
@@ -40,7 +40,7 @@ JS_DIR = ROOT / "src" / "js"
 CSS_DIR = ROOT / "src" / "css"
 CSS_ORG = CSS_DIR / "organized"
 DOCS_DIR = ROOT / "docs"
-SOURCES = DOCS_DIR / "route-bundle-sources-v15.json"
+SOURCES = DOCS_DIR / "route-bundle-sources.json"
 
 
 def resolve_js(path: str) -> Path:
@@ -104,7 +104,7 @@ def main() -> int:
 
     kind = args.kind
     suffix = ".js" if kind == "scripts" else ".css"
-    bundle = (JS_DIR if kind == "scripts" else CSS_DIR) / f"bundle-{Path(args.page).stem}-v15{suffix}"
+    bundle = (JS_DIR if kind == "scripts" else CSS_DIR) / f"bundle-{Path(args.page).stem}{suffix}"
 
     if args.verify:
         derived = exact_bundle_text(args.page, kind)

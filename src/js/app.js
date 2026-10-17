@@ -18,7 +18,7 @@ const savedFullTemplatesKey='sovan-full-invitation-templates-v1';
 const objectClipboardKey='sovan-object-clipboard-v1';
 const recentFieldEdits=new Map();
 let activeCanvasId='hero',accountPageTemplates=[],accountBlockTemplates=[],accountSavedGroups=[];
-let editorZoom=Math.max(.35,Math.min(2,Number(localStorage.getItem('sovan-editor-zoom')||1))),panMode=false,spacePan=false;
+let editorZoom=Math.max(.1,Math.min(5,Number(localStorage.getItem('sovan-editor-zoom')||1))),panMode=false,spacePan=false;
 const editorClientId=sessionStorage.getItem('einvite-editor-client-id')||(crypto.randomUUID?.()||`client-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 sessionStorage.setItem('einvite-editor-client-id',editorClientId);
 localStorage.removeItem('sovan-auth-token');
@@ -373,7 +373,16 @@ if(window.TypographyDocumentModel)TypographyDocumentModel.normalizeDocument(doc,
 if(window.RichTextDocumentModel)RichTextDocumentModel.normalizeInvitation(doc,{mutate:true,strict:false});
 return doc
 }
-let pendingCoalescedCommand=null;
+let pendingCoalescedCommand=null,activeUndoTransaction=null;
+function beginUndoTransaction(label){
+ if(activeUndoTransaction)return activeUndoTransaction;
+ flushCoalescedCommand();const before=ensureHistoryBaseline(state);let ended=false;
+ const transaction={
+  commit(){if(ended)return false;ended=true;activeUndoTransaction=null;pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}));return true},
+  cancel(){if(ended)return false;ended=true;activeUndoTransaction=null;restoreHistory(before);return true}
+ };
+ activeUndoTransaction=transaction;return transaction;
+}
 function flushCoalescedCommand(){const pending=pendingCoalescedCommand;if(!pending)return false;clearTimeout(pending.timer);pendingCoalescedCommand=null;save({history:false,capture:pending.capture!==false});pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:pending.label,before:pending.before,after:clone(state),coalesced:true}}));return true}
 function scheduleCoalescedFlush(delay=450){if(!pendingCoalescedCommand)return;clearTimeout(pendingCoalescedCommand.timer);pendingCoalescedCommand.timer=setTimeout(flushCoalescedCommand,Math.max(80,Number(delay)||450))}
 let state=migrateDocument(inviteStore.read(draftKey,inviteStore.read('sovan-invite-draft-v3',initial)));
@@ -381,6 +390,7 @@ editorSelectionIds=Array.isArray(state.editorModel?.selectionIds)?state.editorMo
 if(state.editorModel)delete state.editorModel.selectionIds;
 window.EInviteEditorBridge={
 getState:()=>state,
+beginUndoTransaction,
 cloneState:()=>clone(state),
 getActiveCanvasId:()=>activeCanvasId,
 getSelectedIds:()=>[...editorSelectionIds],
@@ -421,7 +431,7 @@ if(!incrementallyRendered)apply();
 }
 save({history:false,capture:options.capture!==false});
 if(coalesceKey){if(!pendingCoalescedCommand)pendingCoalescedCommand={key:coalesceKey,label:String(label||'Edit'),before,timer:0,capture:options.capture!==false};else{pendingCoalescedCommand.label=String(label||pendingCoalescedCommand.label);pendingCoalescedCommand.capture=pendingCoalescedCommand.capture!==false&&options.capture!==false;}if(!options.deferFlush)scheduleCoalescedFlush(options.coalesceDelay||450)}
-else{pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}))}
+else if(!activeUndoTransaction){pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}))}
 return result;
 }catch(error){state=clone(before);if(state.editorModel)delete state.editorModel.selectionIds;if(options.render!==false)apply();throw error;}
 },
@@ -799,7 +809,7 @@ if(generation!==saveGeneration)return;
 const serialized=JSON.stringify(state);
 if(serialized===lastLocalFingerprint){$('#saveState').textContent='Saved';return}
 lastLocalFingerprint=serialized;const snapshot=structuredClone(state);inviteStore.write(draftKey,snapshot);
-if(options.history!==false){clearTimeout(historyTimer);historyTimer=setTimeout(()=>pushHistory(snapshot),260)}
+if(options.history!==false&&!activeUndoTransaction){clearTimeout(historyTimer);historyTimer=setTimeout(()=>pushHistory(snapshot),260)}
 $('#saveState').textContent='Saved';
 const activeManagerEditor=document.activeElement?.closest?.('.custom-block-editor,.gallery-item-editor,.section-animation-row,.section-style-row,.design-page-editor,.ei-builder-card');
 if(activeManagerEditor)renderLayers();else renderEditorManagers();
@@ -889,7 +899,7 @@ o.dataset.objectType=d.type||(o.classList.contains('image-object')?'image':'text
 // V25 adaptive/guest bindings are document data, not DOM data: without this the
 // state→DOM→state round-trip (apply() here and capture()) dropped
 // contentBinding, so a binding never survived a page load and the guest.*
-// binding written by template-bindings-v25.js could not be published (research
+// binding written by template-bindings.js could not be published (research
 // §5.3, Goal 3d).
 o.dataset.contentBinding=d.contentBinding||'';
 o.dataset.bindingDetached=d.bindingDetached===true?'true':'false';
@@ -2618,6 +2628,7 @@ select(o);
 save()
 };
 function updateCanvasView(){
+if(window.EInviteMotion?.viewport)return window.EInviteMotion.viewport.refresh();
 const stage=$('#stage'),frame=$('#canvasFrame'),zoomSelect=$('#zoomLevel');if(!stage||!frame)return;
 editorZoom=Math.max(.35,Math.min(2,editorZoom));localStorage.setItem('sovan-editor-zoom',String(editorZoom));
 if(!stage.style.width)stage.style.width='390px';
@@ -2627,6 +2638,7 @@ if(zoomSelect){const nearest=[.5,.75,1,1.25,1.5,2].reduce((a,b)=>Math.abs(b-edit
 requestAnimationFrame(updateSelectionBounds)
 }
 function setZoom(value,options={}){
+if(window.EInviteMotion?.viewport)return window.EInviteMotion.viewport.setZoom(value,options);
 const viewport=$('#canvasViewport'),stage=$('#stage'),oldZoom=editorZoom;
 const anchor=options&&options.anchor!==false&&viewport&&stage?{
 x:Number.isFinite(options.clientX)?options.clientX:viewport.getBoundingClientRect().left+viewport.clientWidth/2,
@@ -2659,7 +2671,14 @@ $('#fitCanvas').onclick=fitCanvasToViewport;
 $('#panToggle').onclick=()=>{panMode=!panMode;$('#panToggle').setAttribute('aria-pressed',String(panMode));$('#canvasViewport').classList.toggle('pan-mode',panMode)};window.EInviteCanvasPanController=Object.freeze({holdStart(){spacePan=true;$('#canvasViewport')?.classList.add('pan-mode');return true},holdEnd(){spacePan=false;if(!panMode)$('#canvasViewport')?.classList.remove('pan-mode');return true},get held(){return spacePan},get pinned(){return panMode}});
 $('#rulersToggle').onclick=()=>{const active=!$('#canvasFrame').classList.contains('show-rulers');$('#canvasFrame').classList.toggle('show-rulers',active);$('#rulersToggle').setAttribute('aria-pressed',String(active))};
 $('#safeMarginToggle').onclick=()=>{const active=!$('#stage').classList.contains('show-safe-margins');$('#stage').classList.toggle('show-safe-margins',active);$('#safeMarginToggle').setAttribute('aria-pressed',String(active))};
-(function wireCanvasPan(){const viewport=$('#canvasViewport');let start=null;viewport.addEventListener('pointerdown',e=>{if(!(panMode||spacePan)||e.button!==0)return;start={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('panning');e.preventDefault();e.stopPropagation()},true);viewport.addEventListener('pointermove',e=>{if(!start)return;viewport.scrollLeft=start.left-(e.clientX-start.x);viewport.scrollTop=start.top-(e.clientY-start.y)},true);viewport.addEventListener('pointerup',()=>{start=null;viewport.classList.remove('panning')},true)})();
+(function wireCanvasPan(){
+const viewport=$('#canvasViewport');let start=null,batcher=null;
+const move=e=>{if(!start)return;viewport.scrollLeft=start.left-(e.clientX-start.x);viewport.scrollTop=start.top-(e.clientY-start.y)};
+viewport.addEventListener('pointerdown',e=>{if(window.EInviteMotion?.input)return;if(!(panMode||spacePan)||e.button!==0)return;start={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('panning');e.preventDefault();e.stopPropagation()},true);
+viewport.addEventListener('pointermove',e=>{if(!start)return;batcher??=window.EInviteMotion?.createFrameBatcher((a,b)=>b,move);if(batcher)batcher.accumulate(e);else move(e)},true);
+const end=()=>{batcher?.flush();start=null;viewport.classList.remove('panning')};
+viewport.addEventListener('pointerup',end,true);viewport.addEventListener('pointercancel',end,true);
+})();
 $$('[data-device]').forEach(b=>b.onclick=()=>{$('#stage').style.width=Math.min(+b.dataset.device,Math.max(390,$('.stage-wrap').clientWidth-70))+'px';requestAnimationFrame(updateCanvasView)});
 async function optimizeImageFile(file){
 if(!file||file.type==='image/gif'||typeof createImageBitmap!=='function')return file;
@@ -3394,4 +3413,4 @@ updateCanvasView();
 pushHistory(capture());
 connectServer();
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initializeV19Typography,{once:true});else initializeV19Typography();
-;(()=>{const start=()=>{const css=n=>{if(globalThis.RichTextRenderer&&n==='rich-text-renderer-v21.css'||document.querySelector(`link[data-v21="${n}"]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=n;l.dataset.v21=n;document.head.append(l)},js=n=>new Promise((ok,no)=>{if((n==='rich-text-contract.js'&&globalThis.EInviteRichTextContract)||(n==='rich-text-document-model.js'&&globalThis.RichTextDocumentModel)||(n==='rich-text-renderer-v21.js'&&globalThis.RichTextRenderer)||(n==='rich-text-editing-v21.js'&&globalThis.RichTextEditing)||(n==='workspace-v21.js'&&globalThis.EInviteWorkspaceV21))return ok();const s=document.createElement('script');s.src=n;s.dataset.v21=n;s.onload=ok;s.onerror=()=>no(new Error(`Unable to load ${n}`));document.head.append(s)});css('rich-text-renderer-v21.css');css('rich-text-editing-v21.css');window.EInviteRichTextReady=(async()=>{for(const n of['rich-text-contract.js','rich-text-document-model.js','rich-text-renderer-v21.js'])await js(n);RichTextDocumentModel.normalizeInvitation(state,{mutate:true,strict:false});apply();await js('rich-text-editing-v21.js');css('workspace-v21.css');await js('workspace-v21.js');dispatchEvent(new CustomEvent('einvite:rich-text-ready'))})().catch(e=>{document.documentElement.dataset.richTextError='true';console.error(e)})};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start()})();
+;(()=>{const start=()=>{const css=n=>{if(globalThis.RichTextRenderer&&n==='rich-text-renderer.css'||document.querySelector(`link[data-v21="${n}"]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=n;l.dataset.v21=n;document.head.append(l)},js=n=>new Promise((ok,no)=>{if((n==='rich-text-contract.js'&&globalThis.EInviteRichTextContract)||(n==='rich-text-document-model.js'&&globalThis.RichTextDocumentModel)||(n==='rich-text-renderer.js'&&globalThis.RichTextRenderer)||(n==='rich-text-editing.js'&&globalThis.RichTextEditing)||(n==='workspace.js'&&globalThis.EInviteWorkspaceV21))return ok();const s=document.createElement('script');s.src=n;s.dataset.v21=n;s.onload=ok;s.onerror=()=>no(new Error(`Unable to load ${n}`));document.head.append(s)});css('rich-text-renderer.css');css('rich-text-editing.css');window.EInviteRichTextReady=(async()=>{for(const n of['rich-text-contract.js','rich-text-document-model.js','rich-text-renderer.js'])await js(n);RichTextDocumentModel.normalizeInvitation(state,{mutate:true,strict:false});apply();await js('rich-text-editing.js');css('workspace.css');await js('workspace.js');dispatchEvent(new CustomEvent('einvite:rich-text-ready'))})().catch(e=>{document.documentElement.dataset.richTextError='true';console.error(e)})};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start()})();

@@ -8,73 +8,50 @@
 | **Permission tier** | `manage` |
 | **Executor** | `client` |
 | **Binding** | `POST /api/platform/v52/enterprise/protocols` (platform-api) |
-| **Reversible** | `True` (default) |
+| **Reversible** | `True` |
 | **Confirmation required** | `True` |
-| **Source file** | `ai_agent/tools.py` (in `_defs()`, after `marketplace.install_template`) |
-| **Binding file** | `ai_agent/capabilities.py:TOOL_BINDINGS["enterprise.prepare_protocol"]` |
+| **Source file** | `ai_agent/tools.py` — `TOOLS['enterprise.prepare_protocol']` |
+| **Binding file** | `ai_agent/capabilities.py` — `TOOL_BINDINGS['enterprise.prepare_protocol']` |
 
 ### 1. What it touches
 
-- **Data**: `enterprise_protocols` (write — protocol definition: name, classification, type, document), `enterprise_protocol_steps` (write — ordered approval steps), `enterprise_directory_entries` (write — official directory entries referenced by the protocol), `enterprise_delegations` (write — delegation chains).
-- **Services**: `POST /api/platform/v52/enterprise/protocols` registers the protocol. The enterprise/government subsystem (`future_platform_v52/service.py`) enforces classification-level access control: `public` / `internal` / `restricted` / `confidential`.
-- **Files**: protocol `document` may reference classified asset versions stored in the workspace's object storage. Access to these assets is gated by the workspace member's classification clearance.
-- **Side effects**: a `confidential` protocol is visible only to workspace members with `confidential` clearance. A `public` protocol is visible to all workspace members and may be embedded in invitations. Approval steps notify designated approvers out-of-band (email / SMS).
+- **Operation:** Prepare an enterprise or government ceremony protocol.
+- **Data and inputs:** one new enterprise or government ceremony protocol with a bounded classification, protocol type, and structured document. The schema accepts: `name`, `classification`, `protocolType`, `document`; values are validated against the registered bounded schema.
+- **Execution boundary:** `platform-api` — `POST /api/platform/v52/enterprise/protocols`. This story does not assume any unlisted external destination or side effect.
 
 ### 2. Worst case if malicious
 
-If a prompt-injected or compromised agent successfully invoked `enterprise.prepare_protocol` with attacker-controlled `classification` and `document`, the attacker could:
-
-- **Downgrade a confidential protocol to public**: the agent sets `classification="public"` on a document that should be `confidential`, exposing classified content to all workspace members and (if published) to the public internet. This is a classic data-downgrade attack.
-- **Embed attacker content in a `public` protocol** that is then included in invitations sent to government officials, foreign dignitaries, or other sensitive recipients — damaging the host's diplomatic or organizational reputation.
-- **Insert malicious approval steps** that route protocol approval to attacker-controlled email addresses, allowing the attacker to approve (or block) protocol changes at will.
-- **Forge delegation chains**: an attacker who controls the `enterprise_delegations` table can impersonate a senior official, signing protocols on their behalf.
-- **Insert directory entries** that reference attacker-controlled external endpoints (e.g. a directory entry for a fake "IT Support" contact whose email forwards to an attacker-controlled inbox).
-- **Bypass classification clearance** by manipulating the `document` object to include classified assets under a `public` protocol wrapper — the asset itself remains access-controlled, but the protocol metadata leak reveals the asset's existence and classification level.
-
-Blast radius: **workspace-wide for protocol metadata**, **potentially cross-organizational if the protocol is published or shared**. Data affected: **classified PII + diplomatic / organizational reputation + approval-chain integrity**.
+If a prompt-injected or compromised agent persuaded an authorized user to approve `enterprise.prepare_protocol` with attacker-chosen but schema-valid arguments, it could label a restricted ceremony plan as public or replace trusted protocol details with misleading instructions, exposing sensitive attendees or causing an unsafe event sequence. The immediate scope is the authorized invitation/page/resource described above; repeated calls can multiply the effect only within the same underlying permissions and rate limits. Treat model-provided content and target IDs as untrusted until verified against the host's intent.
 
 ### 3. Containment
 
-- **Schema validation**: `name` is `string(160)`. `classification` is constrained to the enum `["public", "internal", "restricted", "confidential"]`. `protocolType` is `string(80)`. `document` is a free-form object (Phase 1b should add a schema).
-- **Permission tier**: `manage` — owner / manager only. The enterprise subsystem may further require `enterprise` workspace plan or a `government` workspace flag (Phase 4a).
-- **Confirmation boundary**: `confirmation=True` (medium-risk → `exactTargetsAccepted=True`).
-- **Authorization token**: 30-second single-use, bound to the exact plan index.
-- **HTTP-binding match**: `http_request_matches_tool` verifies `POST /api/platform/v52/enterprise/protocols`.
-- **Classification enforcement**: `future_platform_v52/service.py` enforces that the actor's classification clearance is >= the protocol's classification. A `confidential` protocol requires a `confidential`-cleared actor.
-- **Audit event**: `ai.plan_confirmed` / `ai.tool_authorized` with `metadata={"name": ..., "classification": ..., "protocolType": ...}`. The audit event itself is classified at the same level as the protocol — unauthorized members cannot read the audit event metadata.
+- **Input validation:** `ai_agent/tools.py::validate_tool_call()` applies this tool's registered required fields, types, enums, and declared bounds; the shared validator rejects unknown top-level arguments and recursively blocks several executable-markup, shell/SQL, and destination-key patterns. Nested objects declared with `additionalProperties: true` are permissive, so this shared validation is not a substitute for executor-specific validation.
+- **Permission check:** `manage` is the declared minimum permission. Capability discovery filters tools, then `ai_agent/service.py::confirm_plan()` and `authorize_tool_call()` re-check the user's current access immediately before authorization.
+- **Plan/revision gate:** approval is bound to this plan's exact tool index, user, invitation, and document revision/fingerprint; stale plans are rejected. This tool has no high-risk destructive confirmation boundary; review its exact arguments and targets before accepting the plan.
+- **One-shot authorization:** `authorize_tool_call()` issues a 30-second token bound to `(userId, invitationId, toolId, planId, index)`; it is consumed once (`ai_agent/service.py::consume_tool_authorization()`).
+- **Endpoint binding:** the invocation must match the declared HTTP method/path through `http_request_matches_tool()`; invitation/resource IDs are constrained to the approved binding pattern.
+- **JIT elevation:** this tool is listed in `ai_agent/jit_elevation.py::JIT_ELIGIBLE_TOOLS`; it requires an active five-minute database grant before a one-shot authorization token is issued. Evaluation binds the grant to user/tool/resource and consumes it once (`ai_agent/jit_elevation.py::JITElevationManager.evaluate`). This tool requires manual approval; it is not in `AUTO_APPROVED_TOOLS`.
+- **Audit trail:** when the production audit callback is configured, plan confirmation, tool authorization, token consumption, and JIT state transitions are recorded through `src/python/server.py::write_audit_event` in the hash-chained audit log. Rate limits and workspace AI policy apply to the agent request path.
 
 ### 4. Reversible
 
-- **Yes**: per `ToolDefinition.reversible = True` (default).
-- **How**: `DELETE /api/platform/v52/enterprise/protocols/{id}` marks the protocol as `deleted_at`. Existing approval steps are cancelled. Any notification already dispatched to an approver cannot be un-sent.
-- **Time to undo**: seconds for the database row; permanent for any notifications already dispatched.
-- **Side effects of undo**: if the protocol was already included in a published invitation, the invitation continues to render the protocol's `public` fields until the invitation is re-published.
+- **Registry declaration:** `True`.
+- **Recovery:** The tool registry marks this operation reversible. Capture the pre-operation values and target IDs; restore them with the corresponding inverse/editor action or invitation history where available, then verify the resulting page and guest-visible preview.
 
-### 5. Mitigation (Phase 1a + future)
+### 5. Mitigation and residual risk
 
-- **Resource-scoped permission**: `workspace:{id}:enterprise:protocol:create:{classification}` — the classification is part of the grant. A host who has `create:public` does not automatically have `create:confidential`.
-- **JIT elevation**: 5-minute TTL grant with mandatory `reason`. **Two-person rule** for `classification="confidential"`: the protocol requires approval from a second `confidential`-cleared workspace owner before it is registered.
-- **Downgrade prevention**: refuse any update that lowers a protocol's classification (e.g. `confidential` → `public`) without a separate `enterprise:protocol:downgrade` grant and a documented reason.
-- **Document schema** (Phase 1b): constrain the `document` object to a typed schema with explicit asset references. Each referenced asset must be re-checked for classification clearance at protocol-creation time.
-- **Approval-chain integrity**: approval steps must reference workspace members by `userId`, not by email address. Email-based approval is forbidden because email addresses are mutable.
-- **Directory entry validation**: directory entries must reference existing workspace members or pre-registered external contacts. External contacts must be verified out-of-band before being added to the directory.
-- **Anomaly detection**: dashboard detects classification downgrades, bulk protocol creation (more than 5 in 1 hour), and protocols created off-hours.
+- Before confirmation, show the exact target IDs and meaningful argument summary; reject a stale target, changed document fingerprint, or caller whose invitation permission has changed.
+- Keep the host-facing action limited to the declared `platform-api` executor and validate every referenced page, asset, guest, or external-effect target against the current invitation/workspace ownership.
+- **Residual test gap:** the general registry/plan tests verify the shared agent contract, not necessarily this specific executor's complete downstream behavior. A tool-specific executor test should cover the malicious outcome described above before treating that behavior as independently certified.
 
 ### 6. Test coverage
 
-- `tests/v28_agent_tool_contract_test.py` — registry contract.
-- `tests/v28_agent_server_contract_test.py` — plan + authorize + consume flow.
-- `tests/v28_agent_conversation_browser_test.py` — confirmation UX.
-
-Gap: no test covers the classification-downgrade attack or the two-person rule. Add tests in Phase 1b.
+- `tests/v28_agent_tool_contract_test.py` — registry completeness, schema bounds, and executor bindings.
+- `tests/v28_agent_server_contract_test.py` — plan, confirmation, and authorization flow.
+- `tests/ai_resource_scopes_test.py` — resource-grant behavior (where mapped).
+- `tests/ai_jit_enforcement_test.py` — JIT lifecycle (only applies to JIT-eligible tools).
+- **Tool-specific test:** no dedicated end-to-end executor test is asserted by this document; add/identify one for `enterprise.prepare_protocol` in the relevant route/editor subsystem.
 
 ### 7. AISVS cross-reference
 
-- `C9.2.4` — confirmation (medium-risk → `exactTargetsAccepted`).
-- `C9.2.7` — admin-tier separation (enterprise protocols are effectively admin-tier for `confidential` classification).
-- `C9.3.3` — exact-target confirmation (`classification` is captured).
-- `C9.3.4` — revision re-check.
-- `C10.2.1` — HTTP binding match.
-- `C10.3.2` — JIT elevation (Phase 1a).
-- `C10.3.3` — admin-tier separation (two-person rule for `confidential`).
-- `C10.6.1` — no exfiltration of classified content via the `document` object.
+`C9.1.1` (complete tool inventory), `C9.2.1` (permission enforcement), `C9.2.3` (authorization re-check), `C9.3.3` (exact-target confirmation), `C10.3.2` (JIT elevation), `C10.2.1` (tool-to-endpoint binding), `C10.5.1` (untrusted provider/input data). See `docs/ai/AISVS-C9-C10-MAPPING.md`. These are control mappings, not a claim that this individual tool has a dedicated test or an external MCP transport.

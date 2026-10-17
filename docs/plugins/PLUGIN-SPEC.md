@@ -4,8 +4,8 @@
 > **Scope**: Defines the on-disk manifest format that every eInvite marketplace plugin must ship, the JSON Schema that validates it, the permission model that scopes it, and the 13 extension points it can declare.
 > **AISVS driver**: C9.2.6 (permission tiers must reflect the underlying role model and not be hardcoded per agent), C10.3.1 (tool invocations must be scoped to a specific resource and reject cross-resource access).
 > **Codebase ground truth**:
-> - Existing V48 plugin runtime: `src/js/plugin-runtime-v48.js` (allow-lists 11 extension points + 13 permissions).
-> - Existing V48 plugin platform UI: `src/js/plugin-platform-v48.js` (declares declarative manifests + grants).
+> - Existing V48 plugin runtime: `src/js/plugin-runtime.js` (allow-lists 11 extension points + 13 permissions).
+> - Existing V48 plugin platform UI: `src/js/plugin-platform.js` (declares declarative manifests + grants).
 > - Existing V48 changelog: `docs/V48_PLUGIN_PLATFORM_CHANGELOG.md` (manifests are declarative; executable HTML/JS/SQL/paths/network URLs are rejected).
 > - Resource-scoped permission design: `docs/ai/RESOURCE-SCOPED-PERMISSIONS.md` §2.1 (grant syntax `{resource_type}:{resource_id}:{action}[:{sub_resource}[:{sub_id}]]`).
 
@@ -17,7 +17,7 @@ JetBrains plugins run with full IDE privileges — no sandbox, no fine-grained p
 
 Every plugin on the eInvite marketplace is:
 
-1. **Declarative** — ships a signed manifest that enumerates its permissions, extension points, and version compatibility. Unknown or unauthorized fields are rejected (matching the existing V48 runtime behaviour in `src/js/plugin-runtime-v48.js:scan()` which throws on the `forbidden` set `script|javascript|code|eval|html|cssText|filesystemPath|networkUrl|sql|srcdoc|onload|onclick`).
+1. **Declarative** — ships a signed manifest that enumerates its permissions, extension points, and version compatibility. Unknown or unauthorized fields are rejected (matching the existing V48 runtime behaviour in `src/js/plugin-runtime.js:scan()` which throws on the `forbidden` set `script|javascript|code|eval|html|cssText|filesystemPath|networkUrl|sql|srcdoc|onload|onclick`).
 2. **Double-signed** — author Ed25519 signature + eInvite marketplace CA Ed25519 signature. Both must verify on install.
 3. **Sandboxed** — UI plugins run in a cross-origin iframe with `sandbox="allow-scripts"` (no `allow-same-origin`); logic plugins run as WASM in a dedicated Web Worker. Every capability is granted by the manifest's `permissions[]`.
 4. **Resource-scoped** — permissions follow the Phase 1a grant syntax from `docs/ai/RESOURCE-SCOPED-PERMISSIONS.md` (e.g. `invitation:{id}:read`, `event:{id}:edit`, `template:install`). Wildcard grants (`*`) are rejected.
@@ -67,7 +67,7 @@ Every plugin ships a single `manifest.json` at the root of its bundle. The file 
 
 ### 2.3 Forbidden fields
 
-The manifest validator rejects the following field names anywhere in the document tree (recursive scan, matching the existing V48 runtime's `forbidden` set at `src/js/plugin-runtime-v48.js`):
+The manifest validator rejects the following field names anywhere in the document tree (recursive scan, matching the existing V48 runtime's `forbidden` set at `src/js/plugin-runtime.js`):
 
 ```
 script, javascript, code, eval, html, cssText,
@@ -116,7 +116,7 @@ Where:
 
 ### 3.3 Mapping to V48 permissions
 
-The V48 runtime (`src/js/plugin-runtime-v48.js:allowedPermissions`) currently has 13 coarse permission tokens. Phase 4a deprecates them in favour of the resource-scoped grammar above. The marketplace validator accepts BOTH the new grammar and the legacy V48 tokens during a transition window (V54.6 → V55 inclusive); after V55, only resource-scoped grants are accepted. The mapping:
+The V48 runtime (`src/js/plugin-runtime.js:allowedPermissions`) currently has 13 coarse permission tokens. Phase 4a deprecates them in favour of the resource-scoped grammar above. The marketplace validator accepts BOTH the new grammar and the legacy V48 tokens during a transition window (V54.6 → V55 inclusive); after V55, only resource-scoped grants are accepted. The mapping:
 
 | V48 token (legacy) | Phase 4a resource-scoped grant |
 |---|---|
@@ -147,7 +147,7 @@ At install time, the host:
 
 ## 4. Extension points
 
-eInvite exposes **13 extension points**. The first 11 are inherited from V48 (`src/js/plugin-runtime-v48.js:allowedPoints`); the last 2 are new in Phase 4a to support the marketplace itself.
+eInvite exposes **13 extension points**. The first 11 are inherited from V48 (`src/js/plugin-runtime.js:allowedPoints`); the last 2 are new in Phase 4a to support the marketplace itself.
 
 ### 4.1 `editor.panel`
 
@@ -552,8 +552,8 @@ The full working example plugin (manifest + entrypoint + tests) lives at `plugin
 ## 10. References
 
 - `docs/V48_PLUGIN_PLATFORM_CHANGELOG.md` — V48 plugin platform baseline.
-- `src/js/plugin-runtime-v48.js` — existing runtime (allow-lists 11 extension points + 13 permissions; rejects executable HTML/JS/SQL/paths/network URLs).
-- `src/js/plugin-platform-v48.js` — existing platform UI (declares declarative manifests + grants).
+- `src/js/plugin-runtime.js` — existing runtime (allow-lists 11 extension points + 13 permissions; rejects executable HTML/JS/SQL/paths/network URLs).
+- `src/js/plugin-platform.js` — existing platform UI (declares declarative manifests + grants).
 - `docs/ai/RESOURCE-SCOPED-PERMISSIONS.md` §2.1 — grant grammar reused by §3.
 - `docs/plugins/PLUGIN-SIGNING.md` — Ed25519 double-signing.
 - `docs/plugins/PLUGIN-SANDBOX.md` — sandboxed execution model.

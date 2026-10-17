@@ -302,7 +302,7 @@ These are common plugin asks that eInvite explicitly refuses:
 
 ## 8. Interactions with the existing V48 runtime
 
-The V48 plugin runtime (`src/js/plugin-runtime-v48.js`) is a declarative-only runtime: it accepts manifests with `permissions[]` and `extensions[]`, validates them against allow-lists, and stores the activation state. It does NOT load plugin code — there is no `eval`, no `iframe`, no `Worker` construction in the V48 runtime.
+The V48 plugin runtime (`src/js/plugin-runtime.js`) is a declarative-only runtime: it accepts manifests with `permissions[]` and `extensions[]`, validates them against allow-lists, and stores the activation state. It does NOT load plugin code — there is no `eval`, no `iframe`, no `Worker` construction in the V48 runtime.
 
 Phase 4a preserves this: the V48 runtime continues to handle manifest validation and the declarative registry. The Phase 4a sandbox (`src/js/plugin_sandbox_host.js` — to be added in the code follow-up) layers on top:
 
@@ -312,7 +312,7 @@ Phase 4a preserves this: the V48 runtime continues to handle manifest validation
 4. Phase 4a sandbox constructs the iframe or Worker for each extension point and wires up the MessageChannel.
 5. V48 runtime's existing `einvite:plugin-activated` / `einvite:plugin-deactivated` events are forwarded to the sandbox so it can clean up.
 
-This layering preserves the existing V48 contract: a plugin manifest that does NOT declare `signature` / `marketplace_signature` (i.e. a V48-style development manifest) continues to work in dev-only mode (`EINVITE_ALLOW_UNSIGNED_PLUGINS=1`, refused by `production_preflight`). The V48 `registerManifest()` UI in `src/js/plugin-platform-v48.js` remains the dev entry point; the Phase 4a marketplace UI (a follow-up task) lists doubly-signed plugins from the marketplace.
+This layering preserves the existing V48 contract: a plugin manifest that does NOT declare `signature` / `marketplace_signature` (i.e. a V48-style development manifest) continues to work in dev-only mode (`EINVITE_ALLOW_UNSIGNED_PLUGINS=1`, refused by `production_preflight`). The V48 `registerManifest()` UI in `src/js/plugin-platform.js` remains the dev entry point; the Phase 4a marketplace UI (a follow-up task) lists doubly-signed plugins from the marketplace.
 
 ---
 
@@ -332,8 +332,8 @@ This layering preserves the existing V48 contract: a plugin manifest that does N
 - `docs/plugins/PLUGIN-SPEC.md` — manifest fields (`entrypoint`, `content_security_policy`, `permissions`, `requested_quota`).
 - `docs/plugins/PLUGIN-SIGNING.md` — manifest signatures (the sandbox does not load a plugin whose signatures fail verification).
 - `docs/plugins/MODERATION-PIPELINE.md` — automated pre-upload checks that reject plugins containing `eval` / `Function` / `document.cookie` patterns.
-- `src/js/plugin-runtime-v48.js` — existing V48 declarative runtime (Phase 4a sandbox layers on top).
-- `src/js/plugin-platform-v48.js` — existing V48 manifest registration UI (preserved as dev-only entry point).
+- `src/js/plugin-runtime.js` — existing V48 declarative runtime (Phase 4a sandbox layers on top).
+- `src/js/plugin-platform.js` — existing V48 manifest registration UI (preserved as dev-only entry point).
 - `src/python/security_scanner_v54.py` — malware scanner applied to every `asset:upload` from a plugin sandbox.
 - MDN: [Window.postMessage()](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage) — the cross-origin message API.
 - MDN: [MessageChannel](https://developer.mozilla.org/en-US/docs/Web/API/MessageChannel) — dedicated bi-directional channel.

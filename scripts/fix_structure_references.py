@@ -31,8 +31,8 @@ MAPPING_PATH = REPO / "docs" / "STRUCTURE-MAPPING.json"
 
 HTML_DIR = REPO / "src" / "html"
 MANIFESTS = [
-    REPO / "docs" / "route-bundle-sources-v15.json",
-    REPO / "docs" / "page-assets-v15.json",
+    REPO / "docs" / "route-bundle-sources.json",
+    REPO / "docs" / "page-assets.json",
 ]
 PY_ROOTS = [REPO / "tests", REPO / "src" / "python", REPO / "plugins"]
 

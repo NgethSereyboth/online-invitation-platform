@@ -1,7 +1,7 @@
 from pathlib import Path
 import subprocess, textwrap
 ROOT=Path(__file__).resolve().parents[1]
-JS=ROOT / "src" / "js" / "scene-model-v22.js"
+JS=ROOT / "src" / "js" / "scene-model.js"
 def run(body):
     script=textwrap.dedent(f'''global.window=global;global.structuredClone=v=>JSON.parse(JSON.stringify(v));require({str(JS)!r});{body}''')
     return subprocess.run(['node','-e',script],capture_output=True,text=True,check=True).stdout

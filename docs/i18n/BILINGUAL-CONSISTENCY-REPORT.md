@@ -47,7 +47,7 @@ The script recognises two bilingual string-table conventions:
   — used by `signup-sheets.js`, `polls.js`, `album.js`, `invitation-edit-history.js`, `host-signup-sheets.js`, `host-polls.js`, `toast.js`, `delivery-dialog.js`.
 
 - **Pattern B (per-locale):** `STRINGS = { en: { key1: '...' }, km: { key1: '...' } }`
-  — used by `collaboration-presence-v52.js`, `crdt-yjs-indexeddb.js`, `crdt-yjs-rich-media.js`, `crdt-yjs-undo.js`, `guest-journey.js`.
+  — used by `collaboration-presence.js`, `crdt-yjs-indexeddb.js`, `crdt-yjs-rich-media.js`, `crdt-yjs-undo.js`, `guest-journey.js`.
 
 A hand-rolled brace-balanced scanner walks every `{...}` object literal in the file (skipping string contents and `//` + `/* */` comments). For each object it looks at the identifier before `:` before `{` to decide which pattern applies, then extracts the inner `en:` / `km:` string values.
 
@@ -107,7 +107,7 @@ python3 scripts/check-bilingual-consistency.py --strict \
 | File | Pairs | Missing `km:` | Identical pairs |
 |---|---|---|---|
 | `album.js` | 24 | 0 | 0 |
-| `collaboration-presence-v52.js` | 7 | 0 | 0 |
+| `collaboration-presence.js` | 7 | 0 | 0 |
 | `crdt-yjs-indexeddb.js` | 4 | 0 | 0 |
 | `crdt-yjs-rich-media.js` | 4 | 0 | 0 |
 | `crdt-yjs-undo.js` | 5 | 0 | 0 |

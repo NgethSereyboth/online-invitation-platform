@@ -7,7 +7,7 @@ name: Performance Budgets
 #                           Lighthouse budget-file schema. It is the single source
 #                           of truth for both consumers below.
 #   Layer 2 — build-time:   src/python/build/build_page_manifests.py writes
-#                           docs/page-assets-v15.json (per-page asset manifest +
+#                           docs/page-assets.json (per-page asset manifest +
 #                           the aspirational route budgets). The route-bundle
 #                           builder is re-run with --check so a stale bundle
 #                           cannot pass as fresh.

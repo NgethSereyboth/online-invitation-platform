@@ -405,7 +405,7 @@ function editorEnhancements(){
     }catch{}
   };
 
-  // Keyboard commands are owned by editor-command-system-v23.js.
+  // Keyboard commands are owned by editor-command-system.js.
 
   // Alt-drag duplicate
   let dragState=null;
@@ -428,9 +428,10 @@ function editorEnhancements(){
     dragState.items.forEach(item=>{const f=dragState.frames.get(item); item.style.left=`${Math.max(0,Math.min(100-f.width, f.left+dx))}%`; item.style.top=`${Math.max(0,Math.min(100-f.height, f.top+dy))}%`;});
     try{ typeof updateSelectionBounds==='function'&&updateSelectionBounds(); }catch{}
   };
-  stage.addEventListener('pointermove',moveAltDrag,true);
-  const endAltDrag=(e)=>{ if(!dragState || dragState.pointerId!==e.pointerId) return; saveNow(); dragState=null; };
-  stage.addEventListener('pointerup',endAltDrag,true); stage.addEventListener('pointercancel',()=>{dragState=null},true);
+  let altDragBatcher=null;
+  stage.addEventListener('pointermove',e=>{if(!dragState||dragState.pointerId!==e.pointerId)return;e.preventDefault();altDragBatcher??=window.EInviteMotion.createFrameBatcher((a,b)=>b,moveAltDrag);altDragBatcher.accumulate(e)},true);
+  const endAltDrag=(e)=>{ if(!dragState || dragState.pointerId!==e.pointerId) return; altDragBatcher?.flush();saveNow(); dragState=null; };
+  stage.addEventListener('pointerup',endAltDrag,true); stage.addEventListener('pointercancel',()=>{altDragBatcher?.flush();dragState=null},true);
 }
 
 wireAuthLayouts();

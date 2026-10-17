@@ -16,13 +16,16 @@ Two-part test:
    - ``GET /api/invitations/{id}/deliveries`` lists attempts.
 """
 from __future__ import annotations
+import base64
 import json
 import os
 import sys
-import urllib.request
 import urllib.error
+import urllib.request
 from http.cookiejar import CookieJar
 from pathlib import Path
+from unittest.mock import patch
+from urllib.parse import parse_qs
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src' / 'python'))
@@ -73,18 +76,65 @@ def run_unit():
     r5 = email.send('inv-1', '', '', {})
     assert r5.status == 'skipped'
 
-    # Now configure SMS env vars and verify availability flips.
-    os.environ['EINVITE_SMS_ACCOUNT_SID'] = 'AC' + '0' * 32
-    os.environ['EINVITE_SMS_AUTH_TOKEN'] = 'abc123'
-    os.environ['EINVITE_SMS_FROM'] = '+15550000000'
-    sms2 = type(sms)()  # Re-instantiate to pick up env.
-    assert sms2.available(), f'sms should be available with env, got available={sms2.available()}'
-    # The actual send will fail (no real Twilio backend) but SendResult must not raise.
-    r6 = sms2.send('inv-1', '+15551234567', 'Hello', {})
-    assert r6.status in {'sent', 'queued', 'failed'}, f'unexpected status: {r6.status}'
-    # Clean up.
-    for k in ('EINVITE_SMS_ACCOUNT_SID', 'EINVITE_SMS_AUTH_TOKEN', 'EINVITE_SMS_FROM'):
-        del os.environ[k]
+    # Configured SMS must form the Twilio-compatible request correctly without
+    # reaching a real provider or using credentials from the host environment.
+    sid = 'AC' + '0' * 32
+    token = 'test-auth-token'
+    sender = '+15550000000'
+    with patch.dict(os.environ, {
+        'EINVITE_SMS_ACCOUNT_SID': sid,
+        'EINVITE_SMS_AUTH_TOKEN': token,
+        'EINVITE_SMS_FROM': sender,
+        'EINVITE_SMS_API_ORIGIN': 'https://sms.example.test',
+    }, clear=False):
+        sms2 = type(sms)()
+        assert sms2.available(), 'sms should be available with complete credentials'
+
+        provider_payload = {"sid": "SM-test-123", "status": "queued"}
+
+        def fake_urlopen(request, timeout):
+            assert request.full_url == f'https://sms.example.test/Accounts/{sid}/Messages.json'
+            assert request.get_method() == 'POST'
+            assert request.headers['Content-type'] == 'application/x-www-form-urlencoded'
+            expected_auth = 'Basic ' + base64.b64encode(f'{sid}:{token}'.encode()).decode()
+            assert request.get_header('Authorization') == expected_auth
+            form = parse_qs(request.data.decode('utf-8'))
+            assert form == {'To': ['+15551234567'], 'From': [sender], 'Body': ['Hello']}
+
+            class _Response:
+                def __enter__(self):
+                    return self
+
+                def __exit__(self, *_args):
+                    return False
+
+                def read(self):
+                    return json.dumps(provider_payload).encode('utf-8')
+
+            return _Response()
+
+        with patch('urllib.request.urlopen', side_effect=fake_urlopen):
+            r6 = sms2.send('inv-1', '+15551234567', 'Hello', {})
+            assert r6.status == 'queued'
+            assert r6.provider_message_id == 'SM-test-123'
+            assert r6.raw == {'sid': 'SM-test-123', 'status': 'queued'}
+
+            provider_payload['status'] = 'delivered'
+            delivered = sms2.send('inv-1', '+15551234567', 'Hello', {})
+            assert delivered.status == 'sent'
+            assert delivered.provider_message_id == 'SM-test-123'
+
+            provider_payload.clear()
+            provider_payload.update({'status': 'queued'})
+            missing_sid = sms2.send('inv-1', '+15551234567', 'Hello', {})
+            assert missing_sid.status == 'failed'
+            assert 'SID' in missing_sid.error
+
+            provider_payload.clear()
+            provider_payload.update({'sid': 'SM-test-456', 'status': 'unknown'})
+            unknown_status = sms2.send('inv-1', '+15551234567', 'Hello', {})
+            assert unknown_status.status == 'failed'
+            assert unknown_status.provider_message_id == 'SM-test-456'
 
     print('P2A_DELIVERY_CHANNELS_UNIT_TEST_PASSED')
 

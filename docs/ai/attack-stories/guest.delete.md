@@ -10,70 +10,48 @@
 | **Binding** | `DELETE /api/invitations/{invitationId}/guests/{guestId}` (internal-api) |
 | **Reversible** | `False` |
 | **Confirmation required** | `True` |
-| **Source file** | `ai_agent/tools.py` (in `_defs()`, after `guest.update`) |
-| **Binding file** | `ai_agent/capabilities.py:TOOL_BINDINGS["guest.delete"]` |
+| **Source file** | `ai_agent/tools.py` — `TOOLS['guest.delete']` |
+| **Binding file** | `ai_agent/capabilities.py` — `TOOL_BINDINGS['guest.delete']` |
 
 ### 1. What it touches
 
-- **Data**: `guests` table (delete — row is removed), `rsvps` table (cascade — associated RSVPs are deleted or orphaned depending on the platform policy), `delivery_log` (cascade — delivery records referencing the deleted guest are anonymized or orphaned), `invitation_collaborators` (if the guest was also a collaborator, their collaborator row is removed).
-- **Services**: `DELETE /api/invitations/{invitationId}/guests/{guestId}` performs the deletion. The endpoint enforces ownership / collaboration checks.
-- **Files**: no direct file-system side effects. The guest's avatar (if any) is a stored asset that may be garbage-collected when its ref-count drops to zero.
-- **Side effects**: any in-flight email / SMS to the deleted guest will fail. Any household-composition changes (the guest was in a household with other guests) may break the household's grouping.
+- **Operation:** Permanently delete one invitation guest.
+- **Data and inputs:** the identified invitation guest record and its associated operational references. The schema accepts: `guestId`; values are validated against the registered bounded schema.
+- **Execution boundary:** `internal-api` — `DELETE /api/invitations/{invitationId}/guests/{guestId}`. This story does not assume any unlisted external destination or side effect.
 
 ### 2. Worst case if malicious
 
-If a prompt-injected or compromised agent successfully invoked `guest.delete` for one or more `guestId` values on invitation `inv_X`, the attacker could:
-
-- **Bulk-delete the entire guest list** (up to 40 `guestId` values per plan, per `validate_tool_calls(maximum=40)`, and the agent can issue multiple plans) — wiping out the host's complete guest roster. The host loses the ability to send invitations, track RSVPs, or check in guests.
-- **Delete specific high-value guests** (e.g. the host's parents, the wedding officiant) to disrupt the event.
-- **Delete guests who have already RSVP'd "Yes"**, causing them to be turned away at the door because their name is not on the list.
-- **Cascade-delete RSVP data**: the platform may delete the guest's RSVP record, destroying audit evidence of who was invited and who responded.
-- **Cover tracks**: by deleting a guest, an attacker who had been using that guest record for exfiltration (e.g. via a crafted email address that forwards to an attacker-controlled inbox) can erase the evidence.
-
-Blast radius: **invitation-scoped for the guest data**, but **event-disruption impact is high**. Data affected: **PII destruction + audit evidence destruction + event continuity**.
+If a prompt-injected or compromised agent persuaded an authorized user to approve `guest.delete` with attacker-chosen but schema-valid arguments, it could permanently erase a real guest's contact, household, seating, and RSVP linkage before an event, disrupting attendance and removing information that may be needed for audit or recovery. The immediate scope is the authorized invitation/page/resource described above; repeated calls can multiply the effect only within the same underlying permissions and rate limits. Treat model-provided content and target IDs as untrusted until verified against the host's intent.
 
 ### 3. Containment
 
-- **Schema validation**: `guestId` is a stable-id (120 chars). No free-form arguments.
-- **Permission tier**: `manage` — owner / manager only.
-- **Confirmation boundary**: `reversible=False, confirmation=True, risk="high"` → `destructiveAccepted=True` required.
-- **Authorization token**: 30-second single-use, bound to `(userId, invitationId, toolId="guest.delete", planId, index)`.
-- **HTTP-binding match**: `http_request_matches_tool` verifies `DELETE /api/invitations/{invitationId}/guests/{guestId}` with the matching `invitationId` and the literal `guestId` from the plan.
-- **Audit event**: `ai.plan_confirmed` / `ai.tool_authorized` / `ai.tool_authorization_consumed` with `metadata={"guestId": ..., "householdId": ...}`. The audit event is hash-chained and immutable, so even though the guest row is deleted, the audit record proves the deletion occurred.
-- **Soft-delete consideration**: the current implementation hard-deletes the guest row. Phase 1b should consider a soft-delete (set `deleted_at` timestamp) so the row can be recovered within a grace window. The audit log preserves evidence of the deletion either way.
+- **Input validation:** `ai_agent/tools.py::validate_tool_call()` applies this tool's registered required fields, types, enums, and declared bounds; the shared validator rejects unknown top-level arguments and recursively blocks several executable-markup, shell/SQL, and destination-key patterns. Nested objects declared with `additionalProperties: true` are permissive, so this shared validation is not a substitute for executor-specific validation.
+- **Permission check:** `manage` is the declared minimum permission. Capability discovery filters tools, then `ai_agent/service.py::confirm_plan()` and `authorize_tool_call()` re-check the user's current access immediately before authorization.
+- **Plan/revision gate:** approval is bound to this plan's exact tool index, user, invitation, and document revision/fingerprint; stale plans are rejected. A high-risk tool call also needs separate destructive-action confirmation before execution.
+- **One-shot authorization:** `authorize_tool_call()` issues a 30-second token bound to `(userId, invitationId, toolId, planId, index)`; it is consumed once (`ai_agent/service.py::consume_tool_authorization()`).
+- **Endpoint binding:** the invocation must match the declared HTTP method/path through `http_request_matches_tool()`; invitation/resource IDs are constrained to the approved binding pattern.
+- **JIT elevation:** this tool is listed in `ai_agent/jit_elevation.py::JIT_ELIGIBLE_TOOLS`; it requires an active five-minute database grant before a one-shot authorization token is issued. Evaluation binds the grant to user/tool/resource and consumes it once (`ai_agent/jit_elevation.py::JITElevationManager.evaluate`). This tool requires manual approval; it is not in `AUTO_APPROVED_TOOLS`.
+- **Audit trail:** when the production audit callback is configured, plan confirmation, tool authorization, token consumption, and JIT state transitions are recorded through `src/python/server.py::write_audit_event` in the hash-chained audit log. Rate limits and workspace AI policy apply to the agent request path.
 
 ### 4. Reversible
 
-- **No**: per `ToolDefinition.reversible = False`.
-- **How to undo**: re-create the guest via `guest.create` with the same `name`, `phone`, `email`, `householdId`, etc. — but the historical RSVP record (if cascade-deleted) cannot be recovered except from a backup. The platform's restore path is documented in `docs/ops/RESTORE-RUNBOOK.md` (Phase 1c).
-- **Time to undo**: minutes for re-creating one guest; hours for re-creating 40+ guests from a backup.
-- **Side effects of undo**: the re-created guest record has a new `guestId`, which breaks any external references (e.g. calendar invites sent to the guest that contain the old `guestId` in the URL).
+- **Registry declaration:** `False`.
+- **Recovery:** The tool registry marks this operation non-reversible. Disable/revoke the affected publication or integration where possible; restore deleted or overwritten data from a verified pre-operation backup using `docs/ops/RESTORE-RUNBOOK.md`. External disclosures or messages cannot be recalled by restoring data.
 
-### 5. Mitigation (Phase 1a + future)
+### 5. Mitigation and residual risk
 
-- **Resource-scoped permission**: `invitation:{id}:guest:create`, `invitation:{id}:guest:{guestId}:delete`, `invitation:{id}:guest:{guestId}:update`. The per-guest scope is critical — a bulk-delete grant must be explicit, not implicit in the `manage` tier.
-- **JIT elevation**: 5-minute TTL grant with mandatory `reason`. **Row-count threshold**: any plan that deletes more than 5 guests in a single confirmation flow requires an additional out-of-band email confirmation.
-- **Soft-delete** (Phase 1b): change `guests` to use `deleted_at` timestamp; the deleted row is recoverable for 30 days (configurable). The hard-delete becomes a separate admin-tier operation.
-- **Bulk-delete rate limit**: refuse more than 100 guest deletes per workspace per hour, even from authorized users.
-- **Anomaly detection**: dashboard detects when guest deletions exceed 5 in 5 minutes, or when a delete is followed by a `guest.create` for the same `email` within 10 minutes (potential PII manipulation).
-- **Cascade guard**: when deleting a guest, surface a warning in the confirmation dialog: "This will also delete 1 RSVP and 3 delivery log entries. Reversing this requires a backup restore." (EN) / "នេះនឹងលុប RSVP 1 និងកំណត់ហេតុដឹកជញ្ជូន 3 ផងដែរ។ ការបញ្ច្រាស់វាទាមទារការស្ដារពីការបម្រុងទុក។" (KH).
+- Before confirmation, show the exact target IDs and meaningful argument summary; reject a stale target, changed document fingerprint, or caller whose invitation permission has changed.
+- Keep the host-facing action limited to the declared `internal-api` executor and validate every referenced page, asset, guest, or external-effect target against the current invitation/workspace ownership.
+- **Residual test gap:** the general registry/plan tests verify the shared agent contract, not necessarily this specific executor's complete downstream behavior. A tool-specific executor test should cover the malicious outcome described above before treating that behavior as independently certified.
 
 ### 6. Test coverage
 
-- `tests/v28_agent_tool_contract_test.py` — registry contract.
-- `tests/v28_agent_server_contract_test.py` — plan + authorize + consume flow.
-- `tests/v28_agent_storage_test.py` — plan lifecycle.
-- `tests/v28_agent_conversation_browser_test.py` — confirmation UX.
-
-Gap: no test covers the cascade-deletion warning. Add a UI-level test in Phase 1b.
+- `tests/v28_agent_tool_contract_test.py` — registry completeness, schema bounds, and executor bindings.
+- `tests/v28_agent_server_contract_test.py` — plan, confirmation, and authorization flow.
+- `tests/ai_resource_scopes_test.py` — resource-grant behavior (where mapped).
+- `tests/ai_jit_enforcement_test.py` — JIT lifecycle (only applies to JIT-eligible tools).
+- **Tool-specific test:** no dedicated end-to-end executor test is asserted by this document; add/identify one for `guest.delete` in the relevant route/editor subsystem.
 
 ### 7. AISVS cross-reference
 
-- `C9.2.4` — destructive confirmation.
-- `C9.3.3` — exact-target confirmation (`guestId` is captured).
-- `C9.3.5` — non-reversible + confirmation.
-- `C9.6.1` — audit event for the deletion (immutable evidence).
-- `C10.2.1` — HTTP binding match (guest-id literal in path).
-- `C10.3.1` — resource scoping (per-guest scope).
-- `C10.3.2` — JIT elevation (Phase 1a).
-- `C10.7.4` — one-click undo (partial — backup restore is the only path).
+`C9.1.1` (complete tool inventory), `C9.2.1` (permission enforcement), `C9.2.3` (authorization re-check), `C9.3.3` (exact-target confirmation), `C9.2.4` (high-risk confirmation), `C9.3.5` (non-reversible operation controls), `C10.3.2` (JIT elevation), `C10.2.1` (tool-to-endpoint binding), `C10.5.1` (untrusted provider/input data). See `docs/ai/AISVS-C9-C10-MAPPING.md`. These are control mappings, not a claim that this individual tool has a dedicated test or an external MCP transport.

@@ -1,0 +1,12 @@
+{
+  "why": "Shrinking allowlist for the version-label removal plan (docs/superpowers/plans/2026-10-15-eliminate-version-labeling.md). Stages 0, 1 and 2 renamed the generated bundle family and every hand-authored module whose rename target was free; the entries left here are the ones a mechanical rename cannot resolve, because dropping the version segment would land on a name another live file already holds. Each needs a meaningful name chosen by a person, not a behaviour-preserving strip. tests/version_free_source_names_test.py fails if this list gains an entry that does not exist or if an unlisted version-shaped file appears under src/js or src/css.",
+  "files": [
+    "src/js/collaboration-v24.js",
+    "src/js/photo-editor-v13.js",
+    "src/js/workflow-creation-flow-v3.js",
+    "src/js/workflow-creation-flow-v4.js",
+    "src/css/collaboration-v24.css",
+    "src/css/organized/admin-page-v13.css",
+    "src/css/organized/photo-editor-v13.css"
+  ]
+}

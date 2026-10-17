@@ -5,10 +5,10 @@ from pathlib import Path
 from browser_runtime import launch_chromium
 from inline_editor_runtime_test import build_inline_editor
 ROOT=Path(__file__).resolve().parents[1]
-BASE_CSS=['direct-manipulation-v24.css','content-browser-v24.css','smart-layout-v24.css','brand-components-v24.css','collaboration-v24.css','export-quality-v24.css']
-BASE_JS=['direct-manipulation-v24.js','content-browser-v24.js','smart-layout-v24.js','brand-components-v24.js','collaboration-v24.js','export-quality-v24.js']
-CSS=BASE_CSS+['adaptive-templates-v25.css','studio-governance-v25.css','print-readiness-v25.css','template-bindings-v25.css']
-JS=BASE_JS+['adaptive-templates-v25.js','studio-governance-v25.js','print-readiness-v25.js','template-bindings-v25.js']
+BASE_CSS=['direct-manipulation.css','content-browser.css','smart-layout.css','brand-components.css','collaboration-v24.css','export-quality.css']
+BASE_JS=['direct-manipulation.js','content-browser.js','smart-layout.js','brand-components.js','collaboration-v24.js','export-quality.js']
+CSS=BASE_CSS+['adaptive-templates.css','studio-governance.css','print-readiness.css','template-bindings.css']
+JS=BASE_JS+['adaptive-templates.js','studio-governance.js','print-readiness.js','template-bindings.js']
 def main()->int:
  from playwright.sync_api import sync_playwright
  with sync_playwright() as p:

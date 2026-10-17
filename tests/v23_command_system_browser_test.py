@@ -94,8 +94,8 @@ def main()->int:
   assert page.locator('#stage .object').count()==before+1
 
   # Lazy command UI can be loaded independently and edits profiles/overrides.
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "command-palette-v23.css"))
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "command-palette-v23.js"))
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "command-palette.css"))
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "command-palette.js"))
   page.evaluate("()=>EInviteCommandRegistry.openUI('commands')")
   page.wait_for_timeout(100)
   assert page.locator('.v23-command-surface').is_visible()

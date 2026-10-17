@@ -6,7 +6,7 @@ Two gates hard-coded the same literal:
 
     tests/v27_3_5_release_evidence_test.py
     tests/v53_1_operator_repair_contract_test.py
-        bundle-index-v15.js + bundle-index-v15.css <= 1_420_000
+        bundle-index.js + bundle-index.css <= 1_420_000
 
 Both were red. Measured, the number is a V0.52-era snapshot, not a live budget:
 
@@ -38,8 +38,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BUDGET_FILE = ROOT / "docs" / "perf" / "lighthouse-budgets.json"
 ROUTE = "index.html"
-JS_BUNDLE = ROOT / "src" / "js" / "bundle-index-v15.js"
-CSS_BUNDLE = ROOT / "src" / "css" / "bundle-index-v15.css"
+JS_BUNDLE = ROOT / "src" / "js" / "bundle-index.js"
+CSS_BUNDLE = ROOT / "src" / "css" / "bundle-index.css"
 
 
 def index_route_ceiling() -> dict:

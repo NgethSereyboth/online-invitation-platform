@@ -1,7 +1,7 @@
 const CACHE='einvite-checkin-v16';
 const PRECACHE=[
-  '/checkin.html','/bundle-checkin-v15.css','/bundle-checkin-v15.js',
-  '/core/theme.js','/backend-mode-v14.js','/manifest.webmanifest'
+  '/checkin.html','/bundle-checkin.css','/bundle-checkin.js',
+  '/core/theme.js','/backend-mode.js','/manifest.webmanifest'
 ];
 const STATIC=new Set(PRECACHE.filter(path=>path!=='/checkin.html'));
 self.addEventListener('install',event=>event.waitUntil(

@@ -109,9 +109,9 @@ def test_authorization_is_single_use_and_endpoint_scoped():
 
 
 def test_browser_contracts_and_route_budget():
-    agent = (ROOT / "src" / "js" / "ai-creative-agent-v28.js").read_text(encoding="utf-8")
-    registry = (ROOT / "src" / "js" / "ai-agent-tool-registry-v28.js").read_text(encoding="utf-8")
-    upload = (ROOT / "src" / "js" / "upload-folder-client-v53.js").read_text(encoding="utf-8")
+    agent = (ROOT / "src" / "js" / "ai-creative-agent.js").read_text(encoding="utf-8")
+    registry = (ROOT / "src" / "js" / "ai-agent-tool-registry.js").read_text(encoding="utf-8")
+    upload = (ROOT / "src" / "js" / "upload-folder-client.js").read_text(encoding="utf-8")
     assert "sessionOffline" in agent and "agentServerAvailable" in agent
     assert "MULTIPLE_SERVER_MUTATIONS_UNSUPPORTED" in registry
     assert "X-EInvite-AI-Authorization" in registry

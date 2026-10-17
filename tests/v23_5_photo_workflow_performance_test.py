@@ -15,7 +15,7 @@ def main()->int:
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():
    page.locator('#finalTourDismiss').click();page.wait_for_timeout(80)
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-workflow-v23.js"));page.wait_for_timeout(180)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "photo-workflow.js"));page.wait_for_timeout(180)
   page.evaluate("""()=>{const image=document.querySelector('#stage .image-object');clearSelection();setSelection([image])}""")
   page.wait_for_timeout(80)
   image_id=page.locator('#stage .image-object.selected').get_attribute('data-id')

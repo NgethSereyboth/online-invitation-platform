@@ -13,7 +13,7 @@ def main()->int:
   except Exception as exc:return skipped('V22_1_6_GPU_PROJECTION',exc)
   try:
    page=browser.new_page(viewport={'width':800,'height':500});page.set_default_timeout(30000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_content(html,wait_until='load');page.add_script_tag(content=src('tests/gpu_mock_webgl.js'))
-   for name in ['performance-observability-v22.js','gpu-texture-cache-v22.js','webgl-scene-backend-v22.js','gpu-projection-v22.js']:page.add_script_tag(content=src(name))
+   for name in ['performance-observability.js','gpu-texture-cache.js','webgl-scene-backend.js','gpu-projection.js']:page.add_script_tag(content=src(name))
    page.wait_for_function('()=>window.EInviteGPUProjection')
    result=page.evaluate('''async()=>{await photo.decode();await EInviteGPUProjection.renderPickBuffer();const r=stage.getBoundingClientRect();const center=await EInviteGPUProjection.pick(r.left+70,r.top+70),corner=await EInviteGPUProjection.pick(r.left+23,r.top+23),vector=await EInviteGPUProjection.pick(r.left+210,r.top+70),masked=await EInviteGPUProjection.pick(r.left+325,r.top+70);const draws=EInviteWebGLScene.context.draws.map(d=>({pick:d.u_pick,useTexture:d.u_useTexture,useMask:d.u_useMask,radius:d.u_radius,color:d.u_color}));const diag=EInviteGPUProjection.diagnostics();EInviteGPUProjection.destroy();EInviteWebGLScene.destroy();return{center,corner,vector,masked,draws,diag}}''')
    assert result['center']=='circle' and result['corner'] is None,result

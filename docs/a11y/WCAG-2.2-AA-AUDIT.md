@@ -81,7 +81,7 @@ due to author-created content."*
 | --- | --- |
 | Global scroll padding reserves space for the sticky chrome when the browser scrolls a focused element into view | `src/css/stabilized.css:2` — `scroll-padding:18px 12px calc(90px + env(safe-area-inset-bottom))` |
 | Visible focus indicator on every interactive element | `src/css/modern-ui.css:9` — `button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid …;outline-offset:2px}` |
-| Per-component focus ring where the global one would be clipped | `src/css/page-experience-v22.css:16` — `.v22-page-card:focus-visible{outline:3px solid …;outline-offset:2px}` |
+| Per-component focus ring where the global one would be clipped | `src/css/page-experience.css:16` — `.v22-page-card:focus-visible{outline:3px solid …;outline-offset:2px}` |
 | Skip-link becomes a real, focused control at the top of the stacking order | `src/css/accessibility.css:4` — `.skip-link:focus,.skip-link:focus-visible{position:fixed;left:12px;top:12px;z-index:99999}` |
 
 **Sticky / overlay layers that can hide a focused element:**
@@ -92,7 +92,7 @@ due to author-created content."*
 | Second sticky band, 68px down | `src/css/canvas-plus.css:170` — `.toolbar{position:sticky;top:68px;z-index:15}` |
 | Admin sticky table head | `src/css/admin-page.css:38` — `thead th{position:sticky;top:var(--app-topbar-h)}` |
 | Check-in header | `src/css/checkin.css:2` — `.checkin-header{position:sticky;top:0;z-index:10}` |
-| Shell rails | `src/css/app-shell-v55.css:877` (z 50), `:959` (z 40) |
+| Shell rails | `src/css/app-shell.css:877` (z 50), `:959` (z 40) |
 | Editor tool rail | `src/css/editor-pro.css:2` — `.ei-tool-rail{position:sticky;…}` |
 | The `•••` popover | `src/css/canvas-plus.css:237` — `z-index:12000` |
 
@@ -120,9 +120,9 @@ whether per-container `scroll-padding` is needed. Owner file if a fix is chosen:
 *"All functionality that uses a dragging movement for operation can be achieved by a single
 pointer without dragging, unless dragging is essential."*
 
-**Drag operations present:** page reorder (`src/css/page-experience-v22.css:14`
+**Drag operations present:** page reorder (`src/css/page-experience.css:14`
 `.v22-page-drag-handle`, `:35` `.v22-dock-drag-handle`), canvas element move/resize, and
-drag-from-library asset insertion (`src/js/asset-workflow-v23.js`).
+drag-from-library asset insertion (`src/js/asset-workflow.js`).
 
 **Non-drag alternatives that exist:**
 
@@ -130,20 +130,20 @@ drag-from-library asset insertion (`src/js/asset-workflow-v23.js`).
 | --- | --- | --- |
 | Move a canvas element | On-screen nudge buttons `↑ ← → ↓` | `src/html/index.html:374`, wired at `src/js/app.js:3343`, implemented `src/js/app.js:3316` |
 | Resize a canvas element | `− Size` / `+ Size` buttons, same row | `src/html/index.html:374` |
-| Move a selection | Arrow keys (1px, Shift = 10px) | `src/js/editor-command-system-v23.js:111` |
-| Resize a selection | `Alt+Arrow` | `src/js/professional-workflow-v23.js:68-71` |
-| Reposition an image inside its frame | `Mod+Shift+Arrow` | `src/js/professional-workflow-v23.js:90-93` |
-| Reorder a page (to the ends) | Menu items *Move to first page* / *Move to last page*, reached from the card's action buttons, with a full Arrow/Home/End/Escape keyboard model | `src/js/page-experience-v22.js:387`, `:339`; buttons styled `src/css/page-experience-v22.css:14` |
+| Move a selection | Arrow keys (1px, Shift = 10px) | `src/js/editor-command-system.js:111` |
+| Resize a selection | `Alt+Arrow` | `src/js/professional-workflow.js:68-71` |
+| Reposition an image inside its frame | `Mod+Shift+Arrow` | `src/js/professional-workflow.js:90-93` |
+| Reorder a page (to the ends) | Menu items *Move to first page* / *Move to last page*, reached from the card's action buttons, with a full Arrow/Home/End/Escape keyboard model | `src/js/page-experience.js:387`, `:339`; buttons styled `src/css/page-experience.css:14` |
 
 **Why `partial`, not `pass`:** the page-reorder alternative only reaches the **first and last**
-positions. There is no "move one step earlier / later" control — `grep -n "Move " src/js/page-experience-v22.js`
+positions. There is no "move one step earlier / later" control — `grep -n "Move " src/js/page-experience.js`
 returns only `Move to first page` and `Move to last page` (`:387`). Moving a page to an arbitrary
 index therefore still requires a drag, and the two keyboard paths found are Transform nudges, not
 page reorder. Dragging is not *essential* to arbitrary reordering — a step-wise command would
 satisfy the criterion.
 
 **Follow-up (not applied):** add `Move earlier` / `Move later` entries to the page context menu
-in `src/js/page-experience-v22.js:387`, reusing the existing `reorderPage` helper already called
+in `src/js/page-experience.js:387`, reusing the existing `reorderPage` helper already called
 at `:404`. That is a `src/js/` change and would require `python3 build.py all`.
 
 ### 3.3 2.5.8 Target Size (Minimum) — AA — **partial**
@@ -162,11 +162,11 @@ spacing, equivalent, inline and essential targets.
 | Component | Size | Evidence |
 | --- | --- | --- |
 | Element-library category chips | 28px tall | `src/css/final-polish.css:2` — `.final-library-cats button{min-height:28px!important}` |
-| Page-card action buttons | 30 × 30 | `src/css/page-experience-v22.css:2` — `.v22-page-actions button{min-width:30px;min-height:30px}` |
+| Page-card action buttons | 30 × 30 | `src/css/page-experience.css:2` — `.v22-page-actions button{min-width:30px;min-height:30px}` |
 | Template-card favourite/preview buttons | 30 × 30 | `src/css/dashboard-page.css:5` — `.template-choice-actions button{width:30px;height:30px}` |
-| Agent attachment chips | 32 × 32 | `src/css/ai-creative-agent-v28.css:1` — `.ei-agent-attachment-chip button{min-width:32px;min-height:32px}` |
+| Agent attachment chips | 32 × 32 | `src/css/ai-creative-agent.css:1` — `.ei-agent-attachment-chip button{min-width:32px;min-height:32px}` |
 | Project ⋯ / material close | 34 × 34 | `src/css/final-polish.css:2` |
-| Template dialog controls | 36px tall | `src/css/adaptive-templates-v25.css:2` — `.v25-template-dialog button,select{min-height:36px}` |
+| Template dialog controls | 36px tall | `src/css/adaptive-templates.css:2` — `.v25-template-dialog button,select{min-height:36px}` |
 
 Note the interaction that makes those values win: `accessibility.css:2` uses `:where(...)`, which
 contributes **zero specificity**, so any later `min-height` on a button overrides the 44px floor.
@@ -181,19 +181,19 @@ pointer target:**
 
 | Element | Size | Evidence |
 | --- | --- | --- |
-| Canvas object resize handle | **10 × 10** | `src/css/typography-system-v20.css:2` — `.object>.resize-handle,.object>i{width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important}` |
+| Canvas object resize handle | **10 × 10** | `src/css/typography-system.css:2` — `.object>.resize-handle,.object>i{width:10px!important;height:10px!important;min-width:10px!important;min-height:10px!important}` |
 
 **Why the verdict is `partial` rather than `fail` or an unqualified `pass`:** an undersized target
 is permitted when the *Equivalent* exception holds — the same function is achievable through a
 different control on the same page that does meet the criterion. The same route does ship 44px
 `− Size` / `+ Size` buttons (`src/html/index.html:374`) and `Alt+Arrow` resize
-(`src/js/professional-workflow-v23.js:68-71`), so the exception plausibly applies. But that is an
+(`src/js/professional-workflow.js:68-71`), so the exception plausibly applies. But that is an
 argument, not a measurement: this pass did not render the editor and confirm the buttons are
 reachable in the same context as the handle. The *Spacing* exception is likewise unmeasured. So the
 honest verdict is `partial`, pending either a rendered check of the equivalence or a bump of the
 handle.
 
-**Follow-up (not applied):** raise the resize handle in `src/css/typography-system-v20.css:2` to at
+**Follow-up (not applied):** raise the resize handle in `src/css/typography-system.css:2` to at
 least 24 × 24 while keeping the visual affordance small (a larger hit area with a smaller painted
 grip), or record the measured equivalent-control evidence that makes the exception hold.
 
@@ -210,9 +210,9 @@ The criterion is explicitly conditional. Two searches establish the condition is
    not a help mechanism repeated across pages.
 2. **The one help-like surface exists on a single route.** The keyboard-shortcuts help button
    (`.ui-shortcut-help`, styled at `src/css/modern-ui.css:9`) is created only by
-   `src/js/editor-command-system-v23.js:165`, and appears in exactly one built bundle:
-   `bundle-index-v15.js` has 1 occurrence; the other 15 route bundles have 0
-   (`for b in index dashboard admin account …; do grep -c 'ui-shortcut-help' src/js/bundle-$b-v15.js; done`).
+   `src/js/editor-command-system.js:165`, and appears in exactly one built bundle:
+   `bundle-index.js` has 1 occurrence; the other 15 route bundles have 0
+   (`for b in index dashboard admin account …; do grep -c 'ui-shortcut-help' src/js/bundle-$b.js; done`).
 
 Because no help mechanism is repeated across pages, there is no order for the criterion to
 constrain. Verdict `na`, with the search quoted so it can be re-run if a help affordance is ever
@@ -249,7 +249,7 @@ cheapest available mitigation and is simply missing.
 **Follow-up (not applied):** add `autocomplete="name"` and `autocomplete="email"` to
 `src/js/signup-sheets.js:130-131` and `src/js/polls.js:109-110`, and consider prefilling the
 second form from the first submission. Files: `src/js/signup-sheets.js`, `src/js/polls.js`
-(both feed `bundle-public-v15.js`; regenerate with `python3 build.py all`).
+(both feed `bundle-public.js`; regenerate with `python3 build.py all`).
 
 ### 3.6 3.3.8 Accessible Authentication (Minimum) — AA — **pass**
 
@@ -260,7 +260,7 @@ mechanism to recognize the user."*
 | Requirement | Finding | Evidence |
 | --- | --- | --- |
 | No puzzle / CAPTCHA | **Absent** — `grep -rni "captcha\|recaptcha\|hcaptcha\|turnstile" src/html/*.html src/js/*.js src/python/server.py` → no matches | — |
-| No blocked paste into credential fields | The only two `paste` handlers in the app explicitly bail out on `INPUT`/`TEXTAREA` — `if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return` — so paste into a password field is untouched | `src/js/canvas-plus.js:135`, `src/js/rich-text-editing-v21.js:37` |
+| No blocked paste into credential fields | The only two `paste` handlers in the app explicitly bail out on `INPUT`/`TEXTAREA` — `if(['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))return` — so paste into a password field is untouched | `src/js/canvas-plus.js:135`, `src/js/rich-text-editing.js:37` |
 | Password managers / autofill supported | `autocomplete="email"`, `"current-password"`, `"new-password"` on the sign-in and registration fields | `src/html/dashboard.html:46-48` |
 | Reset flow supports autofill | `autocomplete="email"`, `"new-password"` ×2 | `src/html/reset.html:20,29,30` |
 | MFA code field is autofill-addressable | `autocomplete="one-time-code"` | `src/html/account.html:33` |
@@ -295,10 +295,10 @@ Listed, per this pass's scope, and **none applied**:
 | # | Criterion | Verdict | File to change | Change |
 | --- | --- | --- | --- | --- |
 | 1 | 2.4.11 Focus Not Obscured (Minimum) | partial | `src/css/stabilized.css` (+ a new harness measurement) | Decide whether per-scroll-container `scroll-padding` is needed for the editor's two stacked sticky bands; measure before changing |
-| 2 | 2.5.7 Dragging Movements | partial | `src/js/page-experience-v22.js:387` | Add *Move earlier* / *Move later* menu entries reusing the existing `reorderPage` helper |
+| 2 | 2.5.7 Dragging Movements | partial | `src/js/page-experience.js:387` | Add *Move earlier* / *Move later* menu entries reusing the existing `reorderPage` helper |
 | 3 | 3.3.7 Redundant Entry | partial | `src/js/signup-sheets.js:130-131`, `src/js/polls.js:109-110` | Add `autocomplete="name"` / `autocomplete="email"`; consider cross-form prefill |
 | 4 | 3.3.8 Accessible Authentication (Minimum) | pass (gap noted) | `src/html/index.html:394` | Add an `autocomplete` value to `#accessPassword` |
-| 5 | 2.5.8 Target Size (Minimum) | partial | `src/css/typography-system-v20.css:2` | Canvas resize handle is 10 × 10; raise the hit area to ≥ 24 × 24, or measure and record the Equivalent-exception evidence |
+| 5 | 2.5.8 Target Size (Minimum) | partial | `src/css/typography-system.css:2` | Canvas resize handle is 10 × 10; raise the hit area to ≥ 24 × 24, or measure and record the Equivalent-exception evidence |
 | 6 | 2.5.5 vs 2.5.8 labelling | — | `docs/a11y/WCAG-AA-AUDIT.md` | Restate the AA target-size claim against 2.5.8 |
 
 Each of 1–3 would need `python3 build.py all` afterwards for 2 and 3, since both touch files that
@@ -334,5 +334,5 @@ feed route bundles. Nothing in this table has been started.
 
 *Cross-references: [WCAG-AA-AUDIT.md](WCAG-AA-AUDIT.md), [RESPONSIVE-AUDIT.md](RESPONSIVE-AUDIT.md),
 [KHMER-TYPOGRAPHY.md](../i18n/KHMER-TYPOGRAPHY.md), `src/css/accessibility.css`, `src/css/modern-ui.css`,
-`src/css/stabilized.css`, `src/css/canvas-plus.css`, `src/js/page-experience-v22.js`,
+`src/css/stabilized.css`, `src/css/canvas-plus.css`, `src/js/page-experience.js`,
 `src/js/signup-sheets.js`, `src/js/polls.js`, `src/js/account-security.js`.*

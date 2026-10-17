@@ -196,7 +196,7 @@
 /* Mounted here instead of in a page-level inline <script>: the server sends
    `script-src 'self'` with no nonce or hash list, so the edit history mount block was refused
    outright and logged a CSP violation on every dashboard load. This module is already part
-   of bundle-dashboard-v15.js, so moving the mount into it adds no request and no script tag.
+   of bundle-dashboard.js, so moving the mount into it adds no request and no script tag.
    The block below is byte-for-byte the inline block it replaces. */
 // Mount edit-history view for the active invitation (V2-UX-3, ROADMAP-V2 §3.3).
 // Placed AFTER the editor area (the dashboardView + create dialogs) and BEFORE

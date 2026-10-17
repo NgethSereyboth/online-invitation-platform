@@ -25,7 +25,7 @@ This guide was compiled during a research run in which **every web search and th
 ### 0.2 How to use this guide
 
 - **Work top to bottom.** The categories are ordered by severity and fix-effort.
-- **Fix in source, then rebuild.** Several findings point at `bundle-*-v15.js` files — those are **generated** by `src/python/build_route_bundles.py`. Fixing the bundle directly is futile; the fix must land in the source module, then you run the build.
+- **Fix in source, then rebuild.** Several findings point at `bundle-*.js` files — those are **generated** by `src/python/build_route_bundles.py`. Fixing the bundle directly is futile; the fix must land in the source module, then you run the build.
 - **Apply each pattern once, then globally.** Most findings are the same 12 rule types repeated across many files. Each category below explains the root fix, then lists every affected location.
 - **Verify with the local scan before pushing.** §14 has the commands.
 
@@ -94,7 +94,7 @@ STEP 14 Verify locally, then push                  (§14)
 The repo has three separate issues compounding each other:
 
 1. **A single vulnerable pattern repeated everywhere.** The `f"...{col}=?..."` SQL pattern (§5.1) appears at 30+ call sites. That's why Bandit reports 97 findings from what is essentially one bug.
-2. **Generated files being scanned.** CodeQL is analyzing `bundle-*-v15.js` — the concatenated output of `build_route_bundles.py`. Fixing those files directly is wasted effort; the fix belongs upstream in `src/js/*.js`.
+2. **Generated files being scanned.** CodeQL is analyzing `bundle-*.js` — the concatenated output of `build_route_bundles.py`. Fixing those files directly is wasted effort; the fix belongs upstream in `src/js/*.js`.
 3. **Strict query packs enabled.** CodeQL is running `security-extended`, which surfaces every finding. **Do not downgrade the query pack** — the CI is working as intended; fix the code.
 
 ---
@@ -260,7 +260,7 @@ def escape_html(value: Any) -> str:
  * fix each callsite ad-hoc, use these functions everywhere.
  *
  * Apply this file as `src/js/core/safe-dom.js` and add it to the FIRST
- * bundle source in docs/route-bundle-sources-v15.json so it loads before
+ * bundle source in docs/route-bundle-sources.json so it loads before
  * any page code.
  */
 (function () {
@@ -356,7 +356,7 @@ def escape_html(value: Any) -> str:
 
 **After creating both files:**
 
-1. Add `src/js/core/safe-dom.js` to the **first** entry in the `scripts` array of `docs/route-bundle-sources-v15.json` (before `app.js`).
+1. Add `src/js/core/safe-dom.js` to the **first** entry in the `scripts` array of `docs/route-bundle-sources.json` (before `app.js`).
 2. Rebuild: `python3 src/python/build_route_bundles.py && python3 src/python/sync_frontend_assets.py`
 3. Confirm: `python3 src/python/build_route_bundles.py --check` → `ROUTE_BUNDLE_CHECK_PASSED`
 
@@ -790,11 +790,11 @@ Apply the same fix anywhere else you find it.
 
 ## 7. JavaScript CodeQL fixes
 
-**CRITICAL REMINDER:** All `bundle-*-v15.js` findings must be fixed in **`src/js/*.js`** (the source), then the bundles rebuilt. Fixing the bundle is overwritten on the next build.
+**CRITICAL REMINDER:** All `bundle-*.js` findings must be fixed in **`src/js/*.js`** (the source), then the bundles rebuilt. Fixing the bundle is overwritten on the next build.
 
 ### 7.1 `js/xss-through-dom` — ~20 instances
 
-**Locations (in bundle files):** `bundle-index-v15.js:2987, 5882, 6040, 6659, 7759, 12879`; `bundle-materials-v15.js:453`; `bundle-admin-v15.js:1040`; `bundle-analytics-v15.js:999`; `bundle-dashboard-v15.js:742`; `bundle-designer-v15.js:135`.
+**Locations (in bundle files):** `bundle-index.js:2987, 5882, 6040, 6659, 7759, 12879`; `bundle-materials.js:453`; `bundle-admin.js:1040`; `bundle-analytics.js:999`; `bundle-dashboard.js:742`; `bundle-designer.js:135`.
 
 **Source locations (which actually need fixing):**
 
@@ -853,7 +853,7 @@ Fix each one. If the value written is a **constant** (not derived from user inpu
 
 ### 7.2 `js/incomplete-multi-character-sanitization` — ~10 instances
 
-**Locations:** `bundle-index-v15.js:413, 6659`; `bundle-public-v15.js:276`; `bundle-dashboard-v15.js:231`.
+**Locations:** `bundle-index.js:413, 6659`; `bundle-public.js:276`; `bundle-dashboard.js:231`.
 
 **Source locations:** find them:
 
@@ -897,7 +897,7 @@ function stripAllTags(html) {
 
 ### 7.3 `js/prototype-polluting-assignment` — 2 instances
 
-**Location:** `bundle-index-v15.js:8587` (and its source).
+**Location:** `bundle-index.js:8587` (and its source).
 
 **Source location:** find it:
 
@@ -942,7 +942,7 @@ function merge(target, source) {
 
 ### 7.4 `js/clear-text-storage-of-sensitive-information` — 1 instance
 
-**Location:** `bundle-dashboard-v15.js:435`.
+**Location:** `bundle-dashboard.js:435`.
 
 The CodeQL message says: *"This stores sensitive data returned by a call to `page` as clear text."* and *"...by a call to `baseDocument`"*. So the code is writing `page` and `baseDocument` (invitation content) into `localStorage` or `sessionStorage`.
 
@@ -1081,10 +1081,10 @@ Summary of new files this guide asks you to add:
 | `src/js/app.js` | XSS (1132 — 5 sub-findings) |
 | `src/js/workflow-creation-flow-v4.js` | XSS (178) |
 | `src/js/canvas-plus.js` | XSS (32) |
-| `src/js/dashboard/*.js` | Clear-text storage (bundle-dashboard-v15.js:435 — find source) |
-| Source for bundle-index-v15.js | Prototype pollution (8587) |
+| `src/js/dashboard/*.js` | Clear-text storage (bundle-dashboard.js:435 — find source) |
+| Source for bundle-index.js | Prototype pollution (8587) |
 | 8 test files | URL substring + bad-tag-filter (§8) |
-| `docs/route-bundle-sources-v15.json` | Add `src/js/core/safe-dom.js` to first bundle |
+| `docs/route-bundle-sources.json` | Add `src/js/core/safe-dom.js` to first bundle |
 | `docs/requirements-production.txt` | `cryptography` version (§5.2) |
 ⚙
 
@@ -1112,7 +1112,7 @@ Do **not** do any of these:
 
 | Anti-pattern | Why it's wrong |
 |---|---|
-| Fixing `bundle-*-v15.js` directly | Generated file — overwritten on the next build |
+| Fixing `bundle-*.js` directly | Generated file — overwritten on the next build |
 | Loosening the Bandit gate from `-lll` to `-ll` | Hides real HIGH findings; fix the code |
 | Disabling CodeQL rules via `.github/codeql/codeql-config.yml` | Same — the findings are real |
 | Replacing one f-string with another f-string in SQL | Doesn't remove the injection; column names are the vulnerable part |
@@ -1158,7 +1158,7 @@ Tell CodeQL to ignore generated bundle files. Add `.github/codeql/codeql-config.
 ```
 paths-ignore:
   - src/python/build/bundle-*.js
-  - src/js/bundle-*-v15.js
+  - src/js/bundle-*.js
   - src/python/vendor/**
   - vendor/**
 ```

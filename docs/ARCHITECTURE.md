@@ -11,11 +11,11 @@ flowchart TD
     subgraph Browser["Browser (build-tool-free)"]
         Editor["Editor Chrome<br/>unified-editor-v34, editor-pro"]
         Renderer["renderer-core.js<br/>shared safe object renderer"]
-        CRDT["crdt-adapter-v31.js<br/>pure-JS CRDT engine"]
-        CollabUI["collaboration-studio-v31.js<br/>short-poll + presence"]
+        CRDT["crdt-adapter.js<br/>pure-JS CRDT engine"]
+        CollabUI["collaboration-studio.js<br/>short-poll + presence"]
         Public["public-page.js<br/>advanced-public-renderer-v32"]
-        AIUI["ai-creative-agent-v28.js<br/>plan preview/confirm"]
-        Assets["asset-workflow-v23.js<br/>upload-client.js"]
+        AIUI["ai-creative-agent.js<br/>plan preview/confirm"]
+        Assets["asset-workflow.js<br/>upload-client.js"]
     end
 
     subgraph Server["Python stdlib server (server.py monolith)"]
@@ -154,9 +154,10 @@ The document model is normalized through `src/python/document_schema_v32.py` (cu
 - **Files**: `ai_agent/tools.py`, `ai_agent/capabilities.py`, `ai_agent/__init__.py`, `ai_agent/storage.py`, `ai_agent/service.py`.
 - **What it does**:
   - **80 typed `ToolDefinition` entries** across 30+ groups: `read`, `object`, `transform`, `style`, `image`, `gallery`, `photo`, `page`, `invitation`, `event`, `guest`, `rsvp`, `analytics`, `account`, `materials`, `design`, `asset`, `check`, `fix`, `preview`, `export`, `publish`, `message`, `editor`, `marketplace`, `enterprise`, `animation`, `publishing`, `merge`, `plugin`.
-  - Permission tiers: `read` / `edit` / `manage` / `admin`. *(ROADMAP Phase 1a will replace these with resource-scoped grants like `event:{id}:publish`.)*
+  - Permission tiers remain `read` / `edit` / `manage` / `admin` as the compatibility fallback; **9 of the 80 tools currently have resource-scoped grant mappings**, and unmapped tools continue to use the legacy tier check during the staged rollout (`ai_agent/capabilities.py::TOOL_REQUIRED_GRANTS`, `availability()`). A mapped tool uses an active resource grant authoritatively when a matching resource/action grant exists, with legacy fallback only when no matching grant exists.
+  - **JIT elevation is implemented** for 13 high-risk tools (`ai_agent/jit_elevation.py::JIT_ELIGIBLE_TOOLS`): high-risk tool authorization checks a short-lived, unconsumed database grant; absent grants trigger an elevation request, and an approved grant is consumed once. `publish.prepare` may be auto-approved for an owner/manager; other JIT-eligible operations require manual approval.
   - `TOOL_BINDINGS` dict declares every tool's bound API path or editor function for runtime HTTP verification.
-  - `build_access_snapshot()` gates tools by account/invitation role, plan, storage, archived state, workspace AI policy, and feature-table existence (`event_tasks_v52`, `plugin_installations_v48`, `animation_projects_v44`, `custom_domains_v45`, `data_merge_jobs_v47`, `marketplace_templates_v36`).
+  - `build_access_snapshot()` gates tools by account/invitation role, plan, storage, archived state, workspace AI policy, resource grants, and feature-table existence (`event_tasks_v52`, `plugin_installations_v48`, `animation_projects_v44`, `custom_domains_v45`, `data_merge_jobs_v47`, `marketplace_templates_v36`).
 - **Dependencies**: SQLite/PostgreSQL.
 
 ### 3.4 AI Provider Adapters (provider-neutral with offline fallback)
@@ -205,7 +206,7 @@ The document model is normalized through `src/python/document_schema_v32.py` (cu
 
 ### 3.7 CRDT Collaboration Adapter (pure client-side)
 
-- **Files**: `src/js/crdt-adapter-v31.js` (38-line dense IIFE).
+- **Files**: `src/js/crdt-adapter.js` (38-line dense IIFE).
 - **What it does**: Pure-JS CRDT engine frozen as `window.EInviteCRDTV31`. Operations: `set`, `delete`, `sequence-insert`, `sequence-move`, `rich-text` (paragraphId/runId/start/end spliced), `checkpoint`. Each update carries `version/id/documentId/epoch/actor/clock/type/objectType/path/payload/timestamp/origin`. `compareClock` (numeric clock → actor string tiebreak) resolves register conflicts. State vector per actor.
 - Limits: `MAX_UPDATE_BYTES=256000`, `MAX_PENDING=2000`, `MAX_APPLIED=20000`.
 - Functions: `createState`, `nextUpdate`, `apply`, `receive`, `acknowledge`, `compact`, `diff`, `fingerprint` (FNV-1a), `serialize`. Epoch mismatch throws `code=EPOCH_MISMATCH`.
@@ -213,7 +214,7 @@ The document model is normalized through `src/python/document_schema_v32.py` (cu
 
 ### 3.8 Collaboration Studio UI (transport + presence)
 
-- **Files**: `src/js/collaboration-studio-v31.js` (36-line dense IIFE), `src/css/collaboration-studio-v31.css`, `src/js/canva-scale-v31.js`.
+- **Files**: `src/js/collaboration-studio.js` (36-line dense IIFE), `src/css/collaboration-studio.css`, `src/js/canva-scale.js`.
 - **What it does**:
   - Joins room via `GET /api/invitations/{id}/collaboration/v31/snapshot`.
   - **Short-polls** `.../updates?since=N` every 800 ms (3 s offline).
@@ -244,8 +245,8 @@ The document model is normalized through `src/python/document_schema_v32.py` (cu
 
 ### 3.11 Asset Pipeline & Build System (route-bundle manifests)
 
-- **Files**: `src/python/build_route_bundles.py`, `src/python/build_editor_bundle.py`, `src/python/build_page_manifests.py`, `src/python/sync_frontend_assets.py`, `docs/route-bundle-sources-v15.json`, `docs/route-bundles-v15.json`.
-- **What it does**: Concatenates source JS/CSS files declared in `docs/route-bundle-sources-v15.json` into `bundle-<page>-v15.js` / `.css` written to **both** `src/python/` (server-served) AND `src/js/` + `src/css/` (repo truth). `--check` mode verifies byte-identical hashes. `sync_frontend_assets.py` mirrors HTML, `vendor/`, `assets/`, `licenses/` into `src/python/`. `server.py::ensure_frontend_assets` runs all three builders with `--check` at startup (and rebuilds in dev mode).
+- **Files**: `src/python/build_route_bundles.py`, `src/python/build_editor_bundle.py`, `src/python/build_page_manifests.py`, `src/python/sync_frontend_assets.py`, `docs/route-bundle-sources.json`, `docs/route-bundles.json`.
+- **What it does**: Concatenates source JS/CSS files declared in `docs/route-bundle-sources.json` into `bundle-<page>.js` / `.css` written to **both** `src/python/` (server-served) AND `src/js/` + `src/css/` (repo truth). `--check` mode verifies byte-identical hashes. `sync_frontend_assets.py` mirrors HTML, `vendor/`, `assets/`, `licenses/` into `src/python/`. `server.py::ensure_frontend_assets` runs all three builders with `--check` at startup (and rebuilds in dev mode).
 - **Dependencies**: Python 3 stdlib only.
 
 ---
@@ -298,8 +299,8 @@ The platform uses **POLLING + CRDT + DURABLE CHECKPOINTS + SNAPSHOT PUBLISHING**
 
 ```mermaid
 sequenceDiagram
-    participant Browser as Editor (collaboration-studio-v31.js)
-    participant CRDT as crdt-adapter-v31.js
+    participant Browser as Editor (collaboration-studio.js)
+    participant CRDT as crdt-adapter.js
     participant Server as server.py + platform_v32
     participant DB as invitations / collaboration_updates
 
@@ -394,7 +395,7 @@ Dashboard, materials, templates, guests, responses, analytics, billing, account,
 
 ## 8. Rendering
 
-`renderer-core.js` owns the shared object-level rendering contract: safe rich text, dimensions, filters, transforms, shape fills and animation styles. Both editor-generated preview markup and the public renderer (`advanced-public-renderer-v32.js`) delegate artistic object rendering to it.
+`renderer-core.js` owns the shared object-level rendering contract: safe rich text, dimensions, filters, transforms, shape fills and animation styles. Both editor-generated preview markup and the public renderer (`advanced-public-renderer.js`) delegate artistic object rendering to it.
 
 ---
 
@@ -402,7 +403,8 @@ Dashboard, materials, templates, guests, responses, analytics, billing, account,
 
 Phase 1+ of `docs/ROADMAP.md` will introduce:
 
-- **Resource-scoped + JIT permissions** (Phase 1a) — replace `read`/`edit`/`manage`/`admin` with grants like `event:{id}:publish`. Short-lived 5-minute TTL for `publish`, `delete`, `bulk_*`.
+- **Complete the staged resource-scoped permission rollout** — extend `TOOL_REQUIRED_GRANTS` beyond the current 9 mapped tools while retaining the legacy tier fallback only for tools that have not yet migrated. Resource-scoped matching is already authoritative for mapped tools.
+- **Continue JIT elevation hardening** — the short-lived, one-shot grant lifecycle is implemented for 13 tools; expand coverage only with matching tool-specific policy and regression tests.
 - **Agent-security dashboard** — anomaly detection on tool-invocation patterns.
 - **ASVS L2 self-assessment** — gap analysis across all 14 chapters.
 - **pgBackRest + PITR** — continuous WAL archiving for PostgreSQL.

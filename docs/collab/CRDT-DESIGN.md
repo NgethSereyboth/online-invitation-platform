@@ -81,7 +81,7 @@ merge-corruption incidents; all V31 unit tests still pass.
 
 | Layer | Change |
 |---|---|
-| Frontend | Delete `src/js/crdt-adapter-v31.js` and `src/js/collaboration-studio-v31.js`. |
+| Frontend | Delete `src/js/crdt-adapter.js` and `src/js/collaboration-studio.js`. |
 | Backend | Drop `collaboration_updates` and `collaboration_checkpoints` tables (after a one-time export to V52 binary format for historical replay). Remove `/collaboration/v31/*` routes. |
 
 ---
@@ -394,7 +394,7 @@ lacked.
 ### Integration with the editor's existing undo stack
 
 The editor's native undo (`document.execCommand('undo')` + the V31
-`collaboration-studio-v31.js` history) is **not** removed in Phase A. The V52
+`collaboration-studio.js` history) is **not** removed in Phase A. The V52
 UndoManager is wired as an event listener: it observes `Y.Doc` update events
 and pushes its own stack items onto the editor's history chip. Phase B
 flips the polarity — the editor's undo calls `EInviteCRDTV52Undo.undo()`
@@ -420,7 +420,7 @@ Cursor sync delayed by content sync is bad. Use a dedicated ephemeral
 channel."* and *"Presence heartbeat with grace period (5–10s) to prevent
 flicker."*
 
-`src/js/collaboration-presence-v52.js` (new) exposes
+`src/js/collaboration-presence.js` (new) exposes
 `window.EInviteCollaborationPresenceV52`. It is **separate** from the content
 sync path:
 
@@ -554,7 +554,7 @@ sequenceDiagram
 - [x] `src/js/crdt-yjs-indexeddb.js` — y-indexeddb wrapper, IndexedDB schema
       documented in source comments.
 - [x] `src/js/crdt-yjs-undo.js` — per-user UndoManager with `trackedOrigins`.
-- [x] `src/js/collaboration-presence-v52.js` — dedicated ephemeral channel,
+- [x] `src/js/collaboration-presence.js` — dedicated ephemeral channel,
       3 s heartbeat, 7 s grace, WebSocket-or-poll transport.
 - [x] `src/js/crdt-yjs-rich-media.js` — custom Y.js type for images, embeds,
       resize handles; asset bytes never enter the CRDT.

@@ -20,9 +20,9 @@
   <meta name="twitter:description" content="__INVITATION_DESCRIPTION__">
   <meta name="twitter:image" content="__INVITATION_OG_IMAGE__">
   <link rel="canonical" href="/i/__INVITATION_SLUG__">
-  <link rel="stylesheet" href="bundle-public-v15.css">
+  <link rel="stylesheet" href="bundle-public.css">
 
-  <script src="backend-mode-v14.js"></script>
+  <script src="backend-mode.js"></script>
 </head>
 <body data-shell="b" data-page="public"><!--
   Minimal topbar (§2.1 Skeleton B): brand left, invitation language right.
@@ -49,10 +49,10 @@
   still track the data-language value on #publicRoot. The server does not inject
   __INVITATION_LANG__ (sec-1 owns serve_public and chose to escape user-controlled
   values rather than add a new placeholder); the dynamic attribute is therefore
-  set client-side only. The script is placed BEFORE bundle-public-v15.js so the
+  set client-side only. The script is placed BEFORE bundle-public.js so the
   observer is registered before the bundle's language-switcher first runs.
 -->
-<script src="bundle-public-v15.js"></script>
+<script src="bundle-public.js"></script>
 
 
 

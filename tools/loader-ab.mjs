@@ -2,7 +2,7 @@
  * loader-ab.mjs — does the deferred loader's serial promise chain cost anything,
  * and is the load ORDER load-bearing?
  *
- * performance-loader-v22.js appends its 23 feature modules through
+ * performance-loader.js appends its 23 feature modules through
  *   a.reduce((p, n) => p.then(() => new Promise(...)), Promise.resolve())
  * which is strictly one-at-a-time: module n+1 is not even requested until module
  * n has loaded and executed. Dynamically inserted scripts are `async` by
@@ -17,7 +17,7 @@
  *   2. does dropping it change the page (globals defined, DOM size, errors)?
  *
  * Why the assertions matter: the first version of this experiment intercepted
- * `performance-loader-v22.js` as a URL. It never matched, because the loader is
+ * `performance-loader.js` as a URL. It never matched, because the loader is
  * concatenated into the route bundle, so it silently compared the serial build
  * against itself and printed a plausible-looking "-206 ms". `patched` is now
  * asserted and a run where arm B was not actually patched ABORTS (exit 3)
@@ -25,7 +25,7 @@
  * change in the prior report only looked like a win until three pairs were run.
  *
  * Usage
- *   node tools/loader-ab.mjs [url] [--pairs=3] [--bundle=bundle-index-v15.js]
+ *   node tools/loader-ab.mjs [url] [--pairs=3] [--bundle=bundle-index.js]
  *
  * Requires: node + puppeteer-core, and a running server (tools/serve-gzip.py).
  * Produces: a per-pair metric table, a globals diff and a verdict; exit 3 if
@@ -39,7 +39,7 @@ const URL = urlFromArg(argv.find((a) => !a.startsWith('--')) || pageUrl('index.h
 const PAIRS = Number((argv.find((a) => a.startsWith('--pairs=')) || '--pairs=3').split('=')[1]);
 // The loader is NOT a separate request: it is concatenated into the route
 // bundle, so the bundle is what has to be intercepted.
-const LOADER = (argv.find((a) => a.startsWith('--bundle=')) || '--bundle=bundle-index-v15.js').split('=')[1];
+const LOADER = (argv.find((a) => a.startsWith('--bundle=')) || '--bundle=bundle-index.js').split('=')[1];
 const AS_JSON = hasFlag(argv, 'json');
 
 const SERIAL = "a.reduce((p,n)=>p.then(()=>new Promise((r,j)=>{let s=document.createElement('script');s.src=n;s.onload=r;s.onerror=j;document.head.append(s)})),Promise.resolve())";

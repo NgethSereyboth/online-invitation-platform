@@ -1,0 +1,47 @@
+import java.util.Properties
+
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+final Properties localProperties = new Properties()
+final File localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.isFile()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+final String siteUrl = providers.gradleProperty('einvite.siteUrl').orNull
+        ?: localProperties.getProperty('einvite.siteUrl', 'https://einvite-platform.onrender.com')
+final URI siteUri = URI.create(siteUrl)
+if (siteUri.scheme != 'https' || !siteUri.host || siteUri.userInfo || siteUri.query || siteUri.fragment
+        || (siteUri.path != null && siteUri.path != '' && siteUri.path != '/')
+        || siteUri.port == 0 || siteUri.port > 65535) {
+    throw new GradleException('einvite.siteUrl must be an HTTPS origin (for example https://invite.example.com).')
+}
+final String normalizedSiteUrl = 'https://' + siteUri.rawAuthority
+
+android {
+    namespace 'com.einvite.platform'
+    compileSdk 37
+
+    defaultConfig {
+        applicationId 'com.einvite.platform'
+        minSdk 26
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+        buildConfigField 'String', 'SITE_ORIGIN', '\"' + normalizedSiteUrl + '\"'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation libs.androidx.activity
+}

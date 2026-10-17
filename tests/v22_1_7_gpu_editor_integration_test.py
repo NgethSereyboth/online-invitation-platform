@@ -17,7 +17,7 @@ def main()->int:
    page=browser.new_page(viewport={'width':1440,'height':900});page.set_default_timeout(60000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_content(build(),wait_until='load');page.wait_for_function('()=>window.EInviteProfessionalEditor&&window.EInviteEditorBridge');page.wait_for_timeout(900)
    if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click();page.wait_for_timeout(100)
    page.add_script_tag(content=source('tests/gpu_mock_webgl.js'))
-   for name in ['performance-observability-v22.js','interaction-scheduler-v22.js','incremental-scene-renderer-v22.js','gpu-texture-cache-v22.js','webgl-scene-backend-v22.js','gpu-projection-v22.js','adaptive-gpu-quality-v22.js']:page.add_script_tag(content=source(name))
+   for name in ['performance-observability.js','interaction-scheduler.js','incremental-scene-renderer.js','gpu-texture-cache.js','webgl-scene-backend.js','gpu-projection.js','adaptive-gpu-quality.js']:page.add_script_tag(content=source(name))
    page.wait_for_function('()=>window.EInviteWebGLScene?.available&&window.EInviteGraphicsDiagnostics')
    page.evaluate("()=>EInviteEditorBridge.select(['hero'])");page.wait_for_timeout(120)
    before=page.evaluate("()=>({seq:EInviteProfessionalEditor.commandSequence,left:EInviteEditorBridge.getState().objects.hero.left})")

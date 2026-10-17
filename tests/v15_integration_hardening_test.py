@@ -56,12 +56,12 @@ def cleanup_retry(path):
 def main():
     subprocess.run([sys.executable,'build_route_bundles.py','--check'],cwd=ROOT,check=True)
     subprocess.run([sys.executable,'build_page_manifests.py','--check'],cwd=ROOT,check=True)
-    source=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))
-    built=json.loads((ROOT / "docs" / "route-bundles-v15.json").read_text(encoding='utf-8'))
+    source=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'))
+    built=json.loads((ROOT / "docs" / "route-bundles.json").read_text(encoding='utf-8'))
     assert source['version']==15 and built['version']==15
     for page,entry in source['pages'].items():
         parser=Assets();parser.feed((ROOT/'src'/'html'/page).read_text(encoding='utf-8'))
-        expected_script=f'bundle-{Path(page).stem}-v15.js';expected_style=f'bundle-{Path(page).stem}-v15.css'
+        expected_script=f'bundle-{Path(page).stem}.js';expected_style=f'bundle-{Path(page).stem}.css'
         assert parser.styles==[expected_style],(page,parser.styles)
         if entry['scripts']:
             assert parser.scripts[-1]==expected_script,(page,parser.scripts)
@@ -78,10 +78,10 @@ def main():
         assert hashlib.sha256(css_path.read_bytes()).hexdigest()==built_entry['styleSha256'],page
     editor=source['pages']['index.html']['scripts']
     assert editor.count('collaboration-live.js')==1 and editor.count('app.js')==1
-    assert editor[0]=='runtime-lifecycle-v15.js'
-    public=source['pages']['public.html']['scripts'];assert public[0]=='runtime-lifecycle-v15.js' and public.count('public-page.js')==1
+    assert editor[0]=='runtime-lifecycle.js'
+    public=source['pages']['public.html']['scripts'];assert public[0]=='runtime-lifecycle.js' and public.count('public-page.js')==1
 
-    assets=json.loads((ROOT / "docs" / "page-assets-v15.json").read_text(encoding='utf-8'))
+    assets=json.loads((ROOT / "docs" / "page-assets.json").read_text(encoding='utf-8'))
     assert assets['version']==15
     assert assets['pages']['index.html']['scriptCount']==3 and assets['pages']['index.html']['styleCount']==1
     assert assets['pages']['public.html']['bytes']>200_000  # root-relative assets are honestly counted
@@ -96,7 +96,7 @@ def main():
     collab=(ROOT / "src" / "js" / "collaboration-live.js").read_text(encoding='utf-8')
     assert collab.count('/presence`')==1,collab.count('/presence`')
     assert 'payload.presence' in collab and 'scheduleSseRetry' in collab
-    lifecycle=(ROOT / "src" / "js" / "runtime-lifecycle-v15.js").read_text(encoding='utf-8')
+    lifecycle=(ROOT / "src" / "js" / "runtime-lifecycle.js").read_text(encoding='utf-8')
     assert "if(!event.persisted)cleanup()" in lifecycle and "pagehide',cleanup" not in lifecycle
     public_js=(ROOT / "src" / "js" / "public-page.js").read_text(encoding='utf-8')
     assert 'countdownTimer' in public_js and 'EInviteLifecycle' in public_js

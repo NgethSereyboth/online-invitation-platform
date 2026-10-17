@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">eInvite</string>
+    <string name="unsafe_site_blocked">Unsafe site blocked</string>
+    <string name="file_chooser_unavailable">No file picker is available.</string>
+    <string name="link_unavailable">No app can open this link.</string>
+    <string name="connectivity_error">Could not connect to eInvite. Check your connection and try again.</string>
+    <string name="retry">Try again</string>
+</resources>

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-_candidates = [ROOT/'docs'/'route-bundle-sources-v15.json', ROOT / "docs" / "route-bundle-sources-v15.json"]
+_candidates = [ROOT/'docs'/'route-bundle-sources.json', ROOT / "docs" / "route-bundle-sources.json"]
 SOURCE = next((path for path in _candidates if path.exists()), _candidates[0])
 DATA=json.loads(SOURCE.read_text(encoding='utf-8'))
 def startup_scripts(page:str)->list[str]:return list(DATA['pages'][page]['scripts'])
@@ -11,7 +11,7 @@ def startup_styles(page:str)->list[str]:return list(DATA['pages'][page]['styles'
 def scripts(page:str)->list[str]:
     """Every script the page loads: startup bundle first, then the deferred chunk.
 
-    Deferred modules (``deferredScripts``) load via route-deferred-loader-v15.js
+    Deferred modules (``deferredScripts``) load via route-deferred-loader.js
     after first paint; membership checks mean "the page ships it", so both lists
     count. Use ``startup_scripts`` to assert startup-bundle placement.
     """

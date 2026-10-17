@@ -5,7 +5,7 @@
  * Why this exists
  * ---------------
  * Goal 0 of the Canva-analysis pass compares how Canva loads its editor code with
- * how this project loads its own (`performance-loader-v22.js` and the route
+ * how this project loads its own (`performance-loader.js` and the route
  * bundles). The runtime view of that question is already covered by two existing
  * artifacts — `canva-scripts.json` (what the network delivered, with byte sizes)
  * and the CDP trace (when each request started) — but neither says what the page
@@ -50,8 +50,8 @@
  * The second version of this tool counted the DOM only, and reported that
  * `index.html` ships 37 parser-blocking scripts. That was wrong by an order of
  * magnitude: the *served HTML* declares three (`core/theme.js`,
- * `backend-mode-v14.js`, `bundle-index-v15.js`), and the other 34 are created by
- * `src/js/performance-loader-v22.js` with `document.createElement('script')` after
+ * `backend-mode.js`, `bundle-index.js`), and the other 34 are created by
+ * `src/js/performance-loader.js` with `document.createElement('script')` after
  * the parser has finished — a script created that way cannot block a parser that
  * has already parsed the document. Reporting the DOM count as "parser-blocking"
  * would have invented a gap in the project's favour and against it, so the tool now

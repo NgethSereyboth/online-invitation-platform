@@ -13,24 +13,24 @@ def resolve_repo_path(relative):
     return ROOT / relative
 
 index = (ROOT / "src" / "html" / "index.html").read_text(encoding='utf-8')
-v7js = (ROOT / "src" / "js" / "workflow-final-audit-v7.js").read_text(encoding='utf-8')
-v7css = (ROOT / "src" / "css" / "organized" / "workflow-final-audit-v7.css").read_text(encoding='utf-8')
-v6 = (ROOT / "src" / "js" / "workflow-pro-editor-v6.js").read_text(encoding='utf-8')
+v7js = (ROOT / "src" / "js" / "workflow-final-audit.js").read_text(encoding='utf-8')
+v7css = (ROOT / "src" / "css" / "organized" / "workflow-final-audit.css").read_text(encoding='utf-8')
+v6 = (ROOT / "src" / "js" / "workflow-pro-editor.js").read_text(encoding='utf-8')
 continuity = (ROOT / "src" / "js" / "workflow-continuity.js").read_text(encoding='utf-8')
 legacy_flow = (ROOT / "src" / "js" / "workflow-refine.js").read_text(encoding='utf-8')
 v4 = (ROOT / "src" / "js" / "workflow-creation-flow-v4.js").read_text(encoding='utf-8')
 v3 = (ROOT / "src" / "js" / "workflow-creation-flow-v3.js").read_text(encoding='utf-8')
-v5 = (ROOT / "src" / "js" / "workflow-ux-v5.js").read_text(encoding='utf-8')
+v5 = (ROOT / "src" / "js" / "workflow-ux.js").read_text(encoding='utf-8')
 editor_suite = (ROOT / "src" / "js" / "editor-suite.js").read_text(encoding='utf-8')
-commands = (ROOT / "src" / "js" / "editor-command-system-v23.js").read_text(encoding='utf-8')
+commands = (ROOT / "src" / "js" / "editor-command-system.js").read_text(encoding='utf-8')
 app = (ROOT / "src" / "js" / "app.js").read_text(encoding='utf-8')
 studio = (ROOT / "src" / "js" / "studio-experience.js").read_text(encoding='utf-8')
 
 # Final audit files are present and loaded after all previous workflow layers.
-assert has('index.html','workflow-final-audit-v7.css')
-assert has('index.html','workflow-final-audit-v7.js')
-assert after('index.html','workflow-final-audit-v7.css','workflow-pro-editor-v6.css','styles')
-assert after('index.html','workflow-final-audit-v7.js','workflow-pro-editor-v6.js','scripts')
+assert has('index.html','workflow-final-audit.css')
+assert has('index.html','workflow-final-audit.js')
+assert after('index.html','workflow-final-audit.css','workflow-pro-editor.css','styles')
+assert after('index.html','workflow-final-audit.js','workflow-pro-editor.js','scripts')
 
 # Every local script/stylesheet referenced by the editor exists.
 for ref in re.findall(r'(?:src|href)=["\']([^"\']+)["\']', index):

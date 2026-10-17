@@ -45,7 +45,7 @@ global.CustomEvent=class{constructor(type,init={}){this.type=type;this.detail=in
 const faces=new Set();global.document={fonts:{add:x=>faces.add(x),delete:x=>faces.delete(x)},dispatchEvent:()=>{}};
 global.FontFace=class{constructor(family,source,descriptors){this.family=family;this.source=source;this.descriptors=descriptors;this.status='unloaded'}async load(){this.status='loaded';return this}};
 vm.runInThisContext(fs.readFileSync('src/js/typography-contract.js','utf8'),{filename:'typography-contract.js'});
-vm.runInThisContext(fs.readFileSync('src/js/custom-font-core-v22.js','utf8'),{filename:'custom-font-core-v22.js'});
+vm.runInThisContext(fs.readFileSync('src/js/custom-font-core.js','utf8'),{filename:'custom-font-core.js'});
 const id='custom-1234567890ab',doc={customFonts:{[id]:{id,label:'Test Custom',url:'/uploads/test.woff2',sha256:'1234567890abcdef',scripts:['Latin'],weight:400,style:'normal',licenseAcknowledged:true}}};
 EInviteCustomFonts.normalizeDocumentFonts(doc,{install:false});
 if(EInviteTypography.fontId(id)!==id)throw Error('dynamic font ID not accepted');
@@ -61,15 +61,15 @@ if(EInviteFontRegistry.pairedFont(pair,'km')!=='noto-serif-khmer')throw Error('K
 
 
 def test_integration_contracts():
- routes=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))
+ routes=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'))
  index=routes['pages']['index.html']['scripts'];public=routes['pages']['public.html']['scripts'];dashboard=routes['pages']['dashboard.html']['scripts']
- assert 'custom-font-core-v22.js' in index and index.index('custom-font-core-v22.js')==index.index('typography-contract.js')+1
- assert 'custom-font-core-v22.js' in public and public.index('custom-font-core-v22.js')==public.index('typography-contract.js')+1
- assert 'custom-font-core-v22.js' not in dashboard and 'custom-fonts-v22.js' not in dashboard
- assert 'editor-deferred-tools-bootstrap-v0_52.js' in index and 'font-browser-loader-v22.js' not in index and 'custom-fonts-v22.js' not in index
- assert 'custom-fonts-v22.css' not in routes['pages']['index.html']['styles']
- bootstrap=(ROOT / "src" / "js" / "editor-deferred-tools-bootstrap-v0_52.js").read_text(encoding='utf-8');assert 'font-browser-loader-v22.js' in bootstrap
- loader=(ROOT / "src" / "js" / "font-browser-loader-v22.js").read_text(encoding='utf-8');assert 'custom-fonts-v22.js' in loader and 'font-browser.js' in loader and 'custom-fonts-v22.css' in loader
+ assert 'custom-font-core.js' in index and index.index('custom-font-core.js')==index.index('typography-contract.js')+1
+ assert 'custom-font-core.js' in public and public.index('custom-font-core.js')==public.index('typography-contract.js')+1
+ assert 'custom-font-core.js' not in dashboard and 'custom-fonts.js' not in dashboard
+ assert 'editor-deferred-tools-bootstrap.js' in index and 'font-browser-loader.js' not in index and 'custom-fonts.js' not in index
+ assert 'custom-fonts.css' not in routes['pages']['index.html']['styles']
+ bootstrap=(ROOT / "src" / "js" / "editor-deferred-tools-bootstrap.js").read_text(encoding='utf-8');assert 'font-browser-loader.js' in bootstrap
+ loader=(ROOT / "src" / "js" / "font-browser-loader.js").read_text(encoding='utf-8');assert 'custom-fonts.js' in loader and 'font-browser.js' in loader and 'custom-fonts.css' in loader
  upload=(ROOT / "src" / "js" / "upload-client.js").read_text(encoding='utf-8');assert 'uploadFont' in upload and '/fonts' in upload
  browser=(ROOT / "src" / "js" / "font-browser.js").read_text(encoding='utf-8');assert '.ttf,.tff,.otf,.woff2' in browser and 'licenseAcknowledged' in browser
  server_text=(ROOT/'src'/'python'/'server.py').read_text(encoding='utf-8');assert 'optimize_custom_font' in server_text and 'def upload_font' in server_text

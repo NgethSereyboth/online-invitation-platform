@@ -7,7 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def run():
     script=textwrap.dedent(r'''
       const fs=require('fs'),vm=require('vm');global.window={};global.structuredClone=global.structuredClone||((v)=>JSON.parse(JSON.stringify(v)));
-      vm.runInThisContext(fs.readFileSync('src/js/editor-schema-v13.js','utf8'));
+      vm.runInThisContext(fs.readFileSync('src/js/editor-schema.js','utf8'));
       const doc={schemaVersion:10,objects:{title:{type:'text',html:'Hero'}},designPages:[{id:'one',name:'One',objects:{title:{type:'text',html:'Page'}}}],sectionOrder:['page:one']};
       const migrated=window.EInviteEditorSchema.migrate(doc);
       if(migrated.schemaVersion!==13)throw Error('schema migration failed');

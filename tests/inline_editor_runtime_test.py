@@ -71,10 +71,10 @@ window.assetStore={
 
     html = script_pattern.sub(inline_js, html)
     extras=[]
-    for name in ("rich-text-renderer-v21.css","rich-text-editing-v21.css","workspace-v21.css"):
+    for name in ("rich-text-renderer.css","rich-text-editing.css","workspace.css"):
         path=ROOT/"src"/"css"/name
         if path.exists(): extras.append(f'<style data-v21="{name}">{path.read_text(encoding="utf-8")}</style>')
-    for name in ("rich-text-contract.js","rich-text-document-model.js","rich-text-renderer-v21.js","rich-text-editing-v21.js","workspace-v21.js"):
+    for name in ("rich-text-contract.js","rich-text-document-model.js","rich-text-renderer.js","rich-text-editing.js","workspace.js"):
         path=ROOT/"src"/"js"/name
         if path.exists(): extras.append(f'<script data-v21="{name}">{path.read_text(encoding="utf-8").replace("</script>","<\\/script>")}</script>')
     return html.replace("</body>","".join(extras)+"</body>")

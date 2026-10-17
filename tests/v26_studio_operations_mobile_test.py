@@ -12,9 +12,9 @@ def main()->int:
   page.on('pageerror',lambda error:errors.append(str(error)))
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000);page.wait_for_timeout(850)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click()
-  for name in ('studio-governance-v25.css','studio-operations-v26.css'):page.add_style_tag(path=str(ROOT/name))
+  for name in ('studio-governance.css','studio-operations.css'):page.add_style_tag(path=str(ROOT/name))
   page.evaluate("""()=>{localStorage.setItem('einvite-v25-studio-resources',JSON.stringify([{id:'brand-mobile',kind:'brand',name:'Mobile Brand',category:'Wedding',payload:{},governance:{},status:'approved',version:1}]));localStorage.setItem('einvite-v26-studio-releases',JSON.stringify([{id:'release-mobile',name:'Mobile Release',notes:'Mobile readiness',status:'active',manifest:[{id:'brand-mobile',kind:'brand',name:'Mobile Brand',version:1}],version:1,activatedAt:Date.now()}]));localStorage.setItem('einvite-v26-studio-release-pin',JSON.stringify({pin:{release_id:'release-mobile',release_version:1},release:{id:'release-mobile',name:'Mobile Release',status:'active',version:1}}));window.EInviteFeedback=window.EInviteFeedback||{toast:()=>{}}}""")
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-governance-v25.js"));page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-operations-v26.js"));page.wait_for_timeout(160)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-governance.js"));page.add_script_tag(path=str(ROOT / "src" / "js" / "studio-operations.js"));page.wait_for_timeout(160)
   page.evaluate("()=>EInviteStudioOperations.open('releases')");page.wait_for_timeout(80)
   box=page.locator('.v26-operations-dialog').bounding_box();assert box and box['width']<=390.5 and box['x']>=-0.5,box
   overflow=page.evaluate("()=>document.documentElement.scrollWidth-document.documentElement.clientWidth");assert overflow<=1,overflow

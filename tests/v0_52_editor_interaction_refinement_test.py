@@ -16,7 +16,7 @@ def read(name: str) -> str:
 
 
 def main() -> int:
-    direct = read("src/js/direct-manipulation-v24.js")
+    direct = read("src/js/direct-manipulation.js")
     inline_body = direct.split("function startInline", 1)[1].split("function finishInline", 1)[0]
     install_body = direct.split("function install", 1)[1].split("function destroy", 1)[0]
     assert "on(document,'dblclick',onDoubleClick,true)" in install_body
@@ -34,7 +34,7 @@ def main() -> int:
     assert "ei-rich-toolbar" not in editor
     assert 'data-action="editText"' not in editor
 
-    typography = read("typography-editor-v20.js")
+    typography = read("typography-editor.js")
     assert "v20ToolbarToggle" in typography
     assert "einvite-typography-toolbar-collapsed" in typography
     assert "setCollapsed(localStorage.getItem('einvite-typography-toolbar-collapsed')==='1')" in typography
@@ -60,18 +60,18 @@ def main() -> int:
     assert 'class="studio-nav-label"' in studio
     assert "studio-canvas-hint" not in studio
 
-    editor_css = read("editor-ux-refinement-v0_52.css")
+    editor_css = read("editor-ux-refinement.css")
     for selector in (".v24-inline-toolbar", ".ei-rich-toolbar", "#workflowQuickStrip", ".studio-nav-label"):
         assert selector in editor_css
-    compact_css = read("compact-theme-v0_52.css")
+    compact_css = read("compact-theme.css")
     assert "width: 124px" in compact_css
     assert ".account-appearance-actions" in compact_css
 
-    routes = json.loads(read("route-bundle-sources-v15.json"))["pages"]
+    routes = json.loads(read("route-bundle-sources.json"))["pages"]
     modern_pages = [page for page, spec in routes.items() if "modern-ui.css" in spec["styles"]]
     assert modern_pages
-    assert all("compact-theme-v0_52.css" in routes[page]["styles"] for page in modern_pages)
-    assert "editor-ux-refinement-v0_52.css" in routes["index.html"]["styles"]
+    assert all("compact-theme.css" in routes[page]["styles"] for page in modern_pages)
+    assert "editor-ux-refinement.css" in routes["index.html"]["styles"]
 
     print("V0_52_EDITOR_INTERACTION_REFINEMENT_TEST_PASSED")
     return 0

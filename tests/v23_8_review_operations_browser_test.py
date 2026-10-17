@@ -12,7 +12,7 @@ def main()->int:
   page.on('pageerror',lambda error:errors.append(str(error)))
   page.set_content(build_inline_editor(),wait_until='load',timeout=30000)
   if page.locator('#finalTourDismiss').count() and page.locator('#finalTourDismiss').is_visible():page.locator('#finalTourDismiss').click();page.wait_for_timeout(60)
-  page.add_style_tag(path=str(ROOT / "src" / "css" / "organized" / "review-v23.css"))
+  page.add_style_tag(path=str(ROOT / "src" / "css" / "organized" / "review.css"))
   page.evaluate("""()=>{
    window.EInviteBackend={ready:Promise.resolve(),isAvailable:()=>true};window.serverInvite={id:'review-operations-browser'};
    const comments=[],approvals=[];
@@ -36,7 +36,7 @@ def main()->int:
     return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}})
    }
   }""")
-  page.add_script_tag(path=str(ROOT / "src" / "js" / "review-v23.js"));page.wait_for_timeout(350)
+  page.add_script_tag(path=str(ROOT / "src" / "js" / "review.js"));page.wait_for_timeout(350)
   assert page.evaluate("()=>EInviteReviewWorkflow.version==='23.8.3'")
   assert page.evaluate("()=>EInviteCommandRegistry.conflicts.length")==0
   page.evaluate("()=>EInviteCommandRegistry.execute('review.open')");page.wait_for_timeout(120)

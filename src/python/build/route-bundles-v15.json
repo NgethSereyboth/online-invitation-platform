@@ -18,7 +18,7 @@
           "styles.css",
           "account-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -27,7 +27,7 @@
           "ux-refine.css",
           "account-security-v13.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 215350,
@@ -59,7 +59,7 @@
           "styles.css",
           "admin-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -68,7 +68,7 @@
           "theme-hardening.css",
           "ux-refine.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 215030,
@@ -93,7 +93,7 @@
           "styles.css",
           "analytics-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -102,7 +102,7 @@
           "ux-refine.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 215943,
@@ -125,7 +125,7 @@
           "styles.css",
           "billing-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -133,7 +133,7 @@
           "theme-hardening.css",
           "ux-refine.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 217526,
@@ -158,7 +158,7 @@
           "accessibility-v12.css",
           "checkin-v13.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 76014,
@@ -194,11 +194,11 @@
         ],
         "styles": [
           "typography-fonts.css",
-          "typography-system-v20.css",
+          "typography-system.css",
           "styles.css",
           "dashboard-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -209,7 +209,7 @@
           "dashboard-empty-state.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css",
+          "zoom-layout-pages.css",
           "guest-features-v54_1.css"
         ]
       },
@@ -234,7 +234,7 @@
           "studio-experience.css",
           "designer-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -242,7 +242,7 @@
           "theme-hardening.css",
           "ux-refine.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 242819,
@@ -267,7 +267,7 @@
           "styles.css",
           "guests-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -276,7 +276,7 @@
           "ux-refine.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 215433,
@@ -289,19 +289,19 @@
       "scriptSha256": "915624c9897f1c04c274caa712153c2149fccf1ef6a64b6ecffb52d83dc17761",
       "sources": {
         "scripts": [
-          "runtime-lifecycle-v15.js",
-          "performance-loader-v22.js",
-          "editor-command-system-v23.js",
+          "runtime-lifecycle.js",
+          "performance-loader.js",
+          "editor-command-system.js",
           "typography-contract.js",
-          "custom-font-core-v22.js",
+          "custom-font-core.js",
           "typography-document-model.js",
           "typography-layout-service.js",
           "renderer-core.js",
-          "timeline-runtime-v13.js",
-          "scene-model-v22.js",
-          "editor-schema-v13.js",
+          "timeline-runtime.js",
+          "scene-model.js",
+          "editor-schema.js",
           "experience-schema.js",
-          "document-schema-v32.js",
+          "document-schema.js",
           "vendor/momentkh.js",
           "storage.js",
           "ui-dialogs.js",
@@ -312,8 +312,8 @@
           "modern-ui.js",
           "final-experience.js",
           "editor-suite.js",
-          "ai-editor-action-service-v27.js",
-          "editor-deferred-tools-bootstrap-v0_52.js",
+          "ai-editor-action-service.js",
+          "editor-deferred-tools-bootstrap.js",
           "collaboration.js",
           "collaboration-live.js",
           "ux-refine.js",
@@ -322,9 +322,9 @@
           "workflow-refine.js",
           "workflow-continuity.js",
           "workflow-creation-flow-v4.js",
-          "workflow-ux-v5.js",
-          "workflow-pro-editor-v6.js",
-          "workflow-final-audit-v7.js",
+          "workflow-ux.js",
+          "workflow-pro-editor.js",
+          "workflow-final-audit.js",
           "opening-scenes.js",
           "guest-layouts.js",
           "social-card.js",
@@ -332,27 +332,27 @@
           "style-kits.js",
           "accessibility-polish.js",
           "editor-commands-v13.js",
-          "typography-editor-v20.js",
-          "editor-canva-v13.js",
+          "typography-editor.js",
+          "editor-canva.js",
           "editor-shared-styles-v13.js",
           "photo-editor-v13.js",
           "photo-retouch-v13.js",
-          "timeline-v13.js",
-          "product-operations-v13.js",
+          "timeline.js",
+          "product-operations.js",
           "mobile-editor-v14.js",
-          "professional-editor-v17.js",
-          "editor-responsive-contract-v27.js",
+          "professional-editor.js",
+          "editor-responsive-contract.js",
           "editor/editor-core.js",
           "editor/ui-layout.js",
           "editor/ui-components.js"
         ],
         "styles": [
           "typography-fonts.css",
-          "typography-system-v20.css",
+          "typography-system.css",
           "styles.css",
           "studio-experience.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "editor-suite.css",
           "ai-assistant-loader-v27.css",
@@ -364,10 +364,10 @@
           "workflow-refine.css",
           "editor-layout-stability.css",
           "workflow-continuity.css",
-          "workflow-creation-flow-v4.css",
-          "workflow-ux-v5.css",
-          "workflow-pro-editor-v6.css",
-          "workflow-final-audit-v7.css",
+          "workflow-creation-flow.css",
+          "workflow-ux.css",
+          "workflow-pro-editor.css",
+          "workflow-final-audit.css",
           "style-kits.css",
           "editor-canva-v13.css",
           "editor-shared-styles-v13.css",
@@ -380,11 +380,11 @@
           "timeline-v13.css",
           "product-operations-v13.css",
           "stabilized-v14.css",
-          "editor-ux-refinement-v0_52.css",
-          "professional-editor-v17.css",
-          "zoom-layout-v22.css",
-          "graphics-runtime-v22.css",
-          "editor-responsive-contract-v27.css",
+          "editor-ux-refinement.css",
+          "professional-editor.css",
+          "zoom-layout.css",
+          "graphics-runtime.css",
+          "editor-responsive-contract.css",
           "editor/editor-styles.css"
         ]
       },
@@ -400,7 +400,7 @@
         "scripts": [
           "ui-dialogs.js",
           "upload-client.js",
-          "upload-folder-client-v53.js",
+          "upload-folder-client.js",
           "invitation-context.js",
           "materials.js",
           "modern-ui.js",
@@ -413,7 +413,7 @@
           "styles.css",
           "materials-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -423,7 +423,7 @@
           "final-polish.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 240433,
@@ -439,9 +439,9 @@
         "styles": [
           "styles.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "privacy-v13.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 98904,
@@ -454,16 +454,16 @@
       "scriptSha256": "61c1ba939b78ea20ce024274f7300eb9177d825192ac0bf25a82388c557e502f",
       "sources": {
         "scripts": [
-          "runtime-lifecycle-v15.js",
+          "runtime-lifecycle.js",
           "typography-contract.js",
-          "custom-font-core-v22.js",
+          "custom-font-core.js",
           "typography-document-model.js",
           "typography-layout-service.js",
-          "rich-text-renderer-v21.js",
+          "rich-text-renderer.js",
           "renderer-core.js",
           "experience-schema.js",
-          "document-schema-v32.js",
-          "advanced-public-loader-v32.js",
+          "document-schema.js",
+          "advanced-public-loader.js",
           "opening-scenes.js",
           "guest-layouts.js",
           "public-share-panel.js",
@@ -477,7 +477,7 @@
         ],
         "styles": [
           "typography-fonts.css",
-          "rich-text-renderer-v21.css",
+          "rich-text-renderer.css",
           "styles.css",
           "opening-scenes.css",
           "guest-layouts.css",
@@ -505,7 +505,7 @@
           "styles.css",
           "reset-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -513,7 +513,7 @@
           "theme-hardening.css",
           "ux-refine.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 213328,
@@ -538,7 +538,7 @@
           "styles.css",
           "responses-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -547,7 +547,7 @@
           "ux-refine.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 216008,
@@ -573,7 +573,7 @@
           "studio-experience.css",
           "templates-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -582,7 +582,7 @@
           "ux-refine.css",
           "accessibility-v12.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 246382,
@@ -605,7 +605,7 @@
           "styles.css",
           "verify-page-v13.css",
           "modern-ui.css",
-          "compact-theme-v0_52.css",
+          "compact-theme.css",
           "final-experience.css",
           "canvas-plus.css",
           "ui-dialogs.css",
@@ -613,7 +613,7 @@
           "theme-hardening.css",
           "ux-refine.css",
           "stabilized-v14.css",
-          "zoom-layout-pages-v22.css"
+          "zoom-layout-pages.css"
         ]
       },
       "styleBytes": 213225,

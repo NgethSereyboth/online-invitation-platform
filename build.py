@@ -11,8 +11,8 @@ keep working.
 Usage
 -----
     python3 build.py editor            # editor-suite.{js,css}
-    python3 build.py bundles           # bundle-*-v15.{js,css} for the 16 routes
-    python3 build.py manifests         # page-assets-v15.json (server + docs)
+    python3 build.py bundles           # bundle-*.{js,css} for the 16 routes
+    python3 build.py manifests         # page-assets.json (server + docs)
     python3 build.py mirror            # src/python/ runtime mirror (sync_frontend_assets.py)
     python3 build.py all               # all four, in dependency order
     python3 build.py all --check       # verify every artifact, write nothing

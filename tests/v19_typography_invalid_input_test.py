@@ -58,7 +58,7 @@ def main()->int:
  # Browser model repairs malformed values to finite numbers and never serializes null.
  script=textwrap.dedent(r'''
  const fs=require('fs'),vm=require('vm');global.window=global;
- for(const f of ['typography-contract.js','editor-schema-v13.js','typography-layout-service.js','renderer-core.js'])vm.runInThisContext(fs.readFileSync(f,'utf8'));
+ for(const f of ['typography-contract.js','editor-schema.js','typography-layout-service.js','renderer-core.js'])vm.runInThisContext(fs.readFileSync(f,'utf8'));
  const bad=[NaN,Infinity,-Infinity,null,'',[],{},'bad'];
  const rows=bad.map(v=>EInviteEditorSchema.normalizeObject('x',{type:'text',fontSize:v,textAutoFitMax:v,textMinFontSize:v,textColumns:v,textColumnGap:v},'hero'));
  const hostile=EInviteRenderer.renderObject({type:'text',font:'does-not-exist',html:'safe',fontSize:32},{id:'x'});

@@ -63,12 +63,12 @@ def main()->int:
  legacy_family=normalize_document_typography({'objects':{'x':{'type':'text','html':'x','font':'Arial, sans-serif'}},'designPages':[]},strict=True)
  assert legacy_family['objects']['x']['font']=='sans-arial'
 
- sources=json.loads((ROOT / "docs" / "route-bundle-sources-v15.json").read_text(encoding='utf-8'))['pages']
+ sources=json.loads((ROOT / "docs" / "route-bundle-sources.json").read_text(encoding='utf-8'))['pages']
  for page in ('index.html','public.html','dashboard.html'):
   scripts=sources[page]['scripts']
   assert scripts.index('typography-contract.js')<scripts.index('typography-document-model.js')<scripts.index('typography-layout-service.js')<scripts.index('renderer-core.js')
- assert 'typography-editor-v20.js' in sources['index.html']['scripts']
- assert 'typography-system-v20.css' in sources['index.html']['styles']
+ assert 'typography-editor.js' in sources['index.html']['scripts']
+ assert 'typography-system.css' in sources['index.html']['styles']
 
  renderer=(ROOT / "src" / "js" / "renderer-core.js").read_text(encoding='utf-8')
  assert 'EInviteTypographyRendererAdapters' in renderer and 'TypographyLayoutService.styleObject' in renderer
@@ -79,7 +79,7 @@ def main()->int:
  assert 'TypographyDocumentModel.resolveObjectTypography' in app and 'TypographyLayoutService.installResponsive' in app
  assert 'v19FitFrame' not in app and 'v19ResizeObserver' not in app and 'new ResizeObserver' not in app and 'document.fonts' not in app
  assert 'renderThumbnail' in app
- editor=(ROOT / "src" / "js" / "typography-editor-v20.js").read_text(encoding='utf-8')
+ editor=(ROOT / "src" / "js" / "typography-editor.js").read_text(encoding='utf-8')
  assert 'Actual editor DOM' in editor and 'Actual public renderer' in editor and 'data-preview-pipeline' not in editor
  dashboard=(ROOT / "src" / "js" / "dashboard.js").read_text(encoding='utf-8');polish=(ROOT / "src" / "js" / "final-polish.js").read_text(encoding='utf-8');assert 'renderThumbnail' in polish and 'objectPreview' not in polish and 'overflowEstimate' not in dashboard
  assert 'typographyResolvedSnapshot' in app

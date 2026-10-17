@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-js=(ROOT / "src" / "js" / "photo-style-library-v23.js").read_text(encoding='utf-8')
-css=(ROOT / "src" / "css" / "photo-style-library-v23.css").read_text(encoding='utf-8')
-loader=(ROOT / "src" / "js" / "performance-loader-v22.js").read_text(encoding='utf-8')
-photo=(ROOT / "src" / "js" / "photo-workflow-v23.js").read_text(encoding='utf-8')
-assets=(ROOT / "src" / "js" / "asset-workflow-v23.js").read_text(encoding='utf-8')
+js=(ROOT / "src" / "js" / "photo-style-library.js").read_text(encoding='utf-8')
+css=(ROOT / "src" / "css" / "photo-style-library.css").read_text(encoding='utf-8')
+loader=(ROOT / "src" / "js" / "performance-loader.js").read_text(encoding='utf-8')
+photo=(ROOT / "src" / "js" / "photo-workflow.js").read_text(encoding='utf-8')
+assets=(ROOT / "src" / "js" / "asset-workflow.js").read_text(encoding='utf-8')
 assert "const VERSION='23.6.3'" in js
 for token in [
  'einvite-photo-styles-v23','MAX_STYLES=36','MAX_LIBRARY_BYTES=900000',
@@ -18,8 +18,8 @@ for token in [
  assert token in js,token
 assert "window.addEventListener('keydown'" not in js
 assert "document.addEventListener('keydown'" not in js
-assert 'photo-style-library-v23.js' in loader
-assert loader.index('photo-workflow-v23.js') < loader.index('photo-style-library-v23.js')
+assert 'photo-style-library.js' in loader
+assert loader.index('photo-workflow.js') < loader.index('photo-style-library.js')
 for token in ['normalizeLook:copyLookData','applyLookToObject','projectLookToNode','get lookFields()']:
  assert token in photo,token
 assert "commandButton('photoStyles.open','Photo styles')" in assets

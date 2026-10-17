@@ -46,7 +46,7 @@ const fs=require('fs'),vm=require('vm');
 global.window=global;global.location={href:'http://localhost/index.html'};global.queueMicrotask=fn=>fn();
 global.document={fonts:{add(){},delete(){},ready:Promise.resolve()},dispatchEvent(){}};
 global.FontFace=class{constructor(){this.status='unloaded'}async load(){this.status='loaded';return this}};
-for(const file of ['typography-contract.js','custom-font-core-v22.js','typography-layout-service.js','rich-text-renderer-v21.js'])vm.runInThisContext(fs.readFileSync(file,'utf8'),{filename:file});
+for(const file of ['typography-contract.js','custom-font-core.js','typography-layout-service.js','rich-text-renderer.js'])vm.runInThisContext(fs.readFileSync(file,'utf8'),{filename:file});
 const ready='custom-111111111111',partial='custom-222222222222',doc={customFonts:{
  [ready]:{id:ready,label:'Khmer Ready',url:'/ready.woff2',sha256:'1'.repeat(64),category:'sans',scripts:['Khmer'],khmerReady:true,khmerSupport:'ready',khmerCoreCoveragePercent:100,khmerShaping:true,recommendedLineHeight:1.48},
  [partial]:{id:partial,label:'Khmer Partial',url:'/partial.woff2',sha256:'2'.repeat(64),category:'sans',scripts:['Khmer'],khmerReady:false,khmerSupport:'partial',khmerCoreCoveragePercent:12,khmerShaping:false,recommendedLineHeight:1.45}
@@ -65,7 +65,7 @@ console.log('V22_0_3_KHMER_RUNTIME_OK');
     result=subprocess.run(['node','-e',code],cwd=ROOT/'src'/'js',text=True,capture_output=True)
     assert result.returncode==0,result.stdout+result.stderr
     assert 'V22_0_3_KHMER_RUNTIME_OK' in result.stdout
-    css=(ROOT / "src" / "css" / "rich-text-renderer-v21.css").read_text(encoding='utf-8')
+    css=(ROOT / "src" / "css" / "rich-text-renderer.css").read_text(encoding='utf-8')
     assert 'font-synthesis:none' in css and 'font-variant-ligatures:common-ligatures contextual' in css
 
 

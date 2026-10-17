@@ -42,8 +42,8 @@ Its own Node shim tests pass (see §4). **Not modified this pass.**
 `<html lang>` from `localStorage['einvite-lang']` → `navigator.language`
 (`km*` → `km`) **before first paint**, so the CSS hide rules take effect with no flash.
 Note: `admin.html`'s `<head>` loads `core/theme.js` + the inline FOIL script +
-`backend-mode-v14.js` (the manifest `earlyScripts` list still documents `core/safe-dom.js`
-+ `core/i18n.js` + `backend-mode-v14.js`; `core/i18n.js` is also concatenated into
+`backend-mode.js` (the manifest `earlyScripts` list still documents `core/safe-dom.js`
++ `core/i18n.js` + `backend-mode.js`; `core/i18n.js` is also concatenated into
 `bundle-*.v15.js` and initializes at end-of-body, so the header language switch appears
 after load — a pre-existing timing property, not changed this pass).
 
@@ -53,7 +53,7 @@ after load — a pre-existing timing property, not changed this pass).
 under `[lang="km"]` and `.i18n-km{display:none}` under `[lang="en"]`, `.khmer-text`
 Khmer font stack + `line-height:1.6`, and the sticky `.language-switch`.
 mtime 2026-09-28 06:36; i18n-en occurrence count unchanged (HEAD→working = 1).
-The served `bundle-admin-v15.css` carries these rules. **Not modified this pass.**
+The served `bundle-admin.css` carries these rules. **Not modified this pass.**
 
 ## 5. Verified toggles (Puppeteer, Chrome headless-shell, session 2026-09-29 19:07)
 
@@ -76,12 +76,12 @@ label reads `"Feature flagsទងជម្រើសសមុខងារ"`, `#fe
 **The "stale bundles" root cause is NOT accurate.**
 
 - `HEAD:` `admin.html` had **no** feature-flags tab (only Users/Templates/Invitations/AI);
-  `HEAD` `route-bundle-sources-v15.json` did **not** list `feature-flags.js`;
-  `HEAD` `bundle-admin-v15.js` (70,798 B) contained **0** `feature-flags` symbols.
+  `HEAD` `route-bundle-sources.json` did **not** list `feature-flags.js`;
+  `HEAD` `bundle-admin.js` (70,798 B) contained **0** `feature-flags` symbols.
 - Working tree: `admin.html` adds the `feature-flags` tab + bilingual spans; `admin.js`
   mounts `feature-flags.js`; `feature-flags.js` v65 defines `STRINGS` (en/km) +
-  `EInviteI18n.t` + `subscribe(render)`; `docs/route-bundle-sources-v15.json` lists it;
-  `bundle-admin-v15.js` was **rebuilt** (138,080 B) and now contains
+  `EInviteI18n.t` + `subscribe(render)`; `docs/route-bundle-sources.json` lists it;
+  `bundle-admin.js` was **rebuilt** (138,080 B) and now contains
   `EInviteAdminFeatureFlags` (×4) + `featureFlagsPanel` (×1).
 - The `/api/admin/feature-flags` and `/api/admin/settings` backend routes in
   `src/python/server.py` are **pre-existing migration debt** (mtime 2026-09-28 06:36,
@@ -305,7 +305,7 @@ CSV columns: `text, key, en, km, status, file, line`. Status values:
 
 ### Feature flags tab verdict (Part D — verified via Puppeteer)
 
-Puppeteer computed-style verification on `bundle-admin-v15.css`:
+Puppeteer computed-style verification on `bundle-admin.css`:
 
 - **EN state** (`html lang="en"`): `.i18n-km` inside `[data-admin-tab="feature-flags"]`
   has `display: none` ✅ — Khmer text correctly hidden.
@@ -313,7 +313,7 @@ Puppeteer computed-style verification on `bundle-admin-v15.css`:
   `display: none` ✅ — English text correctly hidden.
 - **Toggle back to EN**: `.i18n-km` returns to `display: none` ✅.
 
-Bundle CSS grep (`bundle-admin-v15.css`) for `[lang="en"] .i18n-km` rules:
+Bundle CSS grep (`bundle-admin.css`) for `[lang="en"] .i18n-km` rules:
 - `[lang="en"] .i18n-km{display:none}` — active on admin page (no `!important`)
 - `[lang="km"] .i18n-km{display:inline}` — active on admin page
 - `.guest[data-language="en"] .i18n-km{display:none!important}` — higher specificity +

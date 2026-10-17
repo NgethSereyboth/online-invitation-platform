@@ -40,8 +40,8 @@ def main() -> int:
                 page.locator('#finalTourDismiss').click()
                 page.wait_for_timeout(100)
 
-            page.add_style_tag(content=(ROOT / "src" / "css" / "page-experience-v22.css").read_text(encoding='utf-8'))
-            page.add_script_tag(content=(ROOT / "src" / "js" / "page-experience-v22.js").read_text(encoding='utf-8'))
+            page.add_style_tag(content=(ROOT / "src" / "css" / "page-experience.css").read_text(encoding='utf-8'))
+            page.add_script_tag(content=(ROOT / "src" / "js" / "page-experience.js").read_text(encoding='utf-8'))
             page.wait_for_function("()=>window.EInvitePageExperience?.version==='22.2.8'")
             page.wait_for_function("()=>document.querySelector('#workflowPageDock .workflow-page-dock-track')")
             page.wait_for_function("()=>document.querySelector('#designPagesManager')?.dataset.v22Managed==='true'")

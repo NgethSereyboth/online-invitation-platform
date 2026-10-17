@@ -13,7 +13,7 @@ def main()->int:
   except Exception as exc:return skipped('V22_1_4_WEBGL_BACKEND',exc)
   try:
    page=browser.new_page(viewport={'width':900,'height':650});page.set_default_timeout(30000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.set_content(html,wait_until='load');page.add_script_tag(content=src('tests/gpu_mock_webgl.js'))
-   for name in ['performance-observability-v22.js','interaction-scheduler-v22.js','gpu-texture-cache-v22.js','webgl-scene-backend-v22.js']:page.add_script_tag(content=src(name))
+   for name in ['performance-observability.js','interaction-scheduler.js','gpu-texture-cache.js','webgl-scene-backend.js']:page.add_script_tag(content=src(name))
    page.wait_for_function('()=>window.EInviteWebGLScene')
    result=page.evaluate('''async()=>{await photo.decode();const scene=EInviteWebGLScene;const rendered=await scene.render(null,{mode:'test'});const gl=scene.context,pixel=new Uint8Array(4),dpr=scene.canvas.width/stage.clientWidth;gl.readPixels(Math.round(80*dpr),Math.round((stage.clientHeight-80)*dpr),1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);const started=await scene.beginPreview(document.querySelector('[data-id=shape]'),{pointerId:7,pointerType:'mouse'});await new Promise(r=>setTimeout(r,60));const during={active:scene.canvas.dataset.active,hidden:document.querySelector('[data-id=shape]').classList.contains('ei-gpu-preview-source')};scene.endPreview();const after={active:scene.canvas.dataset.active,hidden:document.querySelector('[data-id=shape]').classList.contains('ei-gpu-preview-source')};const diag=scene.diagnostics();scene.destroy();return{rendered,pixel:[...pixel],started,during,after,diag,destroyed:!document.querySelector('.ei-gpu-scene-layer')}}''')
    assert result['diag']['available'] is True,result

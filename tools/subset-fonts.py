@@ -138,8 +138,8 @@ def parse_font_faces(css_path: Path):
 
 # Generated route bundles are concatenations of the hand-written sources, so
 # parsing them would report every face twice under a name that no one edits.
-# `bundle-<route>-v15.css` is produced by src/python/build/build_route_bundles.py.
-GENERATED_CSS_RE = re.compile(r"^bundle-[a-z-]+-v15\.css$")
+# `bundle-<route>.css` is produced by src/python/build/build_route_bundles.py.
+GENERATED_CSS_RE = re.compile(r"^bundle-[a-z-]+\.css$")
 
 
 def hand_written_css():
@@ -265,7 +265,7 @@ def cmd_inventory(_args) -> int:
 
     # Which files actually appear in each route bundle's @font-face set.
     routes = {}
-    for css in sorted(CSS_DIR.glob("bundle-*-v15.css")):
+    for css in sorted(CSS_DIR.glob("bundle-*.css")):
         refs = sorted({Path(f["file"]).name for f in parse_font_faces(css)})
         routes[css.name] = refs
     print("\nfonts declared per route bundle:")

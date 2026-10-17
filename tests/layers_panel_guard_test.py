@@ -27,7 +27,7 @@ source, because the bundle is what a browser actually runs:
 What this guard does and does not catch — measured with negative controls
 ------------------------------------------------------------------------
 * **It does catch the guard being removed.** Deleting the `if(boxChanged)` gate
-  from `professional-editor-v17.js`, rebuilding, and re-running this file makes
+  from `professional-editor.js`, rebuilding, and re-running this file makes
   the *static* assertion fail with `the schedule is no longer gated on a real box
   change`. That control was run, and the result is recorded in the pass report.
 * **It does NOT catch that removal dynamically on this host.** With the gate
@@ -58,10 +58,10 @@ ROOT = TESTS_DIR.parent
 SRC_JS = ROOT / "src" / "js"
 SERVE_ROOT = ROOT / "src" / "python"
 
-EDITOR_SRC = SRC_JS / "professional-editor-v17.js"
+EDITOR_SRC = SRC_JS / "professional-editor.js"
 APP_SRC = SRC_JS / "app.js"
-BUNDLE = SRC_JS / "bundle-index-v15.js"
-SERVED_BUNDLE = SERVE_ROOT / "bundle-index-v15.js"
+BUNDLE = SRC_JS / "bundle-index.js"
+SERVED_BUNDLE = SERVE_ROOT / "bundle-index.js"
 
 # The change-detection guard, as one regex over the formatted source and the
 # minified bundle: compare the box key for this element, and gate the schedule on it.
