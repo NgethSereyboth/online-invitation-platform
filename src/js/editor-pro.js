@@ -79,7 +79,7 @@ function setZoomModel(value,options={}){
  const world=clientToWorld(cursor.x,cursor.y),ratio=zoom-view.zoom;
  return setView({zoom,x:view.x-world.x*ratio,y:view.y-world.y*ratio},{source:options.source||'editor',animate:options.animate??!['wheel','slider','gesture'].includes(options.source)});
 }
-function fitView(){cacheViewGeometry();const zoom=clampZoom(Math.min((viewport.clientWidth-100)/stageSize.width,(viewport.clientHeight-80)/stageSize.height));return setView({zoom,x:(viewport.clientWidth-stageSize.width*zoom)/2+viewport.scrollLeft,y:(viewport.clientHeight-stageSize.height*zoom)/2+viewport.scrollTop},{source:'fit',animate:true})}
+function fitView(){cacheViewGeometry();const zoom=Math.max(.35,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return setView({zoom,x:viewport.scrollLeft,y:viewport.scrollTop},{source:'fit',animate:true})}
 function refreshView(){cacheViewGeometry();applyView('resize');syncZoomReadout()}
 function beginViewGesture(){stopTween();if(!gestureCount){cacheViewGeometry();if(perfDebug)performance.mark('einvite:gesture:start')}gestureCount++;transform?.classList.add('gesture')}
 function endViewGesture(){if(!gestureCount)return;gestureCount--;if(!gestureCount){transform?.classList.remove('gesture');syncZoomReadout();if(perfDebug)finishPerfSpan('einvite:gesture');scheduleImageWarmup()}}

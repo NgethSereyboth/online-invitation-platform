@@ -374,14 +374,22 @@ if(window.RichTextDocumentModel)RichTextDocumentModel.normalizeInvitation(doc,{m
 return doc
 }
 let pendingCoalescedCommand=null,activeUndoTransaction=null;
+function settleGestureHistory(before){
+// The stack top may be an older snapshot of this same pre-gesture document, e.g. the
+// open-time baseline taken before the first render normalised the document. Replace it
+// with the exact pre-gesture snapshot so one gesture costs exactly one history entry.
+const top=undoStack.at(-1);
+if(!top)undoStack.push(before);
+else if(historyDocumentFingerprint(top)!==historyDocumentFingerprint(before))undoStack[undoStack.length-1]=before;
+}
 function beginUndoTransaction(label){
  if(activeUndoTransaction)return activeUndoTransaction;
- flushCoalescedCommand();const before=ensureHistoryBaseline(state);let ended=false;
+ flushCoalescedCommand();const before=historySnapshot(state);let ended=false;
  const transaction={
-  commit(){if(ended)return false;ended=true;activeUndoTransaction=null;pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}));return true},
+  commit(){if(ended)return false;ended=true;activeUndoTransaction=null;settleGestureHistory(before);pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}));return true},
   cancel(){if(ended)return false;ended=true;activeUndoTransaction=null;restoreHistory(before);return true}
  };
- activeUndoTransaction=transaction;return transaction;
+ transaction.before=before;activeUndoTransaction=transaction;return transaction;
 }
 function flushCoalescedCommand(){const pending=pendingCoalescedCommand;if(!pending)return false;clearTimeout(pending.timer);pendingCoalescedCommand=null;save({history:false,capture:pending.capture!==false});pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:pending.label,before:pending.before,after:clone(state),coalesced:true}}));return true}
 function scheduleCoalescedFlush(delay=450){if(!pendingCoalescedCommand)return;clearTimeout(pendingCoalescedCommand.timer);pendingCoalescedCommand.timer=setTimeout(flushCoalescedCommand,Math.max(80,Number(delay)||450))}
@@ -414,7 +422,7 @@ const coalesceKey=options.coalesceKey?String(options.coalesceKey):'';
 if(!coalesceKey)flushCoalescedCommand();
 else if(pendingCoalescedCommand&&pendingCoalescedCommand.key!==coalesceKey)flushCoalescedCommand();
 const continuingCoalesced=!!coalesceKey&&pendingCoalescedCommand?.key===coalesceKey;
-const before=continuingCoalesced?clone(pendingCoalescedCommand.before):ensureHistoryBaseline(state);
+const before=continuingCoalesced?clone(pendingCoalescedCommand.before):activeUndoTransaction?clone(activeUndoTransaction.before):ensureHistoryBaseline(state);
 if(options.selectionBefore&&!continuingCoalesced&&undoStack.length){undoStack[undoStack.length-1].editorModel={...(undoStack[undoStack.length-1].editorModel||{}),richTextSelection:clone(options.selectionBefore)}}
 clearTimeout(historyTimer);
 try{
@@ -468,12 +476,12 @@ snap.editorModel={...(snap.editorModel||{}),selectionIds:[...new Set((selectionI
 return snap
 }
 function historyDocumentFingerprint(snapshot){
-const comparable=clone(snapshot||{});
-if(comparable.editorModel)delete comparable.editorModel.selectionIds;
+const comparable={...(snapshot||{})};
+if(comparable.editorModel){comparable.editorModel={...comparable.editorModel};delete comparable.editorModel.selectionIds}
 // Scene projections are compatibility caches. Their volatile generation timestamps
 // must not create empty history entries, while all semantic graph data remains compared.
-if(comparable.sceneGraph&&typeof comparable.sceneGraph==='object')delete comparable.sceneGraph.updatedAt;
-if(comparable.sceneTree&&typeof comparable.sceneTree==='object')delete comparable.sceneTree.updatedAt;
+if(comparable.sceneGraph&&typeof comparable.sceneGraph==='object'){comparable.sceneGraph={...comparable.sceneGraph};delete comparable.sceneGraph.updatedAt}
+if(comparable.sceneTree&&typeof comparable.sceneTree==='object'){comparable.sceneTree={...comparable.sceneTree};delete comparable.sceneTree.updatedAt}
 return JSON.stringify(comparable)
 }
 function pushHistory(documentState,options={}){

@@ -175,6 +175,11 @@
    * @returns {number}
    */
   function stageScale() {
+    // The motion viewport already knows the zoom the stage is drawn at. Reading it
+    // avoids a layout flush on every selection update, which the drag path triggers
+    // right after writing the overlay styles.
+    const zoom = window.EInviteMotion?.viewport?.view?.zoom;
+    if (Number.isFinite(zoom) && zoom > 0) return zoom;
     const rect = stage.getBoundingClientRect();
     return rect.width / Math.max(1, stage.offsetWidth);
   }
@@ -575,7 +580,6 @@
       crop.disabled = !isImage;
       crop.title = isImage ? 'Crop' : 'Crop applies to image objects only';
     }
-    positionSelectionCard(card, true);
     // Re-measure on the next frame. Selecting an object settles its box (and the
     // narrow-viewport inspector drawer) in the same tick, so a card placed against
     // the pre-layout rect sits a few pixels into the selection instead of 8px above

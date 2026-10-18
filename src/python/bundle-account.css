@@ -256,7 +256,9 @@ html[data-theme="dark"] body:not(.guest) a.button-link.primary,
 html[data-theme="dark"] .response-tabs button.active,
 html[data-theme="dark"] .template-tabs button.active,
 html[data-theme="dark"] .empty-state__action button,
-html[data-theme="dark"] .empty-state__action .primary{background:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important;border-color:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important}
+html[data-theme="dark"] .empty-state__action .primary,
+html[data-theme="dark"] .language-switch button.active,
+html[data-theme="dark"] .language-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important;border-color:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important}
 html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-mix(in srgb,#fff 6%,transparent) inset,0 8px 28px rgba(0,0,0,.32)!important}
 
 
@@ -799,7 +801,7 @@ html[data-theme="dark"] body:not(.guest) .badge{background:var(--app-surface-3)!
 .canvas-header-more{position:relative;margin-left:2px}
 
 .canvas-header-more-trigger{width:42px!important;padding:0!important;font-size:16px!important;letter-spacing:1px;anchor-name:--studio-more-trigger}
-.canvas-header-more-menu{position:absolute;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000;position-anchor:--studio-more-trigger;top:calc(anchor(bottom) + var(--space-1));right:auto;bottom:auto;left:anchor(right);position-try-fallbacks:--studio-more-above;width:min(286px,calc(100vw - var(--space-4)));max-height:min(620px,calc(100dvh - var(--space-16)));overflow:auto;overscroll-behavior:contain}
+.canvas-header-more-menu{position:fixed;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000;position-anchor:--studio-more-trigger;top:calc(anchor(bottom) + var(--space-1));right:auto;bottom:auto;left:anchor(right);position-try-fallbacks:--studio-more-above;width:min(286px,calc(100vw - var(--space-4)));max-height:min(620px,calc(100dvh - var(--space-16)));overflow:auto;overscroll-behavior:contain}
 
 @position-try --studio-more-above{top:auto;bottom:calc(anchor(top) + var(--space-1));left:anchor(right)}
 .canvas-header-more-menu[hidden]{display:none}.canvas-header-more-menu>strong{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--app-muted)!important;padding:4px 6px}.canvas-header-more-menu button{width:100%;justify-content:flex-start!important;background:transparent!important;box-shadow:none!important}
@@ -1583,7 +1585,16 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 }
 @media (max-width: 480px) {
   body[data-shell="a"] > main { padding: var(--space-3); }
+  
+  body:not(.guest) > header { height: auto; min-height: var(--app-topbar-h); flex-wrap: wrap; overflow: visible; row-gap: var(--space-2); padding-block: var(--space-2); }
   .app-crumbs { display: none; }
+  
+  body[data-shell="a"] > main h1 { font-size: clamp(1.6rem, 8vw, 2.25rem); overflow-wrap: anywhere; }
+  
+  code { overflow-wrap: anywhere; }
+  
+  html body[data-shell="a"] { grid-template-rows: auto minmax(0, 1fr) auto; }
+  html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
 }
 
 
@@ -1899,7 +1910,8 @@ body[data-page="public"] main#publicRoot.guest > .photo-gallery,
 body[data-page="public"] main#publicRoot.guest > .contact-section,
 body[data-page="public"] main#publicRoot.guest .venue-card,
 body[data-page="public"] main#publicRoot.guest .custom-info-block {
-  background: var(--app-surface);
+  
+  background: var(--kit-surface, var(--app-surface));
   border: 1px solid var(--app-line);
   border-radius: var(--radius-md);
   box-shadow: var(--app-shadow-sm);
@@ -2047,6 +2059,9 @@ body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
 .stat-card { padding: var(--space-5); min-height: 0; }
 .stat-card strong { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
 .stat-card span { color: var(--app-muted); font-size: var(--fs-body-sm); }
+
+
+.language-switch button:not(.active) { color: inherit; }
 
 
 }

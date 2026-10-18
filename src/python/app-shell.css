@@ -562,7 +562,17 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 }
 @media (max-width: 480px) {
   body[data-shell="a"] > main { padding: var(--space-3); }
+  /* P1-3: the 56px topbar clipped its own second row, so the language switch (wrapped below
+     the brand + drawer toggle) was invisible at 375/320. Let the bar grow to fit its wrapped rows. */
+  body:not(.guest) > header { height: auto; min-height: var(--app-topbar-h); flex-wrap: wrap; overflow: visible; row-gap: var(--space-2); padding-block: var(--space-2); }
   .app-crumbs { display: none; }
+  /* P1-4: a 48px one-word title ("Administration") was wider than a 320/375 viewport and forced horizontal scroll. */
+  body[data-shell="a"] > main h1 { font-size: clamp(1.6rem, 8vw, 2.25rem); overflow-wrap: anywhere; }
+  /* P1-4: long identifiers such as EINVITE_ANALYTICS_RETENTION_DAYS in privacy copy overflowed 320/375. */
+  code { overflow-wrap: anywhere; }
+  /* The first grid track was still fixed at --app-topbar-h, so the taller header was clipped. */
+  html body[data-shell="a"] { grid-template-rows: auto minmax(0, 1fr) auto; }
+  html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
 }
 
 /* --- 12. Motion preferences -------------------------------------------- */
@@ -912,7 +922,9 @@ body[data-page="public"] main#publicRoot.guest > .photo-gallery,
 body[data-page="public"] main#publicRoot.guest > .contact-section,
 body[data-page="public"] main#publicRoot.guest .venue-card,
 body[data-page="public"] main#publicRoot.guest .custom-info-block {
-  background: var(--app-surface);
+  /* Guest cards carry the invitation's own text colour (--kit-text), so they must sit on the
+     invitation's surface too; the app's dark --app-surface made brown text unreadable (1.27:1). */
+  background: var(--kit-surface, var(--app-surface));
   border: 1px solid var(--app-line);
   border-radius: var(--radius-md);
   box-shadow: var(--app-shadow-sm);
@@ -1062,6 +1074,11 @@ body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
 .stat-card { padding: var(--space-5); min-height: 0; }
 .stat-card strong { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
 .stat-card span { color: var(--app-muted); font-size: var(--fs-body-sm); }
+
+/* Inactive language toggles inherited a white text colour from the invitation kit,
+   which measured 1.12:1 on the light track. Inherit the track's own text colour so
+   the label follows the surface it sits on in both light and dark themes. */
+.language-switch button:not(.active) { color: inherit; }
 
 
 }

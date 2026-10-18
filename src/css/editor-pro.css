@@ -34,7 +34,7 @@
 #canvasViewport{contain:layout paint;overscroll-behavior:contain;isolation:isolate}
 #canvasViewport #canvasFrame{position:static;width:0!important;height:0!important;min-width:0;min-height:0;margin:0}
 #stageTransform{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;transition:none;filter:none;backdrop-filter:none;box-shadow:none}
-#stageTransform #stage{position:relative;left:0;top:0;margin:0;transform:none!important;transition:none!important}
+#stageTransform #stage{position:relative;left:0;top:0;margin:0;transition:none!important}
 #stageTransform.gesture{transition:none}
 #canvasMeasurements{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
 #canvasZoomSlider{width:100px;min-width:64px;height:28px;margin:0;padding:0;accent-color:var(--app-accent,#3E7C6B)}

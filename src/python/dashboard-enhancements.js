@@ -104,7 +104,7 @@ function openTemplatePreview(item){
   $('#templatePreviewDialog').showModal()
 }
 
-$('#closeTemplatePreview').onclick=()=>$('#templatePreviewDialog').close();
-$('#usePreviewTemplate').onclick=()=>{if(!previewTemplateItem)return;$('#newTemplate').value=previewTemplateItem.id;updateTemplateSummary(previewTemplateItem);renderTemplateChoices();$('#templatePreviewDialog').close()};
-$('#templateSearch').oninput=renderTemplateChoices;
+if($('#closeTemplatePreview'))$('#closeTemplatePreview').onclick=()=>$('#templatePreviewDialog').close();
+if($('#usePreviewTemplate'))$('#usePreviewTemplate').onclick=()=>{if(!previewTemplateItem)return;$('#newTemplate').value=previewTemplateItem.id;updateTemplateSummary(previewTemplateItem);renderTemplateChoices();$('#templatePreviewDialog').close()};
+if($('#templateSearch'))$('#templateSearch').oninput=renderTemplateChoices;
 document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{templateFilter=b.dataset.templateFilter;document.querySelectorAll('[data-template-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTemplateChoices()});

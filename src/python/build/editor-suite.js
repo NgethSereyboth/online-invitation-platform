@@ -192,7 +192,7 @@ function editorEnhancements(){
     };
     Object.entries(ids).forEach(([key,id])=>$('#'+id).addEventListener('change',e=>applyTransform(key,e.target.value)));
     block.addEventListener('click',e=>{const action=e.target.closest('[data-transform-action]')?.dataset.transformAction,item=selectedOne();if(!action||!item)return;const f=stagePercentFrame(item);if(action==='center'){item.style.left=`${(50-f.w/2).toFixed(2)}%`;item.style.top=`${(50-f.h/2).toFixed(2)}%`}if(action==='fill-width'){item.style.left='5%';item.style.width='90%'}if(action==='reset-rotation'){item.dataset.rotation='0';item.style.transform='rotate(0deg)'}applyItems([item]);saveNow();refreshTransform()});
-    const obs=new MutationObserver(refreshTransform);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerup',()=>setTimeout(refreshTransform,0),true);refreshTransform();
+    let pointerBusy=false,refreshQueued=false;const queueTransformRefresh=()=>{if(pointerBusy||refreshQueued)return;refreshQueued=true;requestAnimationFrame(()=>{refreshQueued=false;if(!pointerBusy)refreshTransform()})};const obs=new MutationObserver(queueTransformRefresh);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerdown',()=>{pointerBusy=true},true);document.addEventListener('pointerup',()=>{pointerBusy=false;setTimeout(refreshTransform,0)},true);refreshTransform();
   }
   const eventPane=$('[data-studio-pane="event"]');
   if(eventPane && !$('#canvasSmartWriter')){
@@ -609,7 +609,7 @@ function setZoomModel(value,options={}){
  const world=clientToWorld(cursor.x,cursor.y),ratio=zoom-view.zoom;
  return setView({zoom,x:view.x-world.x*ratio,y:view.y-world.y*ratio},{source:options.source||'editor',animate:options.animate??!['wheel','slider','gesture'].includes(options.source)});
 }
-function fitView(){cacheViewGeometry();const zoom=clampZoom(Math.min((viewport.clientWidth-100)/stageSize.width,(viewport.clientHeight-80)/stageSize.height));return setView({zoom,x:(viewport.clientWidth-stageSize.width*zoom)/2+viewport.scrollLeft,y:(viewport.clientHeight-stageSize.height*zoom)/2+viewport.scrollTop},{source:'fit',animate:true})}
+function fitView(){cacheViewGeometry();const zoom=Math.max(.35,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return setView({zoom,x:viewport.scrollLeft,y:viewport.scrollTop},{source:'fit',animate:true})}
 function refreshView(){cacheViewGeometry();applyView('resize');syncZoomReadout()}
 function beginViewGesture(){stopTween();if(!gestureCount){cacheViewGeometry();if(perfDebug)performance.mark('einvite:gesture:start')}gestureCount++;transform?.classList.add('gesture')}
 function endViewGesture(){if(!gestureCount)return;gestureCount--;if(!gestureCount){transform?.classList.remove('gesture');syncZoomReadout();if(perfDebug)finishPerfSpan('einvite:gesture');scheduleImageWarmup()}}

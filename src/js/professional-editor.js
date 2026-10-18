@@ -59,9 +59,10 @@ function pct(value,total,bounded=true){ const n=value/Math.max(1,total)*100,reso
 function worldRect(){const r=stage.getBoundingClientRect(),zoom=window.EInviteMotion?.viewport?.view.zoom||1;return{left:r.left,top:r.top,width:stage.offsetWidth||r.width/zoom,height:stage.offsetHeight||r.height/zoom,zoom}}
 function frameOf(el,sr=worldRect()){
 if(!sr.zoom)sr=worldRect();
-const style=el.style, rect=el.getBoundingClientRect();
-const w=clamp(px(style.width,sr.width,el.offsetWidth||rect.width),MIN_SIZE,sr.width);
-const h=clamp(px(style.height,sr.height,el.offsetHeight||rect.height),MIN_SIZE,sr.height);
+const style=el.style;
+// Read the bounding rect (a forced layout after style writes) only when offsets are unusable.
+const w=clamp(px(style.width,sr.width,el.offsetWidth||el.getBoundingClientRect().width),MIN_SIZE,sr.width);
+const h=clamp(px(style.height,sr.height,el.offsetHeight||el.getBoundingClientRect().height),MIN_SIZE,sr.height);
 return {
 id:el.dataset.id,
 x:finite(px(style.left,sr.width,el.offsetLeft)),
@@ -144,7 +145,7 @@ commit(label,map=>safe.forEach(f=>{const o=map[f.id];if(!o)return;o.left=pct(f.x
 function revealSelection(){
 const v=$('#canvasViewport'),b=overlay;if(!v||!b||b.hidden)return;
 const adjust=()=>{if(interaction||b.hidden)return;const now=Date.now();if(now-lastRevealAdjustAt<200)return;const r=v.getBoundingClientRect(),q=b.getBoundingClientRect(),m=48,w=window.visualViewport,l=Math.max(r.left,w?.offsetLeft||0),t=Math.max(r.top,w?.offsetTop||0),rr=Math.min(r.right,(w?.offsetLeft||0)+(w?.width||innerWidth)),bb=Math.min(r.bottom,(w?.offsetTop||0)+(w?.height||innerHeight));let x=0,y=0;if(q.left<l+m)x=q.left-l-m;else if(q.right>rr-m)x=q.right-rr+m;if(q.top<t+m)y=q.top-t-m;else if(q.bottom>bb-m)y=q.bottom-bb+m;if(x||y){lastRevealAdjustAt=now;v.scrollBy(x,y);scheduleOverlaySync()}};
-adjust();setTimeout(adjust,0);setTimeout(adjust,120);
+setTimeout(adjust,0);setTimeout(adjust,120);
 }
 function sameIds(a,b){return a.length===b.length&&a.every((id,index)=>id===b[index])}
 function sameIdSet(a,b){return a.length===b.length&&a.every(id=>b.includes(id))}
@@ -347,6 +348,7 @@ function pointerDown(event){
 if(event.button!==0||window.EInviteCanvasPanController?.held||$('#panToggle')?.getAttribute('aria-pressed')==='true'||event.target.closest?.('[contenteditable=true]'))return;
 if(interaction){event.preventDefault();event.stopImmediatePropagation();return}
 const handle=event.target.closest('[data-pe-handle]');if(handle){event.preventDefault();event.stopImmediatePropagation();startInteraction(handle.dataset.peHandle==='rotate'?'rotate':'resize',event,handle.dataset.peHandle,overlaySelectionIds());return}
+if(event.target.closest?.('.object.v24-crop-active'))return;
 const object=event.target.closest('.object');
 if(object&&stage.contains(object)){
 if(object.dataset.locked==='true'){
@@ -356,7 +358,7 @@ event.preventDefault();event.stopImmediatePropagation();return
 }
 if(event.shiftKey||event.ctrlKey||event.metaKey){toggleSelection([object.dataset.id]);event.preventDefault();event.stopImmediatePropagation();return}
 if(!selectedIds().includes(object.dataset.id))setSelection([object.dataset.id]);
-startInteraction('move',event);return;
+event.preventDefault();startInteraction('move',event);return;
 }
 if(event.target.closest('button,input,select,textarea,[contenteditable=true]'))return;
 startMarquee(event);
@@ -470,6 +472,12 @@ function renderLayers(panel=$('#layersPanel')){
 if(!panel||layersRendering||layerDragState?.active)return;layersRendering=true;try{
 const priorTree=panel.querySelector('.pe-layer-tree'),priorScroll=priorTree?.scrollTop||0,active=document.activeElement,activeRow=active?.closest?.('.pe-layer-row'),activeIdentity=layerFocusIdentity||layerIdentity(activeRow),searchFocused=active?.matches?.('[data-pe-layer-search]'),searchSelection=searchFocused?[active.selectionStart,active.selectionEnd]:null;
 const doc=bridge().getState(),map=activeMap(doc),gs=groups(doc),selection=new Set(selectedIds()),query=panel.querySelector('[data-pe-layer-search]')?.value||'';
+const structure=JSON.stringify([Object.entries(map).map(([id,o])=>[id,o.zIndex,o.visible,o.locked,o.type,o.layerName,o.html]),Object.entries(gs).map(([id,g])=>[id,g.name,g.parentId,g.children]),[...expandedGroups].sort(),query,layerAnnouncement]),selectionKey=[...selection].sort().join('|');
+if(panel._peLayerStructure===structure&&panel.querySelector('.pe-layer-tree')){
+// Structure unchanged: a selection-only change just moves the active highlight, so skip the full tree rebuild.
+if(panel._peLayerSelection!==selectionKey){panel.querySelectorAll('.pe-layer-row').forEach(row=>{const ids=String(row.dataset.layerIds||'').split(',').filter(Boolean);row.classList.toggle('active',ids.some(id=>selection.has(id)))});panel._peLayerSelection=selectionKey}
+return;
+}
 panel.innerHTML=`<div class="pe-layer-toolbar"><input data-pe-layer-search type="search" placeholder="Search layers" value=""><button data-pe-arrange="front" title="Bring to front">Front</button><button data-pe-arrange="forward" title="Bring forward">↑</button><button data-pe-arrange="backward" title="Send backward">↓</button><button data-pe-arrange="back" title="Send to back">Back</button></div><div class="pe-layer-tree" role="tree" aria-label="Layers"></div><div class="pe-layer-live" aria-live="polite" aria-atomic="true"></div>`;
 const search=$('[data-pe-layer-search]',panel);search.value=query;search.addEventListener('focus',clearRememberedLayerFocus);const tree=$('.pe-layer-tree',panel);tree.scrollTop=priorScroll;
 const objectOrder=Object.keys(map).sort((a,b)=>finite(map[b].zIndex)-finite(map[a].zIndex));const objectInGroup=new Set(Object.values(gs).flatMap(g=>g.children||[]).filter(id=>map[id]));const topGroups=Object.keys(gs).filter(id=>!gs[id].parentId);
@@ -480,6 +488,7 @@ function groupRow(id,depth){const g=gs[id];if(!g)return null;const ids=descendan
 const topEntries=[...topGroups.map(id=>({id,group:true,rank:layerRank(id)})),...objectOrder.filter(id=>!objectInGroup.has(id)).map(id=>({id,group:false,rank:layerRank(id)}))].sort((a,b)=>b.rank-a.rank);topEntries.forEach(entry=>{const node=entry.group?groupRow(entry.id,0):objectRow(entry.id,0);if(node)tree.append(node)});
 search.addEventListener('input',()=>renderLayers(panel));panel.querySelectorAll('[data-pe-arrange]').forEach(b=>b.onclick=()=>{rememberLayerFocus(layerIdentity(document.activeElement?.closest?.('.pe-layer-row')));reorder(selectedIds(),b.dataset.peArrange);announceLayer(`Selected layers moved ${b.title.toLowerCase()}.`)});$('.pe-layer-live',panel).textContent=layerAnnouncement;
 tree.scrollTop=priorScroll;if(searchFocused){search.focus();if(searchSelection)search.setSelectionRange(...searchSelection)}else if(activeIdentity)restoreLayerFocus(panel,activeIdentity);
+panel._peLayerStructure=structure;panel._peLayerSelection=selectionKey;
 } finally {layersRendering=false}
 }
 function plainText(html){const el=document.createElement('div');el.innerHTML=html||'';return(el.textContent||'').trim().slice(0,36)}
@@ -512,7 +521,7 @@ if(button.id==='groupObjects')groupSelection();else if(button.id==='ungroupObjec
 if(handled){event.preventDefault();event.stopImmediatePropagation()}
 }
 let heavySyncFrame=0;
-function syncAll(){ensureTransformPanel();ensureAssistancePanel();ensureMobileContextBar();syncOverlay();syncTransformInputs();syncMobileContextBar();if(heavySyncFrame)return;heavySyncFrame=requestAnimationFrame(()=>{heavySyncFrame=0;renderUserGuides();renderLayers()})}
+function syncAll(){ensureTransformPanel();ensureAssistancePanel();ensureMobileContextBar();syncTransformInputs();syncOverlay();syncMobileContextBar();if(heavySyncFrame)return;heavySyncFrame=requestAnimationFrame(()=>{heavySyncFrame=0;renderUserGuides();renderLayers()})}
 function scheduleOverlaySync(full=false){
 if(full===true)overlaySyncFull=true;
 if(overlaySyncFrame)return;

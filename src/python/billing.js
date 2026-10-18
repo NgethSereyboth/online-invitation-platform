@@ -27,7 +27,7 @@ function checkoutBanner(){
   const banner=$('#checkoutResult');banner.hidden=false;
   if(state==='success'){
     banner.className='checkout-result verifying';
-    banner.innerHTML=`<strong>${b('Payment submitted','Payment submitted')}</strong><span>${b('We are securely confirming the card payment. Your plan activates only after the gateway webhook is verified.','We are securely confirming the card payment. Your plan activates only after the gateway webhook is verified.')}</span>`;
+    banner.innerHTML=`<strong>${b('Payment submitted','Payment submitted')}</strong><span>${b('We are securely confirming your card payment. Your plan will update as soon as the payment is confirmed.','We are securely confirming your card payment. Your plan will update as soon as the payment is confirmed.')}</span>`;
   }else{
     banner.className='checkout-result cancelled';
     banner.innerHTML=`<strong>${b('Checkout cancelled','Checkout cancelled')}</strong><span>${b('Your card was not charged by this website and your current plan has not changed.','Your card was not charged by this website and your current plan has not changed.')}</span>`;
@@ -66,7 +66,7 @@ async function init(){
     });
     $('#billingNotice').textContent=billing.configured
       ?_txt('Payments are completed on the gateway’s hosted checkout. This website does not receive or store your full card number or security code.','Payments are completed on the gateway’s hosted checkout. This website does not receive or store your full card number or security code.')
-      :_txt('Card checkout is designed and ready, but it stays disabled until the owner adds production gateway credentials and a webhook secret.','Card checkout is designed and ready, but it stays disabled until the owner adds production gateway credentials and a webhook secret.');
+      :_txt('Online card payment is not available yet.','Online card payment is not available yet.');
   }catch(error){
     document.querySelector('.billing-page').innerHTML=`<h1>${b('Plans unavailable','Plans unavailable')}</h1><p>${esc(error.message)}</p><a href="dashboard.html" class="button-link">${b('Back to dashboard','Back to dashboard')}</a>`;
   }

@@ -1195,6 +1195,11 @@ body[data-page="index"] .v54-selection-card[hidden] { display: none; }
   body[data-page="index"] .app-drawer-toggle { display: inline-flex; }
 }
 @media (min-width: 769px) { body[data-page="index"] .app-drawer-toggle { display: none; } }
+/* ≤480px the topbar's language switch wraps onto a second row; the fixed 56px height
+   clipped it under the page kicker (measured at 375px). Let the bar grow to fit. */
+@media (max-width: 480px) {
+  body[data-page="index"].studio-experience > header.studio-topbar { height: auto; min-height: 56px; max-height: none; flex-wrap: wrap; row-gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   body[data-page="index"] .v54-selection-card,

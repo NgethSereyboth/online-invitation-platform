@@ -33,8 +33,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 258175,
-      "styleSha256": "b26253b520751437bb737158e410d9ab78f213463b83cd30f34956c44209ddfa",
+      "styleBytes": 258915,
+      "styleSha256": "be92b7832fdf0e55fb0e75ace5de10b00067ec3740206522902c2cfd9ccc31e7",
       "stylesheet": "bundle-account.css"
     },
     "admin.html": {
@@ -87,8 +87,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 258455,
-      "styleSha256": "147fce9f829d4114e5efcaaad02d86e1b1034160d91d7855b87c0134871a0312",
+      "styleBytes": 259195,
+      "styleSha256": "f7248f7eab002182f251a10257ab3b5150902a2673b46b0a4c552c7d76a7b971",
       "stylesheet": "bundle-admin.css"
     },
     "analytics.html": {
@@ -124,14 +124,14 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 258768,
-      "styleSha256": "3c7a6e6353a72aea75012697acbcfdd4de642e79a4a8b19ab1937252ce8d45e6",
+      "styleBytes": 259572,
+      "styleSha256": "ef4e27e7367f4ca0311f9207955a9504ab9d206e5f3eb27f19804edd5fd07762",
       "stylesheet": "bundle-analytics.css"
     },
     "billing.html": {
       "javascript": "bundle-billing.js",
-      "scriptBytes": 84188,
-      "scriptSha256": "c6b5c8421a0fc824238538590a472213cd8fda5118ab1cb94631b45459931681",
+      "scriptBytes": 83998,
+      "scriptSha256": "305ee6fea66e68f4819e8d97f13d1b75f455bac3b922e7077a8e0d40a3502d82",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -158,8 +158,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 260328,
-      "styleSha256": "ef9cac4a03dad1b30d3edb7ca816b1f52715d168d2ce81e2784933ff95d53e50",
+      "styleBytes": 261068,
+      "styleSha256": "d27c4315a80998cfc33a8143028a0650b7304438e51ec7612d639d5ef927d4da",
       "stylesheet": "bundle-billing.css"
     },
     "checkin.html": {
@@ -186,8 +186,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 129836,
-      "styleSha256": "c732545773dc6a2448ddb7e1792a5f43820d53899da7f174456dc048af28881f",
+      "styleBytes": 130453,
+      "styleSha256": "681d6fa8603f1c28d59ce8c9d0870d35be137b10f190e92d545cc7ca6f0258c9",
       "stylesheet": "bundle-checkin.css"
     },
     "dashboard.html": {
@@ -198,8 +198,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-dashboard.js",
-      "scriptBytes": 330699,
-      "scriptSha256": "bda16c9cffd262f95a4667b1151a33d24c079861ca5e125a8475cb6857d79696",
+      "scriptBytes": 330950,
+      "scriptSha256": "89924a8a193292a9bcaf978d513e213043caeb9840cc5b65d9303d267e615c39",
       "sources": {
         "deferredScripts": [
           "delivery-dialog.js",
@@ -253,8 +253,8 @@
           "toast.css"
         ]
       },
-      "styleBytes": 310959,
-      "styleSha256": "e71296c202183416511e52ae57b41761aae561a725c34f485e9971898b8b6003",
+      "styleBytes": 311699,
+      "styleSha256": "64a9579478dc564891df746004111d93ac1221e9f2dd3e701b0e65c6d0a6a274",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -289,8 +289,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 285679,
-      "styleSha256": "96a2a912c2048b6e57583a8b0ce69eb2a78298d7ab3a1f319bb35f27a1a6d437",
+      "styleBytes": 286419,
+      "styleSha256": "35d2d459a322d48368ce70e2959845e51533c5c5eac9b992efec5f966df95193",
       "stylesheet": "bundle-designer.css"
     },
     "guests.html": {
@@ -326,8 +326,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 258660,
-      "styleSha256": "61778278970268d765c0acbeab6e4d1b116f4185d9ac41a07f3ae9cbaba47765",
+      "styleBytes": 259400,
+      "styleSha256": "18afea7f2ef30b9676dbaba9f27f5bfe87ba706caa190d22d8b00512adf32c2e",
       "stylesheet": "bundle-guests.css"
     },
     "index.html": {
@@ -338,8 +338,8 @@
       "deferredStylesheetBytes": 50436,
       "deferredStylesheetSha256": "c0de3d4e46658992c14d4eac99b833f1f18f4695c4db5c17a1934d34e04c5960",
       "javascript": "bundle-index.js",
-      "scriptBytes": 1040568,
-      "scriptSha256": "c75059394013543fd50b17bde4e3f1d64d4451959e2c8ea5ccca253777546a39",
+      "scriptBytes": 1042943,
+      "scriptSha256": "7fb1a41a6ad56410d9336f46dd20637cd8dceff022a6c6f96ba42a4ecbe229ee",
       "sources": {
         "deferredScripts": [
           "workflow-refine.js",
@@ -449,8 +449,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 438371,
-      "styleSha256": "fca89915e6063924c98bc7c93cde171894524034337114e2a0947e2b57eae3cc",
+      "styleBytes": 439308,
+      "styleSha256": "6d1cd4bc052ae9d6b39a3904dfb8813f51624aa2a456cf5d63511537a4a15ca8",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
@@ -500,8 +500,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 278157,
-      "styleSha256": "155ef3bfb1407ecbdf5bea72e4eb05c030e2cd25138371db90786bf8946e549b",
+      "styleBytes": 278897,
+      "styleSha256": "dc209a64285f14879cde860185fe0a4335c3e9bc0b4f527aa77f0c2789238693",
       "stylesheet": "bundle-materials.css"
     },
     "privacy.html": {
@@ -523,8 +523,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 152070,
-      "styleSha256": "d05febc770b0f8d3acbb1603cc26959e35e44d8e618433d25d7216e0189176bd",
+      "styleBytes": 152813,
+      "styleSha256": "4bce9db590e329c8131e3d1a0721a2694c9494e2ae938d94b5cd03c4792b4f40",
       "stylesheet": "bundle-privacy.css"
     },
     "public.html": {
@@ -535,8 +535,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 248724,
-      "scriptSha256": "49ea93d2b786de83ba098f68d183966ca50442d54e3990d26daad384502157b7",
+      "scriptBytes": 248782,
+      "scriptSha256": "ea4fe326baaaeb5971672c62928c3f2078fb428b4f58c942a21b0e452a76f776",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"
@@ -578,8 +578,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 130018,
-      "styleSha256": "28c72259d130dfa4f13394b6d1971822f748540a0b3e0bc29438fbcd5f868caa",
+      "styleBytes": 130702,
+      "styleSha256": "1e8d8ec35fa6062d0052c1120df79c363176d27ee491043c8d287ffb0177d7db",
       "stylesheet": "bundle-public.css"
     },
     "reset.html": {
@@ -612,8 +612,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 256130,
-      "styleSha256": "c9df8537b3e7e2a493ab77cd246acf34af24566678b02f2a1e0919e2d94b7e9e",
+      "styleBytes": 256870,
+      "styleSha256": "037d46d8ad7a3a993b72eccc4fee0815d0ffcc6020d268c1b3d670103b75bc56",
       "stylesheet": "bundle-reset.css"
     },
     "responses.html": {
@@ -649,8 +649,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 258833,
-      "styleSha256": "69f52eb4bfeced95d60a59e57ae383972f6747acf292b1ebf597ecef6deec91d",
+      "styleBytes": 259573,
+      "styleSha256": "1a8b5a54e064420ed25d9e0884b92e9fbdd24c7070facbc664e09ba83a01c27a",
       "stylesheet": "bundle-responses.css"
     },
     "templates.html": {
@@ -687,8 +687,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 289346,
-      "styleSha256": "77b779c3dda4df50ac41ed00730531fc66c4a39df1e18143426e65e8536017a8",
+      "styleBytes": 290275,
+      "styleSha256": "18200bfdb6124eb244990d834770f432b0ff9efbca8bedba8aa7b5838fd9d107",
       "stylesheet": "bundle-templates.css"
     },
     "verify.html": {
@@ -721,8 +721,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 256027,
-      "styleSha256": "fa3e79a45e1a266c8da33b3fa7d24a00f79db917e23d51c4fcf29f5678e04a6d",
+      "styleBytes": 256767,
+      "styleSha256": "785aef877bddecf2bfe9147cb7a624ba1710a0ed398da1eb6911b5d7328d2c72",
       "stylesheet": "bundle-verify.css"
     }
   },

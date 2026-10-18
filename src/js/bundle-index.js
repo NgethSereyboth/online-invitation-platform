@@ -2624,14 +2624,22 @@ if(window.RichTextDocumentModel)RichTextDocumentModel.normalizeInvitation(doc,{m
 return doc
 }
 let pendingCoalescedCommand=null,activeUndoTransaction=null;
+function settleGestureHistory(before){
+// The stack top may be an older snapshot of this same pre-gesture document, e.g. the
+// open-time baseline taken before the first render normalised the document. Replace it
+// with the exact pre-gesture snapshot so one gesture costs exactly one history entry.
+const top=undoStack.at(-1);
+if(!top)undoStack.push(before);
+else if(historyDocumentFingerprint(top)!==historyDocumentFingerprint(before))undoStack[undoStack.length-1]=before;
+}
 function beginUndoTransaction(label){
  if(activeUndoTransaction)return activeUndoTransaction;
- flushCoalescedCommand();const before=ensureHistoryBaseline(state);let ended=false;
+ flushCoalescedCommand();const before=historySnapshot(state);let ended=false;
  const transaction={
-  commit(){if(ended)return false;ended=true;activeUndoTransaction=null;pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}));return true},
+  commit(){if(ended)return false;ended=true;activeUndoTransaction=null;settleGestureHistory(before);pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:String(label||'Edit'),before,after:clone(state)}}));return true},
   cancel(){if(ended)return false;ended=true;activeUndoTransaction=null;restoreHistory(before);return true}
  };
- activeUndoTransaction=transaction;return transaction;
+ transaction.before=before;activeUndoTransaction=transaction;return transaction;
 }
 function flushCoalescedCommand(){const pending=pendingCoalescedCommand;if(!pending)return false;clearTimeout(pending.timer);pendingCoalescedCommand=null;save({history:false,capture:pending.capture!==false});pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:pending.label,before:pending.before,after:clone(state),coalesced:true}}));return true}
 function scheduleCoalescedFlush(delay=450){if(!pendingCoalescedCommand)return;clearTimeout(pendingCoalescedCommand.timer);pendingCoalescedCommand.timer=setTimeout(flushCoalescedCommand,Math.max(80,Number(delay)||450))}
@@ -2664,7 +2672,7 @@ const coalesceKey=options.coalesceKey?String(options.coalesceKey):'';
 if(!coalesceKey)flushCoalescedCommand();
 else if(pendingCoalescedCommand&&pendingCoalescedCommand.key!==coalesceKey)flushCoalescedCommand();
 const continuingCoalesced=!!coalesceKey&&pendingCoalescedCommand?.key===coalesceKey;
-const before=continuingCoalesced?clone(pendingCoalescedCommand.before):ensureHistoryBaseline(state);
+const before=continuingCoalesced?clone(pendingCoalescedCommand.before):activeUndoTransaction?clone(activeUndoTransaction.before):ensureHistoryBaseline(state);
 if(options.selectionBefore&&!continuingCoalesced&&undoStack.length){undoStack[undoStack.length-1].editorModel={...(undoStack[undoStack.length-1].editorModel||{}),richTextSelection:clone(options.selectionBefore)}}
 clearTimeout(historyTimer);
 try{
@@ -2718,12 +2726,12 @@ snap.editorModel={...(snap.editorModel||{}),selectionIds:[...new Set((selectionI
 return snap
 }
 function historyDocumentFingerprint(snapshot){
-const comparable=clone(snapshot||{});
-if(comparable.editorModel)delete comparable.editorModel.selectionIds;
+const comparable={...(snapshot||{})};
+if(comparable.editorModel){comparable.editorModel={...comparable.editorModel};delete comparable.editorModel.selectionIds}
 // Scene projections are compatibility caches. Their volatile generation timestamps
 // must not create empty history entries, while all semantic graph data remains compared.
-if(comparable.sceneGraph&&typeof comparable.sceneGraph==='object')delete comparable.sceneGraph.updatedAt;
-if(comparable.sceneTree&&typeof comparable.sceneTree==='object')delete comparable.sceneTree.updatedAt;
+if(comparable.sceneGraph&&typeof comparable.sceneGraph==='object'){comparable.sceneGraph={...comparable.sceneGraph};delete comparable.sceneGraph.updatedAt}
+if(comparable.sceneTree&&typeof comparable.sceneTree==='object'){comparable.sceneTree={...comparable.sceneTree};delete comparable.sceneTree.updatedAt}
 return JSON.stringify(comparable)
 }
 function pushHistory(documentState,options={}){
@@ -6638,7 +6646,7 @@ function editorEnhancements(){
     };
     Object.entries(ids).forEach(([key,id])=>$('#'+id).addEventListener('change',e=>applyTransform(key,e.target.value)));
     block.addEventListener('click',e=>{const action=e.target.closest('[data-transform-action]')?.dataset.transformAction,item=selectedOne();if(!action||!item)return;const f=stagePercentFrame(item);if(action==='center'){item.style.left=`${(50-f.w/2).toFixed(2)}%`;item.style.top=`${(50-f.h/2).toFixed(2)}%`}if(action==='fill-width'){item.style.left='5%';item.style.width='90%'}if(action==='reset-rotation'){item.dataset.rotation='0';item.style.transform='rotate(0deg)'}applyItems([item]);saveNow();refreshTransform()});
-    const obs=new MutationObserver(refreshTransform);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerup',()=>setTimeout(refreshTransform,0),true);refreshTransform();
+    let pointerBusy=false,refreshQueued=false;const queueTransformRefresh=()=>{if(pointerBusy||refreshQueued)return;refreshQueued=true;requestAnimationFrame(()=>{refreshQueued=false;if(!pointerBusy)refreshTransform()})};const obs=new MutationObserver(queueTransformRefresh);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerdown',()=>{pointerBusy=true},true);document.addEventListener('pointerup',()=>{pointerBusy=false;setTimeout(refreshTransform,0)},true);refreshTransform();
   }
   const eventPane=$('[data-studio-pane="event"]');
   if(eventPane && !$('#canvasSmartWriter')){
@@ -7055,7 +7063,7 @@ function setZoomModel(value,options={}){
  const world=clientToWorld(cursor.x,cursor.y),ratio=zoom-view.zoom;
  return setView({zoom,x:view.x-world.x*ratio,y:view.y-world.y*ratio},{source:options.source||'editor',animate:options.animate??!['wheel','slider','gesture'].includes(options.source)});
 }
-function fitView(){cacheViewGeometry();const zoom=clampZoom(Math.min((viewport.clientWidth-100)/stageSize.width,(viewport.clientHeight-80)/stageSize.height));return setView({zoom,x:(viewport.clientWidth-stageSize.width*zoom)/2+viewport.scrollLeft,y:(viewport.clientHeight-stageSize.height*zoom)/2+viewport.scrollTop},{source:'fit',animate:true})}
+function fitView(){cacheViewGeometry();const zoom=Math.max(.35,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return setView({zoom,x:viewport.scrollLeft,y:viewport.scrollTop},{source:'fit',animate:true})}
 function refreshView(){cacheViewGeometry();applyView('resize');syncZoomReadout()}
 function beginViewGesture(){stopTween();if(!gestureCount){cacheViewGeometry();if(perfDebug)performance.mark('einvite:gesture:start')}gestureCount++;transform?.classList.add('gesture')}
 function endViewGesture(){if(!gestureCount)return;gestureCount--;if(!gestureCount){transform?.classList.remove('gesture');syncZoomReadout();if(perfDebug)finishPerfSpan('einvite:gesture');scheduleImageWarmup()}}
@@ -8270,7 +8278,7 @@ function buildMobileSummary(){const properties=$('#properties');if(!properties)r
 function syncInactiveSurfaces(){document.querySelectorAll('dialog').forEach(node=>{if(node.open){if(node.dataset.v20AutoInert){node.inert=false;node.removeAttribute('inert');delete node.dataset.v20AutoInert}}else if(!node.inert){node.inert=true;node.dataset.v20AutoInert='true'}});document.querySelectorAll('[hidden]').forEach(node=>{if(!node.inert){node.inert=true;node.dataset.v20AutoInert='true'}});document.querySelectorAll('[data-v20-auto-inert]:not([hidden])').forEach(node=>{if(node.tagName!=='DIALOG'||node.open){node.inert=false;node.removeAttribute('inert');delete node.dataset.v20AutoInert}})}
 function diagnosticsForSelected(){const node=document.querySelector('.object.selected .content')||document.querySelector('.object .content'),objectNode=node?.closest('.object'),doc=bridge()?.getState?.(),object=firstSelected(doc);if(!node||!object||!doc)return null;const model=MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''});node.__typographyModel=model;return{model,result:LAYOUT()?.fitAndDiagnose(node,model),objectNode}}
 function refresh(){syncInactiveSurfaces();const doc=bridge()?.getState?.();if(!doc||!MODEL())return;const entries=selectedEntries(doc),selected=entries[0]?.[1]||null,textSelected=!!selected,selectionSignature=entries.map(([id])=>id).sort().join('|');const atStyleLimit=Object.keys(doc.typography?.styles||{}).length>=MODEL().MAX_TEXT_STYLES;document.querySelectorAll('[data-style-limit-action]').forEach(control=>{control.disabled=atStyleLimit;control.setAttribute('aria-disabled',String(atStyleLimit));control.title=atStyleLimit?`Maximum ${MODEL().MAX_TEXT_STYLES} text styles reached`:''});const inspector=$('#v20TextStyle'),toolbar=$('#v20TypographyToolbar');if(inspector){styleOptions(inspector);inspector.disabled=!textSelected;const adv=$('#typographyControls')?._v20Advanced;if(adv&&textSelected){const m=MODEL().resolveObjectTypography(doc,selected);adv.vertical.value=m.textVerticalAlign;adv.padding.value=String(m.textPadding)}}if(toolbar){toolbar.hidden=!textSelected;toolbar.setAttribute('aria-hidden',String(!textSelected));if(textSelected){const r=toolbar._refs,models=entries.map(([,object])=>MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''})),model=models[0],fonts=[...new Set(models.map(m=>m.font))];styleOptions(r.style);const mixed=fonts.length>1,mixedOption=r.font?.querySelector('option[value="__mixed__"]');if(mixedOption){mixedOption.hidden=!mixed;mixedOption.disabled=!mixed}if(r.font){r.font.value=mixed?'__mixed__':model.font;r.font.dataset.mixed=String(mixed);r.font.setAttribute('aria-label',mixed?'Font for selected text, mixed values':'Font for selected text')}r.size.value=model.textAutoFit==='fit'?model.textAutoFitMax:model.fontSize;r.bold.setAttribute('aria-pressed',String(model.fontWeight==='700'));r.italic.setAttribute('aria-pressed',String(model.fontStyle==='italic'));r.align.value=model.textAlign;r.color.value=/^#[0-9a-f]{6}$/i.test(model.color)?model.color:'#000000';r.fit.textContent=model.textAutoFit==='fit'?`Auto-fit ${model.textMinFontSize}–${model.textAutoFitMax}px`:'Auto-fit off';if(selectionSignature&&selectionSignature!==lastTextSelectionSignature){const activeInspector=document.querySelector('[data-inspector-tab].active')?.dataset.inspectorTab||'';const preserveLayerWorkflow=activeInspector==='layers'&&document.body.dataset.keyboardOwner!=='canvas';if(!preserveLayerWorkflow){const responsive=window.EInviteResponsiveLayout,layout=responsive?.mode?.()||'desktop',tab=document.querySelector('[data-inspector-tab="object"]');if(layout==='desktop')tab?.click();else{document.querySelectorAll('[data-inspector-tab]').forEach(node=>node.classList.toggle('active',node===tab));document.querySelectorAll('[data-inspector-pane]').forEach(node=>node.classList.toggle('active',node.dataset.inspectorPane==='object'));localStorage.setItem('einvite-editor-right-tab','object')}}}}}lastTextSelectionSignature=selectionSignature;const d=diagnosticsForSelected(),model=d?.model,diag=d?.result?.diagnostics;const set=(selector,value)=>{const n=$(selector);if(n)n.textContent=value};set('[data-v20-max]',model?`${model.textAutoFitMax}px`:'—');set('[data-v20-live]',diag?`${diag.computedSize.toFixed(1)}px`:'—');set('[data-v20-min]',model?`${model.textMinFontSize}px`:'—');set('[data-v20-overflow]',diag?(diag.overflow?'Clipped':'Clear'):'—');const warnings=$('#v20TypographyWarnings');if(warnings){warnings.replaceChildren(...(diag?.warnings||[]).map(w=>el('p',{class:`v20-warning v20-${w.severity}`},w.message)));if(!diag?.warnings?.length)warnings.append(el('p',{class:'v20-ok'},'No typography accessibility warnings.'))}const mobile=$('#v20MobileSelectionSummary');if(mobile)mobile.textContent=textSelected?`${selected.textStyleId||'Body'} · ${model?.fontSize||'—'}px · ${model?.locale==='km'?'Khmer':'English'} · ${diag?.overflow?'Overflow':'Fits'}`:'No text object selected'}
-function install(){if(!MODEL()||!LAYOUT()||!bridge())return;buildInspector();buildToolbar();buildPreview();buildMobileSummary();refresh();document.addEventListener('selectionchange',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:editor-command',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:state-applied',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:typography-selection-diagnostics',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:request-typography-fit',event=>{const object=event.detail?.node,content=object?.querySelector('.content'),doc=bridge().getState(),map=canvasMap(doc),data=map[object?.dataset?.id];if(content&&data){const model=MODEL().resolveObjectTypography(doc,data,{text:content.textContent||''});LAYOUT().fitAndDiagnose(content,model)}});new MutationObserver(()=>requestAnimationFrame(refresh)).observe($('#stage'),{subtree:true,attributes:true,attributeFilter:['class']});new MutationObserver(()=>requestAnimationFrame(syncInactiveSurfaces)).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','open']});window.EInviteTypographyV20={refresh,openPreview,command,applyLayout,setStyle,setOverride,resetOverrides}}
+function install(){if(!MODEL()||!LAYOUT()||!bridge())return;buildInspector();buildToolbar();buildPreview();buildMobileSummary();refresh();document.addEventListener('selectionchange',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:editor-command',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:state-applied',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:typography-selection-diagnostics',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:request-typography-fit',event=>{const object=event.detail?.node,content=object?.querySelector('.content'),doc=bridge().getState(),map=canvasMap(doc),data=map[object?.dataset?.id];if(content&&data){const model=MODEL().resolveObjectTypography(doc,data,{text:content.textContent||''});LAYOUT().fitAndDiagnose(content,model)}});let v20RefreshQueued=false;new MutationObserver(()=>{if(v20RefreshQueued)return;v20RefreshQueued=true;requestAnimationFrame(()=>{v20RefreshQueued=false;refresh()})}).observe($('#stage'),{subtree:true,attributes:true,attributeFilter:['class']});new MutationObserver(()=>requestAnimationFrame(syncInactiveSurfaces)).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','open']});window.EInviteTypographyV20={refresh,openPreview,command,applyLayout,setStyle,setOverride,resetOverrides}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,0),{once:true});else setTimeout(install,0);
 })();;(()=>{
 'use strict';
@@ -8511,9 +8519,10 @@ function pct(value,total,bounded=true){ const n=value/Math.max(1,total)*100,reso
 function worldRect(){const r=stage.getBoundingClientRect(),zoom=window.EInviteMotion?.viewport?.view.zoom||1;return{left:r.left,top:r.top,width:stage.offsetWidth||r.width/zoom,height:stage.offsetHeight||r.height/zoom,zoom}}
 function frameOf(el,sr=worldRect()){
 if(!sr.zoom)sr=worldRect();
-const style=el.style, rect=el.getBoundingClientRect();
-const w=clamp(px(style.width,sr.width,el.offsetWidth||rect.width),MIN_SIZE,sr.width);
-const h=clamp(px(style.height,sr.height,el.offsetHeight||rect.height),MIN_SIZE,sr.height);
+const style=el.style;
+// Read the bounding rect (a forced layout after style writes) only when offsets are unusable.
+const w=clamp(px(style.width,sr.width,el.offsetWidth||el.getBoundingClientRect().width),MIN_SIZE,sr.width);
+const h=clamp(px(style.height,sr.height,el.offsetHeight||el.getBoundingClientRect().height),MIN_SIZE,sr.height);
 return {
 id:el.dataset.id,
 x:finite(px(style.left,sr.width,el.offsetLeft)),
@@ -8596,7 +8605,7 @@ commit(label,map=>safe.forEach(f=>{const o=map[f.id];if(!o)return;o.left=pct(f.x
 function revealSelection(){
 const v=$('#canvasViewport'),b=overlay;if(!v||!b||b.hidden)return;
 const adjust=()=>{if(interaction||b.hidden)return;const now=Date.now();if(now-lastRevealAdjustAt<200)return;const r=v.getBoundingClientRect(),q=b.getBoundingClientRect(),m=48,w=window.visualViewport,l=Math.max(r.left,w?.offsetLeft||0),t=Math.max(r.top,w?.offsetTop||0),rr=Math.min(r.right,(w?.offsetLeft||0)+(w?.width||innerWidth)),bb=Math.min(r.bottom,(w?.offsetTop||0)+(w?.height||innerHeight));let x=0,y=0;if(q.left<l+m)x=q.left-l-m;else if(q.right>rr-m)x=q.right-rr+m;if(q.top<t+m)y=q.top-t-m;else if(q.bottom>bb-m)y=q.bottom-bb+m;if(x||y){lastRevealAdjustAt=now;v.scrollBy(x,y);scheduleOverlaySync()}};
-adjust();setTimeout(adjust,0);setTimeout(adjust,120);
+setTimeout(adjust,0);setTimeout(adjust,120);
 }
 function sameIds(a,b){return a.length===b.length&&a.every((id,index)=>id===b[index])}
 function sameIdSet(a,b){return a.length===b.length&&a.every(id=>b.includes(id))}
@@ -8799,6 +8808,7 @@ function pointerDown(event){
 if(event.button!==0||window.EInviteCanvasPanController?.held||$('#panToggle')?.getAttribute('aria-pressed')==='true'||event.target.closest?.('[contenteditable=true]'))return;
 if(interaction){event.preventDefault();event.stopImmediatePropagation();return}
 const handle=event.target.closest('[data-pe-handle]');if(handle){event.preventDefault();event.stopImmediatePropagation();startInteraction(handle.dataset.peHandle==='rotate'?'rotate':'resize',event,handle.dataset.peHandle,overlaySelectionIds());return}
+if(event.target.closest?.('.object.v24-crop-active'))return;
 const object=event.target.closest('.object');
 if(object&&stage.contains(object)){
 if(object.dataset.locked==='true'){
@@ -8808,7 +8818,7 @@ event.preventDefault();event.stopImmediatePropagation();return
 }
 if(event.shiftKey||event.ctrlKey||event.metaKey){toggleSelection([object.dataset.id]);event.preventDefault();event.stopImmediatePropagation();return}
 if(!selectedIds().includes(object.dataset.id))setSelection([object.dataset.id]);
-startInteraction('move',event);return;
+event.preventDefault();startInteraction('move',event);return;
 }
 if(event.target.closest('button,input,select,textarea,[contenteditable=true]'))return;
 startMarquee(event);
@@ -8922,6 +8932,12 @@ function renderLayers(panel=$('#layersPanel')){
 if(!panel||layersRendering||layerDragState?.active)return;layersRendering=true;try{
 const priorTree=panel.querySelector('.pe-layer-tree'),priorScroll=priorTree?.scrollTop||0,active=document.activeElement,activeRow=active?.closest?.('.pe-layer-row'),activeIdentity=layerFocusIdentity||layerIdentity(activeRow),searchFocused=active?.matches?.('[data-pe-layer-search]'),searchSelection=searchFocused?[active.selectionStart,active.selectionEnd]:null;
 const doc=bridge().getState(),map=activeMap(doc),gs=groups(doc),selection=new Set(selectedIds()),query=panel.querySelector('[data-pe-layer-search]')?.value||'';
+const structure=JSON.stringify([Object.entries(map).map(([id,o])=>[id,o.zIndex,o.visible,o.locked,o.type,o.layerName,o.html]),Object.entries(gs).map(([id,g])=>[id,g.name,g.parentId,g.children]),[...expandedGroups].sort(),query,layerAnnouncement]),selectionKey=[...selection].sort().join('|');
+if(panel._peLayerStructure===structure&&panel.querySelector('.pe-layer-tree')){
+// Structure unchanged: a selection-only change just moves the active highlight, so skip the full tree rebuild.
+if(panel._peLayerSelection!==selectionKey){panel.querySelectorAll('.pe-layer-row').forEach(row=>{const ids=String(row.dataset.layerIds||'').split(',').filter(Boolean);row.classList.toggle('active',ids.some(id=>selection.has(id)))});panel._peLayerSelection=selectionKey}
+return;
+}
 panel.innerHTML=`<div class="pe-layer-toolbar"><input data-pe-layer-search type="search" placeholder="Search layers" value=""><button data-pe-arrange="front" title="Bring to front">Front</button><button data-pe-arrange="forward" title="Bring forward">↑</button><button data-pe-arrange="backward" title="Send backward">↓</button><button data-pe-arrange="back" title="Send to back">Back</button></div><div class="pe-layer-tree" role="tree" aria-label="Layers"></div><div class="pe-layer-live" aria-live="polite" aria-atomic="true"></div>`;
 const search=$('[data-pe-layer-search]',panel);search.value=query;search.addEventListener('focus',clearRememberedLayerFocus);const tree=$('.pe-layer-tree',panel);tree.scrollTop=priorScroll;
 const objectOrder=Object.keys(map).sort((a,b)=>finite(map[b].zIndex)-finite(map[a].zIndex));const objectInGroup=new Set(Object.values(gs).flatMap(g=>g.children||[]).filter(id=>map[id]));const topGroups=Object.keys(gs).filter(id=>!gs[id].parentId);
@@ -8932,6 +8948,7 @@ function groupRow(id,depth){const g=gs[id];if(!g)return null;const ids=descendan
 const topEntries=[...topGroups.map(id=>({id,group:true,rank:layerRank(id)})),...objectOrder.filter(id=>!objectInGroup.has(id)).map(id=>({id,group:false,rank:layerRank(id)}))].sort((a,b)=>b.rank-a.rank);topEntries.forEach(entry=>{const node=entry.group?groupRow(entry.id,0):objectRow(entry.id,0);if(node)tree.append(node)});
 search.addEventListener('input',()=>renderLayers(panel));panel.querySelectorAll('[data-pe-arrange]').forEach(b=>b.onclick=()=>{rememberLayerFocus(layerIdentity(document.activeElement?.closest?.('.pe-layer-row')));reorder(selectedIds(),b.dataset.peArrange);announceLayer(`Selected layers moved ${b.title.toLowerCase()}.`)});$('.pe-layer-live',panel).textContent=layerAnnouncement;
 tree.scrollTop=priorScroll;if(searchFocused){search.focus();if(searchSelection)search.setSelectionRange(...searchSelection)}else if(activeIdentity)restoreLayerFocus(panel,activeIdentity);
+panel._peLayerStructure=structure;panel._peLayerSelection=selectionKey;
 } finally {layersRendering=false}
 }
 function plainText(html){const el=document.createElement('div');el.innerHTML=html||'';return(el.textContent||'').trim().slice(0,36)}
@@ -8964,7 +8981,7 @@ if(button.id==='groupObjects')groupSelection();else if(button.id==='ungroupObjec
 if(handled){event.preventDefault();event.stopImmediatePropagation()}
 }
 let heavySyncFrame=0;
-function syncAll(){ensureTransformPanel();ensureAssistancePanel();ensureMobileContextBar();syncOverlay();syncTransformInputs();syncMobileContextBar();if(heavySyncFrame)return;heavySyncFrame=requestAnimationFrame(()=>{heavySyncFrame=0;renderUserGuides();renderLayers()})}
+function syncAll(){ensureTransformPanel();ensureAssistancePanel();ensureMobileContextBar();syncTransformInputs();syncOverlay();syncMobileContextBar();if(heavySyncFrame)return;heavySyncFrame=requestAnimationFrame(()=>{heavySyncFrame=0;renderUserGuides();renderLayers()})}
 function scheduleOverlaySync(full=false){
 if(full===true)overlaySyncFull=true;
 if(overlaySyncFrame)return;
@@ -9189,6 +9206,11 @@ boot();
    * @returns {number}
    */
   function stageScale() {
+    // The motion viewport already knows the zoom the stage is drawn at. Reading it
+    // avoids a layout flush on every selection update, which the drag path triggers
+    // right after writing the overlay styles.
+    const zoom = window.EInviteMotion?.viewport?.view?.zoom;
+    if (Number.isFinite(zoom) && zoom > 0) return zoom;
     const rect = stage.getBoundingClientRect();
     return rect.width / Math.max(1, stage.offsetWidth);
   }
@@ -9589,7 +9611,6 @@ boot();
       crop.disabled = !isImage;
       crop.title = isImage ? 'Crop' : 'Crop applies to image objects only';
     }
-    positionSelectionCard(card, true);
     // Re-measure on the next frame. Selecting an object settles its box (and the
     // narrow-viewport inspector drawer) in the same tick, so a card placed against
     // the pre-layout rect sits a few pixels into the selection instead of 8px above

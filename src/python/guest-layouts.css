@@ -78,11 +78,16 @@ body[data-page="public"] #publicRoot > section { margin-bottom: var(--space-12);
 body[data-page="public"] #publicRoot > section:last-child { margin-bottom: 0; }
 body[data-page="public"] #publicRoot h1 { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
 body[data-page="public"] #publicRoot h2 { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); letter-spacing: 0; }
+/* Unclassed buttons (e.g. "Add event to calendar") take the browser's default text colour, which
+   the dark colour-scheme renders white on the white guest card (1.00:1). Inherit the card's text. */
+body[data-page="public"] #publicRoot button:not([class]) { color: inherit; }
 body[data-page="public"] #publicRoot .rsvp-card,
 body[data-page="public"] #publicRoot form {
   display: grid; gap: var(--space-3);
   padding: var(--space-6);
-  background: var(--app-surface);
+  /* Sits on the invitation's white guest card in both themes. The invitation's text colours
+     are light-theme values, so the app's dark --app-surface made the labels unreadable (2.97:1). */
+  background: #fff;
   border: 1px solid var(--app-line);
   border-radius: var(--radius-md);
   box-shadow: var(--app-shadow);

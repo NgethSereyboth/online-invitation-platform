@@ -253,7 +253,9 @@ html[data-theme="dark"] body:not(.guest) a.button-link.primary,
 html[data-theme="dark"] .response-tabs button.active,
 html[data-theme="dark"] .template-tabs button.active,
 html[data-theme="dark"] .empty-state__action button,
-html[data-theme="dark"] .empty-state__action .primary{background:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important;border-color:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important}
+html[data-theme="dark"] .empty-state__action .primary,
+html[data-theme="dark"] .language-switch button.active,
+html[data-theme="dark"] .language-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important;border-color:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important}
 html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-mix(in srgb,#fff 6%,transparent) inset,0 8px 28px rgba(0,0,0,.32)!important}
 
 
@@ -1211,7 +1213,16 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 }
 @media (max-width: 480px) {
   body[data-shell="a"] > main { padding: var(--space-3); }
+  
+  body:not(.guest) > header { height: auto; min-height: var(--app-topbar-h); flex-wrap: wrap; overflow: visible; row-gap: var(--space-2); padding-block: var(--space-2); }
   .app-crumbs { display: none; }
+  
+  body[data-shell="a"] > main h1 { font-size: clamp(1.6rem, 8vw, 2.25rem); overflow-wrap: anywhere; }
+  
+  code { overflow-wrap: anywhere; }
+  
+  html body[data-shell="a"] { grid-template-rows: auto minmax(0, 1fr) auto; }
+  html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
 }
 
 
@@ -1527,7 +1538,8 @@ body[data-page="public"] main#publicRoot.guest > .photo-gallery,
 body[data-page="public"] main#publicRoot.guest > .contact-section,
 body[data-page="public"] main#publicRoot.guest .venue-card,
 body[data-page="public"] main#publicRoot.guest .custom-info-block {
-  background: var(--app-surface);
+  
+  background: var(--kit-surface, var(--app-surface));
   border: 1px solid var(--app-line);
   border-radius: var(--radius-md);
   box-shadow: var(--app-shadow-sm);
@@ -1675,6 +1687,9 @@ body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
 .stat-card { padding: var(--space-5); min-height: 0; }
 .stat-card strong { font-size: var(--fs-title-lg); font-weight: var(--fw-title-lg); letter-spacing: var(--ls-title-lg); }
 .stat-card span { color: var(--app-muted); font-size: var(--fs-body-sm); }
+
+
+.language-switch button:not(.active) { color: inherit; }
 
 
 }

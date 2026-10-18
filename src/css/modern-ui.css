@@ -174,7 +174,9 @@ html[data-theme="dark"] body:not(.guest) a.button-link.primary,
 html[data-theme="dark"] .response-tabs button.active,
 html[data-theme="dark"] .template-tabs button.active,
 html[data-theme="dark"] .empty-state__action button,
-html[data-theme="dark"] .empty-state__action .primary{background:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important;border-color:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important}
+html[data-theme="dark"] .empty-state__action .primary,
+html[data-theme="dark"] .language-switch button.active,
+html[data-theme="dark"] .language-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important;border-color:color-mix(in srgb,var(--app-accent) 65%,#1f0a11)!important}
 html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-mix(in srgb,#fff 6%,transparent) inset,0 8px 28px rgba(0,0,0,.32)!important}
 
 /* ============================================================================

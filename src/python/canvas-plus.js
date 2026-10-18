@@ -189,7 +189,7 @@ function editorEnhancements(){
     };
     Object.entries(ids).forEach(([key,id])=>$('#'+id).addEventListener('change',e=>applyTransform(key,e.target.value)));
     block.addEventListener('click',e=>{const action=e.target.closest('[data-transform-action]')?.dataset.transformAction,item=selectedOne();if(!action||!item)return;const f=stagePercentFrame(item);if(action==='center'){item.style.left=`${(50-f.w/2).toFixed(2)}%`;item.style.top=`${(50-f.h/2).toFixed(2)}%`}if(action==='fill-width'){item.style.left='5%';item.style.width='90%'}if(action==='reset-rotation'){item.dataset.rotation='0';item.style.transform='rotate(0deg)'}applyItems([item]);saveNow();refreshTransform()});
-    const obs=new MutationObserver(refreshTransform);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerup',()=>setTimeout(refreshTransform,0),true);refreshTransform();
+    let pointerBusy=false,refreshQueued=false;const queueTransformRefresh=()=>{if(pointerBusy||refreshQueued)return;refreshQueued=true;requestAnimationFrame(()=>{refreshQueued=false;if(!pointerBusy)refreshTransform()})};const obs=new MutationObserver(queueTransformRefresh);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerdown',()=>{pointerBusy=true},true);document.addEventListener('pointerup',()=>{pointerBusy=false;setTimeout(refreshTransform,0)},true);refreshTransform();
   }
   const eventPane=$('[data-studio-pane="event"]');
   if(eventPane && !$('#canvasSmartWriter')){

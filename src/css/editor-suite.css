@@ -237,7 +237,7 @@ html[data-theme="dark"] body:not(.guest) .badge{background:var(--app-surface-3)!
    not beside it. Placing it below the trigger's right edge keeps it in the content column by
    construction: it can never extend left of that edge. */
 .canvas-header-more-trigger{width:42px!important;padding:0!important;font-size:16px!important;letter-spacing:1px;anchor-name:--studio-more-trigger}
-.canvas-header-more-menu{position:absolute;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000;position-anchor:--studio-more-trigger;top:calc(anchor(bottom) + var(--space-1));right:auto;bottom:auto;left:anchor(right);position-try-fallbacks:--studio-more-above;width:min(286px,calc(100vw - var(--space-4)));max-height:min(620px,calc(100dvh - var(--space-16)));overflow:auto;overscroll-behavior:contain}
+.canvas-header-more-menu{position:fixed;min-width:190px;padding:10px;display:grid;gap:7px;background:color-mix(in srgb,var(--app-surface) 95%,transparent);border:1px solid var(--app-line);border-radius:16px;box-shadow:var(--app-shadow-xl);backdrop-filter:blur(20px);z-index:12000;position-anchor:--studio-more-trigger;top:calc(anchor(bottom) + var(--space-1));right:auto;bottom:auto;left:anchor(right);position-try-fallbacks:--studio-more-above;width:min(286px,calc(100vw - var(--space-4)));max-height:min(620px,calc(100dvh - var(--space-16)));overflow:auto;overscroll-behavior:contain}
 /* Fallback for a trigger that is not at the top of the viewport: open upwards instead of
    clipping. On the editor route the topbar is the first row, so the max-height above is what
    actually protects that case; this rule is the generic one, verified in a fixture. */
@@ -422,7 +422,7 @@ body.studio-experience #stage.theme-midnight,body.studio-experience #stage.theme
 #canvasViewport{contain:layout paint;overscroll-behavior:contain;isolation:isolate}
 #canvasViewport #canvasFrame{position:static;width:0!important;height:0!important;min-width:0;min-height:0;margin:0}
 #stageTransform{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;transition:none;filter:none;backdrop-filter:none;box-shadow:none}
-#stageTransform #stage{position:relative;left:0;top:0;margin:0;transform:none!important;transition:none!important}
+#stageTransform #stage{position:relative;left:0;top:0;margin:0;transition:none!important}
 #stageTransform.gesture{transition:none}
 #canvasMeasurements{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
 #canvasZoomSlider{width:100px;min-width:64px;height:28px;margin:0;padding:0;accent-color:var(--app-accent,#3E7C6B)}
