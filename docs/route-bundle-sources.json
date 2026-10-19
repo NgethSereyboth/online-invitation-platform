@@ -333,7 +333,8 @@
         "editor/ui-layout.js",
         "editor/ui-components.js",
         "ui/app-shell.js",
-        "editor-responsive-contract.js"
+        "editor-responsive-contract.js",
+        "editor/first-selection-prewarm.js"
       ],
       "styles": [
         "typography-fonts.css",

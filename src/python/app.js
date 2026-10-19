@@ -475,14 +475,16 @@ const snap=clone(documentState);
 snap.editorModel={...(snap.editorModel||{}),selectionIds:[...new Set((selectionIds||[]).map(String))]};
 return snap
 }
+const historyFingerprintMemo=new WeakMap();
 function historyDocumentFingerprint(snapshot){
+const memo=snapshot&&typeof snapshot==='object'?historyFingerprintMemo.get(snapshot):undefined;if(memo!==undefined)return memo;
 const comparable={...(snapshot||{})};
 if(comparable.editorModel){comparable.editorModel={...comparable.editorModel};delete comparable.editorModel.selectionIds}
 // Scene projections are compatibility caches. Their volatile generation timestamps
 // must not create empty history entries, while all semantic graph data remains compared.
 if(comparable.sceneGraph&&typeof comparable.sceneGraph==='object'){comparable.sceneGraph={...comparable.sceneGraph};delete comparable.sceneGraph.updatedAt}
 if(comparable.sceneTree&&typeof comparable.sceneTree==='object'){comparable.sceneTree={...comparable.sceneTree};delete comparable.sceneTree.updatedAt}
-return JSON.stringify(comparable)
+const fp=JSON.stringify(comparable);if(snapshot&&typeof snapshot==='object')historyFingerprintMemo.set(snapshot,fp);return fp
 }
 function pushHistory(documentState,options={}){
 if(historyApplying)return false;
@@ -1186,7 +1188,7 @@ if(target.isConnected)finish();else setTimeout(()=>finish(),0);
 }
 function bindEventFieldInputs(root=document){
 for(const id of eventFieldIds){
-const target=root.querySelector?.('#'+CSS.escape(id));
+const target=root.id===id?root:root.querySelector?.('#'+CSS.escape(id));
 if(!target||target.dataset.einviteEventBound==='true')continue;
 target.dataset.einviteEventBound='true';
 target.addEventListener('input',commitEventFieldInput);
@@ -1195,7 +1197,7 @@ target.addEventListener('input',commitEventFieldInput);
 document.addEventListener('input',commitEventFieldInput,true);
 bindEventFieldInputs();
 new MutationObserver(records=>{
-if(records.some(record=>record.addedNodes.length))bindEventFieldInputs();
+for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)bindEventFieldInputs(node);
 }).observe(document.documentElement,{childList:true,subtree:true});
 ['rsvpCloseDate','rsvpMaxGuests','scheduleText','scheduleTextKm','mapUrl','venuesText','venuesTextKm','sectionOrder','countdownTitle','countdownTitleKm','contactPhone','contactTelegram'].forEach(id=>$('#'+id).addEventListener('input',save));
 ['scheduleLayout','venueLayout','customLayout','countdownLayout'].forEach(id=>$('#'+id).addEventListener('change',save));
@@ -1861,6 +1863,12 @@ let bounds=$('#selectionBounds');
 const items=currentSelection();
 if(!items.length||!stage){
 bounds?.remove();
+return
+}
+// A single ungrouped object hides the bounds box, so skip the stage/item layout
+// reads and style writes entirely in that (common) case.
+if(items.length===1&&!items[0].dataset.groupId){
+if(bounds)bounds.hidden=true;
 return
 }
 if(!bounds){

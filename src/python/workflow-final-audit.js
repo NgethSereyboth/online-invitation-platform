@@ -219,7 +219,8 @@ const dock=$('#workflowPageDock'),dockTrack=dock?$('.workflow-page-dock-track',d
 if(dockTrack)new MutationObserver(()=>requestAnimationFrame(()=>window.EInviteProEditorV6?.renderFlow?.())).observe(dockTrack,{childList:true});
 window.addEventListener('einvite:state-applied',()=>setTimeout(()=>window.EInviteProEditorV6?.renderFlow?.(),120));
 function wireScrollable(root=document){
-  $$('.studio-pane,.studio-inspector-pane,.studio-tool-rail,.workflow-v6-flow-list',root).forEach(el=>{
+ const nodes=[...(root.matches?.('.studio-pane,.studio-inspector-pane,.studio-tool-rail,.workflow-v6-flow-list')?[root]:[]),...$$('.studio-pane,.studio-inspector-pane,.studio-tool-rail,.workflow-v6-flow-list',root)];
+ nodes.forEach(el=>{
     if(el.dataset.v7ScrollWired)return;el.dataset.v7ScrollWired='1';
     el.addEventListener('wheel',e=>{
       if(Math.abs(e.deltaY)<=Math.abs(e.deltaX)||el.scrollHeight<=el.clientHeight+1)return;
@@ -228,7 +229,7 @@ function wireScrollable(root=document){
     },{passive:true});
   });
 }
-wireScrollable();new MutationObserver(()=>requestAnimationFrame(()=>wireScrollable())).observe(document.body,{childList:true,subtree:true});
+wireScrollable();new MutationObserver(records=>{const added=[];for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)added.push(node);if(!added.length)return;requestAnimationFrame(()=>{if(window.EInviteProfessionalEditor?.activeInteraction)return;for(const node of added)if(node.isConnected)wireScrollable(node)})}).observe(document.body,{childList:true,subtree:true});
 let lastVisibleChip=null;
 function keepActivePageVisible(){
   // scrollIntoView forces a style recalculation + layout, and the observer below

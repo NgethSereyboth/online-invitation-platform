@@ -10,10 +10,8 @@ document.addEventListener('click',e=>{
   try{const u=new URL(a.href,location.href);if(u.origin===location.origin&&u.href!==location.href)progress.classList.add('active')}catch{}
 },true);
 if(!document.body.classList.contains('guest')) requestAnimationFrame(()=>document.body.classList.add('final-page-entered'));
-const globalObserver=new MutationObserver(()=>{
-  $$('.empty:not([data-final-empty])').forEach(el=>{el.dataset.finalEmpty='1';el.classList.add('final-empty-state')});
-  $$('dialog:not([data-final-dialog])').forEach(el=>{el.dataset.finalDialog='1';el.classList.add('final-dialog')});
-});
+const markFinalSurface=el=>{if(el.matches?.('.empty:not([data-final-empty])')){el.dataset.finalEmpty='1';el.classList.add('final-empty-state')}if(el.matches?.('dialog:not([data-final-dialog])')){el.dataset.finalDialog='1';el.classList.add('final-dialog')}el.querySelectorAll?.('.empty:not([data-final-empty]),dialog:not([data-final-dialog])').forEach(markFinalSurface)};
+const globalObserver=new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)markFinalSurface(node)});
 globalObserver.observe(document.body,{subtree:true,childList:true});
 if(!editor)return;
 const stage=$('#stage');

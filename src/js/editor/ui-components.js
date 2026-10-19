@@ -59,18 +59,19 @@
     '.studio-inspector-heading strong',
     '.studio-pane-heading h1'
   ];
+  const NAV_SURFACE_QUERY = NAV_SURFACE_SELECTORS.join(',');
 
   /**
    * Tag every matching surface with a stable hook class so the CSS rules in
    * `editor-styles.css` can apply wrapping without fragile selector chains.
    * Idempotent (the class is only added once).
    */
-  function tagNavSurfaces() {
-    // One document scan for the whole selector list, not one per selector. The
-    // union is identical because every entry matches on classes/tags that this
-    // function never changes (it only adds `v54-nav-text`, which no entry here
-    // selects), so a node cannot start or stop matching mid-pass.
-    $$(NAV_SURFACE_SELECTORS.join(',')).forEach(node => {
+  function tagNavSurfaces(root = document) {
+    // Scan the given root for the whole selector list in one pass. Callers
+    // reacting to specific inserted subtrees pass that subtree, so a burst of
+    // unrelated DOM churn does not re-scan the whole document.
+    const nodes = [...(root.matches?.(NAV_SURFACE_QUERY) ? [root] : []), ...$$(NAV_SURFACE_QUERY, root)];
+    nodes.forEach(node => {
       if (!node.classList.contains('v54-nav-text')) node.classList.add('v54-nav-text');
     });
   }
@@ -128,8 +129,17 @@
       // Only element insertions can introduce a nav surface. Attribute-only and
       // character-data batches cannot, and skipping them keeps a re-render that
       // only toggles classes from scheduling a measurement pass.
-      if (!mutations.some(m => m.addedNodes && m.addedNodes.length)) return;
-      tagNavSurfaces();
+      const added = [];
+      for (const m of mutations) for (const node of m.addedNodes || []) if (node.nodeType === 1) added.push(node);
+      if (!added.length) return;
+      // Tag only the inserted subtrees; a batch that cannot contain a nav
+      // surface (the common case during canvas gestures) skips the pass whole.
+      let relevant = false;
+      for (const node of added) {
+        if (node.matches(NAV_SURFACE_QUERY) || node.querySelector(NAV_SURFACE_QUERY)) { relevant = true; break; }
+      }
+      if (!relevant) return;
+      for (const node of added) tagNavSurfaces(node);
       expandOverflowingCards();
     });
     // `target` is kept as the deliberate observation root: it is where the

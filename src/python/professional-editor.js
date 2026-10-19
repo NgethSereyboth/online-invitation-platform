@@ -55,20 +55,37 @@ const text=String(value??'').trim(); const n=parseFloat(text);
 if(!Number.isFinite(n)) return fallback;
 return text.endsWith('%') ? n/100*total : n;
 }
+function pxOr(value,total,compute){
+const text=String(value??'').trim(); const n=parseFloat(text);
+if(!Number.isFinite(n)) return compute();
+return text.endsWith('%') ? n/100*total : n;
+}
 function pct(value,total,bounded=true){ const n=value/Math.max(1,total)*100,resolved=bounded?clamp(n,0,100):finite(n);return `${resolved.toFixed(4).replace(/0+$/,'').replace(/\.$/,'')}%`; }
-function worldRect(){const r=stage.getBoundingClientRect(),zoom=window.EInviteMotion?.viewport?.view.zoom||1;return{left:r.left,top:r.top,width:stage.offsetWidth||r.width/zoom,height:stage.offsetHeight||r.height/zoom,zoom}}
+let worldRectCache=null;
+function worldRect(){if(worldRectCache)return worldRectCache;const r=stage.getBoundingClientRect(),zoom=window.EInviteMotion?.viewport?.view.zoom||1;worldRectCache={left:r.left,top:r.top,width:stage.offsetWidth||r.width/zoom,height:stage.offsetHeight||r.height/zoom,zoom};queueMicrotask(()=>{worldRectCache=null});return worldRectCache}
 function frameOf(el,sr=worldRect()){
 if(!sr.zoom)sr=worldRect();
 const style=el.style;
 // Read the bounding rect (a forced layout after style writes) only when offsets are unusable.
-const w=clamp(px(style.width,sr.width,el.offsetWidth||el.getBoundingClientRect().width),MIN_SIZE,sr.width);
-const h=clamp(px(style.height,sr.height,el.offsetHeight||el.getBoundingClientRect().height),MIN_SIZE,sr.height);
+const w=clamp(pxOr(style.width,sr.width,()=>el.offsetWidth||el.getBoundingClientRect().width),MIN_SIZE,sr.width);
+const h=clamp(pxOr(style.height,sr.height,()=>el.offsetHeight||el.getBoundingClientRect().height),MIN_SIZE,sr.height);
 return {
 id:el.dataset.id,
-x:finite(px(style.left,sr.width,el.offsetLeft)),
-y:finite(px(style.top,sr.height,el.offsetTop)),
+x:finite(pxOr(style.left,sr.width,()=>el.offsetLeft)),
+y:finite(pxOr(style.top,sr.height,()=>el.offsetTop)),
 w,h,r:finite(el.dataset.rotation,0)
 };
+}
+function frameOfStyle(el,sr){
+    const style=el.style;
+    const w=clamp(px(style.width,sr.width,MIN_SIZE),MIN_SIZE,sr.width);
+    const h=clamp(px(style.height,sr.height,MIN_SIZE),MIN_SIZE,sr.height);
+    return {
+    id:el.dataset.id,
+    x:finite(px(style.left,sr.width,0)),
+    y:finite(px(style.top,sr.height,0)),
+    w,h,r:finite(el.dataset.rotation,0)
+    };
 }
 function visibleRect(el,sr=worldRect()){
 if(!sr.zoom)sr=worldRect();const r=el.getBoundingClientRect(),z=sr.zoom;
@@ -145,7 +162,7 @@ commit(label,map=>safe.forEach(f=>{const o=map[f.id];if(!o)return;o.left=pct(f.x
 function revealSelection(){
 const v=$('#canvasViewport'),b=overlay;if(!v||!b||b.hidden)return;
 const adjust=()=>{if(interaction||b.hidden)return;const now=Date.now();if(now-lastRevealAdjustAt<200)return;const r=v.getBoundingClientRect(),q=b.getBoundingClientRect(),m=48,w=window.visualViewport,l=Math.max(r.left,w?.offsetLeft||0),t=Math.max(r.top,w?.offsetTop||0),rr=Math.min(r.right,(w?.offsetLeft||0)+(w?.width||innerWidth)),bb=Math.min(r.bottom,(w?.offsetTop||0)+(w?.height||innerHeight));let x=0,y=0;if(q.left<l+m)x=q.left-l-m;else if(q.right>rr-m)x=q.right-rr+m;if(q.top<t+m)y=q.top-t-m;else if(q.bottom>bb-m)y=q.bottom-bb+m;if(x||y){lastRevealAdjustAt=now;v.scrollBy(x,y);scheduleOverlaySync()}};
-setTimeout(adjust,0);setTimeout(adjust,120);
+setTimeout(adjust,120);requestAnimationFrame(()=>requestAnimationFrame(adjust));
 }
 function sameIds(a,b){return a.length===b.length&&a.every((id,index)=>id===b[index])}
 function sameIdSet(a,b){return a.length===b.length&&a.every(id=>b.includes(id))}
@@ -182,14 +199,15 @@ function ensureOverlay(){
 if(overlay?.isConnected)return overlay;
 overlay=document.createElement('div');overlay.id='peSelectionBox';overlay.className='pe-selection-box';overlay.hidden=true;overlay.innerHTML=`<span class="pe-selection-label"></span>${['nw','n','ne','e','se','s','sw','w'].map(h=>`<button type="button" class="pe-handle pe-${h}" data-pe-handle="${h}" aria-label="Resize ${h}"></button>`).join('')}<button type="button" class="pe-rotate" data-pe-handle="rotate" aria-label="Rotate selection"></button>`;document.body.append(overlay);overlay.addEventListener('pointerdown',pointerDown,true);overlay.addEventListener('pointermove',pointerMove,true);overlay.addEventListener('pointerup',pointerUp,true);overlay.addEventListener('pointercancel',pointerUp,true);return overlay;
 }
+const overlayStyles=(el,next)=>{const st=el.style;for(const k in next){const v=String(next[k]);if(st[k]!==v)st[k]=v}};
 function syncOverlay(){
-const box=ensureOverlay(),items=selectedElements(); if(!items.length){box.hidden=true;delete box.dataset.peSelectionIds;return}
+const box=ensureOverlay(),items=selectedElements(); if(!items.length){if(!box.hidden)box.hidden=true;delete box.dataset.peSelectionIds;return}
 box.dataset.peSelectionIds=JSON.stringify(items.map(item=>item.dataset.id));
-const sr=worldRect(),live=interaction?.type==='move'&&interaction.previewFrames?.length?interaction.previewFrames:null;box.hidden=false;
-if(live&&interaction.overlayStart){const first=interaction.frames[0],current=live.find(frame=>frame.id===first?.id),scaleX=sr.zoom,scaleY=sr.zoom,dx=(current&&first?current.x-first.x:0)*scaleX+(sr.left-interaction.sr.left),dy=(current&&first?current.y-first.y:0)*scaleY+(sr.top-interaction.sr.top),start=interaction.overlayStart;Object.assign(box.style,{left:`${start.left+dx}px`,top:`${start.top+dy}px`,width:`${start.width}px`,height:`${start.height}px`,transform:start.transform});box.classList.toggle('pe-tiny-selection',start.width<56||start.height<56);}
-else if(items.length===1){const f=frameOf(items[0],sr);Object.assign(box.style,{left:`${sr.left+f.x*sr.zoom}px`,top:`${sr.top+f.y*sr.zoom}px`,width:`${f.w*sr.zoom}px`,height:`${f.h*sr.zoom}px`,transform:`rotate(${f.r}deg)`});box.classList.toggle('pe-tiny-selection',f.w<56||f.h<56);}
-else {const b=visibleBBox(items,sr);Object.assign(box.style,{left:`${sr.left+b.x*sr.zoom}px`,top:`${sr.top+b.y*sr.zoom}px`,width:`${b.w*sr.zoom}px`,height:`${b.h*sr.zoom}px`,transform:'none'});box.classList.toggle('pe-tiny-selection',b.w<56||b.h<56);}
-$('.pe-selection-label',box).textContent=items.length>1?`${items.length} objects`:items[0].dataset.layerName||items[0].dataset.objectType||'Object';
+const sr=worldRect(),live=interaction?.type==='move'&&interaction.previewFrames?.length?interaction.previewFrames:null;if(box.hidden)box.hidden=false;
+if(live&&interaction.overlayStart){const first=interaction.frames[0],current=live.find(frame=>frame.id===first?.id),scaleX=sr.zoom,scaleY=sr.zoom,dx=(current&&first?current.x-first.x:0)*scaleX+(sr.left-interaction.sr.left),dy=(current&&first?current.y-first.y:0)*scaleY+(sr.top-interaction.sr.top),start=interaction.overlayStart;overlayStyles(box,{left:`${start.left+dx}px`,top:`${start.top+dy}px`,width:`${start.width}px`,height:`${start.height}px`,transform:start.transform});box.classList.toggle('pe-tiny-selection',start.width<56||start.height<56);}
+else if(items.length===1){const f=frameOf(items[0],sr);overlayStyles(box,{left:`${sr.left+f.x*sr.zoom}px`,top:`${sr.top+f.y*sr.zoom}px`,width:`${f.w*sr.zoom}px`,height:`${f.h*sr.zoom}px`,transform:`rotate(${f.r}deg)`});box.classList.toggle('pe-tiny-selection',f.w<56||f.h<56);}
+else {const b=visibleBBox(items,sr);overlayStyles(box,{left:`${sr.left+b.x*sr.zoom}px`,top:`${sr.top+b.y*sr.zoom}px`,width:`${b.w*sr.zoom}px`,height:`${b.h*sr.zoom}px`,transform:'none'});box.classList.toggle('pe-tiny-selection',b.w<56||b.h<56);}
+const lbl=$('.pe-selection-label',box),lblText=items.length>1?`${items.length} objects`:items[0].dataset.layerName||items[0].dataset.objectType||'Object';if(lbl&&lbl.textContent!==lblText)lbl.textContent=lblText;
 if(!interaction)revealSelection();
 }
 function ensureTransformPanel(){
@@ -284,11 +302,11 @@ return{dx:bestX.dist<=threshold?bestX.d:dx,dy:bestY.dist<=threshold?bestY.d:dy};
 function startInteraction(type,event,handle='',ownerIds=[]){
 const wanted=ownerIds.length?[...new Set(ownerIds.map(String))]:selectedIds();
 const wantedSet=new Set(wanted),items=allObjectElements().filter(el=>wantedSet.has(el.dataset.id)&&el.dataset.locked!=='true');if(!items.length)return;
-const sr=worldRect(),frames=items.map(el=>frameOf(el,sr)),selection=items.length>1?visibleBBox(items,sr):bbox(frames);
-const overlayBox=ensureOverlay(),overlayRect=overlayBox.getBoundingClientRect(),overlayStart={left:finite(parseFloat(overlayBox.style.left),overlayRect.left),top:finite(parseFloat(overlayBox.style.top),overlayRect.top),width:finite(parseFloat(overlayBox.style.width),overlayRect.width),height:finite(parseFloat(overlayBox.style.height),overlayRect.height),transform:overlayBox.style.transform||'none'};
+const sr=worldRect(),frames=items.map(el=>frameOf(el,sr)),selection=items.length>1?visibleBBox(items,sr):bbox(frames),scrollLeft=viewport?.scrollLeft||0,scrollTop=viewport?.scrollTop||0;
+const overlayBox=ensureOverlay(),overlayLeft=parseFloat(overlayBox.style.left),overlayTop=parseFloat(overlayBox.style.top),overlayWidth=parseFloat(overlayBox.style.width),overlayHeight=parseFloat(overlayBox.style.height),overlayRect=Number.isFinite(overlayLeft)&&Number.isFinite(overlayTop)&&Number.isFinite(overlayWidth)&&Number.isFinite(overlayHeight)?null:overlayBox.getBoundingClientRect(),overlayStart={left:finite(overlayLeft,overlayRect?overlayRect.left:0),top:finite(overlayTop,overlayRect?overlayRect.top:0),width:finite(overlayWidth,overlayRect?overlayRect.width:0),height:finite(overlayHeight,overlayRect?overlayRect.height:0),transform:overlayBox.style.transform||'none'};
 const captureOwner=event.target.closest?.('[data-pe-handle]')?overlayBox:stage;
 const ids=Object.freeze(items.map(el=>el.dataset.id));
-interaction={type,handle,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,sr,frames,selection,ids,moved:false,captureOwner,overlayStart,others:activeObjects().filter(el=>!ids.includes(el.dataset.id)).slice(0,100).map(el=>frameOf(el,sr)),scrollLeft:viewport?.scrollLeft||0,scrollTop:viewport?.scrollTop||0};
+interaction={type,handle,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,sr,frames,selection,ids,moved:false,captureOwner,overlayStart,others:null,scrollLeft,scrollTop};
 if(!sameIdSet(selectedIds(),ids))bridge().select([...ids]);
 if(type==='rotate'){interaction.center={x:selection.x+selection.w/2,y:selection.y+selection.h/2};interaction.startAngle=Math.atan2(event.clientY-(sr.top+interaction.center.y*sr.zoom),event.clientX-(sr.left+interaction.center.x*sr.zoom));}
 clearSmartGuides();event.stopImmediatePropagation();
@@ -300,7 +318,7 @@ function moveInteraction(event){
 if(!interaction||event.pointerId!==interaction.pointerId)return;event.preventDefault();event.stopImmediatePropagation();interaction.moved=true;
 const i=interaction;holdInteractionSelection(i);const dx=(event.clientX-i.startX+(viewport?.scrollLeft||0)-i.scrollLeft)/i.sr.zoom,dy=(event.clientY-i.startY+(viewport?.scrollTop||0)-i.scrollTop)/i.sr.zoom;
 if(i.type==='move'){
-const snapped=event.altKey?{dx,dy}:snapDelta(i.selection,i.others,dx,dy,i.sr);
+const snapped=event.altKey?{dx,dy}:snapDelta(i.selection,i.others??(i.others=(settings.snap?activeObjects().filter(el=>!i.ids.includes(el.dataset.id)).slice(0,100).map(el=>frameOfStyle(el,i.sr)):[])),dx,dy,i.sr);
 previewFrames(i.frames.map(f=>({...f,x:f.x+snapped.dx,y:f.y+snapped.dy})),i.sr,'compositor');return;
 }
 if(i.type==='rotate'){
@@ -470,7 +488,7 @@ commit('Ungroup objects',(map,nextDoc)=>{const nextGroups=groups(nextDoc);childr
 function descendantsForLayer(groupId){return descendantIds(groupId,groups()).filter(id=>activeMap()[id]);}
 function renderLayers(panel=$('#layersPanel')){
 if(!panel||layersRendering||layerDragState?.active)return;layersRendering=true;try{
-const priorTree=panel.querySelector('.pe-layer-tree'),priorScroll=priorTree?.scrollTop||0,active=document.activeElement,activeRow=active?.closest?.('.pe-layer-row'),activeIdentity=layerFocusIdentity||layerIdentity(activeRow),searchFocused=active?.matches?.('[data-pe-layer-search]'),searchSelection=searchFocused?[active.selectionStart,active.selectionEnd]:null;
+const priorTree=panel.querySelector('.pe-layer-tree'),active=document.activeElement,activeRow=active?.closest?.('.pe-layer-row'),activeIdentity=layerFocusIdentity||layerIdentity(activeRow),searchFocused=active?.matches?.('[data-pe-layer-search]'),searchSelection=searchFocused?[active.selectionStart,active.selectionEnd]:null;
 const doc=bridge().getState(),map=activeMap(doc),gs=groups(doc),selection=new Set(selectedIds()),query=panel.querySelector('[data-pe-layer-search]')?.value||'';
 const structure=JSON.stringify([Object.entries(map).map(([id,o])=>[id,o.zIndex,o.visible,o.locked,o.type,o.layerName,o.html]),Object.entries(gs).map(([id,g])=>[id,g.name,g.parentId,g.children]),[...expandedGroups].sort(),query,layerAnnouncement]),selectionKey=[...selection].sort().join('|');
 if(panel._peLayerStructure===structure&&panel.querySelector('.pe-layer-tree')){
@@ -478,7 +496,7 @@ if(panel._peLayerStructure===structure&&panel.querySelector('.pe-layer-tree')){
 if(panel._peLayerSelection!==selectionKey){panel.querySelectorAll('.pe-layer-row').forEach(row=>{const ids=String(row.dataset.layerIds||'').split(',').filter(Boolean);row.classList.toggle('active',ids.some(id=>selection.has(id)))});panel._peLayerSelection=selectionKey}
 return;
 }
-panel.innerHTML=`<div class="pe-layer-toolbar"><input data-pe-layer-search type="search" placeholder="Search layers" value=""><button data-pe-arrange="front" title="Bring to front">Front</button><button data-pe-arrange="forward" title="Bring forward">↑</button><button data-pe-arrange="backward" title="Send backward">↓</button><button data-pe-arrange="back" title="Send to back">Back</button></div><div class="pe-layer-tree" role="tree" aria-label="Layers"></div><div class="pe-layer-live" aria-live="polite" aria-atomic="true"></div>`;
+const priorScroll=priorTree?.scrollTop||0;panel.innerHTML=`<div class="pe-layer-toolbar"><input data-pe-layer-search type="search" placeholder="Search layers" value=""><button data-pe-arrange="front" title="Bring to front">Front</button><button data-pe-arrange="forward" title="Bring forward">↑</button><button data-pe-arrange="backward" title="Send backward">↓</button><button data-pe-arrange="back" title="Send to back">Back</button></div><div class="pe-layer-tree" role="tree" aria-label="Layers"></div><div class="pe-layer-live" aria-live="polite" aria-atomic="true"></div>`;
 const search=$('[data-pe-layer-search]',panel);search.value=query;search.addEventListener('focus',clearRememberedLayerFocus);const tree=$('.pe-layer-tree',panel);tree.scrollTop=priorScroll;
 const objectOrder=Object.keys(map).sort((a,b)=>finite(map[b].zIndex)-finite(map[a].zIndex));const objectInGroup=new Set(Object.values(gs).flatMap(g=>g.children||[]).filter(id=>map[id]));const topGroups=Object.keys(gs).filter(id=>!gs[id].parentId);
 const layerRank=id=>map[id]?finite(map[id].zIndex):Math.max(0,...descendantIds(id,gs).map(child=>finite(map[child]?.zIndex)));

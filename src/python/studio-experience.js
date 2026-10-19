@@ -430,7 +430,9 @@
     if ($('#studioSelectionStatus')) $('#studioSelectionStatus').textContent = count ? `${count} object${count === 1 ? '' : 's'} selected` : 'No selection';
   }
   const statusObserver = new MutationObserver(updateStatusbar);
-  [$('#saveState'), $('#serverState'), $('#activeCanvasLabel'), $('#stage')].filter(Boolean).forEach(node => statusObserver.observe(node, { subtree: true, childList: true, characterData: true, attributes: true }));
+  [$('#saveState'), $('#serverState'), $('#activeCanvasLabel')].filter(Boolean).forEach(node => statusObserver.observe(node, { subtree: true, childList: true, characterData: true, attributes: true }));
+  const statusStage = $('#stage');
+  if (statusStage) statusObserver.observe(statusStage, { subtree: true, attributes: true, attributeFilter: ['class'] });
   document.addEventListener('pointerup', () => setTimeout(updateStatusbar, 0), true);
   updateStatusbar();
   const designCheck = document.createElement('div');

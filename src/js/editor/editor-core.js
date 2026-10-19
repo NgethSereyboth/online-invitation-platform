@@ -511,21 +511,22 @@
    * @param {boolean} hasSelection
    */
   function positionSelectionCard(card, hasSelection) {
-    if (!hasSelection) { card.style.transform = ''; return; }
+    if (!hasSelection) { if (card.style.transform) card.style.transform = ''; return; }
     const ids = bridge.getSelectedIds?.() || [];
     const target = ids.length ? stage.querySelector(`.object[data-id="${typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(ids[0]) : ids[0]}"]`) : null;
     if (!target) return;
     const box = target.getBoundingClientRect();
     if (!box.width && !box.height) return;
     // Measure the card untransformed, then translate it by the exact delta.
-    card.style.transform = 'none';
+    if (card.style.transform !== 'none') card.style.transform = 'none';
     const cardRect = card.getBoundingClientRect();
     if (!cardRect.width && !cardRect.height) return;
     const desiredLeft = box.left + box.width / 2 - cardRect.width / 2;
     const above = box.top - SELECTION_CARD_GAP - cardRect.height;
     const flip = above < SELECTION_CARD_GAP;
     const desiredTop = flip ? box.bottom + SELECTION_CARD_GAP : above;
-    card.style.transform = `translate(${Math.round(desiredLeft - cardRect.left)}px, ${Math.round(desiredTop - cardRect.top)}px)`;
+    const nextTransform = `translate(${Math.round(desiredLeft - cardRect.left)}px, ${Math.round(desiredTop - cardRect.top)}px)`;
+    if (card.style.transform !== nextTransform) card.style.transform = nextTransform;
     card.classList.toggle('is-below', flip);
   }
 
@@ -562,20 +563,21 @@
     if (destroyed) return;
     const card = ensureSelectionCard();
     const metrics = selectionMetrics();
-    card.hidden = !metrics;
+    const shouldHideCard = !metrics;
+    if (card.hidden !== shouldHideCard) card.hidden = shouldHideCard;
     syncInspectorDrawer(!!metrics);
     if (!metrics) { positionSelectionCard(card, false); return; }
+    const setCardText = (sel, value) => { const node = $(sel, card); if (node && node.textContent !== value) node.textContent = value; };
     const canvasLabel = $('#activeCanvasLabel')?.textContent?.trim() || 'Canvas';
-    $('[data-v54-page]', card).textContent = canvasLabel;
-    $('[data-v54-label]', card).textContent = metrics.label;
+    setCardText('[data-v54-page]', canvasLabel);
+    setCardText('[data-v54-label]', metrics.label);
     const rotation = Math.abs(metrics.rotation) > 0.05 ? ` · ${Math.round(metrics.rotation * 10) / 10}°` : '';
-    $('[data-v54-metrics]', card).textContent = `${Math.round(metrics.width)} × ${Math.round(metrics.height)}${rotation}`;
+    setCardText('[data-v54-metrics]', `${Math.round(metrics.width)} × ${Math.round(metrics.height)}${rotation}`);
     card.classList.toggle('is-multi', metrics.items.length > 1);
     // Crop only applies to image objects; a disabled control always says why.
     const crop = $('[data-v54-action="crop"]', card);
     if (crop) {
-      const firstId = metrics.items?.[0]?.id || '';
-      const first = firstId ? stage.querySelector(`.object[data-id="${firstId}"]`) : null;
+      const first = metrics.items?.[0] || null;
       const isImage = !!first && (first.dataset.type === 'image' || !!first.querySelector('img'));
       crop.disabled = !isImage;
       crop.title = isImage ? 'Crop' : 'Crop applies to image objects only';
@@ -658,7 +660,8 @@
 
     // Show/hide the "no selection" placeholder.
     const placeholder = pane.querySelector('.v54-inspector-placeholder');
-    if (placeholder) placeholder.style.display = hasSelection ? 'none' : 'grid';
+    const placeholderDisplay = hasSelection ? 'none' : 'grid';
+    if (placeholder && placeholder.style.display !== placeholderDisplay) placeholder.style.display = placeholderDisplay;
 
     if (!hasSelection) {
       // Hide all type-specific control groups.  No !important: none of these
@@ -672,7 +675,7 @@
       // Hide Appearance / Fine position sub-headings.
       pane.querySelectorAll('h2').forEach(h => {
         const txt = (h.textContent || '').toLowerCase();
-        if (txt.includes('appearance') || txt.includes('fine position')) h.style.display = 'none';
+        if ((txt.includes('appearance') || txt.includes('fine position')) && h.style.display !== 'none') h.style.display = 'none';
       });
       return;
     }
@@ -685,12 +688,12 @@
     // `#typographyControls` rule in ux-refine.css no longer carries !important,
     // so a plain inline `display:none` (reinforced by el.hidden + the UA
     // `[hidden]` rule) reliably overrides the author `display:grid`.
-    const show = (sel) => { const el = pane.querySelector(sel); if (el) { el.hidden = false; el.style.removeProperty('display'); } };
-    const hide = (sel) => { const el = pane.querySelector(sel); if (el) { el.hidden = true; el.style.display = 'none'; } };
+    const show = (sel) => { const el = pane.querySelector(sel); if (el && (el.hidden || el.style.display)) { el.hidden = false; el.style.removeProperty('display'); } };
+    const hide = (sel) => { const el = pane.querySelector(sel); if (el && (!el.hidden || el.style.display !== 'none')) { el.hidden = true; el.style.display = 'none'; } };
 
     // Selection summary is always visible when something is selected.
     const summary = pane.querySelector('.selection-summary');
-    if (summary) { summary.hidden = false; summary.style.removeProperty('display'); }
+    if (summary && (summary.hidden || summary.style.display)) { summary.hidden = false; summary.style.removeProperty('display'); }
 
     // Dispatch by type.
     let isText = false, isImage = false, isShape = false;
@@ -739,7 +742,7 @@
     // Appearance / Fine position sections are shown for all selectable objects.
     pane.querySelectorAll('h2').forEach(h => {
       const txt = (h.textContent || '').toLowerCase();
-      if (txt.includes('appearance') || txt.includes('fine position')) h.style.removeProperty('display');
+      if ((txt.includes('appearance') || txt.includes('fine position')) && h.style.display) h.style.removeProperty('display');
     });
 
     // Dispatch event so other modules can react.
@@ -768,16 +771,16 @@
    */
   function scheduleUpdate() {
     if (raf) return;
-    raf = setTimeout(() => {
+    raf = requestAnimationFrame(() => {
       raf = 0;
+      updateSelectionCard();
       updateSelectionState();
       refreshContextPanel();
-      updateSelectionCard();
       updateZoomLabel();
       // NOTE: layoutContextToolbar / header / footer organisation deliberately
       // NOT called here — running them on every selection change is what made
       // the toolbar "jump". They run on install + resize only (see ui-layout).
-    }, 0);
+    });
   }
 
   /** Sync the zoom HUD's numeric label + selection button disabled state. */
@@ -1056,8 +1059,11 @@
     const rect = object.getBoundingClientRect();
     const box = ensureHoverBox();
     box.hidden = false;
-    Object.assign(box.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, transform: 'none' });
-    box.querySelector('span').textContent = readableType(object);
+    const hoverStyle = { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, transform: 'none' };
+    for (const hoverKey in hoverStyle) { if (box.style[hoverKey] !== hoverStyle[hoverKey]) box.style[hoverKey] = hoverStyle[hoverKey]; }
+    const hoverText = readableType(object);
+    const hoverSpan = box.querySelector('span');
+    if (hoverSpan && hoverSpan.textContent !== hoverText) hoverSpan.textContent = hoverText;
   }
 
   /** Hide the hover label. */
@@ -1499,7 +1505,7 @@
    */
   function destroy() {
     destroyed = true;
-    if (raf) clearTimeout(raf);
+    if (raf) cancelAnimationFrame(raf);
     if (duplicateDrag) {
       duplicateDrag.previews.forEach(preview => preview.remove());
       duplicateDrag = null;

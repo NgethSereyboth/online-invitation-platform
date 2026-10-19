@@ -322,7 +322,7 @@ body.workspace-experience-v54 #canvasViewport.v54-middle-panning * { cursor: gra
   margin: 0; padding: 8px 10px;
   border: 1px solid #25192817; border-radius: 10px;
   background: color-mix(in srgb, var(--panel, #fff) 93%, transparent);
-  box-shadow: 0 6px 20px #21152615; backdrop-filter: blur(12px);
+  box-shadow: 0 6px 20px #21152615;
   pointer-events: none; color: var(--text, #29252d);
 }
 .v54-selection-card[hidden] { display: none; }
