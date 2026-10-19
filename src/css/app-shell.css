@@ -1081,4 +1081,111 @@ body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
 .language-switch button:not(.active) { color: inherit; }
 
 
+/* ============================================================================
+   Pass 2 — U2 (audit §D–§H). Additive only: legacy sheets keep their
+   declarations and this shared layer is last in every route bundle.
+   ============================================================================ */
+/* §G type floor: rail group labels and table headers are labels (12px);
+   micro-meta captions stay on the tokens' 11px step. */
+.app-rail__label { font-size: 12px; }
+.app-table thead th, table.data thead th, .v13-list table thead th,
+.admin-panel table thead th { font-size: 12px; }
+.account-summary small { font-size: 12px; }
+
+/* §J3 themed form controls: raw gray checkbox/radio squares in dark mode
+   (templates "Favorites only", guests select-all). */
+input[type="checkbox"], input[type="radio"] {
+  accent-color: var(--app-accent, #8b465b);
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+/* §D/§E narrow viewports: the 48px "Administration" H1 (371px) and the
+   privacy env-token <code> (364px) measured wider than the 320px document. */
+body:not(.guest) main h1,
+body:not(.guest) main h1 .i18n { overflow-wrap: anywhere; }
+body[data-page="admin"] .admin-page > h1 { font-size: clamp(26px, 8.5vw, 48px) !important; }
+body[data-page="privacy"] main code { overflow-wrap: anywhere; word-break: break-word; }
+
+/* The templates "Favorites only" row pushed the toolbar to 345px at 320. */
+.toggle-row { flex-wrap: wrap; min-width: 0; }
+@media (max-width: 420px) {
+  .toggle-row { justify-content: flex-start; gap: 6px; }
+  .toggle-row input[type="checkbox"] { margin-inline-start: auto; }
+}
+
+/* §D checkin hero eyebrow: legacy `.eyebrow{opacity:.65}` turned --app-faint
+   (#6c707a) into 2.73:1 on white (Lighthouse color-contrast). */
+body[data-page="checkin"] .checkin-hero .eyebrow { opacity: 1; }
+
+/* §I public footer credit: 64% opacity turned #342c26 into #7d7874 (4.33:1).
+   78% clears 4.5:1 while staying visually secondary. */
+.guest-platform-credit { opacity: .78; }
+
+/* §G Khmer must not inherit the Latin line-height (KHMER-TYPOGRAPHY.md §4). */
+
+/* §F public dark mode: the guest feature sections and the journey bar themed
+   their surfaces (dark) but kept the light-theme ink, so headings measured
+   1.27:1 and muted copy 3.02:1; the RSVP / load-more buttons rendered
+   white-on-white. The cover-closed Lighthouse run cannot see these. */
+html[data-theme="dark"] .guest-feature {
+  background: var(--app-surface, #191a21);
+  color: var(--app-text, #f2f3f7);
+}
+html[data-theme="dark"] .guest-feature h2 { color: var(--app-text, #f2f3f7); }
+html[data-theme="dark"] .guest-feature .muted { color: var(--app-muted, #a8aab4); }
+html[data-theme="dark"] .guest-journey,
+html[data-theme="dark"] .guest-journey-menu {
+  background: color-mix(in srgb, var(--app-surface, #191a21) 92%, transparent);
+  color: var(--app-text, #f2f3f7);
+  border-color: var(--app-line, #2d2f39);
+}
+html[data-theme="dark"] .guest-journey button { color: inherit; }
+/* §G type floor: the journey counter is meta copy; 10px fell below the
+  11px floor in light mode (the dark block used to carry the only override). */
+.guest-journey-current small { font-size: 11px; }
+html[data-theme="dark"] .guest-journey-current small {
+  color: var(--app-accent, #d5829c);
+}
+/* Dark guest controls keep hardcoded #fff / #f8f8f8 backgrounds ("Upload"
+   measured 1.1:1 white-on-white). Primary buttons are re-styled below. */
+html[data-theme="dark"] .guest-feature :where(button, input, select, textarea),
+html[data-theme="dark"] .album :where(button, input, select, textarea) {
+  background-color: var(--app-surface-3, #282a33);
+  color: var(--app-text, #f2f3f7);
+  border-color: var(--app-line, #2d2f39);
+}
+html[data-theme="dark"] .guest-feature :where(input, textarea)::placeholder {
+  color: var(--app-muted, #a8aab4);
+}
+html[data-theme="dark"] .guest .guest-layout-content button.primary,
+html[data-theme="dark"] .guest .guest-layout-content a.primary {
+  background: var(--app-accent, #d5829c);
+  border-color: var(--app-accent, #d5829c);
+  color: #16171b;
+}
+html[data-theme="dark"] .album .load-more {
+  background: var(--app-surface-3, #282a33);
+  color: var(--app-text, #f2f3f7);
+  border-color: var(--app-line, #2d2f39);
+}
+
+/* §F checkin dark mode: the legacy `header span{color:#766}` and
+   `label{color:#665}` rules survived into dark mode (breadcrumb / theme glyph
+   3.2:1, "Find guest" 3.2:1, hero eyebrow 3.2:1). */
+html[data-theme="dark"] .checkin-header .app-crumbs span,
+html[data-theme="dark"] .checkin-header .app-crumbs a,
+html[data-theme="dark"] .checkin-header .app-topbar-right span { color: var(--app-muted, #a8aab4); }
+html[data-theme="dark"] .checkin-header .app-crumbs [aria-current="page"] { color: var(--app-text, #f2f3f7); }
+html[data-theme="dark"] body[data-page="checkin"] .checkin-search,
+html[data-theme="dark"] body[data-page="checkin"] .checkin-search > span { color: var(--app-muted, #a8aab4); }
+html[data-theme="dark"] body[data-page="checkin"] .checkin-hero .eyebrow {
+  color: var(--app-muted, #a8aab4);
+  opacity: 1;
+}
+
+:lang(km) { line-height: 1.6; }
+
+
+
 }

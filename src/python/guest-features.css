@@ -243,4 +243,35 @@
   border-color: var(--accent, #9d4555);
 }
 
+
+/* Long Khmer date runs have a ~307px min-content width, so the 288px guest
+   column clipped the hero at 320px (section measured 351px wide). Allowing
+   breaks only where the text actually needs them keeps wider layouts intact. */
+.guest-summary .hero-date h2,
+.guest-summary .hero-date p {
+  overflow-wrap: anywhere;
+}
+
+/* The guest column is 288px at 320px, but its flex sections kept a 351px
+   min-content width (hero date + quick actions) and were clipped by
+   overflow-x:hidden. Let them track the column instead. */
+.guest-layout-content > section,
+.guest-layout-content > form,
+.guest-layout-content > .custom-blocks {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* The journey bar's current-section label is a fixed 44px stack; Khmer text
+   inherits a 20px/1.6 line box from :lang(km), so the strong shrank to 6px and
+   clipped on both axes. Let the bar grow and pin the label back to 13px. */
+.guest-journey .guest-journey-current {
+  height: auto;
+  min-height: 44px;
+}
+.guest-journey-current strong,
+[data-language="km"] .guest-journey-current strong {
+  font-size: 13px;
+  line-height: 1.6;
+}
 }

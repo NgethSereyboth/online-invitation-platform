@@ -63,7 +63,7 @@
     }).join('');
     host.innerHTML = `
       <h2>${esc(t('title'))}</h2>
-      <input type="search" class="admin-search" id="usersSearch" placeholder="${esc(t('search'))}" value="${esc(state.q)}">
+      <input type="search" class="admin-search" id="usersSearch" aria-label="${esc(t('search'))}" placeholder="${esc(t('search'))}" value="${esc(state.q)}">
       <table class="ei-admin-table"><thead><tr>
         <th>${esc(t('role'))} / ${esc(t('plan'))}</th>
         <th>${esc(t('created'))}</th>

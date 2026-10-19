@@ -2065,4 +2065,96 @@ body[data-page="admin"] .admin-panel table { margin-top: var(--space-2); }
 .language-switch button:not(.active) { color: inherit; }
 
 
+
+
+.app-rail__label { font-size: 12px; }
+.app-table thead th, table.data thead th, .v13-list table thead th,
+.admin-panel table thead th { font-size: 12px; }
+.account-summary small { font-size: 12px; }
+
+
+input[type="checkbox"], input[type="radio"] {
+  accent-color: var(--app-accent, #8b465b);
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+
+body:not(.guest) main h1,
+body:not(.guest) main h1 .i18n { overflow-wrap: anywhere; }
+body[data-page="admin"] .admin-page > h1 { font-size: clamp(26px, 8.5vw, 48px) !important; }
+body[data-page="privacy"] main code { overflow-wrap: anywhere; word-break: break-word; }
+
+
+.toggle-row { flex-wrap: wrap; min-width: 0; }
+@media (max-width: 420px) {
+  .toggle-row { justify-content: flex-start; gap: 6px; }
+  .toggle-row input[type="checkbox"] { margin-inline-start: auto; }
+}
+
+
+body[data-page="checkin"] .checkin-hero .eyebrow { opacity: 1; }
+
+
+.guest-platform-credit { opacity: .78; }
+
+
+
+
+html[data-theme="dark"] .guest-feature {
+  background: var(--app-surface, #191a21);
+  color: var(--app-text, #f2f3f7);
+}
+html[data-theme="dark"] .guest-feature h2 { color: var(--app-text, #f2f3f7); }
+html[data-theme="dark"] .guest-feature .muted { color: var(--app-muted, #a8aab4); }
+html[data-theme="dark"] .guest-journey,
+html[data-theme="dark"] .guest-journey-menu {
+  background: color-mix(in srgb, var(--app-surface, #191a21) 92%, transparent);
+  color: var(--app-text, #f2f3f7);
+  border-color: var(--app-line, #2d2f39);
+}
+html[data-theme="dark"] .guest-journey button { color: inherit; }
+
+.guest-journey-current small { font-size: 11px; }
+html[data-theme="dark"] .guest-journey-current small {
+  color: var(--app-accent, #d5829c);
+}
+
+html[data-theme="dark"] .guest-feature :where(button, input, select, textarea),
+html[data-theme="dark"] .album :where(button, input, select, textarea) {
+  background-color: var(--app-surface-3, #282a33);
+  color: var(--app-text, #f2f3f7);
+  border-color: var(--app-line, #2d2f39);
+}
+html[data-theme="dark"] .guest-feature :where(input, textarea)::placeholder {
+  color: var(--app-muted, #a8aab4);
+}
+html[data-theme="dark"] .guest .guest-layout-content button.primary,
+html[data-theme="dark"] .guest .guest-layout-content a.primary {
+  background: var(--app-accent, #d5829c);
+  border-color: var(--app-accent, #d5829c);
+  color: #16171b;
+}
+html[data-theme="dark"] .album .load-more {
+  background: var(--app-surface-3, #282a33);
+  color: var(--app-text, #f2f3f7);
+  border-color: var(--app-line, #2d2f39);
+}
+
+
+html[data-theme="dark"] .checkin-header .app-crumbs span,
+html[data-theme="dark"] .checkin-header .app-crumbs a,
+html[data-theme="dark"] .checkin-header .app-topbar-right span { color: var(--app-muted, #a8aab4); }
+html[data-theme="dark"] .checkin-header .app-crumbs [aria-current="page"] { color: var(--app-text, #f2f3f7); }
+html[data-theme="dark"] body[data-page="checkin"] .checkin-search,
+html[data-theme="dark"] body[data-page="checkin"] .checkin-search > span { color: var(--app-muted, #a8aab4); }
+html[data-theme="dark"] body[data-page="checkin"] .checkin-hero .eyebrow {
+  color: var(--app-muted, #a8aab4);
+  opacity: 1;
+}
+
+:lang(km) { line-height: 1.6; }
+
+
+
 }
