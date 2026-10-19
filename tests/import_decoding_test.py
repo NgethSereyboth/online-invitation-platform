@@ -39,8 +39,10 @@ Khmer fixture strings are taken from `docs/i18n/TRANSLATIONS.csv`; none is inven
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -111,8 +113,27 @@ def declaration(name: str) -> str:
 
 
 def _run_node(program: str):
+    # Node reads the program from a temp file, not from stdin. Piping to
+    # `node -` is fine when pytest runs nothing else, but under pytest the child
+    # never sees EOF on its stdin pipe on Windows, so every test times out at
+    # 60 s with the same program it was about to run. Writing the exact program
+    # (declarations + driver, byte-identical) to a file removes the stdin race
+    # without changing what is executed; stdout is still a single JSON line.
     assert NODE, "node is required"
-    result = subprocess.run([NODE, "-"], input=program, capture_output=True, text=True, timeout=60)
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8", newline="\n") as script:
+        script.write(program)
+        script_name = script.name
+    try:
+            # text=True without an encoding uses the Windows locale codec
+            # (cp1252), which throws on Khmer output; stdout is our own JSON so
+            # UTF-8 it is. text decoding for stdout/stderr only — input no longer
+            # goes through a pipe at all.
+            result = subprocess.run(
+                [NODE, script_name], capture_output=True, timeout=60,
+                text=True, encoding="utf-8",
+            )
+    finally:
+        os.unlink(script_name)
     assert result.returncode == 0, f"node exited {result.returncode}:\n{result.stderr}"
     return json.loads(result.stdout.strip().splitlines()[-1])
 

@@ -327,15 +327,15 @@ function toast(message,options={}){
   item.querySelector('.ei-toast-icon').textContent=icon;item.querySelector('strong').textContent=text;
   const close=()=>{if(item.classList.contains('out'))return;item.classList.add('out');setTimeout(()=>item.remove(),190)};item.querySelector('button').onclick=close;stack.append(item);setTimeout(close,Math.max(1500,Number(options.duration||3600)));return item
 }
-function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false}={}){
+function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
-function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve=>{const{dialog,field}=buildDialog({title:options.title||'Enter a value',message,icon:options.icon||'✎',input:true,value:defaultValue,multiline:options.multiline===true,confirmText:options.confirmText||'Save',cancelText:options.cancelText||'Cancel'});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(null)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(null)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'?field.value:null));dialog.showModal();setTimeout(()=>{field.focus();field.select?.()},0)})}
+function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve=>{const{dialog,field}=buildDialog({title:options.title||'Enter a value',message,icon:options.icon||'✎',input:true,value:defaultValue,multiline:options.multiline===true,confirmText:options.confirmText||'Save',cancelText:options.cancelText||'Cancel',selectOptions:Array.isArray(options.selectOptions)?options.selectOptions:null});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(null)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(null)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'?field.value:null));dialog.showModal();setTimeout(()=>{field.focus();field.select?.()},0)})}
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
@@ -1812,7 +1812,7 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.dataset.adminTab = 'system';
-  btn.innerHTML = _html('System', 'System');
+  btn.innerHTML = _html('System', 'ប្រព័ន្ធ');
   tabs.append(btn);
   const panel = document.createElement('section');
   panel.id = 'systemPanel';
@@ -1828,23 +1828,23 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
     try {
       const [health, m] = await Promise.all([api('/api/health'), api('/api/admin/metrics')]);
       const cards = [
-        [_html('Uptime', 'Uptime'), `${Math.floor(m.uptimeSeconds / 3600)}h ${Math.floor(m.uptimeSeconds % 3600 / 60)}m`],
+        [_html('Uptime', 'ពេលធ្វើការ'), `${Math.floor(m.uptimeSeconds / 3600)}h ${Math.floor(m.uptimeSeconds % 3600 / 60)}m`],
         [_html('Users', 'អ្នកប្រើ'), m.users],
         [_html('Invitations', 'ការអញ្ជើញ'), m.invitations],
-        [_html('Publications', 'Publications'), m.publications],
+        [_html('Publications', 'ការផ្សាយ'), m.publications],
         [_html('RSVPs', 'RSVPs'), m.rsvps],
-        [_html('Assets', 'Assets'), m.assets],
-        [_html('Material storage', 'Material storage'), fmtBytes(m.assetBytes)],
+        [_html('Assets', 'ទ្រព្យសម្បត្តិ'), m.assets],
+        [_html('Material storage', 'កន្លែងរក្សាទុកសម្ភារៈ'), fmtBytes(m.assetBytes)],
       ];
       $('#eiSystemMetrics').innerHTML = cards.map(([a, b]) => `<article class="ei-system-card"><small>${a}</small><strong>${esc(b)}</strong></article>`).join('');
       const services = [
-        [_html('API', 'API'), _html('Healthy', 'Healthy')],
-        [_html('Database', 'Database'), esc(health.database)],
-        [_html('Asset storage', 'Asset storage'), esc(health.assetStorage)],
-        [_html('Redis rate limiting', 'Redis rate limiting'), health.redis ? _html('Connected', 'Connected') : _html('In-memory fallback', 'In-memory fallback')],
-        [_html('AI provider', 'AI provider'), health.aiConfigured ? _html('Configured', 'Configured') : _html('Local assistant', 'Local assistant')],
-        [_html('SMTP', 'SMTP'), health.smtpConfigured ? _html('Configured', 'Configured') : _html('Not configured', 'Not configured')],
-        [_html('Billing webhook', 'Billing webhook'), health.billingWebhookConfigured ? _html('Configured', 'Configured') : _html('Not configured', 'Not configured')],
+        [_html('API', 'API'), _html('Healthy', 'ធម្មតា')],
+        [_html('Database', 'មូលដ្ឋានទិន្នន័យ'), esc(health.database)],
+        [_html('Asset storage', 'ការរក្សាទុកទ្រព្យសម្បត្តិ'), esc(health.assetStorage)],
+        [_html('Redis rate limiting', 'ការដាក់កំណត់ល្បឿន Redis'), health.redis ? _html('Connected', 'បានភ្ជាប់') : _html('In-memory fallback', 'ជំនួសក្នុង memory')],
+        [_html('AI provider', 'អ្នកផ្គត់ផ្គង់ AI'), health.aiConfigured ? _html('Configured', 'បានកំណត់រចនាសម្ព័ន្ធ') : _html('Local assistant', 'ជំនួយក្នុងស្រុក')],
+        [_html('SMTP', 'SMTP'), health.smtpConfigured ? _html('Configured', 'បានកំណត់រចនាសម្ព័ន្ធ') : _html('Not configured', 'មិនបានកំណត់រចនាសម្ព័ន្ធ')],
+        [_html('Billing webhook', 'webhook ការទូទាត់'), health.billingWebhookConfigured ? _html('Configured', 'បានកំណត់រចនាសម្ព័ន្ធ') : _html('Not configured', 'មិនបានកំណត់រចនាសម្ព័ន្ធ')],
       ];
       $('#eiSystemServices').innerHTML = services.map(([a, b]) => `<div class="ei-system-row"><span>${a}</span><strong class="ei-system-status">${b}</strong></div>`).join('');
     } catch (e) {
@@ -1860,7 +1860,7 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
   // Re-render on language switch (cached payload, no refetch).
   if (window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
     window.EInviteI18n.subscribe(function () {
-      btn.innerHTML = _html('System', 'System');
+      btn.innerHTML = _html('System', 'ប្រព័ន្ធ');
       if (panel.classList.contains('active')) load();
     });
   }

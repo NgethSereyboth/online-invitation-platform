@@ -85,7 +85,11 @@ def test_khmer_face_resolves_and_the_ok_branch_prints(capsys):
     assert 'support=ready' in printed, printed
     assert Path(status['resolved']).is_relative_to(ROOT), status['resolved']
     assert Path(status['resolved']).name == 'NotoSansKhmer-Regular.ttf', status['resolved']
-    assert 'vendor/noto-khmer/' in printed, printed
+    # The SVG-style forward-slash substring 'vendor/noto-khmer/' can never match a
+    # native POSIX print on Windows, where the path carries backslashes; normalise
+    # the separators so the same vendor/noto-khmer directory claim is asserted on
+    # every platform instead of only on POSIX hosts.
+    assert 'vendor/noto-khmer/' in printed.replace('\\', '/'), printed
 
     font = server.image_font(32, khmer=True)
     assert usable(font), 'a resolved Khmer face must be able to measure Khmer text'

@@ -93,6 +93,7 @@ function fitCanvasSoon(){
 }
 function applyMode(id){
   const content=['event','blocks'].includes(id);
+  // DESIGN-FIX P2: content mode keeps the canvas visible; only the inspector collapses.
   body.classList.toggle('studio-content-mode',content);
   body.classList.toggle('studio-design-mode',!content);
   body.dataset.studioSection=id;

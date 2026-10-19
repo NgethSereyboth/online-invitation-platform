@@ -2027,15 +2027,15 @@ function toast(message,options={}){
   item.querySelector('.ei-toast-icon').textContent=icon;item.querySelector('strong').textContent=text;
   const close=()=>{if(item.classList.contains('out'))return;item.classList.add('out');setTimeout(()=>item.remove(),190)};item.querySelector('button').onclick=close;stack.append(item);setTimeout(close,Math.max(1500,Number(options.duration||3600)));return item
 }
-function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false}={}){
+function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
-function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve=>{const{dialog,field}=buildDialog({title:options.title||'Enter a value',message,icon:options.icon||'✎',input:true,value:defaultValue,multiline:options.multiline===true,confirmText:options.confirmText||'Save',cancelText:options.cancelText||'Cancel'});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(null)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(null)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'?field.value:null));dialog.showModal();setTimeout(()=>{field.focus();field.select?.()},0)})}
+function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve=>{const{dialog,field}=buildDialog({title:options.title||'Enter a value',message,icon:options.icon||'✎',input:true,value:defaultValue,multiline:options.multiline===true,confirmText:options.confirmText||'Save',cancelText:options.cancelText||'Cancel',selectOptions:Array.isArray(options.selectOptions)?options.selectOptions:null});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(null)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(null)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'?field.value:null));dialog.showModal();setTimeout(()=>{field.focus();field.select?.()},0)})}
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
@@ -2360,8 +2360,7 @@ if(!serverInvite){
 try{
 serverInvite=await api('/api/invitations/'+encodeURIComponent(activeInviteId));
 state=migrateDocument(serverInvite.document||state);
-inviteStore.write(draftKey,state);
-undoStack=[];
+applyPosterCanvasSize();
 redoStack=[];
 recentFieldEdits.clear();
 authoritativeStateApplying=true;
@@ -2554,6 +2553,28 @@ return isNaN(date)?fields.date:date.toLocaleDateString(undefined,{
 dateStyle:'long'
 })
 }
+function clampPosterSize(width,height){
+ const w=Math.max(200,Math.min(4000,Math.round(Number(width)||390))),h=Math.max(200,Math.min(4000,Math.round(Number(height)||844)));
+ return {width:w,height:h}
+}
+// Poster docs (docs with a posterCanvas {width,height}) size the #stage in px.
+// Percent-positioned objects keep working: they resolve against the stage box.
+function normalizePosterDocument(doc){
+ if(!doc||typeof doc.posterCanvas!=='object'||!doc.posterCanvas)return doc;
+ const size=clampPosterSize(doc.posterCanvas.width,doc.posterCanvas.height);
+ doc.posterCanvas=size;
+ return doc
+}
+function applyPosterCanvasSize(){
+ const stage=$('#stage'),viewport=$('#canvasViewport');if(!stage)return;
+ const cv=state&&state.posterCanvas;
+ if(!cv){if(stage.dataset.posterSize)stage.style.removeProperty('height');delete stage.dataset.posterSize;return}
+ const {width,height}=clampPosterSize(cv.width,cv.height);
+ stage.style.width=`${width}px`;stage.style.height=`${height}px`;stage.dataset.posterSize=`${width}x${height}`;
+ const sizeSelect=document.getElementById('posterSizes');
+ if(sizeSelect)sizeSelect.value=`${width}x${height}`;
+ const zoomSelect=$('#zoomLevel');if(zoomSelect&&viewport){const fit=Math.min((viewport.clientWidth-70)/width,(viewport.clientHeight-70)/height,1.5);setZoom(Math.max(.35,Math.min(2,fit)),{anchor:false,source:'poster-fit'})}
+}
 function migrateDocument(documentData){
 let doc=clone(documentData||initial);
 doc.fields={...(doc.fields||{})};
@@ -2621,7 +2642,7 @@ doc=window.EInviteExperience?.migrate?window.EInviteExperience.migrate(doc):doc;
 doc=window.EInviteDocumentV32?.migrate?window.EInviteDocumentV32.migrate(doc):doc;
 if(window.TypographyDocumentModel)TypographyDocumentModel.normalizeDocument(doc,{mutate:true});
 if(window.RichTextDocumentModel)RichTextDocumentModel.normalizeInvitation(doc,{mutate:true,strict:false});
-return doc
+return normalizePosterDocument(doc)
 }
 let pendingCoalescedCommand=null,activeUndoTransaction=null;
 function settleGestureHistory(before){
@@ -2654,6 +2675,7 @@ getActiveCanvasId:()=>activeCanvasId,
 getSelectedIds:()=>[...editorSelectionIds],
 replaceState(next,options={}){
 state=migrateDocument(clone(next||{}));
+applyPosterCanvasSize();
 const incomingSelection=Array.isArray(state.editorModel?.selectionIds)?state.editorModel.selectionIds.map(String):[];
 if(state.editorModel)delete state.editorModel.selectionIds;
 editorSelectionIds=incomingSelection;
@@ -3083,6 +3105,7 @@ if('requestIdleCallback'in window)serverIdleSaveHandle=requestIdleCallback(run,{
 }
 window.addEventListener('pagehide',()=>cancelScheduledServerWrites(),{once:true});
 function apply(){
+applyPosterCanvasSize();
 if(!authoritativeStateApplying&&!historyApplying&&document.documentElement.dataset.editorReady==='true'){
 const now=Date.now();
 for(const[id,edit]of recentFieldEdits){
@@ -4945,7 +4968,29 @@ viewport.addEventListener('pointermove',e=>{if(!start)return;batcher??=window.EI
 const end=()=>{batcher?.flush();start=null;viewport.classList.remove('panning')};
 viewport.addEventListener('pointerup',end,true);viewport.addEventListener('pointercancel',end,true);
 })();
-$$('[data-device]').forEach(b=>b.onclick=()=>{$('#stage').style.width=Math.min(+b.dataset.device,Math.max(390,$('.stage-wrap').clientWidth-70))+'px';requestAnimationFrame(updateCanvasView)});
+const posterSizeSelect=$('#posterSizes'); if(posterSizeSelect){
+ posterSizeSelect.onchange=()=>{
+ const chosen=posterSizeSelect.value;
+ if(!chosen)return;
+ if(chosen==='custom'){
+ // DESIGN-FIX continuation: free-form canvas size — the "whatever size it is" ask.
+ (async()=>{
+ const resp=window.uiPrompt?await window.uiPrompt('Canvas size — width × height in px (e.g. 1080x1350)','1080x1080',{title:'Custom canvas size',confirmText:'Resize canvas'}):null;
+ if(!resp)return;
+ const parts=String(resp).toLowerCase().split(/[^0-9.]+/).map(Number).filter(v=>Number.isFinite(v)&&v>0);
+ if(parts.length<2)return alert('Enter both width and height, like 1080x1080.');
+ const width=Math.max(200,Math.min(4000,Math.round(parts[0]))),height=Math.max(200,Math.min(4000,Math.round(parts[1])));
+ window.EInviteEditorBridge.replaceState({...clone(state),posterCanvas:{width,height}},{render:true,history:true,save:true,reason:'canvas-size'});
+ requestAnimationFrame(fitCanvasToViewport);
+ })();
+ return;
+ }
+ const [w,h]=chosen.split('x').map(Number);
+ if(!Number.isFinite(w)||!Number.isFinite(h))return;
+ window.EInviteEditorBridge.replaceState({...clone(state),posterCanvas:{width:w,height:h}},{render:true,history:true,save:true,reason:'canvas-size'});
+ requestAnimationFrame(fitCanvasToViewport)
+ };
+}
 async function optimizeImageFile(file){
 if(!file||file.type==='image/gif'||typeof createImageBitmap!=='function')return file;
 try{
@@ -7856,8 +7901,18 @@ function applyLayout(){
   if(selection)selection.hidden=content;
   if(status)status.hidden=content||innerWidth<=1180;
   $$('.studio-panel-resizer',main).forEach(x=>x.hidden=content||innerWidth<=1180);
+  // P2 fix (DESIGN-FIX-TASK 2026-10-19): never hide the canvas because an
+  // Event/Blocks/content panel is active. The canvas is the product here —
+  // users were losing their poster the moment they opened Event or Blocks.
+  // Content mode now only collapses the inspector; the stage stays visible
+  // at every viewport width (mobile included, where the drawers overlay it).
+  if(stageWrap)stageWrap.hidden=false;
+  if(inspector)inspector.hidden=false;
+  if(selection)selection.hidden=content;
+  if(status)status.hidden=innerWidth<=1180;
+  $$('.studio-panel-resizer',main).forEach(x=>x.hidden=innerWidth<=1180);
   if(content){
-    body.classList.remove('inspector-open','mobile-pane-collapsed');
+    body.classList.remove('mobile-pane-collapsed');
   }else{
     requestAnimationFrame(()=>{
       try{typeof updateCanvasView==='function'&&updateCanvasView()}catch{}
@@ -7867,6 +7922,24 @@ function applyLayout(){
 }
 clampPanelWidths();
 applyLayout();
+// DESIGN-FIX continuation: poster documents have no guest/event data — auto-open
+// the Elements pane once; the canvas itself now always stays visible.
+function posterAutoPane(){
+  const st=window.EInviteEditorBridge?.getState?.();
+  if(!st||st.eventType!=='Poster'||body.dataset.posterPaneApplied)return;
+  body.dataset.posterPaneApplied='1';
+  if(activeSection()==='event'){
+    // Route the switch through the public tab button (click) — direct class
+    // toggles get re-applied back by the pane watchers.
+    document.querySelector('.studio-tool-rail [data-studio-tab="elements"]')?.click();
+  }
+}
+posterAutoPane();
+for(const n of ['einvite:editor-ready','einvite:editor-state-replaced'])document.addEventListener(n,posterAutoPane);
+(function posterPanePoll(attempt){ // panes are built later by studio-experience; poll briefly
+  if(body.dataset.posterPaneApplied||attempt>40){const st=window.EInviteEditorBridge?.getState?.();if(st&&st.eventType==='Poster'&&attempt<=40&&!window.__posterPaneWaitDone){window.__posterPaneWaitDone=true;setTimeout(()=>posterAutoPane(),100);return}return}
+  window.__posterPaneWaitDone=false;requestAnimationFrame(()=>posterPanePoll(attempt+1));
+})(0);
 rail?.addEventListener('click',()=>requestAnimationFrame(applyLayout));
 new MutationObserver(applyLayout).observe(host,{subtree:true,attributes:true,attributeFilter:['class']});
 addEventListener('resize',()=>{clampPanelWidths();applyLayout()});

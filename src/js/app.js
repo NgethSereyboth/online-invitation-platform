@@ -110,8 +110,7 @@ if(!serverInvite){
 try{
 serverInvite=await api('/api/invitations/'+encodeURIComponent(activeInviteId));
 state=migrateDocument(serverInvite.document||state);
-inviteStore.write(draftKey,state);
-undoStack=[];
+applyPosterCanvasSize();
 redoStack=[];
 recentFieldEdits.clear();
 authoritativeStateApplying=true;
@@ -304,6 +303,28 @@ return isNaN(date)?fields.date:date.toLocaleDateString(undefined,{
 dateStyle:'long'
 })
 }
+function clampPosterSize(width,height){
+ const w=Math.max(200,Math.min(4000,Math.round(Number(width)||390))),h=Math.max(200,Math.min(4000,Math.round(Number(height)||844)));
+ return {width:w,height:h}
+}
+// Poster docs (docs with a posterCanvas {width,height}) size the #stage in px.
+// Percent-positioned objects keep working: they resolve against the stage box.
+function normalizePosterDocument(doc){
+ if(!doc||typeof doc.posterCanvas!=='object'||!doc.posterCanvas)return doc;
+ const size=clampPosterSize(doc.posterCanvas.width,doc.posterCanvas.height);
+ doc.posterCanvas=size;
+ return doc
+}
+function applyPosterCanvasSize(){
+ const stage=$('#stage'),viewport=$('#canvasViewport');if(!stage)return;
+ const cv=state&&state.posterCanvas;
+ if(!cv){if(stage.dataset.posterSize)stage.style.removeProperty('height');delete stage.dataset.posterSize;return}
+ const {width,height}=clampPosterSize(cv.width,cv.height);
+ stage.style.width=`${width}px`;stage.style.height=`${height}px`;stage.dataset.posterSize=`${width}x${height}`;
+ const sizeSelect=document.getElementById('posterSizes');
+ if(sizeSelect)sizeSelect.value=`${width}x${height}`;
+ const zoomSelect=$('#zoomLevel');if(zoomSelect&&viewport){const fit=Math.min((viewport.clientWidth-70)/width,(viewport.clientHeight-70)/height,1.5);setZoom(Math.max(.35,Math.min(2,fit)),{anchor:false,source:'poster-fit'})}
+}
 function migrateDocument(documentData){
 let doc=clone(documentData||initial);
 doc.fields={...(doc.fields||{})};
@@ -371,7 +392,7 @@ doc=window.EInviteExperience?.migrate?window.EInviteExperience.migrate(doc):doc;
 doc=window.EInviteDocumentV32?.migrate?window.EInviteDocumentV32.migrate(doc):doc;
 if(window.TypographyDocumentModel)TypographyDocumentModel.normalizeDocument(doc,{mutate:true});
 if(window.RichTextDocumentModel)RichTextDocumentModel.normalizeInvitation(doc,{mutate:true,strict:false});
-return doc
+return normalizePosterDocument(doc)
 }
 let pendingCoalescedCommand=null,activeUndoTransaction=null;
 function settleGestureHistory(before){
@@ -404,6 +425,7 @@ getActiveCanvasId:()=>activeCanvasId,
 getSelectedIds:()=>[...editorSelectionIds],
 replaceState(next,options={}){
 state=migrateDocument(clone(next||{}));
+applyPosterCanvasSize();
 const incomingSelection=Array.isArray(state.editorModel?.selectionIds)?state.editorModel.selectionIds.map(String):[];
 if(state.editorModel)delete state.editorModel.selectionIds;
 editorSelectionIds=incomingSelection;
@@ -833,6 +855,7 @@ if('requestIdleCallback'in window)serverIdleSaveHandle=requestIdleCallback(run,{
 }
 window.addEventListener('pagehide',()=>cancelScheduledServerWrites(),{once:true});
 function apply(){
+applyPosterCanvasSize();
 if(!authoritativeStateApplying&&!historyApplying&&document.documentElement.dataset.editorReady==='true'){
 const now=Date.now();
 for(const[id,edit]of recentFieldEdits){
@@ -2695,7 +2718,29 @@ viewport.addEventListener('pointermove',e=>{if(!start)return;batcher??=window.EI
 const end=()=>{batcher?.flush();start=null;viewport.classList.remove('panning')};
 viewport.addEventListener('pointerup',end,true);viewport.addEventListener('pointercancel',end,true);
 })();
-$$('[data-device]').forEach(b=>b.onclick=()=>{$('#stage').style.width=Math.min(+b.dataset.device,Math.max(390,$('.stage-wrap').clientWidth-70))+'px';requestAnimationFrame(updateCanvasView)});
+const posterSizeSelect=$('#posterSizes'); if(posterSizeSelect){
+ posterSizeSelect.onchange=()=>{
+ const chosen=posterSizeSelect.value;
+ if(!chosen)return;
+ if(chosen==='custom'){
+ // DESIGN-FIX continuation: free-form canvas size — the "whatever size it is" ask.
+ (async()=>{
+ const resp=window.uiPrompt?await window.uiPrompt('Canvas size — width × height in px (e.g. 1080x1350)','1080x1080',{title:'Custom canvas size',confirmText:'Resize canvas'}):null;
+ if(!resp)return;
+ const parts=String(resp).toLowerCase().split(/[^0-9.]+/).map(Number).filter(v=>Number.isFinite(v)&&v>0);
+ if(parts.length<2)return alert('Enter both width and height, like 1080x1080.');
+ const width=Math.max(200,Math.min(4000,Math.round(parts[0]))),height=Math.max(200,Math.min(4000,Math.round(parts[1])));
+ window.EInviteEditorBridge.replaceState({...clone(state),posterCanvas:{width,height}},{render:true,history:true,save:true,reason:'canvas-size'});
+ requestAnimationFrame(fitCanvasToViewport);
+ })();
+ return;
+ }
+ const [w,h]=chosen.split('x').map(Number);
+ if(!Number.isFinite(w)||!Number.isFinite(h))return;
+ window.EInviteEditorBridge.replaceState({...clone(state),posterCanvas:{width:w,height:h}},{render:true,history:true,save:true,reason:'canvas-size'});
+ requestAnimationFrame(fitCanvasToViewport)
+ };
+}
 async function optimizeImageFile(file){
 if(!file||file.type==='image/gif'||typeof createImageBitmap!=='function')return file;
 try{

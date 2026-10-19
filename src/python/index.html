@@ -28,6 +28,7 @@
       into the bundle in the correct order.
   -->
   <link rel="stylesheet" href="bundle-index.css">
+  <link rel="stylesheet" href="design-fix.css">
   
 
 
@@ -276,6 +277,21 @@ rsvp</textarea></label>
     <section class="stage-wrap">
       <div class="toolbar">
         <button data-device="390">Mobile</button><button data-device="760">Tablet</button><button data-device="1100">Desktop</button>
+        <span class="toolbar-divider"></span>
+        <select id="posterSizes" aria-label="Canvas size" title="Canvas size preset">
+          <option value="custom">Custom size…</option>
+          <option value="390">Invitation 390×844</option>
+          <option value="1080x1080">Instagram Post 1080×1080</option>
+          <option value="1080x1350">Instagram Portrait 1080×1350</option>
+          <option value="1080x1920">Instagram Story 1080×1920</option>
+          <option value="1200x1500">Facebook Portrait 1200×1500</option>
+          <option value="794x1123">A4 Portrait 794×1123</option>
+          <option value="1123x794">A4 Landscape 1123×794</option>
+          <option value="816x1056">Letter 816×1056</option>
+          <option value="1440x2160">Poster 24×36in 1440×2160</option>
+          <option value="1200x630">Facebook Cover 1200×630</option>
+          <option value="1280x720">YouTube Thumbnail 1280×720</option>
+        </select>
         <span class="toolbar-divider"></span>
         <button id="zoomOut" title="Zoom out">−</button>
         <label class="sr-only" for="zoomLevel"><span class="i18n i18n-en">Canvas zoom</span><span class="i18n i18n-km khmer-text" lang="km">Canvas zoom</span></label><select id="zoomLevel" aria-label="Canvas zoom"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>

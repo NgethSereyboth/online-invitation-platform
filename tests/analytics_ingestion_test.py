@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -213,8 +214,10 @@ def test_phase5_background_reconstruction():
     import sqlite3
     from datetime import datetime, timedelta
 
-    # Use a fresh temp DB.
-    db_path = data if False else "/tmp/ei-analytics-bg-test.db"
+    # Use a fresh temp DB. `tempfile.gettempdir()` instead of a literal `/tmp`:
+    # on Windows a literal /tmp path is not writable, which killed the SQLite
+    # open with an OperationalError before any product code ran.
+    db_path = os.path.join(tempfile.gettempdir(), "ei-analytics-bg-test.db")
     if os.path.exists(db_path):
         os.unlink(db_path)
     conn = sqlite3.connect(db_path)

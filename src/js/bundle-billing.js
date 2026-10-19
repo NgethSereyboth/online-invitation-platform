@@ -285,15 +285,15 @@ function toast(message,options={}){
   item.querySelector('.ei-toast-icon').textContent=icon;item.querySelector('strong').textContent=text;
   const close=()=>{if(item.classList.contains('out'))return;item.classList.add('out');setTimeout(()=>item.remove(),190)};item.querySelector('button').onclick=close;stack.append(item);setTimeout(close,Math.max(1500,Number(options.duration||3600)));return item
 }
-function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false}={}){
+function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
-function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve=>{const{dialog,field}=buildDialog({title:options.title||'Enter a value',message,icon:options.icon||'✎',input:true,value:defaultValue,multiline:options.multiline===true,confirmText:options.confirmText||'Save',cancelText:options.cancelText||'Cancel'});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(null)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(null)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'?field.value:null));dialog.showModal();setTimeout(()=>{field.focus();field.select?.()},0)})}
+function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve=>{const{dialog,field}=buildDialog({title:options.title||'Enter a value',message,icon:options.icon||'✎',input:true,value:defaultValue,multiline:options.multiline===true,confirmText:options.confirmText||'Save',cancelText:options.cancelText||'Cancel',selectOptions:Array.isArray(options.selectOptions)?options.selectOptions:null});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(null)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(null)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'?field.value:null));dialog.showModal();setTimeout(()=>{field.focus();field.select?.()},0)})}
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
@@ -318,7 +318,7 @@ async function api(path,options={}){
 }
 const fmtBytes=value=>{const n=Number(value||0);if(n<1e6)return `${(n/1e3).toFixed(n<1e5?1:0)} KB`;if(n<1e9)return `${(n/1e6).toFixed(n<1e8?1:0)} MB`;return `${(n/1e9).toFixed(1)} GB`};
 const fmtPrice=(minor,currency)=>new Intl.NumberFormat(undefined,{style:'currency',currency,minimumFractionDigits:currency==='KHR'?0:2}).format(Number(minor||0)/(currency==='KHR'?1:100));
-const meter=(value,limit)=>{const percent=limit?Math.min(100,Math.round(value/limit*100)):0;return `<div class="meter"><i style="width:${percent}%"></i></div><small>${percent}% ${_txt('used','used')}</small>`};
+const meter=(value,limit)=>{const percent=limit?Math.min(100,Math.round(value/limit*100)):0;return `<div class="meter"><i style="width:${percent}%"></i></div><small>${percent}% ${_txt('used','បានប្រើ')}</small>`};
 
 function checkoutBanner(){
   const state=new URLSearchParams(location.search).get('checkout');
@@ -326,10 +326,10 @@ function checkoutBanner(){
   const banner=$('#checkoutResult');banner.hidden=false;
   if(state==='success'){
     banner.className='checkout-result verifying';
-    banner.innerHTML=`<strong>${b('Payment submitted','Payment submitted')}</strong><span>${b('We are securely confirming your card payment. Your plan will update as soon as the payment is confirmed.','We are securely confirming your card payment. Your plan will update as soon as the payment is confirmed.')}</span>`;
+    banner.innerHTML=`<strong>${b('Payment submitted','ការទូទាត់ត្រូវបានបញ្ជូនរួចរាល់')}</strong><span>${b('We are securely confirming your card payment. Your plan will update as soon as the payment is confirmed.','We are securely confirming your card payment. Your plan will update as soon as the payment is confirmed.')}</span>`;
   }else{
     banner.className='checkout-result cancelled';
-    banner.innerHTML=`<strong>${b('Checkout cancelled','Checkout cancelled')}</strong><span>${b('Your card was not charged by this website and your current plan has not changed.','Your card was not charged by this website and your current plan has not changed.')}</span>`;
+    banner.innerHTML=`<strong>${b('Checkout cancelled','Checkout ត្រូវបានបោះបង់')}</strong><span>${b('Your card was not charged by this website and your current plan has not changed.','ប័ណ្ណរបស់អ្នកមិនត្រូវគេទូទាត់ដោយគេហទំព័រនេះទេ ហើយកញ្ចប់បច្ចុប្បន្នរបស់អ្នកមិនបានផ្លាស់ប្តូរទេ។')}</span>`;
   }
 }
 
@@ -345,29 +345,29 @@ async function init(){
     if(!me.user)throw Error('Sign in required');
     const current=usage.plan||me.user.plan||'free';
     $('#currentPlan').textContent=plans[current]?.name||current;
-    $('#planRole').textContent=`${me.user.role||'customer'} ${_txt('account','account')}`;
+    $('#planRole').textContent=`${me.user.role||'customer'} ${_txt('account','គណនី')}`;
     const u=usage.usage,l=usage.limits;
-    $('#usageGrid').innerHTML=`<article class="usage-card"><small>${b('Invitations','Invitations')}</small><strong>${u.invitations} / ${l.invitations}</strong>${meter(u.invitations,l.invitations)}</article><article class="usage-card"><small>${b('Reusable templates','Reusable templates')}</small><strong>${u.templates} / ${l.templates}</strong>${meter(u.templates,l.templates)}</article><article class="usage-card"><small>${b('Material storage','Material storage')}</small><strong>${fmtBytes(u.storageBytes)} / ${fmtBytes(l.storageBytes)}</strong>${meter(u.storageBytes,l.storageBytes)}</article>`;
-    $('#gatewayName').textContent=billing.provider||_txt('Secure card checkout','Secure card checkout');
-    $('#gatewayState').textContent=billing.configured?_txt('Card checkout is connected','Card checkout is connected'):_txt('Gateway credentials still need to be configured','Gateway credentials still need to be configured');
+    $('#usageGrid').innerHTML=`<article class="usage-card"><small>${b('Invitations','ការអញ្ជើញ')}</small><strong>${u.invitations} / ${l.invitations}</strong>${meter(u.invitations,l.invitations)}</article><article class="usage-card"><small>${b('Reusable templates','ពុម្ពអត្ថបទប្រើឡើងវិញបាន')}</small><strong>${u.templates} / ${l.templates}</strong>${meter(u.templates,l.templates)}</article><article class="usage-card"><small>${b('Material storage','កន្លែងរក្សាទុកសម្ភារៈ')}</small><strong>${fmtBytes(u.storageBytes)} / ${fmtBytes(l.storageBytes)}</strong>${meter(u.storageBytes,l.storageBytes)}</article>`;
+    $('#gatewayName').textContent=billing.provider||_txt('Secure card checkout','Checkout ដោយប័ណ្ណដោយសុវត្ថិភាព');
+    $('#gatewayState').textContent=billing.configured?_txt('Card checkout is connected','Checkout តាមប័ណ្ណត្រូវបានភ្ជាប់រួចរាល់'):_txt('Gateway credentials still need to be configured','គ្រឿងបញ្ជាក់គ្រឹះស្ថានទូទាត់នៅត្រូវការកំណត់រចនាសម្ព័ន្ធថែមទៀត');
     $('#gatewayState').className=billing.configured?'gateway-ready':'gateway-pending';
     $('#planCards').innerHTML=Object.entries(plans).map(([key,plan])=>{
       const isCurrent=key===current;
-      const price=key==='free'?_txt('No card required','No card required'):fmtPrice(billing.prices?.[key],billing.currency||'USD');
-      const action=isCurrent?`<button disabled>${b('Current plan','Current plan')}</button>`:key==='free'?'<button disabled>'+b('Included','Included')+'</button>':`<button class="card-checkout" type="button" data-plan="${key}" ${billing.configured?'':'disabled'}><span>${b('Pay securely by card','Pay securely by card')}</span><small>${b('Visa · Mastercard','Visa · Mastercard')}</small></button>`;
-      return `<article class="plan ${isCurrent?'current':''}"><span class="badge">${isCurrent?b('Current plan','Current plan'):b('Available tier','Available tier')}</span><h2>${plan.name}</h2><div class="plan-price">${price}${key==='free'?'':` <small>${b('per billing period','per billing period')}</small>`}</div><p>${plan.invitations} ${_txt('active invitations','active invitations')} · ${plan.templates} ${_txt('templates','ពុម្ពអត្ថបទ')} · ${fmtBytes(plan.storageBytes)} ${_txt('storage','storage')}</p><ul>${plan.features.map(feature=>`<li>${b(feature,feature)}</li>`).join('')}</ul>${action}</article>`;
+      const price=key==='free'?_txt('No card required','មិនត្រូវការប័ណ្ណទេ'):fmtPrice(billing.prices?.[key],billing.currency||'USD');
+      const action=isCurrent?`<button disabled>${b('Current plan','កញ្ចប់បច្ចុប្បន្ន')}</button>`:key==='free'?'<button disabled>'+b('Included','រួមបញ្ចូលគ្នា')+'</button>':`<button class="card-checkout" type="button" data-plan="${key}" ${billing.configured?'':'disabled'}><span>${b('Pay securely by card','ទូទាត់តាមប័ណ្ណដោយសុវត្ថិភាព')}</span><small>${b('Visa · Mastercard','Visa · Mastercard')}</small></button>`;
+      return `<article class="plan ${isCurrent?'current':''}"><span class="badge">${isCurrent?b('Current plan','កញ្ចប់បច្ចុប្បន្ន'):b('Available tier','កម្រិតដែលអាចរើសបាន')}</span><h2>${plan.name}</h2><div class="plan-price">${price}${key==='free'?'':` <small>${b('per billing period','ក្នុងមួយរយៈពេលទូទាត់')}</small>`}</div><p>${plan.invitations} ${_txt('active invitations','ការអញ្ជើញសកម្ម')} · ${plan.templates} ${_txt('templates','ពុម្ពអត្ថបទ')} · ${fmtBytes(plan.storageBytes)} ${_txt('storage','កន្លែងរក្សាទុក')}</p><ul>${plan.features.map(feature=>`<li>${b(feature,feature)}</li>`).join('')}</ul>${action}</article>`;
     }).join('');
     document.querySelectorAll('[data-plan]').forEach(button=>button.onclick=async()=>{
-      button.disabled=true;const previous=button.innerHTML;button.textContent=_txt('Opening secure checkout…','Opening secure checkout…');
+      button.disabled=true;const previous=button.innerHTML;button.textContent=_txt('Opening secure checkout…','កំពុងបើក checkout ដោយសុវត្ថិភាព…');
       try{const result=await api('/api/billing/checkout',{method:'POST',body:JSON.stringify({plan:button.dataset.plan})});location.assign(result.url)}
-      catch(error){window.uiAlert?(uiAlert(error.message,{title:_txt('Checkout unavailable','Checkout unavailable')})):alert(error.message)}
+      catch(error){window.uiAlert?(uiAlert(error.message,{title:_txt('Checkout unavailable','Checkout មិនអាចប្រើបាន')})):alert(error.message)}
       finally{button.disabled=false;button.innerHTML=previous}
     });
     $('#billingNotice').textContent=billing.configured
-      ?_txt('Payments are completed on the gateway’s hosted checkout. This website does not receive or store your full card number or security code.','Payments are completed on the gateway’s hosted checkout. This website does not receive or store your full card number or security code.')
+      ?_txt('Payments are completed on the gateway’s hosted checkout. This website does not receive or store your full card number or security code.','ការទូទាត់ត្រូវបានបញ្ចប់នៅលើ hosted checkout របស់គ្រឹះស្ថានទូទាត់។ គេហទំព័រនេះមិនទទួលឬរក្សាទុកលេខប័ណ្ណរបស់អ្នកឬកូដសុវត្ថិភាពទេ។')
       :_txt('Online card payment is not available yet.','Online card payment is not available yet.');
   }catch(error){
-    document.querySelector('.billing-page').innerHTML=`<h1>${b('Plans unavailable','Plans unavailable')}</h1><p>${esc(error.message)}</p><a href="dashboard.html" class="button-link">${b('Back to dashboard','Back to dashboard')}</a>`;
+    document.querySelector('.billing-page').innerHTML=`<h1>${b('Plans unavailable','កញ្ចប់មិនអាចប្រើបាន')}</h1><p>${esc(error.message)}</p><a href="dashboard.html" class="button-link">${b('Back to dashboard','ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង')}</a>`;
   }
 }
 function render(){checkoutBanner()}

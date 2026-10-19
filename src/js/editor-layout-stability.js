@@ -41,8 +41,18 @@ function applyLayout(){
   if(selection)selection.hidden=content;
   if(status)status.hidden=content||innerWidth<=1180;
   $$('.studio-panel-resizer',main).forEach(x=>x.hidden=content||innerWidth<=1180);
+  // P2 fix (DESIGN-FIX-TASK 2026-10-19): never hide the canvas because an
+  // Event/Blocks/content panel is active. The canvas is the product here —
+  // users were losing their poster the moment they opened Event or Blocks.
+  // Content mode now only collapses the inspector; the stage stays visible
+  // at every viewport width (mobile included, where the drawers overlay it).
+  if(stageWrap)stageWrap.hidden=false;
+  if(inspector)inspector.hidden=false;
+  if(selection)selection.hidden=content;
+  if(status)status.hidden=innerWidth<=1180;
+  $$('.studio-panel-resizer',main).forEach(x=>x.hidden=innerWidth<=1180);
   if(content){
-    body.classList.remove('inspector-open','mobile-pane-collapsed');
+    body.classList.remove('mobile-pane-collapsed');
   }else{
     requestAnimationFrame(()=>{
       try{typeof updateCanvasView==='function'&&updateCanvasView()}catch{}
@@ -52,6 +62,24 @@ function applyLayout(){
 }
 clampPanelWidths();
 applyLayout();
+// DESIGN-FIX continuation: poster documents have no guest/event data — auto-open
+// the Elements pane once; the canvas itself now always stays visible.
+function posterAutoPane(){
+  const st=window.EInviteEditorBridge?.getState?.();
+  if(!st||st.eventType!=='Poster'||body.dataset.posterPaneApplied)return;
+  body.dataset.posterPaneApplied='1';
+  if(activeSection()==='event'){
+    // Route the switch through the public tab button (click) — direct class
+    // toggles get re-applied back by the pane watchers.
+    document.querySelector('.studio-tool-rail [data-studio-tab="elements"]')?.click();
+  }
+}
+posterAutoPane();
+for(const n of ['einvite:editor-ready','einvite:editor-state-replaced'])document.addEventListener(n,posterAutoPane);
+(function posterPanePoll(attempt){ // panes are built later by studio-experience; poll briefly
+  if(body.dataset.posterPaneApplied||attempt>40){const st=window.EInviteEditorBridge?.getState?.();if(st&&st.eventType==='Poster'&&attempt<=40&&!window.__posterPaneWaitDone){window.__posterPaneWaitDone=true;setTimeout(()=>posterAutoPane(),100);return}return}
+  window.__posterPaneWaitDone=false;requestAnimationFrame(()=>posterPanePoll(attempt+1));
+})(0);
 rail?.addEventListener('click',()=>requestAnimationFrame(applyLayout));
 new MutationObserver(applyLayout).observe(host,{subtree:true,attributes:true,attributeFilter:['class']});
 addEventListener('resize',()=>{clampPanelWidths();applyLayout()});

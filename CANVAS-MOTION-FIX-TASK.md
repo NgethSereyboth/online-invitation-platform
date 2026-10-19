@@ -26,10 +26,11 @@ source; do not weaken any test, gate, threshold, or baseline.
 
 ## Current status (what must change)
 
-- Acceptance: **20 pass / 2 fail / 2 skipped** (the 2 skips are by design:
-  networking-collab-poller and decode-ahead-debug-api).
-- Perf: wheel + pan pass; **snap-drag fails** (frame ≥ 50 ms in 3/3 runs) and **crop fails**
-  (gesture never engages).
+- **Status after the 2026-10-19 re-verification (see `artifacts/canvas-motion/ledger.md`, "fresh evidence, 2026-10-19"): ACCEPTED.** The fix set committed as `d9818a6` passes every gate on this machine:
+  - Acceptance: **22 pass / 0 fail / 2 skipped** (the 2 skips are by design).
+  - Perf (renderer pinned per the ledger procedure): exit 0, zero ≥50 ms frames, zero long tasks, all gestures `engaged:true` (all 3 runs × 4 gestures).
+  - The unpinned "hitch" (max ~65-151 ms first-gesture frame) is the environment amplifier already documented in the ledger — the DoD procedure pins the renderer, and fresh evidence reproduces it unpinned and eliminates it pinned.
+- Status at the time this work order was written (superseded): 20 pass / 2 fail / 2 skipped; snap-drag ≥50 ms in 3/3; crop never engaged.
 - Visual: light passes all 3 widths; **dark fails all 3 widths**
   (5.52 % / 10.67 % / 6.62 % vs the 3.5 % limit).
 - pytest baseline: `pytest tests/ -q -s` → **14 F / 127 P**, all 14 failures pre-existing

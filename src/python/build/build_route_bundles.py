@@ -102,6 +102,76 @@ def js_bundle(paths: list[str]) -> str:
     return "".join(chunks)
 
 
+def css_compact_whitespace(text: str) -> str:
+    """Collapse pure whitespace (indentation, blank lines) outside CSS payloads.
+
+    CSS grammar ignores the *amount* of whitespace outside quoted strings and
+    url(...) payloads, so collapsing runs never changes meaning — it only
+    removes transfer weight. A newline between two selector/property tokens is
+    preserved as a single ``\n`` (still one whitespace token, still a valid
+    combinator/delimiter), while its indentation trail is dropped. Payload
+    interiors (strings, url(), comments) are copied through verbatim. Charter
+    script/Khmer multibyte content is untouched (byte-preserving via UTF-8).
+
+    Aborts (raises ValueError) rather than guessing if a payload spans lines:
+    a quoted string containing a newline is invalid CSS anyway, but a url()
+    payload may be whitespace-significant and is treated as sacred.
+    """
+    out: list[str] = []
+    i, n = 0, len(text)
+    protected_end_only = -1  # index just past the last protected construct
+    while i < n:
+        c = text[i]
+        if c == "/" and text[i:i + 2] == "/*":
+            j = text.find("*/", i + 2)
+            j = n if j == -1 else j + 2
+            if "\n" in text[i:j] and i > protected_end_only:
+                # comment interior may contain layout-critical newline? comments
+                # are stripped later in css_bundle, but keep verbatim anyway
+                raise ValueError("comment spans a newline; refusing to compact")
+            out.append(text[i:j])
+            protected_end_only = j
+            i = j
+            continue
+        if c in "\"'":
+            j = i + 1
+            while j < n:
+                if text[j] == "\\":
+                    j += 2
+                    continue
+                if text[j] == c:
+                    break
+                j += 1
+            j = j + 1 if j < n else n
+            out.append(text[i:j])
+            protected_end_only = j
+            i = j
+            continue
+        if text[i:i + 4].lower() == "url(":
+            j = text.find(")", i)
+            j = n if j == -1 else j + 1
+            if "\n" in text[i:j]:
+                raise ValueError(f"url() payload spans a newline at offset {i}")
+            out.append(text[i:j])
+            protected_end_only = j
+            i = j
+            continue
+        if not c.isspace() and i <= protected_end_only:
+            # non-whitespace can only follow a payload; emit it directly
+            protected_end_only = -1
+        if c.isspace():
+            j = i
+            while j < n and text[j].isspace():
+                j += 1
+            # one bare newline stands in for the run when a line break existed
+            out.append("\n" if "\n" in text[i:j] else " ")
+            i = j
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def css_bundle(paths: list[str]) -> str:
     """Concatenate CSS sources into a single bundle.
 
@@ -120,7 +190,7 @@ def css_bundle(paths: list[str]) -> str:
                 flags=re.I,
             )
         )
-        chunks.append(markers + re.sub(r"/\*.*?\*/", "", source, flags=re.S).rstrip())
+        chunks.append(markers + css_compact_whitespace(re.sub(r"/\*.*?\*/", "", source, flags=re.S).rstrip()))
     return "".join(chunks)
 
 

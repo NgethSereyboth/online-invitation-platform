@@ -1,0 +1,42 @@
+/* DESIGN-FIX polish layer — 2026-10-19 (DESIGN-FIX-TASK.md P4)
+   Aimed at a cleaner, Canva-like design studio:
+   - calmer dot-grid canvas backdrop (was a coarse loud grid)
+   - grouped canvas toolbar with size picker styling
+   - poster/responsive stage sizing helpers
+   - designer error recovery cards
+*/
+
+/* 1. Calmer canvas backdrop */
+.canvas-viewport{
+  background-image:radial-gradient(#cfd2d8 1px,transparent 1px)!important;
+  background-size:16px 16px!important;
+}
+.canvas-viewport:before{
+  background:radial-gradient(circle at center,transparent 0,transparent 62%,rgba(45,47,54,.05) 100%);
+}
+
+/* 2. Canvas size picker (poster presets) */
+#posterSizes{
+  max-width:210px;
+  height:32px;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:11px;
+  background:#f7f7f9;
+  border-color:#e4e4e8;
+  color:#4a4550;
+}
+#posterSizes:focus-visible{outline:2px solid color-mix(in srgb,var(--accent,#7d4052) 45%,transparent);outline-offset:1px}
+
+/* 3. Probe diagnostics for poster documents (hidden unless size cannot be applied) */
+.stage[data-poster-size]{border-radius:4px}
+.stage-wrap .toolbar #posterSizes:invalid{border-color:#c8556f}
+
+/* 4. Designer workspace error recovery */
+.designer-error-note{color:#7a4956;font-size:13px;margin:6px 0 16px}
+.designer-error-actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.designer-error-actions .button-link.primary{border-color:var(--accent,#9d4555);background:var(--accent,#9d4555);color:#fff}
+.designer-page .hint{max-width:560px;line-height:1.55}
+
+/* 5. Editor toolbar polish: match selected zoom & size select heights */
+.studio-canvas-toolbar select{height:32px}
