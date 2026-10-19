@@ -9,7 +9,24 @@
     event: '◈', pages: '▤', media: '▧', blocks: '▦', elements: '✦',
     object: '◌', layers: '≡', sections: '▥', theme: '◐', publish: '↗'
   };
-  function text(node) { return (node?.textContent || '').trim(); }
+  /* P2-1: bilingual nodes ship one span per language (`.i18n-en` / `.i18n-km`,
+     hidden by `[lang="en"] .i18n-km{display:none}`). textContent concatenated
+     both, so the statusbar read "Saved locallyបានរក្សាទុក". Read the active
+     span only and fall back to the old behaviour for plain nodes. */
+  function activeLang() {
+    if (window.EInviteLang === 'km' || window.EInviteLang === 'en') return window.EInviteLang;
+    return /^km/i.test(document.documentElement.lang || '') ? 'km' : 'en';
+  }
+  function text(node) {
+    if (!node) return '';
+    const lang = activeLang();
+    const spans = [...node.querySelectorAll('.i18n')];
+    if (spans.length) {
+      const pick = spans.find(s => s.classList.contains(`i18n-${lang}`));
+      if (pick) return (pick.textContent || '').trim();
+    }
+    return (node.textContent || '').trim();
+  }
   function button(label, className = '') {
     const b = document.createElement('button');
     b.type = 'button'; b.textContent = label; if (className) b.className = className;
@@ -435,6 +452,9 @@
   if (statusStage) statusObserver.observe(statusStage, { subtree: true, attributes: true, attributeFilter: ['class'] });
   document.addEventListener('pointerup', () => setTimeout(updateStatusbar, 0), true);
   updateStatusbar();
+  // P2-1: a language switch must re-render the statusbar from the newly active span.
+  document.addEventListener('einvite:lang-changed', () => setTimeout(updateStatusbar, 0));
+  try { window.EInviteI18n?.subscribe?.(() => setTimeout(updateStatusbar, 0)); } catch (_) { /* i18n optional */ }
   const designCheck = document.createElement('div');
   designCheck.className = 'studio-design-check'; designCheck.hidden = true;
   designCheck.innerHTML = `

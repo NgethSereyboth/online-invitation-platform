@@ -7,8 +7,14 @@
   const left = document.querySelector('aside.left');
   const right = document.querySelector('aside.right');
   if (!body || !stage || !left || !right) return;
-  body.classList.add('mobile-editor-v14');
+  // Only add mobile-editor-v14 class at ≤600px where the legacy mobile layout applies
   const mq = matchMedia('(max-width: 600px)');
+  function applyMobileClass() {
+    if (mq.matches) body.classList.add('mobile-editor-v14');
+    else body.classList.remove('mobile-editor-v14');
+  }
+  applyMobileClass();
+  mq.addEventListener('change', applyMobileClass);
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   let returnFocus = null;

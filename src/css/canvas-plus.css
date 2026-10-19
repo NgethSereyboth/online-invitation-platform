@@ -253,7 +253,7 @@ body.studio-experience .studio-pane,body.studio-experience .studio-inspector-pan
 body.studio-experience .studio-pane>h2,body.studio-experience .studio-inspector-pane>h2{padding-top:16px;border-top:1px solid var(--app-line);margin-top:18px!important}
 body.studio-experience .studio-pane-heading{padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--app-line)}
 body.studio-experience .studio-pane-heading h1{font-size:24px!important;margin:2px 0 0;color:var(--app-text)!important}
-body.studio-experience .studio-pane-heading small{font-size:10px!important;text-transform:uppercase;letter-spacing:.12em;color:var(--app-muted)!important}
+body.studio-experience .studio-pane-heading small{font-size:11px!important;text-transform:uppercase;letter-spacing:.12em;color:var(--app-muted)!important}
 
 body[data-page="materials"] .library-head>p,body[data-page="billing"] .billing-head p,body[data-page="account"] .account-page>p{color:var(--app-muted)!important;line-height:1.6}
 body[data-page="materials"] .upload-box h2,body[data-page="materials"] .upload-box h3{margin-top:0;color:var(--app-text)!important}

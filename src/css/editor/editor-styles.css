@@ -470,7 +470,7 @@ html[data-theme="dark"] .v54-footer-tools-menu { box-shadow: 0 22px 60px #000a; 
 }
 @media (max-width: 600px) {
   body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left {
-    position: fixed; inset: 58px 0 68px 0; width: 100vw; max-width: 100vw; height: auto; padding: 0;
+    position: fixed; inset: var(--mobile-header-h, 58px) 0 calc(68px + env(safe-area-inset-bottom)) 0; width: 100vw; max-width: 100vw; height: auto; padding: 0;
     display: grid; grid-template-columns: var(--einvite-rail-width, 66px) minmax(0, 1fr); overflow: hidden;
   }
   body.studio-experience.workspace-experience-v54.einvite-layout-mobile aside.left > .studio-tool-rail { position: relative; inset: auto; width: var(--einvite-rail-width, 66px); min-width: var(--einvite-rail-width, 66px); height: 100%; margin: 0; }
@@ -1206,5 +1206,393 @@ body[data-page="index"] .v54-selection-card[hidden] { display: none; }
   body[data-page="index"] .studio-inspector-tab,
   body[data-page="index"] .studio-rail-button { transition: none; }
 }
+
+/* =========================================================================
+   Pass 2 — U1 (audit §A–§G) responsive/theming fixes.
+   Evidence: artifacts/ui-audit/fixes/pass2-u1/ (before/, probe1/, after/).
+   Every selector stays index-scoped so other pages keep their own chrome.
+   ========================================================================= */
+
+/* U1-1 · One chrome surface per breakpoint. The v54 context row rendered as a
+   648x243 white sheet at 768 (probe: order:20, top 740) and as a 295x91 empty
+   card at 375. Compact it into its reserved 44px row between the canvas
+   toolbar and the viewport at tablet widths; ≤640px editor-styles already
+   hides it and the status pills carry the same information. */
+@media (min-width: 641px) and (max-width: 1180px) {
+  body[data-page="index"] .stage-wrap > .ei-context-toolbar {
+    order: 2 !important;
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+    flex: 0 0 auto !important;
+    width: calc(100% - 20px) !important;
+    max-width: none !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    margin: 6px 10px 0 !important;
+    padding: 5px 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+  body[data-page="index"] .stage-wrap > .ei-context-toolbar > * { flex: 0 0 auto !important; }
+}
+@media (max-width: 640px) {
+  body[data-page="index"] .stage-wrap > .ei-context-toolbar { display: none !important; }
+}
+/* Desktop keeps the v23 context row inside the canvas toolbar (one responsive
+   surface per breakpoint, UI-AUDIT §P1-1). Left visible, the stage row absorbed
+   all free space as a 257px empty white band above the canvas (probe 1440:
+   row 420,156 640x257 white, viewport pushed to y413). */
+@media (min-width: 1181px) {
+  body[data-page="index"] .stage-wrap > .ei-context-toolbar { display: none !important; }
+}
+
+/* U1-2 · Topbar: the action cluster painted over #documentTitle at 768 because
+   `.studio-topbar-right { min-width: max-content }` cannot shrink while the
+   row already measures ~751/768px before the title gets a single px. The
+   history buttons are the pair with keyboard equivalents (Cmd/Ctrl+Z) and the
+   desktop canvas toolbar keeps its own copies. */
+@media (max-width: 900px) {
+  body[data-page="index"] > header.studio-topbar #undoBtn,
+  body[data-page="index"] > header.studio-topbar #redoBtn { display: none !important; }
+}
+body[data-page="index"] #documentTitle {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* U1-3 · ≤600px the topbar wraps to two rows and measures 126px (375 and 320,
+   probe: header 126 vs stage top 58 — 68px of the second row sat under the
+   editor chrome). The bar is deterministic, so publish the measured height and
+   pin the bar to it; main/panes already inset with this var. */
+@media (max-width: 600px) {
+  body[data-page="index"].studio-experience { --mobile-header-h: 126px; }
+  body[data-page="index"].studio-experience > header.studio-topbar {
+    height: 126px !important;
+    min-height: 126px !important;
+    max-height: 126px !important;
+    overflow: hidden !important;
+  }
+  /* The desktop-only hint must clear the 68px V14 action bar instead of
+     rendering under it (probe: hint 569..655, bar 599..667). */
+  body[data-page="index"] > .mobile-desktop-hint {
+    bottom: calc(68px + env(safe-area-inset-bottom) + 10px) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+/* U1-4 · ≤430px a legacy rule slid the entire canvas toolbar off-canvas
+   (`left: calc(100vw - 26px); width: calc(100vw - 18px); transform:
+   translateX(-100%)`), leaving only a stray 42px zoom read-out at x=2. The
+   toolbar is a normal in-row scroller at every width. */
+@media (max-width: 430px) {
+  body[data-page="index"] .stage-wrap > .studio-canvas-toolbar {
+    left: auto !important;
+    width: auto !important;
+    transform: none !important;
+  }
+}
+
+/* U1-5 · Tablet drawer width: `.studio-pane-host` is absolutely placed at
+   `inset: 0 0 0 66px` inside aside.left, so aside.left must be rail + pane
+   wide or the host resolves to 0px (probe 768: aside 66px, host 24px, so the
+   creation drawer would open empty). `mobile-pane-collapsed` is the state the
+   contract runs in on tablets, and its own rule pins `.left` to the rail; the
+   drawer width has to win over it. */
+@media (min-width: 601px) and (max-width: 820px) {
+  body.studio-experience.einvite-layout-mobile aside.left,
+  body.studio-experience.studio-design-mode.einvite-layout-mobile aside.left,
+  body.studio-experience.studio-design-mode.einvite-layout-mobile.mobile-pane-collapsed aside.left {
+    width: min(356px, 100vw) !important;
+  }
+  body.studio-experience.einvite-layout-mobile aside.left > .studio-pane-host,
+  body.studio-experience.studio-design-mode.einvite-layout-mobile aside.left > .studio-pane-host {
+    width: auto !important;
+    min-width: 0 !important;
+    /* The older mobile editor translated the host itself (translateX(-100%-12px),
+       final-polish / editor-layout-stability / zoom-layout, specificity (0,4,1)).
+       The contract now moves aside.left instead, so the host must not stay
+       translated or the opened drawer shows an empty panel (probe 768:
+       aside 356 but host parked at x=-591). */
+    transform: none !important;
+  }
+}
+
+/* U1-6 · Dark theme: surfaces that hard-coded white/#eee while their text
+   follows the theme tokens (dark probe: fit pill 1.05, hint 1.11, V6 flow
+   panel white with #f3f4f8 text) and the context-toolbar Assets button, which
+   was white-on-transparent in both themes (1.16). */
+body[data-page="index"] .mobile-desktop-hint {
+  background: color-mix(in srgb, var(--app-warn, #c98322) 10%, var(--app-surface, #fff)) !important;
+  color: var(--app-text, #1f2026) !important;
+  border-color: var(--app-line, #e2e3e8) !important;
+}
+body[data-page="index"] .v20-fit-pill {
+  background: var(--app-surface-3, #eff0f4) !important;
+  color: var(--app-text, #1f2026) !important;
+}
+body[data-page="index"] #workflowV6Flow { background: var(--app-surface, #fff) !important; }
+body[data-page="index"] #workflowV6Flow > header { background: var(--app-surface-2, #f8f8fb) !important; }
+body[data-page="index"] #v23ContextToolbar button.primary {
+  background: var(--app-accent, #8b465b) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+html[data-theme="dark"] body[data-page="index"] #v23ContextToolbar button.primary {
+  background: var(--app-accent, #e18aa5) !important;
+  color: #1a1b22 !important;
+}
+
+/* U1-7 · One zoom control: the bottom-right canvas HUD keeps zoomIn/zoomOut/
+   fitCanvas; the duplicated toolbar slider and its orphaned sr-only label are
+   removed at index (the toolbar keeps the read-only percentage). */
+body[data-page="index"] .stage-wrap > .studio-canvas-toolbar #canvasZoomSlider,
+body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > label.sr-only { display: none !important; }
+
+/* U1-8 · Timeline pill: dock it in the statusbar track (left edge of the
+   canvas, just above the bar) instead of floating over the canvas centre in
+   the same lane as the zoom HUD (probe 1440: pill 674..767 / HUD 780..1094),
+   and clear of the creation pane (probe: pill 80..173 sat over the left
+   pane's style cards). */
+body[data-page="index"] .ei-timeline-launch {
+  left: calc(var(--einvite-rail-width, 66px) + var(--einvite-pane-width, 304px) + 12px) !important;
+  transform: none !important;
+  bottom: calc(var(--app-statusbar-h, 32px) + 8px) !important;
+}
+
+/* U1-9 · Inspector tabs: the five tracks were min-content (72px each), so the
+   row measured 360px inside a 301px nav and the last tab rendered at x=1443 —
+   a 72px overflow inside the 330px inspector (same inside the 360px mobile
+   drawer). Flexible tracks + ellipsised captions keep all five reachable. */
+body[data-page="index"] .studio-inspector-tabs {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+body[data-page="index"] .studio-inspector-tab { min-width: 0 !important; padding-inline: 4px !important; }
+body[data-page="index"] .studio-inspector-tab > small {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* U1-10 · Type floor (§G): every caption that measured 8–10px in the probe
+   (rail labels, brand caption, pane kicker, flow cards, statusbar, V5 pill,
+   V20 field captions) is raised to the 11px floor. */
+body[data-page="index"] .studio-brand-copy small,
+body[data-page="index"] .studio-rail-button > span:last-child,
+body[data-page="index"] .studio-nav-label,
+body[data-page="index"] .studio-statusbar,
+body[data-page="index"] .studio-statusbar strong,
+body[data-page="index"] .studio-pane-heading small,
+body[data-page="index"] .flow-project-card small,
+body[data-page="index"] .flow-project-card span,
+body[data-page="index"] #flowProjectMeta,
+body[data-page="index"] #workflowV7ProTip strong,
+body[data-page="index"] #workflowV7ProTip small,
+body[data-page="index"] .workflow-v5-status,
+body[data-page="index"] .v20-field,
+body[data-page="index"] .v20-field > span { font-size: 11px !important; }
+
+/* U1-11 · V20 typography toolbar below desktop: the glyph buttons were 36px
+   wide with 28px of padding (the "B" glyph clipped by 3px) and the responsive
+   preview button clipped a 17-character label inside 36px (over 69–73px). */
+@media (max-width: 1180px) {
+  body[data-page="index"] #v20TypographyToolbar #v20ToolbarBold,
+  body[data-page="index"] #v20TypographyToolbar #v20ToolbarItalic {
+    padding: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  body[data-page="index"] #v20TypographyToolbar #v20ResponsivePreview { font-size: 0 !important; }
+  body[data-page="index"] #v20TypographyToolbar #v20ResponsivePreview::before { content: "📱"; font-size: 15px; }
+}
+
+/* U1-12 · Device buttons (≤1450px) must keep their single-letter short labels:
+   a `font-size:13px!important` toolbar rule above re-showed the full words, so
+   the 36px buttons painted "MobileTabletDesktop" over each other and over the
+   zoom read-out (P1-1 "ghost/overlapping pills"). */
+@media (max-width: 1450px) {
+  body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > button.v54-device-button {
+    font-size: 0 !important;
+    color: transparent !important;
+    overflow: hidden !important;
+  }
+  body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > button.v54-device-button::after {
+    font-size: 11px !important;
+    color: var(--app-text, #35353b) !important;
+  }
+}
+
+/* U1-13 · Selection toolbar: the legacy absolute bar sets `top:58px` and
+   ux-refine adds `bottom:52px`, so the box stretched to the whole stage height
+   and `align-items:center` dropped its buttons mid-canvas over the pane sheet
+   (measured with the title selected: 1440 427x692, 1024 481x632, 768 332x857 —
+   UI-AUDIT P1-1 "selection toolbar sits mid-canvas"). Keep one edge: a compact
+   bar docked to the bottom edge of the canvas, in the lane above the zoom HUD. */
+body[data-page="index"] .studio-selection-toolbar {
+  height: auto !important;
+  top: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+@media (min-width: 601px) {
+  body[data-page="index"] .studio-selection-toolbar {
+    bottom: 112px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+/* U1-14 · V5 canvas-status pill: toolbar-on-toolbar collision at tablet and
+   desktop (with a text selection: 1440 v20 typography bar 96..193 vs pill
+   164..192; 768 v20 bar 96..154 vs pill 130..158; 1024 v20 bar 96..193 vs pill
+   130..158). Above 640px the canvas name + selection state are already carried
+   by the context row / statusbar, so the floating duplicate is removed. ≤640
+   keeps it — there the context row and statusbar are hidden and it is the only
+   status surface. */
+@media (min-width: 641px) {
+  body[data-page="index"] .workflow-v5-status { display: none !important; }
+}
+
+/* U1-15 · V20 typography toolbar below desktop: `max-height:58px` clipped the
+   69px `.v20-field` cells, so the caption row (Style/Font/Size/Align/Color) sat
+   above the toolbar box and the cells read as empty chips (P1-6 "empty white
+   chips" / clipped chips at 375). The cells need their caption inside the box. */
+@media (max-width: 820px) {
+  body.studio-experience #v20TypographyToolbar:not(.collapsed) { max-height: 78px !important; }
+}
+
+/* U1-16 · Timeline pill (P1-6 "re-anchor to the statusbar track"): the desktop
+   dock (left:382px = rail + pane + 12) also applied below 1181, where the left
+   pane is not laid out — at 768 the pill sat on top of the zoom HUD (measured:
+   pill 382..475 x 940..984 vs HUD 293..475 x 918..974; occlusion "+"/"Fit").
+   Below 1181 the pane is a drawer, so the pill hugs the canvas edge instead. */
+@media (max-width: 1180px) {
+  body[data-page="index"] #eiTimelineLaunch { left: 14px !important; }
+}
+@media (min-width: 821px) and (max-width: 1180px) {
+  body[data-page="index"] #eiTimelineLaunch { left: 78px !important; }
+}
+
+/* U1-17 · 768 topbar: the wordmark ("E-invitation / Design Studio") shared the
+   row with the document title, squeezing it to clientWidth 50px for 93px of
+   text (clippedText "Sokha & Dara" over:44). Below 901 the wordmark copy is
+   dropped (the logo mark stays) and the remaining chrome is tightened — the
+   topbar row was exactly full at 768, so the title needs ~44px back. */
+@media (max-width: 900px) {
+  body[data-page="index"] .studio-topbar-left #flowHomeButton .studio-brand-copy { display: none !important; }
+  body[data-page="index"] .studio-topbar { gap: 4px !important; }
+  body[data-page="index"] .studio-topbar-left { gap: 6px !important; }
+  body[data-page="index"] .studio-topbar-left #flowHomeButton { padding-inline: 4px !important; }
+  body[data-page="index"] .studio-topbar .language-switch button { padding-inline: 4px !important; }
+  body[data-page="index"] .studio-topbar-right #previewBtn,
+  body[data-page="index"] .studio-topbar-right #publishBtn { padding-inline: 7px !important; }
+}
+
+/* U1-22 · Last type-floor stragglers (own-text census): the compact context
+   row's "Design" chip (10px), the flow panel's pinned step number (9px) and the
+   statusbar tools trigger glyph (9px). */
+body[data-page="index"] .ei-context-toolbar,
+body[data-page="index"] .ei-context-toolbar button,
+body[data-page="index"] .ei-context-toolbar span,
+body[data-page="index"] aside#workflowV6Flow .workflow-v6-flow-fixed span,
+body[data-page="index"] .v54-footer-tools-trigger,
+body[data-page="index"] .v54-footer-tools-trigger span { font-size: 11px !important; }
+
+/* U1-23 · The rich-text tools row is a horizontal scroller, but its last button
+   ("Link") was flex-shrunk below its own label at 768 (box 48px vs scrollWidth
+   53 → clippedText over:7). Items keep their content width and the row scrolls. */
+body[data-page="index"] #v20TypographyToolbar .rt-toolbar-tools button {
+  flex: 0 0 auto !important;
+  padding-inline: 10px !important;
+}
+
+/* U1-24 · At 320 the mobile bar wrapped its sixth button ("Advanced") onto its
+   own floating row and the label ellipsized ("Advan…", clippedText over:9).
+   Below 361 the bar stays a single row and the last button drops its text — the
+   ••• glyph (aria-haspopup dialog) already carries the meaning. */
+@media (max-width: 360px) {
+  body[data-page="index"] #mobileEditorV14Bar { flex-wrap: nowrap !important; }
+  body[data-page="index"] #mobileEditorV14Bar #mobileAdvancedV14 {
+    flex: 0 0 auto !important;
+    min-width: 36px !important;
+  }
+  body[data-page="index"] #mobileEditorV14Bar #mobileAdvancedV14 small { display: none !important; }
+}
+
+/* U1-25 · Dark mode: the flow-list "Design flow" entry kept the raw
+   `--flow-purple` (#7b47ff) on the dark surface (measured 3.19:1). Use the
+   light tint there instead of re-tinting the shared token. */
+html[data-theme="dark"] body[data-page="index"] #workflowV7DesignFlow span { color: #a78bfa !important; }
+
+/* U1-18 · ≤600 the topbar "•••" trigger clipped its own glyph: scrollWidth 47
+   in a 40px content box (clippedText over:7, before and after). */
+@media (max-width: 600px) {
+  body[data-page="index"] .canvas-header-more-trigger {
+    padding-inline: 4px !important;
+    font-size: 13px !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+/* U1-19 · Below desktop the responsive-preview typography button is icon-only
+   (font-size:0, glyph via the `::before` "📱" from U1-11) but its padding left
+   the glyph clipped (scrollWidth 49 in a 36px cell), so it read as an empty
+   white chip (P1-6). Let the cell fit its glyph. */
+body[data-page="index"] #v20ResponsivePreview { padding-inline: 4px !important; }
+
+/* U1-20 · The mobile "desktop screen" hint is a fixed card (bottom:78px at
+   ≤640). It fully covered the zoom HUD in the after capture (375: HUD buttons
+   occluded ×3; at 320 it also covered the invitation text). Below 641 the
+   mobile bar already marks the mode, so the card is dropped instead of stacked
+   over the canvas. */
+@media (max-width: 640px) {
+  body[data-page="index"] aside.mobile-desktop-hint { display: none !important; }
+}
+
+/* U1-14b · ≤640 the V5 canvas-status pill floated over the lower canvas and
+   covered the invitation text at 320 (occlusion "span.rt-run" ← #workflowV5Status).
+   Above 640 the pill is removed (U1-14); below it docks into the empty lane
+   between the header and the typography toolbar. */
+@media (max-width: 640px) {
+  body[data-page="index"] .workflow-v5-status {
+    top: 4px !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* U1-21 · Type-floor sweep 2: the remaining 8–10px studio copy lives in the
+   left pane cards ("View all", block tiles, project meta), the inspector tabs
+   and steppers, the workflow flow panel and the mobile bar labels (captured at
+   375: 8px|small ×11, 9px|b ×4, 10px|button ×18/19, 9px|small ×6 bar labels).
+   Raised to the 11px meta floor; icon-only buttons keep their SVG sizing. */
+body[data-page="index"] .studio-pane small,
+body[data-page="index"] .studio-pane p,
+body[data-page="index"] .studio-pane b,
+body[data-page="index"] .studio-pane .workflow-pane-close,
+body[data-page="index"] .studio-pane button:not(:has(svg)),
+body[data-page="index"] .studio-inspector small,
+body[data-page="index"] .studio-inspector b,
+body[data-page="index"] .studio-inspector strong,
+body[data-page="index"] .studio-inspector-tab,
+body[data-page="index"] .studio-inspector-tabs button,
+body[data-page="index"] .studio-inspector button:not(:has(svg)),
+body[data-page="index"] #mobileEditorV14Bar small,
+body[data-page="index"] .studio-footer-tools,
+body[data-page="index"] aside#workflowV6Flow small,
+body[data-page="index"] aside#workflowV6Flow strong,
+body[data-page="index"] aside#workflowV6Flow b,
+body[data-page="index"] aside#workflowV6Flow p,
+body[data-page="index"] aside#workflowV6Flow .workflow-v6-flow-number,
+body[data-page="index"] aside#workflowV6Flow button { font-size: 11px !important; }
 
 }

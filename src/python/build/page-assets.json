@@ -79,7 +79,7 @@
       ]
     },
     "designer.html": {
-      "bytes": 377232,
+      "bytes": 377234,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -105,7 +105,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1501876,
+      "bytes": 1513169,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -180,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 399524,
+      "bytes": 399526,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
