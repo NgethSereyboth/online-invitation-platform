@@ -62,12 +62,38 @@ function applyLayout(){
 }
 clampPanelWidths();
 applyLayout();
-// DESIGN-FIX continuation: poster documents have no guest/event data — auto-open
-// the Elements pane once; the canvas itself now always stays visible.
-function posterAutoPane(){
+  // Owner decision (CANVA-UI §5, accepted 2026-10-20): poster documents have
+  // no event data — hide the Event/Blocks rail buttons, the RSVP + countdown
+  // left-panel groups ([data-poster-hide] wrappers in index.html) and the
+  // Design-home Event/Blocks cards (workflow-refine flow); auto-open the
+  // Elements pane once; the canvas itself now always stays visible.
+  function posterPanelTreatments(){
+    $$('.studio-tool-rail [data-studio-tab="event"],.studio-tool-rail [data-studio-tab="blocks"]').forEach(b=>{b.hidden=true});
+    $$('[data-poster-hide]').forEach(node=>{node.hidden=true});
+    $$('[data-flow-open="event"],[data-flow-open="blocks"]').forEach(el=>{
+      if(el.closest('[data-studio-pane="design"]'))el.hidden=true; // flow cards
+    });
+    if(['event','blocks'].includes(activeSection())){ // never leave a hidden pane active
+      document.querySelector('.studio-tool-rail [data-studio-tab="elements"]')?.click();
+    }
+  }
+  // workflow-refine (Design home) rebuilds/reorders the rail after this script
+  // runs; re-apply the treatments whenever those surfaces change.
+  const posterTreatWatcher=new MutationObserver(()=>{
+    if(body.dataset.posterPaneApplied)posterPanelTreatments();
+  });
+  for(const target of [rail,host]){
+    if(target)posterTreatWatcher.observe(target,{childList:true,subtree:target!==rail});
+  }
+  // Public hook: app.js (connectServer) re-migrates `state` from the fetched
+  // server document and calls this; it re-drives posterAutoPane without assuming
+  // load order beyond app.js loading later in the bundle.
+  window.EInvitePosterTreat=()=>{try{window.__posterPaneWaitDone=false;applyLayout();posterAutoPane()}catch{}};
+  function posterAutoPane(){
   const st=window.EInviteEditorBridge?.getState?.();
   if(!st||st.eventType!=='Poster'||body.dataset.posterPaneApplied)return;
   body.dataset.posterPaneApplied='1';
+  posterPanelTreatments();
   if(activeSection()==='event'){
     // Route the switch through the public tab button (click) — direct class
     // toggles get re-applied back by the pane watchers.
@@ -77,7 +103,7 @@ function posterAutoPane(){
 posterAutoPane();
 for(const n of ['einvite:editor-ready','einvite:editor-state-replaced'])document.addEventListener(n,posterAutoPane);
 (function posterPanePoll(attempt){ // panes are built later by studio-experience; poll briefly
-  if(body.dataset.posterPaneApplied||attempt>40){const st=window.EInviteEditorBridge?.getState?.();if(st&&st.eventType==='Poster'&&attempt<=40&&!window.__posterPaneWaitDone){window.__posterPaneWaitDone=true;setTimeout(()=>posterAutoPane(),100);return}return}
+  if(body.dataset.posterPaneApplied||attempt>600){const st=window.EInviteEditorBridge?.getState?.();if(st&&st.eventType==='Poster'&&attempt<=600&&!window.__posterPaneWaitDone){window.__posterPaneWaitDone=true;setTimeout(()=>posterAutoPane(),100);return}return}
   window.__posterPaneWaitDone=false;requestAnimationFrame(()=>posterPanePoll(attempt+1));
 })(0);
 rail?.addEventListener('click',()=>requestAnimationFrame(applyLayout));

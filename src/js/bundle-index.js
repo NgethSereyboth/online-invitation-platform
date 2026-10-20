@@ -2039,6 +2039,26 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
+// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
+// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
+// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
+// custom canvas-size prompt (app.js) and the Template Studio custom poster
+// size prompt (templates.js); lives here because both route bundles already
+// load ui-dialogs.js before their consumer modules.
+window.EInvitePosterUnits=Object.freeze({
+ PX_PER:{in:96,cm:96/2.54,ft:1152},
+ parse(value){
+  const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
+  const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
+  if(!m)return null;
+  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+  return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
+ },
+ toPx(number,unit){
+  const per=this.PX_PER[String(unit||'').replace(/inches|"/g,'in').replace(/centimeters?/,'cm').replace(/feet|'/g,'ft')];
+  return per?number*per:number // bare numbers stay px
+ }
+});
 })();;(() => {
   'use strict';
   const RESUMABLE_THRESHOLD = 8_000_000;
@@ -2361,6 +2381,7 @@ try{
 serverInvite=await api('/api/invitations/'+encodeURIComponent(activeInviteId));
 state=migrateDocument(serverInvite.document||state);
 applyPosterCanvasSize();
+runPosterTreatments&&window.setTimeout(runPosterTreatments,0);
 redoStack=[];
 recentFieldEdits.clear();
 authoritativeStateApplying=true;
@@ -2664,7 +2685,18 @@ function beginUndoTransaction(label){
 }
 function flushCoalescedCommand(){const pending=pendingCoalescedCommand;if(!pending)return false;clearTimeout(pending.timer);pendingCoalescedCommand=null;save({history:false,capture:pending.capture!==false});pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:pending.label,before:pending.before,after:clone(state),coalesced:true}}));return true}
 function scheduleCoalescedFlush(delay=450){if(!pendingCoalescedCommand)return;clearTimeout(pendingCoalescedCommand.timer);pendingCoalescedCommand.timer=setTimeout(flushCoalescedCommand,Math.max(80,Number(delay)||450))}
-let state=migrateDocument(inviteStore.read(draftKey,inviteStore.read('sovan-invite-draft-v3',initial)));
+// Server document boot-choice fixes (poster-flow bug, owner decision implemented
+// 2026-10-20): with a cached sovan-server-invite:* and no local draft, the editor
+// used to boot on the Wedding `initial` default and never adopt the stored server
+// document — eventType/posterCanvas were lost and poster detection never fired.
+function serverDocumentToAdopt(){
+ const cached=serverInvite&&serverInvite.document&&typeof serverInvite.document==='object'?clone(serverInvite.document):null;
+ const draft=inviteStore.read(draftKey,null);
+ // Adopt the cached server document only when there is no local draft (the draft
+ // is always more recent than the cache) — keeps offline work intact.
+ return draft?null:cached
+}
+let state=migrateDocument(serverDocumentToAdopt()||inviteStore.read(draftKey,inviteStore.read('sovan-invite-draft-v3',initial)));
 editorSelectionIds=Array.isArray(state.editorModel?.selectionIds)?state.editorModel.selectionIds.map(String):[];
 if(state.editorModel)delete state.editorModel.selectionIds;
 window.EInviteEditorBridge={
@@ -4973,13 +5005,15 @@ const posterSizeSelect=$('#posterSizes'); if(posterSizeSelect){
  const chosen=posterSizeSelect.value;
  if(!chosen)return;
  if(chosen==='custom'){
- // DESIGN-FIX continuation: free-form canvas size — the "whatever size it is" ask.
+ // DESIGN-FIX continuation: free-form canvas size — px, in and cm accepted.
  (async()=>{
- const resp=window.uiPrompt?await window.uiPrompt('Canvas size — width × height in px (e.g. 1080x1350)','1080x1080',{title:'Custom canvas size',confirmText:'Resize canvas'}):null;
+ const resp=window.uiPrompt?await window.uiPrompt('Canvas size — width × height with an optional unit: px, in, or cm (e.g. 1080x1350, 24x36 in, 21x29.7 cm)','1080x1080',{title:'Custom canvas size',confirmText:'Resize canvas'}):null;
  if(!resp)return;
- const parts=String(resp).toLowerCase().split(/[^0-9.]+/).map(Number).filter(v=>Number.isFinite(v)&&v>0);
- if(parts.length<2)return alert('Enter both width and height, like 1080x1080.');
- const width=Math.max(200,Math.min(4000,Math.round(parts[0]))),height=Math.max(200,Math.min(4000,Math.round(parts[1])));
+ const size=window.EInvitePosterUnits?.parse?.(resp);
+ if(!size)return alert('Enter both width and height with an optional unit, like 1080x1080, 24x36 in, or 21x29.7 cm.');
+ const px=(number,unit)=>window.EInvitePosterUnits.toPx(number,unit); // bound call: `this` is units
+ const width=Math.max(200,Math.min(4000,Math.round(px(Number(size.w),size.wu)))),
+ height=Math.max(200,Math.min(4000,Math.round(px(Number(size.h),size.hu))));
  window.EInviteEditorBridge.replaceState({...clone(state),posterCanvas:{width,height}},{render:true,history:true,save:true,reason:'canvas-size'});
  requestAnimationFrame(fitCanvasToViewport);
  })();
@@ -7922,12 +7956,38 @@ function applyLayout(){
 }
 clampPanelWidths();
 applyLayout();
-// DESIGN-FIX continuation: poster documents have no guest/event data — auto-open
-// the Elements pane once; the canvas itself now always stays visible.
-function posterAutoPane(){
+  // Owner decision (CANVA-UI §5, accepted 2026-10-20): poster documents have
+  // no event data — hide the Event/Blocks rail buttons, the RSVP + countdown
+  // left-panel groups ([data-poster-hide] wrappers in index.html) and the
+  // Design-home Event/Blocks cards (workflow-refine flow); auto-open the
+  // Elements pane once; the canvas itself now always stays visible.
+  function posterPanelTreatments(){
+    $$('.studio-tool-rail [data-studio-tab="event"],.studio-tool-rail [data-studio-tab="blocks"]').forEach(b=>{b.hidden=true});
+    $$('[data-poster-hide]').forEach(node=>{node.hidden=true});
+    $$('[data-flow-open="event"],[data-flow-open="blocks"]').forEach(el=>{
+      if(el.closest('[data-studio-pane="design"]'))el.hidden=true; // flow cards
+    });
+    if(['event','blocks'].includes(activeSection())){ // never leave a hidden pane active
+      document.querySelector('.studio-tool-rail [data-studio-tab="elements"]')?.click();
+    }
+  }
+  // workflow-refine (Design home) rebuilds/reorders the rail after this script
+  // runs; re-apply the treatments whenever those surfaces change.
+  const posterTreatWatcher=new MutationObserver(()=>{
+    if(body.dataset.posterPaneApplied)posterPanelTreatments();
+  });
+  for(const target of [rail,host]){
+    if(target)posterTreatWatcher.observe(target,{childList:true,subtree:target!==rail});
+  }
+  // Public hook: app.js (connectServer) re-migrates `state` from the fetched
+  // server document and calls this; it re-drives posterAutoPane without assuming
+  // load order beyond app.js loading later in the bundle.
+  window.EInvitePosterTreat=()=>{try{window.__posterPaneWaitDone=false;applyLayout();posterAutoPane()}catch{}};
+  function posterAutoPane(){
   const st=window.EInviteEditorBridge?.getState?.();
   if(!st||st.eventType!=='Poster'||body.dataset.posterPaneApplied)return;
   body.dataset.posterPaneApplied='1';
+  posterPanelTreatments();
   if(activeSection()==='event'){
     // Route the switch through the public tab button (click) — direct class
     // toggles get re-applied back by the pane watchers.
@@ -7937,7 +7997,7 @@ function posterAutoPane(){
 posterAutoPane();
 for(const n of ['einvite:editor-ready','einvite:editor-state-replaced'])document.addEventListener(n,posterAutoPane);
 (function posterPanePoll(attempt){ // panes are built later by studio-experience; poll briefly
-  if(body.dataset.posterPaneApplied||attempt>40){const st=window.EInviteEditorBridge?.getState?.();if(st&&st.eventType==='Poster'&&attempt<=40&&!window.__posterPaneWaitDone){window.__posterPaneWaitDone=true;setTimeout(()=>posterAutoPane(),100);return}return}
+  if(body.dataset.posterPaneApplied||attempt>600){const st=window.EInviteEditorBridge?.getState?.();if(st&&st.eventType==='Poster'&&attempt<=600&&!window.__posterPaneWaitDone){window.__posterPaneWaitDone=true;setTimeout(()=>posterAutoPane(),100);return}return}
   window.__posterPaneWaitDone=false;requestAnimationFrame(()=>posterPanePoll(attempt+1));
 })(0);
 rail?.addEventListener('click',()=>requestAnimationFrame(applyLayout));

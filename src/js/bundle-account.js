@@ -398,6 +398,26 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
+// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
+// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
+// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
+// custom canvas-size prompt (app.js) and the Template Studio custom poster
+// size prompt (templates.js); lives here because both route bundles already
+// load ui-dialogs.js before their consumer modules.
+window.EInvitePosterUnits=Object.freeze({
+ PX_PER:{in:96,cm:96/2.54,ft:1152},
+ parse(value){
+  const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
+  const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
+  if(!m)return null;
+  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+  return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
+ },
+ toPx(number,unit){
+  const per=this.PX_PER[String(unit||'').replace(/inches|"/g,'in').replace(/centimeters?/,'cm').replace(/feet|'/g,'ft')];
+  return per?number*per:number // bare numbers stay px
+ }
+});
 })();;const $=s=>document.querySelector(s);localStorage.removeItem('sovan-auth-token');
 const fmtBytes=n=>{n=Number(n||0);if(n<1e6)return `${(n/1e3).toFixed(n<1e5?1:0)} KB`;if(n<1e9)return `${(n/1e6).toFixed(n<1e8?1:0)} MB`;return `${(n/1e9).toFixed(1)} GB`};
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');

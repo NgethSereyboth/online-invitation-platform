@@ -14,6 +14,13 @@ Source JS lives in ``src/js/<name>`` and source CSS lives in ``src/css/<name>``
 ``editor-suite.js`` and ``editor-suite.css`` are written to BOTH ``src/python/``
 (so the server in ``src/python/server.py`` can serve them — its ``ROOT`` is
 ``src/python/``) AND ``src/js``/``src/css`` (repo source of truth).
+
+OUTPUT-ROOT FIX (owner decision accepted 2026-10-20, was the documented
+``build.py all`` wrinkle): ``SCRIPT_DIR`` (this file's directory,
+``src/python/build/``) was written to instead of ``SERVER_DIR``
+(``src/python/``), so the served-root copies went stale/missing while the
+build exited 0. ``src/python/build/`` itself keeps a copy for legacy
+build-dir readers (``tools/canvas-motion-visual.py``).
 """
 from __future__ import annotations
 
@@ -24,8 +31,11 @@ from pathlib import Path
 # SCRIPT_DIR is src/python/ (where the server serves from). Generated artifacts
 # are written here so the server can serve them.
 SCRIPT_DIR = Path(__file__).resolve().parent
+# SERVER_DIR = src/python/ — the HTTP server's ROOT (server.py serves static
+# files only from here). This is the primary output location.
+SERVER_DIR = SCRIPT_DIR.parent
 # REPO_ROOT = /home/z/my-project/einvite-platform
-REPO_ROOT = SCRIPT_DIR.parent.parent.parent
+REPO_ROOT = SERVER_DIR.parent.parent
 JS_DIR = REPO_ROOT / "src" / "js"
 CSS_DIR = REPO_ROOT / "src" / "css"
 CSS_ORG = CSS_DIR / "organized"
@@ -131,12 +141,13 @@ def check() -> bool:
     """Verify the on-disk editor-suite bundles match the freshly-built expected content.
 
     Returns True if both bundles are present and byte-identical to the expected
-    output in BOTH ``src/python/`` and ``src/js``/``src/css``.
+    output in ``src/python/`` (server root), ``src/js``/``src/css``
+    (source of truth), AND ``src/python/build/`` (legacy build-dir copy).
     """
     mismatches: list[str] = []
     for output, expected in expected_bundles().items():
         mirror_dir = JS_DIR if output.endswith(".js") else CSS_DIR
-        for location in (SCRIPT_DIR, mirror_dir):
+        for location in (SERVER_DIR, SCRIPT_DIR, mirror_dir):
             path = location / output
             actual = path.read_text(encoding="utf-8") if path.exists() else ""
             if actual != expected:
@@ -149,10 +160,12 @@ def check() -> bool:
 
 
 def build() -> None:
-    """Regenerate editor-suite.js and editor-suite.css in both output locations."""
+    """Regenerate editor-suite.js and editor-suite.css in every output location."""
     for output, content in expected_bundles().items():
         mirror_dir = JS_DIR if output.endswith(".js") else CSS_DIR
-        write_both(output, content, [SCRIPT_DIR, mirror_dir])
+        # Server root first (primary, what the server serves), then the repo
+        # source of truth, then the legacy build-dir copy for build-dir readers.
+        write_both(output, content, [SERVER_DIR, mirror_dir, SCRIPT_DIR])
     print("EDITOR_BUNDLE_BUILT")
 
 

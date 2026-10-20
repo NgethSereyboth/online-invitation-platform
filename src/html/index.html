@@ -131,6 +131,10 @@
       <label><input id="contactEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show contact-host buttons</label>
       <label>Phone number<input id="contactPhone" type="tel" placeholder="+855 12 345 678"></label>
       <label>Telegram username or link<input id="contactTelegram" placeholder="username or https://t.me/username"></label>
+      <!-- POSTER-PANEL-HIDE: owner decision (CANVA-UI §5, accepted 2026-10-20) — poster
+           documents carry no event data, so editor-layout-stability.js hides these two
+           groups (and the Event/Blocks rail buttons) when state.eventType === 'Poster'. -->
+      <div id="guestResponseGroup" data-poster-hide="true">
       <h2>Guest response</h2>
       <label><input id="rsvpEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Enable RSVP attendance form</label>
       <p class="hint">Turn this off for a pure invitation with no attending, declined, or pending response. Existing historical responses are preserved.</p>
@@ -147,6 +151,7 @@
       <button id="addRsvpField" type="button">+ Add RSVP question</button>
       <label><input id="wishesEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Enable private guest wishes</label>
       <p class="hint">Guests can send a separate congratulatory message without submitting RSVP. Wishes are visible only to the invitation owner.</p>
+      </div>
       <h2>Invitation sections</h2>
       <label>Quick preset<select id="invitationPreset"><option value="custom">Custom</option><option value="pure">Pure invitation</option><option value="rsvp">Simple invitation + RSVP</option><option value="full">Full event experience</option></select></label>
       <label>Section order — one per line<textarea id="sectionOrder" placeholder="gallery&#10;video&#10;countdown&#10;schedule&#10;venue&#10;rsvp">gallery
@@ -186,10 +191,12 @@ rsvp</textarea></label>
       <div id="designPagesManager" class="design-pages-manager"></div>
       <h3>Reusable page templates</h3>
       <div id="savedPageTemplates" class="saved-page-templates"></div>
+      <div id="countdownGroup" data-poster-hide="true">
       <label><input id="countdownEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show live event countdown</label>
       <label>Countdown heading — English<input id="countdownTitle" value="Counting down to our celebration"></label>
       <label>Countdown heading — Khmer<input id="countdownTitleKm" class="khmer-text" lang="km" value="រាប់ថយក្រោយទៅកាន់ថ្ងៃដ៏ពិសេសរបស់យើង"></label>
       <label>Countdown layout<select id="countdownLayout"><option value="cards">Number cards</option><option value="minimal">Minimal</option><option value="pill">Compact pills</option></select></label>
+      </div>
       <label><input id="scheduleEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show event schedule</label>
       <label>Schedule — English, one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
 5:00 PM | Wedding ceremony

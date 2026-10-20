@@ -46,13 +46,29 @@ async function newPoster(){if(window.EInviteBackend&&!window.EInviteBackend.isAv
   {label:_txt('Letter · 816×1056','Letter · 816×1056'),w:816,h:1056},
   {label:_txt('Poster 24×36in · 1440×2160','Poster 24×36in · 1440×2160'),w:1440,h:2160},
   {label:_txt('Facebook Cover · 1200×630','Facebook Cover · 1200×630'),w:1200,h:630},
-  {label:_txt('YouTube Thumbnail · 1280×720','YouTube Thumbnail · 1280×720'),w:1280,h:720}
+  {label:_txt('YouTube Thumbnail · 1280×720','YouTube Thumbnail · 1280×720'),w:1280,h:720},
+  {label:_txt('Custom size — px, in, or cm…','Custom size — px, in, or cm…'),w:0,h:0,custom:true}
  ];  const name=await uiPrompt(_txt('Poster title:','Poster title:'),_txt('New Poster','New Poster'),{title:_txt('New poster','New poster'),confirmText:_txt('Create poster','Create poster')});if(!name)return;
- const sizePick=await uiPrompt(_txt('Pick a canvas size:','Pick a canvas size:'),POSTER_PRESETS[1].label,{title:_txt('Poster size','Poster size'),confirmText:_txt('Create poster','Create poster'),selectOptions:POSTER_PRESETS.map((p,i)=>({value:String(i),label:p.label}))});
+ const sizePick=await uiPrompt(_txt('Pick a canvas size (Custom accepts px, in, and cm):','ជ្រើសរើសទំហំក្រណាត់ (ប្រភេទផ្ទាល់ខ្លួនទទួល px, in, និង cm):'),POSTER_PRESETS[1].label,{title:_txt('Poster size','ទំហំពុម្ព'),confirmText:_txt('Create poster','បង្កើតពុម្ព'),selectOptions:POSTER_PRESETS.map((p,i)=>({value:String(i),label:p.label}))});
  if(sizePick==null)return;
  const sizeIndex=Number(sizePick);
  if(sizeIndex==null||!POSTER_PRESETS[sizeIndex])return;
- const preset=POSTER_PRESETS[sizeIndex];
+ let preset={...POSTER_PRESETS[sizeIndex]};
+ if(preset.custom){
+  // Custom-units support (owner decision, CANVA-UI §5, accepted 2026-10-20):
+  // px default, plus in/cm via 96 px per CSS inch. Shares the editor's
+  // EInvitePosterUnits engine (app.js) — same parse + conversion semantics.
+  const units=window.EInvitePosterUnits;
+  if(!units)return alert(_txt('Custom sizes load with the editor bundle — pick a preset instead.','ទំហំផ្ទាល់ខ្លួនផ្ទុកជាមួយកញ្ចប់កម្មវិធីនិពន្ធ — ជ្រើសរើសទំហំកំណត់ជំនួស។'));
+  const resp=await uiPrompt(_txt('Canvas size — width × height with an optional unit: px, in, or cm (e.g. 1080x1350, 24x36 in, 21x29.7 cm)','ទំហំក្រណាត់ — ទទឹង × កំពស់ជាមួយឯកកា (px, in, ឬ cm ជាឧទាហរណ៍ 1080x1350, 24x36 in, 21x29.7 cm)'),'1080x1080',{title:_txt('Custom canvas size','ទំហំក្រណាត់ផ្ទាល់ខ្លួន'),confirmText:_txt('Create poster','បង្កើតពុម្ព')});
+  if(resp==null)return;
+  const size=units.parse(resp);
+  if(!size)return alert(_txt('Enter both width and height with an optional unit, like 1080x1080, 24x36 in, or 21x29.7 cm.','បញ្ចូលទទឹង និងកំពស់ជាមួយឯកកា ឧទាហរណ៍ 1080x1080, 24x36 in, ឬ 21x29.7 cm។'));
+  const px=(number,unit)=>units.toPx(number,unit); // bound call: `this` is units
+  preset.w=Math.max(200,Math.min(4000,Math.round(px(Number(size.w),size.wu))));
+  preset.h=Math.max(200,Math.min(4000,Math.round(px(Number(size.h),size.hu))));
+  preset.label=`${preset.w}×${preset.h}px`;
+ }
  const doc={eventType:'Poster',templateId:'poster',fields:{names:name},settings:{},languageMode:'en',posterCanvas:{width:preset.w,height:preset.h},sectionOrder:[],designPages:[],schedule:[],venues:[],customBlocks:[],accent:'#7d4052',palettePreset:'custom',palette:{background:'#ffffff',surface:'#ffffff',text:'#2a2430',heading:'#7d4052'},theme:'rose',objects:{posterTitle:{id:'posterTitle',type:'text',left:'8%',top:(preset.h>preset.w?'18%':'28%'),width:'84%',height:Math.round(110*Math.min(preset.w,preset.h)/1080)+'px',html:name,font:'serif-georgia',color:'#2a2430',fontSize:Math.round(64*Math.min(preset.w,preset.h)/1080),textAlign:'center',fontWeight:'700',letterSpacing:0,lineHeight:1.08,opacity:1,borderWidth:0,borderColor:'#ffffff',borderRadius:0,shadowBlur:0,shadowColor:'#000000',animation:'none',duration:'900',rotation:0,showInHero:true,showInGallery:false,zIndex:2},posterBody:{id:'posterBody',type:'text',left:'10%',top:(preset.h>preset.w?'34%':'44%'),width:'80%',height:Math.round(140*Math.min(preset.w,preset.h)/1080)+'px',html:_txt('Add your poster message here. Select this text to edit it.','Add your poster message here. Select this text to edit it.'),font:'sans-arial',color:'#5a5360',fontSize:Math.round(22*Math.min(preset.w,preset.h)/1080),textAlign:'center',fontWeight:'400',letterSpacing:0,lineHeight:1.5,opacity:1,borderWidth:0,borderColor:'#ffffff',borderRadius:0,shadowBlur:0,shadowColor:'#000000',animation:'none',duration:'900',rotation:0,showInHero:true,showInGallery:false,zIndex:2}}};
  try{const item=await api('/api/invitations',{method:'POST',body:JSON.stringify({slug:name||'New Poster',document:doc})});localStorage.setItem('sovan-active-invite',item.id);location.href=`/invitations/${encodeURIComponent(item.id)}/editor`}catch(error){alert(error.message)}
 }

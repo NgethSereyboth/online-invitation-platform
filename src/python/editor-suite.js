@@ -192,7 +192,7 @@ function editorEnhancements(){
     };
     Object.entries(ids).forEach(([key,id])=>$('#'+id).addEventListener('change',e=>applyTransform(key,e.target.value)));
     block.addEventListener('click',e=>{const action=e.target.closest('[data-transform-action]')?.dataset.transformAction,item=selectedOne();if(!action||!item)return;const f=stagePercentFrame(item);if(action==='center'){item.style.left=`${(50-f.w/2).toFixed(2)}%`;item.style.top=`${(50-f.h/2).toFixed(2)}%`}if(action==='fill-width'){item.style.left='5%';item.style.width='90%'}if(action==='reset-rotation'){item.dataset.rotation='0';item.style.transform='rotate(0deg)'}applyItems([item]);saveNow();refreshTransform()});
-    const obs=new MutationObserver(refreshTransform);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerup',()=>setTimeout(refreshTransform,0),true);refreshTransform();
+    let pointerBusy=false,refreshQueued=false;const queueTransformRefresh=()=>{if(pointerBusy||refreshQueued)return;refreshQueued=true;requestAnimationFrame(()=>{refreshQueued=false;if(!pointerBusy)refreshTransform()})};const obs=new MutationObserver(queueTransformRefresh);obs.observe(stage,{subtree:true,attributes:true,attributeFilter:['class','style','data-rotation']});document.addEventListener('pointerdown',()=>{pointerBusy=true},true);document.addEventListener('pointerup',()=>{pointerBusy=false;setTimeout(refreshTransform,0)},true);refreshTransform();
   }
   const eventPane=$('[data-studio-pane="event"]');
   if(eventPane && !$('#canvasSmartWriter')){
@@ -609,7 +609,7 @@ function setZoomModel(value,options={}){
  const world=clientToWorld(cursor.x,cursor.y),ratio=zoom-view.zoom;
  return setView({zoom,x:view.x-world.x*ratio,y:view.y-world.y*ratio},{source:options.source||'editor',animate:options.animate??!['wheel','slider','gesture'].includes(options.source)});
 }
-function fitView(){cacheViewGeometry();const zoom=Math.max(.35,Math.min(1.5,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return setView({zoom,x:viewport.scrollLeft,y:viewport.scrollTop},{source:'fit',animate:true})}
+function fitView(){cacheViewGeometry();const zoom=Math.max(.35,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return setView({zoom,x:viewport.scrollLeft,y:viewport.scrollTop},{source:'fit',animate:true})}
 function refreshView(){cacheViewGeometry();applyView('resize');syncZoomReadout()}
 function beginViewGesture(){stopTween();if(!gestureCount){cacheViewGeometry();if(perfDebug)performance.mark('einvite:gesture:start')}gestureCount++;transform?.classList.add('gesture')}
 function endViewGesture(){if(!gestureCount)return;gestureCount--;if(!gestureCount){transform?.classList.remove('gesture');syncZoomReadout();if(perfDebug)finishPerfSpan('einvite:gesture');scheduleImageWarmup()}}
@@ -664,6 +664,20 @@ function measurementLine(axis,value,kind='snap',label=''){
  if(axis==='x'){node.style.left=`${position}px`;node.style.top=`${view.y}px`;node.style.height=`${stageSize.height*view.zoom}px`}else{node.style.top=`${position}px`;node.style.left=`${view.x}px`;node.style.width=`${stageSize.width*view.zoom}px`}
  if(label){const badge=document.createElement('span');badge.className='motion-distance';badge.textContent=label;node.append(badge)}measureRoot.append(node);return node;
 }
+const measurementPool=[];let measurementPoolUsed=0;
+function measurementDynamicLine(axis,value,kind,label){
+ let node=measurementPool[measurementPoolUsed];
+ if(!node){node=measurementPool[measurementPoolUsed]=document.createElement('div');measureRoot.append(node)}
+ measurementPoolUsed++;
+ node.hidden=false;
+ const className=`motion-line motion-${axis} motion-${kind}`;if(node.className!==className)node.className=className;
+ const position=axis==='x'?view.x+value*view.zoom:view.y+value*view.zoom;
+ if(axis==='x'){node.style.left=`${position}px`;node.style.top=`${view.y}px`;node.style.height=`${stageSize.height*view.zoom}px`;node.style.width=''}
+ else{node.style.top=`${position}px`;node.style.left=`${view.x}px`;node.style.width=`${stageSize.width*view.zoom}px`;node.style.height=''}
+ let badge=node.firstChild;
+ if(label){if(!badge){badge=document.createElement('span');node.append(badge)}badge.className='motion-distance';if(badge.textContent!==label)badge.textContent=label}
+ else if(badge)badge.remove();
+}
 function renderRuler(axis){
  if(!measureRoot||!$('#canvasFrame')?.classList.contains('show-rulers')||viewportSize.width<300)return;
  const ruler=document.createElement('div');ruler.className=`motion-ruler motion-ruler-${axis}`;ruler.dataset.axis=axis;ruler.setAttribute('role','group');ruler.setAttribute('aria-label',uiText('Drag to add a guide','អូសដើម្បីបន្ថែមបន្ទាត់ណែនាំ'));
@@ -671,17 +685,25 @@ function renderRuler(axis){
  for(let value=0,count=0;value<=extent&&count<180;value+=step,count++){const tick=document.createElement('span');tick.className='motion-ruler-tick';const pos=(axis==='x'?view.x:view.y)+value*view.zoom;tick.style[axis==='x'?'left':'top']=`${pos}px`;if(count%5===0){tick.textContent=String(value);tick.classList.add('major')}ruler.append(tick)}
  ruler.addEventListener('pointerdown',event=>{if(event.button!==0)return;beginGuideDrag(event,axis==='x'?'y':'x',null)});measureRoot.append(ruler);
 }
+let measurementStaticKey='';
 function renderMeasurements(){
- if(!measureRoot)return;measureRoot.replaceChildren();measureRoot.removeAttribute('aria-hidden');
+ if(!measureRoot)return;
  const model=window.EInviteEditorBridge?.getState?.().editorModel||{},guides=guidesInWorld(),show=model.guidesVisible!==false;
- if(show)for(const axis of ['x','y'])for(const guide of guides[axis]){
-  const line=measurementLine(axis,guide.value,'guide');line.tabIndex=0;line.setAttribute('role','slider');line.setAttribute('aria-valuenow',String(Math.round(guide.value)));line.setAttribute('aria-label',uiText('Guide position','ទីតាំងបន្ទាត់ណែនាំ'));line.classList.toggle('locked',guide.locked===true);
-  line.addEventListener('pointerdown',event=>{if(!guide.locked)beginGuideDrag(event,axis,guide)});
-  line.addEventListener('keydown',event=>{if(guide.locked)return;if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();updateGuide(axis,guide.id,guide.value,true)}else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const direction=['ArrowLeft','ArrowUp'].includes(event.key)?-1:1;updateGuide(axis,guide.id,guide.value+direction*(event.shiftKey?10:1))}});
+ const staticKey=[show?1:0,model.marginVisible?1:0,model.margin??24,view.x,view.y,view.zoom,stageSize.width,stageSize.height,viewportSize.width,$('#canvasFrame')?.classList.contains('show-rulers')?1:0,JSON.stringify(guides)].join('|');
+ if(staticKey!==measurementStaticKey){
+  measurementStaticKey=staticKey;measureRoot.replaceChildren();measureRoot.removeAttribute('aria-hidden');
+  if(show)for(const axis of ['x','y'])for(const guide of guides[axis]){
+   const line=measurementLine(axis,guide.value,'guide');line.tabIndex=0;line.setAttribute('role','slider');line.setAttribute('aria-valuenow',String(Math.round(guide.value)));line.setAttribute('aria-label',uiText('Guide position','ទីតាំងបន្ទាត់ណែនាំ'));line.classList.toggle('locked',guide.locked===true);
+   line.addEventListener('pointerdown',event=>{if(!guide.locked)beginGuideDrag(event,axis,guide)});
+   line.addEventListener('keydown',event=>{if(guide.locked)return;if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();updateGuide(axis,guide.id,guide.value,true)}else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const direction=['ArrowLeft','ArrowUp'].includes(event.key)?-1:1;updateGuide(axis,guide.id,guide.value+direction*(event.shiftKey?10:1))}});
+  }
+  if(model.marginVisible){const margin=Math.max(0,Math.min(Math.min(stageSize.width,stageSize.height)/2,Number(model.margin??24)));const box=document.createElement('div');box.className='motion-margin';Object.assign(box.style,{left:`${view.x+margin*view.zoom}px`,top:`${view.y+margin*view.zoom}px`,width:`${Math.max(0,stageSize.width-2*margin)*view.zoom}px`,height:`${Math.max(0,stageSize.height-2*margin)*view.zoom}px`});measureRoot.append(box)}
+  renderRuler('x');renderRuler('y');
+  for(const node of measurementPool)measureRoot.append(node);
  }
- if(model.marginVisible){const margin=Math.max(0,Math.min(Math.min(stageSize.width,stageSize.height)/2,Number(model.margin??24)));const box=document.createElement('div');box.className='motion-margin';Object.assign(box.style,{left:`${view.x+margin*view.zoom}px`,top:`${view.y+margin*view.zoom}px`,width:`${Math.max(0,stageSize.width-2*margin)*view.zoom}px`,height:`${Math.max(0,stageSize.height-2*margin)*view.zoom}px`});measureRoot.append(box)}
- if(measureState){for(const hit of Object.values(measureState.hits))measurementLine(hit.axis,hit.value,'snap',hit.kind==='spacing'?uiText('Equal spacing','ចន្លោះស្មើគ្នា'):'');const box=measureState.box;measurementLine('x',box.x,'distance',`${Math.round(box.x)} px`);measurementLine('y',box.y,'distance',`${Math.round(box.y)} px`)}
- renderRuler('x');renderRuler('y');
+ measurementPoolUsed=0;
+ if(measureState){for(const hit of Object.values(measureState.hits))measurementDynamicLine(hit.axis,hit.value,'snap',hit.kind==='spacing'?uiText('Equal spacing','ចន្លោះស្មើគ្នា'):'');const box=measureState.box;measurementDynamicLine('x',box.x,'distance',`${Math.round(box.x)} px`);measurementDynamicLine('y',box.y,'distance',`${Math.round(box.y)} px`)}
+ for(let index=measurementPoolUsed;index<measurementPool.length;index++)measurementPool[index].hidden=true;
 }
 function beginGuideDrag(event,axis,guide){
  if(event.button!==0)return;cacheViewGeometry();guideDrag={axis,guide,startX:event.clientX,startY:event.clientY,value:guide?.value??0,started:false};event.stopPropagation();

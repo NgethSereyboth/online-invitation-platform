@@ -1,0 +1,336 @@
+{
+  "pages": {
+    "account.html": {
+      "bytes": 376434,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-account.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-account.css"
+      ]
+    },
+    "admin.html": {
+      "bytes": 426606,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-admin.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-admin.css"
+      ]
+    },
+    "analytics.html": {
+      "bytes": 364259,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-analytics.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-analytics.css"
+      ]
+    },
+    "billing.html": {
+      "bytes": 361958,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-billing.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-billing.css"
+      ]
+    },
+    "checkin.html": {
+      "bytes": 180884,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-checkin.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-checkin.css"
+      ]
+    },
+    "dashboard.html": {
+      "bytes": 661110,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-dashboard.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-dashboard.css"
+      ]
+    },
+    "designer.html": {
+      "bytes": 383045,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-designer.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-designer.css"
+      ]
+    },
+    "guests.html": {
+      "bytes": 399163,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-guests.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-guests.css"
+      ]
+    },
+    "index.html": {
+      "bytes": 1519890,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-index.js"
+      ],
+      "styleCount": 2,
+      "styles": [
+        "bundle-index.css",
+        "design-fix.css"
+      ]
+    },
+    "materials.html": {
+      "bytes": 428437,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-materials.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-materials.css"
+      ]
+    },
+    "privacy.html": {
+      "bytes": 172483,
+      "scriptCount": 1,
+      "scripts": [
+        "bundle-privacy.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-privacy.css"
+      ]
+    },
+    "public.html": {
+      "bytes": 386585,
+      "scriptCount": 2,
+      "scripts": [
+        "backend-mode.js",
+        "bundle-public.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-public.css"
+      ]
+    },
+    "reset.html": {
+      "bytes": 351797,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-reset.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-reset.css"
+      ]
+    },
+    "responses.html": {
+      "bytes": 367481,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-responses.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-responses.css"
+      ]
+    },
+    "templates.html": {
+      "bytes": 412551,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-templates.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-templates.css"
+      ]
+    },
+    "verify.html": {
+      "bytes": 349695,
+      "scriptCount": 3,
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-verify.js"
+      ],
+      "styleCount": 1,
+      "styles": [
+        "bundle-verify.css"
+      ]
+    }
+  },
+  "routes": {
+    "account-admin": {
+      "budgets": {
+        "bytes": 435000,
+        "scripts": 4,
+        "styles": 1
+      },
+      "pages": [
+        "account.html",
+        "admin.html",
+        "billing.html",
+        "verify.html",
+        "reset.html",
+        "privacy.html"
+      ],
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-account.js",
+        "bundle-admin.js",
+        "bundle-billing.js",
+        "bundle-verify.js",
+        "bundle-reset.js",
+        "bundle-privacy.js"
+      ],
+      "styles": [
+        "bundle-account.css",
+        "bundle-admin.css",
+        "bundle-billing.css",
+        "bundle-verify.css",
+        "bundle-reset.css",
+        "bundle-privacy.css"
+      ]
+    },
+    "dashboard": {
+      "budgets": {
+        "bytes": 685000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "dashboard.html"
+      ],
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-dashboard.js"
+      ],
+      "styles": [
+        "bundle-dashboard.css"
+      ]
+    },
+    "editor": {
+      "budgets": {
+        "bytes": 1700000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "index.html"
+      ],
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-index.js"
+      ],
+      "styles": [
+        "bundle-index.css",
+        "design-fix.css"
+      ]
+    },
+    "event-operations": {
+      "budgets": {
+        "bytes": 440000,
+        "scripts": 3,
+        "styles": 1
+      },
+      "pages": [
+        "guests.html",
+        "responses.html",
+        "analytics.html",
+        "materials.html",
+        "checkin.html",
+        "templates.html",
+        "designer.html"
+      ],
+      "scripts": [
+        "core/theme.js",
+        "backend-mode.js",
+        "bundle-guests.js",
+        "bundle-responses.js",
+        "bundle-analytics.js",
+        "bundle-materials.js",
+        "bundle-checkin.js",
+        "bundle-templates.js",
+        "bundle-designer.js"
+      ],
+      "styles": [
+        "bundle-guests.css",
+        "bundle-responses.css",
+        "bundle-analytics.css",
+        "bundle-materials.css",
+        "bundle-checkin.css",
+        "bundle-templates.css",
+        "bundle-designer.css"
+      ]
+    },
+    "public-guest": {
+      "budgets": {
+        "bytes": 405000,
+        "scripts": 2,
+        "styles": 1
+      },
+      "pages": [
+        "public.html"
+      ],
+      "scripts": [
+        "backend-mode.js",
+        "bundle-public.js"
+      ],
+      "styles": [
+        "bundle-public.css"
+      ]
+    }
+  },
+  "version": 15
+}

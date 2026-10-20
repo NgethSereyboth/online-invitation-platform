@@ -11,6 +11,13 @@ HTML pages live in ``src/html/``; browser assets live in ``src/js/``,
 ``src/css/`` (+ ``src/css/organized/``), and ``vendor/``. The output manifest
 ``page-assets.json`` is written to BOTH ``src/python/`` (where the server
 reads it) AND ``docs/`` (repo source of truth).
+
+OUTPUT-ROOT FIX (owner decision accepted 2026-10-20, was the documented
+``build.py all`` wrinkle): ``SCRIPT_DIR`` (this file's directory,
+``src/python/build/``) was used as the "server" output, so the real served
+root never got ``page-assets.json`` while the build exited 0. The true
+server-root copy now lives in ``src/python/``; ``src/python/build/`` keeps
+a legacy copy for build-dir readers (``tools/important-removal-audit.py``).
 """
 from __future__ import annotations
 
@@ -23,8 +30,11 @@ from pathlib import Path
 # SCRIPT_DIR is src/python/ (server ROOT). The output manifest is written here
 # so server.py can read it, AND mirrored to docs/ (repo source of truth).
 SCRIPT_DIR = Path(__file__).resolve().parent
+# SERVER_DIR = src/python/ — the HTTP server's ROOT (server.py serves static
+# files only from here). This is the primary output location.
+SERVER_DIR = SCRIPT_DIR.parent
 # REPO_ROOT = /home/z/my-project/einvite-platform
-REPO_ROOT = SCRIPT_DIR.parent.parent.parent
+REPO_ROOT = SERVER_DIR.parent.parent
 JS_DIR = REPO_ROOT / "src" / "js"
 CSS_DIR = REPO_ROOT / "src" / "css"
 CSS_ORG = CSS_DIR / "organized"
@@ -33,9 +43,11 @@ ASSETS_DIR = REPO_ROOT / "assets"
 HTML_DIR = REPO_ROOT / "src" / "html"
 DOCS_DIR = REPO_ROOT / "docs"
 
-# Output manifest: written to both locations.
-OUTPUT_SERVER = SCRIPT_DIR / "page-assets.json"
+# Output manifest: written to all three locations.
+OUTPUT_SERVER = SERVER_DIR / "page-assets.json"
+OUTPUT_BUILD = SCRIPT_DIR / "page-assets.json"  # legacy build-dir copy
 OUTPUT_DOCS = DOCS_DIR / "page-assets.json"
+OUTPUTS = (OUTPUT_SERVER, OUTPUT_BUILD, OUTPUT_DOCS)
 
 # Map each route name to the list of HTML pages that belong to it.
 ROUTES = {
@@ -197,14 +209,14 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     text = json.dumps(build(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.check:
-        for output in (OUTPUT_SERVER, OUTPUT_DOCS):
+        for output in OUTPUTS:
             if not output.is_file() or output.read_text(encoding="utf-8") != text:
                 print(f"PAGE_ASSET_MANIFEST_OUT_OF_DATE {output}")
                 return 1
         print("PAGE_ASSET_MANIFEST_CHECK_PASSED")
         return 0
-    atomic_write(OUTPUT_SERVER, text)
-    atomic_write(OUTPUT_DOCS, text)
+    for output in OUTPUTS:
+        atomic_write(output, text)
     print(f"WROTE {OUTPUT_SERVER.name}")
     return 0
 

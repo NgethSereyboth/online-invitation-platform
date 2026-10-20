@@ -297,6 +297,26 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
+// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
+// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
+// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
+// custom canvas-size prompt (app.js) and the Template Studio custom poster
+// size prompt (templates.js); lives here because both route bundles already
+// load ui-dialogs.js before their consumer modules.
+window.EInvitePosterUnits=Object.freeze({
+ PX_PER:{in:96,cm:96/2.54,ft:1152},
+ parse(value){
+  const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
+  const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
+  if(!m)return null;
+  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+  return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
+ },
+ toPx(number,unit){
+  const per=this.PX_PER[String(unit||'').replace(/inches|"/g,'in').replace(/centimeters?/,'cm').replace(/feet|'/g,'ft')];
+  return per?number*per:number // bare numbers stay px
+ }
+});
 })();;(()=>{'use strict';
 const base=(id,name,category,styleKit,accent,background,description)=>({id:`builtin-${id}`,name,category,description,tags:['Built-in','Premium',category],favorite:false,currentVersion:1,visibility:'builtin',source:'builtin',updatedAt:Date.now(),document:{schemaVersion:10,eventType:category==='Wedding'?'Wedding':category,templateId:id,fields:{names:name.replace(/ Template$/,''),namesKm:'',date:'2027-01-01',time:'17:00',venue:'Phnom Penh',venueKm:'ភ្នំពេញ',message:'We would be honored to celebrate this special moment with you.',messageKm:'យើងខ្ញុំមានកិត្តិយសសូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរថ្ងៃដ៏ពិសេសនេះ។'},settings:{rsvpEnabled:false,wishesEnabled:true,scheduleEnabled:true,venueEnabled:true,galleryEnabled:true,countdownEnabled:true,musicEnabled:false,openingEnabled:true,contactEnabled:true},languageMode:'both',styleKit:{id:styleKit,overrides:{},templateDefaults:null},desktopGuestLayout:'ambient-frame',openingScene:{id:styleKit==='royal-khmer-gold'?'royal-khmer-gate':styleKit==='botanical-blush'?'floral-reveal':'minimal-editorial',monogram:'',subtitle:'',backgroundColor:background,backgroundImage:'',decorative:true,enterText:'Open invitation',enterTextKm:'បើកការអញ្ជើញ',duration:1100,textVariant:styleKit==='royal-khmer-gold'?'light':'dark',skipAllowed:true},socialCard:{photo:'',alignment:'center',textVariant:'dark',language:'both',monogram:''},accent,palette:{background,surface:'#ffffff',text:'#302b27',heading:accent},schedule:[{time:'17:00',title:'Welcome',titleKm:'ស្វាគមន៍ភ្ញៀវ'},{time:'18:00',title:'Celebration',titleKm:'កម្មវិធីអបអរសាទរ'}],venues:[],customBlocks:[],designPages:[],objects:{},sectionOrder:['gallery','countdown','schedule','venue','wishes'],rsvpFields:[]}});
 window.EInviteBuiltinTemplates=[
@@ -354,13 +374,29 @@ async function newPoster(){if(window.EInviteBackend&&!window.EInviteBackend.isAv
   {label:_txt('Letter · 816×1056','Letter · 816×1056'),w:816,h:1056},
   {label:_txt('Poster 24×36in · 1440×2160','Poster 24×36in · 1440×2160'),w:1440,h:2160},
   {label:_txt('Facebook Cover · 1200×630','Facebook Cover · 1200×630'),w:1200,h:630},
-  {label:_txt('YouTube Thumbnail · 1280×720','YouTube Thumbnail · 1280×720'),w:1280,h:720}
+  {label:_txt('YouTube Thumbnail · 1280×720','YouTube Thumbnail · 1280×720'),w:1280,h:720},
+  {label:_txt('Custom size — px, in, or cm…','Custom size — px, in, or cm…'),w:0,h:0,custom:true}
  ];  const name=await uiPrompt(_txt('Poster title:','Poster title:'),_txt('New Poster','New Poster'),{title:_txt('New poster','New poster'),confirmText:_txt('Create poster','Create poster')});if(!name)return;
- const sizePick=await uiPrompt(_txt('Pick a canvas size:','Pick a canvas size:'),POSTER_PRESETS[1].label,{title:_txt('Poster size','Poster size'),confirmText:_txt('Create poster','Create poster'),selectOptions:POSTER_PRESETS.map((p,i)=>({value:String(i),label:p.label}))});
+ const sizePick=await uiPrompt(_txt('Pick a canvas size (Custom accepts px, in, and cm):','ជ្រើសរើសទំហំក្រណាត់ (ប្រភេទផ្ទាល់ខ្លួនទទួល px, in, និង cm):'),POSTER_PRESETS[1].label,{title:_txt('Poster size','ទំហំពុម្ព'),confirmText:_txt('Create poster','បង្កើតពុម្ព'),selectOptions:POSTER_PRESETS.map((p,i)=>({value:String(i),label:p.label}))});
  if(sizePick==null)return;
  const sizeIndex=Number(sizePick);
  if(sizeIndex==null||!POSTER_PRESETS[sizeIndex])return;
- const preset=POSTER_PRESETS[sizeIndex];
+ let preset={...POSTER_PRESETS[sizeIndex]};
+ if(preset.custom){
+  // Custom-units support (owner decision, CANVA-UI §5, accepted 2026-10-20):
+  // px default, plus in/cm via 96 px per CSS inch. Shares the editor's
+  // EInvitePosterUnits engine (app.js) — same parse + conversion semantics.
+  const units=window.EInvitePosterUnits;
+  if(!units)return alert(_txt('Custom sizes load with the editor bundle — pick a preset instead.','ទំហំផ្ទាល់ខ្លួនផ្ទុកជាមួយកញ្ចប់កម្មវិធីនិពន្ធ — ជ្រើសរើសទំហំកំណត់ជំនួស។'));
+  const resp=await uiPrompt(_txt('Canvas size — width × height with an optional unit: px, in, or cm (e.g. 1080x1350, 24x36 in, 21x29.7 cm)','ទំហំក្រណាត់ — ទទឹង × កំពស់ជាមួយឯកកា (px, in, ឬ cm ជាឧទាហរណ៍ 1080x1350, 24x36 in, 21x29.7 cm)'),'1080x1080',{title:_txt('Custom canvas size','ទំហំក្រណាត់ផ្ទាល់ខ្លួន'),confirmText:_txt('Create poster','បង្កើតពុម្ព')});
+  if(resp==null)return;
+  const size=units.parse(resp);
+  if(!size)return alert(_txt('Enter both width and height with an optional unit, like 1080x1080, 24x36 in, or 21x29.7 cm.','បញ្ចូលទទឹង និងកំពស់ជាមួយឯកកា ឧទាហរណ៍ 1080x1080, 24x36 in, ឬ 21x29.7 cm។'));
+  const px=(number,unit)=>units.toPx(number,unit); // bound call: `this` is units
+  preset.w=Math.max(200,Math.min(4000,Math.round(px(Number(size.w),size.wu))));
+  preset.h=Math.max(200,Math.min(4000,Math.round(px(Number(size.h),size.hu))));
+  preset.label=`${preset.w}×${preset.h}px`;
+ }
  const doc={eventType:'Poster',templateId:'poster',fields:{names:name},settings:{},languageMode:'en',posterCanvas:{width:preset.w,height:preset.h},sectionOrder:[],designPages:[],schedule:[],venues:[],customBlocks:[],accent:'#7d4052',palettePreset:'custom',palette:{background:'#ffffff',surface:'#ffffff',text:'#2a2430',heading:'#7d4052'},theme:'rose',objects:{posterTitle:{id:'posterTitle',type:'text',left:'8%',top:(preset.h>preset.w?'18%':'28%'),width:'84%',height:Math.round(110*Math.min(preset.w,preset.h)/1080)+'px',html:name,font:'serif-georgia',color:'#2a2430',fontSize:Math.round(64*Math.min(preset.w,preset.h)/1080),textAlign:'center',fontWeight:'700',letterSpacing:0,lineHeight:1.08,opacity:1,borderWidth:0,borderColor:'#ffffff',borderRadius:0,shadowBlur:0,shadowColor:'#000000',animation:'none',duration:'900',rotation:0,showInHero:true,showInGallery:false,zIndex:2},posterBody:{id:'posterBody',type:'text',left:'10%',top:(preset.h>preset.w?'34%':'44%'),width:'80%',height:Math.round(140*Math.min(preset.w,preset.h)/1080)+'px',html:_txt('Add your poster message here. Select this text to edit it.','Add your poster message here. Select this text to edit it.'),font:'sans-arial',color:'#5a5360',fontSize:Math.round(22*Math.min(preset.w,preset.h)/1080),textAlign:'center',fontWeight:'400',letterSpacing:0,lineHeight:1.5,opacity:1,borderWidth:0,borderColor:'#ffffff',borderRadius:0,shadowBlur:0,shadowColor:'#000000',animation:'none',duration:'900',rotation:0,showInHero:true,showInGallery:false,zIndex:2}}};
  try{const item=await api('/api/invitations',{method:'POST',body:JSON.stringify({slug:name||'New Poster',document:doc})});localStorage.setItem('sovan-active-invite',item.id);location.href=`/invitations/${encodeURIComponent(item.id)}/editor`}catch(error){alert(error.message)}
 }
