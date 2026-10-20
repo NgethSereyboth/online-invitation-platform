@@ -345,8 +345,8 @@
       "deferredStylesheetBytes": 50372,
       "deferredStylesheetSha256": "5a5ebd5bf532c1289df4df2647362ed28938396e7f86f0fcd4ba449d4ec0c589",
       "javascript": "bundle-index.js",
-      "scriptBytes": 1062107,
-      "scriptSha256": "4692bd837300767b40253b2a9f4f8315351830904930528929b256d3a4009f46",
+      "scriptBytes": 1062075,
+      "scriptSha256": "440847a8c04b6f41470abe5e5b486147bf7c0dcaa0b21bae748ff10710a3bde8",
       "sources": {
         "deferredScripts": [
           "workflow-refine.js",

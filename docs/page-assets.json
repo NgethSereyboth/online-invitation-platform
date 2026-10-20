@@ -105,7 +105,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1519890,
+      "bytes": 1519858,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",

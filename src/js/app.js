@@ -111,7 +111,7 @@ try{
 serverInvite=await api('/api/invitations/'+encodeURIComponent(activeInviteId));
 state=migrateDocument(serverInvite.document||state);
 applyPosterCanvasSize();
-runPosterTreatments&&window.setTimeout(runPosterTreatments,0);
+window.EInvitePosterTreat?.();
 redoStack=[];
 recentFieldEdits.clear();
 authoritativeStateApplying=true;
