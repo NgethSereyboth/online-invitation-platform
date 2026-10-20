@@ -143,6 +143,13 @@ PRODUCTION_MODE = platform_env("EINVITE_PRODUCTION", "0").lower() in {"1","true"
 STRICT_SESSION_CSRF = PRODUCTION_MODE or platform_env("EINVITE_STRICT_SESSION_CSRF", "0").lower() in {"1","true","yes"}
 DISCLOSE_HEALTH_DETAILS = platform_env("EINVITE_DISCLOSE_HEALTH_DETAILS", "0" if PRODUCTION_MODE else "1").lower() in {"1","true","yes"}
 ALLOW_LOCAL_ADMIN_BOOTSTRAP = not PRODUCTION_MODE and platform_env("EINVITE_ALLOW_LOCAL_ADMIN_BOOTSTRAP", "1").lower() in {"1","true","yes"}
+# Registration throttle: 10 per 600 s per client address for public traffic. The bundled
+# offline/development workflow (and every Playwright harness) legitimately creates many
+# identities from loopback — the canvas visual gate alone needs 12 — so the same local
+# bootstrap mode that already grants loopback administrator authority raises this ceiling.
+# The public limit is untouched, and PRODUCTION_MODE disables the bootstrap entirely.
+REGISTER_RATE_LIMIT = 10
+REGISTER_RATE_LIMIT_LOCAL = 60
 _UPLOAD_SECRET_CONFIGURED = platform_env("EINVITE_UPLOAD_SIGNING_SECRET", "").strip()
 _MEDIA_SECRET_CONFIGURED = platform_env("EINVITE_MEDIA_SIGNING_SECRET", "").strip()
 if PRODUCTION_MODE and (not _UPLOAD_SECRET_CONFIGURED or not _MEDIA_SECRET_CONFIGURED):
@@ -6353,7 +6360,8 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,{"exportedAt":int(time.time()*1000),"account":{"id":user["id"],"email":user["email"],"role":user["role"],"plan":user["plan"],"emailVerified":bool(user["email_verified"]),"uploadEnabled":bool(user["upload_enabled"] if "upload_enabled" in user.keys() else 1)},"invitations":invitations,"publications":publications,"rsvps":rsvps,"guests":guests,"wishes":wishes,"assets":assets,"templates":templates,"pageTemplates":page_templates,"components":components,"studioResources":studio_resources,"studioReleases":studio_releases,"studioReleasePins":studio_release_pins,"studioGovernance":governance_export,"studioBackupPolicy":dict(studio_backup_policy) if studio_backup_policy else {},"studioBulkJobs":studio_bulk_jobs})
 
     def register(self):
-        if not self.rate_limit(f"register:{self.client_address[0]}",10,600): return
+        local_harness=ALLOW_LOCAL_ADMIN_BOOTSTRAP and is_loopback_address(self.client_ip())
+        if not self.rate_limit(f"register:{self.client_address[0]}",REGISTER_RATE_LIMIT_LOCAL if local_harness else REGISTER_RATE_LIMIT,600): return
         data=self.body(100_000); email=str(data.get("email","")).strip().lower()[:254]; password=str(data.get("password",""))
         if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",email):raise ValueError("Valid email required")
         if len(password)<8 or len(password)>200:raise ValueError("Password must be 8 to 200 characters")
