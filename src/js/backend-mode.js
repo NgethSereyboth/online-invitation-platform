@@ -22,10 +22,8 @@ function message(target,text='This feature requires the full application server.
  if(host)host.replaceChildren(box);else document.body.append(box);return box
 }
 function disable(root=document){root.querySelectorAll('[data-server-only],button.server-only,a.server-only').forEach(el=>{el.setAttribute('aria-disabled','true');if('disabled'in el)el.disabled=true;el.title='This feature requires the full application server.'})}
-/* Session probe — one cached `/api/auth/me` per page load. Signed out the server answers
-   `200 {"user":null}` (verified with curl), so this never adds a failed request; it lets the
-   studio/review/collaboration modules tell "nobody is signed in" from "server is down" and
-   skip their auth-gated fetches instead of firing them into a 401 (inventory A1). */
+/* Session probe — one cached /api/auth/me per load (inventory A1); lets modules tell
+   "nobody signed in" from "server down" without a 401 (signed-out always 200 {"user":null}). */
 let sessionPromise=null;
 function session(){
  if(!sessionPromise){sessionPromise=ready.then(()=>{if(!isAvailable())return null;
@@ -35,20 +33,9 @@ function session(){
 function hasSession(){return session().then(Boolean)}
 window.EInviteBackend={state,ready,isAvailable,staticUrl,message,disable,session,hasSession,onChange(fn){listeners.add(fn);return()=>listeners.delete(fn)}};
 
-/* --- Signed-out request guard (inventory A1) --------------------------------
- * A signed-out load used to fire every page's session-only fetches straight at the server and get
- * 401/404 for each one: 37 failing requests across the 16 routes, one browser console error apiece
- * (docs/reviews/console-baseline.txt). Nothing about that is recoverable client-side, so the shell
- * stops sending them and answers with the same 401 JSON body the server would have sent.
- *
- * The allowlist is measured, not guessed — artifacts/probe_api_calls.mjs records every /api request
- * a signed-out load makes: the only paths that answer 200 are /api/health and /api/auth/me. The
- * guest-reachable writes (RSVP, poll vote, signup claim, public/guest APIs) are allowlisted too so a
- * guest page never loses a capability, and /api/auth/* stays open so signing in still works.
- *
- * Two deliberate properties: nothing is blocked while the backend is offline (the existing
- * "full server required" paths must keep their own messaging), and a successful sign-in or sign-out
- * invalidates the cached probe so the very next gated call re-reads the session. */
+/* Signed-out request guard (inventory A1): the allowlist is measured (artifacts/probe_api_calls.mjs) —
+   only /api/health and /api/auth/me answer 200 signed out; guest-reachable writes and /api/auth/* stay
+   open. Offline never blocks, and login/logout invalidates the cached probe. */
 var SIGNED_OUT_ALLOWED=[
  /^\/api\/health$/,
  /^\/api\/auth\//,
@@ -58,14 +45,9 @@ var SIGNED_OUT_ALLOWED=[
 ];
 var SESSION_CHANGES=/^\/api\/auth\/(login|logout|logout-all|register|verify|reset|reset-confirm|password)$/;
 
-/* Local/demo invitation ids have no server counterpart. `demo-wedding` is the app's own
- * "no invitation selected" fallback (src/js/app.js, dashboard.js, guests.js, responses.js,
- * navigation-history.js) and `local-draft` is the editor's unsaved draft. A signed-in editor
- * was still asking the server for /api/invitations/demo-wedding, /comments, /approvals,
- * /review-context, /studio-release and the four /api/studio/*?invitationId=demo-wedding routes —
- * eight 404s and eight console errors per load (the editor was already open on a real invitation,
- * 08dfadb8…/bfa1dcdd…). The shell answers them locally with the same 404 the server would send, so
- * each module takes the fallback path it already has instead of putting an error in the console. */
+/* demo-wedding / local-.* ids have no server counterpart (app.js, dashboard.js, guests.js,
+   responses.js, navigation-history.js); the shell answers them 404 locally instead of 8 console
+   errors per load. */
 var LOCAL_ID=/^(demo-|local-)/;
 function refsLocalId(url){
  var m=/^\/api\/invitations\/([^/]+)/.exec(url.pathname);
@@ -96,12 +78,8 @@ if(nativeFetch){
 }
 })();
 
-
-/* Pre-paint language bootstrap — the same block core/theme.js runs on the other 15 routes.
-   public.html does not load theme.js, so without it the guest page could only correct
-   `html.lang` after the route bundle had parsed (measured: with `einvite-lang=km` stored, the
-   page rendered English while the Khmer topbar button showed as active). Idempotent: it sets the
-   same value theme.js would. */
+/* Pre-paint language bootstrap (same block core/theme.js runs on the other routes; public.html
+   does not load theme.js — measured in the km topbar-active review). Idempotent. */
 (function(){try{var el=document.documentElement,lang=localStorage.getItem('einvite-lang');
 if(!lang){var nav=navigator.language||(navigator.languages&&navigator.languages[0])||'';lang=nav.toLowerCase().indexOf('km')===0?'km':'en'}
 el.lang=lang}catch(e){}})();

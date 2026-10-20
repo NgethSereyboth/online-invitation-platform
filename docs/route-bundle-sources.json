@@ -31,7 +31,8 @@
         "account-security.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "admin.html": {
@@ -71,7 +72,8 @@
         "ux-refine.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "analytics.html": {
@@ -100,7 +102,8 @@
         "accessibility.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "billing.html": {
@@ -126,7 +129,8 @@
         "ux-refine.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "checkin.html": {
@@ -199,6 +203,7 @@
         "zoom-layout-pages.css",
         "guest-features.css",
         "app-shell.css",
+        "canva-ui.css",
         "toast.css"
       ]
     },
@@ -227,7 +232,8 @@
         "ux-refine.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "guests.html": {
@@ -256,7 +262,8 @@
         "accessibility.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "index.html": {
@@ -403,7 +410,8 @@
         "accessibility.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "privacy.html": {
@@ -485,7 +493,8 @@
         "ux-refine.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "responses.html": {
@@ -514,7 +523,8 @@
         "accessibility.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "templates.html": {
@@ -544,7 +554,8 @@
         "accessibility.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     },
     "verify.html": {
@@ -570,9 +581,10 @@
         "ux-refine.css",
         "stabilized.css",
         "zoom-layout-pages.css",
-        "app-shell.css"
+        "app-shell.css",
+        "canva-ui.css"
       ]
     }
   },
-  "version": 15
+  "version": 16
 }
