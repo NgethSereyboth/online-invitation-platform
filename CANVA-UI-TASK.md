@@ -80,8 +80,8 @@ Evidence ledger: `artifacts/ui-audit/fixes/canva-ui/RESULTS.md` (one row per pag
 - [x] UI-guidelines review: 0 `!important`, transform/opacity-only transitions, reduced-motion kills, focus-visible parity via modern-ui global rules, native `<dialog>` keyboard dismissal, i18n spans balanced 53/53 — no fixes needed.
 - [x] RESULTS.md rows complete; ledger update; this checklist ticked.
 
-### Task H — commit
-- [ ] `git add` the pass only (never `src/python/data/`); commit message in the prior style e.g. `feat(ui): canva-style pass — <one-line summary>`; do **not** push. Then update `artifacts/ui-audit/fixes/STATE.md` (Done/Active/Next).
+### Task H — commit — DONE
+- [x] `git add` the pass only (never `src/python/data/`); committed as `37bfc8d` in the prior style; **not pushed**. STATE.md updated (Done/Active/Next).
 
 ## 3. Review Focus — what most likely bites
 
