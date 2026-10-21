@@ -258,8 +258,8 @@
           "toast.css"
         ]
       },
-      "styleBytes": 317007,
-      "styleSha256": "de5e36c4808751a8d37685992d48cc8d764f1b10fb312de2c4dec265e539afc3",
+      "styleBytes": 317048,
+      "styleSha256": "7599bc5af0c43d05288a2d6eef31c87346af4ccdede08fd7900368fe79afef10",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -457,8 +457,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 448595,
-      "styleSha256": "e985ec2d2b1136d7f19a834778d111d245c4aab6aa72b8d80fca743219038aac",
+      "styleBytes": 448636,
+      "styleSha256": "c8469ec23689e90167708d7a27314eb0bfd2bfde66d390035b3595f750e1b217",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
@@ -509,8 +509,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 284447,
-      "styleSha256": "782b36c0d22269a895451b17a26cbb59c1047af14c48cb32b103389a76b188e8",
+      "styleBytes": 284488,
+      "styleSha256": "5a662264e59671e5c6a9f2395f75cfb547246b164bbbaa0538f7b84fea8f698e",
       "stylesheet": "bundle-materials.css"
     },
     "privacy.html": {
