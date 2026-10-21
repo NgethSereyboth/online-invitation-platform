@@ -302,7 +302,12 @@ def test_unset_allowlist_production_refuses_start():
                                 cwd=REPO, env=env, stdout=log_handle, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
         try:
             # Wait for server to start or fail
-            time.sleep(3)
+            # NW-5.x (2026-10-21): a fixed 3s sleep raced the refusal on slower hosts —
+            # the production refusal (exit 1 + expected message) lands at ~3.4–3.5s on the
+            # Linux box, so proc.poll() read as still-running. Poll up to 30s for exit.
+            deadline = time.time() + 30
+            while time.time() < deadline and proc.poll() is None:
+                time.sleep(0.25)
             if proc.poll() is None:
                 # Server started, which is wrong
                 proc.terminate()
@@ -352,7 +357,10 @@ def test_malformed_cidr_refuses_start():
         proc = subprocess.Popen([sys.executable, '-u', str(REPO / 'src' / 'python' / 'server.py'), '--host', '127.0.0.1', '--port', str(port)],
                                 cwd=REPO, env=env, stdout=log_handle, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace')
         try:
-            time.sleep(3)
+            # Same bounded exit-poll as the unset-allowlist test (NW-5.x).
+            deadline = time.time() + 30
+            while time.time() < deadline and proc.poll() is None:
+                time.sleep(0.25)
             if proc.poll() is None:
                 proc.terminate()
                 proc.wait(timeout=5)
