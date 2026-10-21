@@ -102,10 +102,12 @@ Evidence ledger: `artifacts/ui-audit/fixes/canva-ui/RESULTS.md` (one row per pag
 
 ## 5. Owner decisions surfaced during the pass (do NOT act; list w/ recommendation)
 
-From DESIGN-FIX / earlier audit — still open:
-- Poster-doc left-panel countdown/RSVP controls still shown (should hide when `eventType==='Poster'`).
-- Hide Event/Blocks rail buttons on poster docs.
-- Custom units (in/cm) in the poster size prompt (px-only today).
+2026-10-20 update: the first three items (poster-doc countdown/RSVP controls, Event/Blocks rail buttons, custom units in/cm) were owner-approved and implemented as Task I in commit `508f95a`; the §5 list is kept for history. Remaining genuinely open: billing gradient contrast heuristic rows, admin mock 403 audit rows, designer.html CSP `unsafe-eval` pageerror.
+
+From DESIGN-FIX / earlier audit (kept for history; resolved items annotated):
+- Poster-doc left-panel countdown/RSVP controls still shown (should hide when `eventType==='Poster'`). → resolved in Task I (`#guestResponseGroup`/`#countdownGroup` hidden).
+- Hide Event/Blocks rail buttons on poster docs. → resolved in Task I (rail + Design-home cards hidden).
+- Custom units (in/cm) in the poster size prompt (px-only today). → resolved in Task I (px/in/cm/ft engine).
 - Billing gradient-contrast heuristic rows (known false-positive rows).
 - Admin mock-view 403 audit rows (heuristic, not a real defect).
 - designer.html CSP `unsafe-eval` pageerror (baseline, not ours).

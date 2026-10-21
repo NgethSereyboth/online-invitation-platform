@@ -4,6 +4,8 @@ Repo: `F:\Project\eInvite\online-invitation-platform`
 Written: 2026-10-19 · Author of this work order: Freebuff / Buffy (verify each ✅ before closing)
 Live verification server: `PYTHONPATH=. EINVITE_ALLOW_NO_SCANNER=1 python src/python/server.py` → http://127.0.0.1:4175 (background PID in this session)
 
+**Status: CLOSED — implemented and verified 2026-10-19.** Committed in `708e675` plus its continuation rounds; the P0–P5 checkboxes below are the original work-order state and are intentionally NOT retro-ticked; evidence is in `DESIGN-FIX-REPORT.md` and `artifacts/design-fix/`. The P1 "seed default objects for a fresh invitation" item was superseded by the poster starter-content path and has no separate evidence row, so re-verify before relying on it.
+
 ---
 
 ## 0. How the app is put together (quick map)

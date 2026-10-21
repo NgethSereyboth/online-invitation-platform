@@ -30,6 +30,7 @@ source; do not weaken any test, gate, threshold, or baseline.
   - Acceptance: **22 pass / 0 fail / 2 skipped** (the 2 skips are by design).
   - Perf (renderer pinned per the ledger procedure): exit 0, zero ≥50 ms frames, zero long tasks, all gestures `engaged:true` (all 3 runs × 4 gestures).
   - The unpinned "hitch" (max ~65-151 ms first-gesture frame) is the environment amplifier already documented in the ledger — the DoD procedure pins the renderer, and fresh evidence reproduces it unpinned and eliminates it pinned.
+- 2026-10-20 update: the dark-width visual failure recorded below was resolved by the owner-approved baseline re-anchor (`artifacts/canvas-motion/baseline/REBASELINE-2026-10-20.md`). 6/6 pairs pass at 0.109–0.279 %; the 3.5 % threshold and comparison logic are untouched. The loopback register-rate fix (`af2b723`) lets the frozen visual gate complete in one command (6/6, 0.06–1.26 %).
 - Status at the time this work order was written (superseded): 20 pass / 2 fail / 2 skipped; snap-drag ≥50 ms in 3/3; crop never engaged.
 - Visual: light passes all 3 widths; **dark fails all 3 widths**
   (5.52 % / 10.67 % / 6.62 % vs the 3.5 % limit).

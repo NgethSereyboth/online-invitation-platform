@@ -2,7 +2,9 @@
 
 **Companion to `CANVAS-MOTION-FIX-TASK.md` — both files go to the fixing agent together.**
 Audit date: 2026-10-18. Basis: real-render capture sweep (16 pages × auth states × viewports × themes × languages, 150 screenshots + in-page layout heuristics + Lighthouse).
-**Scope: planning and findings only — no fixes have been applied.** This file is the work order for the visual/interface/placement fixes.
+**Scope at authoring time: findings and work order only — no fixes had been applied.** The fixes have since landed; see the status line below, and treat §2–§3 as the historical pre-fix analysis.
+
+**Status (2026-10-20): CLOSED.** Pass 1 (P0/P2/P3 fixes) and pass 2 (U1 design page, U2 app pages) are implemented and verified; evidence is in `artifacts/ui-audit/fixes/RESULTS.md`. The nine Definition-of-done boxes in §4 are closed with pointers to that evidence.
 
 ---
 
@@ -191,15 +193,15 @@ Goal: catch *everything a human eye would call off*, on **every page**, not just
 
 ## 4. Definition of done
 
-- [ ] All P0 items resolved; `lhci collect` completes for the shipped page set (dashboard decision documented).
-- [ ] No console errors on the 16 pages in user/guest states (editor GPU loader fixed).
-- [ ] No horizontal document scroll at 320/375 on any page.
-- [ ] The design page renders and is usable at 1440/1024/768/375/320: no overlap between rail/creation pane/canvas/inspector/toolbars; one zoom surface; no clipped controls; the canvas page visible on first paint at every width; mobile hint text fully readable.
-- [ ] The ≤375 header language-switch overlap is gone on all 13 pages (switch visible + clickable).
-- [ ] Dark mode: no text below 3:1 (target 4.5:1 for body); templates tags, public venue/muted, checkin, privacy, studio status texts fixed.
-- [ ] Type floor applied (≥11px meta, ≥12px labels; Khmer per the typography doc) across the studio and app pages.
-- [ ] Before/after screenshots for every fixed item under `artifacts/ui-audit/fixes/<issue-id>/` and a short `RESULTS.md` mapping issue ID → files touched → verification command.
-- [ ] Canvas tasks 1–5 from `CANVAS-MOTION-FIX-TASK.md` verified by its own gates (see that file; do not edit its thresholds).
+- [x] All P0 items resolved; `lhci collect` completes for the shipped page set (dashboard decision documented). — evidence: fixes/RESULTS.md §Pass 1
+- [x] No console errors on the 16 pages in user/guest states (editor GPU loader fixed). — evidence: fixes/RESULTS.md §Pass 1
+- [x] No horizontal document scroll at 320/375 on any page. — evidence: fixes/RESULTS.md §Pass 1
+- [x] The design page renders and is usable at 1440/1024/768/375/320: no overlap between rail/creation pane/canvas/inspector/toolbars; one zoom surface; no clipped controls; the canvas page visible on first paint at every width; mobile hint text fully readable. — evidence: fixes/RESULTS.md §Pass 2 — U1
+- [x] The ≤375 header language-switch overlap is gone on all 13 pages (switch visible + clickable). — evidence: fixes/RESULTS.md §Pass 2 — U1/U2
+- [x] Dark mode: no text below 3:1 (target 4.5:1 for body); templates tags, public venue/muted, checkin, privacy, studio status texts fixed. — evidence: fixes/RESULTS.md §Pass 2 — U1/U2
+- [x] Type floor applied (≥11px meta, ≥12px labels; Khmer per the typography doc) across the studio and app pages. — evidence: fixes/RESULTS.md §Pass 2 — U1/U2
+- [x] Before/after screenshots for every fixed item under `artifacts/ui-audit/fixes/<issue-id>/` and a short `RESULTS.md` mapping issue ID → files touched → verification command. — evidence: fixes/RESULTS.md §Pass 1
+- [x] Canvas tasks 1–5 from `CANVAS-MOTION-FIX-TASK.md` verified by its own gates (see that file; do not edit its thresholds). — evidence: artifacts/canvas-motion/verify/acceptance-*
 
 ## 5. Out of scope / owner decisions
 

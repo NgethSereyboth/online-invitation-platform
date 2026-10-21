@@ -8,6 +8,9 @@ which has no subagent dispatch, no MCP config, and no plugin API.
 - Resume state: `artifacts/ui-audit/fixes/STATE.md` — read it before continuing any eInvite work
   (hard rules, current pass, open items, next move); update its Done / Active / Next Move at the
   end of a work session.
+- Next work order: `NEXT-WORK-TASK.md` — the phase/task plan for the remaining accessibility,
+  CSS-debt, dashboard-parity, i18n, CI-durability, UI-refinement and release work. STATE.md points
+  to it; read both before editing anything.
 - Sessions started outside this repo can reach the same pointer via the global `einvite-project`
   skill (`~/.agents/skills/einvite-project/SKILL.md`).
 
