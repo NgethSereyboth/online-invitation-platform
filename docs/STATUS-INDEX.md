@@ -1,9 +1,10 @@
 # STATUS-INDEX — work orders, ledgers, and audits
 
 Verdicts as of 2026-10-21 (`pass/2026-10-21-next-work`; code HEAD `11e549f`, docs HEAD
-`d8e9379` — this refresh; legs `ec0cf91` a11y, `6a30d9e` i18n, `8952381`/`cd56ac0` CI,
-`837042f`+`d8e9379` docs, `ca53dbe` contrast fix, `11e549f` toolbar reachability). One row
-per document: its standing today. Keep dated.
+`8d256e3` plus the harness/docs follow-up that carries this line; legs `ec0cf91` a11y,
+`6a30d9e` i18n, `8952381`/`cd56ac0` CI, `837042f`+`15554e3`+`8d256e3` docs, `ca53dbe`
+contrast fix, `11e549f` toolbar reachability). One row per document: its standing today.
+Keep dated.
 
 | Document | Verdict | Date note |
 |---|---|---|

@@ -1,8 +1,9 @@
 # Branch review note — `pass/2026-10-21-next-work` (2026-10-21)
 
 Read this instead of running anything: each commit below carries its own verification
-evidence. Code HEAD `11e549f`, docs HEAD `15554e3`, cut from `50721ef`. Push/release is
-OD-3-gated (see [RELEASE-CANDIDATE.md](RELEASE-CANDIDATE.md)).
+evidence. Code HEAD `11e549f`, docs HEAD `8d256e3` plus the harness/docs follow-up, cut from
+`50721ef`. Push/release was OD-3-gated and the owner approved it on 2026-10-21 (see
+[RELEASE-CANDIDATE.md](RELEASE-CANDIDATE.md)).
 Branch-wide live results on this machine: full pytest 142 passed / 1 pre-existing OD-7
 digest-pin failure; `tools/run-gates.py` build/bundles/smoke/lhci/canvas all PASS.
 
@@ -18,6 +19,8 @@ digest-pin failure; `tools/run-gates.py` build/bundles/smoke/lhci/canvas all PAS
 | 6 | `ca53dbe` | fix(a11y) | 13 files, +29/−29 | Gradient AA close: `.fp-profile-button` light stop → `color-mix(in srgb,var(--app-accent-2) 65%,var(--app-accent))` in [final-polish.css](src/css/final-polish.css); bundles/manifests regenerated | In-browser: computed `backgroundImage` light end rgb(170,95,118); white ratio 4.56 ≥ 4.5; `build.py all --check` green |
 | 7 | `11e549f` | fix(a11y) | 6 files, +12/−8 | NW-6.3 reachability close: thin visible scrollbar on `.stage-wrap>.studio-canvas-toolbar` from 701px up in [workflow-final-audit.css](src/css/organized/workflow-final-audit.css) (mobile ≤700 keeps hidden-scroll convention) | In-browser at 1440/1366/1024/768/375: after scroll `#v23ContextToolbar` buttons win `elementFromPoint`; no vertical clipping; row height unchanged |
 | 8 | `15554e3` | docs | 2 files, +16/−8 | STATUS-INDEX + RELEASE-CANDIDATE refreshed to the final HEADs (commit list, NW-6 execution, link check) | Automated link check: 0 broken links |
+| 9 | `8d256e3` | docs | 1 file, +35 | This per-commit reviewer note (range `50721ef..15554e3`) | Rows cross-checked against `git show --stat` |
+| 10 | (final commit) | test(tools)/docs | 8 new files + 3 docs | Committed the eight verification harnesses + the continuation brief, and corrected the docs HEAD/count references | Harness re-run (`option_labels_i18n_check.py` exit 0); `run-gates.py --phase build` → `GATES_PASSED`; `build.py all --check` exit 0 |
 
 ## Review framing
 

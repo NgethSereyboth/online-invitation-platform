@@ -1,7 +1,8 @@
 # RELEASE-CANDIDATE — session end 2026-10-21
 
-**Do not push, tag, or edit `VERSION_HISTORY.md` — blocked on OD-3.** Nothing below has been
-published anywhere; everything lives on the local branch.
+**OD-3 update 2026-10-21 (owner): the push was approved after this snapshot was written.** The
+pre-push state below is kept for the record. Do not tag or edit `VERSION_HISTORY.md` without an
+explicit owner decision.
 
 ## HEAD and commits
 
@@ -13,6 +14,10 @@ published anywhere; everything lives on the local branch.
 - `837042f` — docs: RELEASE-CANDIDATE reader + STATUS-INDEX.
 - `ca53dbe` — fix(a11y): dashboard profile gradient light stop passes AA (white 4.56).
 - `11e549f` — fix(a11y): canvas toolbar overflow scroll discoverable from 701px up (NW-6.3).
+- `15554e3` — docs: STATUS-INDEX + RELEASE-CANDIDATE refreshed to the code HEAD.
+- `8d256e3` — docs: per-commit branch review note for reviewers.
+- final commit — test(tools)/docs: the eight verification harnesses this pass used (plus the
+  continuation brief) and docs HEAD/count corrections.
 - Untracked owner work preserved untouched (78 paths, incl. `.claude/`, `data/`, review PNGs);
   `wip/2026-10-21-backup` branch untouched.
 
@@ -61,5 +66,5 @@ OD-8 (11 Khmer strings) — evidence and recommendations in
 
 ## Push instruction (blocked)
 
-When OD-3 is answered: `git push -u origin pass/2026-10-21-next-work` — seven commits, no tags,
+When OD-3 is answered: `git push -u origin pass/2026-10-21-next-work` — ten commits, no tags,
 no `VERSION_HISTORY.md` change, no `main` merge until the owner orders it.
