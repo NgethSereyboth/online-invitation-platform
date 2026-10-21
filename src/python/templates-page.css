@@ -1,5 +1,15 @@
 @layer components {
-.studio{max-width:1240px;margin:auto;padding:28px}.studio-head{display:flex;align-items:center;gap:12px}.studio-head h1{font:40px Georgia,serif;color:var(--accent);margin-right:auto}.studio-toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0}.studio-toolbar input[type="search"]{flex:1;min-width:min(240px,100%)}.studio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}.studio-card{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:0 10px 30px #51372b12}.studio-thumb{height:180px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--thumb-bg,#fff7f3);color:var(--thumb-heading,#9d4555)}.studio-thumb::before{content:'';position:absolute;inset:18px;border:1px solid color-mix(in srgb,var(--thumb-heading) 45%,transparent);border-radius:25px}/* WCAG 2.1 AA 1.4.3. --thumb-heading is a template brand colour painted as text on
+.studio{max-width:1240px;margin:auto;padding:28px}.studio-head{display:flex;align-items:center;gap:12px}.studio-head h1{font:40px Georgia,serif;color:var(--accent);margin-right:auto}.studio-toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0}.studio-toolbar input[type="search"]{flex:1;min-width:min(240px,100%)}
+
+/* ui-refinement pass (DIRECTION.md §4/§5, Batch D): the base layer sets
+   input/select{display:block;width:100%}, which turned the Template Studio
+   filter rows into a stacked full-width form wall (AUDIT.md #2). One band,
+   controls inline, comfortable widths; native selects/checkboxes now carry
+   the brand accent via the shared modern-ui accent-color rule. ------------- */
+.studio-toolbar select{display:inline-block;width:auto;min-width:150px;flex:0 1 auto;margin-top:0}
+.studio-toolbar .toggle-row{display:inline-flex;align-items:center;margin:0;white-space:nowrap}
+.studio-toolbar .toggle-row span{margin-right:6px}
+.studio-grid{--studio-grid-gap:18px}.studio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}.studio-card{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:0 10px 30px #51372b12}.studio-thumb{height:180px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--thumb-bg,#fff7f3);color:var(--thumb-heading,#9d4555)}.studio-thumb::before{content:'';position:absolute;inset:18px;border:1px solid color-mix(in srgb,var(--thumb-heading) 45%,transparent);border-radius:25px}/* WCAG 2.1 AA 1.4.3. --thumb-heading is a template brand colour painted as text on
    the template's own surface. Measured worst case before this rule: the Royal Khmer
    Gold accent #b78b2f on #fff9ec at 28px = 2.97:1, just under the 3:1 large-text
    minimum. Mixing 8% black moves it to 3.45:1 while keeping the template's hue; the

@@ -126,7 +126,7 @@
 .toast__close:focus-visible {
   opacity: 1;
   color: var(--app-text, #1f2026);
-  outline: 2px solid var(--app-accent-2, #9c6cff);
+  outline: 2px solid var(--app-accent-2, #ba6d84);
   outline-offset: 1px;
 }
 

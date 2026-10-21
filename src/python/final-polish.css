@@ -8,3 +8,11 @@
    7 .fp-mobile-pane-close elements, 0 visible, at 768/1024/1180. Show it wherever the creation
    pane is a drawer (<=1180px), otherwise opening the pane with the rail handle is one-way. */
 @media(max-width:1180px){body.studio-experience.studio-design-mode .fp-mobile-pane-close{display:block}}
+
+/* ui-refinement pass — dashboard paper-mat (DIRECTION.md signature element):
+   the invitation card artwork sits on a --paper-mat sheet with a hairline
+   frame (stationery-in-a-shop-window mat) instead of the previous
+   --app-surface-2 grey well, and the card hovers to --app-shadow pressure.
+   Artwork geometry/wiring is untouched — only the framing colors change. */
+body[data-page="dashboard"] .invite-cover{background:var(--paper-mat)}
+body[data-page="dashboard"] .fp-project-preview{background:var(--paper-mat)}

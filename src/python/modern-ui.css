@@ -458,4 +458,16 @@ html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-m
    scroll-start, causing the button to scale and "jump"). Already covered by
    the global prefers-reduced-motion rule above — no additional override needed. */
 
+/* ============================================================================
+   ui-refinement pass (artifacts/ui-refinement/DIRECTION.md §4 contract):
+   ONE accent voice + native controls that follow it. The accent-2 token was
+   repaired at source (tokens.css --brand-2 violet→rose) so no !important armory
+   is needed here — these rules only fill gaps the layered skins don't cover.
+   ============================================================================ */
+
+/* Native checkboxes/radios everywhere follow the brand accent instead of the
+   UA default blue (audit P2-3-class; accent-color is a single declaration,
+   no layout impact, reduced-motion-safe). ---------------------------------- */
+input[type="checkbox"],input[type="radio"]{accent-color:var(--app-accent)}
+
 }
