@@ -9,6 +9,10 @@ published anywhere; everything lives on the local branch.
 - `ec0cf91` — fix(a11y): all six WCAG 2.2 AA code asks (`NW-1.1`–`NW-1.6`).
 - `6a30d9e` — feat(i18n): bilingual `<option>` labels (14), CSV reconcile archive, Khmer sweep (NW-4.1–4.4).
 - `8952381` — test(ci): portable gate runner + allowlist startup race fix (NW-5).
+- `cd56ac0` — test(ci): the allowlist implementation file omitted from `8952381`.
+- `837042f` — docs: RELEASE-CANDIDATE reader + STATUS-INDEX.
+- `ca53dbe` — fix(a11y): dashboard profile gradient light stop passes AA (white 4.56).
+- `11e549f` — fix(a11y): canvas toolbar overflow scroll discoverable from 701px up (NW-6.3).
 - Untracked owner work preserved untouched (78 paths, incl. `.claude/`, `data/`, review PNGs);
   `wip/2026-10-21-backup` branch untouched.
 
@@ -47,13 +51,15 @@ OD-8 (11 Khmer strings) — evidence and recommendations in
   `artifacts/canvas-motion/baseline/` here).
 - Files only ever measured against `tools/serve-gzip.py` (no production hosting evidence in
   this pass; `deploy/sites/` is owner work, untouched).
-- NW-6.3–6.6 (floating controls, motion audit, contrast sweep, privacy headroom) recon-only:
-  NW-6.4 static probe run (tokens pinned in `tokens.css`; the 40-decl "layout-transition" figure
-  is a regex over-count with multi-line declarations — methodology note, needs a real audit).
+- NW-6.3–6.6 (floating controls, motion audit, contrast sweep, privacy headroom) executed
+  same-day (see `artifacts/next-work/nw-6-3/FINDING.md`): one reachability defect fixed in
+  `11e549f`, one gradient AA residual fixed in `ca53dbe`; NW-6.6 headroom measured (139 KB
+  of 174 KB budget); NW-6.4 reduced-motion contract verified via
+  `tests/canvas_motion_contract_test.py` (2/2).
 - RILL-WALKTHROUGH end-to-end flow not executed this session (no throwaway account flow run);
   documented as not run, not assumed.
 
 ## Push instruction (blocked)
 
-When OD-3 is answered: `git push -u origin pass/2026-10-21-next-work` — three commits, no tags,
+When OD-3 is answered: `git push -u origin pass/2026-10-21-next-work` — seven commits, no tags,
 no `VERSION_HISTORY.md` change, no `main` merge until the owner orders it.
