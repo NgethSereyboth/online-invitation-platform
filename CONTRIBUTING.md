@@ -46,6 +46,21 @@ The repo-root `build_editor_bundle.py`, `build_route_bundles.py` and
 (tests, `src/python/release_check.py`, CI) keep working. They print a
 deprecation notice. Do not add new callers.
 
+### One-command gates (2026-10-21)
+
+`tools/run-gates.py` reproduces the full gate matrix — build, bundles, smoke,
+pytest, LHCI and the canvas acceptance harness — in one serial run, with log
+directory and lock file, on Linux (no PowerShell renderer pin needed):
+
+```bash
+.venv/bin/python tools/run-gates.py --phase all      # everything (heavy)
+.venv/bin/python tools/run-gates.py --skip-heavy     # build/bundles/smoke only
+```
+
+Use the repo `.venv/bin/python` (system python3 lacks Playwright and would
+exclude the browser test modules); the runner exports `PYTHONIOENCODING=utf-8`
+itself and never edits the frozen canvas tools or budgets. See `tools/README.md`.
+
 ## 3. Test
 
 ```bash

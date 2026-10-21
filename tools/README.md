@@ -16,6 +16,14 @@ make reproduce                           # everything, against a gzip server it 
 Nothing else is required. Python scripts are standard-library-only except
 `subset-fonts.py`.
 
+### Gate runner (NW-5.3, 2026-10-21)
+
+| file | what it does |
+| --- | --- |
+| `run-gates.py` | one-command reproduction of the Phase-0 gate matrix (Linux portable; `argparse`, no PowerShell). `--phase all\|build\|bundles\|smoke\|pytest\|lhci\|canvas`, `--skip-heavy`, `--port` (default 8124). Starts/stops `serve-gzip.py` for smoke+lhci in `finally`; lock file `artifacts/next-work/gates/.run-gates.lock` serializes heavy runs (exit 3 if busy); logs command/exit/key-line under `artifacts/next-work/gates/<timestamp>/` and stops the chain at the first failure. Requirements: run through the repo `.venv/bin/python` (system python lacks Playwright), `PYTHONIOENCODING=utf-8` (set internally). The `canvas` phase calls the frozen `tests/canvas_motion_playwright.py` as-is (its `--output` **must be absolute** — the harness uses `path.relative_to(ROOT)`); the canvas *visual* gate is NOT RUN by this runner — the frozen baseline lives on the Windows box. |
+
+Example: `.venv/bin/python tools/run-gates.py --phase all`.
+
 ## The server rule
 
 **Every Lighthouse number must be measured against `tools/serve-gzip.py`.**
