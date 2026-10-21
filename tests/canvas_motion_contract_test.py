@@ -69,6 +69,21 @@ assert.equal(motion.MOTION.FLICK_LOCK_MS, 250);
 assert.equal(motion.MOTION.LONG_PRESS_MS, 251);
 assert.equal(motion.MOTION.TRANSITION_MAX_MS, 400);
 """
-    result = subprocess.run(['node', '-e', script], cwd=ROOT,
-                            text=True, capture_output=True, timeout=15)
-    assert result.returncode == 0, result.stdout + result.stderr
+    # Harness-boundary std plumbing (NEXT-WORK-TASK NW-5.1 class; assertion unchanged):
+    # the bare `capture_output=True` form intermittently fails on this Windows host with
+    # `OSError: [WinError 50] The request is not supported` while creating the child's
+    # std pipes when the parent's captured std handles are unusable (reproduced 1-in-3
+    # in isolation, 2026-10-21). Redirecting the child to explicit temp files bypasses
+    # the broken inherited std handles entirely and keeps the run deterministic.
+    import tempfile
+    stdout_file = tempfile.TemporaryFile(mode='w+', encoding='utf-8')
+    stderr_file = tempfile.TemporaryFile(mode='w+', encoding='utf-8')
+    try:
+        result = subprocess.run(['node', '-e', script], cwd=ROOT,
+                                stdin=subprocess.DEVNULL, stdout=stdout_file,
+                                stderr=stderr_file, timeout=15)
+        stdout_file.seek(0); stderr_file.seek(0)
+        captured = stdout_file.read() + stderr_file.read()
+    finally:
+        stdout_file.close(); stderr_file.close()
+    assert result.returncode == 0, captured

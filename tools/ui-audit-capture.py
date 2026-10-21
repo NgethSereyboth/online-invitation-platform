@@ -49,7 +49,7 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tests'))
 
-from browser_runtime import dismiss_editor_onboarding, launch_chromium  # noqa: E402
+from browser_runtime import dismiss_editor_onboarding, launch_chromium, mark_editor_onboarding_seen  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 # The 16 shipped routes — mirrors tools/lib/repo.mjs PAGES.
@@ -527,11 +527,17 @@ def main():
                             init = (f"try{{localStorage.setItem('sovan-active-invite',{json.dumps(str(seed_info['invite_id']))});"
                                     f"localStorage.setItem('einvite-theme-mode','{theme}');"
                                     f"localStorage.setItem('einvite-lang','{lang}');}}catch(e){{}}")
-                            page.add_init_script(init)
                         else:
                             init = (f"try{{localStorage.setItem('einvite-theme-mode','{theme}');"
                                     f"localStorage.setItem('einvite-lang','{lang}');}}catch(e){{}}")
-                            page.add_init_script(init)
+                        # NW-6.2 capture determinism: seed the editor tour's legacy 'seen'
+                        # key BEFORE any page script runs, so final-experience.js's own
+                        # migration marks the tour seen and `EInviteOnboardingReady`
+                        # toasts {shown:false} on the first probe. Real first-run UX is
+                        # unchanged — this only pre-seeds a state a real second visit
+                        # reaches by itself (tests/browser_runtime.mark_editor_onboarding_seen).
+                        init = init + mark_editor_onboarding_seen()
+                        page.add_init_script(init)
 
                         # Resolve the public-page slug only AFTER the user state has had a
                         # chance to seed + publish. Fixed 2026-10-18: this used to run

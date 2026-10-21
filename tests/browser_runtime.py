@@ -8,6 +8,21 @@ def skipped(label,exc):
  print(f'{label}_SKIPPED',exc)
  return 1 if browser_required() else 0
 
+def mark_editor_onboarding_seen():
+ """Init script that seeds the editor tour's 'seen' storage before page JS runs.
+
+ NW-6.2 capture-determinism fix: `final-experience.js` already persists its per-identity
+ seen key (`einvite-final-tour-seen-v2:{identity}:studio-v27`) and migrates the legacy
+ `einvite-final-tour-seen-v1` key across versions, so seeding the legacy key makes the
+ app itself decide the tour is seen — same mechanism a real second visit uses, without
+ touching the first-run UX. Seeding must happen in an init script (document-scoped, before
+ any page script) so `window.EInviteOnboardingReady` resolves with `shown:false` on the
+ first probe instead of after a manual dismissal. Returns the script string to pass to
+ `context.add_init_script`.
+ """
+ return "try{localStorage.setItem('einvite-final-tour-seen-v1','1')}catch{}"
+
+
 def dismiss_editor_onboarding(page,*,timeout=10000):
  page.wait_for_function("()=>document.documentElement.dataset.editorReady==='true'",timeout=timeout)
  page.evaluate("async()=>{if(window.EInviteOnboardingReady)await window.EInviteOnboardingReady}")
