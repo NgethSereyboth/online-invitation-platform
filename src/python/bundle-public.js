@@ -947,8 +947,8 @@ window.EInviteGuestJourney={enhance};
           ${slot.description ? `<p class="muted">${esc(slot.description)}</p>` : ''}
           ${closed || full ? '' : `
             <form data-sheet="${esc(sheet.id)}" data-slot="${esc(slot.id)}">
-              <label>${langText('name', mode)}<input type="text" name="name" required maxlength="120"></label>
-              <label>${langText('email', mode)}<input type="email" name="email" maxlength="254"></label>
+              <label>${langText('name', mode)}<input type="text" name="name" autocomplete="name" required maxlength="120"></label>
+              <label>${langText('email', mode)}<input type="email" name="email" autocomplete="email" maxlength="254"></label>
               <label>${langText('quantity', mode)}<input type="number" name="quantity" min="1" max="100" value="1"></label>
               <button type="submit">${langText('submit', mode)}</button>
             </form>
@@ -1113,8 +1113,8 @@ window.EInviteGuestJourney={enhance};
           ${closed ? `<ul class="poll-options">${options}</ul>` : `
             <form data-poll="${esc(poll.id)}">
               <ul class="poll-options">${options}</ul>
-              <label>${langText('name', mode)}<input type="text" name="name" required maxlength="120"></label>
-              <label>${langText('email', mode)}<input type="email" name="email" maxlength="254"></label>
+              <label>${langText('name', mode)}<input type="text" name="name" autocomplete="name" required maxlength="120"></label>
+              <label>${langText('email', mode)}<input type="email" name="email" autocomplete="email" maxlength="254"></label>
               <button type="submit">${langText('submit', mode)}</button>
             </form>
           `}

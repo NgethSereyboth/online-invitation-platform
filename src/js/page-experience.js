@@ -294,6 +294,18 @@ function setObjectTextBySuffix(id,suffix,value){
   schedulePageThumbnail(id);
   if(id===activeId())requestAnimationFrame(()=>bridge()?.render?.());
 }
+function menuPageBilingualLabel(button,label){
+  // WCAG 2.5.7 (NW-1.2): context-menu entries carry .i18n-en/.i18n-km spans — the
+  // same convention as EInviteI18n.langText() — so Khmer users see translated labels.
+  const enSpan=document.createElement('span');
+  enSpan.className='i18n i18n-en';
+  enSpan.textContent=label.en;
+  const kmSpan=document.createElement('span');
+  kmSpan.className='i18n i18n-km khmer-text';
+  kmSpan.lang='km';
+  kmSpan.textContent=label.km||label.en;
+  button.append(enSpan,kmSpan);
+}
 function makeButton(text,label,action,className=''){
   const button=document.createElement('button');
   button.type='button';
@@ -385,10 +397,17 @@ function openPageMenu(page,anchor){
   const menu=document.createElement('div');
   const actions=[
     ['open','Open canvas'],['rename','Rename'],['duplicate','Duplicate'],['first','Move to first page'],['last','Move to last page'],
+    ['earlier',{en:'Move earlier',km:'ផ្លាស់ទីទៅមុខ'}],['later',{en:'Move later',km:'ផ្លាស់ទីទៅក្រោយ'}],
     [pageMode(page)==='free-design'?'event':'free',pageMode(page)==='free-design'?'Convert to event page':'Convert to free design'],
     ...(pageMode(page)==='event-template'?[['layout','Apply event layout']]:[])
   ];
-  actions.forEach(([action,label])=>{const button=document.createElement('button');button.type='button';button.dataset.a=action;button.textContent=label;menu.append(button)});
+  actions.forEach(([action,label])=>{const button=document.createElement('button');button.type='button';button.dataset.a=action;if(label&&typeof label==='object')menuPageBilingualLabel(button,label);else button.textContent=label;menu.append(button)});
+  const pageIndex=pages().findIndex(item=>item.id===page.id),pageCount=pages().length;
+  if(pageIndex>=0&&pageCount>1){
+    const upButton=menu.querySelector('[data-a=earlier]'),downButton=menu.querySelector('[data-a=later]');
+    upButton.disabled=pageIndex<=0;
+    downButton.disabled=pageIndex>=pageCount-1;
+  }
   const divider=document.createElement('hr');menu.append(divider);
   const remove=document.createElement('button');remove.type='button';remove.dataset.a='delete';remove.className='danger';remove.textContent='Delete';menu.append(remove);
   menu.addEventListener('click',async event=>{
@@ -403,6 +422,10 @@ function openPageMenu(page,anchor){
     }else if(action==='duplicate')duplicatePage(page.id);
     else if(action==='first')reorderPage(page.id,0);
     else if(action==='last')reorderPage(page.id,pages().length-1);
+    else if(action==='earlier'||action==='later'){
+      const from=pages().findIndex(item=>item.id===page.id);
+      if(from>=0)reorderPage(page.id,Math.max(0,Math.min(pages().length-1,from+(action==='earlier'?-1:1))));
+    }
     else if(action==='event')setPageMode(page.id,'event-template',pageRole(page)==='custom'?'title':pageRole(page));
     else if(action==='free')setPageMode(page.id,'free-design','');
     else if(action==='layout')applyEventPreset(page.id,pageRole(page));

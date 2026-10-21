@@ -106,8 +106,8 @@
           ${closed ? `<ul class="poll-options">${options}</ul>` : `
             <form data-poll="${esc(poll.id)}">
               <ul class="poll-options">${options}</ul>
-              <label>${langText('name', mode)}<input type="text" name="name" required maxlength="120"></label>
-              <label>${langText('email', mode)}<input type="email" name="email" maxlength="254"></label>
+              <label>${langText('name', mode)}<input type="text" name="name" autocomplete="name" required maxlength="120"></label>
+              <label>${langText('email', mode)}<input type="email" name="email" autocomplete="email" maxlength="254"></label>
               <button type="submit">${langText('submit', mode)}</button>
             </form>
           `}

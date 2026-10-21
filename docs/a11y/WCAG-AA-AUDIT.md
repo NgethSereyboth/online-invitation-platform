@@ -454,6 +454,16 @@ These findings apply to **all 16 pages** (or all but a few):
 | 1.4.10 Reflow | pass (all 16) | Pages use `width=device-width` viewport + responsive CSS (`@media (max-width:820px)` etc. in `typography-system.css:1`, `modern-ui.css:1`). |
 | 1.4.12 Text Spacing | pass (all 16) | No `!important` overrides on `line-height` that would block user stylesheet overrides. |
 
+> **Target-size labelling correction (2026-10-21).** This audit predates WCAG 2.2. The 44×44
+> min-touch-size rule documented in the `2.4.7 Focus Visible` row above (and cited in
+> `RESPONSIVE-AUDIT.md` / the ux-8 pass as "WCAG 2.5.5") is the enforcing mechanism. As an AA claim,
+> the correct criterion is **WCAG 2.5.8 Target Size (Minimum), 24 × 24**; 2.5.5 Target Size
+> (Enhanced, 44 × 44) is **Level AAA** and must not be cited as the AA target. 44 × 44 exceeds
+> 24 × 24, so the substantive claim stands unchanged — only the labelling is corrected. The
+> delta audit that checked 2.5.8 explicitly is
+> [WCAG-2.2-AA-AUDIT.md](WCAG-2.2-AA-AUDIT.md) → its §4 (labelling correction) and
+> §5 (six code asks, incl. the 10 × 10 canvas resize handle at `src/css/typography-system.css`).
+
 ---
 
 ## 6. Khmer-specific accessibility issues

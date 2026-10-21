@@ -417,7 +417,7 @@ rsvp</textarea></label>
       <div id="publishingSettings" class="card">
         <label>Public link slug<input id="publicSlug" placeholder="your-event"></label>
         <label>Guest access<select id="accessMode"><option value="unlisted">Anyone with the link</option><option value="password">Password protected</option></select></label>
-        <label id="accessPasswordLabel" hidden>Invitation password<input id="accessPassword" type="password" minlength="8" placeholder="At least 8 characters"></label>
+        <label id="accessPasswordLabel" hidden>Invitation password<input id="accessPassword" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters"></label>
         <button id="savePublishingSettings" type="button">Save link & access settings</button>
         <p id="publishingSettingsState" class="hint"></p>
       </div>

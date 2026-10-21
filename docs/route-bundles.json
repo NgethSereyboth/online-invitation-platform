@@ -457,8 +457,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 448320,
-      "styleSha256": "e5a3b3b51b204aafd7a031ab097846ecd8c0cbbb211297ab3a6c0966932d716a",
+      "styleBytes": 448595,
+      "styleSha256": "e985ec2d2b1136d7f19a834778d111d245c4aab6aa72b8d80fca743219038aac",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
@@ -544,8 +544,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 248776,
-      "scriptSha256": "1ffb04e78c84a93e2b82c1b37b3e9d62a84e688f54987861024914a744c70e3f",
+      "scriptBytes": 248858,
+      "scriptSha256": "de248b474d17282ae4196f7ad2110f330508af3c7d8b6952a5b0268f132e8723",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"

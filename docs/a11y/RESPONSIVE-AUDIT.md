@@ -31,6 +31,10 @@ viewport):
 4. **Touch targets < 44×44px** — WCAG 2.5.5 (Level AAA) / 2.5.8 (Level AA,
    incoming in WCAG 2.2).
 
+   *(Labelling correction, 2026-10-21: as an AA conformance claim the criterion is **2.5.8 Target
+   Size (Minimum), 24 × 24**; 2.5.5 is Level AAA. The 44 × 44 enforcement satisfies both. See
+   [WCAG-2.2-AA-AUDIT.md](WCAG-2.2-AA-AUDIT.md) §4.)*
+
 For each page, the matrix below records PASS/FAIL at four canonical widths:
 375px (iPhone SE), 768px (iPad portrait), 1024px (iPad landscape), 1440px
 (laptop). 375px is the WCAG 1.4.10 reflow target (320px is the strict floor
@@ -78,14 +82,14 @@ guest/checkin CSS).
 |-----|----------|--------------|
 | Body font floor | `@media(max-width:540px){html,body{font-size:16px}}` | Prevents iOS Safari from zooming inputs on focus (triggered when input font-size < 16px). |
 | Header wrap | `body:not(.guest)>header` | `flex-wrap:wrap; height:auto; min-height:60px; padding:10px 14px; overflow-x:auto` so nav buttons wrap to a second row at 375px instead of overflowing. |
-| Touch targets ≥ 44px | `a.button-link, header button, .dialog-actions button, .response-tabs button, .template-tabs button, .admin-tabs button, .empty-state__action button, .error-state__retry button, ...` | `min-height:44px; min-width:44px; padding:10px 14px` — WCAG 2.5.5. |
+| Touch targets ≥ 44px | `a.button-link, header button, .dialog-actions button, .response-tabs button, .template-tabs button, .admin-tabs button, .empty-state__action button, .error-state__retry button, ...` | `min-height:44px; min-width:44px; padding:10px 14px` — WCAG 2.5.8 (AA; the enforced 44 px also satisfies the 2.5.5 AAA bar). |
 | Dialog full-screen | `dialog, dialog[aria-modal="true"], .create-dialog, .template-preview-dialog, .edit-material-dialog, .studio-dialog, .ei-dialog` | `width:100vw; max-width:100vw; height:100dvh; max-height:100dvh; border-radius:0; border:0; margin:0; padding:16px; overflow:auto` — full-screen modal on mobile. |
 | Two-column dialog → single | `.template-preview-shell, .template-preview-phone, .template-preview-grid` | Grid collapses to 1fr; phone preview centres; preview grid drops to 1 column. |
 | Head rows wrap | `.dash-head, .library-head, .billing-head, .response-top, .studio-head, .analytics-head` | `flex-wrap:wrap` + full-width children at ≤ 540px. |
 | Multi-col grids → single | `.upload-row, .add-form, .library-toolbar, .checkin-tools, .checkin-hero, .checkin-person, .usage-grid, .plans, .response-metrics, .designer-grid, .workspace-metrics, .account-grid, .admin-metrics, .admin-tabs, .invite-grid, .payment-assurance, .v13-security-grid, .v13-security-actions` | Each grid's `grid-template-columns` collapses to `1fr` or `1fr 1fr` (metrics) at ≤ 540px. |
 | Editor header pruning | `body[data-page="index"]>header #backupBtn, #restoreBtn, #undoBtn, #redoBtn` | `display:none` — these remain available via the command palette (Ctrl+K). The banner tells the user some tools may be unavailable. |
 | Editor status pill truncation | `body[data-page="index"]>header #saveState, #serverState` | `font-size:11px; max-width:120px; text-overflow:ellipsis; white-space:nowrap` so they don't push other buttons off-screen. |
-| Inputs ≥ 44px + 16px | `input[type=*], select, textarea` | `min-height:44px; font-size:16px` — iOS no-zoom + WCAG 2.5.5. |
+| Inputs ≥ 44px + 16px | `input[type=*], select, textarea` | `min-height:44px; font-size:16px` — iOS no-zoom + WCAG 2.5.8 (AA; also satisfies 2.5.5 AAA). |
 | Tables scroll horizontally | `.v13-list table, .v13-audit table, .admin-panel table, .analytics-card table` | `min-width:540px` inside an `overflow-x:auto` parent — tables don't shrink below readability but no page-wide horizontal scroll. |
 | `.mobile-desktop-hint` visibility | `@media(max-width:720px){.mobile-desktop-hint{display:flex}}` | Reveals the bilingual editor banner at ≤ 720px. |
 | Very-narrow (≤ 380px) | `@media(max-width:380px){...}` | Tighter font-size + padding for iPhone SE / older Androids. |
