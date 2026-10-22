@@ -16,7 +16,7 @@
 # (`('editor','index.html','styles',2,1)` against an aspirational stylesheet
 # count). Owner answer 2026-10-22 (OD-6): keep non-blocking for now. It runs
 # with `continue-on-error: true` ONLY in the separate v14 step and its log is
-# uploaded; see FB-11 and docs/security/canvas/v14-decision-note.md.
+# uploaded; see FB-11 and docs/perf/v14-decision-note.md.
 # pytest itself is NEVER wrapped in continue-on-error.
 
 name: Tests
