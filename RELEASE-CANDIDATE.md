@@ -140,3 +140,22 @@ in `fb-20/RESULTS.md` is not reproducible at any HEAD in this session and is sup
 **Correction (FB-23):** the earlier "LHCI assert → exit 0" row described a phase that ran a
 squatted placeholder package and never started Lighthouse. The LHCI row now names the real
 phase and its completion line.
+
+## Refactor disposition — `829af12` `core.config` (FB-27)
+
+`829af12` (*refactor(config): deepen EINVITE env reads behind one core.config adapter*)
+was not in the work order and landed after the previous pass's last gate run. It is
+**kept, verified, and not extended** (rule R1):
+
+- `server.platform_env` now delegates to `core/config.py::get`; precedence
+  `override > EINVITE_X > SOVAN_X > default` proven by `tests/config_adapter_test.py` (9 tests).
+- Import-time behaviour unchanged: starting the server with `EINVITE_DATA_DIR=<tmp>` and
+  with the legacy `SOVAN_DATA_DIR=<tmp>` yields identical data directories
+  (`invites.db` + four secret files) — `artifacts/next-work/fb-27/logs/data-dir-precedence.txt`.
+- 28 live direct `EINVITE_*` reads remain outside `platform_env`, each with a structural
+  reason (import-time constants, standalone feature modules, harness env construction) —
+  enumerated in `artifacts/next-work/fb-27/NOTES.md`.
+- Verified on the same HEAD as the FB-26 matrix: 25 targeted tests pass, three consecutive
+  full runs pass (157/0), `run-gates.py --phase all` → `GATES_PASSED`.
+- **OD-9 is OPEN** in `artifacts/next-work/DECISIONS.md`: keep or drop the adapter.
+  Recommendation: keep.
