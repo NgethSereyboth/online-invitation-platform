@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formatdate
 from core.auth import (ARGON2_AVAILABLE, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
+from core.config import get as config_get
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
@@ -67,8 +68,7 @@ from features.analytics.model import SESSION_ID_RE as ANALYTICS_SESSION_ID_RE
 
 def platform_env(name, default=None):
     """Read the current EINVITE_* setting, with legacy SOVAN_* fallback."""
-    legacy = name.replace("EINVITE_", "SOVAN_", 1)
-    return os.environ.get(name, os.environ.get(legacy, default))
+    return config_get(name, default)
 
 
 def require_http_endpoint(value):

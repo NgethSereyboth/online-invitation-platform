@@ -16,13 +16,13 @@ import json
 import os
 import sqlite3
 from pathlib import Path
+from core.config import get as _config_get
 
 
 
 def platform_env(name, default=None):
     """Read the current EINVITE_* setting, with legacy SOVAN_* fallback."""
-    legacy = name.replace("EINVITE_", "SOVAN_", 1)
-    return os.environ.get(name, os.environ.get(legacy, default))
+    return _config_get(name, default)
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_SQLITE = Path(platform_env("EINVITE_DATA_DIR", ROOT / "data")) / "invites.db"
