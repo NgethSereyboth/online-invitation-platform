@@ -1,0 +1,114 @@
+# Test gate (FB-07, 2026-10-22).
+#
+# Before this workflow existed CI only ran Lighthouse (Performance) and the
+# Security Scan — pytest never ran anywhere but a local machine, and even the
+# local reproduce script had silently mis-measured the suite (FB-06: bare
+# pytest + six Playwright collection errors counted as a pass). This job runs
+# the real suite with the Playwright-capable interpreter.
+#
+# Interpreter discipline (mirrors tools/reproduce.sh step 0 and the repo hard
+# rules): a venv from requirements-dev.txt (pytest 9.1.1 + pytest-timeout +
+# docs/requirements-test.txt: playwright 1.61.0, Pillow, qrcode, argon2-cffi,
+# cryptography, fonttools, Brotli). The system interpreter alone cannot collect
+# the browser modules.
+#
+# v14 status: `python tests/v14_performance_budget_test.py` is known red
+# (`('editor','index.html','styles',2,1)` against an aspirational stylesheet
+# count). Owner answer 2026-10-22 (OD-6): keep non-blocking for now. It runs
+# with `continue-on-error: true` ONLY in the separate v14 step and its log is
+# uploaded; see FB-11 and docs/security/canvas/v14-decision-note.md.
+# pytest itself is NEVER wrapped in continue-on-error.
+
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'pass/**'   # active work branches (owner-approved in the work order)
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements-dev.txt
+            docs/requirements-test.txt
+            docs/requirements-production.txt
+
+      - name: Create venv and install test dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements-dev.txt
+          .venv/bin/python -c "import pytest, playwright; print('interpreter OK: pytest', pytest.__version__, '+ playwright', __import__('playwright').__version__ if hasattr(__import__('playwright'), '__version__') else 'ok')"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('docs/requirements-test.txt') }}
+
+      - name: Install Chromium for Playwright
+        run: .venv/bin/python -m playwright install --with-deps chromium
+
+      - name: Build check
+        run: |
+          python3 build.py all --check
+          python3 build.py bundles --check
+
+      - name: Run pytest
+        run: |
+          set -o pipefail
+          PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q 2>&1 | tee pytest-output.log
+          test ${PIPESTATUS[0]} -eq 0
+
+      - name: v55 route-weight budget gate
+        run: PYTHONIOENCODING=utf-8 .venv/bin/python tests/v55_route_weight_budget_test.py
+
+      - name: v14 performance budget (NON-BLOCKING, known red — owner answer 2026-10-22)
+        id: v14
+        continue-on-error: true
+        run: |
+          PYTHONIOENCODING=utf-8 .venv/bin/python tests/v14_performance_budget_test.py 2>&1 | tee v14-output.log
+          exit ${PIPESTATUS[0]}
+        # Deliberately quarantined: aspirational `styles: 1` budget for
+        # editor/index.html fails against the intentional two-stylesheet
+        # build. See FB-11 / OD-6. This step does not gate the job.
+
+      - name: Upload logs on failure
+        if: failure() || steps.v14.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-${{ github.run_id }}
+          path: |
+            pytest-output.log
+            v14-output.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: No orphaned servers (informational)
+        if: always()
+        run: |
+          pgrep -af 'src/python/server.py' > leaked-servers.txt || true
+          cat leaked-servers.txt
+          # A non-empty file after teardown would mean the fixtures leaked a
+          # server process; the app_server fixture kills its whole process
+          # group, so expect this to stay empty.
