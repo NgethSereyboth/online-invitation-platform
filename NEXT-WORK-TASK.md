@@ -591,6 +591,24 @@ capture still reproduces. This task remains open.
 
 ### NW-5.2 — `analytics_ingestion_test::test_phase4_rate_limit` order dependence
 
+> **Closure note (FB-13, 2026-10-22).** The original reference here was stale
+> in two ways. First, the file DOES define and pytest DOES collect
+> `test_phase4_rate_limit` (tests/analytics_ingestion_test.py:185) — this is
+> real 429 coverage, alongside `tests/auth_register_rate_limit_test.py`:
+> (10th registration succeeds, 11th returns 429, line 53). The work order's
+> earlier claim that the cited test "does not exist" was wrong; it exists and
+> runs in the default-capture suite. Second, the allowlist startup race
+> (fixed in 8952381/cd56ac0) is a separate closed fix and was mislabeled as
+> NW-5.2 in STATE.md — it is not this item.
+> Verified post-FB-01/04/09 on `fix/2026-10-22-open-issues`:
+> `pytest tests/auth_register_rate_limit_test.py -q` × 3 → 2 passed each,
+> ~13 s; with the ingestion module alongside → 8 passed / 3 passed × 2;
+> and the full suite green: **146 passed in 4:03** including
+> `test_phase4_rate_limit` and both rate-limit files. The limiter asserts the
+> exact production behaviour (60 accepted / 10 rejected) and was never
+> weakened. **.Closed** — three-run full-suite proof is discharged by
+> FB-15's repeat matrix; the allowlist race remains its own closed fix.
+
 **Symptom:** passes in isolation, fails in a full run when rate state is carried across tests.
 
 - [ ] Reproduce with a full-suite run; identify the shared limiter/identity.
