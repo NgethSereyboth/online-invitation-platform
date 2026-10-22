@@ -30,10 +30,14 @@ test dependencies from requirements-dev.txt into .venv/ on first use. When no
 # Usage:  tools/reproduce.sh [--skip-lhci] [--skip-tests] [--port 8124]
 #         make reproduce
 #
-# Exit status is 0 only when the build check passes, the determinism check is
-# deterministic, and Lighthouse CI's assertions pass. Unit-test failures are
-# reported and do not fail the run, because the suite has pre-existing red tests
-# unrelated to measurement (see the report's deferred table).
+#   --allow-test-failures   report pytest failures without failing the run
+#                           (explicit triage opt-in; the default is fail-closed)
+#
+# Exit status is 0 only when the build check passes, the test suite passes (or
+# --allow-test-failures was given), the determinism check is deterministic, and
+# Lighthouse CI's assertions pass. Until FB-06 a red suite exited 0 behind a
+# NOTE — exactly how one reproduce "passed" while measuring two-thirds of the
+# suite through six pytest collection errors.
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -43,11 +47,13 @@ PORT="${PORT:-8124}"
 ARTIFACTS="${ARTIFACTS_DIR:-$REPO_ROOT/artifacts}"
 SKIP_LHCI=0
 SKIP_TESTS=0
+ALLOW_TEST_FAILURES=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip-lhci) SKIP_LHCI=1 ;;
     --skip-tests) SKIP_TESTS=1 ;;
+    --allow-test-failures) ALLOW_TEST_FAILURES=1 ;;
     --port) PORT="$2"; shift ;;
     *) echo "reproduce.sh: unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -99,25 +105,37 @@ echo "  python3 $(python3 --version 2>&1 | awk '{print $2}')   node $(node --ver
 
 # Resolve an interpreter that has pytest, and the browser/asset imports the
 # suite needs. Order:
-#   1. the interpreter running this script, if it already has pytest
-#   2. .venv, created here from requirements-dev.txt on first use
+#   1. .venv, when it has pytest AND playwright
+#   2. the system interpreter, ditto
+#   3. .venv (created here from requirements-dev.txt on first use) when neither
+#      interpreter has the pair
 # A venv rather than `pip install` because python3 on this and every supported
 # host is EXTERNALLY-MANAGED (PEP 668): installing into it needs
 # --break-system-packages, which mutates the OS-managed interpreter.
+#
+# "has pytest" is not the bar — the bar is pytest AND Playwright (FB-06). A bare
+# pytest interpreter collects the six browser modules, throws six
+# ModuleNotFoundError collection errors, and a reproduce run that "passed" was
+# silently measuring two-thirds of the suite. .venv wins over the system
+# interpreter when both qualify so the run exercises the same environment the
+# pytest gates are recorded against.
 PYTEST_PY=""
 TEST_VENV="${TEST_VENV:-$REPO_ROOT/.venv}"
-if python3 -m pytest --version >/dev/null 2>&1; then
+has_pytest_pair() { "$1" -c 'import pytest, playwright' >/dev/null 2>&1; }
+if has_pytest_pair "$TEST_VENV/bin/python"; then
+  PYTEST_PY="$TEST_VENV/bin/python"
+elif has_pytest_pair python3; then
   PYTEST_PY=python3
 else
   if [ ! -x "$TEST_VENV/bin/python" ]; then
     echo "  creating $TEST_VENV for the test-only dependencies"
     python3 -m venv "$TEST_VENV" >/dev/null 2>&1 || true
   fi
-  if [ -x "$TEST_VENV/bin/python" ] && ! "$TEST_VENV/bin/python" -m pytest --version >/dev/null 2>&1; then
+  if [ -x "$TEST_VENV/bin/python" ] && ! has_pytest_pair "$TEST_VENV/bin/python"; then
     echo "  installing requirements-dev.txt into $TEST_VENV"
     "$TEST_VENV/bin/python" -m pip install -q -r requirements-dev.txt > "$ARTIFACTS/reproduce-pip.log" 2>&1 || true
   fi
-  if [ -x "$TEST_VENV/bin/python" ] && "$TEST_VENV/bin/python" -m pytest --version >/dev/null 2>&1; then
+  if has_pytest_pair "$TEST_VENV/bin/python"; then
     PYTEST_PY="$TEST_VENV/bin/python"
   fi
 fi
@@ -184,9 +202,13 @@ else
     *)
       summary_line=$(grep -E "^[0-9]+ (passed|failed)|passed|failed|error" "$ARTIFACTS/reproduce-pytest.log" | tail -1)
       echo "  result: $summary_line"
-      if [ "$pytest_status" -ne 0 ]; then
-        echo "  NOTE: test failures are reported, not fatal — the suite carries pre-existing"
-        echo "        red tests unrelated to measurement. Not counted against this run's exit status."
+      if [ "$pytest_status" -ne 0 ] && [ "$ALLOW_TEST_FAILURES" -ne 1 ]; then
+        echo "  TEST FAILURES ARE FATAL in reproduce (FB-06): a reproduce that exits 0"
+        echo "        with a red suite is worse than no reproduce. Re-run with the triage"
+        echo "        opt-in if you really mean it:  --allow-test-failures"
+        fail=1
+      elif [ "$pytest_status" -ne 0 ]; then
+        echo "  NOTE: test failures reported, not fatal (--allow-test-failures is set)."
       fi
       ;;
   esac
