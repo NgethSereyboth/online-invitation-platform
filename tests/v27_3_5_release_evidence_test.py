@@ -8,7 +8,13 @@ ROOT=Path(__file__).resolve().parents[1]
 # Repinned 2026-10-19 via `python3 tests/v27_3_5_release_evidence_test.py --repin`:
 # README.md was rewritten by the committed canvas-motion checkpoint (23f7cf6,
 # 2026-10-17) after the original pin — drift is tracked at HEAD, not in the tree.
-README_SHA='826e19f441d63a04b16e995e9c70fad6e796f111242a35e6b91248f456a80731'
+# Re-pinned 2026-10-22 (OD-7, owner-approved Option A): digest() now normalizes
+# CRLF→LF before hashing, so the same content hashes identically on Windows
+# checkouts (CRLF) and Linux (LF). 826e19f4… was the CRLF rendering (the LF blob
+# with \r appended per line); 38ce744d… is that normalized LF digest. Both agree
+# after normalization — verified 2026-10-22 via
+# `git cat-file blob HEAD:README.md | sed 's/$/\r/'` hashing to 826e19f4….
+README_SHA='38ce744d4e628b4003bdd58df777ca97014e32d97e7c4a8429d70900e1542f08'
 MANIFEST='V0_52_RELEASE_FILE_HASHES.sha256'
 DOCS={'V0_52_ARCHITECTURE.md','V0_52_CHANGELOG.md','V0_52_TEST_MATRIX.md','V0_52_KNOWN_LIMITATIONS.md','V0_52_IMPLEMENTATION_STATUS.md','V0_52_CODEX_TEST_HANDOFF.md','V0_52_CHANGED_FILES.md'}
 REQUIRED_TESTS={'v53_1_operator_repair_contract_test.py','v53_1_ai_project_operator_backend_test.py','v27_3_5_ai_transaction_browser_test.py','v27_3_5_ai_rich_text_browser_test.py','v27_3_5_ai_target_revision_test.py','v27_3_5_ai_layout_preview_test.py','v27_3_5_ai_accessibility_mobile_test.py','v27_3_5_ai_backend_contract_test.py','v27_3_5_mobile_canvas_hud_test.py','v27_3_5_release_evidence_test.py','v27_3_5_typography_preview_sequence_test.py','v28_agent_server_contract_test.py','v28_agent_performance_contract_test.py','v30_raster_workspace_contract_test.py','v31_collaboration_contract_test.py','v32_platform_contract_test.py','v0_52_remaining_fixes_contract_test.py','v0_52_asset_identity_test.py','v0_52_production_deployment_hardening_test.py','v0_52_security_boundary_test.py','v0_52_upload_permission_test.py','v0_52_multi_host_deployment_test.py','v0_52_platform_dark_mode_browser_test.py','v0_52_public_lazy_loader_browser_test.py','v30_raster_worker_browser_test.py','v0_52_ai_real_server_test.py','v0_52_ai_live_browser_test.py','v0_52_dashboard_cover_navigation_test.py','v0_52_autosave_status_test.py','v0_52_publish_barrier_server_test.py','v0_52_publish_autosave_barrier_browser_test.py'}
@@ -16,9 +22,17 @@ REQUIRED_TESTS.add('v0_52_first_time_setup_contract_test.py')
 REQUIRED_TESTS.add('v0_52_free_canvas_drag_test.py')
 FORBIDDEN_PARTS={'__pycache__','.pytest_cache','.cache'};FORBIDDEN_NAMES={'.upload-signing-secret','.media-signing-secret','.guest-token-secret'};FORBIDDEN_SUFFIXES={'.pyc','.pyo','.pid','.log','.db','.sqlite','.sqlite3'}
 def digest(path:Path)->str:
+ """SHA-256 of a file's content with line endings normalized to LF.
+
+ OD-7: the V0.52 pin was taken on a Windows checkout whose editor wrote the
+ README with CRLF; reading raw bytes on Linux hashes the identical content
+ differently. Normalizing before hashing makes the pin platform-neutral without
+ weakening it (content is still content-addressable; only the line-ending
+ rendering stops splitting Windows from Linux).
+ """
  h=hashlib.sha256()
  with path.open('rb') as stream:
-  for chunk in iter(lambda:stream.read(1024*1024),b''):h.update(chunk)
+  for chunk in iter(lambda:stream.read(1024*1024),b''):h.update(chunk.replace(b'\r\n',b'\n'))
  return h.hexdigest()
 def manifest_drift(entries):
  """Measure, do not assert, how far the tree has moved from the V0.52 snapshot.
@@ -82,6 +96,18 @@ def test_release_evidence():
  pytest-executed test.
  """
  assert main()==0
+def test_digest_normalizes_crln_and_lf_to_one_value():
+ """OD-7 regression guard: a CRLF re-render of the same text must not re-split
+ the pin. Writes identical text as CRLF and as LF and asserts digest() returns
+ one value for both.
+ """
+ import tempfile,os
+ text=b'line one\nline two\nsupposedly byte-identical modulo line endings\n'
+ with tempfile.TemporaryDirectory() as directory:
+  crlf=Path(directory)/'crlf.txt';lf=Path(directory)/'lf.txt'
+  crlf.write_bytes(text.replace(b'\n',b'\r\n'));lf.write_bytes(text)
+  assert crlf.read_bytes()!=lf.read_bytes(), 'fixture must actually differ in bytes'
+  assert digest(crlf)==digest(lf)==digest(lf)
 def repin():
  """Print the current README digest for README_SHA.
 
