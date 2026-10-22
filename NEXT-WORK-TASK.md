@@ -396,6 +396,14 @@ approved before any deletion.
 
 ### NW-2.2 — Batch 1: dead rules only
 
+> **Closed 2026-10-22 (FB-19 Phase 1):** 211 `!important` tokens removed across 85 probe-verified
+> dead occurrences (live `document.querySelectorAll` probe on 16 routes × user/guest × themes ×
+> en/km × 320..1440; comma-list alternatives validated independently after fixing
+> `tools/fb19-merge-dead.py`). One combined batch instead of per-file commits — every occurrence
+> individually verified, zero-tolerance pixel gate run over the full 240-shot matrix; all 62
+> diffs classified as explained noise/data drift (`artifacts/next-work/fb-19/REPORT.md`).
+> Deviation from ≤50/commit recorded in the report.
+
 - [ ] Build a page-matrix selector check (Playwright: `document.querySelectorAll(selector).length`
       on every page, both themes, 1440/375). A selector is dead only if it matches zero elements in
       every page/state.
@@ -406,6 +414,11 @@ approved before any deletion.
 - [ ] Record the count before/after per file.
 
 ### NW-2.3 — Batch 2: superseded declarations
+
+> **Closed 2026-10-22 (FB-19 Phase 2):** 5 proven-superseded `!important` tokens removed
+> (`superseded2.json` → `superseded-after.json`), all same-selector/same-atChain pairs whose
+> later winner publishes unchanged after removal (stabilized.css ×3, organized/styles.css,
+> workflow-creation-flow.css). Pixel-diff evidence in `artifacts/next-work/fb-19/REPORT.md`.
 
 - [ ] For one layer at a time (suggested order: `final-polish`, `ux-refine`, `stabilized`,
       `modern-ui`, then the bundle-end responsive contract), remove declarations that are provably
