@@ -383,6 +383,7 @@
       "deferredStyles": [],
       "scripts": [
         "core/i18n.js",
+        "core/i18n-options.js",
         "route-deferred-loader.js",
         "ui-dialogs.js",
         "upload-client.js",
@@ -500,6 +501,7 @@
     "responses.html": {
       "scripts": [
         "core/i18n.js",
+        "core/i18n-options.js",
         "ui-dialogs.js",
         "invitation-context.js",
         "responses.js",
@@ -586,5 +588,5 @@
       ]
     }
   },
-  "version": 16
+  "version": 17
 }
