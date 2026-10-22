@@ -188,10 +188,10 @@
   }
   function boot() {
     try { injectSwitches(); } catch (e) { /* keep going */ }
-    // NW-4.1: rewrite <option> label text from data-i18n-en/km after the DOM is
-    // parsed (re-runs on every language change via the set() path).
-    try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ }
+    applyOptions();
   }
+  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+  function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
   // --- Public resolver -------------------------------------------------------
   var EInviteI18n = {
@@ -203,10 +203,10 @@
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
       // If the language isn't actually changing, just (re)sync the DOM attribute
       // and form fields so a forced re-render is idempotent.
-      if (get() === lang) { applyHtmlLang(lang); applyFormFields(); EInviteI18n.applyOptionLabels(); return lang; }
+      if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
-      EInviteI18n.applyOptionLabels();
+      applyOptions();
       return lang;
     },
     // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
@@ -240,27 +240,11 @@
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1: <option> elements cannot hold the .i18n-en/.i18n-km span convention
-    // (the HTML parser strips elements inside <option>), so bilingual labels live in
-    // data-i18n-en / data-i18n-km attributes and this helper rewrites option.textContent
-    // at init and on every language change. Call applyOptionLabels(root) after building
-    // dynamic options too. Selection state lives on the <option> value, so rewriting
-    // textContent never resets the user's choice.
-    applyOptionLabels: function (root) {
-      if (!doc) return;
-      var scope = root || doc;
-      var lang = get();
-      var list;
-      try {
-        list = scope.querySelectorAll("option[data-i18n-en], option[data-i18n-km]");
-      } catch (e) { return; }
-      for (var i = 0; i < list.length; i++) {
-        var option = list[i];
-        var en = option.getAttribute("data-i18n-en") || option.getAttribute("data-i18n-km") || "";
-        var km = option.getAttribute("data-i18n-km") || en;
-        option.textContent = lang === "km" ? km : en;
-      }
-    },
+    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
+    // convention (the HTML parser strips elements inside <option>), so their
+    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
+    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
+    // The guarded calls above resolve to it only on routes that include it.
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -298,6 +282,44 @@
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
+  }
+})(typeof window !== "undefined" ? window : this);;/*! core/i18n-options.js — NW-4.1 bilingual <option> labels, route-scoped (FB-03)
+ * <option> cannot hold spans, so labels ride on data-i18n-en/km and this helper
+ * rewrites option.textContent at boot and on every language change (value
+ * survives; never resets the user's choice). Lives here, not in core/i18n.js,
+ * because every route folds core/i18n.js and only materials/responses render
+ * data-i18n <option> elements: keeping it out of the shared core is what pays
+ * the admin route's frozen v55 weight budget. Call
+ * EInviteI18n.applyOptionLabels(root) after building dynamic options too.
+ */
+(function (global) {
+  "use strict";
+  var core = global.EInviteI18n;
+  if (!core || (core.applyOptionLabels && core.applyOptionLabels.routeScoped)) return;
+  var doc = global.document;
+  function applyOptionLabels(root) {
+    if (!doc) return;
+    var scope = root || doc;
+    var list;
+    try {
+      list = scope.querySelectorAll("option[data-i18n-en], option[data-i18n-km]");
+    } catch (e) { return; }
+    for (var i = 0; i < list.length; i++) {
+      var option = list[i];
+      var en = option.getAttribute("data-i18n-en") || option.getAttribute("data-i18n-km") || "";
+      var km = option.getAttribute("data-i18n-km") || en;
+      option.textContent = core.get() === "km" ? km : en;
+    }
+  }
+  applyOptionLabels.routeScoped = true;
+  core.applyOptionLabels = applyOptionLabels;
+  // Runs after DOM parse (bundles load blocking in <head>) and on every
+  // einvite:lang-changed dispatch.
+  function boot() { try { applyOptionLabels(); } catch (e) { /* keep going */ } }
+  try { doc.addEventListener("einvite:lang-changed", boot); } catch (e) { /* noop */ }
+  if (doc && doc.addEventListener) {
+    doc.addEventListener("DOMContentLoaded", boot);
+    if (doc.readyState === "interactive" || doc.readyState === "complete") boot();
   }
 })(typeof window !== "undefined" ? window : this);;(() => {
   'use strict';
