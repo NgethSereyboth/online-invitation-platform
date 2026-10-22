@@ -194,8 +194,6 @@ fi
 
 # ---------------------------------------------------------------------------
 step "3/6  gzip server  (tools/serve-gzip.py --port $PORT)"
-python3 tools/serve-gzip.py --port "$PORT" > "$ARTIFACTS/reproduce-serve.log" 2>&1 &
-SERVER_PID=$!
 cleanup() {
   if kill -0 "$SERVER_PID" 2>/dev/null; then
     kill "$SERVER_PID" 2>/dev/null
@@ -205,9 +203,16 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-ready=0
-for _ in $(seq 1 40); do
-  if python3 - "$PORT" <<'PY' >/dev/null 2>&1
+# Starts the gzip server on $PORT and waits until it actually answers; echoes
+# the banner on success, returns 1 with the log on failure. Used by step 3 and
+# again by step 4 after lhci (which starts and stops its own per
+# tools/lighthouserc.js startServerCommand) — so the later steps 5/6 always
+# have a live server without ever running two on one port.
+start_server() {
+  python3 tools/serve-gzip.py --port "$PORT" > "$1" 2>&1 &
+  SERVER_PID=$!
+  for _ in $(seq 1 40); do
+    if python3 - "$PORT" <<'PY' >/dev/null 2>&1
 import sys, urllib.request
 try:
     with urllib.request.urlopen(f"http://127.0.0.1:{sys.argv[1]}/index.html", timeout=2) as r:
@@ -215,17 +220,20 @@ try:
 except Exception:
     sys.exit(1)
 PY
-  then ready=1; break; fi
-  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-    echo "  server died during startup:" >&2
-    cat "$ARTIFACTS/reproduce-serve.log" >&2
-    exit 2
-  fi
-  sleep 0.5
-done
-if [ "$ready" -ne 1 ]; then
+    then return 0; fi
+    if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+      echo "  server died during startup:" >&2
+      cat "$1" >&2
+      return 1
+    fi
+    sleep 0.5
+  done
   echo "  server never answered on http://127.0.0.1:$PORT/index.html" >&2
-  cat "$ARTIFACTS/reproduce-serve.log" >&2
+  cat "$1" >&2
+  return 1
+}
+
+if ! start_server "$ARTIFACTS/reproduce-serve.log"; then
   exit 2
 fi
 echo "  $(cat "$ARTIFACTS/reproduce-serve.log")"
@@ -242,11 +250,23 @@ step "4/6  Lighthouse CI  (16 pages)"
 if [ "$SKIP_LHCI" -eq 1 ]; then
   echo "  skipped (--skip-lhci)"
 else
-  npx lhci autorun --config=tools/lighthouserc.js > "$ARTIFACTS/reproduce-lhci.log" 2>&1
+  # lhci now starts (and stops) its own gzip server via startServerCommand in
+  # tools/lighthouserc.js. Ours from step 3 must go down first: two servers
+  # cannot bind $PORT, and whichever won would silently own the numbers.
+  if kill -0 "$SERVER_PID" 2>/dev/null; then
+    kill "$SERVER_PID" 2>/dev/null; wait "$SERVER_PID" 2>/dev/null
+    echo "  pre-started server $SERVER_PID stopped — lhci starts its own"
+  fi
+  npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js > "$ARTIFACTS/reproduce-lhci.log" 2>&1
   lhci_status=$?
   grep -E "assertion|resources are|failing|All results processed|error|warning" "$ARTIFACTS/reproduce-lhci.log" | head -40
   echo "  exit=$lhci_status  (full log: artifacts/reproduce-lhci.log)"
   [ "$lhci_status" -ne 0 ] && fail=1
+  # Steps 5/6 need a live server again; since lhci already tore down its own.
+  if ! start_server "$ARTIFACTS/reproduce-serve-restart.log"; then
+    echo "  RESTART after lhci failed — determinism/report steps cannot run." >&2
+    fail=1
+  fi
 fi
 
 # ---------------------------------------------------------------------------

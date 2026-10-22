@@ -70,19 +70,18 @@ jobs:
         run: python3 src/python/build/build_route_bundles.py --check
 
       # --- Layer 2: the pre-existing aspirational route budgets ------------------
-      # KNOWN RED, quarantined on purpose. Two pre-existing defects keep this
-      # gate from being a pass/fail signal today, both documented in
-      # docs/reviews/optimisation-report.md:
-      #   1. the repo-root forwarder build_page_manifests.py is truncated (76 B,
-      #      missing `import os, runpy, sys` and the runpy.run_path call), so the
-      #      test cannot even import the builder it checks;
-      #   2. with the builder invoked directly, the BUDGETS ceilings for three of
-      #      the five routes are already exceeded (editor +194,149 B,
-      #      dashboard +190,247 B, public-guest +119,928 B) on an untouched
-      #      checkout.
-      # Re-baselining or reducing those ceilings is a payload decision, not a
-      # build fix, so this step reports without blocking. Delete
-      # `continue-on-error` once the decision lands.
+      # KNOWN RED, quarantined on purpose (owner answer 2026-10-22: keep
+      # non-blocking for now; see FB-11). The gate actually runs and fails on
+      # its own assertion — `editor/index.html styles 2 > 1` — not on import:
+      # both build_page_manifests.py imports and the runpy.run_path forwarding
+      # call execute, so the "truncated forwarder" note an older revision of
+      # this comment carried is no longer true. The style-count ceiling is
+      # aspirational and currently unsatisfiable: index.html deliberately
+      # ships base + deferred feature CSS. See docs/reviews/optimisation-report.md.
+      # Re-baselining the BUDGETS map in tests/v14_performance_budget_test.py
+      # is a payload decision (OD-6), not a build fix, so this step reports
+      # without blocking. Remove `continue-on-error` only after a real
+      # duplicate-stylesheet fix plus a new explicit owner decision.
       - name: Aspirational route budgets (layer 2, known red)
         continue-on-error: true
         run: python3 tests/v14_performance_budget_test.py
@@ -92,14 +91,24 @@ jobs:
         run: python3 tests/v55_route_weight_budget_test.py
 
       # --- Layer 3b: the same budget file against real transfer sizes -----------
+      # The config is passed explicitly: with no --config, autorun probes for a
+      # build directory and dies at collect with "Failed to automatically
+      # determine staticDistDir" (CI run 39557451848). tools/lighthouserc.js
+      # now carries startServerCommand (python3 tools/serve-gzip.py), so autorun
+      # owns its server lifecycle on CI; there is no pre-started server here to
+      # conflict with.
       - name: Lighthouse CI (layer 3b)
-        run: npx --yes @lhci/cli@0 autorun
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js
 
+      # The config writes reports to .lighthouseci/reports/, not
+      # docs/reviews/lighthouse. An empty silent upload hid the collect failure
+      # once already; warn keeps the run visible without turning an upload
+      # hiccup into a red step.
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
-          path: docs/reviews/lighthouse
-          if-no-files-found: ignore
+          path: .lighthouseci/reports
+          if-no-files-found: warn
           retention-days: 14

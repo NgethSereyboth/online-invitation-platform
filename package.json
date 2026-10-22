@@ -1,6 +1,9 @@
 {
   "name": "dsh-profile-test",
   "private": true,
+  "scripts": {
+    "serve:lhci": "python3 tools/serve-gzip.py --port 8124"
+  },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
     "puppeteer-core": "^25.12.0"

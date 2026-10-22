@@ -52,6 +52,12 @@
  * (gzip on the wire, like every real static host). Against an uncompressed
  * server index.html reads 54 instead of 73 and every byte budget looks violated.
  *
+ *    (
+ *    See also: `startServerCommand` below. Before it existed, `lhci autorun`
+ *    with no server command and no staticDistDir failed at the collect layer
+ *    with "Failed to automatically determine staticDistDir" — the CI failure
+ *    the gzip-server option was added for. FB-02, 2026-10-22.
+ *    )
  * 3. The port is resolved, not read straight out of the environment. Lighthouse
  *    CI exports `PORT=0` while it probes for a free port, so `process.env.PORT
  *    || 8124` resolves to the literal string "0" and every URL becomes
@@ -85,10 +91,29 @@ function resolvePort() {
 
 const PORT = resolvePort();
 
+/**
+ * A plain staticDistDir is wrong here on purpose: `src/python` is not one of
+ * LHCI's conventional build-dir names, and pointing collect at it would serve
+ * uncompressed bytes — every byte budget in docs/perf/lighthouse-budgets.json
+ * is measured against the gzip-on-the-wire delivery tools/serve-gzip.py gives
+ * (see "Server requirement" above). A python3 server command is that
+ * contract: autorun starts it before collecting and stops it afterwards.
+ * `startServerReadyPattern` matches the one-line banner serve-gzip.py prints
+ * ("serving ... (gzip enabled)") so collect waits for a real listener, not
+ * a race. A caller that already has a server up (tools/reproduce.sh step 3)
+ * must stop its own first: two servers cannot bind the same port, and the
+ * numbers would silently measure whichever won.
+ */
+const START_SERVER = {
+  startServerCommand: `python3 tools/serve-gzip.py --port ${PORT}`,
+  startServerReadyPattern: 'gzip enabled',
+};
+
 /** @type {import('@lhci/cli').LighthouseRc} */
 module.exports = {
   ci: {
     collect: {
+      ...START_SERVER,
       url: [
         'index.html',
         'dashboard.html',
