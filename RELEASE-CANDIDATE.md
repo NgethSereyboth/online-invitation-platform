@@ -98,3 +98,28 @@ Owner decisions carried into the ledgers (2026-10-22): OD-1 and OD-2 approved
 (implementation deferred to FB-19/FB-20, not in this pass's branch), OD-3 local-only,
 OD-4/OD-5 confirmed, OD-7 Option A (implemented, FB-04), OD-8 deferred, i18n audit-first
 (FB-14), v14 non-blocking (FB-11).
+
+### FB-15 final matrix (2026-10-22, same branch)
+
+Every row has a fresh run behind it; full commands, exit codes and log paths are in
+[artifacts/next-work/fb-15/RESULTS.md](artifacts/next-work/fb-15/RESULTS.md).
+
+- `tools/run-gates.py --phase all` → **all 7 phases green** (build, bundles, smoke
+  16/16, pytest 146/0 in 248.44s, budgets, lhci, canvas 22/0/2):
+  `artifacts/next-work/gates/20261022-095502/summary.json`.
+- Fresh LHCI autorun (`npx --yes @lhci/cli@0.15.1`): 16/16 URLs, **a11y 1.00 on all 16**,
+  budget assertions pass (`fb-15/lhci-autorun.log`, `fb-15/lhci-fresh-scores.json`).
+  The runner's own lhci phase is assert-only against prior reports — row #8 of the
+  RESULTS matrix records that distinction.
+- v14 rerun: still the documented known red (exit 1, non-blocking per the owner answer).
+- pip-audit: production **clean**; dev/test clean after lifting the test-toolchain Pillow
+  pin to `>=13,<14` in `docs/requirements-test.txt` (same 13.x as the installed, fully
+  tested environment; pre-fix red log kept in `fb-15/pip-audit-dev.log`).
+- npm audit: **0 vulnerabilities**. GitHub Dependabot alert state: not verifiable from
+  this machine — recorded as NOT RUN, not claimed.
+- `git status` at matrix time: only the 79 owner/work-order/evidence untracked paths;
+  no accidental staging; no push/PR/merge/tag performed (OD-3).
+
+Verdict: the release candidate is evidence-complete on this Linux box; the explicit
+non-gating remainder is v14 (quarantined), canvas visual/perf (Windows box) and the
+GitHub-side alert UI.
