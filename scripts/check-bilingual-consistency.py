@@ -45,6 +45,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
@@ -539,6 +540,140 @@ def scan_helper_calls(path: Path, text: str) -> List[HelperPair]:
 
 
 # ---------------------------------------------------------------------------
+# Foreign-script scan.
+# ---------------------------------------------------------------------------
+# A Khmer string that contains a letter from another non-Latin script is not a
+# translation — it is damage. FB-20 shipped `(ពិ\u10e5សែល)` in the dashboard's
+# poster-size label: the character after ពិ was the Georgian letter ქ (U+10E5),
+# typed by a model instead of a translator. Nothing failed, because the checker
+# only compared en/km presence. This scan fails on any letter or combining mark
+# in a km string that is neither Khmer nor Latin, so the same class of corruption
+# cannot land again (FB-25, rule R3).
+
+KHMER_BLOCK_RANGES: Tuple[Tuple[int, int], ...] = ((0x1780, 0x17FF), (0x19E0, 0x19FF))
+
+# Pre-existing damage found by the scan when it was introduced (2026-10-22), and
+# deliberately NOT repaired here: reconstructing these needs a Khmer reader, and
+# rule R3 forbids generating Khmer. They are reported on every run as
+# ``[known-damage]`` and are escalated as OD-12 in artifacts/next-work/DECISIONS.md.
+# Format: (file name, where). Remove an entry once a native speaker supplies the
+# corrected text; a new, unlisted hit always fails the check.
+KNOWN_FOREIGN_SCRIPT_DAMAGE: Set[Tuple[str, str]] = {
+    ("chart.js", "km: desktop"),                 # ដេស្គトップ — Katakana ッ ト プ
+    ("users.js", "km: confirmForceMfa"),         # …ឡុកអិន下一次 — CJK 下一次
+    ("analytics.js", "km: purgeConfirm"),        # …អ一刀មិនអាច… — CJK 一刀
+}
+
+
+@dataclass
+class ForeignHit:
+    file: str
+    line: int
+    where: str
+    text: str
+    offenders: List[str]
+
+
+def _is_khmer(cp: int) -> bool:
+    return any(lo <= cp <= hi for lo, hi in KHMER_BLOCK_RANGES)
+
+
+def _script_offenders(text: str) -> List[str]:
+    """Return one description per character that is not Khmer/Latin.
+
+    Only letters and combining marks are inspected; digits, punctuation,
+    symbols (arrows, ★, ✦, emoji), spaces and format characters (ZWSP/ZWNJ/
+    ZWJ) are script-neutral and always allowed.
+    """
+    out: List[str] = []
+    for ch in text:
+        cp = ord(ch)
+        category = unicodedata.category(ch)
+        if not (category.startswith("L") or category.startswith("M")):
+            continue
+        if _is_khmer(cp):
+            continue
+        # Halfwidth/fullwidth Katakana & Hangul in East Asian text are letters;
+        # they fall through to the Latin check below and are reported.
+        name = unicodedata.name(ch, "")
+        if name.startswith("LATIN") or name.startswith("FULLWIDTH LATIN"):
+            continue
+        out.append(f"U+{cp:04X} {name or category} {ch!r}")
+    return out
+
+
+# `.i18n-km ...>text</span>` and `data-km="…"` / `data-i18n-km="…"`.
+_KM_SPAN_RE = re.compile(
+    r'<(?P<tag>[a-zA-Z][\w-]*)\b[^>]*class="[^"]*\bi18n-km\b[^"]*"[^>]*>'
+    r'(?P<body>.*?)</(?P=tag)\s*>',
+    re.DOTALL,
+)
+_KM_ATTR_RE = re.compile(r'data-(?:i18n-)?km="(?P<body>[^"]*)"')
+
+
+def discover_html_files(root: Path) -> List[Path]:
+    html_dir = root / "src" / "html"
+    if not html_dir.is_dir():
+        return []
+    return sorted(html_dir.rglob("*.html"))
+
+
+def find_foreign_script(root: Path, file_reports: List[FileReport]) -> List[ForeignHit]:
+    """Every km string in src/js (tables + helper calls) and src/html, scanned."""
+    hits: List[ForeignHit] = []
+
+    for fr in file_reports:
+        path = Path(fr.path)
+        for pair in fr.pairs:
+            if not pair.km or not pair.km.value:
+                continue
+            offenders = _script_offenders(pair.km.value)
+            if offenders:
+                hits.append(ForeignHit(str(path), pair.line, f"km: {pair.key}",
+                                       pair.km.value, offenders))
+        for hp in fr.helper_pairs:
+            if not hp.km:
+                continue
+            offenders = _script_offenders(hp.km)
+            if offenders:
+                hits.append(ForeignHit(str(path), hp.line, f"{hp.helper}() km argument",
+                                       hp.km, offenders))
+
+    for html in discover_html_files(root):
+        text = html.read_text(encoding="utf-8", errors="replace")
+        for match in _KM_SPAN_RE.finditer(text):
+            body = re.sub(r"<[^>]+>", "", match.group("body"))
+            offenders = _script_offenders(body)
+            if offenders:
+                line = text.count("\n", 0, match.start()) + 1
+                hits.append(ForeignHit(str(html), line, ".i18n-km span", body, offenders))
+        for match in _KM_ATTR_RE.finditer(text):
+            body = match.group("body")
+            offenders = _script_offenders(body)
+            if offenders:
+                line = text.count("\n", 0, match.start()) + 1
+                hits.append(ForeignHit(str(html), line, "data-km attribute", body, offenders))
+
+    hits.sort(key=lambda h: (h.file, h.line, h.where))
+    return hits
+
+
+def split_known_damage(
+    hits: List[ForeignHit],
+    allow: Set[Tuple[str, str]] | None = None,
+) -> Tuple[List[ForeignHit], List[ForeignHit]]:
+    """(unexplained, known) — known damage is reported but does not fail."""
+    known_keys = set(KNOWN_FOREIGN_SCRIPT_DAMAGE)
+    if allow:
+        known_keys |= allow
+    unexplained: List[ForeignHit] = []
+    known: List[ForeignHit] = []
+    for hit in hits:
+        (known if (Path(hit.file).name, hit.where) in known_keys else unexplained).append(hit)
+    return unexplained, known
+
+
+# ---------------------------------------------------------------------------
 # Top-level orchestration.
 # ---------------------------------------------------------------------------
 
@@ -966,6 +1101,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         action="store_true",
         help="Emit machine-readable JSON instead of human text on stdout.",
     )
+    parser.add_argument(
+        "--allow-foreign",
+        default="",
+        help="Comma-separated `file.js:where` pairs to treat as explained "
+             "foreign-script damage (reported, not failing). New hits always fail.",
+    )
     args = parser.parse_args(argv)
 
     # Merge extra exception strings.
@@ -993,10 +1134,21 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     missing = find_missing_km(file_reports)
     identical = find_identical_pairs(file_reports)
+    foreign_all = find_foreign_script(root, file_reports)
+    allow_foreign = set()
+    for entry in args.allow_foreign.split(","):
+        if ":" in entry:
+            file_name, where = entry.split(":", 1)
+            allow_foreign.add((file_name.strip(), where.strip()))
+    foreign, known_foreign = split_known_damage(foreign_all, allow_foreign)
 
     # Decide exit code.
     fail = False
     if missing:
+        fail = True
+    # A km string containing a letter from another non-Latin script is damage,
+    # not a fallback: fail unless it is a recorded, explained case (FB-25).
+    if foreign:
         fail = True
     # Byte-identical (en, km) pairs are reported above as "fallback" (the
     # user accepts en==km as a transitional state pending hand translation;
@@ -1032,6 +1184,20 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"  Total bilingual strings (all shapes): {total_pairs + total_helpers}")
         print(f"  Missing km:       : {len(missing)}")
         print(f"  Identical pairs  : {len(identical)}")
+        print(f"  Foreign-script km strings: {len(foreign)}"
+              f" (+{len(known_foreign)} known)")
+        for label, group in (("FOREIGN-SCRIPT characters in km text (not Khmer, not Latin)", foreign),
+                             ("known foreign-script damage (explained; does not fail)", known_foreign)):
+            if not group:
+                continue
+            print(f"\n{label}:")
+            for hit in group:
+                rel = Path(hit.file).name if Path(hit.file).is_relative_to(root) else hit.file
+                print(f"  {rel}:{hit.line}  {hit.where}")
+                shown = hit.text if len(hit.text) <= 80 else hit.text[:77] + "..."
+                print(f"    text: {shown!r}")
+                for offender in hit.offenders:
+                    print(f"    {offender}")
         if missing:
             print("\nMISSING km: translations:")
             for p in missing:

@@ -1148,3 +1148,4 @@
 "_txt()","_txt","Restore template version","Restore template version","fallback","src/js/templates.js","37"
 "_txt()","_txt","Restore","Restore","fallback","src/js/templates.js","37"
 "close","close","Close","បិទ","translated","src/js/toast.js","41"
+"span","span","Poster canvas size (px)","Poster canvas size (px)","fallback","src/html/dashboard.html","74"

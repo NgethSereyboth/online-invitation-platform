@@ -119,4 +119,10 @@ body[data-page="dashboard"] .dashboard-empty-preview strong { font-size: var(--f
   body[data-page="dashboard"] .dashboard-empty { grid-template-columns: 1fr; padding: var(--space-6); }
 }
 
+/* Poster canvas size row (FB-25). These replace the inline `style=` attributes
+   that were on #posterSizeRow's wrapper span and its two number inputs; the
+   values are unchanged. */
+.poster-size-fields { display: flex; gap: .75rem; }
+.poster-size-input { min-width: 5rem; width: 5rem; }
+
 }
