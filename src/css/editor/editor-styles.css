@@ -1524,14 +1524,7 @@ body[data-page="index"] #v20TypographyToolbar .rt-toolbar-tools button {
     min-width: 36px !important;
   }
   body[data-page="index"] #mobileEditorV14Bar #mobileAdvancedV14 small { display: none !important; }
-}
-
-/* U1-25 · Dark mode: the flow-list "Design flow" entry kept the raw
-   `--flow-purple` (#7b47ff) on the dark surface (measured 3.19:1). Use the
-   light tint there instead of re-tinting the shared token. */
-html[data-theme="dark"] body[data-page="index"] #workflowV7DesignFlow span { color: #a78bfa !important; }
-
-/* U1-18 · ≤600 the topbar "•••" trigger clipped its own glyph: scrollWidth 47
+}/* U1-18 · ≤600 the topbar "•••" trigger clipped its own glyph: scrollWidth 47
    in a 40px content box (clippedText over:7, before and after). */
 @media (max-width: 600px) {
   body[data-page="index"] .canvas-header-more-trigger {

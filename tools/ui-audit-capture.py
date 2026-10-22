@@ -265,7 +265,19 @@ OCCLUSION_JS = r"""() => {
 }"""
 
 
+def load_seed_preset(path):
+    """--seed-preset: reuse an already-seeded account+invite (register only once per data dir)."""
+    data = json.loads(Path(path).read_text(encoding='utf-8'))
+    for key in ('email', 'slug', 'invite_id'):
+        if not data.get(key):
+            raise RuntimeError(f'seed preset missing {key}: {path}')
+    return {'email': data['email'], 'slug': data['slug'], 'invite_id': data['invite_id'],
+            'publish_ok': True, 'guests_ok': 0, 'rsvp_ok': True, 'notes': ['seed-preset reuse'],
+            'preset': True}
+
+
 def seed_account(page, base):
+    """Register one throwaway account, seed + publish one invitation, best-effort guests/RSVP."""
     """Register one throwaway account, seed + publish one invitation, best-effort guests/RSVP."""
     stamp = f'{int(time.time())}-{"".join(random.choices(string.ascii_lowercase, k=4))}'
     email = f'ui-audit-{stamp}@example.com'
@@ -474,6 +486,10 @@ def main():
     ap.add_argument('--viewports', default='', help='override profile, e.g. 1440x900,375x667')
     ap.add_argument('--settle', type=int, default=700)
     ap.add_argument('--no-full', action='store_true')
+    ap.add_argument('--seed-preset', default='',
+                    help='JSON file {email,slug,invite_id}: reuse an existing seeded account+invite instead of '
+                         'registering a fresh one. Captures become pixel-comparable across runs; the seeded '
+                         'document must exist on the target server (same EINVITE_DATA_DIR).',)
     args = ap.parse_args()
 
     out_dir = Path(args.out)
@@ -517,7 +533,16 @@ def main():
 
                         if state == 'user':
                             if seed_info is None:
-                                seed_info = seed_account(page, args.base)
+                                if args.seed_preset:
+                                    seed_info = load_seed_preset(args.seed_preset)
+                                    r = page.request.post(args.base + '/api/auth/login',
+                                                          data={'email': seed_info['email'], 'password': PASSWORD})
+                                    if not r.ok:
+                                        raise RuntimeError(
+                                            f'seed-preset login failed: {r.status} {r.text()[:120]}')
+                                    print(f"[seed] preset {json.dumps({k: seed_info[k] for k in ('email', 'slug', 'invite_id')})}", flush=True)
+                                else:
+                                    seed_info = seed_account(page, args.base)
                                 print(f"[seed] {json.dumps(seed_info)}", flush=True)
                             else:
                                 r = page.request.post(args.base + '/api/auth/login',
