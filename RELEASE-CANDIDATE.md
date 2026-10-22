@@ -28,7 +28,7 @@ explicit owner decision.
 | Build | `python3 build.py all --check` → exit 0 (`BUILD_OK… MIRROR_CHECK_PASSED (up_to_date=327)`) | PASS |
 | Bundles | `python3 build.py bundles --check` → exit 0 (`ROUTE_BUNDLE_CHECK_PASSED`) | PASS |
 | Smoke | `node tools/page-errors.mjs --all` → `TOTAL pages=16 consoleErrors=0 non2xx=0` | PASS |
-| LHCI assert | `npx lhci assert --config=tools/lighthouserc.js` → exit 0, **a11y 1.00 on 16/16 reports** | PASS |
+| LHCI | `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js` → 16/16 reports, **a11y 1.00**, budgets pass | PASS |
 | Bilingual checker | `python3 scripts/check-bilingual-consistency.py` → exit 0 (`OK: … passed.`) | PASS |
 | Full pytest (default capture) | `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q` → **1 failed / 142 passed** | PASS with documented blocker |
 | Canvas acceptance | frozen harness `--phase all` (absolute `--output`) → `pass=22 fail=0 skipped=2`, `CANVAS_MOTION_VERIFY_PASSED` | PASS |

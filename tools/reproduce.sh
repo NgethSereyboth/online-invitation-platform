@@ -9,7 +9,7 @@
 #   1. build check        python3 build.py all --check          (must pass)
 #   2. unit tests         pytest tests/                         (failures reported, not fatal)
 #   3. gzip server        tools/serve-gzip.py                   (started here, stopped on exit)
-#   4. Lighthouse CI      npx lhci autorun --config=tools/lighthouserc.js
+#   4. Lighthouse CI      npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js
 #   5. determinism        tools/determinism-50x.py public.html   (50 captures)
 #   6. report text        tools/report-verify.mjs <report>        (quoted commands re-run)
 #

@@ -3,10 +3,10 @@
  *
  * This is the ONLY Lighthouse CI config in the repo. The former repo-root
  * `.lighthouserc.json` was removed in the same change: two configs where only one
- * is picked up by `npx lhci autorun` is a trap, and the silent one was the one
+ * is picked up by `@lhci/cli autorun` is a trap, and the silent one was the one
  * that looked authoritative. Run it explicitly:
  *
- *     npx lhci autorun --config=tools/lighthouserc.js
+ *     npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js
  *     make perf          # same thing, with the server and the assertions
  *
  * Two delivery details that are load-bearing:
@@ -65,7 +65,7 @@
  *    fails as `CHROME_INTERSTITIAL_ERROR` — "Chrome prevented page load with an
  *    interstitial" — which reads like a server that is not running, so the gate
  *    was red for a reason that named the wrong subsystem. Reproduced:
- *      $ npx lhci collect --config=tools/lighthouserc.js
+ *      $ npx --yes @lhci/cli@0.15.1 collect --config=tools/lighthouserc.js
  *      Running Lighthouse 1 time(s) on http://127.0.0.1:0/index.html
  *    Only a real, non-zero, numeric port is honoured; PORT=8124 in the
  *    environment still wins, which is what `make reproduce --port N` relies on.

@@ -88,7 +88,7 @@ either server. Only the byte numbers depend on compression.
 
 | file | what it does |
 | --- | --- |
-| `lighthouserc.js` | the only Lighthouse CI config. Run from the repo root: `npx lhci autorun --config=tools/lighthouserc.js`. |
+| `lighthouserc.js` | the only Lighthouse CI config. Run from the repo root: `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js` (never a bare `npx lhci` — that name is a squatted placeholder package). |
 
 ### Suites and routing
 

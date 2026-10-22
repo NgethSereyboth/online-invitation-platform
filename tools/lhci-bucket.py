@@ -12,7 +12,7 @@ self-verifying report and cannot be compared across sessions with confidence.
 This tool reads the newest (or a named) `.lighthouseci/lhr-*.json` and prints the
 same figures the reports quote: the headline metrics, every main-thread bucket with
 its share, and the bucket total. It never runs Lighthouse — that is
-`npx lhci collect --config=tools/lhci-single.js`, which needs the gzip server — so
+`npx --yes @lhci/cli@0.15.1 collect --config=tools/lhci-single.js`, which needs the gzip server — so
 the extraction can be re-run at any time against an existing run.
 
 Usage
@@ -86,7 +86,7 @@ def main(argv=None) -> int:
     if path is None:
         sys.stderr.write(
             f"lhci-bucket.py: no Lighthouse report found ({LHCI_DIR}/lhr-*.json).\n"
-            "  run one first:  PAGE=index.html npx lhci collect --config=tools/lhci-single.js\n"
+            "  run one first:  PAGE=index.html npx --yes @lhci/cli@0.15.1 collect --config=tools/lhci-single.js\n"
         )
         return 3
     lhr = json.loads(Path(path).read_text(encoding="utf-8"))

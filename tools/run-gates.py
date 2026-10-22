@@ -10,13 +10,20 @@ Phases (default --phase all): build → bundles → smoke → pytest → budgets
           it is known red against an aspirational stylesheet count and stays
           non-blocking per the 2026-10-22 owner answer (OD-6 / FB-11); CI's
           tests.yml runs it quarantined with continue-on-error.
-  lhci    `npx lhci collect` + `npx lhci assert`     (a11y must stay 1.00)
+  lhci    `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js`
+          (fresh collect of all 16 routes + budgets assert; the config starts its
+          own gzip server, so this phase stops the runner's server first.)
+          Prints the minimum accessibility score across the 16 reports.
   canvas  `.venv/bin/python tests/canvas_motion_playwright.py --phase all --output <abs>`
           (visual gate: NOT RUN here — frozen baseline lives on the Windows box)
 
 Behaviour
-  - Starts/stops its own servers (gzip static server for smoke+lhci; process cleanly
-    reaped in finally). The canvas phase runs the frozen harness that manages its own
+  - Starts/stops its own servers (gzip static server for smoke; process cleanly
+    reaped in finally). The lhci phase runs `autorun`, whose config owns the server.
+  - **Fail-closed markers (FB-23):** every phase declares the signature line(s) that
+    prove it actually ran. Exit 0 without its marker is a FAIL — the unscoped
+    squatted placeholder package printing a greeting and exiting 0, which made two
+    "all phases green" runs false greens. The canvas phase runs the frozen harness that manages its own
     app server.
   - Serializes heavy runs with a lock file (``artifacts/next-work/gates/.run-gates.lock``);
     a second concurrent run exits 3 immediately.
@@ -38,14 +45,39 @@ LOCK=GATES_DIR/'.run-gates.lock'
 PHASES=['build','bundles','smoke','pytest','budgets','lhci','canvas']
 PY=sys.executable
 VENV_PY=ROOT/'.venv'/'bin'/'python'
+# One pin, in one place. The unscoped `lhci` package resolves to an unrelated squatted
+# prints a greeting and exits 0 — see artifacts/next-work/fb-23/NOTES.md.
+LHCI_CLI=['npx','--yes','@lhci/cli@0.15.1']
+LHCI_REPORTS=ROOT/'.lighthouseci'/'reports'
+LHCI_PAGES=16
+# Signature each phase must print before its exit code counts (rule R2).
+MARKERS={
+    'build':   ('BUILD_OK','MIRROR_CHECK_PASSED'),
+    'bundles': ('ROUTE_BUNDLE_CHECK_PASSED',),
+    'smoke':   ('TOTAL pages=16','consoleErrors=0','non2xx=0'),
+    'pytest':  (' passed',),
+    'budgets': ('V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED',),
+    'lhci':    ('Done running Lighthouse',),
+    'canvas':  ('CANVAS_MOTION_VERIFY_PASSED',),
+}
 
 def log_line(log,marker,text=''):
     stamp=datetime.datetime.now().strftime('%H:%M:%S')
     with log.open('a',encoding='utf-8') as fh:
         fh.write(f'[{stamp}] {marker} {text}\n')
 
-def run(cmd:list, log:Path, *, env_extra:dict|None=None, cwd:Path|None=None, timeout:int|None=None):
-    """Execute one gate command; (rc, stdout, stderr) → a caller checks rc==0."""
+def has_markers(text:str, markers):
+    missing=[m for m in markers if m not in text]
+    return (not missing),missing
+
+
+def run(cmd:list, log:Path, *, env_extra:dict|None=None, cwd:Path|None=None, timeout:int|None=None,
+        required=()):
+    """Execute one gate command; (rc, stdout, stderr).
+
+    ``required`` markers must all appear in stdout+stderr. Exit 0 without them is a
+    failure, not a pass: v55-style gates print a signature only when they really ran.
+    """
     log_line(log,'RUN',' '.join(cmd))
     env={**os.environ,'PYTHONIOENCODING':'utf-8'}
     if env_extra:env.update(env_extra)
@@ -62,13 +94,48 @@ def run(cmd:list, log:Path, *, env_extra:dict|None=None, cwd:Path|None=None, tim
         log_line(log,'FAIL',f'timeout after {timeout}s')
         return 124,(e.stdout or b'').decode(errors='replace') if isinstance(e.stdout,bytes) else (e.stdout or ''),''
     dur=time.time()-started
-    lines=((out or '')+'\n'+(code or '')).splitlines()
+    combined=(out or '')+'\n'+(code or '')
+    markers_ok,missing=has_markers(combined,required)
+    if not markers_ok and rc==0:
+        log_line(log,'MARKER','missing '+', '.join(repr(m) for m in missing)+' — exit 0 is not a pass')
+        rc=1
+    lines=combined.splitlines()
     key=' | '.join([l for l in lines if any(t in l for t in ('PASSED','BUILD_OK','TOTAL pages','CANVAS_MOTION','failed','passed'))][-3:])
     log_line(log,'DONE' if rc==0 else 'FAIL',f'exit={rc} dur={dur:.1f}s key={key[:400]}')
     with log.open('a',encoding='utf-8') as fh:
         if out:fh.write(out)
         if code:fh.write('\n--- stderr ---\n'+code)
     return rc,out,code
+
+
+def stop_static_server(server, log:Path):
+    """Stop the runner-owned static server; (None) so the caller's handle is cleared."""
+    if server is None:
+        return None
+    try:os.killpg(server.pid,signal.SIGTERM)
+    except Exception:
+        try:server.terminate()
+        except Exception:pass
+    log_line(log,'SERVER','stopped static server')
+    return None
+
+
+def lhci_report_summary(started:float, log:Path):
+    """(count, min_a11y) for LHR reports written by this phase; logs the 16 pages."""
+    # `*.report.json` is one LHR object per route; the upload dir also holds other
+    # JSON (lists/manifests), which carry no categories and are not reports.
+    files=[p for p in LHCI_REPORTS.glob('*.report.json') if p.stat().st_mtime>=started-1]
+    scores=[]
+    for path in sorted(files):
+        try:data=json.loads(path.read_text(encoding='utf-8'))
+        except (OSError,ValueError):continue
+        if not isinstance(data,dict):continue
+        url=str(data.get('finalUrl') or data.get('requestedUrl') or path.name)
+        score=(data.get('categories') or {}).get('accessibility') or {}
+        value=score.get('score')
+        log_line(log,'LHR',f"{url} a11y={'n/a' if value is None else f'{value:.2f}'}")
+        if isinstance(value,(int,float)):scores.append(value)
+    return len(files),(min(scores) if scores else None)
 
 def acquire_lock():
     GATES_DIR.mkdir(parents=True,exist_ok=True)
@@ -132,46 +199,36 @@ def main():
             elif phase=='smoke':cmd=['node','tools/page-errors.mjs','--all']
             elif phase=='pytest':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'-m','pytest','tests/','-q']
             elif phase=='budgets':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tests/v55_route_weight_budget_test.py']
-            elif phase=='lhci':cmd=['npx','lhci','assert','--config','tools/lighthouserc.js']
+            elif phase=='lhci':cmd=[*LHCI_CLI,'autorun','--config','tools/lighthouserc.js']
             elif phase=='canvas':cmd=[str(VENV_PY),'tests/canvas_motion_playwright.py','--phase','all','--output',str(GATES_DIR/stamp/'canvas-acceptance')]
-            if phase in ('smoke',):
+            if phase=='smoke':
                 server=start_static_server(args.port) if not server else server
                 env_extra={'SMOKE_BASE_URL':f'http://127.0.0.1:{args.port}'}
             elif phase=='lhci':
-                server=start_static_server(args.port) if not server else server
-                env_extra=None
-            elif phase=='canvas':
-                # frozen harness starts its own app server; needs an absolute path env-side
+                # The config's startServerCommand owns the port; two servers cannot bind it
+                # and the numbers would silently measure whichever won (FB-15 hit this).
+                server=stop_static_server(server,log)
                 env_extra=None
             else:
+                # canvas: the frozen harness starts its own app server.
                 env_extra=None
-            rc,out,err=run(cmd,log,env_extra=env_extra)
+            phase_started=time.time()
+            rc,out,err=run(cmd,log,env_extra=env_extra,required=MARKERS.get(phase,()))
+            if phase=='lhci':
+                count,min_a11y=lhci_report_summary(phase_started,log)
+                log_line(log,'LHR',f'reports={count}/{LHCI_PAGES} minA11y={"n/a" if min_a11y is None else f"{min_a11y:.2f}"}')
+                print(f'  lhci reports={count}/{LHCI_PAGES} minA11y={"n/a" if min_a11y is None else f"{min_a11y:.2f}"}')
+                if count<LHCI_PAGES:
+                    log_line(log,'MARKER',f'only {count} fresh LHR reports — expected {LHCI_PAGES}')
+                    rc=1
             results[phase]=rc
             if rc!=0:
-                # lhci assert needs the reports lhci collect made — if assert fails hard
-                # because collect never ran in this session, run collect once and retry
-                # exactly one assert (bounded, not a blind retry).
-                if phase=='lhci' and 'No lighthouse reports' in (out+err):
-                    c_rc,_,_=run(['npx','lhci','collect','--config','tools/lighthouserc.js'],log)
-                    if c_rc==0:
-                        rc,out,err=run(cmd,log)
-                if rc!=0:
-                    log_line(log,'STOP',f'{phase} failed — stopping chain')
-                    break
+                log_line(log,'STOP',f'{phase} failed — stopping chain')
+                break
         # always stop our server
-        if server is not None:
-            try:os.killpg(server.pid,signal.SIGTERM)
-            except Exception:
-                try:server.terminate()
-                except Exception:pass
-            server=None
-            log_line(log,'SERVER','stopped static server')
+        server=stop_static_server(server,log)
     finally:
-        if server is not None:
-            try:os.killpg(server.pid,signal.SIGTERM)
-            except Exception:
-                try:server.terminate()
-                except Exception:pass
+        stop_static_server(server,log)
         release_lock()
     # summary + skipped markers
     order=[p for p in phases]

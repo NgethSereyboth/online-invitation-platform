@@ -15,8 +15,8 @@
  * numbers while adding noise to them.
  *
  * Usage
- *   npx lhci collect --config=tools/lhci-single.js --collect.url=http://127.0.0.1:8124/index.html
- *   # or just:  PAGE=index.html npx lhci collect --config=tools/lhci-single.js
+ *   npx --yes @lhci/cli@0.15.1 collect --config=tools/lhci-single.js --collect.url=http://127.0.0.1:8124/index.html
+ *   # or just:  PAGE=index.html npx --yes @lhci/cli@0.15.1 collect --config=tools/lhci-single.js
  *
  * Reads PAGE (default index.html) and PORT (default 8124) from the environment.
  * Products: the usual `.lighthouseci/lhr-*.json`, one per run.

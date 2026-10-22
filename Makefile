@@ -4,7 +4,7 @@
 # CONTRIBUTING.md). Nothing here writes to src/ except through that script.
 #
 # Measurement tools live in tools/ (see tools/README.md). Two rules they encode:
-#   * `npx lhci autorun` MUST run against tools/serve-gzip.py. Against an
+#   * `@lhci/cli autorun` MUST run against tools/serve-gzip.py. Against an
 #     uncompressed server index.html reads 54 instead of 73 and every byte
 #     budget looks violated.
 #   * every tool writes its output to artifacts/ (gitignored), never to /tmp.
@@ -13,6 +13,10 @@ PYTHON ?= python3
 PORT   ?= 8124
 STATIC_ROOT ?= src/python
 LHCI_CONFIG ?= tools/lighthouserc.js
+# Pinned, scoped package. The unscoped `lhci` name resolves to an unrelated squatted
+# package that prints a greeting and exits 0 (FB-23). @lhci/cli is deliberately
+# NOT a local dependency — FB-10 removed it to clear six advisories.
+LHCI ?= npx --yes @lhci/cli@0.15.1
 
 .PHONY: help build check test serve dev serve-gzip perf smoke reproduce clean
 
@@ -54,7 +58,7 @@ dev:
 	PYTHONPATH=$(STATIC_ROOT):. $(PYTHON) $(STATIC_ROOT)/server.py
 
 perf:
-	npx lhci autorun --config=$(LHCI_CONFIG)
+	$(LHCI) autorun --config=$(LHCI_CONFIG)
 
 # Cheap post-change gate: every page loads with no console error and no 404.
 # Needs the gzip server running (`make serve-gzip &`).
