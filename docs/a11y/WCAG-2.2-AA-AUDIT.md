@@ -290,7 +290,13 @@ criterion that was actually audited. The enforcing rules are at `src/css/accessi
 
 ## 5. Findings requiring a code change
 
-Listed, per this pass's scope, and **none applied**:
+Listed, per this pass's scope. **Disposition note (2026-10-22):** although this table was
+written with "none applied", all six asks were subsequently implemented and verified live:
+all six closed in `ec0cf91` (NW-1.1 scroll-padding measure-first close, NW-1.2 bilingual
+Move earlier/later + 8/8 keyboard check, NW-1.3/1.4 autocomplete, NW-1.5 24×24 live handle
+hit box measured, NW-1.6 doc relabels), plus the `ca53dbe` gradient AA close and the
+`11e549f` toolbar reachability close (dual-criterion gap). See the interlinked evidence
+ledger `docs/reviews/*` and `artifacts/ui-audit/fixes/STATE.md`.
 
 | # | Criterion | Verdict | File to change | Change |
 | --- | --- | --- | --- | --- |
@@ -301,8 +307,10 @@ Listed, per this pass's scope, and **none applied**:
 | 5 | 2.5.8 Target Size (Minimum) | partial | `src/css/typography-system.css:2` | Canvas resize handle is 10 × 10; raise the hit area to ≥ 24 × 24, or measure and record the Equivalent-exception evidence |
 | 6 | 2.5.5 vs 2.5.8 labelling | — | `docs/a11y/WCAG-AA-AUDIT.md` | Restate the AA target-size claim against 2.5.8 |
 
-Each of 1–3 would need `python3 build.py all` afterwards for 2 and 3, since both touch files that
-feed route bundles. Nothing in this table has been started.
+The original 2026-10-15 state of this section was a listing only — nothing had been started
+at that date. Items 1–5 shipped in `ec0cf91` (+`ca53dbe`, `11e549f`), verified 2026-10-21;§5's
+"not applied" framing below the table is retained as the audit's original voice and is
+superseded by the disposition note above.
 
 ---
 
@@ -329,6 +337,7 @@ feed route bundles. Nothing in this table has been started.
 | Date | Change | Reason |
 | --- | --- | --- |
 | 2026-10-15 | Created | Delta audit against WCAG 2.2 AA; the 2.1 audit at [WCAG-AA-AUDIT.md](WCAG-AA-AUDIT.md) predates the 2.2 Recommendation and the project's AA claim needed the four new AA / two new A criteria checked. Documentation-only; no source change. |
+| 2026-10-22 | §5 disposition note added | The six §5 asks shipped in `ec0cf91` (plus `ca53dbe`, `11e549f`) after this audit was written; FB-12 forbids marking the original findings down, so the audit text is addended, not rewritten. |
 
 ---
 

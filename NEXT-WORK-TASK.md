@@ -86,7 +86,7 @@ translucent surfaces read as low contrast. These are documented in `RESULTS.md` 
 
 These apply to every task in this file. A task that violates one is failed even if its tests pass.
 
-- **Frozen canvas files — never edit:** `artifacts/canvas-motion/**`, `docs/CANVAS-SMOOTHNESS-BRIEF.md`,
+- **Frozen canvas files — never edit:** `artifacts/canvas-motion/**`, `docs/CANVA-SMOOTHNESS-BRIEF.md`,
   `tests/canvas_motion_playwright.py`, `tools/canvas-motion-*.{mjs,py}`, and the canvas gate
   thresholds/baselines.
 - **Never weaken gates, tests, thresholds, or budgets:** `tools/lighthouserc.js` and

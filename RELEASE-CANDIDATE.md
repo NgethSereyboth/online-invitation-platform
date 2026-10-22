@@ -64,7 +64,37 @@ OD-8 (11 Khmer strings) — evidence and recommendations in
 - RILL-WALKTHROUGH end-to-end flow not executed this session (no throwaway account flow run);
   documented as not run, not assumed.
 
-## Push instruction (blocked)
+## Push instruction (resolved 2026-10-22)
 
-When OD-3 is answered: `git push -u origin pass/2026-10-21-next-work` — ten commits, no tags,
-no `VERSION_HISTORY.md` change, no `main` merge until the owner orders it.
+**OD-3 answered 2026-10-22:** the branch WAS pushed at `6f7de27`; `main` remains
+`50721ef`; no tag and no `VERSION_HISTORY.md` edit. **All further work uses local
+commits only — no push, no PR, no merge, no tag** until the owner explicitly orders
+otherwise. The pre-push snapshot below is preserved for the record. (FB-22)
+
+---
+
+## 2026-10-22 continuation addendum (`fix/2026-10-22-open-issues`, FB-12/22/15)
+
+Follow-up pass over the owner-approved work order
+[FREEBUFF-OPEN-ISSUES-2026-10-21.md](FREEBUFF-OPEN-ISSUES-2026-10-21.md).
+Scope: local commits only (OD-3). State at the pass end:
+
+| Gate | Command | Result |
+|---|---|---|
+| Build | `python3 build.py all --check` | PASS (exit 0) |
+| Bundles | `python3 build.py bundles --check` | PASS (`ROUTE_BUNDLE_CHECK_PASSED`) |
+| v55 route-weight budget (run-gates `budgets` phase, FB-08) | `.venv/bin/python tools/run-gates.py --phase budgets` | PASS — `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED (6 pages within budget)`; the FB-03 admin regression is fixed |
+| v14 aspirational budgets | `python tests/v14_performance_budget_test.py` | **KNOWN RED, non-blocking** (owner answer 2026-10-22, OD-6): `AssertionError: ('editor','index.html','styles',2,1)` — aspirational count; see [docs/perf/v14-decision-note.md](docs/perf/v14-decision-note.md) |
+| Full pytest (default capture) | `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q` | **146 passed / 0 failed in 4:03** (first fully green run incl. OD-7 fix FB-04 + FB-05/08 additions). Repeat runs: see FB-15 matrix |
+| Security scan | pip-audit `docs/requirements-production.txt` | PASS — clean after the Pillow 13.0.0 bump (FB-01) |
+| npm audit | `npm audit` | **0 vulnerabilities** after the @lhci/cli removal (FB-10); 17 → 0 locally. GitHub Dependabot alert closure is deferred to a future push |
+| Bilingual checker | `scripts/check-bilingual-consistency.py` | PASS (fallback allowed; FB-14 audit recorded, nothing translated) |
+| LHCI clean-checkout autorun | `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js` | PASS — 16/16 URLs, a11y 1.00, reports under `.lighthouseci/reports` (FB-02) |
+
+The scope of "GATES_PASSED" claims in this document is per-phase (each row names the exact
+phase run); no single `--phase all` runner claim is made here.
+
+Owner decisions carried into the ledgers (2026-10-22): OD-1 and OD-2 approved
+(implementation deferred to FB-19/FB-20, not in this pass's branch), OD-3 local-only,
+OD-4/OD-5 confirmed, OD-7 Option A (implemented, FB-04), OD-8 deferred, i18n audit-first
+(FB-14), v14 non-blocking (FB-11).
