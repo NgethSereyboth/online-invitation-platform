@@ -95,7 +95,12 @@ if [ ! -d node_modules ]; then
   echo "  MISSING: node_modules — run: npm install" >&2
   exit 2
 fi
-for mod in puppeteer-core @lhci/cli; do
+# puppeteer-core is the repo's own devDependency (capture/probe tools) and
+# must be installed. @lhci/cli deliberately is NOT (FB-10): removing the local
+# install pruned six vulnerable transitive chains (extract-zip ×2, sprintf-js,
+# tmp ×2, uuid). The LHCI step runs the pinned `npx @lhci/cli@0.15.1` instead,
+# so npx (network or warm ~/.npm cache) is what that step needs.
+for mod in puppeteer-core; do
   if [ ! -d "node_modules/$mod" ]; then
     echo "  MISSING: node_modules/$mod — run: npm install" >&2
     exit 2
