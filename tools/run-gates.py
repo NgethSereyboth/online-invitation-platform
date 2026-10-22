@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """tools/run-gates.py — one-command gate runner for the eInvite repo (Linux portable).
 
-Phases (default --phase all): build → bundles → smoke → pytest → lhci → canvas.
+Phases (default --phase all): build → bundles → smoke → pytest → budgets → lhci → canvas.
   build   `python3 build.py all`            (BUILD_OK + MIRROR_CHECK_PASSED)
   bundles `python3 build.py bundles --check` (ROUTE_BUNDLE_CHECK_PASSED)
   smoke   `tools/serve-gzip.py --port <port>` + `node tools/page-errors.mjs --all`
   pytest  `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q`  (default capture)
+  budgets v55 route-weight budget gate (BLOCKING — FB-08). v14 is NOT a phase:
+          it is known red against an aspirational stylesheet count and stays
+          non-blocking per the 2026-10-22 owner answer (OD-6 / FB-11); CI's
+          tests.yml runs it quarantined with continue-on-error.
   lhci    `npx lhci collect` + `npx lhci assert`     (a11y must stay 1.00)
   canvas  `.venv/bin/python tests/canvas_motion_playwright.py --phase all --output <abs>`
           (visual gate: NOT RUN here — frozen baseline lives on the Windows box)
@@ -31,7 +35,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 GATES_DIR=ROOT/'artifacts'/'next-work'/'gates'
 LOCK=GATES_DIR/'.run-gates.lock'
-PHASES=['build','bundles','smoke','pytest','lhci','canvas']
+PHASES=['build','bundles','smoke','pytest','budgets','lhci','canvas']
 PY=sys.executable
 VENV_PY=ROOT/'.venv'/'bin'/'python'
 
@@ -105,7 +109,7 @@ def start_static_server(port:int):
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--phase',default='all',choices=['all']+PHASES)
-    ap.add_argument('--skip-heavy',action='store_true',help='skip pytest/lhci/canvas')
+    ap.add_argument('--skip-heavy',action='store_true',help='skip pytest/budgets/lhci/canvas')
     ap.add_argument('--port',type=int,default=8124)
     args=ap.parse_args()
     acquired,held=acquire_lock()
@@ -117,7 +121,7 @@ def main():
     run_dir.mkdir(parents=True,exist_ok=True)
     log=run_dir/'gates.log'
     phases=PHASES if args.phase=='all' else [args.phase]
-    if args.skip_heavy:phases=[p for p in phases if p not in ('pytest','lhci','canvas')]
+    if args.skip_heavy:phases=[p for p in phases if p not in ('pytest','budgets','lhci','canvas')]
     server:subprocess.Popen|None=None
     results={}
     try:
@@ -127,6 +131,7 @@ def main():
             elif phase=='bundles':cmd=[PY,'build.py','bundles','--check']
             elif phase=='smoke':cmd=['node','tools/page-errors.mjs','--all']
             elif phase=='pytest':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'-m','pytest','tests/','-q']
+            elif phase=='budgets':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tests/v55_route_weight_budget_test.py']
             elif phase=='lhci':cmd=['npx','lhci','assert','--config','tools/lighthouserc.js']
             elif phase=='canvas':cmd=[str(VENV_PY),'tests/canvas_motion_playwright.py','--phase','all','--output',str(GATES_DIR/stamp/'canvas-acceptance')]
             if phase in ('smoke',):

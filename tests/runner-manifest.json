@@ -1,0 +1,1147 @@
+{
+  "_about": "FB-08 (2026-10-22): every tests/*_test.py|test_*.py file with no def test_ is listed here with its kind and invocation; tests/test_runner_manifest.py enforces completeness.",
+  "files": {
+    "ac4_2d_audit_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/ac4_2d_audit_test.py",
+      "kind": "module-script"
+    },
+    "admin_tools_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/admin_tools_test.py",
+      "kind": "manual-runner"
+    },
+    "build_integrity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/build_integrity_test.py (bound into the bundle-gate preflight)",
+      "kind": "manual-runner",
+      "note": "raw assertion script (module-body); runs at import under pytest only as a no-op"
+    },
+    "collaboration_asset_permissions_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/collaboration_asset_permissions_test.py",
+      "kind": "module-script"
+    },
+    "collaboration_revision_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/collaboration_revision_test.py",
+      "kind": "module-script"
+    },
+    "editor_layout_geometry_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/editor_layout_geometry_test.py",
+      "kind": "manual-runner"
+    },
+    "final_features_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/final_features_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "final_visual_polish_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/final_visual_polish_test.py",
+      "kind": "module-script"
+    },
+    "final_workflow_audit_v7_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/final_workflow_audit_v7_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "inline_editor_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/inline_editor_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "optimistic_revision_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/optimistic_revision_test.py",
+      "kind": "module-script"
+    },
+    "p2a_album_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p2a_album_test.py",
+      "kind": "module-script"
+    },
+    "p2a_delivery_channels_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p2a_delivery_channels_test.py",
+      "kind": "module-script"
+    },
+    "p2a_polls_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p2a_polls_test.py",
+      "kind": "module-script"
+    },
+    "p2a_post_send_edit_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p2a_post_send_edit_test.py",
+      "kind": "module-script"
+    },
+    "p2a_signup_sheets_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p2a_signup_sheets_test.py",
+      "kind": "module-script"
+    },
+    "p2c_features_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p2c_features_test.py",
+      "kind": "manual-runner"
+    },
+    "p5_canva_onboarding_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/p5_canva_onboarding_test.py",
+      "kind": "manual-runner"
+    },
+    "plan_limit_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/plan_limit_test.py",
+      "kind": "module-script"
+    },
+    "plugin_sandbox_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/plugin_sandbox_test.py",
+      "kind": "manual-runner"
+    },
+    "private_access_header_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/private_access_header_test.py",
+      "kind": "module-script"
+    },
+    "pro_editor_v6_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/pro_editor_v6_test.py",
+      "kind": "module-script"
+    },
+    "production_foundations_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/production_foundations_test.py",
+      "kind": "module-script"
+    },
+    "provider_adapters_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/provider_adapters_test.py",
+      "kind": "manual-runner"
+    },
+    "public_guest_feature_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/public_guest_feature_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "public_layout_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/public_layout_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "realtime_storage_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/realtime_storage_test.py",
+      "kind": "module-script"
+    },
+    "security_maintenance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/security_maintenance_test.py",
+      "kind": "module-script"
+    },
+    "security_notification_emails_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/security_notification_emails_test.py",
+      "kind": "manual-runner"
+    },
+    "security_regression_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/security_regression_test.py",
+      "kind": "module-script"
+    },
+    "security_tenant_isolation_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/security_tenant_isolation_test.py",
+      "kind": "manual-runner"
+    },
+    "signed_upload_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/signed_upload_backend_test.py",
+      "kind": "module-script"
+    },
+    "smoke_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/smoke_test.py",
+      "kind": "module-script"
+    },
+    "static_integrity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/static_integrity_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "theme_launcher_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/theme_launcher_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "ui_smoke_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/ui_smoke_test.py",
+      "kind": "manual-runner"
+    },
+    "ux_ai_v5_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/ux_ai_v5_test.py",
+      "kind": "module-script"
+    },
+    "v0_52_ai_live_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_ai_live_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_ai_real_server_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_ai_real_server_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_asset_identity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_asset_identity_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_autosave_status_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_autosave_status_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_dashboard_cover_navigation_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_dashboard_cover_navigation_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_editor_interaction_refinement_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_editor_interaction_refinement_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_editor_interaction_refinement_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_editor_interaction_refinement_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_final_ux_refinement_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_final_ux_refinement_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_first_time_setup_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_first_time_setup_contract_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v0_52_free_canvas_drag_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_free_canvas_drag_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_guest_journey_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_guest_journey_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_guest_journey_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_guest_journey_contract_test.py",
+      "kind": "module-script"
+    },
+    "v0_52_laptop_host_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_laptop_host_contract_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v0_52_multi_host_deployment_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_multi_host_deployment_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_platform_dark_mode_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_platform_dark_mode_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_production_deployment_hardening_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_production_deployment_hardening_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_public_lazy_loader_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_public_lazy_loader_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_publish_autosave_barrier_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_publish_autosave_barrier_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_publish_barrier_server_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_publish_barrier_server_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_remaining_fixes_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_remaining_fixes_contract_test.py",
+      "kind": "module-script"
+    },
+    "v0_52_security_boundary_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_security_boundary_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_security_hardening_attack_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_security_hardening_attack_test.py",
+      "kind": "manual-runner"
+    },
+    "v0_52_upload_permission_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v0_52_upload_permission_test.py",
+      "kind": "module-script"
+    },
+    "v10_browser_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v10_browser_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v10_experience_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v10_experience_test.py",
+      "kind": "manual-runner"
+    },
+    "v11_browser_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v11_browser_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v11_media_experience_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v11_media_experience_test.py",
+      "kind": "manual-runner"
+    },
+    "v12_browser_stabilization_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v12_browser_stabilization_test.py",
+      "kind": "manual-runner"
+    },
+    "v12_immediate_stabilization_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v12_immediate_stabilization_test.py",
+      "kind": "module-script"
+    },
+    "v12_media_source_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v12_media_source_test.py",
+      "kind": "manual-runner"
+    },
+    "v12_routing_context_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v12_routing_context_test.py",
+      "kind": "manual-runner"
+    },
+    "v12_storage_privacy_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v12_storage_privacy_test.py",
+      "kind": "module-script"
+    },
+    "v13_account_security_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_account_security_test.py",
+      "kind": "module-script"
+    },
+    "v13_backup_restore_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_backup_restore_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v13_browser_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_browser_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v13_editor_model_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_editor_model_test.py",
+      "kind": "module-script"
+    },
+    "v13_future_foundation_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_future_foundation_test.py",
+      "kind": "module-script"
+    },
+    "v13_privacy_lifecycle_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_privacy_lifecycle_test.py",
+      "kind": "manual-runner"
+    },
+    "v13_product_lifecycle_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v13_product_lifecycle_test.py",
+      "kind": "module-script"
+    },
+    "v14_dashboard_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v14_dashboard_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v14_lifecycle_signing_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v14_lifecycle_signing_test.py",
+      "kind": "manual-runner"
+    },
+    "v14_live_layout_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v14_live_layout_test.py",
+      "kind": "manual-runner"
+    },
+    "v14_live_server_acceptance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v14_live_server_acceptance_test.py",
+      "kind": "manual-runner"
+    },
+    "v14_performance_budget_test.py": {
+      "checked_by": "run-gates.py budgets phase / CI tests.yml",
+      "invocation": ".venv/bin/python tests/v14_performance_budget_test.py (CI tests.yml, NON-BLOCKING per 2026-10-22 owner answer; run-gates: aspirational)",
+      "kind": "gate"
+    },
+    "v14_static_server_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v14_static_server_test.py",
+      "kind": "manual-runner"
+    },
+    "v15_http_integration_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v15_http_integration_test.py",
+      "kind": "module-script"
+    },
+    "v15_integration_hardening_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v15_integration_hardening_test.py",
+      "kind": "manual-runner"
+    },
+    "v16_browser_geometry_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v16_browser_geometry_test.py",
+      "kind": "manual-runner"
+    },
+    "v16_windows_ui_hardening_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v16_windows_ui_hardening_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_layers_clipboard_history_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_layers_clipboard_history_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_persistence_snapshot_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_persistence_snapshot_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_professional_editor_core_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_professional_editor_core_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_professional_editor_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_professional_editor_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_professional_editor_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_professional_editor_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_professional_foundation_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_professional_foundation_test.py",
+      "kind": "manual-runner"
+    },
+    "v17_served_editor_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v17_served_editor_test.py",
+      "kind": "manual-runner"
+    },
+    "v18_nested_transform_matrix_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v18_nested_transform_matrix_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_editor_public_parity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_editor_public_parity_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_font_loading_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_font_loading_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_responsive_autofit_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_responsive_autofit_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_server_typography_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_server_typography_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_typography_invalid_input_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_typography_invalid_input_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_typography_model_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_typography_model_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_typography_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_typography_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v19_typography_visual_geometry_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v19_typography_visual_geometry_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_1_bilingual_public_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_1_bilingual_public_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_1_dashboard_actions_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_1_dashboard_actions_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_1_lifecycle_mobile_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_1_lifecycle_mobile_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_1_semantic_boundary_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_1_semantic_boundary_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_1_stabilization_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_1_stabilization_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_font_registry_loading_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_font_registry_loading_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_khmer_shaping_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_khmer_shaping_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_semantic_style_parity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_semantic_style_parity_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_typography_accessibility_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_typography_accessibility_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_typography_architecture_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_typography_architecture_test.py",
+      "kind": "manual-runner"
+    },
+    "v20_typography_editor_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v20_typography_editor_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v21_0_migration_roundtrip_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_0_migration_roundtrip_test.py",
+      "kind": "manual-runner"
+    },
+    "v21_0_rich_text_model_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_0_rich_text_model_test.py",
+      "kind": "manual-runner"
+    },
+    "v21_0_rich_text_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_0_rich_text_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v21_0_rich_text_server_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_0_rich_text_server_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v21_1_renderer_parity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_1_renderer_parity_test.py",
+      "kind": "manual-runner"
+    },
+    "v21_2_accessible_editing_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_2_accessible_editing_test.py",
+      "kind": "manual-runner"
+    },
+    "v21_3_workspace_hardening_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v21_3_workspace_hardening_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_0_3_khmer_custom_font_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_0_3_khmer_custom_font_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_4_webgl_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_4_webgl_backend_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_5_texture_cache_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_5_texture_cache_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_6_gpu_projection_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_6_gpu_projection_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_7_adaptive_gpu_quality_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_7_adaptive_gpu_quality_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_7_gpu_editor_integration_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_7_gpu_editor_integration_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_7_gpu_fallback_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_7_gpu_fallback_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_7_real_webgl_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_7_real_webgl_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_editor_interaction_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_editor_interaction_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_performance_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_performance_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_1_worker_rendering_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_1_worker_rendering_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_2_page_experience_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_2_page_experience_contract_test.py",
+      "kind": "module-script"
+    },
+    "v22_2_page_experience_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_2_page_experience_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_2_page_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_2_page_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_2_page_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_2_page_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_2_page_refinement_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_2_page_refinement_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_custom_font_browser_runtime_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_custom_font_browser_runtime_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_custom_font_lazy_loader_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_custom_font_lazy_loader_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_custom_font_server_endpoint_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_custom_font_server_endpoint_test.py",
+      "kind": "manual-runner"
+    },
+    "v22_zoom_layout_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v22_zoom_layout_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v23_1_professional_workflow_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_1_professional_workflow_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_1_professional_workflow_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_1_professional_workflow_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_2_navigation_history_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_2_navigation_history_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_2_navigation_history_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_2_navigation_history_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_2_navigation_history_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_2_navigation_history_performance_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v23_3_style_history_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_3_style_history_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_3_style_history_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_3_style_history_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_3_style_history_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_3_style_history_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_4_asset_workflow_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_4_asset_workflow_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_4_asset_workflow_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_4_asset_workflow_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_4_asset_workflow_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_4_asset_workflow_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_5_photo_workflow_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_5_photo_workflow_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_5_photo_workflow_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_5_photo_workflow_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_5_photo_workflow_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_5_photo_workflow_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_6_photo_style_library_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_6_photo_style_library_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_6_photo_style_library_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_6_photo_style_library_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_6_photo_style_library_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_6_photo_style_library_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_6_photo_style_library_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_6_photo_style_library_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_7_review_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_7_review_backend_test.py",
+      "kind": "module-script"
+    },
+    "v23_7_review_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_7_review_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_7_review_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_7_review_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_7_review_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_7_review_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_7_review_workflow_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_7_review_workflow_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_8_review_operations_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_8_review_operations_backend_test.py",
+      "kind": "module-script"
+    },
+    "v23_8_review_operations_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_8_review_operations_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_8_review_operations_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_8_review_operations_contract_test.py",
+      "kind": "module-script"
+    },
+    "v23_8_review_operations_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_8_review_operations_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_8_review_operations_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_8_review_operations_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_command_lazy_loader_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_command_lazy_loader_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_command_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_command_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_command_registry_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_command_registry_test.py",
+      "kind": "manual-runner"
+    },
+    "v23_command_system_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v23_command_system_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v24_canva_experience_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v24_canva_experience_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v24_canva_experience_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v24_canva_experience_contract_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v24_canva_experience_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v24_canva_experience_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v24_canva_experience_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v24_canva_experience_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v24_collaboration_tasks_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v24_collaboration_tasks_backend_test.py",
+      "kind": "module-script"
+    },
+    "v24_export_quality_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v24_export_quality_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v25_template_governance_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v25_template_governance_backend_test.py",
+      "kind": "module-script"
+    },
+    "v25_template_governance_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v25_template_governance_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v25_template_governance_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v25_template_governance_contract_test.py",
+      "kind": "module-script"
+    },
+    "v25_template_governance_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v25_template_governance_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v25_template_governance_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v25_template_governance_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v26_studio_operations_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v26_studio_operations_backend_test.py",
+      "kind": "module-script"
+    },
+    "v26_studio_operations_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v26_studio_operations_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v26_studio_operations_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v26_studio_operations_contract_test.py",
+      "kind": "module-script"
+    },
+    "v26_studio_operations_migration_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v26_studio_operations_migration_test.py",
+      "kind": "module-script"
+    },
+    "v26_studio_operations_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v26_studio_operations_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v26_studio_operations_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v26_studio_operations_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_4_repair_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_4_repair_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_4_repair_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_4_repair_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_ai_accessibility_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_ai_accessibility_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_ai_backend_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_ai_backend_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_ai_layout_preview_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_ai_layout_preview_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_ai_rich_text_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_ai_rich_text_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_ai_target_revision_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_ai_target_revision_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_ai_transaction_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_ai_transaction_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_mobile_canvas_hud_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_mobile_canvas_hud_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_3_5_typography_preview_sequence_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_3_5_typography_preview_sequence_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_studio_automation_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_automation_backend_test.py",
+      "kind": "module-script"
+    },
+    "v27_studio_automation_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_automation_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_studio_automation_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_automation_contract_test.py",
+      "kind": "module-script"
+    },
+    "v27_studio_automation_migration_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_automation_migration_test.py",
+      "kind": "module-script"
+    },
+    "v27_studio_automation_mobile_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_automation_mobile_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_studio_automation_performance_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_automation_performance_test.py",
+      "kind": "manual-runner"
+    },
+    "v27_studio_backup_scheduler_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v27_studio_backup_scheduler_test.py",
+      "kind": "module-script"
+    },
+    "v28_agent_conversation_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_conversation_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_mobile_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_mobile_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_performance_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_performance_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_provider_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_provider_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_registry_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_registry_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_server_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_server_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_storage_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_storage_test.py",
+      "kind": "manual-runner"
+    },
+    "v28_agent_tool_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v28_agent_tool_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v29_professional_scene_vector_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v29_professional_scene_vector_contract_test.py",
+      "kind": "module-script"
+    },
+    "v30_raster_worker_browser_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v30_raster_worker_browser_test.py",
+      "kind": "manual-runner"
+    },
+    "v30_raster_workspace_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v30_raster_workspace_contract_test.py",
+      "kind": "module-script"
+    },
+    "v31_collaboration_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v31_collaboration_contract_test.py",
+      "kind": "module-script"
+    },
+    "v32_platform_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v32_platform_contract_test.py",
+      "kind": "module-script"
+    },
+    "v52_dualwrite_migration_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v52_dualwrite_migration_test.py",
+      "kind": "manual-runner"
+    },
+    "v52_selected_capabilities_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v52_selected_capabilities_contract_test.py",
+      "kind": "manual-runner",
+      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+    },
+    "v52_yjs_wiring_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v52_yjs_wiring_test.py",
+      "kind": "manual-runner"
+    },
+    "v53_1_ai_project_operator_backend_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v53_1_ai_project_operator_backend_test.py",
+      "kind": "manual-runner"
+    },
+    "v53_1_ai_project_operator_contract_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/v53_1_ai_project_operator_contract_test.py",
+      "kind": "manual-runner"
+    },
+    "v55_route_weight_budget_test.py": {
+      "checked_by": "run-gates.py budgets phase / CI tests.yml",
+      "invocation": ".venv/bin/python tests/v55_route_weight_budget_test.py (run-gates: budgets phase; CI tests.yml)",
+      "kind": "gate"
+    },
+    "workflow_continuity_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/workflow_continuity_test.py",
+      "kind": "module-script"
+    }
+  }
+}
