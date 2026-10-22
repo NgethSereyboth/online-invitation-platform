@@ -30,7 +30,7 @@ explicit owner decision.
 | Smoke | `node tools/page-errors.mjs --all` → `TOTAL pages=16 consoleErrors=0 non2xx=0` | PASS |
 | LHCI | `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js` → 16/16 reports, **a11y 1.00**, budgets pass | PASS |
 | Bilingual checker | `python3 scripts/check-bilingual-consistency.py` → exit 0 (`OK: … passed.`) | PASS |
-| Full pytest (default capture) | `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q` → **1 failed / 142 passed** | PASS with documented blocker |
+| Full pytest (default capture) | `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q` → **157 passed / 0 failed**, three consecutive runs (4:30 / 4:28 / 4:28) — FB-26 | PASS |
 | Canvas acceptance | frozen harness `--phase all` (absolute `--output`) → `pass=22 fail=0 skipped=2`, `CANVAS_MOTION_VERIFY_PASSED` | PASS |
 | Canvas perf | env-blocked on this machine (3 launch modes, presentation-quantized timings; `inputToPaintMs` 11.5 under budget) | NOT VERIFIED HERE |
 | Canvas visual | frozen baseline absent (`artifacts/canvas-motion/baseline/**` stayed on the Windows box) | NOT RUN |
@@ -39,7 +39,7 @@ explicit owner decision.
 | Reorder keyboard (NW-1.2) | `tools/page_reorder_keyboard_check.py` → 8/8 | PASS |
 | Option labels (NW-4.1) | `tools/option_labels_i18n_check.py` → 0 failed (2 pages × 6 checks) | PASS |
 | Khmer sweep (NW-4.4) | `tools/khmer-visual-sweep.py` → 21 shots, 0 failures | PASS |
-| Gate runner (NW-5.3) | `tools/run-gates.py --phase {build,bundles,smoke,lhci}` each → `GATES_PASSED` | PASS (per phase) |
+| Gate runner (NW-5.3) | `tools/run-gates.py --phase all` → 7/7 phases **PASS**, `GATES_PASSED` (log `artifacts/next-work/gates/20261022-184517/`) — FB-26 | PASS |
 
 The single pytest failure is the documented `v27_3_5` README digest pin — **OD-7**, content-identical
 CRLF/LF hash; every other baseline red was fixed (allowlist race ×2) or remains environment-bound.
@@ -123,3 +123,20 @@ Every row has a fresh run behind it; full commands, exit codes and log paths are
 Verdict: the release candidate is evidence-complete on this Linux box; the explicit
 non-gating remainder is v14 (quarantined), canvas visual/perf (Windows box) and the
 GitHub-side alert UI.
+
+## Gate-matrix addendum — 2026-10-22 evening (FB-26)
+
+The rows above were the 2026-10-21 snapshot. Re-run in full at `6fa3f48` after
+FB-23/24/25 (`tools/run-gates.py --phase all` → **`GATES_PASSED`**, 7/7). Signature
+lines, per phase: `BUILD_OK` + `MIRROR_CHECK_PASSED (after sync)`; `ROUTE_BUNDLE_CHECK_PASSED`;
+`TOTAL pages=16 consoleErrors=0 non2xx=0`; `157 passed in 269.44s`; 
+`V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED (6 pages within budget)`; `Done running Lighthouse!`
+with `reports=16/16 minA11y=1.00`; `pass=22 fail=0 skipped=2` + `CANVAS_MOTION_VERIFY_PASSED`.
+
+**Test-count reconciliation (FB-26):** 146 (FB-15) + 9 (`config_adapter_test.py` from
+`829af12`) + 2 (`lhci_invocation_test.py` from FB-23) = **157**. The "162 passed" figure
+in `fb-20/RESULTS.md` is not reproducible at any HEAD in this session and is superseded.
+
+**Correction (FB-23):** the earlier "LHCI assert → exit 0" row described a phase that ran a
+squatted placeholder package and never started Lighthouse. The LHCI row now names the real
+phase and its completion line.
