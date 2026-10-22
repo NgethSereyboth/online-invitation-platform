@@ -83,7 +83,13 @@ def main()->int:
  for name in DOCS:assert (ROOT/'docs'/name).exists(),name
  review=(ROOT/'src'/'python'/'run_review_checks.py').read_text(encoding='utf-8');release=(ROOT/'src'/'python'/'release_check.py').read_text(encoding='utf-8');assert 'EINVITATION_V0_52_ALL_REQUIRED_REVIEW_CHECKS_PASSED' in review and '--continue-on-failure' in review;assert 'EINVITATION_V0_52_RELEASE_CHECK_PASSED' in release
  verify_manifest()
- for cmd in [['build_editor_bundle.py','--check'],['build_route_bundles.py','--check'],['build_page_manifests.py','--check']]:subprocess.run([sys.executable,str(ROOT/cmd[0]),*cmd[1:]],check=True,cwd=ROOT)
+ for cmd in [['build_editor_bundle.py','--check'],['build_route_bundles.py','--check'],['build_page_manifests.py','--check']]:
+  # Explicit handles (NW-5.1/FB-05): under pytest's default fd capture the
+  # child could inherit unusable standard handles and exit 1 silently. Captured
+  # pipes keep it runnable in every mode and make a failure diagnosable.
+  result=subprocess.run([sys.executable,str(ROOT/cmd[0]),*cmd[1:]],cwd=ROOT,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=False)
+  if result.returncode!=0:
+   raise AssertionError(f"{cmd[0]} failed ({result.returncode})\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
  print(f'V0_52_EDITOR_ROUTE_BYTES={size}');print('V27_3_5_RELEASE_EVIDENCE_TEST_PASSED');return 0
 def test_release_evidence():
  """Entry point for pytest.
