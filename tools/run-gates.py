@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """tools/run-gates.py — one-command gate runner for the eInvite repo (Linux portable).
 
-Phases (default --phase all): build → bundles → smoke → layout → pytest → budgets → lhci → csp → canvas.
+Phases (default --phase all): build → bundles → smoke → layout → pytest → budgets → lhci → csp → canvas → important.
   build   `python3 build.py all`            (BUILD_OK + MIRROR_CHECK_PASSED)
   bundles `python3 build.py bundles --check` (ROUTE_BUNDLE_CHECK_PASSED)
   smoke   `tools/serve-gzip.py --port <port>` + `node tools/page-errors.mjs --all`
@@ -23,6 +23,9 @@ Phases (default --phase all): build → bundles → smoke → layout → pytest 
           app server unless --base is given).
   canvas  `.venv/bin/python tests/canvas_motion_playwright.py --phase all --output <abs>`
           (visual gate: NOT RUN here — frozen baseline lives on the Windows box)
+  important FB-32 `!important` ratchet: `tools/css-important-inventory.py` count must
+          stay ≤ IMPORTANT_PIN (ratchet lowers as cleanups land; no threshold judgement
+          here, pure inventory). Cheap, so it runs in both the full and --skip-heavy set.
 
 Behaviour
   - Starts/stops its own servers (gzip static server for smoke; process cleanly
@@ -44,12 +47,12 @@ Exit codes: 0 all requested gates green; 1 a gate failed; 2 usage/config error;
 3 another gate run holds the lock; 4 lock/python/env failure.
 """
 from __future__ import annotations
-import argparse,datetime,json,os,signal,subprocess,sys,time
+import argparse,datetime,json,os,re,signal,subprocess,sys,time
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 GATES_DIR=ROOT/'artifacts'/'next-work'/'gates'
 LOCK=GATES_DIR/'.run-gates.lock'
-PHASES=['build','bundles','smoke','layout','pytest','budgets','lhci','csp','canvas']
+PHASES=['build','bundles','smoke','layout','pytest','budgets','lhci','csp','canvas','important']
 PY=sys.executable
 VENV_PY=ROOT/'.venv'/'bin'/'python'
 # One pin, in one place. The unscoped `lhci` package resolves to an unrelated squatted
@@ -57,6 +60,12 @@ VENV_PY=ROOT/'.venv'/'bin'/'python'
 LHCI_CLI=['npx','--yes','@lhci/cli@0.15.1']
 LHCI_REPORTS=ROOT/'.lighthouseci'/'reports'
 LHCI_PAGES=16
+# FB-32 ratchet pin: inventory total must not exceed this. 3819 at FB-19 close
+# (artifacts/next-work/fb-19/inventory-after2); +4 documented exceptions landed with
+# evidenced fixes after that pin (FB-28 editor-styles ×2, FB-30 km display-face
+# editor-suite ×1 / canvas-plus ×1) → 3823. LOWER this number as cleanups land;
+# the phase fails as soon as the count climbs above it.
+IMPORTANT_PIN=3823
 # Signature each phase must print before its exit code counts (rule R2).
 MARKERS={
     'build':   ('BUILD_OK','MIRROR_CHECK_PASSED'),
@@ -68,6 +77,7 @@ MARKERS={
     'budgets': ('V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED',),
     'lhci':    ('Done running Lighthouse',),
     'canvas':  ('CANVAS_MOTION_VERIFY_PASSED',),
+    'important': ('CSS_IMPORTANT_INVENTORY total=',),
 }
 
 def log_line(log,marker,text=''):
@@ -259,6 +269,7 @@ def main():
                     app_server=start_app_server(layout_port,log)
                 cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tools/ui-layout-guard.py','--base',f'http://127.0.0.1:{layout_port}','--out',str(GATES_DIR/stamp/'ui-layout-guard')]
             elif phase=='csp':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tools/csp-violation-check.py']  # own fresh-data server
+            elif phase=='important':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tools/css-important-inventory.py','--out',str(GATES_DIR/stamp/'important-inventory')]
             if phase=='smoke':
                 server=start_static_server(args.port) if not server else server
                 env_extra={'SMOKE_BASE_URL':f'http://127.0.0.1:{args.port}'}
@@ -280,6 +291,21 @@ def main():
                     log_line(log,'MARKER',f'only {count} fresh LHR reports — expected {LHCI_PAGES}')
                     rc=1
             results[phase]=rc
+            if phase=='important':
+                # Ratchet: the inventory tool always exits 0 (read-only recon),
+                # so the count comparison happens here.
+                m=re.search(r'total=(\d+)',out)
+                total=int(m.group(1)) if m else -1
+                if total<0:
+                    log_line(log,'MARKER','no total= line in inventory output — cannot verify')
+                    rc=1
+                elif total>IMPORTANT_PIN:
+                    log_line(log,'FAIL',f'important ratchet exceeded: {total} > pin {IMPORTANT_PIN}')
+                    print(f'  !! important ratchet: {total} > pin {IMPORTANT_PIN}')
+                    rc=1
+                else:
+                    log_line(log,'OK',f'important ratchet holds: {total} ≤ pin {IMPORTANT_PIN}')
+                results[phase]=rc
             if phase=='layout':
                 app_server=stop_static_server(app_server,log)
             if rc!=0:
