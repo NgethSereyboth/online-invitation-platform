@@ -339,14 +339,14 @@
     },
     "index.html": {
       "deferredJavascript": "bundle-index-deferred.js",
-      "deferredJavascriptBytes": 146997,
-      "deferredJavascriptSha256": "3925a0fb1d8df753b5504c75e25bc249bc79dcb5125802fb103d3181e275e392",
+      "deferredJavascriptBytes": 147417,
+      "deferredJavascriptSha256": "112981a3d69166e0e21d9ca9497a47fe320e3892b192cf4298edc68ecc276c95",
       "deferredStylesheet": "bundle-index-deferred.css",
       "deferredStylesheetBytes": 51075,
       "deferredStylesheetSha256": "da749eebb8c336d4ea05f7edc422c28e5d0fdae09e30cf34aaa4fc862ab62357",
       "javascript": "bundle-index.js",
-      "scriptBytes": 1065493,
-      "scriptSha256": "fb1df3bd6ec28d1d3bcd4bf1df5d85bea9a11af6b03d166e756b6c96cdfd5a01",
+      "scriptBytes": 1065911,
+      "scriptSha256": "51ec82d1976e0bbb9e8a7ccb3937ac24507b3c79d4d685939dee168bf4854f59",
       "sources": {
         "deferredScripts": [
           "workflow-refine.js",

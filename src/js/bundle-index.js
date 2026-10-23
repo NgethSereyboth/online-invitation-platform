@@ -7958,7 +7958,12 @@ function clampPanelWidths(){
 function activeSection(){return $('.studio-pane.active',host)?.dataset.studioPane||'event'}
 function applyLayout(){
   const section=activeSection();
-  const content=section==='event'||section==='blocks';
+  // FB-43: the pane host is built with its first tab (Event) active, and the
+  // workflow then activates the real start tab (Design on a fresh session).
+  // Entering content mode in between made <main> switch to position:fixed at
+  // y=126 and back, i.e. the editor's only 'poor' CLS. Until the workflow owns
+  // the section (it publishes EInviteWorkflow), boot in the neutral layout.
+  const content=(section==='event'||section==='blocks')&&!!window.EInviteWorkflow;
   body.classList.toggle('studio-content-mode',content);
   body.classList.toggle('studio-design-mode',!content);
   body.dataset.studioSection=section;

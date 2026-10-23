@@ -236,7 +236,11 @@ const CONTENT=new Set(['event','blocks']);
 const COMPACT=()=>innerWidth<=1180;
 const scrollMemory=new Map();
 const history=[];
-let current=$('.studio-pane.active',host)?.dataset.studioPane||'design';
+// FB-43: start from the tab the session will actually open (requested → saved →
+// Design), not from the pane host's synthetic first tab. Reading the DOM default
+// here made boot enter content mode and then leave it, which moved <main> twice.
+const bootTab=sessionStorage.getItem('einvite-open-editor-tab')||localStorage.getItem('einvite-editor-left-tab');
+let current=($(`.studio-pane[data-studio-pane="${bootTab}"]`,host)||$('.studio-pane.active',host))?.dataset.studioPane||'design';
 let lastDesign=CONTENT.has(current)?'design':current;
 let selectedSignature='';
 let lastAutoInspected='';
