@@ -9,5 +9,13 @@
 @font-face{font-family:'EInvite Noto Sans Khmer';src:url('assets/fonts/noto-sans-khmer-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
 @font-face{font-family:'EInvite Noto Serif Khmer';src:url('assets/fonts/noto-serif-khmer-400.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
 @font-face{font-family:'EInvite Noto Serif Khmer';src:url('assets/fonts/noto-serif-khmer-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
+/* FB-37: the bundled Inter files were only registered by the editor bundle, so
+   public pages fell back to any locally installed family named "Inter" — on the
+   audit box a decorative impostor face (postScriptName InterPlayText) painted the
+   guest topbar brand as overlapping script glyphs. Register the shipped faces on
+   every page that uses --font-latin. */
+@font-face{font-family:'Inter';src:url('assets/fonts/inter-latin-400.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
+@font-face{font-family:'Inter';src:url('assets/fonts/inter-latin-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
+@font-face{font-family:'Inter';src:url('assets/fonts/inter-latin-800.woff2') format('woff2');font-style:normal;font-weight:800;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
 
 }

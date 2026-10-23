@@ -888,12 +888,22 @@ body[data-page="public"] {
   height: var(--app-topbar-h); min-height: var(--app-topbar-h);
   padding: 0 var(--space-4);
   position: sticky; top: 0; z-index: 50;
+  /* FB-37: with Khmer labels the flex row measured scrollWidth 376 vs 375
+     while every child stayed inside (max right 364.2) — a stray scroll-area
+     pixel. The header is a single non-scrolling row, so clip it. */
+  overflow-x: clip;
   background: color-mix(in srgb, var(--app-surface) 86%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--app-line) 72%, transparent);
 }
 .guest-topbar .app-brand { margin-right: auto; }
 .guest-topbar .app-brand strong { font-family: var(--font-latin); font-size: var(--fs-body-md); font-weight: var(--fw-semibold); }
-.guest-topbar__lang { display: inline-flex; padding: 3px; gap: 2px; background: var(--app-surface-3); border-radius: var(--radius-sm); }
+/* FB-37: one language control, shown once. The guest topbar used to render the
+   compact EN/ខ្មែរ toggle *and* the generic `.language-switch` (which persists the
+   choice), while the opened invitation repeated the switch again in the page
+   body. The topbar language-switch below is the single kept control; the other
+   two duplicates are not rendered. */
+.guest-topbar__lang { display: none; }
+.guest-layout-content .language-switch { display: none; }
 .guest-topbar__lang button {
   min-height: 28px; padding: 0 var(--space-3);
   border: 0; border-radius: calc(var(--radius-sm) - 3px);

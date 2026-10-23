@@ -8,6 +8,9 @@
 @font-face{font-family:'EInvite Noto Sans Khmer';src:url('assets/fonts/noto-sans-khmer-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
 @font-face{font-family:'EInvite Noto Serif Khmer';src:url('assets/fonts/noto-serif-khmer-400.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
 @font-face{font-family:'EInvite Noto Serif Khmer';src:url('assets/fonts/noto-serif-khmer-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+1780-17FF,U+19E0-19FF;}
+@font-face{font-family:'Inter';src:url('assets/fonts/inter-latin-400.woff2') format('woff2');font-style:normal;font-weight:400;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
+@font-face{font-family:'Inter';src:url('assets/fonts/inter-latin-700.woff2') format('woff2');font-style:normal;font-weight:700;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
+@font-face{font-family:'Inter';src:url('assets/fonts/inter-latin-800.woff2') format('woff2');font-style:normal;font-weight:800;font-display:swap;unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;}
 }@layer components {
 .rt-document{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:break-word;word-break:normal}.rt-paragraph{margin:0;min-height:1em}.rt-list{margin:0;padding-inline-start:1.5em}.rt-list>.rt-paragraph{display:list-item}.rt-run{font-family:inherit}.rt-link{color:inherit;text-decoration:underline;text-underline-offset:.14em}.rt-tab{display:inline-block;min-width:2em}.rt-document [lang=km]{font-kerning:normal;font-variant-ligatures:common-ligatures contextual;font-synthesis:none;word-break:normal;overflow-wrap:break-word;hyphens:none}.rt-document[data-rich-text-editable=true]{outline:none}
 }@layer reset, tokens, base, layout, components, utilities, overrides;
@@ -1205,12 +1208,14 @@ display: flex; align-items: center; gap: var(--space-2);
 height: var(--app-topbar-h); min-height: var(--app-topbar-h);
 padding: 0 var(--space-4);
 position: sticky; top: 0; z-index: 50;
+overflow-x: clip;
 background: color-mix(in srgb, var(--app-surface) 86%, transparent);
 border-bottom: 1px solid color-mix(in srgb, var(--app-line) 72%, transparent);
 }
 .guest-topbar .app-brand { margin-right: auto; }
 .guest-topbar .app-brand strong { font-family: var(--font-latin); font-size: var(--fs-body-md); font-weight: var(--fw-semibold); }
-.guest-topbar__lang { display: inline-flex; padding: 3px; gap: 2px; background: var(--app-surface-3); border-radius: var(--radius-sm); }
+.guest-topbar__lang { display: none; }
+.guest-layout-content .language-switch { display: none; }
 .guest-topbar__lang button {
 min-height: 28px; padding: 0 var(--space-3);
 border: 0; border-radius: calc(var(--radius-sm) - 3px);
