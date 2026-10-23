@@ -95,7 +95,7 @@ The scope of "GATES_PASSED" claims in this document is per-phase (each row names
 phase run); no single `--phase all` runner claim is made here.
 
 Owner decisions carried into the ledgers (2026-10-22): OD-1 and OD-2 approved
-(implementation deferred to FB-19/FB-20, not in this pass's branch), OD-3 local-only,
+(FB-19 executed 2026-10-22, 4033 → 3819; FB-20 executed same pass), OD-3 local-only,
 OD-4/OD-5 confirmed, OD-7 Option A (implemented, FB-04), OD-8 deferred, i18n audit-first
 (FB-14), v14 non-blocking (FB-11).
 
@@ -159,3 +159,24 @@ was not in the work order and landed after the previous pass's last gate run. It
   full runs pass (157/0), `run-gates.py --phase all` → `GATES_PASSED`.
 - **OD-9 is OPEN** in `artifacts/next-work/DECISIONS.md`: keep or drop the adapter.
   Recommendation: keep.
+
+## 2026-10-22/23 — Wave 2 of the refinement order (`FREEBUFF-REFINEMENT-ORDER-2026-10-22.md`)
+
+Visual-bug wave on the same branch, one commit per bug plus harness commits:
+
+| Item | Commit | Scope / result |
+|---|---|---|
+| FB-19 (earlier in this branch's ledger) | — | staged `!important` cleanup 4033 → 3819, full evidence in `RELEASE-…` §FB-26 era docs (see STATE.md FB-19 entry) |
+| FB-28 (VB-01…03) | `581113a` | auth-card inputs ≥ 16 px at 1440/1024/375, empty icon button removed, header ≤ 96 px at 375, breadcrumb ellipsis at 768 |
+| FB-29 (VB-04…06) | `22822ba` | editor responsive contract written against canvas-share/auto-fit races; index-mobile captures repeatable |
+| FB-30 (VB-07/08) | `ff9d788` + `1414bd1` | Khmer headings stop degrading to the Latin display face (`:lang(km)`; one justified `!important` counted in the ratchet); language-pill/lang agreement already gate-checked |
+| FB-31 | `782abc3` | `layout` phase (tools/ui-layout-guard.py) + `csp` phase (tools/csp-violation-check.py) wired into run-gates.py |
+| FB-32 | `17707e8` | `important` phase — `!important` ratchet at pin 3823 |
+| FB-34 | (no UI change) | fresh-account RILL: 9/9 steps pass, 0 console / 0 CSP-classified errors; OD-11 input recorded (EN 1 tap + 3 screens, KM 2 taps + 3 screens to RSVP at 375 px) — `artifacts/next-work/fb-34/RESULTS.md` |
+
+Owner decisions raised by this wave (open, `artifacts/next-work/DECISIONS.md`):
+OD-9 (core.config keep/drop — recommendation: keep), OD-10 (continue CSS cleanup toward
+25–40 % or stop at the ratchet — ratchet shipped, continuation owner-gated), OD-11 (direct
+RSVP splash shortcut — decide on the FB-34 measurement), OD-12 (native Khmer strings).
+
+Push/PR/merge/tag remain forbidden (OD-3 local-only, standing).

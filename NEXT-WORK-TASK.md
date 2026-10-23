@@ -2,7 +2,10 @@
 
 **Repo:** `F:\Project\eInvite\online-invitation-platform` (Windows / PowerShell)
 **Written:** 2026-10-20
-**Status:** proposed work order — owner-approval gates are marked `OD-n`; do not start a gated task before the owner answers.
+**Status (2026-10-23, FB-33):** executed and closed — NW-1…NW-5 committed, NW-6.1–6.6 executed same-day
+(`nw-6-3/FINDING.md`), owner-gated items dispositioned per the 2026-10-22 answers (OD-1 → FB-19,
+OD-2 → FB-20, OD-7 → FB-04; OD-8 stays deferred). Original line: *proposed work order — owner-approval
+gates are marked `OD-n`*.
 **Baseline HEAD:** `1f28cbc` (`main`, ahead 8 of `origin/main`, not pushed; working tree clean except untracked `src/python/data/`). **Updated:** 2026-10-21 after the ui-refinement pass (`1cd09d2`) and the harness commit (`1f28cbc`).
 **Predecessor state:** `artifacts/ui-audit/fixes/STATE.md` (read it first, then this file).
 

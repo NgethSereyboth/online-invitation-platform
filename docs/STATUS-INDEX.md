@@ -6,6 +6,15 @@ Verdicts as of 2026-10-21 (`pass/2026-10-21-next-work` pushed at `6f7de27`; code
 `ca53dbe` contrast fix, `11e549f` toolbar reachability). One row per document: its standing
 today. Keep dated.
 
+**Update 2026-10-23 (FB-33):** the second order,
+[`FREEBUFF-REFINEMENT-ORDER-2026-10-22.md`](../FREEBUFF-REFINEMENT-ORDER-2026-10-22.md) (FB-23…FB-34,
+untracked owner file), has been executed on the same branch: CSP inline handlers fixed (FB-24),
+bilingual scan scripts, FB-26/27 evidence + `core.config` disposition (OD-9 open), Wave 2 visual
+fixes FB-28/29/30 committed per bug, `run-gates.py` carries the layout, csp and important
+(`!important` ratchet, pin 3823) phases, and the FB-34 fresh-account RILL is green with the
+OD-11 RSVP path measured. Ledger truth-up landed in the FB-33 docs commit; owner decisions
+OD-10/OD-11/OD-12 are open in `artifacts/next-work/DECISIONS.md`.
+
 **Update 2026-10-22 (FB-12):** an approved continuation work order,
 [`FREEBUFF-OPEN-ISSUES-2026-10-21.md`](../FREEBUFF-OPEN-ISSUES-2026-10-21.md), is being
 executed on the new local branch `fix/2026-10-22-open-issues` from `6f7de27`. Owner answers
