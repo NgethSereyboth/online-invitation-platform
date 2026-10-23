@@ -1,6 +1,4 @@
 {
-  "note": "Known console errors by pattern (substring, or re:<regex>). FB-38: the ui-layout guard fails any error not listed here. FB-39 fills the causes.",
-  "patterns": [
-    "re:api/admin/[^ ]+ :: Failed to load resource: the server responded with a status of 403"
-  ]
+  "note": "Known console errors by pattern (substring, or re:<regex>). FB-38: the ui-layout guard fails any error not listed here. FB-39 triaged the only entry it ever needed (non-admin admin.html 403s) and fixed the cause, so the list is intentionally empty — a new error on any guarded page is a regression.",
+  "patterns": []
 }

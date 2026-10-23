@@ -221,6 +221,18 @@
         '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">The administration console requires the full application server.</span>');
       return;
     }
+    // Authorization gate (FB-39): every admin endpoint answers 403 to a signed-in
+    // non-admin, so mounting the console fired three doomed requests (metrics-v2,
+    // system-status, users) and left an error card behind empty tabs. One session
+    // probe decides; the page then says why it is closed instead.
+    let sessionUser = null;
+    try { const me = await api.get('/api/auth/me'); sessionUser = me && me.user; } catch (e) { sessionUser = null; }
+    if (!sessionUser || sessionUser.role !== 'admin') {
+      const host = document.querySelector('.admin-page') || document.querySelector('main') || document.body;
+      host.innerHTML = `<h1><span class="i18n i18n-en">${STRINGS.en.unauthorized}</span><span class="i18n i18n-km khmer-text" lang="km">${STRINGS.km.unauthorized}</span></h1>`
+        + `<p><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">Back to dashboard</span><span class="i18n i18n-km khmer-text" lang="km">ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង</span></a></p>`;
+      return;
+    }
     initTabs();
     showImpersonationBanner();
     await pollOnce();

@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 423609,
+      "bytes": 424676,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
