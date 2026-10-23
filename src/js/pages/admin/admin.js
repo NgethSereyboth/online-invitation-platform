@@ -1,12 +1,4 @@
-/* v0.64.0 — admin shell (ROADMAP-v0.54-to-v1.0 §5.1)
- *
- * Orchestrates the admin page: stat cards grid + system status banner +
- * tab navigation between the 9 admin modules. Polls /api/admin/metrics-v2
- * + /api/admin/system-status every 30s.
- *
- * Replaces the legacy admin.js (kept for backward-compat with the old
- * users/templates/invitations/ai panels — the new modules layer on top).
- */
+/* v0.64.0 — admin shell: stat cards, system status, 9 module tabs, 30s polls. */
 (function(){
   'use strict';
   if (window.EInviteAdminShell && window.EInviteAdminShell.version >= 64) return;
@@ -121,11 +113,7 @@
   }
 
   function showImpersonationBanner(){
-    // The server sets the `einvite_admin_origin` cookie when an admin
-    // starts an impersonation session. We can't read it directly (HttpOnly),
-    // so we rely on the session payload from /api/auth/me to surface
-    // impersonation state — server returns `impersonating` if the cookie
-    // is present. If absent, hide the banner.
+    // HttpOnly impersonation cookie — surfaced through /api/auth/me's `impersonating`.
     const banner = document.getElementById('impersonationBanner');
     if (!banner) return;
     api.get('/api/auth/me').then(me => {
@@ -211,9 +199,7 @@
   }
 
   async function init(){
-    // Static mode: every admin panel is server-backed, so gate the whole console
-    // behind the backend probe instead of firing 404s from the shell, the
-    // impersonation probe and the lazily-mounted modules (G8).
+    // Static mode: the console is server-backed; gate it on the backend probe (G8).
     if (window.EInviteBackend?.ready) { try { await window.EInviteBackend.ready; } catch (e) { /* ignore */ } }
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) {
       window.EInviteBackend.message(
@@ -221,25 +207,16 @@
         '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">The administration console requires the full application server.</span>');
       return;
     }
-    // Authorization gate (FB-39): every admin endpoint answers 403 to a signed-in
-    // non-admin, so mounting the console fired three doomed requests (metrics-v2,
-    // system-status, users) and left an error card behind empty tabs. One session
-    // probe decides; the page then says why it is closed instead.
-    let sessionUser = null;
-    try { const me = await api.get('/api/auth/me'); sessionUser = me && me.user; } catch (e) { sessionUser = null; }
-    if (!sessionUser || sessionUser.role !== 'admin') {
-      const host = document.querySelector('.admin-page') || document.querySelector('main') || document.body;
-      host.innerHTML = `<h1><span class="i18n i18n-en">${STRINGS.en.unauthorized}</span><span class="i18n i18n-km khmer-text" lang="km">${STRINGS.km.unauthorized}</span></h1>`
-        + `<p><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">Back to dashboard</span><span class="i18n i18n-km khmer-text" lang="km">ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង</span></a></p>`;
-      return;
-    }
+    // FB-39: every admin route 403s for a non-admin, so gate before polling.
+    let u=null;try{u=(await api.get('/api/auth/me')).user}catch{}
+    if(!u||u.role!=='admin'){const h=document.querySelector('.admin-page')||document.body;h.innerHTML='<h1><span class="i18n i18n-en">'+STRINGS.en.unauthorized+'</span><span class="i18n i18n-km khmer-text" lang="km">'+STRINGS.km.unauthorized+'</span></h1><p><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">Back to dashboard</span><span class="i18n i18n-km khmer-text" lang="km">ត្រឡប់ទៅផ្ទាំងគ្រប់គរង</span></a></p>';return}
     initTabs();
     showImpersonationBanner();
     await pollOnce();
     startPolling();
     // Lazy-mount the default tab (users).
     mountModule('users');
-    // Re-render stat cards + system status on language switch (cached payload, no refetch).
+    // Re-render cached cards on language switch.
     if (window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
       window.EInviteI18n.subscribe(function () {
         if (lastMetrics) renderStatCards(lastMetrics);

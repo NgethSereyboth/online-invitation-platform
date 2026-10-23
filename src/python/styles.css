@@ -40,6 +40,12 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
      measured at 375 px that produced a 113-171 px bar on a 667 px screen and
      pushed the content below the fold. The row keeps its design height and the
      overflow scrolls horizontally instead, so every control stays reachable. */
+  /* FB-40 tried to drop the four `!important` below (plain declarations, then a
+     `body header` specificity bump). Both changed the rendered row: at 540 the
+     later `header` rules re-won padding (8px 12px -> 0 16px) and gap (8px -> 12px)
+     on the dashboard, the editor and the public invitation, and at 768 the editor
+     padding moved too. Measured before/after in artifacts/next-work/fb-40/, so the
+     declarations stay forceful and the ratchet pin stays at 3823. */
   header{
     flex-wrap:nowrap!important;
     height:var(--app-topbar-h,56px)!important;

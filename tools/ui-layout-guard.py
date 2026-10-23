@@ -492,6 +492,26 @@ def main() -> int:
             console_errors.append((label, (url + ' :: ' if url else '') + m.text))
         page.on("console", record)
 
+    def seed_public(base_url: str, browser) -> str:
+        """Seed and publish one invitation on the server under test (FB-41).
+
+        The pinned seed preset belongs to the FB-35 data dir; the gate starts a fresh
+        server, so its public route answered 404 and the console gate failed on noise.
+        Reuse the audit capture's seeder (same DOCUMENT and publish call).
+        """
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(
+            "ui_audit_capture", ROOT / "tools" / "ui-audit-capture.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+        try:
+            info = mod.seed_account(ctx.new_page(), base_url)
+        finally:
+            ctx.close()
+        print(f"UI_LAYOUT_GUARD_SEED public slug={info['slug']} publish_ok={info['publish_ok']}")
+        return info["slug"] if info.get("publish_ok") else ""
+
     with sync_playwright() as play:
         browser = play.chromium.launch(headless=True)
 
@@ -526,6 +546,16 @@ def main() -> int:
                     ctx.close()
 
         # ---- public invitation (FB-38): guest page at /i/<slug>, opened state.
+        # FB-41: without an explicit --slug, seed our own published invitation on the
+        # running server instead of trusting the preset (which belongs to another data dir).
+        if slug and not args.slug:
+            probe = browser.new_context(viewport={"width": 800, "height": 600})
+            try:
+                reachable = probe.request.get(f"{base}/api/public/{slug}").ok
+            finally:
+                probe.close()
+            if not reachable:
+                slug = seed_public(base, browser)
         if slug:
             for viewport in viewports:
                 w, h = (int(v) for v in viewport.split("x"))
