@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """tools/run-gates.py — one-command gate runner for the eInvite repo (Linux portable).
 
-Phases (default --phase all): build → bundles → smoke → pytest → budgets → lhci → canvas.
+Phases (default --phase all): build → bundles → smoke → layout → pytest → budgets → lhci → csp → canvas.
   build   `python3 build.py all`            (BUILD_OK + MIRROR_CHECK_PASSED)
   bundles `python3 build.py bundles --check` (ROUTE_BUNDLE_CHECK_PASSED)
   smoke   `tools/serve-gzip.py --port <port>` + `node tools/page-errors.mjs --all`
+  layout  `tools/ui-layout-guard.py --base <app-server>` (FB-31: horizontal scroll /
+          nameless controls / header overlap+height / auth-padding / editor contract,
+          across 320/375/768/1024/1440 × light/dark × en/km). The runner starts its
+          own fresh-data app server for this phase (dev tokens, throwaway account).
   pytest  `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q`  (default capture)
   budgets v55 route-weight budget gate (BLOCKING — FB-08). v14 is NOT a phase:
           it is known red against an aspirational stylesheet count and stays
@@ -14,6 +18,9 @@ Phases (default --phase all): build → bundles → smoke → pytest → budgets
           (fresh collect of all 16 routes + budgets assert; the config starts its
           own gzip server, so this phase stops the runner's server first.)
           Prints the minimum accessibility score across the 16 reports.
+  csp     `tools/csp-violation-check.py` (FB-24/FB-31: creates an invitation, opens
+          the editor, publishes, RSVPs; the tool starts + stops its own fresh-data
+          app server unless --base is given).
   canvas  `.venv/bin/python tests/canvas_motion_playwright.py --phase all --output <abs>`
           (visual gate: NOT RUN here — frozen baseline lives on the Windows box)
 
@@ -42,7 +49,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 GATES_DIR=ROOT/'artifacts'/'next-work'/'gates'
 LOCK=GATES_DIR/'.run-gates.lock'
-PHASES=['build','bundles','smoke','pytest','budgets','lhci','canvas']
+PHASES=['build','bundles','smoke','layout','pytest','budgets','lhci','csp','canvas']
 PY=sys.executable
 VENV_PY=ROOT/'.venv'/'bin'/'python'
 # One pin, in one place. The unscoped `lhci` package resolves to an unrelated squatted
@@ -55,6 +62,8 @@ MARKERS={
     'build':   ('BUILD_OK','MIRROR_CHECK_PASSED'),
     'bundles': ('ROUTE_BUNDLE_CHECK_PASSED',),
     'smoke':   ('TOTAL pages=16','consoleErrors=0','non2xx=0'),
+    'layout':  ('UI_LAYOUT_GUARD_PASSED',),
+    'csp':     ('CSP_CHECK_PASSED',),
     'pytest':  (' passed',),
     'budgets': ('V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED',),
     'lhci':    ('Done running Lighthouse',),
@@ -173,10 +182,49 @@ def start_static_server(port:int):
     proc.terminate()
     raise RuntimeError('static server did not become ready')
 
+def free_port(start:int):
+    import socket
+    for port in range(start,start+40):
+        with socket.socket() as sock:
+            try:sock.bind(('127.0.0.1',port))
+            except OSError:continue
+            return port
+    raise RuntimeError('no free port')
+
+def start_app_server(port:int, log:Path):
+    """Fresh-data app server for browser phases that need real routes (layout guard).
+
+    Mirrors the launcher in tools/csp-violation-check.py: dev tokens, no scanner,
+    own temp EINVITE_DATA_DIR, session-leader process group so stop_static_server's
+    killpg reaches it.
+    """
+    import tempfile, urllib.request
+    data_dir=tempfile.mkdtemp(prefix='einvite-gates-app-')
+    env={**os.environ,'PYTHONIOENCODING':'utf-8',
+         'EINVITE_DATA_DIR':data_dir,'EINVITE_DEV_AUTH_TOKENS':'1',
+         'EINVITE_ALLOW_NO_SCANNER':'1',
+         'PYTHONPATH':f"{ROOT/'src'/'python'}:{ROOT}"}
+    py=str(VENV_PY) if VENV_PY.exists() else PY
+    proc=subprocess.Popen([py,str(ROOT/'src'/'python'/'server.py'),'--port',str(port)],
+                          cwd=str(ROOT),env=env,stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL,start_new_session=True)
+    for _ in range(120):
+        time.sleep(0.25)
+        if proc.poll() is not None:
+            log_line(log,'FAIL',f'app server exited during startup (code {proc.returncode})')
+            raise RuntimeError(f'app server exited during startup (code {proc.returncode})')
+        try:
+            urllib.request.urlopen(f'http://127.0.0.1:{port}/dashboard.html',timeout=2).read(64)
+            log_line(log,'SERVER',f'app server ready on :{port} (data_dir={data_dir})')
+            return proc
+        except Exception:continue
+    proc.terminate()
+    raise RuntimeError('app server did not become ready')
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--phase',default='all',choices=['all']+PHASES)
-    ap.add_argument('--skip-heavy',action='store_true',help='skip pytest/budgets/lhci/canvas')
+    ap.add_argument('--skip-heavy',action='store_true',help='skip layout/csp/pytest/budgets/lhci/canvas')
     ap.add_argument('--port',type=int,default=8124)
     args=ap.parse_args()
     acquired,held=acquire_lock()
@@ -188,8 +236,10 @@ def main():
     run_dir.mkdir(parents=True,exist_ok=True)
     log=run_dir/'gates.log'
     phases=PHASES if args.phase=='all' else [args.phase]
-    if args.skip_heavy:phases=[p for p in phases if p not in ('pytest','budgets','lhci','canvas')]
+    layout_port=0
+    if args.skip_heavy:phases=[p for p in phases if p not in ('layout','csp','pytest','budgets','lhci','canvas')]
     server:subprocess.Popen|None=None
+    app_server:subprocess.Popen|None=None
     results={}
     try:
         for phase in phases:
@@ -201,6 +251,14 @@ def main():
             elif phase=='budgets':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tests/v55_route_weight_budget_test.py']
             elif phase=='lhci':cmd=[*LHCI_CLI,'autorun','--config','tools/lighthouserc.js']
             elif phase=='canvas':cmd=[str(VENV_PY),'tests/canvas_motion_playwright.py','--phase','all','--output',str(GATES_DIR/stamp/'canvas-acceptance')]
+            elif phase=='layout':
+                # Own fresh-data app server on a port away from the static server,
+                # the lhci port and the csp tool's free-port scan start (4177).
+                if app_server is None:
+                    layout_port=free_port(args.port+20)
+                    app_server=start_app_server(layout_port,log)
+                cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tools/ui-layout-guard.py','--base',f'http://127.0.0.1:{layout_port}','--out',str(GATES_DIR/stamp/'ui-layout-guard')]
+            elif phase=='csp':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tools/csp-violation-check.py']  # own fresh-data server
             if phase=='smoke':
                 server=start_static_server(args.port) if not server else server
                 env_extra={'SMOKE_BASE_URL':f'http://127.0.0.1:{args.port}'}
@@ -222,12 +280,16 @@ def main():
                     log_line(log,'MARKER',f'only {count} fresh LHR reports — expected {LHCI_PAGES}')
                     rc=1
             results[phase]=rc
+            if phase=='layout':
+                app_server=stop_static_server(app_server,log)
             if rc!=0:
                 log_line(log,'STOP',f'{phase} failed — stopping chain')
                 break
-        # always stop our server
+        # always stop our servers
+        app_server=stop_static_server(app_server,log)
         server=stop_static_server(server,log)
     finally:
+        stop_static_server(app_server,log)
         stop_static_server(server,log)
         release_lock()
     # summary + skipped markers
