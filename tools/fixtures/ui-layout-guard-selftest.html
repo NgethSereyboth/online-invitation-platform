@@ -28,6 +28,9 @@
   <script>
     // Deliberately unknown console error: the baseline must not match it.
     console.error('GUARD-SELFTEST-UNKNOWN console error for the console-baseline negative control');
+    // FB-45 negative control: one ~700 ms blocking task, above LONG_TASK_MAX_MS (600).
+    const until = performance.now() + 700;
+    while (performance.now() < until) { /* deliberately blocking */ }
   </script>
 </body>
 </html>

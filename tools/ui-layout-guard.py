@@ -54,7 +54,15 @@ DEFAULT_OUT = ROOT / "artifacts" / "next-work" / "ui-layout-guard"
 DEFAULT_BASELINE = ROOT / "tools" / "ui-layout-guard.console-baseline.json"
 PASSWORD = "layout-guard-2026"
 
-PAGES = ["dashboard.html", "templates.html", "guests.html", "index.html", "admin.html"]
+# FB-45 (guard v3): checkin + designer joined the matrix — both passed with zero console
+# errors before being added (375/1440, light, en), so this is coverage, not a fix.
+PAGES = ["dashboard.html", "templates.html", "guests.html", "index.html", "admin.html",
+         "checkin.html", "designer.html"]
+
+# FB-45: long-task ceiling, measured before it was set. Worst single task at 1440 on this
+# machine: dashboard 137ms, materials 201ms, checkin 146ms, designer 186ms, editor 498ms.
+# 600 leaves the editor headroom while still failing on a real main-thread regression.
+LONG_TASK_MAX_MS = 600
 VIEWPORTS = ["320x568", "375x667", "768x1024", "1024x768", "1440x900"]
 THEMES = ["light", "dark"]
 LANGS = ["en", "km"]
@@ -64,6 +72,18 @@ INIT_SCRIPT = """(() => {
   try {
     localStorage.setItem('einvite-theme-mode', '%s');
     localStorage.setItem('einvite-lang', '%s');
+  } catch (e) {}
+})();"""
+
+# FB-45: collected from document start so the boot script itself is counted, not just what
+# happens after the settle. The selftest fixture ships a deliberate 700ms task to prove the
+# check fires.
+LONG_TASK_JS = """(() => {
+  window.__longTasks = [];
+  try {
+    new PerformanceObserver(list => {
+      for (const e of list.getEntries()) window.__longTasks.push(Math.round(e.duration));
+    }).observe({type: 'longtask', buffered: true});
   } catch (e) {}
 })();"""
 
@@ -91,7 +111,8 @@ MEASURE_JS = r"""
   const out = { scrollWidth: document.documentElement.scrollWidth, innerWidth: vw,
                 widest: [], nameless: [], headerOverlap: [], headerHeight: null,
                 authPadding: null, authInputInset: null, editor: null,
-                emptyControls: [], clippedFields: [] };
+                emptyControls: [], clippedFields: [],
+                longTasks: (window.__longTasks || []).slice() };
 
   // 1. horizontal scroll: name the widest elements that stick out.
   if (document.documentElement.scrollWidth > vw + 1) {
@@ -337,6 +358,7 @@ def run_self_test() -> int:
         browser = play.chromium.launch(headless=True)
         ctx = browser.new_context(viewport={"width": 375, "height": 667})
         page = ctx.new_page()
+        page.add_init_script(LONG_TASK_JS)
         page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
         page.goto(fixture.as_uri(), wait_until="domcontentloaded")
         page.wait_for_timeout(150)
@@ -347,7 +369,7 @@ def run_self_test() -> int:
     patterns = load_console_patterns(str(DEFAULT_BASELINE))
     console_fails = [m for m in errors if not console_matches(m, patterns)]
     failed_checks = {check for check, ok, _ in rows if not ok}
-    expected = {"empty-control", "clipped-field", "editor-artboard"}
+    expected = {"empty-control", "clipped-field", "editor-artboard", "long-task"}
     print("SELFTEST negative control — deliberately broken fixture:")
     for check, ok, detail in rows:
         if not ok and check in expected:
@@ -360,7 +382,8 @@ def run_self_test() -> int:
     if missing:
         print("UI_LAYOUT_GUARD_SELFTEST_FAILED missing=" + ",".join(sorted(missing)))
         return 1
-    print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, editor-artboard, console-baseline)")
+    print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, editor-artboard, "
+          "long-task, console-baseline)")
     return 0
 
 
@@ -398,6 +421,12 @@ def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, s
     rows.append(("header-overlap", not data["headerOverlap"],
                  f"{where} " + ("; ".join(" x ".join(p) for p in data["headerOverlap"])
                                 if data["headerOverlap"] else "none")))
+
+    # FB-45: main-thread budget — one task over the ceiling is a real regression, not noise.
+    tasks = data.get("longTasks") or []
+    worst = max(tasks) if tasks else 0
+    rows.append(("long-task", worst <= LONG_TASK_MAX_MS,
+                 f"{where} max={worst}ms tasks={len(tasks)} ceiling={LONG_TASK_MAX_MS}ms"))
 
     if data["headerHeight"] is not None:
         limit = 96 if w <= 400 else 200
@@ -491,6 +520,7 @@ def main() -> int:
                 url = ""
             console_errors.append((label, (url + ' :: ' if url else '') + m.text))
         page.on("console", record)
+        page.add_init_script(LONG_TASK_JS)
 
     def seed_public(base_url: str, browser) -> str:
         """Seed and publish one invitation on the server under test (FB-41).
