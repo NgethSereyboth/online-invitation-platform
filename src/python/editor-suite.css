@@ -24,6 +24,11 @@ html[data-theme="dark"]{
 }
 html,body,button,input,select,textarea{font-family:var(--canvas-font)}
 h1,h2,h3,h4,header strong,.billing-head h1,.library-head h1,.dash-head h1,.login h1,.account-page h1,.auth-page h1,.verify-page h1{font-family:var(--canvas-display)!important;letter-spacing:-.03em}
+/* VB-08: this !important display face would outrank tokens.css :lang(km) forever, so
+   Khmer headings (admin 'អ្នកប្រើ', dashboard H1 spans) rendered as Inter glyphs.
+   Pair the display face with its Khmer counterpart and reset the Latin tracking —
+   mirror the same selector so it wins the matched cascade identically. */
+h1:lang(km),h2:lang(km),h3:lang(km),h4:lang(km),header strong:lang(km),.billing-head h1:lang(km),.library-head h1:lang(km),.dash-head h1:lang(km),.login h1:lang(km),.account-page h1:lang(km),.auth-page h1:lang(km),.verify-page h1:lang(km){font-family:var(--font-display-km)!important;letter-spacing:normal}
 body:not(.guest) h1{font-weight:800;line-height:1.05;color:var(--app-text)!important}
 body:not(.guest) h2, body:not(.guest) h3{color:var(--app-text)!important}
 body:not(.guest) small{color:var(--app-muted)!important}
