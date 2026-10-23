@@ -13,6 +13,18 @@ body.studio-experience #v20TypographyToolbar {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
+  /* FB-36 target 3: below desktop this strip is a horizontal scroller, but every
+     scrollbar was hidden, so a half-visible cell read as a cut field instead of
+     "scroll for more". Give the strip its own visible thin scrollbar. */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--app-muted, #737680) 55%, transparent) transparent;
+}
+
+body.studio-experience #v20TypographyToolbar::-webkit-scrollbar { height: 5px; }
+body.studio-experience #v20TypographyToolbar::-webkit-scrollbar-track { background: transparent; }
+body.studio-experience #v20TypographyToolbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--app-muted, #737680) 45%, transparent);
+  border-radius: 999px;
 }
 
 body.studio-experience #v20TypographyToolbar.collapsed {
@@ -81,6 +93,10 @@ body.studio-experience .workflow-v4-popover {
 
   body.studio-experience #v20TypographyToolbar:not(.collapsed) {
     max-height: 58px;
+    /* Overlay scrollbars are invisible until scrolled; fade the strip's last
+       16px so the clipped edge reliably reads as "more controls to the right". */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 16px), transparent);
   }
 
   body.studio-experience .studio-nav-label {

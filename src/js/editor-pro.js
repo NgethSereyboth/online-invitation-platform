@@ -79,7 +79,13 @@ function setZoomModel(value,options={}){
  const world=clientToWorld(cursor.x,cursor.y),ratio=zoom-view.zoom;
  return setView({zoom,x:view.x-world.x*ratio,y:view.y-world.y*ratio},{source:options.source||'editor',animate:options.animate??!['wheel','slider','gesture'].includes(options.source)});
 }
-function fitView(){cacheViewGeometry();const zoom=Math.max(.35,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return setView({zoom,x:viewport.scrollLeft,y:viewport.scrollTop},{source:'fit',animate:true})}
+function fitView(){
+ // Fit = scale the artboard into the viewport AND centre it. The transform layer
+ // is anchored off #canvasFrame, whose box is zero-width and shifts between the
+ // boot layout and the final mobile layout, so the analytic translate is only an
+ // approximation: once the tween has finished, measure the rendered stage and
+ // correct the residual once (rAF loop, waits out any in-flight tween/relayout).
+ const computeFit=()=>{cacheViewGeometry();const zoom=Math.max(.35,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return{zoom,x:(viewport.clientLeft||0)+viewport.clientWidth/2+viewport.scrollLeft-stageSize.width*zoom/2,y:(viewport.clientTop||0)+viewport.clientHeight/2+viewport.scrollTop-stageSize.height*zoom/2}};const applied=setView(computeFit(),{source:'fit',animate:true});const deadline=performance.now()+3000;let stable=0,last='',rounds=0;const settle=()=>{if(performance.now()>deadline)return;if(tweenFrame){stable=0;last='';requestAnimationFrame(settle);return}const sr=stage.getBoundingClientRect(),cur=`${sr.left},${sr.top},${sr.width}`;if(cur!==last){stable=0;last=cur;requestAnimationFrame(settle);return}if(++stable<3){requestAnimationFrame(settle);return}const vr=viewport.getBoundingClientRect(),dx=(vr.left+(viewport.clientLeft||0)+viewport.clientWidth/2)-(sr.left+sr.width/2),dy=(vr.top+(viewport.clientTop||0)+viewport.clientHeight/2)-(sr.top+sr.height/2);rounds++;if(rounds>3)return;const fit=computeFit();if(Math.abs(fit.zoom-view.zoom)>.01){stable=0;last='';setView(fit,{source:'fit'});requestAnimationFrame(settle);return}if(Math.abs(dx)>1||Math.abs(dy)>1){stable=0;last='';setView({x:view.x+dx,y:view.y+dy},{source:'fit'});requestAnimationFrame(settle)}};requestAnimationFrame(settle);return applied}
 function refreshView(){cacheViewGeometry();applyView('resize');syncZoomReadout()}
 function beginViewGesture(){stopTween();if(!gestureCount){cacheViewGeometry();if(perfDebug)performance.mark('einvite:gesture:start')}gestureCount++;transform?.classList.add('gesture')}
 function endViewGesture(){if(!gestureCount)return;gestureCount--;if(!gestureCount){transform?.classList.remove('gesture');syncZoomReadout();if(perfDebug)finishPerfSpan('einvite:gesture');scheduleImageWarmup()}}

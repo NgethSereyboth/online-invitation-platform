@@ -1043,7 +1043,12 @@ body[data-page="index"] .studio-pane-heading h2 { font-size: var(--fs-title-xs);
 body[data-page="index"] .studio-pane h2 { font-size: var(--fs-caption); font-weight: var(--fw-caption); letter-spacing: var(--ls-caption); text-transform: uppercase; color: var(--app-faint); }
 
 /* --- Centre canvas: white artboard on surface-2, 40px of air -------------- */
-body[data-page="index"] .stage-wrap { background: var(--app-surface-2); padding: var(--space-10); }
+/* P2-15/VB-04b: this padding must lose to the FB-29 ≤700px mobile contract
+   (`.stage-wrap { padding: 14px }` above) — same specificity, so scope it to the
+   widths where the 40px breathing room is actually wanted. */
+@media (min-width: 701px) {
+  body[data-page="index"] .stage-wrap { padding: var(--space-10); }
+}
 body[data-page="index"] .stage-wrap > .studio-canvas-toolbar { margin-bottom: var(--space-2); }
 body[data-page="index"] #stage.stage {
   background: #fff;
@@ -1609,5 +1614,33 @@ body[data-page="index"] aside#workflowV6Flow b,
 body[data-page="index"] aside#workflowV6Flow p,
 body[data-page="index"] aside#workflowV6Flow .workflow-v6-flow-number,
 body[data-page="index"] aside#workflowV6Flow button { font-size: 11px !important; }
+
+/* P2-15 c) Mobile header text spans: the FB-36 audit (375px) found the
+   header's `<span>` children hidden by `header span { display:none }` in the
+   inline style-loader sheet — the document title span (`.studio-document-title`)
+   and the sidebar-collapse rail glyph (`«`). Both are restored here. The title
+   is restored as a shrinkable one-line ellipsis box (FB-36 target 2), not
+   `display:inline`. Scoped to these two elements only. */
+body[data-page="index"] header .studio-document-title {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body[data-page="index"] header .app-rail-toggle [data-rail-glyph] {
+  display: inline !important;
+}
+
+/* P2-15 b) Editor header fits 375: the v54 topbar row (collapse + home +
+   launcher + title + ••• + inspector + language switch) measures ~489px
+   (probe-geo at 375). Reclaim the window: the app launcher is a duplicate
+   navigation entry behind the sidebar toggle (and renders as an empty square
+   when its dot grid is hidden), the home button drops to its glyph, and the
+   language switch tightens its paddings. */
+@media (max-width: 700px) {
+  body[data-page="index"] .studio-topbar .ui-app-launcher { display: none; }
+  body[data-page="index"] .studio-topbar > .language-switch { display: none; }
+}
 
 }
