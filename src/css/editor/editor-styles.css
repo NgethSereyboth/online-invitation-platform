@@ -1264,17 +1264,22 @@ body[data-page="index"] #documentTitle {
   white-space: nowrap !important;
 }
 
-/* U1-3 · ≤600px the topbar wraps to two rows and measures 126px (375 and 320,
-   probe: header 126 vs stage top 58 — 68px of the second row sat under the
-   editor chrome). The bar is deterministic, so publish the measured height and
-   pin the bar to it; main/panes already inset with this var. */
+/* U1-3 · ≤600px the topbar is measured at a single 52px row (VB-02/FB-28:
+   re-probe 2026-10-23 showed ONE row centred inside a legacy 126px box —
+   68px of dead chrome above the canvas on a 667px screen). The bar keeps its
+   design height and scrolls overflow horizontally; --mobile-header-h, which
+   the fixed side-pane insets read, moves with the height so the contracts
+   never disagree. */
 @media (max-width: 600px) {
-  body[data-page="index"].studio-experience { --mobile-header-h: 126px; }
+  body[data-page="index"].studio-experience { --mobile-header-h: 56px; }
   body[data-page="index"].studio-experience > header.studio-topbar {
-    height: 126px !important;
-    min-height: 126px !important;
-    max-height: 126px !important;
-    overflow: hidden !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
   }
   /* The desktop-only hint must clear the 68px V14 action bar instead of
      rendering under it (probe: hint 569..655, bar 599..667). */

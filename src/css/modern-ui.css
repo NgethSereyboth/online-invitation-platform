@@ -203,13 +203,15 @@ html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-m
   html{font-size:16px}
   body{font-size:16px!important}
   /* (c) Header: dashboard/account/etc. headers have many button-link children
-     that overflow at 375px. Allow wrapping + horizontal scroll as a last resort. */
+     that overflow at 375px. Keep ONE row at the design height and let the bar
+     scroll horizontally instead of wrapping (VB-02/FB-28: wrapping made it
+     113-171 px tall at 320-375 and pushed the page content out of the viewport). */
   body:not(.guest)>header,body:not(.guest) header{
-    flex-wrap:wrap;
-    height:auto;
-    min-height:60px;
-    padding:10px 14px;
-    gap:8px 10px;
+    flex-wrap:nowrap;
+    height:var(--app-topbar-h,56px);
+    min-height:var(--app-topbar-h,56px);
+    padding:8px 12px;
+    gap:8px;
     overflow-x:auto;
     overflow-y:hidden;
     -webkit-overflow-scrolling:touch

@@ -62,7 +62,12 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
      but are retained: 17 and 7 source declarations depend on them and migrating
      those would be a visual change, not a token change. -------------------- */
   --space-1:4px;  --space-2:8px;  --space-3:12px; --space-4:16px; --space-5:20px;
-  --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
+  /* --space-7 (28px) was referenced by canva-ui.css but never defined here. A
+     `padding: var(--space-7)` with an undefined custom property is invalid at
+     computed-value time, which behaves as `unset` — it does NOT fall back to an
+     earlier cascade value. That is why the dashboard auth card and its hero
+     panel rendered with 0 padding instead of 28px (VB-01, FB-28). */
+  --space-6:24px; --space-7:28px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
   --space-24:96px;
 
   /* --- Motion (§1.5) — 150/200/250ms.

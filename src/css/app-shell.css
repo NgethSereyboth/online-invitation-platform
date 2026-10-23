@@ -562,9 +562,12 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 }
 @media (max-width: 480px) {
   body[data-shell="a"] > main { padding: var(--space-3); }
-  /* P1-3: the 56px topbar clipped its own second row, so the language switch (wrapped below
-     the brand + drawer toggle) was invisible at 375/320. Let the bar grow to fit its wrapped rows. */
-  body:not(.guest) > header { height: auto; min-height: var(--app-topbar-h); flex-wrap: wrap; overflow: visible; row-gap: var(--space-2); padding-block: var(--space-2); }
+  /* The ≤480 topbar height/wrap contract is NOT set here. Measured at 375 px with an
+     earlier `flex-wrap: nowrap` in this block: the bar still rendered 113 px tall
+     (VB-02). The winners are organized/styles.css (a bare `header{…}` with
+     `flex-wrap:wrap!important`) and modern-ui.css block (c) (`body:not(.guest)>header`),
+     both bundled after this sheet — a declaration here can never beat them, so the
+     contract for the bar lives in those two sheets instead of being duplicated. */
   .app-crumbs { display: none; }
   /* P1-4: a 48px one-word title ("Administration") was wider than a 320/375 viewport and forced horizontal scroll. */
   body[data-shell="a"] > main h1 { font-size: clamp(1.6rem, 8vw, 2.25rem); overflow-wrap: anywhere; }

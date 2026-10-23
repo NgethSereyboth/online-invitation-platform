@@ -35,16 +35,26 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
 @media (max-width: 540px){
   html{font-size:16px}
   body{font-size:16px!important}
-  /* Header wrapping — the universal header has many button-link children. */
+  /* Header: ONE row, not a wrapped block (VB-02/FB-28). This used to force
+     `wrap` so the universal header's many button-link children would not clip;
+     measured at 375 px that produced a 113-171 px bar on a 667 px screen and
+     pushed the content below the fold. The row keeps its design height and the
+     overflow scrolls horizontally instead, so every control stays reachable. */
   header{
-    flex-wrap:wrap!important;
-    height:auto!important;
-    min-height:60px;
-    padding:10px 14px!important;
-    gap:8px 10px!important;
+    flex-wrap:nowrap!important;
+    height:var(--app-topbar-h,56px)!important;
+    min-height:var(--app-topbar-h,56px);
+    padding:8px 12px!important;
+    gap:8px!important;
     overflow-x:auto;
     -webkit-overflow-scrolling:touch
   }
+  /* The row scrolls, so the clusters must not shrink into each other: letting them
+     shrink squeezed the brand to 76 px and folded the action cluster into two rows
+     inside a 56 px bar (measured at 375 px). */
+  body:not(.guest)>header>*{flex-shrink:0}
+  body:not(.guest)>header .app-topbar-left,
+  body:not(.guest)>header .app-topbar-right{flex-wrap:nowrap}
   header strong{font-size:18px!important;margin-right:auto!important;flex:0 0 auto}
   /* Touch targets ≥ 44×44px (WCAG 2.5.5). */
   button,
