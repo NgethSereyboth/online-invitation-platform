@@ -43,7 +43,11 @@
   </nav>
 <main id="main" class="library-page" tabindex="-1">
   <div class="library-head"><div><h1>Material Library</h1><p class="library-hint">Your account-wide collection of photos, music, and invitation videos.</p></div><button id="refreshBtn" type="button"><span class="i18n i18n-en">Refresh</span><span class="i18n i18n-km khmer-text" lang="km">ធ្វើបច្ចុប្បន្នភាព</span></button></div>
-  <section class="upload-box">
+  <!-- FB-44: hidden from the first paint. ux-refine.js has always collapsed this
+       box behind the "Upload files" toggle at ~450 ms; doing it in the markup
+       means the library stack (toolbar, summary, grid) no longer jumps up 347 px
+       when the toggle appears (materials CLS 0.162 -> measured after the change). -->
+  <section class="upload-box" hidden>
     <h2><span class="i18n i18n-en">Upload material</span><span class="i18n i18n-km khmer-text" lang="km">បញ្ចូលសម្ភារៈ</span></h2>
     <div class="upload-row"><label>Store under invitation<select id="uploadInvitation"></select></label><label>Choose files<input id="uploadFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/mp4,video/mp4,video/webm"></label><button id="uploadBtn" class="primary" type="button"><span class="i18n i18n-en">Upload files</span><span class="i18n i18n-km khmer-text" lang="km">បញ្ចូលឯកសារ</span></button></div>
     <div class="upload-row"><label>Choose a materials folder<input id="uploadFolder" type="file" multiple webkitdirectory directory accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/mp4,video/mp4,video/webm"></label><button id="uploadFolderBtn" type="button"><span class="i18n i18n-en">Import folder</span><span class="i18n i18n-km khmer-text" lang="km">នាំចូលថត</span></button><label>ZIP fallback<input id="uploadZip" type="file" accept=".zip,application/zip,application/x-zip-compressed"></label><button id="uploadZipBtn" type="button"><span class="i18n i18n-en">Import ZIP</span><span class="i18n i18n-km khmer-text" lang="km">នាំចូល ZIP</span></button></div>
