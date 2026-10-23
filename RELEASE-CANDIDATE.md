@@ -180,3 +180,13 @@ OD-9 (core.config keep/drop — recommendation: keep), OD-10 (continue CSS clean
 RSVP splash shortcut — decide on the FB-34 measurement), OD-12 (native Khmer strings).
 
 Push/PR/merge/tag remain forbidden (OD-3 local-only, standing).
+
+### Full gate matrix at close-out (2026-10-23, HEAD `98dcc82`)
+
+`tools/run-gates.py --phase all` → **10/10 phases PASS, `GATES_PASSED`**
+(`artifacts/next-work/gates/20261023-101255/gates.log`): build (`BUILD_OK` + `MIRROR_CHECK_PASSED`),
+bundles, smoke `TOTAL pages=16 consoleErrors=0 non2xx=0`, **layout** `UI_LAYOUT_GUARD_PASSED`
+(new FB-31 phase, first full-matrix green; horizontal-scroll 0 / nameless-control 0),
+pytest **157/0** (346 s), budgets `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED`, LHCI 16/16 minA11y **1.00**,
+**csp** `CSP_CHECK_PASSED`, canvas `pass=22 fail=0 skipped=2` + `CANVAS_MOTION_VERIFY_PASSED`,
+**important** ratchet holds (3823 ≤ pin 3823).
