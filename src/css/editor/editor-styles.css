@@ -1616,20 +1616,17 @@ body[data-page="index"] aside#workflowV6Flow .workflow-v6-flow-number,
 body[data-page="index"] aside#workflowV6Flow button { font-size: 11px !important; }
 
 /* P2-15 c) Mobile header text spans: the FB-36 audit (375px) found the
-   header's `<span>` children hidden by `header span { display:none }` in the
-   inline style-loader sheet — the document title span (`.studio-document-title`)
-   and the sidebar-collapse rail glyph (`«`). Both are restored here. The title
-   is restored as a shrinkable one-line ellipsis box (FB-36 target 2), not
-   `display:inline`. Scoped to these two elements only. */
+   document title span (`.studio-document-title`) and the sidebar-collapse rail
+   glyph (`«`) hidden by the legacy ≤650 `header span{display:none}` rule in
+   `src/css/organized/styles.css`. That hide is now removed at the cause (it also
+   blanked the theme toggle and inspector-drawer glyphs — caught by the FB-38
+   empty-control check), so only the title's one-line ellipsis treatment stays. */
 body[data-page="index"] header .studio-document-title {
   display: block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-body[data-page="index"] header .app-rail-toggle [data-rail-glyph] {
-  display: inline !important;
 }
 
 /* P2-15 b) Editor header fits 375: the v54 topbar row (collapse + home +

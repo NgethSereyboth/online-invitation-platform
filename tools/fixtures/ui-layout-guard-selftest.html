@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ui-layout-guard self-test fixture (deliberately broken)</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  /* Broken canvas: the stage sticks out of the viewport on the right and the
+     floating palette covers ~22% of the artboard. */
+  .canvas-viewport { position: relative; margin: 10px; width: 300px; height: 300px; overflow: hidden; border: 1px solid #ddd; }
+  #stage { position: absolute; left: 250px; top: 0; width: 200px; height: 300px; background: #fff; }
+  .ei-tool-rail { position: absolute; left: 240px; top: 0; width: 120px; height: 120px; background: #eee; }
+  /* Broken control: bordered square with nothing painted inside. */
+  .bordered-empty { width: 44px; height: 44px; border: 1px solid #ccc; background: #fff; }
+  .clipped-strip { width: 80px; }
+</style>
+</head>
+<body>
+  <button class="bordered-empty" aria-label="Empty square" id="empty"></button>
+  <input id="clip" class="clipped-strip" value="this value is much longer than the box">
+  <select id="clipselect" class="clipped-strip">
+    <option selected>A selected option label much wider than the box</option>
+  </select>
+  <div class="canvas-viewport">
+    <div class="ei-tool-rail"></div>
+    <div id="stage"></div>
+  </div>
+  <script>
+    // Deliberately unknown console error: the baseline must not match it.
+    console.error('GUARD-SELFTEST-UNKNOWN console error for the console-baseline negative control');
+  </script>
+</body>
+</html>

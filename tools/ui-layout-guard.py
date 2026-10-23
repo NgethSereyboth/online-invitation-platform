@@ -45,11 +45,13 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "artifacts" / "next-work" / "ui-layout-guard"
+DEFAULT_BASELINE = ROOT / "tools" / "ui-layout-guard.console-baseline.json"
 PASSWORD = "layout-guard-2026"
 
 PAGES = ["dashboard.html", "templates.html", "guests.html", "index.html", "admin.html"]
@@ -74,6 +76,10 @@ MEASURE_JS = r"""
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   };
+  const onScreen = (el) => {
+    const r = el.getBoundingClientRect();
+    return r.right > 0 && r.left < window.innerWidth && r.bottom > 0 && r.top < window.innerHeight;
+  };
   const path = (el) => {
     const bits = [el.tagName.toLowerCase()];
     if (el.id) bits.push('#' + el.id);
@@ -84,7 +90,8 @@ MEASURE_JS = r"""
   };
   const out = { scrollWidth: document.documentElement.scrollWidth, innerWidth: vw,
                 widest: [], nameless: [], headerOverlap: [], headerHeight: null,
-                authPadding: null, authInputInset: null, editor: null };
+                authPadding: null, authInputInset: null, editor: null,
+                emptyControls: [], clippedFields: [] };
 
   // 1. horizontal scroll: name the widest elements that stick out.
   if (document.documentElement.scrollWidth > vw + 1) {
@@ -120,6 +127,63 @@ MEASURE_JS = r"""
     if (!nameOf(el)) out.nameless.push(path(el));
   }
   out.nameless = out.nameless.slice(0, 6);
+
+  // 2b. empty-looking controls (FB-38): a visible bordered button/square that
+  // paints nothing — no text, no svg/img/canvas, no background image, no painted
+  // child. The old "empty squares" were buttons whose only glyph span was
+  // display:none, so innerText is the right emptiness test (it ignores hidden
+  // descendants); aria-label does NOT make a control look non-empty.
+  const paints = (el) => {
+    const s = getComputedStyle(el);
+    for (const pseudo of ['::before', '::after']) {
+      const ps = getComputedStyle(el, pseudo);
+      const c = ps.content;
+      if (c && c !== 'none' && c !== 'normal' && c !== '""') return true;
+    }
+    if (s.backgroundImage && s.backgroundImage !== 'none') return true;
+    if (s.backgroundColor && s.backgroundColor !== 'rgba(0, 0, 0, 0)' && s.backgroundColor !== 'transparent') return true;
+    if (s.boxShadow && s.boxShadow !== 'none') return true;
+    return ['Top', 'Right', 'Bottom', 'Left'].some((side) => {
+      const w = parseFloat(s['border' + side + 'Width']) || 0;
+      const style = s['border' + side + 'Style'];
+      return w > 0 && style && style !== 'none';
+    });
+  };
+  const isScroller = (el) => {
+    let n = el.parentElement;
+    while (n && n !== document.documentElement) {
+      const s = getComputedStyle(n);
+      if ((s.overflowX === 'auto' || s.overflowX === 'scroll') && n.scrollWidth > n.clientWidth + 1) return true;
+      n = n.parentElement;
+    }
+    return false;
+  };
+  for (const el of document.querySelectorAll('button, [role="button"], a[href]')) {
+    if (!visible(el) || !onScreen(el) || !paints(el)) continue;
+    if ((el.innerText || '').trim()) continue;
+    if (el.querySelector('svg, img, canvas, use, picture, video')) continue;
+    const kidsPaint = [...el.querySelectorAll('*')].some((k) => {
+      if (!visible(k)) return false;
+      return paints(k) || (k.innerText || '').trim();
+    });
+    if (!kidsPaint) out.emptyControls.push(path(el));
+  }
+  out.emptyControls = out.emptyControls.slice(0, 6);
+
+  // 2c. controls clipped by their own box (FB-38): an input/select whose text is
+  // cut is fine inside a horizontally scrolling strip (that strip advertises the
+  // overflow), but a hard clip is a defect.
+  for (const el of document.querySelectorAll('input:not([type=hidden]), select, textarea')) {
+    if (!visible(el) || !onScreen(el)) continue;
+    if (el.scrollWidth > el.clientWidth + 1 && !isScroller(el)) {
+      const label = el.id || el.getAttribute('name') || el.getAttribute('type') || '';
+      const host = el.closest('section,form,aside,fieldset');
+      const hostPath = host ? ' in ' + path(host) : '';
+      out.clippedFields.push(path(el) + (label && !el.id ? '#' + label : '') + hostPath +
+                              ' sw=' + el.scrollWidth + ' cw=' + el.clientWidth);
+    }
+  }
+  out.clippedFields = out.clippedFields.slice(0, 6);
 
   // 3. header children overlap + 4. header height.
   const header = document.querySelector('body > header');
@@ -183,6 +247,10 @@ MEASURE_JS = r"""
         if (!text) ed.emptySheets.push(path(el) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
       }
     }
+    // FB-38: artboard visibility at ≤480 — the fitted artboard must sit fully
+    // inside the canvas viewport and the floating palette must stay off it.
+    const art = document.querySelector('#stage');
+    const pal = document.querySelector('nav.ei-tool-rail') || document.querySelector('.ei-tool-rail');
     // toolbar clipping: children must be reachable — scrollable, never clipped.
     for (const el of document.querySelectorAll('.studio-canvas-toolbar, .object-quick-toolbar, .studio-selection-toolbar, #v23ContextToolbar')) {
       if (!visible(el)) continue;
@@ -197,11 +265,103 @@ MEASURE_JS = r"""
       if (s.overflowX === 'visible' && over > 0) ed.clippedToolbars.push(`${path(el)} overflowX=visible +${over}px`);
       if (unreachable) ed.clippedToolbars.push(`${path(el)} overflowX=hidden scrollWidth-elWidth=${el.scrollWidth - el.clientWidth}px`);
     }
+    if (art) {
+      const ar = art.getBoundingClientRect();
+      if (ar.width > 0 && ar.height > 0) {
+        ed.artboardInside = ar.left >= cvr.left - 1 && ar.right <= cvr.right + 1 &&
+                            ar.top >= cvr.top - 1 && ar.bottom <= cvr.bottom + 1;
+        ed.artboard = { x: Math.round(ar.left), y: Math.round(ar.top),
+                        w: Math.round(ar.width), h: Math.round(ar.height) };
+        if (pal && visible(pal)) {
+          const pr = pal.getBoundingClientRect();
+          const ox = Math.max(0, Math.min(ar.right, pr.right) - Math.max(ar.left, pr.left));
+          const oy = Math.max(0, Math.min(ar.bottom, pr.bottom) - Math.max(ar.top, pr.top));
+          ed.paletteOverlapPct = Math.round(1000 * ox * oy / (ar.width * ar.height)) / 10;
+        } else {
+          ed.paletteOverlapPct = 0;
+        }
+      }
+    }
     out.editor = ed;
   }
   return out;
 }
 """
+
+
+def load_seed(path: str) -> dict:
+    """Read the pinned-seed preset (slug/invite_id) the audit tooling reuses."""
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — the guard still runs without a public page
+        return {}
+
+
+def load_console_patterns(path: str) -> list[str]:
+    """Console-baseline patterns: substrings, or `re:<regex>` entries."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — no file means every console error fails
+        return []
+    patterns = data.get("patterns", data if isinstance(data, list) else [])
+    return [p for p in patterns if isinstance(p, str)]
+
+
+def console_matches(message: str, patterns: list[str]) -> bool:
+    for pat in patterns:
+        if pat.startswith("re:"):
+            try:
+                if re.search(pat[3:], message):
+                    return True
+            except re.error:
+                continue
+        elif pat in message:
+            return True
+    return False
+
+
+def run_self_test() -> int:
+    """FB-38 negative control: a deliberately broken fixture must fail each new
+    check and produce the expected signature row. Exit 0 only when all fire."""
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("UI_LAYOUT_GUARD_CANNOT_RUN: playwright missing (use .venv/bin/python)")
+        return 4
+    fixture = ROOT / "tools" / "fixtures" / "ui-layout-guard-selftest.html"
+    if not fixture.is_file():
+        print(f"UI_LAYOUT_GUARD_SELFTEST_MISSING {fixture}")
+        return 4
+    errors: list[str] = []
+    with sync_playwright() as play:
+        browser = play.chromium.launch(headless=True)
+        ctx = browser.new_context(viewport={"width": 375, "height": 667})
+        page = ctx.new_page()
+        page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
+        page.goto(fixture.as_uri(), wait_until="domcontentloaded")
+        page.wait_for_timeout(150)
+        data = page.evaluate(MEASURE_JS)
+        ctx.close()
+        browser.close()
+    rows = rows_for("selftest.html", "375x667", "light", "en", data, signed_in=False)
+    patterns = load_console_patterns(str(DEFAULT_BASELINE))
+    console_fails = [m for m in errors if not console_matches(m, patterns)]
+    failed_checks = {check for check, ok, _ in rows if not ok}
+    expected = {"empty-control", "clipped-field", "editor-artboard"}
+    print("SELFTEST negative control — deliberately broken fixture:")
+    for check, ok, detail in rows:
+        if not ok and check in expected:
+            print(f"  [{check}] {detail}")
+    for msg in console_fails:
+        print(f"  [console-baseline] selftest.html :: {msg[:160]}")
+    missing = expected - failed_checks
+    if not console_fails:
+        missing.add("console-baseline")
+    if missing:
+        print("UI_LAYOUT_GUARD_SELFTEST_FAILED missing=" + ",".join(sorted(missing)))
+        return 1
+    print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, editor-artboard, console-baseline)")
+    return 0
 
 
 def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, signed_in: bool):
@@ -218,6 +378,22 @@ def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, s
 
     rows.append(("nameless-control", not data["nameless"],
                  f"{where} " + (", ".join(data["nameless"]) if data["nameless"] else "none")))
+
+    # FB-38: empty-looking controls (bordered box with nothing painted).
+    empties = data.get("emptyControls") or []
+    if empties:
+        for el in empties:
+            rows.append(("empty-control", False, f"{where} {el}"))
+    else:
+        rows.append(("empty-control", True, f"{where} none"))
+
+    # FB-38: inputs/selects clipped by their own box, outside a scrolling strip.
+    clipped = data.get("clippedFields") or []
+    if clipped:
+        for el in clipped:
+            rows.append(("clipped-field", False, f"{where} {el}"))
+    else:
+        rows.append(("clipped-field", True, f"{where} none"))
 
     rows.append(("header-overlap", not data["headerOverlap"],
                  f"{where} " + ("; ".join(" x ".join(p) for p in data["headerOverlap"])
@@ -248,6 +424,17 @@ def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, s
             rows.append(("editor-toolbar-clip", False, f"{where} {clip}"))
         if not ed["clippedToolbars"]:
             rows.append(("editor-toolbar-clip", True, f"{where} none"))
+
+        # FB-38: ≤480 the fitted artboard must be fully inside the viewport and
+        # the floating palette must not cover more than 10 % of it.
+        if w <= 480 and ed.get("artboardInside") is not None:
+            art = ed.get("artboard") or {}
+            pct = ed.get("paletteOverlapPct")
+            ok = bool(ed.get("artboardInside")) and (pct is None or pct <= 10)
+            rows.append(("editor-artboard", ok,
+                         f"{where} inside={ed.get('artboardInside')} "
+                         f"stage={art.get('x')},{art.get('y')} {art.get('w')}x{art.get('h')} "
+                         f"palette-overlap={pct}%"))
     return rows
 
 
@@ -261,6 +448,10 @@ def main() -> int:
     ap.add_argument("--langs", default=",".join(LANGS))
     ap.add_argument("--settle", type=int, default=350, help="ms after DOMContentLoaded")
     ap.add_argument("--skip-signed-in", action="store_true")
+    ap.add_argument("--slug", default="", help="public invitation slug for /i/<slug> (default: seed preset)")
+    ap.add_argument("--seed-preset", default=str(ROOT / "artifacts" / "next-work" / "fb-35" / "seed-preset.json"))
+    ap.add_argument("--console-baseline", default=str(DEFAULT_BASELINE))
+    ap.add_argument("--self-test", action="store_true", help="run the negative-control fixture for the FB-38 checks")
     args = ap.parse_args()
 
     try:
@@ -268,6 +459,12 @@ def main() -> int:
     except ImportError:
         print("UI_LAYOUT_GUARD_CANNOT_RUN: playwright missing (use .venv/bin/python)")
         return 4
+
+    if args.self_test:
+        return run_self_test()
+
+    seed = load_seed(args.seed_preset)
+    slug = args.slug or seed.get("slug", "")
 
     pages = [p.strip() for p in args.only.split(",") if p.strip()] or PAGES
     viewports = [v.strip() for v in args.viewports.split(",") if v.strip()] or VIEWPORTS
@@ -280,7 +477,20 @@ def main() -> int:
     jsonl.write_text("", encoding="utf-8")
 
     rows = []
-    console_errors = []
+    console_errors: list[tuple[str, str]] = []
+    # FB-38: replaced by the account's own invitation once the signed-in seed exists.
+    active_invite = {"id": ""}
+
+    def hook(page, label: str):
+        def record(m):
+            if m.type != "error":
+                return
+            try:
+                url = (m.location or {}).get("url", "")
+            except Exception:  # noqa: BLE001
+                url = ""
+            console_errors.append((label, (url + ' :: ' if url else '') + m.text))
+        page.on("console", record)
 
     with sync_playwright() as play:
         browser = play.chromium.launch(headless=True)
@@ -288,6 +498,13 @@ def main() -> int:
         def context(width: int, height: int, theme: str, lang: str):
             ctx = browser.new_context(viewport={"width": width, "height": height})
             ctx.add_init_script(INIT_SCRIPT % (theme, lang))
+            # FB-38: the editor cell runs the seeded invitation with the tour seen so
+            # it measures the real fitted canvas, not the first-run overlay.
+            ctx.add_init_script("try{localStorage.setItem('einvite-final-tour-seen-v1','1')}catch{}")
+            if active_invite["id"]:
+                ctx.add_init_script(
+                    "try{localStorage.setItem('sovan-active-invite','" + str(active_invite["id"]) +
+                    "')}catch{}")
             return ctx
 
         # ---- signed-out dashboard (auth-card padding) ---------------------
@@ -297,7 +514,7 @@ def main() -> int:
                 for lang in langs:
                     ctx = context(w, h, theme, lang)
                     page = ctx.new_page()
-                    page.on("console", lambda m: console_errors.append(m.text) if m.type == "error" else None)
+                    hook(page, "dashboard.html")
                     page.goto(f"{base}/dashboard.html", wait_until="domcontentloaded")
                     page.wait_for_timeout(args.settle)
                     if page.locator("#newBtn").count() and page.is_visible("#newBtn"):
@@ -308,12 +525,40 @@ def main() -> int:
                     rows.extend(rows_for("dashboard.html", viewport, theme, lang, data, signed_in=False))
                     ctx.close()
 
+        # ---- public invitation (FB-38): guest page at /i/<slug>, opened state.
+        if slug:
+            for viewport in viewports:
+                w, h = (int(v) for v in viewport.split("x"))
+                for theme in themes:
+                    for lang in langs:
+                        ctx = context(w, h, theme, lang)
+                        page = ctx.new_page()
+                        hook(page, "public.html")
+                        try:
+                            page.goto(f"{base}/i/{slug}", wait_until="domcontentloaded")
+                            page.wait_for_timeout(args.settle)
+                            open_btn = page.get_by_role("button", name="Open invitation").first
+                            if open_btn.count():
+                                try:
+                                    open_btn.click(timeout=4000)
+                                except Exception:  # noqa: BLE001 — guest page may auto-open
+                                    pass
+                                page.wait_for_timeout(args.settle)
+                            data = page.evaluate(MEASURE_JS)
+                        except Exception as exc:  # noqa: BLE001
+                            rows.append(("load:public.html", False,
+                                         f"public.html {viewport} {theme} {lang} {exc}"[:300]))
+                            ctx.close()
+                            continue
+                        rows.extend(rows_for("public.html", viewport, theme, lang, data, signed_in=False))
+                        ctx.close()
+
         # ---- signed-in pages ----------------------------------------------
         if not args.skip_signed_in:
             stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S%f")
             email = f"layout-guard-{stamp}@example.com"
-            seed = context(1440, 900, "light", "en")
-            req = seed.request
+            seed_ctx = context(1440, 900, "light", "en")
+            req = seed_ctx.request
             reg = req.post(f"{base}/api/auth/register", data={"email": email, "password": PASSWORD})
             if not reg.ok:
                 login = req.post(f"{base}/api/auth/login", data={"email": email, "password": PASSWORD})
@@ -321,7 +566,17 @@ def main() -> int:
                     print(f"UI_LAYOUT_GUARD_CANNOT_RUN: could not create account ({reg.status})")
                     browser.close()
                     return 4
-            seed.close()
+            # FB-38: the fresh account needs its own invitation. Pointing
+            # `sovan-active-invite` at the shared seed preset's id made every signed-in
+            # page request an invitation this account cannot read (404s in the console)
+            # and ran the editor against the offline fallback document.
+            created = req.post(f"{base}/api/invitations",
+                               data={"title": "Layout guard seed", "eventType": "wedding"})
+            if created.ok:
+                active_invite["id"] = str((created.json() or {}).get("id") or "")
+            else:
+                print(f"UI_LAYOUT_GUARD_WARN: seed invitation failed ({created.status})")
+            seed_ctx.close()
 
             for viewport in viewports:
                 w, h = (int(v) for v in viewport.split("x"))
@@ -332,10 +587,20 @@ def main() -> int:
                         req.post(f"{base}/api/auth/login", data={"email": email, "password": PASSWORD})
                         for page_name in pages:
                             page = ctx.new_page()
-                            page.on("console", lambda m: console_errors.append(m.text) if m.type == "error" else None)
+                            hook(page, page_name)
                             try:
                                 page.goto(f"{base}/{page_name}", wait_until="domcontentloaded")
                                 page.wait_for_timeout(args.settle)
+                                if page_name == "index.html":
+                                    # Wait for the editor to report ready, then let
+                                    # the fit tween and its settle pass finish.
+                                    try:
+                                        page.wait_for_function(
+                                            "() => document.documentElement.dataset.editorReady === 'true'",
+                                            timeout=8000)
+                                    except Exception:  # noqa: BLE001
+                                        pass
+                                    page.wait_for_timeout(args.settle + 900)
                                 data = page.evaluate(MEASURE_JS)
                             except Exception as exc:  # noqa: BLE001
                                 rows.append((f"load:{page_name}", False,
@@ -347,6 +612,17 @@ def main() -> int:
                         ctx.close()
 
         browser.close()
+
+    # FB-38: console baseline — every error must match a committed pattern.
+    patterns = load_console_patterns(args.console_baseline)
+    unmatched = [(label, msg) for label, msg in console_errors
+                 if not console_matches(msg, patterns)]
+    if unmatched:
+        for label, msg in unmatched[:12]:
+            rows.append(("console-baseline", False, f"{label} :: {msg[:180]}"))
+    else:
+        rows.append(("console-baseline", True,
+                     f"{len(console_errors)} console error(s), all baseline-known"))
 
     with jsonl.open("w", encoding="utf-8") as fh:
         for check, ok, detail in rows:
