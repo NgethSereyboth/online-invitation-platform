@@ -10,14 +10,17 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
 html{font-size:16px}
 body{font-size:16px!important}
 header{
-flex-wrap:wrap!important;
-height:auto!important;
-min-height:60px;
-padding:10px 14px!important;
-gap:8px 10px!important;
+flex-wrap:nowrap!important;
+height:var(--app-topbar-h,56px)!important;
+min-height:var(--app-topbar-h,56px);
+padding:8px 12px!important;
+gap:8px!important;
 overflow-x:auto;
 -webkit-overflow-scrolling:touch
 }
+body:not(.guest)>header>*{flex-shrink:0}
+body:not(.guest)>header .app-topbar-left,
+body:not(.guest)>header .app-topbar-right{flex-wrap:nowrap}
 header strong{font-size:18px!important;margin-right:auto!important;flex:0 0 auto}
 button,
 a.button-link,
@@ -256,11 +259,11 @@ html[data-theme="dark"] body:not(:has(.guest))>header{box-shadow:0 1px 0 color-m
 html{font-size:16px}
 body{font-size:16px!important}
 body:not(.guest)>header,body:not(.guest) header{
-flex-wrap:wrap;
-height:auto;
-min-height:60px;
-padding:10px 14px;
-gap:8px 10px;
+flex-wrap:nowrap;
+height:var(--app-topbar-h,56px);
+min-height:var(--app-topbar-h,56px);
+padding:8px 12px;
+gap:8px;
 overflow-x:auto;
 overflow-y:hidden;
 -webkit-overflow-scrolling:touch
@@ -868,7 +871,7 @@ html[data-theme="dark"]{--surface-0:#111218;--surface-1:#191a21;--surface-2:#202
 --fs-display-lg:64px; --lh-display-lg:1.1; --ls-display-lg:var(--tracking-tight); --fw-display-lg:400;
 --fs-hero:80px; --lh-hero:1.1; --ls-hero:var(--tracking-tight); --fw-hero:400;
 --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
---space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
+--space-6:24px; --space-7:28px; --space-8:32px; --space-10:40px; --space-12:48px; --space-16:64px;
 --space-24:96px;
 --motion-1:150ms; --motion-2:200ms; --motion-3:250ms;
 --ease-out:cubic-bezier(0.2,0,0,1);
@@ -1386,7 +1389,6 @@ body.rail-collapsed .app-rail a .i18n { position: absolute; width: 1px; height: 
 }
 @media (max-width: 480px) {
 body[data-shell="a"] > main { padding: var(--space-3); }
-body:not(.guest) > header { height: auto; min-height: var(--app-topbar-h); flex-wrap: wrap; overflow: visible; row-gap: var(--space-2); padding-block: var(--space-2); }
 .app-crumbs { display: none; }
 body[data-shell="a"] > main h1 { font-size: clamp(1.6rem, 8vw, 2.25rem); overflow-wrap: anywhere; }
 code { overflow-wrap: anywhere; }

@@ -1212,6 +1212,17 @@ body.windows-ui-v54 .ei-tool-rail { scrollbar-width: none; -ms-overflow-style: n
 body.windows-ui-v54 .ei-tool-rail::-webkit-scrollbar { display: none; width: 0; height: 0; }
 body.windows-ui-v54 .final-tour,
 body.windows-ui-v54 .final-tour * { transition-property: transform, opacity; transition-duration: .16s; }
+@media (max-width: 700px) {
+body.studio-experience .stage-wrap { padding: 14px 14px 14px; }
+body.studio-experience .v54-canvas-hud {
+position: absolute; inset: auto 8px 8px; margin: 0;
+z-index: 40;
+background: var(--app-surface, #fff);
+border: 1px solid var(--app-line, #e4e4e9);
+border-radius: 14px;
+box-shadow: 0 12px 30px rgba(20, 24, 36, .14);
+}
+}
 @media (max-width: 640px) {
 body.windows-ui-v54 .stage-wrap > .workflow-page-dock {
 left: auto; right: auto; transform: none;

@@ -46,7 +46,17 @@ function fit(outer,model={},options={}){
  // any edit that could move the result still recomputes.
  const fitKey=`${Math.round(available.width)}x${Math.round(available.height)}|${options.set===false?'probe':'apply'}|${JSON.stringify(model)}`;
  const fitCached=outer.__typographyFitCache;
- if(fitCached&&fitCached.key===fitKey)return{...fitCached.result};
+ if(fitCached&&fitCached.key===fitKey){
+  // A hit still has to leave the DOM in the fitted state. applyToElement runs
+  // on every pass (modelFor in the editor), which resets the inline font-size
+  // to the auto-fit maximum; skipping the rewrite here left the element at max
+  // size with the fitted value only in the dataset, and the final state became
+  // dependent on whether a cache miss happened to come last (FB-29 race: the
+  // title rendered at 88px on some loads, 41.6px on others, same seed).
+  outer.style.fontSize=`${fitCached.result.computedSize}px`;
+  outer.dataset.textComputedFontSize=String(fitCached.result.computedSize);
+  return{...fitCached.result};
+ }
  const min=finite(model.textMinFontSize,10,8,72),max=finite(model.textAutoFitMax,model.fontSize,Math.max(8,min),200),old=outer.style.fontSize,oldComputed=outer.dataset.textComputedFontSize;
  const fitLargest=globalThis.EInviteTypography?.fitLargest||(({min})=>min);
  const computed=fitLargest({min,max,steps:16,fits:size=>{outer.style.fontSize=`${size}px`;return!measurement(outer).overflow}});

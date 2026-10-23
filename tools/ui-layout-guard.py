@@ -16,6 +16,12 @@ into a pass/fail matrix the gate runner can enforce:
   * **header height** — at ≤ 400 px wide, the header must stay ≤ 96 px (FB-28).
   * **auth-card padding** — on the signed-out dashboard the card's inner padding
     and every input's inset must be at least 16 px (VB-01 acceptance).
+  * **editor contract** — on index.html (FB-29): at ≤ 440 px the canvas
+    (`.canvas-viewport`) must occupy ≥ 50 % of the viewport height; toolbars
+    must scroll (overflow-x auto/scroll) instead of clipping children; and on
+    the tablet band (721–1024 px) no empty opaque sheet may cover the canvas —
+    the "big empty white panel" class. A sheet counts as empty when its
+    textContent is whitespace-only and it has no content-bearing descendants.
 
 Matrix: `--pages` × `--viewports` (320/375/768/1024/1440 by default) ×
 `--themes light,dark` × `--langs en,km`. The signed-out dashboard is measured in
@@ -78,7 +84,7 @@ MEASURE_JS = r"""
   };
   const out = { scrollWidth: document.documentElement.scrollWidth, innerWidth: vw,
                 widest: [], nameless: [], headerOverlap: [], headerHeight: null,
-                authPadding: null, authInputInset: null };
+                authPadding: null, authInputInset: null, editor: null };
 
   // 1. horizontal scroll: name the widest elements that stick out.
   if (document.documentElement.scrollWidth > vw + 1) {
@@ -153,6 +159,46 @@ MEASURE_JS = r"""
     }
     out.authInputInset = inset;
   }
+
+  // 6. editor contract (FB-29), index.html only.
+  const cv = document.querySelector('.canvas-viewport');
+  if (cv) {
+    const cvr = cv.getBoundingClientRect();
+    const ed = { vw, vh, canvasTop: Math.round(cvr.top), canvasH: Math.round(cvr.height),
+                 emptySheets: [], clippedToolbars: [] };
+    if (cvr.height > 0) ed.canvasShare = Math.round(100 * cvr.height / vh);
+    // empty sheet: opaque background, covers the canvas centre, zero content.
+    const mid = { x: cvr.left + cvr.width / 2, y: cvr.top + cvr.height / 2 };
+    if (cvr.width > 0 && cvr.height > 0) {
+      for (const el of document.querySelectorAll('div,aside,section')) {
+        if (!visible(el) || el === cv || el.contains(cv)) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < vw * 0.4 || r.height < 80) continue;
+        if (!(r.left <= mid.x && r.right >= mid.x && r.top <= mid.y && r.bottom >= mid.y)) continue;
+        const s = getComputedStyle(el);
+        const bg = s.backgroundColor;
+        if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') continue;
+        if (s.pointerEvents === 'none') continue;
+        const text = (el.textContent || '').trim();
+        if (!text) ed.emptySheets.push(path(el) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+      }
+    }
+    // toolbar clipping: children must be reachable — scrollable, never clipped.
+    for (const el of document.querySelectorAll('.studio-canvas-toolbar, .object-quick-toolbar, .studio-selection-toolbar, #v23ContextToolbar')) {
+      if (!visible(el)) continue;
+      const r = el.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      let over = 0;
+      for (const c of el.querySelectorAll('*')) {
+        const cr = c.getBoundingClientRect();
+        if (cr.width > 0 && cr.right > r.right + 1) over = Math.max(over, Math.round(cr.right - r.right));
+      }
+      const unreachable = s.overflowX === 'hidden' && el.scrollWidth > el.clientWidth + 1;
+      if (s.overflowX === 'visible' && over > 0) ed.clippedToolbars.push(`${path(el)} overflowX=visible +${over}px`);
+      if (unreachable) ed.clippedToolbars.push(`${path(el)} overflowX=hidden scrollWidth-elWidth=${el.scrollWidth - el.clientWidth}px`);
+    }
+    out.editor = ed;
+  }
   return out;
 }
 """
@@ -188,6 +234,20 @@ def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, s
         if data["authInputInset"] is not None:
             rows.append(("auth-input-inset", data["authInputInset"] >= 16,
                          f"{where} input-inset={data['authInputInset']}px"))
+
+    ed = data.get("editor")
+    if ed:
+        if w <= 440 and ed.get("canvasShare") is not None:
+            rows.append(("editor-canvas-share", ed["canvasShare"] >= 50,
+                         f"{where} canvas-share={ed['canvasShare']}% (top={ed['canvasTop']}px h={ed['canvasH']}px)"))
+        for sheet in ed["emptySheets"]:
+            rows.append(("editor-empty-sheet", False, f"{where} {sheet}"))
+        if not ed["emptySheets"] and 721 <= w <= 1024:
+            rows.append(("editor-empty-sheet", True, f"{where} none"))
+        for clip in ed["clippedToolbars"]:
+            rows.append(("editor-toolbar-clip", False, f"{where} {clip}"))
+        if not ed["clippedToolbars"]:
+            rows.append(("editor-toolbar-clip", True, f"{where} none"))
     return rows
 
 
