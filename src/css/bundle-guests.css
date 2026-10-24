@@ -1527,7 +1527,7 @@ background: var(--app-surface); color: var(--app-muted);
 width: 100%; border: 0; background: transparent; color: var(--app-text);
 font-size: var(--fs-body-md); padding: 0; min-height: 32px;
 }
-.app-search input:focus { outline: none; }
+.app-search input:focus { outline: none; box-shadow: var(--app-ring); }
 body[data-page="dashboard"] #inviteGrid {
 display: grid;
 grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

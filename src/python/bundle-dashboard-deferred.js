@@ -51,7 +51,7 @@
     overlay.className = 'delivery-dialog-overlay';
     overlay.innerHTML = `
       <div class="delivery-dialog" role="dialog" aria-modal="true" aria-label="${esc(STRINGS.title.en)}">
-        <header><h2>${langText('title', lang)}</h2><button type="button" data-close>&times;</button></header>
+        <header><h2>${langText('title', lang)}</h2><button type="button" data-close aria-label="Close">&times;</button></header>
         <p class="muted">${langText('intro', lang)}</p>
         <form>
           <fieldset>

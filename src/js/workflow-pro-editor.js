@@ -85,7 +85,7 @@ function arrange(action){
   }
 }
 const position=document.createElement('section');position.id='workflowV6Position';position.className='workflow-v6-popover workflow-v6-position';position.innerHTML=`
-  <header><div><small>Professional layout</small><strong>Position & arrange</strong></div><button type="button" data-v6-close>×</button></header>
+  <header><div><small>Professional layout</small><strong>Position & arrange</strong></div><button type="button" data-v6-close aria-label="Close position and arrange">×</button></header>
   <div class="workflow-v6-position-status">Select an object to use positioning tools.</div>
   <section><h3>Align to page</h3><div class="workflow-v6-icon-grid six">
     <button data-page-align="left" title="Align left edge">⇤</button><button data-page-align="hcenter" title="Center horizontally">↔</button><button data-page-align="right" title="Align right edge">⇥</button>
@@ -171,7 +171,7 @@ stage.addEventListener('drop',e=>{
 const sectionMeta={gallery:['Gallery','▧'],video:['Featured video','▶'],countdown:['Countdown','◷'],schedule:['Schedule','☷'],custom:['Content blocks','▦'],venue:['Venue & maps','⌖'],contact:['Contact','☎'],wishes:['Guest wishes','♡'],rsvp:['RSVP','✓']};
 function pageForToken(token){if(!String(token).startsWith('page:'))return null;const id=String(token).slice(5);return state?.designPages?.find(p=>p.id===id)||null}
 function tokenMeta(token){const page=pageForToken(token);return page?[page.name||'Visual page','▣']:sectionMeta[token]||[String(token),'◇']}
-const flow=document.createElement('aside');flow.id='workflowV6Flow';flow.className='workflow-v6-flow';flow.innerHTML=`<header><div><small>Published invitation</small><strong>Invitation flow</strong></div><button type="button" data-flow-close>×</button></header><p>Drag sections and pages to change the order guests see them.</p><div class="workflow-v6-flow-fixed"><span>1</span><b>Opening / main hero</b><small>Fixed opening</small></div><div class="workflow-v6-flow-list"></div>`;document.body.append(flow);
+const flow=document.createElement('aside');flow.id='workflowV6Flow';flow.className='workflow-v6-flow';flow.innerHTML=`<header><div><small>Published invitation</small><strong>Invitation flow</strong></div><button type="button" data-flow-close aria-label="Close invitation flow">×</button></header><p>Drag sections and pages to change the order guests see them.</p><div class="workflow-v6-flow-fixed"><span>1</span><b>Opening / main hero</b><small>Fixed opening</small></div><div class="workflow-v6-flow-list"></div>`;document.body.append(flow);
 function currentOrder(){try{return [...(state.sectionOrder||[])]}catch{return[]}}
 function writeOrder(order){try{
   const unique=[...new Set(order)].filter(Boolean);state.sectionOrder=unique;

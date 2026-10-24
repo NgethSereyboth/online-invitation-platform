@@ -784,7 +784,9 @@ body[data-page="dashboard"] .dash-quickstart button .i18n:first-of-type:empty { 
   width: 100%; border: 0; background: transparent; color: var(--app-text);
   font-size: var(--fs-body-md); padding: 0; min-height: 32px;
 }
-.app-search input:focus { outline: none; }
+.app-search input:focus { outline: none; box-shadow: var(--app-ring); }
+/* The ring is the focus replacement: `outline: none` alone would leave the search
+   field with no visible focus (the container is the control's only shape). */
 
 /* Card grid: uniform 280px cards, 20px gutter, no ragged rows. */
 body[data-page="dashboard"] #inviteGrid {

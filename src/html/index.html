@@ -103,7 +103,7 @@
       <button id="previewBtn"><span class="i18n i18n-en">Guest preview</span><span class="i18n i18n-km khmer-text" lang="km">Guest preview</span></button>
       <button id="publishBtn" class="primary"><span class="i18n i18n-en">Publish snapshot</span><span class="i18n i18n-km khmer-text" lang="km">Publish snapshot</span></button>
       <button id="eiAiTopButton" class="primary" data-deferred-tool="ai" data-open-ai="write" title="Open AI Project Operator (Ctrl/Cmd + .)">AI</button>
-      <button id="studioCommandBtn" title="Command palette">⌘K</button>
+      <button id="studioCommandBtn" title="Command palette" aria-label="Command palette">⌘K</button>
       <button id="v54InspectorDrawer" class="app-drawer-toggle" type="button" title="Inspector" aria-label="Toggle inspector" aria-expanded="false"><span aria-hidden="true">▤</span></button>
     </div>
   </header>
@@ -304,9 +304,9 @@ rsvp</textarea></label>
           <option value="1280x720">YouTube Thumbnail 1280×720</option>
         </select>
         <span class="toolbar-divider"></span>
-        <button id="zoomOut" title="Zoom out">−</button>
+        <button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
         <label class="sr-only" for="zoomLevel"><span class="i18n i18n-en">Canvas zoom</span><span class="i18n i18n-km khmer-text" lang="km">Canvas zoom</span></label><select id="zoomLevel" aria-label="Canvas zoom"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>
-        <button id="zoomIn" title="Zoom in">+</button><button id="fitCanvas">Fit</button>
+        <button id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button><button id="fitCanvas">Fit</button>
         <button id="panToggle" aria-pressed="false" title="Pan canvas (or hold Space)">Hand</button>
         <button id="rulersToggle" aria-pressed="false">Rulers</button><button id="safeMarginToggle" aria-pressed="false">Safe margins</button><span class="toolbar-divider"></span><button id="copyObjects" title="Copy selected objects (Ctrl/Cmd+C)">Copy</button><button id="pasteObjects" title="Paste objects (Ctrl/Cmd+V)">Paste</button>
         <span id="activeCanvasLabel">Main hero canvas</span>
@@ -368,7 +368,7 @@ rsvp</textarea></label>
         </div>
         <h2 align-group="position">Alignment</h2>
         <div id="alignment-grid">
-        <button data-align="left" title="Align left">⇤</button><button data-align="center" title="Align horizontal centers">↔</button><button data-align="right" title="Align right">⇥</button>
+        <button data-align="left" title="Align left" aria-label="Align left">⇤</button><button data-align="center" title="Align horizontal centers" aria-label="Align horizontal centers">↔</button><button data-align="right" title="Align right" aria-label="Align right">⇥</button>
         <button data-align="top" title="Align top">⇧</button><button data-align="middle" title="Align vertical centers">↕</button><button data-align="bottom" title="Align bottom">⇩</button>
         <button data-distribute="horizontal" title="Distribute horizontally">H</button><button data-distribute="vertical" title="Distribute vertically">V</button>
         </div>
@@ -395,13 +395,13 @@ rsvp</textarea></label>
         <div class="actions"><button id="groupObjects">Group</button><button id="ungroupObjects">Ungroup</button></div>
         <h2>Align selected</h2>
         <div class="alignment-grid">
-          <button data-align="left" title="Align left">⇤</button><button data-align="center" title="Align horizontal centers">↔</button><button data-align="right" title="Align right">⇥</button>
+          <button data-align="left" title="Align left" aria-label="Align left">⇤</button><button data-align="center" title="Align horizontal centers" aria-label="Align horizontal centers">↔</button><button data-align="right" title="Align right" aria-label="Align right">⇥</button>
           <button data-align="top" title="Align top">⇧</button><button data-align="middle" title="Align vertical centers">↕</button><button data-align="bottom" title="Align bottom">⇩</button>
           <button data-distribute="horizontal" title="Distribute horizontally">H</button><button data-distribute="vertical" title="Distribute vertically">V</button>
         </div>
         <button id="duplicate">Duplicate</button><button id="deleteBtn" class="danger">Delete</button>
         <h2>Fine position</h2>
-        <div class="actions"><button data-nudge="up">↑</button><button data-nudge="left">←</button><button data-nudge="right">→</button><button data-nudge="down">↓</button><button data-size="smaller">− Size</button><button data-size="larger">+ Size</button></div>
+        <div class="actions"><button data-nudge="up" aria-label="Nudge up">↑</button><button data-nudge="left" aria-label="Nudge left">←</button><button data-nudge="right" aria-label="Nudge right">→</button><button data-nudge="down" aria-label="Nudge down">↓</button><button data-size="smaller">− Size</button><button data-size="larger">+ Size</button></div>
       </div>
       </div>
       <h2>Layers</h2><div id="layersPanel" class="layers-panel"></div>

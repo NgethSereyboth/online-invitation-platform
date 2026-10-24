@@ -34,8 +34,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 261931,
-      "styleSha256": "215b230d8f5edf7c4854f87bb1c42afeb87540a92bd262de7eda82f81f82f7ce",
+      "styleBytes": 261960,
+      "styleSha256": "2049d126d4c4bc2542a1f9ae115d9e42124e2a9d436d943c8c6b1d9b6501a161",
       "stylesheet": "bundle-account.css"
     },
     "admin.html": {
@@ -89,8 +89,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262414,
-      "styleSha256": "f9be14ecf879627972295ae3ac76e8cca9c84878c1bf698b704aa573ae0c9db7",
+      "styleBytes": 262443,
+      "styleSha256": "ec4477ff8ac67627cd93e6b144e7969aceb877c9d7ea2d40c000c207b86b4a4a",
       "stylesheet": "bundle-admin.css"
     },
     "analytics.html": {
@@ -127,8 +127,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262587,
-      "styleSha256": "4ff4230d69a74f3e8f241c874879d788f5b3347af0148fbd06990a5db26a6bcd",
+      "styleBytes": 262616,
+      "styleSha256": "1f3dc0648e06b1038c90af9517cf7d1543c60ea789f44861b28366f1a57ec375",
       "stylesheet": "bundle-analytics.css"
     },
     "billing.html": {
@@ -162,8 +162,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 264085,
-      "styleSha256": "42bc7843c491f26369fb126c08b34096fb9fa90033c7d5aa697df79177b48923",
+      "styleBytes": 264114,
+      "styleSha256": "caa5db48401df0b7868b82f0730ba9c8c640ae34a27027ef0aed9ebc37f11d4b",
       "stylesheet": "bundle-billing.css"
     },
     "checkin.html": {
@@ -190,14 +190,14 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 131755,
-      "styleSha256": "f3ff5962c04ea4c7954e5ce109b317262442ebf841d26b6aeaa243ab6ca32ffc",
+      "styleBytes": 131784,
+      "styleSha256": "2aea89f9c19da4debe4c70664d9199c5890369fb3ce0408df03ed6f92904007e",
       "stylesheet": "bundle-checkin.css"
     },
     "dashboard.html": {
       "deferredJavascript": "bundle-dashboard-deferred.js",
-      "deferredJavascriptBytes": 24748,
-      "deferredJavascriptSha256": "843c36bf0072c2e4639f0b2007d2df08dddb47e69bdc2f0d22dddc1972dda75d",
+      "deferredJavascriptBytes": 24767,
+      "deferredJavascriptSha256": "623d13922e4c4032d83cc034a6b12d61f2ab0855bcadcc10e0f2a79afe307b22",
       "deferredStylesheet": "bundle-dashboard-deferred.css",
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -258,8 +258,8 @@
           "toast.css"
         ]
       },
-      "styleBytes": 315748,
-      "styleSha256": "d7c6d4fc7d53c12480e65a578304beec1f8d3af09c0d38a573470f7e3a66bead",
+      "styleBytes": 315777,
+      "styleSha256": "bfcc061aeaa0726e70c6889d39fdd8dc124af914c9547aef8a47faaa207788d1",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -295,8 +295,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 288752,
-      "styleSha256": "b3abce21aef796bde89d3c108ac0119c6792380d45ce34a0cd9f0756378cf7fe",
+      "styleBytes": 288781,
+      "styleSha256": "458d81a3476aefe1a944a51c35b30eb8363a7c8d48365dac1557a6f48b3e854b",
       "stylesheet": "bundle-designer.css"
     },
     "guests.html": {
@@ -333,20 +333,20 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262636,
-      "styleSha256": "f2f274b32669fd99a78af62f53a3720859e6f8d611740750693188dc0a622112",
+      "styleBytes": 262665,
+      "styleSha256": "f54bc1475b3c21cd97cba5c5ec59fdda030203eaf7a822105f016d7988d95cf7",
       "stylesheet": "bundle-guests.css"
     },
     "index.html": {
       "deferredJavascript": "bundle-index-deferred.js",
-      "deferredJavascriptBytes": 147843,
-      "deferredJavascriptSha256": "d0d60e46f971c22b9b7855f618ba21fa9b89fbd0759d5e00858aa603d675e1f3",
+      "deferredJavascriptBytes": 147918,
+      "deferredJavascriptSha256": "6d0f89f9460d6a7eb122df4f9e27ecb7a0494f52b3c8b94893e8630472b71999",
       "deferredStylesheet": "bundle-index-deferred.css",
       "deferredStylesheetBytes": 51075,
       "deferredStylesheetSha256": "da749eebb8c336d4ea05f7edc422c28e5d0fdae09e30cf34aaa4fc862ab62357",
       "javascript": "bundle-index.js",
-      "scriptBytes": 1066831,
-      "scriptSha256": "8e8e8be22469c7f7b6f7a2ca2bc6f46aa066d79b23a8d741872b9a88015c354e",
+      "scriptBytes": 1066948,
+      "scriptSha256": "b848717050c37664af115dd81629b6ed0bf39688d9b0cfb96badab1519ecd218",
       "sources": {
         "deferredScripts": [
           "workflow-refine.js",
@@ -457,8 +457,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 445097,
-      "styleSha256": "68e92294ba7945f6038d299a14d1f238c3b1e394923834c6e0fd04dcf2e3aabd",
+      "styleBytes": 445126,
+      "styleSha256": "6b4e4bad0ff2f26fd8d49bf4b9246c1c423d7eef3dfb34e3942cf1cc4883e586",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
@@ -510,8 +510,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 282098,
-      "styleSha256": "0aec6853463b1734a59e4321db42b947b0417af895c3baaaa40c75ed3f7951cd",
+      "styleBytes": 282127,
+      "styleSha256": "f73e01f7e9df794c11b5106174ddcf124631d3343d2e18658b7d1cf3005fa893",
       "stylesheet": "bundle-materials.css"
     },
     "privacy.html": {
@@ -533,8 +533,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 154175,
-      "styleSha256": "cf0977c1c3b34c536aafc702094c7dd4e3cd82f252b87589b679af20961e89b5",
+      "styleBytes": 154204,
+      "styleSha256": "bb6eba7050600ad8e2527c8eebb18436639b9bdf28cd3beeaee85d7efdc7e808",
       "stylesheet": "bundle-privacy.css"
     },
     "public.html": {
@@ -588,8 +588,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 134114,
-      "styleSha256": "a3376657ca4cef2aaa1331da308077e1a8889465f0e2892cf52610c951783972",
+      "styleBytes": 134143,
+      "styleSha256": "d3fd9b66bb3e898beb23125c7a844c1a3729b2e56cf0b99e469f15f0400ea9b5",
       "stylesheet": "bundle-public.css"
     },
     "reset.html": {
@@ -623,8 +623,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 259887,
-      "styleSha256": "cffb6b5be5f59ae3103ee91f369703593a3442af41936c199bfceb2544b18991",
+      "styleBytes": 259916,
+      "styleSha256": "85f2bb74049172367d41e4186002fa9fdb5f71c21c47d95bfc51e67bc8237548",
       "stylesheet": "bundle-reset.css"
     },
     "responses.html": {
@@ -662,8 +662,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262588,
-      "styleSha256": "fe86ce30454718690d9c31e9eb65262354e99acd70379787dcf08b95c5df8f4f",
+      "styleBytes": 262617,
+      "styleSha256": "beb07f80e58ae3e56ed0ef831a3c38bf7a223169cd14bcc53928f0821c3f5f30",
       "stylesheet": "bundle-responses.css"
     },
     "templates.html": {
@@ -701,8 +701,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 292889,
-      "styleSha256": "bedd5447d554cd87e28121ae64a5bc1b7ea6a1e821415658f5587395560f2c77",
+      "styleBytes": 292918,
+      "styleSha256": "406705b226c84fc96c1a66d06353bfe96b4c6bbe853a773adad71d99a24098d2",
       "stylesheet": "bundle-templates.css"
     },
     "verify.html": {
@@ -736,8 +736,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 259784,
-      "styleSha256": "4308a191733feaf7b13f75319792e9d695f13a5ad78decf5f7478031db44272a",
+      "styleBytes": 259813,
+      "styleSha256": "f9ad8de7b464116252d4c3acc9144b51d260a91cb32bad1f36b4be71f11493d1",
       "stylesheet": "bundle-verify.css"
     }
   },

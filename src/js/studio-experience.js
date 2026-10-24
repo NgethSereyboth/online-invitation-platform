@@ -463,7 +463,7 @@
   designCheck.innerHTML = `
     <div class="studio-command-backdrop"></div>
     <section class="studio-check-dialog" role="dialog" aria-modal="true" aria-label="Invitation design check">
-      <header><div><small>Invitation quality</small><h2>Design check</h2></div><button type="button" data-close-check>×</button></header>
+      <header><div><small>Invitation quality</small><h2>Design check</h2></div><button type="button" data-close-check aria-label="Close design check">×</button></header>
       <div class="studio-check-score"><div class="studio-score-ring"><strong id="studioCheckScore">0</strong><span>/ 100</span></div><div><strong id="studioCheckSummary">Reviewing your invitation…</strong><p>Checks content, guest experience, accessibility and publishing readiness.</p></div></div>
       <div class="studio-check-list" id="studioCheckList"></div>
       <footer><button type="button" data-close-check>Close</button><button type="button" class="primary" id="studioPreviewFromCheck">Preview as guest</button></footer>
