@@ -16,7 +16,12 @@
    ========================================================================= */
 
 /* --- 1. Base ------------------------------------------------------------- */
-html { -webkit-text-size-adjust: 100%; }
+/* FB-51: native selects, scrollbars and form controls follow the page theme from the
+   first paint. The theme controller still writes the same value inline when it resolves
+   a stored preference, so this only decides what the browser paints before that runs
+   (and on pages that never load the controller). */
+html { -webkit-text-size-adjust: 100%; color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
 body {
   margin: 0;
   font-family: var(--font-latin);
@@ -585,6 +590,19 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
   /* The first grid track was still fixed at --app-topbar-h, so the taller header was clipped. */
   html body[data-shell="a"] { grid-template-rows: auto minmax(0, 1fr) auto; }
   html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
+}
+/* FB-51: on a phone the topbar is one clipped row — measured at 375 on guests and admin:
+   header scrollWidth 565 vs clientWidth 375, `overflow-x: hidden`, and the rightmost control
+   cut mid-glyph. The editor's typography strip solves the same signal problem with a
+   16px right-edge mask; this is the same treatment for the two pages whose header carries
+   an action button after the drawer toggle. Mask, not a gradient overlay: it fades the
+   bar's own background too, so the cut edge cannot read as a disabled control. */
+@media (max-width: 540px) {
+  body[data-page="guests"] > header,
+  body[data-page="admin"] > header {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+  }
 }
 
 /* --- 12. Motion preferences -------------------------------------------- */
