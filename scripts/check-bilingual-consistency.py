@@ -558,11 +558,10 @@ KHMER_BLOCK_RANGES: Tuple[Tuple[int, int], ...] = ((0x1780, 0x17FF), (0x19E0, 0x
 # ``[known-damage]`` and are escalated as OD-12 in artifacts/next-work/DECISIONS.md.
 # Format: (file name, where). Remove an entry once a native speaker supplies the
 # corrected text; a new, unlisted hit always fails the check.
-KNOWN_FOREIGN_SCRIPT_DAMAGE: Set[Tuple[str, str]] = {
-    ("chart.js", "km: desktop"),                 # ដេស្គトップ — Katakana ッ ト プ
-    ("users.js", "km: confirmForceMfa"),         # …ឡុកអិន下一次 — CJK 下一次
-    ("analytics.js", "km: purgeConfirm"),        # …អ一刀មិនអាច… — CJK 一刀
-}
+KNOWN_FOREIGN_SCRIPT_DAMAGE: Set[Tuple[str, str]] = set()
+# Empty since FB-54: the three damaged strings (chart.js desktop, users.js
+# confirmForceMfa, analytics.js purgeConfirm) were repaired from the owner's
+# translation map. A new hit always fails again.
 
 
 @dataclass
@@ -656,6 +655,150 @@ def find_foreign_script(root: Path, file_reports: List[FileReport]) -> List[Fore
 
     hits.sort(key=lambda h: (h.file, h.line, h.where))
     return hits
+
+
+# FB-54 — mixed-script words and other text damage the character-class scan above
+# cannot see. A Latin letter directly touching a Khmer letter or mark inside one
+# word is always an error (Khmer punctuation `។` `៖` does not count). Each entry
+# is (file name, where) with a one-line cause; a new, unlisted hit always fails.
+KNOWN_MIXED_SCRIPT: Set[Tuple[str, str]] = {
+    # សessian — a Latin run inside the Khmer word for "session". The map repairs
+    # impersonate.js confirmStart only; these other keys need Khmer the map does
+    # not carry, so they are listed for the owner (OD-18 / OD-22) instead of
+    # being improvised (R3).
+    ("impersonate.js", "km: current"),
+    ("impersonate.js", "km: description"),
+    ("impersonate.js", "km: notActive"),
+    ("users.js", "km: confirmSuspend"),
+}
+
+
+def _is_latin_letter(ch: str) -> bool:
+    name = unicodedata.name(ch, "")
+    return name.startswith("LATIN") or name.startswith("FULLWIDTH LATIN")
+
+
+def _is_khmer_letter_or_mark(ch: str) -> bool:
+    if not _is_khmer(ord(ch)):
+        return False
+    return unicodedata.category(ch)[0] in ("L", "M")
+
+
+def _mixed_script_offenders(text: str) -> List[str]:
+    """Latin letters directly touching a Khmer letter/mark, and vice versa."""
+    out: List[str] = []
+    for i in range(len(text) - 1):
+        a, b = text[i], text[i + 1]
+        if (_is_latin_letter(a) and _is_khmer_letter_or_mark(b)) or \
+           (_is_khmer_letter_or_mark(a) and _is_latin_letter(b)):
+            out.append(f"U+{ord(a):04X}…U+{ord(b):04X} {a!r}{b!r}")
+    return out
+
+
+def _control_offenders(text: str) -> List[str]:
+    """U+FFFD and C1 control characters are always damage."""
+    out: List[str] = []
+    for ch in text:
+        cp = ord(ch)
+        if cp == 0xFFFD or 0x80 <= cp <= 0x9F:
+            out.append(f"U+{cp:04X} {unicodedata.category(ch)}")
+    return out
+
+
+_PLACEHOLDER_RE = re.compile(r"%[sd]|\{[A-Za-z_][A-Za-z0-9_]*\}")
+
+
+def _placeholders(text: str) -> Set[str]:
+    return set(_PLACEHOLDER_RE.findall(text or ""))
+
+
+@dataclass
+class TextHit:
+    file: str
+    line: int
+    where: str
+    text: str
+    detail: List[str]
+
+
+_HTML_PAIR_RE = re.compile(
+    r'<span[^>]*class="[^"]*\bi18n-en\b[^"]*"[^>]*>(?P<en>.*?)</span>\s*'
+    r'<span[^>]*class="[^"]*\bi18n-km\b[^"]*"[^>]*>(?P<km>.*?)</span>',
+    re.DOTALL,
+)
+_HTML_ATTR_PAIR_RE = re.compile(
+    r'data-en="(?P<en>[^"]*)"[^>]*?data-(?:i18n-)?km="(?P<km>[^"]*)"',
+    re.DOTALL,
+)
+
+
+def iter_text_pairs(root: Path, file_reports: List[FileReport]):
+    """Yield (file, line, where, en, km) for every bilingual slot we can pair."""
+    for fr in file_reports:
+        for pair in fr.pairs:
+            if pair.km and pair.km.value:
+                yield (fr.path, pair.line, f"km: {pair.key}",
+                       pair.en.value if pair.en else None, pair.km.value)
+        for hp in fr.helper_pairs:
+            if hp.km:
+                yield (fr.path, hp.line, f"{hp.helper}()", hp.en, hp.km)
+    for html in discover_html_files(root):
+        text = html.read_text(encoding="utf-8", errors="replace")
+        for m in _HTML_PAIR_RE.finditer(text):
+            en = re.sub(r"<[^>]+>", "", m.group("en"))
+            km = re.sub(r"<[^>]+>", "", m.group("km"))
+            yield (str(html), text.count("\n", 0, m.start()) + 1, ".i18n-km span", en, km)
+        for m in _HTML_ATTR_PAIR_RE.finditer(text):
+            yield (str(html), text.count("\n", 0, m.start()) + 1, "data-km attribute",
+                   m.group("en"), m.group("km"))
+
+
+def find_mixed_script(root: Path, file_reports: List[FileReport]) -> List[TextHit]:
+    hits: List[TextHit] = []
+    for file, line, where, _en, km in iter_text_pairs(root, file_reports):
+        offenders = _mixed_script_offenders(km)
+        if offenders:
+            hits.append(TextHit(file, line, where, km, offenders))
+    hits.sort(key=lambda h: (h.file, h.line, h.where))
+    return hits
+
+
+def find_control_chars(root: Path, file_reports: List[FileReport]) -> List[TextHit]:
+    hits: List[TextHit] = []
+    for file, line, where, _en, km in iter_text_pairs(root, file_reports):
+        offenders = _control_offenders(km)
+        if offenders:
+            hits.append(TextHit(file, line, where, km, offenders))
+    hits.sort(key=lambda h: (h.file, h.line, h.where))
+    return hits
+
+
+def find_placeholder_mismatches(root: Path, file_reports: List[FileReport]) -> List[TextHit]:
+    hits: List[TextHit] = []
+    for file, line, where, en, km in iter_text_pairs(root, file_reports):
+        if en is None:
+            continue
+        want, have = _placeholders(en), _placeholders(km)
+        if want != have:
+            detail = []
+            if want - have:
+                detail.append(f"missing in km: {sorted(want - have)}")
+            if have - want:
+                detail.append(f"extra in km: {sorted(have - want)}")
+            hits.append(TextHit(file, line, where, km, detail))
+    hits.sort(key=lambda h: (h.file, h.line, h.where))
+    return hits
+
+
+def split_known_mixed(
+    hits: List[TextHit],
+) -> Tuple[List[TextHit], List[TextHit]]:
+    known_keys = set(KNOWN_MIXED_SCRIPT)
+    unexplained: List[TextHit] = []
+    known: List[TextHit] = []
+    for hit in hits:
+        (known if (Path(hit.file).name, hit.where) in known_keys else unexplained).append(hit)
+    return unexplained, known
 
 
 def split_known_damage(
@@ -1141,10 +1284,16 @@ def main(argv: Optional[List[str]] = None) -> int:
             file_name, where = entry.split(":", 1)
             allow_foreign.add((file_name.strip(), where.strip()))
     foreign, known_foreign = split_known_damage(foreign_all, allow_foreign)
+    mixed_all = find_mixed_script(root, file_reports)
+    mixed, known_mixed = split_known_mixed(mixed_all)
+    control_chars = find_control_chars(root, file_reports)
+    placeholders = find_placeholder_mismatches(root, file_reports)
 
     # Decide exit code.
     fail = False
     if missing:
+        fail = True
+    if mixed or control_chars or placeholders:
         fail = True
     # A km string containing a letter from another non-Latin script is damage,
     # not a fallback: fail unless it is a recorded, explained case (FB-25).
@@ -1186,6 +1335,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"  Identical pairs  : {len(identical)}")
         print(f"  Foreign-script km strings: {len(foreign)}"
               f" (+{len(known_foreign)} known)")
+        print(f"  Mixed-script km strings : {len(mixed)}"
+              f" (+{len(known_mixed)} known)")
+        print(f"  Control/replacement chars: {len(control_chars)}")
+        print(f"  Placeholder mismatches  : {len(placeholders)}")
         for label, group in (("FOREIGN-SCRIPT characters in km text (not Khmer, not Latin)", foreign),
                              ("known foreign-script damage (explained; does not fail)", known_foreign)):
             if not group:
@@ -1198,6 +1351,22 @@ def main(argv: Optional[List[str]] = None) -> int:
                 print(f"    text: {shown!r}")
                 for offender in hit.offenders:
                     print(f"    {offender}")
+        for label, group in (
+            ("MIXED-SCRIPT km words (Latin touching Khmer; not punctuation)", mixed),
+            ("known mixed-script words (explained; does not fail)", known_mixed),
+            ("CONTROL/REPLACEMENT characters in km text", control_chars),
+            ("PLACEHOLDER parity mismatches (EN vs km)", placeholders),
+        ):
+            if not group:
+                continue
+            print(f"\n{label}:")
+            for hit in group:
+                rel = Path(hit.file).name if Path(hit.file).is_relative_to(root) else hit.file
+                print(f"  {rel}:{hit.line}  {hit.where}")
+                shown = hit.text if len(hit.text) <= 80 else hit.text[:77] + "..."
+                print(f"    text: {shown!r}")
+                for detail in hit.detail:
+                    print(f"    {detail}")
         if missing:
             print("\nMISSING km: translations:")
             for p in missing:

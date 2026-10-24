@@ -823,7 +823,7 @@ window.EInvitePosterUnits=Object.freeze({
   const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const STRINGS = {
     en: { title:'Users', search:'Search by email, role, or plan', prev:'Previous', next:'Next', suspend:'Suspend', unsuspend:'Unsuspend', resetPw:'Reset password', forceMfa:'Force MFA', impersonate:'Impersonate', confirmSuspend:'Suspend this user? Active sessions will be invalidated.', confirmResetPw:'Send a password-reset email to this user?', confirmForceMfa:'Force this user to re-enroll MFA on next login?', confirmImpersonate:'Start an impersonation session as this user? You will be logged in as them for 30 minutes.', suspendReason:'Reason', noUsers:'No users found.', role:'Role', plan:'Plan', created:'Created', lastActive:'Last active', invitations:'Invitations', status:'Status', actions:'Actions', tipStepUp:'Super-admin (step-up) required', allowUploads:'Allow uploads', saveUploads:'Save uploads' },
-    km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះ? សessianសកម្មនឹងត្រូវបោះបង់។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលឡុកអិន下一次?', confirmImpersonate:'ចាប់ផ្ដើមសessianសាកល្បងក្នុងនាមអ្នកប្រើនេះ? អ្នកនឹងត្រូវបានឡុកអិនក្នុងនាមពួកគេរយៈពេល ៣០ នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការ super-admin (step-up)', allowUploads:'អនុញ្ញាតឱ្យផ្ទុកឡើង', saveUploads:'រក្សាទុកការផ្ទុកឡើង' }
+    km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះ? សessianសកម្មនឹងត្រូវបោះបង់។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលចូលគណនីលើកក្រោយឬ?', confirmImpersonate:'ចាប់ផ្ដើមសម័យតំណាងក្នុងនាមអ្នកប្រើនេះឬ? អ្នកនឹងចូលគណនីក្នុងនាមពួកគេរយៈពេល 30 នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការ super-admin (step-up)', allowUploads:'អនុញ្ញាតឱ្យផ្ទុកឡើង', saveUploads:'រក្សាទុកការផ្ទុកឡើង' }
   };
   function t(key, ...args) {
     var out = window.EInviteI18n
@@ -951,7 +951,7 @@ window.EInvitePosterUnits=Object.freeze({
   const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const STRINGS = {
     en: { title:'Invitations', search:'Search by slug or owner email', preview:'Preview', unpublish:'Unpublish', flag:'Flag', transfer:'Transfer', confirmUnpublish:'Unpublish this invitation? The owner will be notified by email.', confirmFlag:'Flag this invitation for review? Add a reason.', flagReason:'Reason for flagging', transferPrompt:'Enter the new owner user id:', noInvitations:'No invitations found.', slug:'Slug', owner:'Owner', created:'Created', published:'Published', views:'Views', rsvps:'RSVPs', status:'Status', actions:'Actions' },
-    km: { title:'ការអញ្ជើញ', search:'ស្វែងរកតាម slug ឬអ៊ីមែលម្ចាស់', preview:'មើល', unpublish:'ឈប់ផ្សាយ', flag:'សម្គាល់', transfer:'ផ្ទេរម្ចាស់', confirmUnpublish:'ឈប់ផ្សាយការអញ្ជើញនេះ? ម្ចាស់នឹងត្រូវបានជូនដំណឹងតាមអ៊ីមែល។', confirmFlag:'សម្គាល់ការអញ្ជើញនេះសម្រាប់ពិនិត្យ? បន្ថែមមូលហេតុ។', flagReason:'មូលហេតុនៃការសម្គាល់', transferPrompt:'បញ្ចូលលេខសម្គាល់អ្នកប្រើម្ចាស់ថ្មី៖', noInvitations:'រកមិនឃើញការអញ្ជើញ។', slug:'Slug', owner:'ម្ចាស់', created:'បង្កើត', published:'ផ្សាយ', views:'មើល', rsvps:'RSVPs', status:'ស្ថានភាព', actions:'សកម្មភាព' }
+    km: { title:'ការអញ្ជើញ', search:'ស្វែងរកតាម slug ឬអ៊ីមែលម្ចាស់', preview:'មើល', unpublish:'ឈប់ផ្សាយ', flag:'សម្គាល់', transfer:'ផ្ទេរម្ចាស់', confirmUnpublish:'ឈប់ផ្សាយការអញ្ជើញនេះ? ម្ចាស់នឹងត្រូវបានជូនដំណឹងតាមអ៊ីមែល។', confirmFlag:'សម្គាល់ការអញ្ជើញនេះសម្រាប់ពិនិត្យ? បន្ថែមមូលហេតុ។', flagReason:'មូលហេតុនៃការសម្គាល់', transferPrompt:'បញ្ចូលលេខសម្គាល់អ្នកប្រើម្ចាស់ថ្មី៖', noInvitations:'រកមិនឃើញការអញ្ជើញ។', slug:'ឈ្មោះតំណ', owner:'ម្ចាស់', created:'បង្កើត', published:'ផ្សាយ', views:'មើល', rsvps:'RSVP', status:'ស្ថានភាព', actions:'សកម្មភាព' }
   };
   function t(key, ...args) {
     var out = window.EInviteI18n
@@ -1083,18 +1083,18 @@ window.EInvitePosterUnits=Object.freeze({
       off:'បិទ',
       updatedAt:'បានធ្វើបច្ចុប្គន្នភាព',
       updatedBy:'ដោយ',
-      flag:'Flag',
-      noFlags:'No flags defined.',
-      tier:'Tier',
-      confirmSave:'Save this flag value?',
-      requireSuperAdmin:'Super-admin access required to modify flags.',
-      sessionPolicyTitle:'Non-admin session idle window',
-      sessionPolicyDesc:'How long a non-admin session may sit idle before it expires. Changing this affects all non-admin users.',
-      sessionPolicyLabel:'Idle window (days)',
-      sessionPolicySave:'Save idle window',
-      sessionPolicyConfirm:'Change the non-admin session idle window to {days} days?',
-      sessionPolicySaved:'Idle window updated to {days} days.',
-      sessionPolicyError:'Failed to update idle window: {error}',
+      flag:'ជម្រើស',
+      noFlags:'មិនមានជម្រើសមុខងារត្រូវបានកំណត់ទេ។',
+      tier:'កម្រិត',
+      confirmSave:'រក្សាទុកតម្លៃជម្រើសនេះឬ?',
+      requireSuperAdmin:'ត្រូវការសិទ្ធិអ្នកគ្រប់គ្រងជាន់ខ្ពស់ដើម្បីកែប្រែជម្រើសមុខងារ។',
+      sessionPolicyTitle:'រយៈពេលទំនេរនៃសម័យសម្រាប់អ្នកមិនមែនអ្នកគ្រប់គ្រង',
+      sessionPolicyDesc:'រយៈពេលដែលសម័យរបស់អ្នកមិនមែនអ្នកគ្រប់គ្រងអាចទុកចោលទំនេរមុនផុតកំណត់។ ការផ្លាស់ប្ដូរនេះប៉ះពាល់ដល់អ្នកប្រើមិនមែនអ្នកគ្រប់គ្រងទាំងអស់។',
+      sessionPolicyLabel:'រយៈពេលទំនេរ (ថ្ងៃ)',
+      sessionPolicySave:'រក្សាទុករយៈពេលទំនេរ',
+      sessionPolicyConfirm:'ប្ដូររយៈពេលទំនេរនៃសម័យសម្រាប់អ្នកមិនមែនអ្នកគ្រប់គ្រងទៅ {days} ថ្ងៃឬ?',
+      sessionPolicySaved:'បានធ្វើបច្ចុប្បន្នភាពរយៈពេលទំនេរទៅ {days} ថ្ងៃ។',
+      sessionPolicyError:'ធ្វើបច្ចុប្បន្នភាពរយៈពេលទំនេរមិនបានសម្រេច៖ {error}',
       /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
          the English fallback (repo convention: commit c2ec627). */
       flagSaved:'Saved {key}.',
@@ -1850,7 +1850,7 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
         [_html('Users', 'អ្នកប្រើ'), m.users],
         [_html('Invitations', 'ការអញ្ជើញ'), m.invitations],
         [_html('Publications', 'ការផ្សាយ'), m.publications],
-        [_html('RSVPs', 'RSVPs'), m.rsvps],
+        [_html('RSVPs', 'RSVP'), m.rsvps],
         [_html('Assets', 'ទ្រព្យសម្បត្តិ'), m.assets],
         [_html('Material storage', 'កន្លែងរក្សាទុកសម្ភារៈ'), fmtBytes(m.assetBytes)],
       ];

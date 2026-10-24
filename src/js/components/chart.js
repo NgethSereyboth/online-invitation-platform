@@ -42,10 +42,10 @@
     },
     km: {
       views: "ចំនួនមើល",
-      rsvps: "RSVPs",
+      rsvps: "RSVP",
       mobile: "ទូរស័ព្ទ",
       tablet: "ថេប្លេត",
-      desktop: "ដេស្គトップ",
+      desktop: "កុំព្យូទ័រ",
       noData: "មិនមានទិន្នន័យទេ",
       chartOf: "ក្រាហ្វិចនៃ",
       data: "ទិន្នន័យ",

@@ -49,7 +49,7 @@
         [_html('Users', 'អ្នកប្រើ'), m.users],
         [_html('Invitations', 'ការអញ្ជើញ'), m.invitations],
         [_html('Publications', 'ការផ្សាយ'), m.publications],
-        [_html('RSVPs', 'RSVPs'), m.rsvps],
+        [_html('RSVPs', 'RSVP'), m.rsvps],
         [_html('Assets', 'ទ្រព្យសម្បត្តិ'), m.assets],
         [_html('Material storage', 'កន្លែងរក្សាទុកសម្ភារៈ'), fmtBytes(m.assetBytes)],
       ];
