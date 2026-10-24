@@ -27,7 +27,11 @@ body {
   background: var(--app-bg);
   -webkit-font-smoothing: antialiased;
 }
-body :lang(km), body .khmer-text { line-height: 1.6; font-size: 1.06em; }
+/* FB-48: `font-size:1.06em` here matched every element under html[lang="km"], so the
+   factor compounded once per nesting level (measured: the account chip rendered at
+   19.06px where the same Latin label renders at 12px). Khmer is optically sized once,
+   in its @font-face `size-adjust`; line-height stays per script. */
+body :lang(km), body .khmer-text { line-height: 1.6; }
 
 /* --- 2. Skeleton A: application shell ------------------------------------ */
 body[data-shell="a"] {
@@ -604,12 +608,21 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 .guest-credit { text-align: center; padding: 20px 16px 28px; font-size: var(--fs-caption); color: var(--app-muted); }
 .guest-credit a { color: inherit; text-decoration: none; }
 .guest-credit a:hover { text-decoration: underline; }
-.app-brand strong { font-family: var(--font-display); font-size: var(--fs-title-sm); font-weight: var(--fw-bold); color: var(--app-text); }
+.app-brand strong { font-family: var(--font-latin); font-size: var(--fs-title-sm); font-weight: var(--fw-bold); color: var(--app-text); }
 .app-account {
-  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* FB-48: at 375 the chip's 220px box started under the workspace launcher (measured
+     x=149 with the launcher at 145..183). Reserve that lane and truncate inside. */
+  max-width: min(220px, calc(100vw - 200px));
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: var(--fs-body-sm); color: var(--app-muted);
 }
 .app-account:empty { display: none; }
+@media (max-width: 700px) {
+  /* The workspace launcher is positioned over the gap between the two topbar
+     clusters; without this the account chip starts underneath it. */
+  body:not(.guest) > header .app-topbar-right { margin-left: 42px; }
+  .app-account { max-width: min(220px, calc(100vw - 240px)); }
+}
 .app-theme-toggle {
   width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center;
   border: 1px solid transparent; border-radius: var(--radius-sm);
@@ -728,7 +741,11 @@ body[data-page="dashboard"] .dash-head h1 {
   letter-spacing: var(--ls-title-lg);
   color: var(--app-text);
 }
-body[data-page="dashboard"] .dash-quickstart { display: flex; gap: var(--space-2); flex-wrap: wrap; margin: 0 0 var(--space-5); }
+/* FB-48: three quick-start tiles were flex items with intrinsic widths, so 375 px
+   painted 2 + 1 with the third at half width. One equal-width row, equal heights. */
+body[data-page="dashboard"] .dash-quickstart { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: var(--space-2); margin: 0 0 var(--space-5); }
+body[data-page="dashboard"] .dash-quickstart button { width: 100%; height: 100%; min-height: 88px; padding: 10px 6px; font-size: var(--fs-body-sm); line-height: 1.3; }
+body[data-page="dashboard"] .dash-quickstart button .i18n { max-width: 100%; overflow-wrap: break-word; text-align: center; }
 body[data-page="dashboard"] .dash-quickstart button {
   display: inline-flex; align-items: center; gap: var(--space-2);
   min-height: 36px; padding: 0 var(--space-3);

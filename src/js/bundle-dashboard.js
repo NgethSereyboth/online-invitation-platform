@@ -1077,7 +1077,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
       `<span class="app-search__icon" aria-hidden="true">⌕</span>` +
       `<input id="dashboardSearch" type="search" autocomplete="off" ` +
       `placeholder="${esc('Search invitations…')}" ` +
-      `data-en="${esc('Search invitations…')}" data-km="${esc('Search invitations…')}" ` +
+      `data-en="${esc('Search invitations…')}" data-km="${esc('ស្វែងរកការអញ្ជើញ…')}" ` +
       `aria-label="${esc('Search invitations…')}">` +
       `</label>` +
       `<div class="segmented" role="group" aria-label="${esc('Filter invitations')}">` +
