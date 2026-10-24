@@ -1,7 +1,7 @@
 {
   "pages": {
     "account.html": {
-      "bytes": 374860,
+      "bytes": 374856,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 416716,
+      "bytes": 416712,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -27,7 +27,7 @@
       ]
     },
     "analytics.html": {
-      "bytes": 362721,
+      "bytes": 362717,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -40,7 +40,7 @@
       ]
     },
     "billing.html": {
-      "bytes": 360342,
+      "bytes": 360338,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -53,7 +53,7 @@
       ]
     },
     "checkin.html": {
-      "bytes": 181418,
+      "bytes": 181414,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -66,7 +66,7 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 665062,
+      "bytes": 665058,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -79,7 +79,7 @@
       ]
     },
     "designer.html": {
-      "bytes": 380834,
+      "bytes": 380830,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -92,7 +92,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 397811,
+      "bytes": 397807,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -105,7 +105,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1523174,
+      "bytes": 1523170,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -118,7 +118,7 @@
       ]
     },
     "materials.html": {
-      "bytes": 428954,
+      "bytes": 428950,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -131,7 +131,7 @@
       ]
     },
     "privacy.html": {
-      "bytes": 173796,
+      "bytes": 173792,
       "scriptCount": 1,
       "scripts": [
         "bundle-privacy.js"
@@ -142,7 +142,7 @@
       ]
     },
     "public.html": {
-      "bytes": 390563,
+      "bytes": 391168,
       "scriptCount": 2,
       "scripts": [
         "backend-mode.js",
@@ -154,7 +154,7 @@
       ]
     },
     "reset.html": {
-      "bytes": 350280,
+      "bytes": 350276,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -167,7 +167,7 @@
       ]
     },
     "responses.html": {
-      "bytes": 367809,
+      "bytes": 367805,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -180,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 410539,
+      "bytes": 410535,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -193,7 +193,7 @@
       ]
     },
     "verify.html": {
-      "bytes": 348121,
+      "bytes": 348117,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
