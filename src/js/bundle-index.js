@@ -5674,7 +5674,7 @@ inviteStore.write(historyKey,data.history||[]);
 inviteStore.write(rsvpKey,data.rsvps||[]);
 location.reload()
 }catch{
-alert('This is not a valid E-invitation-website backup.')
+alert('This is not a valid OKID backup.')
 }
 };
 const lunarMonths=['មិគសិរ','បុស្ស','មាឃ','ផល្គុន','ចេត្រ','ពិសាខ','ជេស្ឋ','អាសាឍ','ស្រាពណ៍','ភទ្របទ','អស្សុជ','កត្តិក','បឋមាសាឍ','ទុតិយាសាឍ'];
@@ -5816,7 +5816,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     header.classList.add('studio-topbar');
     const brand = header.querySelector('strong');
     if (brand) {
-      brand.innerHTML = '<span class="studio-brand-mark">E</span><span class="studio-brand-copy"><b>E-invitation</b><small>Design Studio</small></span>';
+      brand.innerHTML = '<span class="studio-brand-mark">O</span><span class="studio-brand-copy"><b>OKID</b><small>Design Studio</small></span>';
     }
     // The v54 top bar nests #saveState/#previewBtn inside .studio-topbar-right, so
     // insertBefore must target the anchor's own parent — calling header.insertBefore

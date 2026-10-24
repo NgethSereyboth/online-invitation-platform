@@ -37,7 +37,7 @@
     header.classList.add('studio-topbar');
     const brand = header.querySelector('strong');
     if (brand) {
-      brand.innerHTML = '<span class="studio-brand-mark">E</span><span class="studio-brand-copy"><b>E-invitation</b><small>Design Studio</small></span>';
+      brand.innerHTML = '<span class="studio-brand-mark">O</span><span class="studio-brand-copy"><b>OKID</b><small>Design Studio</small></span>';
     }
     // The v54 top bar nests #saveState/#previewBtn inside .studio-topbar-right, so
     // insertBefore must target the anchor's own parent — calling header.insertBefore

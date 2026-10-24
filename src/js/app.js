@@ -3385,7 +3385,7 @@ inviteStore.write(historyKey,data.history||[]);
 inviteStore.write(rsvpKey,data.rsvps||[]);
 location.reload()
 }catch{
-alert('This is not a valid E-invitation-website backup.')
+alert('This is not a valid OKID backup.')
 }
 };
 const lunarMonths=['មិគសិរ','បុស្ស','មាឃ','ផល្គុន','ចេត្រ','ពិសាខ','ជេស្ឋ','អាសាឍ','ស្រាពណ៍','ភទ្របទ','អស្សុជ','កត្តិក','បឋមាសាឍ','ទុតិយាសាឍ'];

@@ -25,12 +25,13 @@
   <script src="backend-mode.js"></script>
 </head>
 <body data-shell="b" data-page="public"><!--
-  Minimal topbar (§2.1 Skeleton B): brand left, invitation language right.
-  No navigation, no marketing copy, no "powered by" footer, and no appearance
+  Minimal topbar (§2.1 Skeleton B): the invitation's own title left, invitation
+  language right (OD-15). No navigation, no marketing copy and no appearance
   toggle — the invitation's own template is the visual, not the chrome around it.
+  The platform credit is the small footer line below, not a topbar brand.
 -->
 <header class="guest-topbar">
-  <a class="app-brand" href="/"><strong>E-invitation-website</strong></a>
+  <strong class="guest-invitation-title" id="guestInvitationTitle">__INVITATION_TITLE__</strong>
   <div class="guest-topbar__lang" role="group" aria-label="Invitation language">
     <button type="button" data-guest-lang-proxy="en" aria-pressed="true" class="active">EN</button>
     <button type="button" data-guest-lang-proxy="km" lang="km" aria-pressed="false">ខ្មែរ</button>
@@ -52,6 +53,7 @@
   set client-side only. The script is placed BEFORE bundle-public.js so the
   observer is registered before the bundle's language-switcher first runs.
 -->
+<footer class="guest-credit"><a href="/"><span class="i18n i18n-en">Created with OKID</span><span class="i18n i18n-km khmer-text" lang="km">បង្កើតដោយ អូខេអាយឌី</span></a></footer>
 <script src="bundle-public.js"></script>
 
 

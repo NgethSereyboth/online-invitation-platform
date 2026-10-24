@@ -329,7 +329,7 @@ ACCOUNT_TRASH_DAYS = max(1, min(365, int(platform_env("EINVITE_ACCOUNT_TRASH_DAY
 AUDIT_RETENTION_DAYS = max(30, min(3650, int(platform_env("EINVITE_AUDIT_RETENTION_DAYS", "730"))))
 BOT_PROTECTION_ENDPOINT = platform_env("EINVITE_BOT_PROTECTION_ENDPOINT", "").strip()
 BOT_PROTECTION_SECRET = platform_env("EINVITE_BOT_PROTECTION_SECRET", "").strip()
-PASSKEY_RP_NAME = platform_env("EINVITE_PASSKEY_RP_NAME", "E-invitation-website").strip() or "E-invitation-website"
+PASSKEY_RP_NAME = platform_env("EINVITE_PASSKEY_RP_NAME", "OKID").strip() or "OKID"
 REQUIRE_VERIFIED_EMAIL = platform_env("EINVITE_REQUIRE_VERIFIED_EMAIL", "1" if PRODUCTION_MODE else "0").lower() in {"1","true","yes"}
 # V54.28 (sec-8 — §2.8) — CSP report-only monitoring.
 # The enforcing CSP below is sent verbatim on every response. A mirror
@@ -5542,7 +5542,7 @@ class Handler(SimpleHTTPRequestHandler):
         url = auth_action_url("/reset.html", token)
         sent = False
         try:
-            sent = send_platform_email(row["email"], "Reset your E-invitation-website password", f"An administrator started a password reset for your E-invitation-website account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not expect this, contact support.")
+            sent = send_platform_email(row["email"], "Reset your OKID password", f"An administrator started a password reset for your OKID account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not expect this, contact support.")
         except Exception as exc:
             print(f"Admin password-reset email delivery failed: {exc}", flush=True)
         self.audit("admin.user_password_reset_sent", "user", user_id, {"sent": bool(sent)}, user_id=admin["id"])
@@ -6223,7 +6223,7 @@ class Handler(SimpleHTTPRequestHandler):
         with connect() as db:row=db.execute("SELECT id,email FROM users WHERE email=?",(email,)).fetchone()
         if row:
             token=self._create_auth_token(row["id"],"password-reset",30*60*1000);url=auth_action_url("/reset.html",token)
-            try:sent=send_platform_email(row["email"],"Reset your E-invitation-website password",f"A password reset was requested for your E-invitation-website account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not request this, you can ignore this message.")
+            try:sent=send_platform_email(row["email"],"Reset your OKID password",f"A password reset was requested for your OKID account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not request this, you can ignore this message.")
             except Exception as exc:print(f"Password-reset email delivery failed: {exc}",flush=True)
             if platform_env("EINVITE_DEV_AUTH_TOKENS","").lower() in {"1","true","yes"}:dev_token=token
         # Production responses must not reveal whether an account exists or
@@ -6241,7 +6241,7 @@ class Handler(SimpleHTTPRequestHandler):
             row=db.execute("SELECT user_id FROM auth_tokens WHERE token_hash=? AND kind='password-reset' AND expires_at>?",(token_hash,now)).fetchone()
             if not row:return self.json(400,{"error":"This password-reset link is invalid or expired"})
             hashed,salt,algo=account_hash_password(new);db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,row["user_id"]));db.execute("DELETE FROM sessions WHERE user_id=?",(row["user_id"],));db.execute("DELETE FROM auth_tokens WHERE user_id=? AND kind='password-reset'",(row["user_id"],));account=db.execute("SELECT email FROM users WHERE id=?",(row["user_id"],)).fetchone()
-        if account:security_notification(account["email"],"Your password was reset","Your E-invitation-website password was reset and existing sessions were signed out.")
+        if account:security_notification(account["email"],"Your password was reset","Your OKID password was reset and existing sessions were signed out.")
         self.audit("password.reset","user",row["user_id"],user_id=row["user_id"])
         self.json(200,{"changed":True})
 
@@ -6251,7 +6251,7 @@ class Handler(SimpleHTTPRequestHandler):
         if user["email_verified"]:return self.json(200,{"verified":True,"sent":False})
         if not self.rate_limit(f"verify-email:{user['id']}",6,3600):return
         token=self._create_auth_token(user["id"],"email-verification",24*60*60*1000);url=auth_action_url("/verify.html",token);sent=False
-        try:sent=send_platform_email(user["email"],"Verify your E-invitation-website email",f"Verify your E-invitation-website email address by opening this link within 24 hours:\n\n{url}")
+        try:sent=send_platform_email(user["email"],"Verify your OKID email",f"Verify your OKID email address by opening this link within 24 hours:\n\n{url}")
         except Exception as exc:print(f"Verification email delivery failed: {exc}",flush=True)
         payload={"verified":False,"sent":bool(sent)}
         if platform_env("EINVITE_DEV_AUTH_TOKENS","").lower() in {"1","true","yes"}:payload["devToken"]=token
