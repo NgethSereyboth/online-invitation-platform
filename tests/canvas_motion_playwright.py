@@ -962,13 +962,24 @@ def test_plain_wheel_scroll(page):
 
 
 def test_ctrl_wheel_no_scroll(page):
-    """Real ctrl+wheel: zoom changes while scrollTop must not move (no accidental
-    page scroll while zooming). Parked mid-range so drift would be visible."""
+    """Real ctrl+wheel: zoom changes and the *page* must not scroll (no accidental
+    page scroll while zooming). Parked mid-range so drift would be visible.
+
+    OD-22 (2026-10-24): the assertion is on the document scroll position, not on
+    #canvasViewport.scrollTop. The viewport is an inner scroll box whose scroll
+    range is a function of the zoom: re-framing the stage can collapse
+    scrollHeight-clientHeight to 0 for a frame, and the browser then clamps
+    scrollTop. That clamp is not a page scroll (window.scrollY and
+    document.scrollingElement.scrollTop stay 0), and reading it as one made this
+    check fail 4 of 5 runs while the behaviour under test was correct.
+    """
     def metrics():
         return page.evaluate("""() => {
             const v = document.querySelector('#canvasViewport');
             return {scrollTop: v.scrollTop, scrollHeight: v.scrollHeight,
-                    clientHeight: v.clientHeight, zoom: EInviteCanvasViewController.zoom};
+                    clientHeight: v.clientHeight, zoom: EInviteCanvasViewController.zoom,
+                    pageScrollY: window.scrollY,
+                    documentScrollTop: document.scrollingElement.scrollTop};
         }""")
 
     m0 = metrics()
@@ -991,12 +1002,16 @@ def test_ctrl_wheel_no_scroll(page):
     after = metrics()
     return {
         'scrollUnchanged': after['scrollTop'] == before['scrollTop'],
+        'pageScrollUnchanged': (after['pageScrollY'] == before['pageScrollY']
+                                and after['documentScrollTop'] == before['documentScrollTop']),
         'zoomChanged': after['zoom'] != before['zoom'],
         'zoomBefore': before['zoom'],
         'zoomAfter': after['zoom'],
         'zoomFactor': (after['zoom'] / before['zoom']) if before['zoom'] else 0.0,
         'scrollBefore': before['scrollTop'],
-        'scrollAfter': after['scrollTop']
+        'scrollAfter': after['scrollTop'],
+        'pageScrollBefore': before['pageScrollY'],
+        'pageScrollAfter': after['pageScrollY']
     }
 
 
@@ -1215,10 +1230,12 @@ def run_phase_P5(page, out, errors):
     cw = test_ctrl_wheel_no_scroll(page)
     results.append({
         'name': 'ctrl-wheel-no-page-scroll',
-        'verdict': 'pass' if (cw.get('scrollUnchanged') and cw.get('zoomChanged')) else 'fail',
+        'verdict': 'pass' if (cw.get('pageScrollUnchanged') and cw.get('zoomChanged')) else 'fail',
         'metrics': cw,
         'evidencePath': screenshot_out(page, out, 'P5-ctrl-wheel.png'),
-        'notes': f"scrollTop {cw.get('scrollBefore')}->{cw.get('scrollAfter')} (must not move), zoom {cw.get('zoomBefore')}->{cw.get('zoomAfter')}"
+        'notes': f"page scroll {cw.get('pageScrollBefore')}->{cw.get('pageScrollAfter')} (must not move), "
+                 f"viewport scrollTop {cw.get('scrollBefore')}->{cw.get('scrollAfter')}, "
+                 f"zoom {cw.get('zoomBefore')}->{cw.get('zoomAfter')}"
     })
     page.evaluate("() => EInviteCanvasViewController.fit()")
     wait_quiet_rAF(page)
