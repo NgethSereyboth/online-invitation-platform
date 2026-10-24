@@ -5,4 +5,4 @@ qrcode[pil]>=8,<9
 argon2-cffi>=23.1,<26
 cryptography>=50,<51
 fonttools[woff]>=4.58,<5
-Brotli>=1.1,<2
+Brotli>=1.2.1,<2

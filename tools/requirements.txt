@@ -12,4 +12,4 @@
 # the same artifact CI would produce.
 
 fonttools[woff]==4.66.1
-Brotli==1.2.0
+Brotli==1.2.1
