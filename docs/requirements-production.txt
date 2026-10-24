@@ -27,4 +27,4 @@ Pillow==12.3.0
 argon2-cffi==25.1.0
 cryptography==50.0.2
 fonttools[woff]==4.66.1
-Brotli==1.2.0
+Brotli==1.2.1
