@@ -1,6 +1,6 @@
 # Browser geometry/timing evidence is only reproducible against this audited toolchain.
 playwright==1.61.0
-Pillow>=12,<13
+Pillow>=13.0.0,<14
 qrcode[pil]>=8,<9
 argon2-cffi>=23.1,<26
 cryptography>=50,<51
