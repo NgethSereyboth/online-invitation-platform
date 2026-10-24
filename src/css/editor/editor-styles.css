@@ -1581,12 +1581,14 @@ body[data-page="index"] #v20ResponsivePreview { padding-inline: 4px !important; 
    Above 640 the pill is removed (U1-14); below it docks into the empty lane
    between the header and the typography toolbar. */
 @media (max-width: 640px) {
+  /* FB-47: the chip used to float over the lane above the typography strip, so a
+     text selection put the strip underneath it. ≤640 workflow-ux.js moves it into
+     the canvas toolbar's own scroll row: in the flow, no extra row, no overlap. */
   body[data-page="index"] .workflow-v5-status {
-    top: 4px !important;
-    bottom: auto !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
+    position: static;
+    transform: none;
+    height: 26px;
+    margin: 0 4px 0 0;
   }
 }
 

@@ -7150,7 +7150,7 @@ const stage=$('#stage'),viewport=$('#canvasViewport'),toolbar=$('.toolbar');if(!
 const transform=$('#stageTransform'),frame=$('#canvasFrame'),zoomControl=$('#zoomLevel');
 const view={x:0,y:0,zoom:Number(window.EInviteCanvasViewController?.zoom)||1};
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-let viewRect=null,stageSize={width:390,height:844},viewportSize={width:0,height:0,left:0,top:0},tweenFrame=0,gestureCount=0,fitSettleToken=0;
+let viewRect=null,stageSize={width:390,height:844},viewportSize={width:0,height:0,left:0,top:0},tweenFrame=0,gestureCount=0,fitSettleToken=0,fitActive=false;
 if(perfDebug){
  const restore=[];
  function warn(name){perfTotals.layoutReads++;if(perfTotals.layoutReads<=20)console.warn(`eInvite layout read during gesture: ${name}`)}
@@ -7181,7 +7181,7 @@ function setView(next,{source='editor',animate=false,readout=true}={}){
  // Any non-fit view change cancels an in-flight fit settle loop; otherwise the
  // loop keeps re-centring and swallows the user's pan/zoom (canvas P5: a middle
  // drag moved +25/+15 and the settle pulled it back to the fitted origin).
- if(source!=='fit')fitSettleToken++;
+ if(source!=='fit'){fitSettleToken++;fitActive=false}
  stopTween();const target={x:Number.isFinite(next.x)?next.x:view.x,y:Number.isFinite(next.y)?next.y:view.y,zoom:clampZoom(next.zoom??view.zoom)};
  const duration=animate&&!reducedMotion.matches?MOTION.TWEEN_MAX_MS:0;
  if(!duration){Object.assign(view,target);applyView(source);if(readout)syncZoomReadout();window.dispatchEvent(new CustomEvent('einvite:zoom-changed',{detail:{zoom:view.zoom,source}}));return view.zoom}
@@ -7205,7 +7205,21 @@ function fitView(){
  // for 0.258 and got 0.35, so 7 px of the stage sat outside the scroller and the
  // FB-38 artboard check failed at 320). Fit may shrink to 0.25; the user-facing zoom
  // control keeps its own clamp.
- const computeFit=()=>{cacheViewGeometry();const zoom=Math.max(.25,Math.min(1,(viewport.clientWidth-70)/stageSize.width,(viewport.clientHeight-70)/stageSize.height));return{zoom,x:(viewport.clientLeft||0)+viewport.clientWidth/2+viewport.scrollLeft-stageSize.width*zoom/2,y:(viewport.clientTop||0)+viewport.clientHeight/2+viewport.scrollTop-stageSize.height*zoom/2}};const token=++fitSettleToken;const applied=setView(computeFit(),{source:'fit',animate:true});const deadline=performance.now()+3000;let stable=0,last='',rounds=0;const settle=()=>{if(token!==fitSettleToken||performance.now()>deadline)return;if(tweenFrame){stable=0;last='';requestAnimationFrame(settle);return}const sr=stage.getBoundingClientRect(),cur=`${sr.left},${sr.top},${sr.width}`;if(cur!==last){stable=0;last=cur;requestAnimationFrame(settle);return}if(++stable<3){requestAnimationFrame(settle);return}const vr=viewport.getBoundingClientRect(),dx=(vr.left+(viewport.clientLeft||0)+viewport.clientWidth/2)-(sr.left+sr.width/2),dy=(vr.top+(viewport.clientTop||0)+viewport.clientHeight/2)-(sr.top+sr.height/2);rounds++;if(rounds>3)return;const fit=computeFit();if(Math.abs(fit.zoom-view.zoom)>.01){stable=0;last='';setView(fit,{source:'fit'});requestAnimationFrame(settle);return}if(Math.abs(dx)>1||Math.abs(dy)>1){stable=0;last='';setView({x:view.x+dx,y:view.y+dy},{source:'fit'});requestAnimationFrame(settle)}};requestAnimationFrame(settle);return applied}
+ // FB-47: phones fit inside the viewport's real content box, whose padding already
+ // reserves the toolbar, the palette and the zoom HUD. Wider layouts keep the
+ // pre-FB-47 70px mat so the desktop framing does not change.
+ const fitFrame=()=>{
+  cacheViewGeometry();
+  if(!matchMedia('(max-width:700px)').matches)return{left:35,top:35,width:Math.max(0,viewport.clientWidth-70),height:Math.max(0,viewport.clientHeight-70)};
+  const css=getComputedStyle(viewport),px=value=>parseFloat(value)||0;
+  const padL=px(css.paddingLeft),padR=px(css.paddingRight),padT=px(css.paddingTop),padB=px(css.paddingBottom);
+  return{left:padL,top:padT,width:Math.max(0,viewport.clientWidth-padL-padR),height:Math.max(0,viewport.clientHeight-padT-padB)}
+ };
+ const computeFit=()=>{
+  const frame=fitFrame();
+  const zoom=Math.max(.08,Math.min(1,frame.width/stageSize.width,frame.height/stageSize.height));
+  return{zoom,x:(viewport.clientLeft||0)+frame.left+(frame.width-stageSize.width*zoom)/2+viewport.scrollLeft,y:(viewport.clientTop||0)+frame.top+(frame.height-stageSize.height*zoom)/2+viewport.scrollTop}
+ };fitActive=true;const token=++fitSettleToken;const applied=setView(computeFit(),{source:'fit',animate:true});const deadline=performance.now()+3000;let stable=0,last='',rounds=0;const settle=()=>{if(token!==fitSettleToken||performance.now()>deadline)return;if(tweenFrame){stable=0;last='';requestAnimationFrame(settle);return}const sr=stage.getBoundingClientRect(),cur=`${sr.left},${sr.top},${sr.width}`;if(cur!==last){stable=0;last=cur;requestAnimationFrame(settle);return}if(++stable<3){requestAnimationFrame(settle);return}const vr=viewport.getBoundingClientRect(),frame=fitFrame(),dx=(vr.left+(viewport.clientLeft||0)+frame.left+frame.width/2)-(sr.left+sr.width/2),dy=(vr.top+(viewport.clientTop||0)+frame.top+frame.height/2)-(sr.top+sr.height/2);rounds++;if(rounds>3)return;const fit=computeFit();if(Math.abs(fit.zoom-view.zoom)>.01){stable=0;last='';setView(fit,{source:'fit'});requestAnimationFrame(settle);return}if(Math.abs(dx)>1||Math.abs(dy)>1){stable=0;last='';setView({x:view.x+dx,y:view.y+dy},{source:'fit'});requestAnimationFrame(settle)}};requestAnimationFrame(settle);return applied}
 function refreshView(){cacheViewGeometry();applyView('resize');syncZoomReadout()}
 function beginViewGesture(){stopTween();if(!gestureCount){cacheViewGeometry();if(perfDebug)performance.mark('einvite:gesture:start')}gestureCount++;transform?.classList.add('gesture')}
 function endViewGesture(){if(!gestureCount)return;gestureCount--;if(!gestureCount){transform?.classList.remove('gesture');syncZoomReadout();if(perfDebug)finishPerfSpan('einvite:gesture');scheduleImageWarmup()}}
@@ -7220,7 +7234,7 @@ if(transform){
  motionAPI.viewport=Object.freeze({view,refresh:refreshView,setZoom:setZoomModel,setView,fit:fitView,clientToWorld,cacheGeometry:cacheViewGeometry,beginGesture:beginViewGesture,endGesture:endViewGesture,get size(){return{...stageSize}},get gesturing(){return gestureCount>0},get reducedMotion(){return reducedMotion.matches}});
  window.EInviteCanvasViewController=Object.freeze({version:25,get zoom(){return view.zoom},setZoom:setZoomModel,fit:fitView,actual:()=>setZoomModel(1,{source:'actual'}),zoomToSelection:zoomSelection});
  $('#zoomIn').onclick=()=>setZoomModel(view.zoom*1.25,{source:'button'});$('#zoomOut').onclick=()=>setZoomModel(view.zoom/1.25,{source:'button'});$('#fitCanvas').onclick=fitView;zoomControl.onchange=e=>setZoomModel(e.target.value,{source:'select'});
- const ro=new ResizeObserver(()=>{if(!gestureCount)refreshView()});ro.observe(stage);ro.observe(viewport);window.EInviteLifecycle?.add?.(()=>{ro.disconnect();stopTween();sliderBatcher.destroy()});refreshView();
+ const ro=new ResizeObserver(()=>{if(gestureCount)return;if(fitActive&&matchMedia('(max-width:700px)').matches)fitView();else refreshView()});ro.observe(stage);ro.observe(viewport);window.EInviteLifecycle?.add?.(()=>{ro.disconnect();stopTween();sliderBatcher.destroy()});refreshView();
 }
 // Pure world-space snap resolver: providers are additive; no layout access here.
 function snapCandidates({page,others=[],guides={x:[],y:[]},grid=0,box}){

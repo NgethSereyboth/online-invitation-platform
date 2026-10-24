@@ -12,6 +12,11 @@ const clickFirst=(...sels)=>{for(const s of sels){const el=$(s);if(el){el.click(
 let focusMode=false,previousPanelHidden=false;
 const status=document.createElement('div');status.id='workflowV5Status';status.className='workflow-v5-status';status.innerHTML='<span class="page">Main hero</span><b>·</b><span class="selection">Nothing selected</span>';
 $('.stage-wrap')?.append(status);
+// FB-47: on phones the chip shares the canvas toolbar's own scroll row instead of
+// floating over the lane where the typography strip appears.
+const statusHost=matchMedia('(max-width:640px)');
+function placeStatus(){const host=statusHost.matches&&toolbar?toolbar:$('.stage-wrap');if(host&&status.parentElement!==host){host.prepend(status);host.scrollLeft=0}}
+placeStatus();statusHost.addEventListener('change',placeStatus);
 function selectionLabel(){
   const items=selected();if(!items.length)return'Nothing selected';if(items.length>1)return`${items.length} objects selected`;
   const o=items[0],type=typeOf(o),name=o.dataset.layerName||o.dataset.id||type;return`${type[0].toUpperCase()+type.slice(1)} · ${name}`

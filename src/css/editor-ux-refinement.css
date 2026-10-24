@@ -87,7 +87,10 @@ body.studio-experience .workflow-v4-popover {
 }
 
 @media (max-width: 820px) {
-  body.studio-experience #v20TypographyToolbar {
+  /* FB-47: the toolbar is `hidden` when no text object is selected
+     (typography-editor.js refresh()). This rule used to force it visible anyway,
+     so a strip of controls painted at rest over a canvas with nothing to format. */
+  body.studio-experience #v20TypographyToolbar:not([hidden]) {
     display: flex !important;
   }
 
