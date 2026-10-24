@@ -70,6 +70,11 @@ body[data-shell="a"] > main {
   width: 100%;
   min-width: 0;
 }
+/* FB-57 (OD-16 option 1): `body.auth-mode > main` widens the column to 100% only after
+   the session resolves, so the dashboard painted at the 1200px cap first. The page knows it is
+   the dashboard from the first byte of HTML, so ask for the final width there instead; same
+   selector family as the base rule, no priority override. */
+body[data-page="dashboard"][data-shell="a"] > main { max-width: 100%; }
 /* The editor owns its own grid inside <main> (rail + canvas + inspector). */
 body[data-page="index"] > main { max-width: none; margin: 0; padding: 0; }
 
