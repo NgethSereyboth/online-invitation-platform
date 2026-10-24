@@ -142,3 +142,15 @@ translation are **not** listed here; FB-54 did not change them.
 | `src/js/pages/admin/audit-log.js` | IP | IP |
 | `src/html/privacy.html` | Skip to content | រំលងទៅមាតិកា |
 | `src/html/dashboard.html` | Poster canvas size (px) | ទំហំផ្ទាំងប៉ូស្ទ័រ (px) |
+
+## Not yet translatable — no map row (2026-10-24, FB-61)
+
+The audit found **72 occurrences / 42 unique strings** in `<span class="i18n-km">` slots that still
+render English to a Khmer reader, concentrated in the shared header rebuilt in FB-48/FB-55
+(`Workspace` 20×, `Plans` 11×, `Passkeys`, `Administration`, `Sign out`, `Welcome back`, …).
+They are not in this queue because there is nothing to review yet: rule R3 forbids applying Khmer
+that the map does not contain, and `tools/i18n-apply-khmer-map.py` matches no row for those slots.
+
+The full inventory — English string, occurrence count, pages, and whether a map row exists
+elsewhere — is `docs/i18n/KHMER-GAP-SHARED-HEADER-2026-10-24.md`. The next Khmer round needs a map
+section per file for those strings before any of them can ship.
