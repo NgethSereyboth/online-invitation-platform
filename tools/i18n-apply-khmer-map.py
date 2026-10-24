@@ -30,6 +30,7 @@ Matching rules (map §0)
 from __future__ import annotations
 
 import argparse
+import html as htmlmod
 import json
 import re
 import sys
@@ -38,6 +39,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MAP = ROOT / "docs" / "i18n" / "KHMER-TRANSLATION-MAP-2026-10-24.md"
+DEFAULT_ADDENDA = [
+    ROOT / "docs" / "i18n" / "KHMER-TRANSLATION-MAP-ADDENDUM-2026-10-24.md",
+    ROOT / "docs" / "i18n" / "KHMER-TRANSLATION-MAP-ADDENDUM-2-2026-10-24.md",
+]
 SKIP_DIRS = {"python"}  # src/python/* is a generated mirror; build.py copies src/js|html
 
 
@@ -116,6 +121,92 @@ def parse_map(path: Path) -> list[Row]:
             idx += 1
         elif section == "6" and current_file and len(cells) >= 2:
             rows.append(Row("6", current_file, cells[0], km=cells[1], index=idx))
+            idx += 1
+    return rows
+
+
+def parse_addendum(path: Path) -> list[Row]:
+    """Parse an ADDENDUM map.
+
+    Shapes (LT-1.2):
+      ## 1./## 2./## 3. + ### `file` + | EN | KM |      -> fallback row (like section 6)
+      ## 4. + | Replace | With |                         -> global terminology replacement
+      ## N. `file` (STRINGS.km) + | KEY | KM |          -> keyed JS string-table repair
+      | EN (new English text) | KM |                     -> pair row: new EN + new KM for
+                                                            the slot whose EN is the row
+                                                            immediately above it
+    """
+    text = path.read_text(encoding="utf-8")
+    rows: list[Row] = []
+    section = ""
+    current_file = ""
+    last_fallback: Row | None = None
+    idx = 0
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        m = re.match(r"## (\d+)\.", line)
+        if m:
+            num = m.group(1)
+            current_file = ""
+            last_fallback = None
+            fm = re.search(r"`([^`]+\.(?:js|html))`", line)
+            if "STRINGS.km" in line and fm:
+                section = "key"
+                current_file = fm.group(1)
+            elif num in ("1", "2", "3"):
+                section = "fb"
+            elif num == "4":
+                section = "term"
+            else:
+                section = ""
+            continue
+        if line.startswith("### "):
+            fm = re.search(r"`([^`]+\.(?:js|html))`", line)
+            if fm and section in ("fb", "key"):
+                current_file = fm.group(1)
+            continue
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not cells or set(cells[0]) <= set("-: "):
+            continue
+        if cells[0] == "EN (new English text)":
+            # The following row replaces this slot's EN as well as its KM.
+            section = "pair"
+            continue
+        if cells[0] in ("EN", "Replace", "KEY", "Where", "Where | EN"):
+            continue
+        if section == "fb" and current_file and len(cells) >= 2:
+            row = Row("6", current_file, cells[0], km=cells[1], index=idx)
+            rows.append(row)
+            last_fallback = row
+            idx += 1
+        elif section == "pair" and current_file and len(cells) >= 2:
+            # The conditional row replaces the earlier row for the same slot (its EN is
+            # rewritten too). Pick the preceding row with the longest shared word suffix;
+            # "…design studio for invitations and posters" wins over the table above it.
+            candidates = [r for r in rows if r.file == current_file and r.section == "6"]
+            base = last_fallback
+            if candidates:
+                def suffix(a: str, b: str) -> int:
+                    n = 0
+                    for x, y in zip(a.split()[::-1], b.split()[::-1]):
+                        if x.lower() != y.lower():
+                            break
+                        n += 1
+                    return n
+                base = max(candidates, key=lambda r: suffix(r.en, cells[0]))
+            if base:
+                rows.append(Row("pair", current_file, cells[0], km=cells[1],
+                                find=base.en, index=idx))
+                idx += 1
+        elif section == "term" and len(cells) >= 2:
+            rows.append(Row("term", "", cells[0], find=cells[0],
+                            replace=cells[1], index=idx))
+            idx += 1
+        elif section == "key" and current_file and len(cells) >= 2:
+            rows.append(Row("key", current_file, "", km=cells[1],
+                            keys=(cells[0],), index=idx))
             idx += 1
     return rows
 
@@ -295,6 +386,7 @@ def apply_helpers(state: FileState, rows: list[Row]) -> None:
             new = js_encode(keep_edges(km, row.km), quote)
             edits.append((m.start("km"), m.end("km"), new))
             state.rows_applied.add(row.index)
+            break  # one row per slot; addenda override earlier maps
     for start, end, new in sorted(edits, reverse=True):
         state.text = state.text[:start] + new + state.text[end:]
     state.applied += len(edits)
@@ -306,6 +398,7 @@ def apply_strings_table(state: FileState, rows: list[Row]) -> None:
         return
     en_tab, km_tab = tables
     edits: list[tuple[int, int, str]] = []
+    done_keys: set[str] = set()
     for row in rows:
         # §4: find the key whose EN value is this row's English.
         key = None
@@ -315,8 +408,9 @@ def apply_strings_table(state: FileState, rows: list[Row]) -> None:
                 break
         if key is None and row.keys:
             key = row.keys[0]
-        if key is None or key not in km_tab:
+        if key is None or key not in km_tab or key in done_keys:
             continue
+        done_keys.add(key)
         cur, pos, quote = km_tab[key]
         if row.section == "6" and cur.strip() != row.en.strip():
             continue
@@ -332,24 +426,116 @@ def apply_strings_table(state: FileState, rows: list[Row]) -> None:
 
 def apply_html(state: FileState, rows: list[Row]) -> None:
     edits: list[tuple[int, int, str]] = []
-    by_en = {r.en.strip(): r for r in rows}
+    # LT-1.2 (b): compare after decoding HTML entities on both sides. `Plans &amp; usage`
+    # in billing.html only matched its map row after this.
+    by_en: dict[str, Row] = {}
+    for r in rows:
+        # A later map (an addendum) overrides an earlier row for the same slot.
+        by_en[htmlmod.unescape(r.en).strip()] = r
+
+    def row_for(body: str) -> Row | None:
+        plain = htmlmod.unescape(body)
+        row = by_en.get(plain.strip())
+        if not row:
+            return None
+        if plain == htmlmod.unescape(row.en):
+            return row
+        if row.km and plain == row.km:
+            state.rows_applied.add(row.index)  # already in the map's Khmer
+        return None
+
     for m in KM_SPAN_RE.finditer(state.text):
         body = m.group("body")
-        row = by_en.get(body.strip())
-        if not row or body != row.en:
+        row = row_for(body)
+        if not row:
             continue
         edits.append((m.start("body"), m.end("body"), row.km))
         state.rows_applied.add(row.index)
     for m in KM_ATTR_RE.finditer(state.text):
         body = m.group("body")
-        row = by_en.get(body.strip())
-        if not row or body != row.en:
+        row = row_for(body)
+        if not row:
             continue
         edits.append((m.start("body"), m.end("body"), row.km))
         state.rows_applied.add(row.index)
     for start, end, new in sorted(edits, reverse=True):
         state.text = state.text[:start] + new + state.text[end:]
     state.applied += len(edits)
+
+
+def apply_pairs(state: FileState, rows: list[Row]) -> None:
+    """Rows with a NEW English text and its Khmer (ADDENDUM §2 conditional row)."""
+    if not rows:
+        return
+    edits: list[tuple[int, int, str]] = []
+    for m in HTML_PAIR_RE.finditer(state.text):
+        en_body = re.sub(r"<[^>]+>", "", m.group("en"))
+        en_body = htmlmod.unescape(en_body)
+        for row in rows:
+            if htmlmod.unescape(row.find).strip() != en_body.strip():
+                continue
+            edits.append((m.start("en"), m.end("en"), row.en))
+            edits.append((m.start("km"), m.end("km"), row.km))
+            state.rows_applied.add(row.index)
+    for m in HELPER_RE.finditer(state.text):
+        en = js_decode(m.group("en"))
+        for row in rows:
+            if htmlmod.unescape(row.find).strip() != en.strip():
+                continue
+            q1, q2 = m.group("q1"), m.group("q2")
+            edits.append((m.start("en"), m.end("en"), js_encode(row.en, q1)))
+            edits.append((m.start("km"), m.end("km"), js_encode(row.km, q2)))
+            state.rows_applied.add(row.index)
+    for start, end, new in sorted(edits, reverse=True):
+        state.text = state.text[:start] + new + state.text[end:]
+    state.applied += len(edits)
+
+
+def apply_keys(state: FileState, rows: list[Row]) -> None:
+    """ADDENDUM-2: replace one named key's value inside the file's STRINGS.km block."""
+    if not rows:
+        return
+    tables = _strings_tables(state.text)
+    if not tables:
+        return
+    _en_tab, km_tab = tables
+    edits: list[tuple[int, int, str]] = []
+    for row in rows:
+        key = row.keys[0] if row.keys else ""
+        if not key or key not in km_tab:
+            continue
+        # A key must exist exactly once in the en table and once in the km table.
+        if len(re.findall(rf"\b{re.escape(key)}\s*:", state.text)) != 2:
+            continue
+        cur, pos, quote = km_tab[key]
+        new = js_encode(keep_edges(cur, row.km), quote)
+        if cur == row.km:
+            state.rows_applied.add(row.index)
+            continue
+        edits.append((pos, pos + len(cur), new))
+        state.rows_applied.add(row.index)
+        km_tab[key] = (row.km, pos, quote)
+    for start, end, new in sorted(edits, reverse=True):
+        state.text = state.text[:start] + new + state.text[end:]
+    state.applied += len(edits)
+
+
+def apply_terms(files: dict[str, Path], rows: list[Row], report: dict,
+                dry_run: bool) -> None:
+    """ADDENDUM §4: exact find -> replace across src/js|src/html, listing every site."""
+    for row in rows:
+        sites: list[dict] = []
+        for rel, path in sorted(files.items()):
+            text = path.read_text(encoding="utf-8")
+            if row.find not in text:
+                continue
+            for lineno, line in enumerate(text.splitlines(), 1):
+                if row.find in line:
+                    sites.append({"file": rel, "line": lineno})
+            if not dry_run:
+                path.write_text(text.replace(row.find, row.replace), encoding="utf-8")
+                report["applied_total"] += text.count(row.find)
+        report["terms"].append({"find": row.find, "replace": row.replace, "sites": sites})
 
 
 def apply_label_pairs(state: FileState, rows: list[Row]) -> None:
@@ -437,7 +623,20 @@ def _existing_translation(text: str, en: str, is_html: bool) -> str | None:
 def update_csv(csv_path: Path, rows: list[Row], report: dict) -> None:
     """Refresh the ledger by script: a row that has Khmer in source is not a fallback."""
     import csv
-    by_key = {(r.file, r.en.strip()): r for r in rows if r.section in ("3-key", "4", "6")}
+    by_key = {(r.file, r.en.strip()): r for r in rows
+              if r.section in ("3-key", "4", "6")}
+    for r in rows:
+        if r.section == "key" and r.file and r.keys:
+            src = ROOT / r.file
+            if src.is_file():
+                tables = _strings_tables(src.read_text(encoding="utf-8"))
+                if tables:
+                    en_tab = tables[0]
+                    key = r.keys[0]
+                    if key in en_tab:
+                        by_key.setdefault((r.file, en_tab[key][0].strip()), r)
+        elif r.section == "pair":
+            by_key.setdefault((r.file, r.find.strip()), r)
     with csv_path.open(newline="", encoding="utf-8-sig") as fh:
         reader = csv.reader(fh)
         header = next(reader)
@@ -447,11 +646,24 @@ def update_csv(csv_path: Path, rows: list[Row], report: dict) -> None:
     changed = 0
     still_fallback = 0
     for r in data:
-        if len(r) <= si or r[si] != "fallback":
+        if len(r) <= si:
             continue
         file, en = r[fi], r[ei]
         map_row = by_key.get((file, en.strip()))
-        src = (ROOT / file)
+        if map_row is not None and map_row.section == "pair" and r[si] == "fallback":
+            # The conditional row rewrites the slot's English too; keep the ledger honest.
+            r[ei] = map_row.en
+            en = map_row.en
+            src = ROOT / map_row.file
+        else:
+            src = ROOT / file
+        if r[si] != "fallback":
+            if map_row is not None and src.is_file():
+                text = src.read_text(encoding="utf-8")
+                if _row_present(text, map_row) and r[ki] != map_row.km:
+                    r[ki] = map_row.km
+                    changed += 1
+            continue
         if map_row is None or not src.is_file():
             still_fallback += 1
             continue
@@ -473,14 +685,34 @@ def update_csv(csv_path: Path, rows: list[Row], report: dict) -> None:
         writer = csv.writer(fh, lineterminator="\r\n", quoting=csv.QUOTE_ALL)
         writer.writerow(header)
         writer.writerows(data)
-    print(f"CSV_UPDATED fallback_to_translated={changed} still_fallback={still_fallback}")
+    print(f"CSV_UPDATED rows_updated={changed} still_fallback={still_fallback}")
 
 
 def _row_present(text: str, row: Row) -> bool:
     """True when the file carries this row's KM byte-for-byte next to its EN."""
+    if row.section == "key":
+        tables = _strings_tables(text)
+        if not tables:
+            return False
+        _en_tab, km_tab = tables
+        key = row.keys[0] if row.keys else ""
+        return bool(key) and key in km_tab and km_tab[key][0] == row.km
+    if row.section == "pair":
+        for m in HTML_PAIR_RE.finditer(text):
+            en = htmlmod.unescape(re.sub(r"<[^>]+>", "", m.group("en")))
+            if en.strip() == htmlmod.unescape(row.en).strip() and m.group("km") == row.km:
+                return True
+        for m in HELPER_RE.finditer(text):
+            if js_decode(m.group("en")) == row.en and js_decode(m.group("km")) == row.km:
+                return True
+        return False
     if row.file.endswith(".html"):
         for m in HTML_PAIR_RE.finditer(text):
-            if m.group("en").strip() == row.en.strip() and m.group("km") == row.km:
+            if (htmlmod.unescape(m.group("en"))).strip() == htmlmod.unescape(row.en).strip() \
+                    and m.group("km") == row.km:
+                return True
+        for m in KM_SPAN_RE.finditer(text):
+            if htmlmod.unescape(m.group("body")) == row.km:
                 return True
         for m in KM_ATTR_RE.finditer(text):
             if m.group("body") == row.km:
@@ -527,12 +759,23 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     rows = parse_map(Path(args.map))
+    for extra in DEFAULT_ADDENDA:
+        if extra.is_file():
+            rows.extend(parse_addendum(extra))
+    # A conditional pair row rewrites its slot's EN, so the older row for that slot
+    # (still in the main map) can no longer verify byte-for-byte: it is superseded.
+    superseded = {(r.file, r.find.strip()) for r in rows if r.section == "pair"}
+    rows = [r for r in rows
+            if not (r.section == "6" and (r.file, r.en.strip()) in superseded)]
     by_file: dict[str, list[Row]] = {}
     label_rows: list[Row] = []
+    term_rows: list[Row] = []
     for row in rows:
         if row.section == "3-label":
             label_rows.append(row)
-        else:
+        elif row.section == "term":
+            term_rows.append(row)
+        elif row.file:
             by_file.setdefault(row.file, []).append(row)
 
     files = {p.relative_to(ROOT).as_posix(): p for p in source_files()}
@@ -543,6 +786,8 @@ def main(argv: list[str] | None = None) -> int:
         "mismatches": [],
         "applied_total": 0,
         "verified": 0,
+        "terms": [],
+        "shared_source": [],
     }
 
     states: dict[str, FileState] = {}
@@ -556,14 +801,19 @@ def main(argv: list[str] | None = None) -> int:
         state = FileState(path, path.read_text(encoding="utf-8"))
         repairs = [r for r in file_rows if r.section in ("3-key", "4")]
         fallbacks = [r for r in file_rows if r.section == "6"]
+        pairs = [r for r in file_rows if r.section == "pair"]
+        keys = [r for r in file_rows if r.section == "key"]
         if rel.endswith(".html"):
             apply_html(state, repairs + fallbacks)
+            apply_pairs(state, pairs)
         else:
             if repairs:
                 apply_strings_table(state, repairs)
             if fallbacks:
                 apply_helpers(state, fallbacks)
                 apply_strings_table(state, fallbacks)
+            apply_pairs(state, pairs)
+            apply_keys(state, keys)
         # Specific rows first so "Stored materials" wins over the generic label.
         if label_rows:
             specific = [r for r in label_rows if r.en.split("(")[-1].split(")")[0].endswith(
@@ -574,7 +824,22 @@ def main(argv: list[str] | None = None) -> int:
             apply_label_pairs(state, label_rows)
         applied_rows = [r for r in file_rows if r.index in state.rows_applied]
         for row in file_rows:
-            if row.index not in state.rows_applied:
+            if row.index in state.rows_applied:
+                continue
+            shared = None
+            for other_rel, other_path in files.items():
+                if other_rel == rel:
+                    continue
+                try:
+                    if _row_present(other_path.read_text(encoding="utf-8"), row):
+                        shared = other_rel
+                        break
+                except OSError:
+                    continue
+            if shared:
+                report["shared_source"].append(
+                    {"file": rel, "en": row.en, "source": shared})
+            else:
                 report["mismatches"].append(
                     {"file": rel, "en": row.en,
                      "reason": "no fallback occurrence in this file"})
@@ -598,6 +863,8 @@ def main(argv: list[str] | None = None) -> int:
         for rel, state in states.items():
             if state.text != state.path.read_text(encoding="utf-8"):
                 state.path.write_text(state.text, encoding="utf-8")
+    if term_rows:
+        apply_terms(files, term_rows, report, args.dry_run or args.verify)
 
     if args.verify or not args.dry_run:
         total = 0
@@ -610,14 +877,19 @@ def main(argv: list[str] | None = None) -> int:
             sim = FileState(files[rel], head)
             fallbacks = [r for r in file_rows if r.section == "6"]
             repairs = [r for r in file_rows if r.section in ("3-key", "4")]
+            pairs = [r for r in file_rows if r.section == "pair"]
+            keys = [r for r in file_rows if r.section == "key"]
             if rel.endswith(".html"):
                 apply_html(sim, repairs + fallbacks)
+                apply_pairs(sim, pairs)
             else:
                 if repairs:
                     apply_strings_table(sim, repairs)
                 if fallbacks:
                     apply_helpers(sim, fallbacks)
                     apply_strings_table(sim, fallbacks)
+                apply_pairs(sim, pairs)
+                apply_keys(sim, keys)
             for row in file_rows:
                 if row.index not in sim.rows_applied:
                     continue
@@ -636,6 +908,12 @@ def main(argv: list[str] | None = None) -> int:
           f"{sum(f['rows'] for f in report['files'].values())} rows")
     print(f"APPLIED {report['applied_total']} string occurrences")
     print(f"MISMATCHED {len(report['mismatches'])} rows (listed in the report)")
+    if report["shared_source"]:
+        print(f"SHARED SOURCE {len(report['shared_source'])} rows "
+              f"(already present in a shared module)")
+    for term in report["terms"]:
+        print(f"TERM {term['find']!r} -> {term['replace']!r}: "
+              f"{len(term['sites'])} occurrence(s) in {len({s['file'] for s in term['sites']})} file(s)")
     for rel, info in sorted(report["files"].items()):
         print(f"  {rel}: {info['applied']} occurrences, {info['rows']}/{info['rows_total']} rows")
     if args.update_csv and not args.dry_run:

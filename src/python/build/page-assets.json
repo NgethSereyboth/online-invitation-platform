@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 416561,
+      "bytes": 416716,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -40,7 +40,7 @@
       ]
     },
     "billing.html": {
-      "bytes": 360384,
+      "bytes": 360342,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -79,7 +79,7 @@
       ]
     },
     "designer.html": {
-      "bytes": 380855,
+      "bytes": 380834,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -180,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 410602,
+      "bytes": 410539,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",

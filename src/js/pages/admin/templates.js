@@ -35,7 +35,7 @@
     },
     km: {
       /* Trusted Khmer from docs/i18n/TRANSLATIONS.csv. */
-      title:'ពុម្ពអត្ថបទ', category:'ប្រភេទ', owner:'ម្ចាស់', version:'កំណែ',
+      title:'គំរូ', category:'ប្រភេទ', owner:'ម្ចាស់', version:'កំណែ',
       visibility:'ភាពមើលឃើញ', updated:'បានធ្វើបច្ចុប្គន្នភាព', actions:'សកម្មភាព',
       save:'រក្សាទុក', retry:'ព្យាយាមម្ដងទៀត',
       /* KH_PENDING — no trusted Khmer translation; English text kept. */

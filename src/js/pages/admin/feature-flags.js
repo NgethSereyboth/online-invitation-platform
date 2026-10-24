@@ -28,8 +28,6 @@
       sessionPolicyConfirm:'Change the non-admin session idle window to {days} days?',
       sessionPolicySaved:'Idle window updated to {days} days.',
       sessionPolicyError:'Failed to update idle window: {error}',
-      /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
-         the English fallback (repo convention: commit c2ec627). */
       flagSaved:'Saved {key}.',
       saveFailed:'Could not save the change. Try again.'
     },
@@ -39,7 +37,7 @@
       save:'រក្សាទុក',
       on:'បើក',
       off:'បិទ',
-      updatedAt:'បានធ្វើបច្ចុប្គន្នភាព',
+      updatedAt:'បានធ្វើបច្ចុប្បន្នភាព',
       updatedBy:'ដោយ',
       flag:'ជម្រើស',
       noFlags:'មិនមានជម្រើសមុខងារត្រូវបានកំណត់ទេ។',
@@ -53,10 +51,8 @@
       sessionPolicyConfirm:'ប្ដូររយៈពេលទំនេរនៃសម័យសម្រាប់អ្នកមិនមែនអ្នកគ្រប់គ្រងទៅ {days} ថ្ងៃឬ?',
       sessionPolicySaved:'បានធ្វើបច្ចុប្បន្នភាពរយៈពេលទំនេរទៅ {days} ថ្ងៃ។',
       sessionPolicyError:'ធ្វើបច្ចុប្បន្នភាពរយៈពេលទំនេរមិនបានសម្រេច៖ {error}',
-      /* KH_PENDING — no trusted Khmer string for these two; the km block keeps
-         the English fallback (repo convention: commit c2ec627). */
-      flagSaved:'Saved {key}.',
-      saveFailed:'Could not save the change. Try again.'
+      flagSaved:'បានរក្សាទុក {key}។',
+      saveFailed:'មិនអាចរក្សាទុកការផ្លាស់ប្ដូរបានទេ។ សូមព្យាយាមម្ដងទៀត។'
     }
   };
   function t(key, ...args) {

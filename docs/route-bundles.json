@@ -40,14 +40,14 @@
     },
     "admin.html": {
       "deferredJavascript": "bundle-admin-deferred.js",
-      "deferredJavascriptBytes": 14604,
-      "deferredJavascriptSha256": "c29e4d3d23f16f5faa9b507fc9804894a3ba493aea246e35f6324952acb4c7a6",
+      "deferredJavascriptBytes": 14454,
+      "deferredJavascriptSha256": "a2cb2b9507519e73f4666a196b45872b4b2f6d4d29a43809b32d7ff371d2fd26",
       "deferredStylesheet": "bundle-admin-deferred.css",
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-admin.js",
-      "scriptBytes": 145980,
-      "scriptSha256": "ed234db93547f890c394cf948e82755e68c15f53fb9b76d4fade9fb7da026cc2",
+      "scriptBytes": 146135,
+      "scriptSha256": "43e0973dd1c635a6b037c4f83a0b3daeae04ddef8af87176b618ed29beaf1000",
       "sources": {
         "deferredScripts": [
           "pages/admin/impersonate.js",
@@ -133,8 +133,8 @@
     },
     "billing.html": {
       "javascript": "bundle-billing.js",
-      "scriptBytes": 88132,
-      "scriptSha256": "4a8412dc19f9c07baa84edc2b67f292588bd97040ab866b2d6deaefbfaf3cfab",
+      "scriptBytes": 88090,
+      "scriptSha256": "0a9951aa517402bcc0ff7c337f4bbe4c8a7b9b69684f68461bb1de0c2dbca72c",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -264,8 +264,8 @@
     },
     "designer.html": {
       "javascript": "bundle-designer.js",
-      "scriptBytes": 83936,
-      "scriptSha256": "8ef9c917f5a0476be00048c082d951b58196f13c76ea3c425fde095daeeccf6d",
+      "scriptBytes": 83915,
+      "scriptSha256": "35bdd6a121bcd3dd3982b10e3e517af0ab22e13f05eeb19ebcb40075f764bae2",
       "sources": {
         "scripts": [
           "yjs-bridge.js",
@@ -675,8 +675,8 @@
     },
     "templates.html": {
       "javascript": "bundle-templates.js",
-      "scriptBytes": 109546,
-      "scriptSha256": "33509bb55250e13fda60cf72caa736c45ec12391c5d228d2de793c15e6c97182",
+      "scriptBytes": 109483,
+      "scriptSha256": "ee1cdde8aadecc0662f792db95d9113872cdbad6111ae37d04c57c9a9ae10350",
       "sources": {
         "scripts": [
           "core/i18n.js",

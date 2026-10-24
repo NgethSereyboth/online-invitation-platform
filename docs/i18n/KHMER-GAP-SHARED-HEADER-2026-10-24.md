@@ -63,3 +63,23 @@ pins its fallback count at 305 and has to move in the same item.
 
 Excluded from this list: slots with no Latin letters (`×`) and console hints (`Ctrl K`, `Space`),
 which stay Latin by design.
+
+## Closed by LT-1.2 (2026-10-24)
+
+`docs/i18n/KHMER-TRANSLATION-MAP-ADDENDUM-2026-10-24.md` supplied a row for every string in the
+inventory above. `tools/i18n-apply-khmer-map.py` (extended to read the addenda, decode HTML
+entities on both sides, and apply the terminology replacement) applied them to `src/` and reported
+`VERIFIED 88/88`; the source-of-truth list is the review queue's "LT-1.2" section.
+
+- **Header/furniture slots:** the per-page breadcrumb, rail label and rail links are now Khmer on
+  all ten pages (`Workspace`, `Plans`, `Administration`, `Passkeys`, `Template Studio`, `Sign out`,
+  `My invitations`, `Welcome back`, …). The shared launcher menu header built in `src/js/app.js`
+  (`<strong>Workspace</strong>`) is **outside** the `.i18n-km` slot system and still English; it is
+  recorded in `KHMER-GAP-ROUND5-2026-10-24.md`.
+- **Terminology:** ADDENDUM §4 replaced the "text template" word with the term-base word in 24
+  places over 14 files (list in `artifacts/next-work/lt-1-2/NOTES.md`).
+- **HTML entities:** `Plans &amp; usage` (billing) and `Style &amp; motion` (editor) matched only
+  after decoding both sides, exactly as the addendum predicted.
+
+The 72-occurrence / 42-string count above remains the historical audit. The remaining English on
+Khmer pages is inventoried separately, page by page, in `KHMER-GAP-ROUND5-2026-10-24.md`.
