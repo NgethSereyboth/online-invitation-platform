@@ -283,8 +283,11 @@ rsvp</textarea></label>
       <p class="hint">Select an object, then drag it, use the lower-right handle to resize, or drag the top rotation handle. Drag on empty canvas space to box-select multiple objects.</p>
     </aside>
     <section class="stage-wrap">
-      <div class="toolbar">
-        <button data-device="390">Mobile</button><button data-device="760">Tablet</button><button data-device="1100">Desktop</button>
+      <!-- FB-50: the toolbar's final class and the device buttons' short labels used to arrive
+           from studio-experience.js / editor-core.js, so the bar painted at its full width and
+           collapsed ~0.12 of the editor's CLS a second later. Both are static here now. -->
+      <div class="toolbar studio-canvas-toolbar">
+        <button data-device="390" class="v54-device-button" data-short="M">Mobile</button><button data-device="760" class="v54-device-button" data-short="T">Tablet</button><button data-device="1100" class="v54-device-button" data-short="D">Desktop</button>
         <span class="toolbar-divider"></span>
         <select id="posterSizes" aria-label="Canvas size" title="Canvas size preset">
           <option value="custom">Custom size…</option>
@@ -429,6 +432,14 @@ rsvp</textarea></label>
       <button id="wishesBtn" type="button">View guest wishes</button>
     </aside>
   </main>
+  <!-- FB-50: the footer was appended by studio-experience.js ~1.3 s in, and the third shell row
+       then took 32px from <main> (a 0.086 layout shift). Ship its final box here; the script
+       now fills the existing element instead of creating it. -->
+  <footer class="studio-statusbar">
+    <div><span class="studio-status-dot"></span><strong id="studioStatusSave">Ready</strong><small id="studioStatusServer">Local workspace</small></div>
+    <div class="studio-status-center"><span id="studioStatusCanvas">Main hero canvas</span><span>·</span><span id="studioSelectionStatus">No selection</span></div>
+    <div><kbd>Ctrl K</kbd><span>Quick actions</span><kbd>Space</kbd><span>Pan</span></div>
+  </footer>
   <dialog id="modal" aria-modal="true" aria-labelledby="modalHeading"><button class="close" type="button" aria-label="Close guest preview">×</button><div id="modalBody"></div><h2 id="modalHeading" class="sr-only">Guest preview</h2></dialog>
   <script src="bundle-index.js"></script>
   

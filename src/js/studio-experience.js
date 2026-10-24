@@ -431,13 +431,16 @@
   document.addEventListener('pointerup', () => setTimeout(refreshFloatingToolbar, 0), true);
   refreshFloatingToolbar();refreshPhotoControls();
   const pasteStyleButton=$('[data-float-action="pasteStyle"]',floating);if(pasteStyleButton)pasteStyleButton.disabled=!localStorage.getItem(styleClipboardKey);
-  const statusbar = document.createElement('footer');
-  statusbar.className = 'studio-statusbar';
-  statusbar.innerHTML = `
+  let statusbar = $('.studio-statusbar');
+  if (!statusbar) {
+    statusbar = document.createElement('footer');
+    statusbar.className = 'studio-statusbar';
+    statusbar.innerHTML = `
     <div><span class="studio-status-dot"></span><strong id="studioStatusSave">Ready</strong><small id="studioStatusServer">Local workspace</small></div>
     <div class="studio-status-center"><span id="studioStatusCanvas">Main hero canvas</span><span>·</span><span id="studioSelectionStatus">No selection</span></div>
-    <div><kbd>Ctrl K</kbd><span>Quick actions</span><kbd>Space</kbd><span>Pan</span></div>`;
-  body.append(statusbar);
+      <div><kbd>Ctrl K</kbd><span>Quick actions</span><kbd>Space</kbd><span>Pan</span></div>`;
+    body.append(statusbar);
+  }
   function updateStatusbar() {
     const save = $('#saveState'); const server = $('#serverState'); const canvas = $('#activeCanvasLabel');
     if ($('#studioStatusSave')) $('#studioStatusSave').textContent = text(save) || 'Ready';
