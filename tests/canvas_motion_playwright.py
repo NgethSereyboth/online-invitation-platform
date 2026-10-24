@@ -912,6 +912,36 @@ VIEW_READ_JS = """() => ({
 })"""
 
 
+def _ensure_scrollable(page, budget_ms=4000):
+    """Wait for the seeded document to render and give the viewport scroll range.
+
+    P5 can start before the invitation has hydrated. An empty stage reports
+    scrollHeight == clientHeight, so neither a plain wheel nor the zoom boost in
+    test_plain_wheel_scroll can create range, and the check used to fail on a
+    page that simply had not painted yet (2 of 15 runs). Poll for rendered text,
+    apply the zoom boost once, and report whether a range ever appeared.
+    """
+    deadline = time.time() + budget_ms / 1000.0
+    boosted = False
+    while time.time() < deadline:
+        state = page.evaluate("""() => {
+            const v = document.querySelector('#canvasViewport');
+            if (!v) return {ready: false, scrollable: false};
+            return {ready: (v.innerText || '').trim().length > 0,
+                    scrollable: v.scrollHeight > v.clientHeight + 1};
+        }""")
+        if state.get('scrollable'):
+            return True
+        if state.get('ready') and not boosted:
+            # Rendered but still fitted: zoom in so native scroll is possible.
+            page.evaluate("() => EInviteCanvasViewController.setZoom(2)")
+            boosted = True
+            page.wait_for_timeout(350)
+            continue
+        page.wait_for_timeout(150)
+    return False
+
+
 def test_plain_wheel_scroll(page):
     """Real plain wheel over the canvas must scroll natively (event not
     preventDefault'd) and must not change zoom. Grounded in probe-wheel.json
@@ -931,14 +961,13 @@ def test_plain_wheel_scroll(page):
                     clientHeight: v.clientHeight, zoom: EInviteCanvasViewController.zoom};
         }""")
 
+    if not _ensure_scrollable(page):
+        return {'prepared': False,
+                'reason': 'canvas stage never rendered a scrollable document within 4 s; '
+                          'native wheel scroll cannot be exercised'}
+    page.evaluate("() => { document.querySelector('#canvasViewport').scrollTop = 0; }")
+    page.wait_for_timeout(120)
     before = metrics()
-    if before['scrollHeight'] <= before['clientHeight'] + 1:
-        # Not scrollable at the current zoom: zoom in so native scroll is possible.
-        page.evaluate("() => EInviteCanvasViewController.setZoom(2)")
-        page.wait_for_timeout(350)
-        page.evaluate("() => { document.querySelector('#canvasViewport').scrollTop = 0; }")
-        page.wait_for_timeout(120)
-        before = metrics()
     center = page.evaluate("""() => { const r = document.querySelector('#canvasViewport').getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; }""")
     page.mouse.move(center['x'], center['y'])
     page.mouse.wheel(0, 240)
@@ -947,6 +976,7 @@ def test_plain_wheel_scroll(page):
     log = page.evaluate("() => window.__wheelLog")
     plain_events = [e for e in log if not e.get('ctrlKey')]
     return {
+        'prepared': True,
         'plainScrollChanged': after['scrollTop'] > before['scrollTop'],
         'plainWheelNotPrevented': bool(plain_events) and all(not e.get('prevented') for e in plain_events),
         'zoomUnchangedByPlainWheel': after['zoom'] == before['zoom'],
@@ -1216,13 +1246,22 @@ def run_phase_P5(page, out, errors):
 
     # Plain wheel scroll (real wheel input; native scroll must be preserved)
     pw = test_plain_wheel_scroll(page)
-    results.append({
-        'name': 'plain-wheel-scrolls-native',
-        'verdict': 'pass' if (pw.get('plainScrollChanged') and pw.get('plainWheelNotPrevented') and pw.get('zoomUnchangedByPlainWheel')) else 'fail',
-        'metrics': pw,
-        'evidencePath': screenshot_out(page, out, 'P5-plain-wheel.png'),
-        'notes': f"scrollTop {pw.get('scrollBefore')}->{pw.get('scrollAfterPlain')}, prevented={not pw.get('plainWheelNotPrevented')}, zoom {pw.get('zoomBefore')}->{pw.get('zoomAfterPlain')}"
-    })
+    if not pw.get('prepared'):
+        results.append({
+            'name': 'plain-wheel-scrolls-native',
+            'verdict': 'skipped',
+            'metrics': pw,
+            'evidencePath': screenshot_out(page, out, 'P5-plain-wheel.png'),
+            'notes': pw.get('reason', 'stage never became scrollable')
+        })
+    else:
+        results.append({
+            'name': 'plain-wheel-scrolls-native',
+            'verdict': 'pass' if (pw.get('plainScrollChanged') and pw.get('plainWheelNotPrevented') and pw.get('zoomUnchangedByPlainWheel')) else 'fail',
+            'metrics': pw,
+            'evidencePath': screenshot_out(page, out, 'P5-plain-wheel.png'),
+            'notes': f"scrollTop {pw.get('scrollBefore')}->{pw.get('scrollAfterPlain')}, prevented={not pw.get('plainWheelNotPrevented')}, zoom {pw.get('zoomBefore')}->{pw.get('zoomAfterPlain')}"
+        })
     page.evaluate("() => EInviteCanvasViewController.fit()")
     wait_quiet_rAF(page)
 
