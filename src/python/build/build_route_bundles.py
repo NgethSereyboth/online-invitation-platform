@@ -241,7 +241,22 @@ def build(write: bool) -> dict:
         stem = Path(page).stem
         js_name = f"bundle-{stem}.js"
         css_name = f"bundle-{stem}.css"
-        js = js_bundle(entry["scripts"])
+        # Optional script split: ``scriptSplitAt`` names the module index where a
+        # route's startup bundle is cut into ``bundle-<stem>.js`` and
+        # ``bundle-<stem>-2.js``. The two files are the same bytes in the same
+        # order, but each compiles in its own task, so a 1 MB editor bundle stops
+        # landing as one ~700 ms long task. Executed in document order, so
+        # behaviour is unchanged; the page keeps its script count by folding a
+        # former head script into the first part.
+        scripts = entry["scripts"]
+        split_at = int(entry.get("scriptSplitAt") or 0)
+        if split_at:
+            js = js_bundle(scripts[:split_at])
+            js2_name = f"bundle-{stem}-2.js"
+            js2 = js_bundle(scripts[split_at:])
+        else:
+            js = js_bundle(scripts)
+            js2_name, js2 = "", ""
         css = css_bundle(entry["styles"])
         # Deferred chunks: on-demand modules that route-deferred-loader.js
         # injects after first paint. They are generated like the startup
@@ -255,6 +270,8 @@ def build(write: bool) -> dict:
         if write:
             # JS bundles mirror into src/js/ (repo truth); CSS bundles into src/css/.
             write_both(js_name, js, [SERVER_DIR, JS_DIR])
+            if js2:
+                write_both(js2_name, js2, [SERVER_DIR, JS_DIR])
             write_both(css_name, css, [SERVER_DIR, CSS_DIR])
             if has_deferred:
                 write_both(deferred_js_name, deferred_js, [SERVER_DIR, JS_DIR])
@@ -268,6 +285,13 @@ def build(write: bool) -> dict:
             "scriptSha256": digest(js),
             "styleSha256": digest(css),
         }
+        if js2:
+            result["pages"][page].update({
+                "javascript2": js2_name,
+                "javascript2Bytes": len(encoded(js2)),
+                "javascript2Sha256": digest(js2),
+                "scriptSplitAt": split_at,
+            })
         if has_deferred:
             result["pages"][page].update({
                 "deferredJavascript": deferred_js_name,
@@ -303,7 +327,8 @@ def main(argv=None) -> int:
                 print(f"ROUTE_BUNDLE_MANIFEST_OUT_OF_DATE {manifest_path}")
                 return 1
         # Verify every generated bundle file exists in BOTH locations and matches its hash.
-        pairs = (("javascript", "scriptSha256"), ("stylesheet", "styleSha256"),
+        pairs = (("javascript", "scriptSha256"), ("javascript2", "javascript2Sha256"),
+                 ("stylesheet", "styleSha256"),
                  ("deferredJavascript", "deferredJavascriptSha256"),
                  ("deferredStylesheet", "deferredStylesheetSha256"))
         for page, item in expected["pages"].items():

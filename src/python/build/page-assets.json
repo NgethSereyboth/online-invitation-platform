@@ -105,17 +105,16 @@
       ]
     },
     "index.html": {
-      "bytes": 1521844,
+      "bytes": 1521224,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
-        "backend-mode.js",
-        "bundle-index.js"
+        "bundle-index.js",
+        "bundle-index-2.js"
       ],
-      "styleCount": 2,
+      "styleCount": 1,
       "styles": [
-        "bundle-index.css",
-        "design-fix.css"
+        "bundle-index.css"
       ]
     },
     "materials.html": {
@@ -270,12 +269,11 @@
       ],
       "scripts": [
         "core/theme.js",
-        "backend-mode.js",
-        "bundle-index.js"
+        "bundle-index.js",
+        "bundle-index-2.js"
       ],
       "styles": [
-        "bundle-index.css",
-        "design-fix.css"
+        "bundle-index.css"
       ]
     },
     "event-operations": {

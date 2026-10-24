@@ -292,6 +292,7 @@
         "product-operations.css"
       ],
       "scripts": [
+        "backend-mode.js",
         "runtime-lifecycle.js",
         "route-deferred-loader.js",
         "core/i18n.js",
@@ -373,8 +374,10 @@
         "graphics-runtime.css",
         "editor/editor-styles.css",
         "app-shell.css",
-        "editor-responsive-contract.css"
-      ]
+        "editor-responsive-contract.css",
+        "design-fix.css"
+      ],
+      "scriptSplitAt": 24
     },
     "materials.html": {
       "deferredScripts": [

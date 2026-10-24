@@ -345,8 +345,12 @@
       "deferredStylesheetBytes": 51075,
       "deferredStylesheetSha256": "da749eebb8c336d4ea05f7edc422c28e5d0fdae09e30cf34aaa4fc862ab62357",
       "javascript": "bundle-index.js",
-      "scriptBytes": 1066948,
-      "scriptSha256": "b848717050c37664af115dd81629b6ed0bf39688d9b0cfb96badab1519ecd218",
+      "javascript2": "bundle-index-2.js",
+      "javascript2Bytes": 537201,
+      "javascript2Sha256": "0c2f2161d2ccc217b649d54778ba414d16200ed71c9ce67648a83df8e6e1107d",
+      "scriptBytes": 535343,
+      "scriptSha256": "8cf5182fda90cd27bbb1a3b9aad6d1fbc49a4fb6f2d44f979559e6551f4f7e01",
+      "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [
           "workflow-refine.js",
@@ -372,7 +376,9 @@
           "timeline.css",
           "product-operations.css"
         ],
+        "scriptSplitAt": 24,
         "scripts": [
+          "backend-mode.js",
           "runtime-lifecycle.js",
           "route-deferred-loader.js",
           "core/i18n.js",
@@ -454,11 +460,12 @@
           "graphics-runtime.css",
           "editor/editor-styles.css",
           "app-shell.css",
-          "editor-responsive-contract.css"
+          "editor-responsive-contract.css",
+          "design-fix.css"
         ]
       },
-      "styleBytes": 445126,
-      "styleSha256": "6b4e4bad0ff2f26fd8d49bf4b9246c1c423d7eef3dfb34e3942cf1cc4883e586",
+      "styleBytes": 446138,
+      "styleSha256": "10fd18b86933cb7696639b38ff72c1650eec870e3ccc8691b263e307867c71e1",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {

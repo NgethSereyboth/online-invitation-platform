@@ -38,6 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BUDGET_FILE = ROOT / "docs" / "perf" / "lighthouse-budgets.json"
 ROUTE = "index.html"
+MANIFEST = ROOT / "docs" / "route-bundles.json"
 JS_BUNDLE = ROOT / "src" / "js" / "bundle-index.js"
 CSS_BUNDLE = ROOT / "src" / "css" / "bundle-index.css"
 
@@ -60,8 +61,20 @@ def index_route_ceiling() -> dict:
 
 
 def index_route_bytes() -> dict:
-    """What the built editor route actually weighs, in bytes."""
-    script = JS_BUNDLE.stat().st_size
+    """What the built editor route actually weighs, in bytes.
+
+    The startup script may be split across ``bundle-index.js`` and
+    ``bundle-index-2.js`` (``scriptSplitAt`` in ``docs/route-bundle-sources.json``)
+    so each half compiles in its own task. Both parts are the route's script
+    weight, so the ceiling is compared against their sum, not the first file.
+    """
+    names = [JS_BUNDLE.name]
+    if MANIFEST.is_file():
+        entry = json.loads(MANIFEST.read_text(encoding="utf-8"))["pages"].get(ROUTE, {})
+        names = [entry.get("javascript", JS_BUNDLE.name)]
+        if entry.get("javascript2"):
+            names.append(entry["javascript2"])
+    script = sum((JS_BUNDLE.parent / name).stat().st_size for name in names)
     stylesheet = CSS_BUNDLE.stat().st_size
     return {"script": script, "stylesheet": stylesheet, "total": script + stylesheet}
 

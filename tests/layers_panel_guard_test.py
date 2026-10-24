@@ -60,8 +60,17 @@ SERVE_ROOT = ROOT / "src" / "python"
 
 EDITOR_SRC = SRC_JS / "professional-editor.js"
 APP_SRC = SRC_JS / "app.js"
-BUNDLE = SRC_JS / "bundle-index.js"
-SERVED_BUNDLE = SERVE_ROOT / "bundle-index.js"
+# The editor's startup route is built from two concatenated scripts
+# (``scriptSplitAt`` in docs/route-bundle-sources.json) so each half compiles in
+# its own task. A module can therefore live in either part, so the static
+# contract is checked against the union of the route's startup scripts.
+BUNDLES = [SRC_JS / "bundle-index.js", SRC_JS / "bundle-index-2.js"]
+SERVED_BUNDLES = [SERVE_ROOT / "bundle-index.js", SERVE_ROOT / "bundle-index-2.js"]
+
+
+def _route_text(paths):
+    """Read the whole startup script surface of the editor route."""
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths)
 
 # The change-detection guard, as one regex over the formatted source and the
 # minified bundle: compare the box key for this element, and gate the schedule on it.
@@ -127,18 +136,21 @@ def _serve(root: Path):
 # --------------------------------------------------------------------------- #
 
 def test_static_guard_present_in_source_and_bundles():
-    for path in (EDITOR_SRC, BUNDLE, SERVED_BUNDLE):
-        text = path.read_text(encoding="utf-8")
-        assert GUARD_KEY.search(text), f"{path}: the observer's per-element box comparison is gone"
-        assert GUARD_GATE.search(text), f"{path}: the schedule is no longer gated on a real box change"
-        assert "observe(stage)" in text, f"{path}: the observer no longer observes #stage"
-        assert WEAKMAP.search(text), f"{path}: overlayObservedSizes is no longer a WeakMap keyed by element"
+    for source, label in ((EDITOR_SRC.read_text(encoding="utf-8"), EDITOR_SRC),
+                          (_route_text(BUNDLES), "src/js/bundle-index*.js"),
+                          (_route_text(SERVED_BUNDLES), "src/python/bundle-index*.js")):
+        text = source
+        assert GUARD_KEY.search(text), f"{label}: the observer's per-element box comparison is gone"
+        assert GUARD_GATE.search(text), f"{label}: the schedule is no longer gated on a real box change"
+        assert "observe(stage)" in text, f"{label}: the observer no longer observes #stage"
+        assert WEAKMAP.search(text), f"{label}: overlayObservedSizes is no longer a WeakMap keyed by element"
 
 
 def test_static_render_layers_delegates_to_the_professional_editor():
-    for path in (APP_SRC, BUNDLE, SERVED_BUNDLE):
-        text = path.read_text(encoding="utf-8")
-        assert DELEGATION.search(text), f"{path}: renderLayers no longer delegates to the v17 editor"
+    for text, label in ((APP_SRC.read_text(encoding="utf-8"), APP_SRC),
+                        (_route_text(BUNDLES), "src/js/bundle-index*.js"),
+                        (_route_text(SERVED_BUNDLES), "src/python/bundle-index*.js")):
+        assert DELEGATION.search(text), f"{label}: renderLayers no longer delegates to the v17 editor"
 
 
 # --------------------------------------------------------------------------- #
