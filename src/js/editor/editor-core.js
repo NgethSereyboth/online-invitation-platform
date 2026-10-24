@@ -1080,10 +1080,14 @@
     const right = $('.right');
     if (!right || inspectorToggle) return;
 
-    inspectorToggle = document.createElement('div');
-    inspectorToggle.className = 'v54-inspector-mode';
-    inspectorToggle.innerHTML = '<span>Inspector</span><button type="button" data-v54-inspector-toggle></button>';
-    right.insertBefore(inspectorToggle, right.children[1] || null);
+    // OD-23: the bar ships in index.html so the inspector column is its final
+    // height at first paint; reuse it instead of inserting a new one.
+    inspectorToggle = $(':scope > .v54-inspector-mode', right) || document.createElement('div');
+    if (!inspectorToggle.parentElement) {
+      inspectorToggle.className = 'v54-inspector-mode';
+      inspectorToggle.innerHTML = '<span>Inspector</span><button type="button" data-v54-inspector-toggle></button>';
+      right.insertBefore(inspectorToggle, right.children[1] || null);
+    }
 
     // Selectors for controls considered "advanced" — hidden in Essentials.
     const advanced = [
@@ -1273,10 +1277,14 @@
     const host = footer?.lastElementChild;
     if (!footer || !host) return null;
     if (footerTools?.isConnected) return footerTools;
-    footerTools = document.createElement('div');
-    footerTools.className = 'v54-footer-tools';
-    footerTools.innerHTML = '<button type="button" class="v54-footer-tools-trigger" aria-expanded="false">Tools <span>⌃</span></button><div class="v54-footer-tools-menu" hidden><strong>Workspace tools</strong><div></div></div>';
-    host.append(footerTools);
+    // OD-23: the trigger ships in index.html; only its menu contents and wiring
+    // are built here, so the status bar is already 44 px tall at first paint.
+    footerTools = $('.v54-footer-tools', host) || document.createElement('div');
+    if (!footerTools.parentElement) {
+      footerTools.className = 'v54-footer-tools';
+      footerTools.innerHTML = '<button type="button" class="v54-footer-tools-trigger" aria-expanded="false">Tools <span>⌃</span></button><div class="v54-footer-tools-menu" hidden><strong>Workspace tools</strong><div></div></div>';
+      host.append(footerTools);
+    }
     const trigger = $('.v54-footer-tools-trigger', footerTools);
     const menu = $('.v54-footer-tools-menu', footerTools);
     trigger.onclick = event => {

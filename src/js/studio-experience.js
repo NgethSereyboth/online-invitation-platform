@@ -182,7 +182,6 @@
     localStorage.setItem('einvite-editor-right-tab', id);
   };
   function buildInspector() {
-    const original = [...right.children];
     const tabs = [
       { id: 'object', label: 'Edit', icon: icon.object },
       { id: 'layers', label: 'Layers', icon: icon.layers },
@@ -190,6 +189,35 @@
       { id: 'theme', label: 'Design', icon: icon.theme },
       { id: 'publish', label: 'Share', icon: icon.publish }
     ];
+    // OD-23: the shell (tab row + host + one pane per tab) ships in index.html,
+    // so it exists at first paint and the canvas is never pushed 62 px up when
+    // this ran at ~1.8 s. Only the buttons and any missing pane are created here.
+    const shell = right.querySelector(':scope > .studio-inspector-tabs');
+    const shellHost = right.querySelector(':scope > .studio-inspector-host');
+    if (shell && shellHost) {
+      right.classList.add('studio-inspector');
+      shell.replaceChildren();
+      tabs.forEach(tab => {
+        const b = button('', 'studio-inspector-tab');
+        b.dataset.inspectorTab = tab.id;
+        b.innerHTML = `<span>${tab.icon}</span><small>${tab.label}</small>`;
+        b.onclick = () => activateRight(tab.id);
+        shell.append(b);
+        if (!shellHost.querySelector(`:scope > [data-inspector-pane="${tab.id}"]`)) {
+          const pane = document.createElement('section');
+          pane.dataset.inspectorPane = tab.id;
+          pane.className = 'studio-inspector-pane';
+          const head = document.createElement('div');
+          head.className = 'studio-inspector-heading';
+          head.innerHTML = `<small>Inspector</small><strong>${tab.label}</strong>`;
+          pane.append(head);
+          shellHost.append(pane);
+        }
+      });
+      return { nav: shell, host: shellHost };
+    }
+    // Legacy path: pages (or older markup) without the shipped shell.
+    const original = [...right.children];
     const groups = new Map(tabs.map(t => [t.id, []]));
     let current = 'object';
     original.forEach(node => {
@@ -198,7 +226,9 @@
     });
     right.innerHTML = '';
     right.classList.add('studio-inspector');
-    const nav = document.createElement('nav'); nav.className = 'studio-inspector-tabs';
+    const nav = shell || document.createElement('nav');
+    nav.className = 'studio-inspector-tabs';
+    nav.replaceChildren();
     const host = document.createElement('div'); host.className = 'studio-inspector-host';
     tabs.forEach((tab, index) => {
       const b = button('', 'studio-inspector-tab');

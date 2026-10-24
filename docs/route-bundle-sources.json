@@ -374,8 +374,8 @@
         "graphics-runtime.css",
         "editor/editor-styles.css",
         "app-shell.css",
-        "editor-responsive-contract.css",
-        "design-fix.css"
+        "design-fix.css",
+        "editor-responsive-contract.css"
       ],
       "scriptSplitAt": 24
     },

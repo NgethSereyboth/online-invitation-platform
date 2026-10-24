@@ -346,10 +346,10 @@
       "deferredStylesheetSha256": "da749eebb8c336d4ea05f7edc422c28e5d0fdae09e30cf34aaa4fc862ab62357",
       "javascript": "bundle-index.js",
       "javascript2": "bundle-index-2.js",
-      "javascript2Bytes": 537201,
-      "javascript2Sha256": "0c2f2161d2ccc217b649d54778ba414d16200ed71c9ce67648a83df8e6e1107d",
-      "scriptBytes": 535343,
-      "scriptSha256": "8cf5182fda90cd27bbb1a3b9aad6d1fbc49a4fb6f2d44f979559e6551f4f7e01",
+      "javascript2Bytes": 537691,
+      "javascript2Sha256": "85edac93a705438555fc30529bd8087749a96e46b9da02d63238075cdca1a570",
+      "scriptBytes": 536803,
+      "scriptSha256": "ce88947f8bdf816e5debe077ecea98b39c05eb8b1c694154b89cb78fc1e3956e",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [
@@ -460,12 +460,12 @@
           "graphics-runtime.css",
           "editor/editor-styles.css",
           "app-shell.css",
-          "editor-responsive-contract.css",
-          "design-fix.css"
+          "design-fix.css",
+          "editor-responsive-contract.css"
         ]
       },
       "styleBytes": 446138,
-      "styleSha256": "10fd18b86933cb7696639b38ff72c1650eec870e3ccc8691b263e307867c71e1",
+      "styleSha256": "95d260d296eab345d004a0aceaaf0d18200646af791bd104578a527d530cbca9",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {

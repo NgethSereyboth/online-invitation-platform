@@ -328,7 +328,17 @@ rsvp</textarea></label>
       </div>
     </section>
     <aside class="right">
-      <div data-inspector-pane="object">
+      <!-- OD-23: the inspector mode bar ships here for the same reason; editor-core.js
+           reuses it instead of inserting it above the tab row at ~1.5 s. -->
+      <div class="v54-inspector-mode"><span>Inspector</span><button type="button" data-v54-inspector-toggle></button></div>
+      <nav class="studio-inspector-tabs" aria-label="Inspector sections"></nav>
+      <!-- OD-23: the inspector shell ships in markup so the tab row and the
+           active pane exist from first paint; buildInspector() only fills the
+           tab buttons and any pane a later module adds. Before this, the row
+           and host were created at ~1.8 s and pushed #canvasViewport up 62 px. -->
+      <div class="studio-inspector-host">
+        <section class="studio-inspector-pane active" data-inspector-pane="object">
+        <div class="studio-inspector-heading"><small>Inspector</small><strong>Edit</strong></div>
         <h2 class="studio-inspector-heading"><span class="i18n i18n-en">Style & motion</span><span class="i18n i18n-km khmer-text" lang="km">Style & motion</span></h2>
         <div id="noSelection" class="empty v54-inspector-placeholder"><span class="i18n i18n-en">Select an object on the canvas to edit its properties.</span><span class="i18n i18n-km khmer-text" lang="km">ជ្រើសវត្ថុនៅលើផ្ទាំងគំរូ ដើម្បីកែប្រែលក្ខណៈសម្បត្តិរបស់វា។</span></div>
         <div id="properties">
@@ -402,10 +412,18 @@ rsvp</textarea></label>
         <h2>Fine position</h2>
         <div class="actions"><button data-nudge="up" aria-label="Nudge up">↑</button><button data-nudge="left" aria-label="Nudge left">←</button><button data-nudge="right" aria-label="Nudge right">→</button><button data-nudge="down" aria-label="Nudge down">↓</button><button data-size="smaller">− Size</button><button data-size="larger">+ Size</button></div>
       </div>
-      </div>
+        </section>
+        <section class="studio-inspector-pane" data-inspector-pane="layers">
+        <div class="studio-inspector-heading"><small>Inspector</small><strong>Layers</strong></div>
       <h2>Layers</h2><div id="layersPanel" class="layers-panel"></div>
+        </section>
+        <section class="studio-inspector-pane" data-inspector-pane="sections">
+        <div class="studio-inspector-heading"><small>Inspector</small><strong>Sections</strong></div>
       <h2>Section motion</h2><p class="hint">Control the entrance animation for each published section.</p><div id="sectionAnimationsManager" class="section-animations-manager"></div>
       <h2>Section appearance</h2><p class="hint">Give individual published sections their own background, text color, and corner treatment.</p><div id="sectionStylesManager" class="section-styles-manager"></div>
+        </section>
+        <section class="studio-inspector-pane" data-inspector-pane="theme">
+        <div class="studio-inspector-heading"><small>Inspector</small><strong>Design</strong></div>
       <h2>Template & palette</h2>
       <label>Invitation template<select id="designTheme"><option value="rose">Royal Rose</option><option value="gold">Khmer Gold</option><option value="emerald">Emerald Garden</option><option value="midnight">Midnight Luxury</option></select></label>
       <label>Global palette<select id="palettePreset"><option value="template">Use template colors</option><option value="rose">Rose Quartz</option><option value="gold">Royal Gold</option><option value="emerald">Emerald Garden</option><option value="midnight">Midnight Violet</option><option value="ivory-navy">Ivory & Navy</option><option value="custom">Custom</option></select></label>
@@ -416,7 +434,11 @@ rsvp</textarea></label>
         <label>Heading<input id="paletteHeading" type="color" value="#9d4555"></label>
       </div>
       <label>Accent<input id="accent" type="color" value="#9d4555"></label>
-      <h2>Reusable invitation template</h2><p class="hint">Save this complete invitation — pages, canvas design, section styling, palette, and animation — as a reusable account template.</p><button id="saveFullTemplateBtn" type="button">Save complete design as template</button><div id="templateSaveState" class="hint"></div><h2>Publishing</h2>
+      <h2>Reusable invitation template</h2><p class="hint">Save this complete invitation — pages, canvas design, section styling, palette, and animation — as a reusable account template.</p><button id="saveFullTemplateBtn" type="button">Save complete design as template</button><div id="templateSaveState" class="hint"></div>
+        </section>
+        <section class="studio-inspector-pane" data-inspector-pane="publish">
+        <div class="studio-inspector-heading"><small>Inspector</small><strong>Share</strong></div>
+        <h2>Publishing</h2>
       <div id="publishingSettings" class="card">
         <label>Public link slug<input id="publicSlug" placeholder="your-event"></label>
         <label>Guest access<select id="accessMode"><option value="unlisted">Anyone with the link</option><option value="password">Password protected</option></select></label>
@@ -429,6 +451,8 @@ rsvp</textarea></label>
       <button id="unpublishBtn" type="button">Unpublish invitation</button>
       <button id="rsvpBtn">View RSVP responses</button>
       <button id="wishesBtn" type="button">View guest wishes</button>
+        </section>
+      </div>
     </aside>
   </main>
   <!-- FB-50: the footer was appended by studio-experience.js ~1.3 s in, and the third shell row
@@ -437,7 +461,11 @@ rsvp</textarea></label>
   <footer class="studio-statusbar">
     <div><span class="studio-status-dot"></span><strong id="studioStatusSave">Ready</strong><small id="studioStatusServer">Local workspace</small></div>
     <div class="studio-status-center"><span id="studioStatusCanvas">Main hero canvas</span><span>·</span><span id="studioSelectionStatus">No selection</span></div>
-    <div><kbd>Ctrl K</kbd><span>Quick actions</span><kbd>Space</kbd><span>Pan</span></div>
+    <div><kbd>Ctrl K</kbd><span>Quick actions</span><kbd>Space</kbd><span>Pan</span>
+      <!-- OD-23: the footer Tools trigger ships here; editor-core.js fills the menu and
+           wires it instead of appending it at ~1.5 s and growing the row 18 -> 44 px. -->
+      <div class="v54-footer-tools"><button type="button" class="v54-footer-tools-trigger" aria-expanded="false">Tools <span>⌃</span></button><div class="v54-footer-tools-menu" hidden><strong>Workspace tools</strong><div></div></div></div>
+    </div>
   </footer>
   <dialog id="modal" aria-modal="true" aria-labelledby="modalHeading"><button class="close" type="button" aria-label="Close guest preview">×</button><div id="modalBody"></div><h2 id="modalHeading" class="sr-only">Guest preview</h2></dialog>
   <script src="bundle-index.js"></script>
