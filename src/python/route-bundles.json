@@ -34,8 +34,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 261711,
-      "styleSha256": "223bd834e8cb54dda2b26c6ab5bb7909db2b2790a0783b133283271cae79f960",
+      "styleBytes": 261833,
+      "styleSha256": "680ca3ace9a7d689b1442f881535c9ac2aef4e6d4ee921844e4bee423526ad9e",
       "stylesheet": "bundle-account.css"
     },
     "admin.html": {
@@ -89,8 +89,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 261973,
-      "styleSha256": "5b1833c0c695a6efadcd1481da906f4c9a64549e2da87004b733ed09cfef5ed6",
+      "styleBytes": 262095,
+      "styleSha256": "d49969440e947e9a96624700af6d2128dcfd29402c4dd326894e004643bed3a6",
       "stylesheet": "bundle-admin.css"
     },
     "analytics.html": {
@@ -127,8 +127,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262367,
-      "styleSha256": "c1615b6c23857d683578a046dfd85380824426efe02e65d2e16596284313a6d6",
+      "styleBytes": 262489,
+      "styleSha256": "0525a93a4b0c8ef1709398a8767105963bb4ac157de4bd79a34f383d43ac1cfb",
       "stylesheet": "bundle-analytics.css"
     },
     "billing.html": {
@@ -162,8 +162,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 263865,
-      "styleSha256": "830051e476924df871a0e0e58c414160867b2a27cf0064bc0b8b8488e9ce523a",
+      "styleBytes": 263987,
+      "styleSha256": "21b644fa39d1b36659f87123d625550f3d9aa733ee1d105b8653bf0cbf173dc7",
       "stylesheet": "bundle-billing.css"
     },
     "checkin.html": {
@@ -190,8 +190,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 131535,
-      "styleSha256": "05f4af35d190cdbd1542ba9d9b16596e5ab03f81ff4da4307f530ae762bd2a06",
+      "styleBytes": 131657,
+      "styleSha256": "10c76933e207d3d78c034f20818c9b4e8674fc1f0c601edc7a8c060c1b5476d4",
       "stylesheet": "bundle-checkin.css"
     },
     "dashboard.html": {
@@ -258,8 +258,8 @@
           "toast.css"
         ]
       },
-      "styleBytes": 315528,
-      "styleSha256": "4040fd5384eac8bc7b40162a8498f56c7110c4b52b3acb4218b12ee25fbe9eae",
+      "styleBytes": 315650,
+      "styleSha256": "92afb1ee703344574bd068f33b1c4214c6abecc954c4f5fcf49c4061ac1869ae",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -295,8 +295,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 288532,
-      "styleSha256": "065d1a961731e4e9f219bca1ff88622d22ab9b3213f237e930fa4a2665ce551a",
+      "styleBytes": 288654,
+      "styleSha256": "fb1f484256660e4419f068cbc411e5c747e2d51ac0640c8a6654ec3daa3f1190",
       "stylesheet": "bundle-designer.css"
     },
     "guests.html": {
@@ -333,8 +333,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262194,
-      "styleSha256": "e494ad911ac22cce7eb315594f8a7d96ccda6f7cea5e399d4cc45062042cdc73",
+      "styleBytes": 262316,
+      "styleSha256": "62071ef98484261594c09bd853611f3c91de18bd48f8282b42d3b521e5fecf32",
       "stylesheet": "bundle-guests.css"
     },
     "index.html": {
@@ -457,8 +457,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 444851,
-      "styleSha256": "7ab9fdaa744ac98e8c50c070588b3cd2fe8b46ce88e690579eb3559a77e34e08",
+      "styleBytes": 444999,
+      "styleSha256": "1a30e3a28a981320a14e41b2170fb0cfca4cb7da67bb5c5224f6b01481759839",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
@@ -510,8 +510,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 281878,
-      "styleSha256": "5ed8cf18b857055fc32886804e7ffb7e4b05217810d6788350b35dadd6c49e63",
+      "styleBytes": 282000,
+      "styleSha256": "3654b4a93ed178cd2e021272fe0c2f9685b8becd8f3a46599a3f2fa34516d5c1",
       "stylesheet": "bundle-materials.css"
     },
     "privacy.html": {
@@ -533,8 +533,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 153955,
-      "styleSha256": "8376ae2bb6dc5bd614dd64d29a5ce7cf99f5d64425e3624e39a148854f206b62",
+      "styleBytes": 154077,
+      "styleSha256": "22dbc94d6c433b971709dc28d689606357f4674c1b00094fbc4685b1b1975962",
       "stylesheet": "bundle-privacy.css"
     },
     "public.html": {
@@ -545,8 +545,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 250291,
-      "scriptSha256": "f98cfab02535d2776bf637643824e35bc48e6d3f17983fb90857e084ca6b3e9a",
+      "scriptBytes": 250824,
+      "scriptSha256": "54de99fbfc856d6f17fa2c98cdd36b36f8bb65ada59f437aa177b320c7926653",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"
@@ -588,8 +588,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 133798,
-      "styleSha256": "c4c8eaa698a97105f6a28d7ef041d4b012127b0c37065daf17da1d4e2cb0d32e",
+      "styleBytes": 134016,
+      "styleSha256": "7391ee6f0c976799eefe02731cc6a1bc55b43d7b601f8966761e04c0eb9a0ff0",
       "stylesheet": "bundle-public.css"
     },
     "reset.html": {
@@ -623,8 +623,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 259667,
-      "styleSha256": "32f4103babe61e09285f4f1d8bd85781cc253c64f6825394be89335528cff1df",
+      "styleBytes": 259789,
+      "styleSha256": "00b5b2172ffa4133ae41718241a0ea37ca8ec082272f2194a72a58b326c07eab",
       "stylesheet": "bundle-reset.css"
     },
     "responses.html": {
@@ -662,8 +662,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 262368,
-      "styleSha256": "8c6ce0d2cf2b1e91e8c75588694b6f581e1c361fe8247b46c9253b68689b8024",
+      "styleBytes": 262490,
+      "styleSha256": "2999f5031132285a32aa5541729708b8f44f0722976378ffecbd2daf21f653ae",
       "stylesheet": "bundle-responses.css"
     },
     "templates.html": {
@@ -701,8 +701,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 292669,
-      "styleSha256": "e309ea6dc0fd95eaed98beabd84be18b9dd00ec132925f8aec955b33d07309e5",
+      "styleBytes": 292791,
+      "styleSha256": "2503e2721b6f8e0dec9bd226862bfeaeb714ae62f285b69ceb0258e60a613e3f",
       "stylesheet": "bundle-templates.css"
     },
     "verify.html": {
@@ -736,8 +736,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 259564,
-      "styleSha256": "8bc7d91db6beab7e603f315562822086d4b1cd05e3ce4c55272f9801ba4667fb",
+      "styleBytes": 259686,
+      "styleSha256": "b43bad9dc6ed6ff544ee6f458c662d15d070f79d77585d58575f5aa6a280c189",
       "stylesheet": "bundle-verify.css"
     }
   },
