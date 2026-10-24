@@ -1296,8 +1296,7 @@ font-size: 13px;
 line-height: 1.6;
 }
 }@layer components {
-html { -webkit-text-size-adjust: 100%; color-scheme: light; }
-html[data-theme="dark"] { color-scheme: dark; }
+html { -webkit-text-size-adjust: 100%; color-scheme: light dark; }
 body {
 margin: 0;
 font-family: var(--font-latin);
@@ -1757,13 +1756,6 @@ body[data-shell="a"] > main h1 { font-size: clamp(1.6rem, 8vw, 2.25rem); overflo
 code { overflow-wrap: anywhere; }
 html body[data-shell="a"] { grid-template-rows: auto minmax(0, 1fr) auto; }
 html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
-}
-@media (max-width: 540px) {
-body[data-page="guests"] > header,
-body[data-page="admin"] > header {
--webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
-}
 }
 @media (prefers-reduced-motion: reduce) {
 *, *::before, *::after {

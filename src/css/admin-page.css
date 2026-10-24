@@ -30,3 +30,15 @@ body[data-page="admin"] .admin-panel table thead th { background: var(--app-surf
 body[data-page="admin"] .admin-panel tbody tr:hover { background: var(--app-surface-2); }
 
 }
+
+/* FB-51: the topbar is one clipped row on a phone — measured at 375 with scrollWidth 565 vs
+   clientWidth 375 and the rightmost control cut mid-glyph. The editor's typography strip uses
+   the same 16–18px right-edge mask so a clipped edge reads as scrollable instead of broken.
+   Lives in the page sheet, not app-shell.css: only these two routes put an action button after
+   the drawer toggle, and the public route's stylesheet budget sits at its ceiling. */
+@media (max-width: 540px) {
+  body[data-page="admin"] > header {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
+  }
+}

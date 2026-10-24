@@ -37,7 +37,8 @@
     },
     "admin.html": {
       "deferredScripts": [
-        "pages/admin/impersonate.js"
+        "pages/admin/impersonate.js",
+        "pages/admin/feature-flags.js"
       ],
       "scripts": [
         "route-deferred-loader.js",
@@ -47,7 +48,6 @@
         "pages/admin/admin.js",
         "pages/admin/users.js",
         "pages/admin/invitations.js",
-        "pages/admin/feature-flags.js",
         "pages/admin/audit-log.js",
         "pages/admin/system-health.js",
         "pages/admin/bulk-operations.js",
