@@ -9,8 +9,13 @@ ROOT=Path(__file__).resolve().parents[1]
 def main()->int:
  data=json.loads((ROOT / "docs" / "typography-contract.json").read_text(encoding='utf-8'))
  css=(ROOT / "src" / "css" / "typography-fonts.css").read_text(encoding='utf-8')
+ # FB-37 registered the three bundled Inter faces on every page, so the Latin
+ # range now belongs to seven faces (four Noto, three Inter), not four.
+ assert css.count('@font-face')==11,css
+ assert css.count("font-family:'Inter'")==3,css
+ assert css.count('font-display:swap')==11,css
  assert css.count('unicode-range:U+1780-17FF,U+19E0-19FF;')==4,css
- assert css.count('unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;')==4,css
+ assert css.count('unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F;')==7,css
  for khmer_id,latin_id in (('noto-serif-khmer','noto-serif'),('noto-sans-khmer','noto-sans')):
   stack=data['fonts'][khmer_id]['stack']
   assert stack.index(data['fonts'][latin_id]['family'])<stack.index('Khmer UI'),stack

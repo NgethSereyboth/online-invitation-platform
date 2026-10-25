@@ -72,14 +72,22 @@ synced into the served mirror `src/python/assets/fonts/` by
 
 | Font ID | Weight | Asset | SHA-256 |
 |---|---:|---|---|
-| `noto-sans` | 400 | `assets/fonts/noto-sans-latin-400.woff2` | `6932db6a846e5f3eedd70862935d1e382ffa25da0851563c3e7b82129ebefe23` |
-| `noto-sans` | 700 | `assets/fonts/noto-sans-latin-700.woff2` | `a9885073a1b8fcde1b37ac0c4497914e598cc9057344a552217b32e4c89f0866` |
-| `noto-serif` | 400 | `assets/fonts/noto-serif-latin-400.woff2` | `3c94a973daf5e7fd05cb205eab2171b0af0ba42496202d54e6cdd55e45a82221` |
-| `noto-serif` | 700 | `assets/fonts/noto-serif-latin-700.woff2` | `d7e6e94e00d65d77273e033e0eca185d9ab37d44d4505225f364ff1453cb7039` |
-| `noto-sans-khmer` | 400 | `assets/fonts/noto-sans-khmer-400.woff2` | `53229761be85cb21c727d19ff81e959f3a35c32925d42f02829acf53dbdbf625` |
-| `noto-sans-khmer` | 700 | `assets/fonts/noto-sans-khmer-700.woff2` | `0eb1923fffc493ed3af0e5cb4bc467ec1c7921ce9f845888ebd3b5755b86aecd` |
-| `noto-serif-khmer` | 400 | `assets/fonts/noto-serif-khmer-400.woff2` | `db80eb1479b0cb726e5fd224ba2cde7b6f92825988f4ec1e89575d851011e625` |
-| `noto-serif-khmer` | 700 | `assets/fonts/noto-serif-khmer-700.woff2` | `fe903cee1be19a931d38a575948897f7c0d0159a8c2c028af596ec928d7976ce` |
+| `noto-sans` | 400 | `assets/fonts/noto-sans-latin-400.woff2` | `f54a80e0d925f4e82d0cf52b3249a4b1320137363e98018a6f65377d3390aa8c` |
+| `noto-sans` | 700 | `assets/fonts/noto-sans-latin-700.woff2` | `5fce99c92e68803bf3bf4f2c4a26ab0a649ddea0f11eaba28124d010183b69e5` |
+| `noto-serif` | 400 | `assets/fonts/noto-serif-latin-400.woff2` | `0415cee63cb9ba43d5094caddd6d903d447cbc025dbe1c2a621f7855ffa1a99e` |
+| `noto-serif` | 700 | `assets/fonts/noto-serif-latin-700.woff2` | `f66ce4961c2ca74153ccf8be0e112ba679575b6aacc3155371483b019155d1b7` |
+| `noto-sans-khmer` | 400 | `assets/fonts/noto-sans-khmer-400.woff2` | `4edee25cbc3ad5877820db657b57cf7df5fae06ae7ecc0513209d3617efe99a3` |
+| `noto-sans-khmer` | 700 | `assets/fonts/noto-sans-khmer-700.woff2` | `8bb47df185665c501e5d264547b0f7eb235b4fba6063a48d4b721f48474d72e3` |
+| `noto-serif-khmer` | 400 | `assets/fonts/noto-serif-khmer-400.woff2` | `980724e3fd5f924c86df268bf5cd5a4b1f500e3446ae579e741ba3df9d0e1b9f` |
+| `noto-serif-khmer` | 700 | `assets/fonts/noto-serif-khmer-700.woff2` | `89d8d06b2425e7bc67292401d475d6f047706a13c462f24e291121a64b8f24c2` |
+
+### Bundled UI font (outside the invitation registry)
+
+| Family | Weights | Assets | Licence | Licence file |
+|---|---|---|---|---|
+| Inter | 400, 700, 800 | `assets/fonts/inter-latin-400.woff2`, `inter-latin-700.woff2`, `inter-latin-800.woff2` | SIL Open Font License 1.1 | `licenses/fonts/Inter-OFL-1.1.txt` |
+
+Inter is the application-shell face. It is bundled and self-hosted the same way as the invitation faces; it is not a document font choice and therefore has no registry entry.
 
 `tests/v20_font_registry_loading_test.py` validates every file, digest, OpenType table presence, `FontFaceSet` load state, and measurable English/Khmer rendering in real Chromium.
 
