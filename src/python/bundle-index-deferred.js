@@ -38,7 +38,6 @@ function ensureDesignHome(){
         <div class="flow-project-art" aria-hidden="true"><span>✦</span></div>
         <div><small>Current invitation</small><strong id="flowProjectName">Invitation</strong><span id="flowProjectMeta">Interactive invitation website</span></div>
       </section>
-      <div class="flow-design-search"><span>⌕</span><input type="search" placeholder="Search design tools" aria-label="Search design tools"></div>
       <section class="flow-section"><div class="flow-section-head"><h3>Start creating</h3></div>
         <div class="flow-action-grid">
           <button type="button" data-flow-open="elements"><span class="flow-action-icon">${iconSvg('elements')}</span><b>Elements</b><small>Graphics & ornaments</small></button>
@@ -139,11 +138,9 @@ function wireDesignHome(){
       return;
     }
   });
-  const search=$('.flow-design-search input',pane);
-  search?.addEventListener('input',()=>{
-    const q=search.value.trim().toLowerCase();
-    $$('[data-flow-open], [data-flow-theme], .flow-list-actions button',pane).forEach(el=>el.hidden=!!q&&!el.textContent.toLowerCase().includes(q));
-  });
+  // LT-1.7: the pane's inline search duplicated the panel search above it and
+  // filtered the same cards. The panel search (studio-experience.js) now
+  // filters these action tiles individually, so there is one search box.
   const refresh=()=>{
     const name=($('#names')?.value||'').trim()||'Untitled invitation';
     const n=$('#flowProjectName');if(n)n.textContent=name;

@@ -1810,6 +1810,11 @@ grid-template-columns: calc(var(--app-rail-w-collapsed) + var(--app-rail-w)) min
 overflow: hidden;
 }
 body[data-page="index"] .studio-document-title { font-size: var(--fs-body-md); font-weight: var(--fw-medium); color: var(--app-muted); }
+body[data-page="index"] #flowHomeButton > strong {
+display: flex;
+align-items: center;
+line-height: 1;
+}
 body.studio-experience.rail-collapsed > main { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr) var(--app-inspector-w); }
 body[data-page="index"] > header.studio-topbar button,
 body[data-page="index"] > header.studio-topbar .button-link {

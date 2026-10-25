@@ -956,6 +956,16 @@ body[data-page="index"] > main {
   overflow: hidden;
 }
 body[data-page="index"] .studio-document-title { font-size: var(--fs-body-md); font-weight: var(--fw-medium); color: var(--app-muted); }
+/* LT-1.7: the brand lockup was a block `strong` holding a block mark and a
+   block copy column, so the 64px stack was centred inside the 38px home button:
+   the mark painted from y=-4.6 (clipped by the 56px topbar) and the wordmark
+   fell below it. One flex line keeps the 34px mark inside the button. */
+body[data-page="index"] #flowHomeButton > strong {
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
 /* LT-1.6: the title had a decorative `content: "/"` crumb separator with no
    crumb after it (`.workflow-trail` is the real breadcrumb and is hidden on
    `design`). At 375 the 97px-wide title wrapped the slash onto its own line

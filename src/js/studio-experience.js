@@ -157,12 +157,21 @@
     if (!pane) return;
     [...pane.children].forEach(node => {
       if (node.classList.contains('studio-pane-heading')) return;
-      node.classList.toggle('studio-search-hidden', !!q && !text(node).toLowerCase().includes(q));
+      // LT-1.7: this is the panel's only search box now. On the Design home it
+      // also filters the individual action/theme tiles, not just whole
+      // sections, so removing the pane's inline duplicate loses no behaviour.
+      const tiles = [...node.querySelectorAll('[data-flow-open], [data-flow-theme], .flow-list-actions button')];
+      const matches = !q || text(node).toLowerCase().includes(q) || tiles.some(el => el.textContent.toLowerCase().includes(q));
+      node.classList.toggle('studio-search-hidden', !matches);
+      tiles.forEach(el => { el.hidden = !!q && !el.textContent.toLowerCase().includes(q); });
     });
   });
   $$('[data-studio-tab]', leftTabs.nav).forEach(b => b.addEventListener('click', () => {
     leftSearchInput.value = '';
     $$('.studio-search-hidden', leftTabs.host).forEach(x => x.classList.remove('studio-search-hidden'));
+    // LT-1.7: clearing the field on a tab switch does not fire `input`, so the
+    // flow tiles hidden by the last query have to be restored here.
+    $$('[data-flow-open][hidden], [data-flow-theme][hidden], .flow-list-actions button[hidden]', leftTabs.host).forEach(x => { x.hidden = false; });
   }));
   const right = $('.right');
   const rightGroupMap = {

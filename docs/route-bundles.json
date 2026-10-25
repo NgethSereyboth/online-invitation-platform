@@ -346,17 +346,17 @@
     },
     "index.html": {
       "deferredJavascript": "bundle-index-deferred.js",
-      "deferredJavascriptBytes": 148140,
-      "deferredJavascriptSha256": "6bb940a747f5eb8813476320770684ff0dd71578d02eda9044f210cea7d36143",
+      "deferredJavascriptBytes": 147923,
+      "deferredJavascriptSha256": "2cc3aa7c63f54bb5aa37c3360503bb1f884b1bc095d322ad16ecb52e169ed9ef",
       "deferredStylesheet": "bundle-index-deferred.css",
-      "deferredStylesheetBytes": 51075,
-      "deferredStylesheetSha256": "da749eebb8c336d4ea05f7edc422c28e5d0fdae09e30cf34aaa4fc862ab62357",
+      "deferredStylesheetBytes": 51195,
+      "deferredStylesheetSha256": "bbbc60f2b365679e9bce46860dd22df0bc49e775ee8538567376bc7ad12212a0",
       "javascript": "bundle-index.js",
       "javascript2": "bundle-index-2.js",
       "javascript2Bytes": 538685,
       "javascript2Sha256": "df36db38092404bda295a166d909a5cbbd6c133107f21c4d55ab4fbf9c2a1599",
-      "scriptBytes": 537262,
-      "scriptSha256": "82db6cb180a0bcfc39dd93f4bfe6dd3d5314a608898f5f8911076d8da6345681",
+      "scriptBytes": 538091,
+      "scriptSha256": "5f53919ea06b0d089ee7799eb618de7a0413c2b56f0b35e2ec5154e6a1be669a",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [
@@ -471,8 +471,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 447220,
-      "styleSha256": "a4d4ab1e737042838d419a7790f09e1ecc72d676d6dcf8dbae4f451441bdce6c",
+      "styleBytes": 447325,
+      "styleSha256": "15403bf445b955a0a9a26fd84853f64509416d3a1bc07972ed5de2fbe7ba153e",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
