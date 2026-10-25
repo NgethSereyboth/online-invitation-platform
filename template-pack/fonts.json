@@ -1,0 +1,76 @@
+{
+ "version": 1,
+ "note": "Roles used by templates/*.json. Map to the app's font registry; add a lazily loaded self-hosted OFL woff2 only for a family the registry lacks (amendment TP-OD-1).",
+ "roles": {
+  "kh.moul": {
+   "family": "Moul",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.moulpali": {
+   "family": "Moulpali",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.koulen": {
+   "family": "Koulen",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.bokor": {
+   "family": "Bokor",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.serif": {
+   "family": "Noto Serif Khmer",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.sans": {
+   "family": "Noto Sans Khmer",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.battambang": {
+   "family": "Battambang",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "kh.kantumruy": {
+   "family": "Kantumruy Pro",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "lat.cormorant": {
+   "family": "Cormorant Garamond",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "lat.playfair": {
+   "family": "Playfair Display",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "lat.script": {
+   "family": "Great Vibes",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "lat.cinzel": {
+   "family": "Cinzel",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "lat.montserrat": {
+   "family": "Montserrat",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  },
+  "lat.jost": {
+   "family": "Jost",
+   "licence": "OFL-1.1",
+   "source": "https://github.com/google/fonts/tree/main/ofl (find the directory for this family)"
+  }
+ }
+}

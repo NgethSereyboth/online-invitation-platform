@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OKID template-pack template (pack format v1)",
+  "type": "object",
+  "required": ["id", "category", "canvas", "palette", "typography", "name", "tags", "pages"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "category": {"enum": ["wedding", "birthday", "ceremony", "greeting", "business"]},
+    "canvas": {"type": "object", "required": ["key", "w", "h"], "properties": {"key": {"enum": ["a5p", "p45", "sq", "story", "land"]}, "w": {"type": "integer"}, "h": {"type": "integer"}}},
+    "palette": {"type": "object", "description": "Role -> #RRGGBB. Required: bg paper ink soft accent accent2 deep line. Optional: sky wash1 wash2.", "required": ["bg", "paper", "ink", "soft", "accent", "accent2", "deep", "line"]},
+    "typography": {"enum": ["ceremonial", "elegant", "modern", "festive"]},
+    "name": {"type": "object", "required": ["en", "km"]},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "photoSlots": {"type": "array", "items": {"type": "string"}},
+    "pages": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["layers"], "properties": {"name": {"type": "string"}, "builder": {"type": "string"}, "layers": {"type": "array", "items": {"$ref": "#/$defs/layer"}}}}}
+  },
+  "$defs": {
+    "layer": {
+      "type": "object", "required": ["id", "type", "x", "y", "w", "h"],
+      "description": "x,y,w,h are percentages of the canvas. size/strokeWidth/radius/tile/frame.width are pixels on a canvas of the declared width (scale by canvasWidth/declaredWidth). Colours are palette roles, never hex (except inside recolor targets, which are roles too).",
+      "properties": {
+        "type": {"enum": ["bg", "shape", "svg", "pattern", "photo", "text"]},
+        "opacity": {"type": "number"}, "rot": {"type": "number"},
+        "fill": {"description": "role, or {gradient:{angle, stops:[[role,0..1],...]}} on bg"},
+        "shape": {"enum": ["rect", "ellipse", "line", "arch"]},
+        "src": {"type": "string", "description": "ornaments/<name>.svg, monotone files use currentColor"},
+        "color": {"type": "string"}, "recolor": {"type": "object", "description": "{c1,c2,c3} -> roles; replaces magic hexes #AA0001/#AA0002/#AA0003 in multi-tone SVGs"},
+        "flipX": {"type": "boolean"}, "flipY": {"type": "boolean"},
+        "copy": {"type": "string", "description": "key in copy-bank.json; text = copy[key][lang]"},
+        "literal": {"type": "string", "description": "non-Khmer glyphs only (e.g. the ampersand)"},
+        "lang": {"enum": ["km", "en"]}, "font": {"type": "string", "description": "role in fonts.json"},
+        "size": {"type": "number"}, "weight": {"type": "number"}, "align": {"enum": ["left", "center", "right"]},
+        "lineHeight": {"type": "number"}, "letterSpacing": {"type": "number", "description": "em; always 0 for km"}, "transform": {"enum": ["none", "upper"]},
+        "slot": {"type": "string", "description": "semantic slot (groom, bride, name, host, groom_en...) for the editor's fill-in UI"},
+        "frame": {"type": ["object", "null"]}
+      }
+    }
+  }
+}

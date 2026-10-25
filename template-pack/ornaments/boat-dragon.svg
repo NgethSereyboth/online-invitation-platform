@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 190" >
+<path d="M20,120 C120,150 680,150 780,120 C770,138 700,170 400,172 C100,170 30,138 20,120Z" fill="currentColor"/>
+<polygon points="25.8,116.1 24.9,114.9 24,113.7 23.1,112.6 22.2,111.4 21.4,110.2 20.5,109 19.7,107.8 18.9,106.6 18.1,105.4 17.3,104.1 16.6,102.9 15.9,101.6 15.2,100.4 14.5,99.1 13.8,97.8 13.2,96.5 12.6,95.2 12.1,93.9 11.6,92.6 11.1,91.3 10.6,90 10.3,88.6 9.9,87.3 9.6,86 9.4,84.6 9.3,83.3 9.2,82 9.2,80.7 9.3,79.4 9.5,78.1 9.7,76.9 10.1,75.7 10.5,74.5 11.1,73.4 11.8,72.4 12.6,71.4 13.4,70.6 14.4,69.9 15.5,69.3 16.6,69 17.8,68.8 19,68.8 20.1,69 21.2,69.5 22.2,70.1 23,71 23.6,72.1 24,73.5 26,73.3 25.9,71.6 25.4,69.8 24.5,68.2 23.1,66.8 21.6,65.7 19.8,65 17.9,64.6 16,64.6 14.1,64.9 12.3,65.5 10.6,66.3 9,67.3 7.6,68.5 6.3,69.9 5.2,71.4 4.2,72.9 3.4,74.6 2.7,76.3 2.2,78 1.8,79.7 1.5,81.5 1.3,83.3 1.2,85 1.3,86.8 1.3,88.5 1.5,90.2 1.7,91.9 2,93.6 2.3,95.2 2.7,96.9 3.1,98.5 3.5,100.1 4,101.7 4.5,103.3 5.1,104.8 5.7,106.4 6.3,107.9 6.9,109.4 7.5,110.9 8.2,112.4 8.9,113.9 9.6,115.4 10.3,116.8 11.1,118.3 11.8,119.7 12.6,121.1 13.4,122.6 14.2,123.9" fill="currentColor"/>
+<polygon points="785.8,123.9 786.6,122.6 787.4,121.1 788.2,119.7 788.9,118.3 789.7,116.8 790.4,115.4 791.1,113.9 791.8,112.4 792.5,110.9 793.1,109.4 793.7,107.9 794.3,106.4 794.9,104.8 795.5,103.3 796,101.7 796.5,100.1 796.9,98.5 797.3,96.9 797.7,95.2 798,93.6 798.3,91.9 798.5,90.2 798.7,88.5 798.7,86.8 798.8,85 798.7,83.3 798.5,81.5 798.2,79.7 797.8,78 797.3,76.3 796.6,74.6 795.8,72.9 794.8,71.4 793.7,69.9 792.4,68.5 791,67.3 789.4,66.3 787.7,65.5 785.9,64.9 784,64.6 782.1,64.6 780.2,65 778.4,65.7 776.9,66.8 775.5,68.2 774.6,69.8 774.1,71.6 774,73.3 776,73.5 776.4,72.1 777,71 777.8,70.1 778.8,69.5 779.9,69 781,68.8 782.2,68.8 783.4,69 784.5,69.3 785.6,69.9 786.6,70.6 787.4,71.4 788.2,72.4 788.9,73.4 789.5,74.5 789.9,75.7 790.3,76.9 790.5,78.1 790.7,79.4 790.8,80.7 790.8,82 790.7,83.3 790.6,84.6 790.4,86 790.1,87.3 789.7,88.6 789.4,90 788.9,91.3 788.4,92.6 787.9,93.9 787.4,95.2 786.8,96.5 786.2,97.8 785.5,99.1 784.8,100.4 784.1,101.6 783.4,102.9 782.7,104.1 781.9,105.4 781.1,106.6 780.3,107.8 779.5,109 778.6,110.2 777.8,111.4 776.9,112.6 776,113.7 775.1,114.9 774.2,116.1" fill="currentColor"/>
+<circle cx="70" cy="82" r="8" fill="currentColor"/>
+<path d="M70,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M74,100 L94,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="117" cy="82" r="8" fill="currentColor"/>
+<path d="M117,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M121,100 L141,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="164" cy="82" r="8" fill="currentColor"/>
+<path d="M164,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M168,100 L188,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="211" cy="82" r="8" fill="currentColor"/>
+<path d="M211,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M215,100 L235,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="258" cy="82" r="8" fill="currentColor"/>
+<path d="M258,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M262,100 L282,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="305" cy="82" r="8" fill="currentColor"/>
+<path d="M305,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M309,100 L329,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="352" cy="82" r="8" fill="currentColor"/>
+<path d="M352,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M356,100 L376,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="399" cy="82" r="8" fill="currentColor"/>
+<path d="M399,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M403,100 L423,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="446" cy="82" r="8" fill="currentColor"/>
+<path d="M446,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M450,100 L470,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="493" cy="82" r="8" fill="currentColor"/>
+<path d="M493,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M497,100 L517,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="540" cy="82" r="8" fill="currentColor"/>
+<path d="M540,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M544,100 L564,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="587" cy="82" r="8" fill="currentColor"/>
+<path d="M587,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M591,100 L611,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="634" cy="82" r="8" fill="currentColor"/>
+<path d="M634,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M638,100 L658,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="681" cy="82" r="8" fill="currentColor"/>
+<path d="M681,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M685,100 L705,150" stroke="currentColor" stroke-width="3"/>
+<circle cx="728" cy="82" r="8" fill="currentColor"/>
+<path d="M728,92 v28" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+<path d="M732,100 L752,150" stroke="currentColor" stroke-width="3"/>
+</svg>

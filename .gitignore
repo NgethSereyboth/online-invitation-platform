@@ -146,3 +146,8 @@ _i18n_all_result.json
 src/html/*-test-*.html
 src/python/fixture-*.html
 .agents/
+
+# Template-pack QA renders (TP-1.1): reference PNG/WebP from Claude's generator,
+# never shipped and never served. The pack's own design sources stay tracked.
+template-pack/previews/
+template-pack/_preview/

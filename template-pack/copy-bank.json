@@ -1,0 +1,620 @@
+{
+ "version": 1,
+ "note": "Khmer is Claude-drafted; native-speaker review required before launch. risk: low|med",
+ "copy": {
+  "ph.groom": {
+   "en": "[Groom name]",
+   "km": "[ឈ្មោះ​កូនកំលោះ]",
+   "risk": "low"
+  },
+  "ph.bride": {
+   "en": "[Bride name]",
+   "km": "[ឈ្មោះ​កូនក្រមុំ]",
+   "risk": "low"
+  },
+  "ph.name": {
+   "en": "[Name]",
+   "km": "[ឈ្មោះ]",
+   "risk": "low"
+  },
+  "ph.host": {
+   "en": "[Host name]",
+   "km": "[ឈ្មោះ​ម្ចាស់​ពិធី]",
+   "risk": "low"
+  },
+  "ph.date": {
+   "en": "[Date]",
+   "km": "[កាលបរិច្ឆេទ]",
+   "risk": "low"
+  },
+  "ph.time": {
+   "en": "[Time]",
+   "km": "[ម៉ោង]",
+   "risk": "low"
+  },
+  "ph.venue": {
+   "en": "[Venue]",
+   "km": "[ទីកន្លែង]",
+   "risk": "low"
+  },
+  "ph.address": {
+   "en": "[Address]",
+   "km": "[អាសយដ្ឋាន]",
+   "risk": "low"
+  },
+  "ph.phone": {
+   "en": "[Phone]",
+   "km": "[លេខទូរស័ព្ទ]",
+   "risk": "low"
+  },
+  "ph.age": {
+   "en": "[Age]",
+   "km": "[អាយុ]",
+   "risk": "low"
+  },
+  "ph.company": {
+   "en": "[Company name]",
+   "km": "[ឈ្មោះ​ក្រុមហ៊ុន]",
+   "risk": "low"
+  },
+  "ph.baby": {
+   "en": "[Baby name]",
+   "km": "[ឈ្មោះ​កូន]",
+   "risk": "low"
+  },
+  "ph.departed": {
+   "en": "[Name of the departed]",
+   "km": "[ឈ្មោះ​អ្នក​ដែល​បាន​ចែកឋាន]",
+   "risk": "med"
+  },
+  "ph.parents_groom": {
+   "en": "[Groom's parents]",
+   "km": "[ឪពុក​ម្តាយកូន​កំលោះ]",
+   "risk": "low"
+  },
+  "ph.parents_bride": {
+   "en": "[Bride's parents]",
+   "km": "[ឪពុក​ម្តាយកូន​ក្រមុំ]",
+   "risk": "low"
+  },
+  "ph.message": {
+   "en": "[Your message]",
+   "km": "[សារ​ជូនពរ​របស់​អ្នក]",
+   "risk": "low"
+  },
+  "ph.school": {
+   "en": "[School or university]",
+   "km": "[សាលា ឬ សាកល​វិទ្យាល័យ]",
+   "risk": "low"
+  },
+  "label.date": {
+   "en": "Date",
+   "km": "កាលបរិច្ឆេទ",
+   "risk": "low"
+  },
+  "label.time": {
+   "en": "Time",
+   "km": "ម៉ោង",
+   "risk": "low"
+  },
+  "label.venue": {
+   "en": "Venue",
+   "km": "ទីកន្លែង",
+   "risk": "low"
+  },
+  "label.location": {
+   "en": "Location",
+   "km": "ទីតាំង",
+   "risk": "low"
+  },
+  "label.program": {
+   "en": "Programme",
+   "km": "កម្មវិធី",
+   "risk": "low"
+  },
+  "label.dresscode": {
+   "en": "Dress code",
+   "km": "ការ​ស្លៀកពាក់",
+   "risk": "low"
+  },
+  "label.contact": {
+   "en": "Contact",
+   "km": "ទំនាក់ទំនង",
+   "risk": "low"
+  },
+  "label.map": {
+   "en": "Map",
+   "km": "ផែនទី",
+   "risk": "low"
+  },
+  "label.host": {
+   "en": "Hosts",
+   "km": "ម្ចាស់​ពិធី",
+   "risk": "low"
+  },
+  "label.groom": {
+   "en": "Groom",
+   "km": "កូនកំលោះ",
+   "risk": "low"
+  },
+  "label.bride": {
+   "en": "Bride",
+   "km": "កូនក្រមុំ",
+   "risk": "low"
+  },
+  "label.son_of": {
+   "en": "Son of",
+   "km": "កូនប្រុស​របស់",
+   "risk": "low"
+  },
+  "label.daughter_of": {
+   "en": "Daughter of",
+   "km": "កូនស្រី​របស់",
+   "risk": "low"
+  },
+  "label.rsvp": {
+   "en": "Kindly confirm your attendance",
+   "km": "សូម​បញ្ជាក់​ការចូលរួម",
+   "risk": "low"
+  },
+  "label.day1": {
+   "en": "Day 1",
+   "km": "ថ្ងៃទី ១",
+   "risk": "low"
+  },
+  "label.day2": {
+   "en": "Day 2",
+   "km": "ថ្ងៃទី ២",
+   "risk": "low"
+  },
+  "label.day3": {
+   "en": "Day 3",
+   "km": "ថ្ងៃទី ៣",
+   "risk": "low"
+  },
+  "label.morning": {
+   "en": "Morning",
+   "km": "ពេលព្រឹក",
+   "risk": "low"
+  },
+  "label.afternoon": {
+   "en": "Afternoon",
+   "km": "ពេលរសៀល",
+   "risk": "low"
+  },
+  "label.evening": {
+   "en": "Evening",
+   "km": "ពេលល្ងាច",
+   "risk": "low"
+  },
+  "label.dress_traditional": {
+   "en": "Traditional Khmer attire",
+   "km": "ស្លៀកពាក់​ប្រពៃណី​ខ្មែរ",
+   "risk": "low"
+  },
+  "label.with_love": {
+   "en": "With love and gratitude",
+   "km": "ដោយ​ក្តី​ស្រឡាញ់ និង​ការ​ដឹងគុណ",
+   "risk": "med"
+  },
+  "label.with_respect": {
+   "en": "With respect, we wish you",
+   "km": "ដោយ​ក្តី​គោរព សូមជូនពរ",
+   "risk": "med"
+  },
+  "label.in_memory": {
+   "en": "In loving memory",
+   "km": "ក្នុង​សេចក្តី​នឹករលឹក",
+   "risk": "med"
+  },
+  "label.invited": {
+   "en": "You are cordially invited",
+   "km": "សូម​គោរព​អញ្ជើញ",
+   "risk": "low"
+  },
+  "label.save_the_date": {
+   "en": "Save the Date",
+   "km": "សូម​កត់ទុក​ថ្ងៃ",
+   "risk": "med"
+  },
+  "label.hosted_by": {
+   "en": "Hosted by",
+   "km": "រៀបចំ​ដោយ",
+   "risk": "low"
+  },
+  "sched.welcome": {
+   "en": "Welcome of guests",
+   "km": "ពិធី​ស្វាគមន៍​ភ្ញៀវ",
+   "risk": "low"
+  },
+  "sched.chanting": {
+   "en": "Monks' blessing chant",
+   "km": "ពិធីសូត្រមន្ត",
+   "risk": "low"
+  },
+  "sched.ancestors": {
+   "en": "Offering to ancestors",
+   "km": "ពិធី​សែនដូនតា",
+   "risk": "med"
+  },
+  "sched.hair": {
+   "en": "Hair-cutting ceremony",
+   "km": "ពិធីកាត់សក់",
+   "risk": "med"
+  },
+  "sched.wrist": {
+   "en": "Wrist-tying blessing",
+   "km": "ពិធីចងដៃ",
+   "risk": "med"
+  },
+  "sched.procession": {
+   "en": "Gift procession",
+   "km": "ពិធីហែជំនូន",
+   "risk": "med"
+  },
+  "sched.engagement": {
+   "en": "Engagement ceremony",
+   "km": "ពិធី​ភ្ជាប់ពាក្យ",
+   "risk": "low"
+  },
+  "sched.ceremony": {
+   "en": "Wedding ceremony",
+   "km": "ពិធី​រៀប​អាពាហ៍​ពិពាហ៍",
+   "risk": "low"
+  },
+  "sched.banquet": {
+   "en": "Wedding banquet",
+   "km": "ពិធីជប់លៀង",
+   "risk": "low"
+  },
+  "sched.lunch": {
+   "en": "Lunch",
+   "km": "អាហារ​ថ្ងៃត្រង់",
+   "risk": "low"
+  },
+  "sched.dinner": {
+   "en": "Dinner",
+   "km": "អាហារ​ពេលល្ងាច",
+   "risk": "low"
+  },
+  "sched.monks_meal": {
+   "en": "Chanting and meal offering to the monks",
+   "km": "សូត្រ​មន្ត និង​ប្រគេន​ភត្តាហារ​ដល់​ព្រះសង្ឃ",
+   "risk": "med"
+  },
+  "sched.ribbon": {
+   "en": "Ribbon-cutting",
+   "km": "ពិធី​កាត់ខ្សែបូ",
+   "risk": "low"
+  },
+  "wedding.title": {
+   "en": "Wedding Ceremony",
+   "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍",
+   "risk": "low"
+  },
+  "wedding.invite_formal": {
+   "en": "Together with their families, request the honour of your presence at the wedding of their son and daughter",
+   "km": "សូម​គោរព​អញ្ជើញ ឯកឧត្តម លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា ចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស ក្នុង​ពិធី​អាពាហ៍​ពិពាហ៍​កូនប្រុស និង​កូនស្រី​របស់​យើងខ្ញុំ",
+   "risk": "med"
+  },
+  "wedding.invite_short": {
+   "en": "Together with our families, we invite you to celebrate our wedding",
+   "km": "សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​អបអរសាទរ​ពិធី​អាពាហ៍​ពិពាហ៍​របស់​យើងខ្ញុំ",
+   "risk": "med"
+  },
+  "wedding.honour": {
+   "en": "Your presence is a great honour to us",
+   "km": "ការចូលរួម​របស់​លោកអ្នក គឺជា​កិត្តិយស​ដ៏​ខ្ពង់ខ្ពស់​សម្រាប់​យើងខ្ញុំ",
+   "risk": "med"
+  },
+  "wedding.engagement.title": {
+   "en": "Engagement Ceremony",
+   "km": "ពិធី​ភ្ជាប់ពាក្យ",
+   "risk": "low"
+  },
+  "wedding.engagement.invite": {
+   "en": "You are warmly invited to witness our engagement ceremony",
+   "km": "សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស​ក្នុង​ពិធី​ភ្ជាប់ពាក្យ",
+   "risk": "med"
+  },
+  "wedding.hair.title": {
+   "en": "Hair-Cutting Ceremony",
+   "km": "ពិធីកាត់សក់",
+   "risk": "med"
+  },
+  "wedding.hair.invite": {
+   "en": "Join us for the traditional blessing before the wedding",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីកាត់សក់ តាម​ប្រពៃណី​ខ្មែរ មុន​ពិធី​អាពាហ៍​ពិពាហ៍",
+   "risk": "med"
+  },
+  "wedding.reception.title": {
+   "en": "Wedding Reception",
+   "km": "ពិធីជប់លៀង​អាពាហ៍​ពិពាហ៍",
+   "risk": "low"
+  },
+  "wedding.reception.invite": {
+   "en": "Join us for an evening of dinner and celebration",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីជប់លៀង​អាហារ​ពេលល្ងាច ដើម្បី​អបអរសាទរ​អាពាហ៍​ពិពាហ៍",
+   "risk": "med"
+  },
+  "wedding.program.title": {
+   "en": "Three Days of Celebration",
+   "km": "កម្មវិធី​អាពាហ៍​ពិពាហ៍​បី​ថ្ងៃ",
+   "risk": "med"
+  },
+  "wedding.program.intro": {
+   "en": "Please join us for the following ceremonies",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ក្នុង​ពិធី​ដូច​ខាងក្រោម",
+   "risk": "med"
+  },
+  "bd.title": {
+   "en": "Birthday Celebration",
+   "km": "ពិធី​អបអរសាទរ​ខួបកំណើត",
+   "risk": "low"
+  },
+  "bd.happy": {
+   "en": "Happy Birthday",
+   "km": "រីករាយ​ថ្ងៃកំណើត",
+   "risk": "low"
+  },
+  "bd.first": {
+   "en": "My First Birthday",
+   "km": "ខួបកំណើត​គម្រប់ ១ ឆ្នាំ",
+   "risk": "low"
+  },
+  "bd.invite": {
+   "en": "You are invited to celebrate the birthday of",
+   "km": "សូម​អញ្ជើញ​ចូលរួម​អបអរសាទរ​ខួបកំណើត​របស់",
+   "risk": "med"
+  },
+  "bd.kids_invite": {
+   "en": "Come and celebrate with us!",
+   "km": "សូម​អញ្ជើញ​មក​អបអរសាទរ​ជាមួយ​យើង!",
+   "risk": "med"
+  },
+  "bd.longevity.title": {
+   "en": "Longevity Blessing Ceremony",
+   "km": "ពិធីបុណ្យ​ចម្រើន​អាយុ",
+   "risk": "med"
+  },
+  "bd.longevity.invite": {
+   "en": "Join us in honouring our elder on this special birthday",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីបុណ្យ​ចម្រើន​អាយុ",
+   "risk": "med"
+  },
+  "bd.longevity.wish": {
+   "en": "May you enjoy a long life and good health",
+   "km": "សូមជូនពរ​ឱ្យ​មាន​អាយុ​យឺនយូរ សុខភាព​ល្អ",
+   "risk": "med"
+  },
+  "bd.sixty": {
+   "en": "60th Birthday",
+   "km": "ខួបកំណើត​គម្រប់ ៦០ ឆ្នាំ",
+   "risk": "low"
+  },
+  "hw.title": {
+   "en": "House Blessing Ceremony",
+   "km": "ពិធីបុណ្យ​ឡើងផ្ទះ​ថ្មី",
+   "risk": "low"
+  },
+  "hw.invite": {
+   "en": "We invite you to bless our new home",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីបុណ្យ​ឡើងផ្ទះ​ថ្មី​របស់​យើងខ្ញុំ",
+   "risk": "med"
+  },
+  "merit.title": {
+   "en": "Merit-Making Ceremony",
+   "km": "ពិធីបុណ្យ​ទាន",
+   "risk": "low"
+  },
+  "merit.invite": {
+   "en": "You are invited to join us in making merit",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ធ្វើបុណ្យ​ទាន",
+   "risk": "med"
+  },
+  "kathina.title": {
+   "en": "Kathina Robe Offering",
+   "km": "បុណ្យកឋិន​ទាន",
+   "risk": "low"
+  },
+  "kathina.invite": {
+   "en": "We invite all benefactors to join the Kathina ceremony",
+   "km": "សូម​អញ្ជើញ​សប្បុរសជន​ចូលរួម​បុណ្យកឋិន​ទាន",
+   "risk": "med"
+  },
+  "pchum.title": {
+   "en": "Pchum Ben",
+   "km": "បុណ្យភ្ជុំបិណ្ឌ",
+   "risk": "low"
+  },
+  "pchum.invite": {
+   "en": "In remembrance of our ancestors",
+   "km": "ដើម្បីរំលឹក​គុណ​ដូនតា",
+   "risk": "med"
+  },
+  "pchum.line": {
+   "en": "You are invited to join the ceremony and dedicate merit to our ancestors",
+   "km": "សូម​អញ្ជើញ​ចូលរួម​បុណ្យភ្ជុំបិណ្ឌ ឧទ្ទិស​កុសល​ជូន​ដូនតា",
+   "risk": "med"
+  },
+  "memorial.title": {
+   "en": "Memorial Ceremony",
+   "km": "ពិធីបុណ្យ​ខួប",
+   "risk": "med"
+  },
+  "memorial.invite": {
+   "en": "You are respectfully invited to a ceremony dedicating merit to",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីបុណ្យ​ឧទ្ទិស​កុសល​ជូន",
+   "risk": "med"
+  },
+  "memorial.wish": {
+   "en": "May the soul rest in peace",
+   "km": "សូម​ឱ្យ​វិញ្ញាណក្ខន្ធ​បាន​ទៅកាន់​សុគតិភព",
+   "risk": "med"
+  },
+  "ny.title": {
+   "en": "Khmer New Year",
+   "km": "បុណ្យចូលឆ្នាំ​ថ្មី​ប្រពៃណី​ខ្មែរ",
+   "risk": "low"
+  },
+  "ny.greeting": {
+   "en": "Happy Khmer New Year",
+   "km": "សួស្តី​ឆ្នាំ​ថ្មី",
+   "risk": "low"
+  },
+  "ny.wish": {
+   "en": "May the new year bring you health, happiness and prosperity",
+   "km": "សូមជូនពរ​លោកអ្នក​ប្រកបដោយ​សុខភាព​ល្អ សុភមង្គល និង​ភាព​រុងរឿង​ក្នុង​ឆ្នាំ​ថ្មី",
+   "risk": "med"
+  },
+  "wf.title": {
+   "en": "Water Festival",
+   "km": "បុណ្យអុំទូក",
+   "risk": "low"
+  },
+  "wf.wish": {
+   "en": "Wishing you joy and good fortune this Water Festival",
+   "km": "សូមជូនពរ​ឱ្យ​លោកអ្នក​រីករាយ និង​ជួប​តែ​សំណាងល្អ​ក្នុង​បុណ្យអុំទូក",
+   "risk": "med"
+  },
+  "gny.title": {
+   "en": "Happy New Year",
+   "km": "សួស្តី​ឆ្នាំ​សកល​ថ្មី",
+   "risk": "med"
+  },
+  "gny.wish": {
+   "en": "Wishing you a bright and joyful year ahead",
+   "km": "សូមជូនពរ​ឱ្យ​លោកអ្នក​មាន​ឆ្នាំ​ថ្មី​ដ៏​ភ្លឺស្វាង និង​ពោរពេញ​ដោយ​សេចក្តី​សុខ",
+   "risk": "med"
+  },
+  "thanks.title": {
+   "en": "Thank You",
+   "km": "សូម​អរគុណ",
+   "risk": "low"
+  },
+  "thanks.line": {
+   "en": "Thank you for celebrating with us",
+   "km": "អរគុណ​ដែល​បាន​ចូលរួម​អបអរសាទរ​ជាមួយ​យើងខ្ញុំ",
+   "risk": "med"
+  },
+  "grad.title": {
+   "en": "Congratulations, Graduate",
+   "km": "អបអរសាទរ​បញ្ចប់​ការសិក្សា",
+   "risk": "low"
+  },
+  "grad.wish": {
+   "en": "Wishing you success in every step ahead",
+   "km": "សូមជូនពរ​ឱ្យ​ទទួល​បាន​ជោគជ័យ​គ្រប់​ជំហាន​បន្ទាប់",
+   "risk": "med"
+  },
+  "baby.title": {
+   "en": "Welcome, Little One",
+   "km": "សូមស្វាគមន៍​សមាជិក​ថ្មី",
+   "risk": "med"
+  },
+  "baby.line": {
+   "en": "A new life, a new joy",
+   "km": "ជីវិត​ថ្មី សេចក្តី​រីករាយ​ថ្មី",
+   "risk": "med"
+  },
+  "symp.title": {
+   "en": "With Deepest Sympathy",
+   "km": "សូម​ចូលរួម​រំលែកទុក្ខ",
+   "risk": "low"
+  },
+  "symp.line": {
+   "en": "Our thoughts are with you and your family",
+   "km": "យើងខ្ញុំ​សូម​រំលែកទុក្ខ​ជាមួយ​លោកអ្នក និង​ក្រុម​គ្រួសារ",
+   "risk": "med"
+  },
+  "well.title": {
+   "en": "Get Well Soon",
+   "km": "សូម​ឱ្យ​ឆាប់​ជាសះស្បើយ",
+   "risk": "low"
+  },
+  "well.line": {
+   "en": "Wishing you good health again very soon",
+   "km": "សូមជូនពរ​ឱ្យ​មាន​សុខភាព​ល្អ​ឡើង​វិញ​ឆាប់​ៗ",
+   "risk": "med"
+  },
+  "bless.title": {
+   "en": "Blessings and Good Wishes",
+   "km": "សូមជូនពរ",
+   "risk": "low"
+  },
+  "bless.line": {
+   "en": "May your life be filled with happiness, health and good fortune",
+   "km": "សូម​ឱ្យ​ជីវិត​របស់​លោកអ្នក​ពោរពេញ​ដោយ​សុភមង្គល សុខភាព​ល្អ និង​សំណាងល្អ",
+   "risk": "med"
+  },
+  "bless.elder": {
+   "en": "May you be blessed with long life, good health, strength and wisdom",
+   "km": "សូម​ឱ្យ​លោកអ្នក​មាន​អាយុ​យឺនយូរ សុខភាព​ល្អ កម្លាំង​មាំមួន និង​ប្រាជ្ញាវាងវៃ",
+   "risk": "med"
+  },
+  "cong.title": {
+   "en": "Congratulations",
+   "km": "សូម​អបអរសាទរ",
+   "risk": "low"
+  },
+  "open.title": {
+   "en": "Grand Opening",
+   "km": "ពិធីសម្ពោធ​បើក​ដំណើរការ",
+   "risk": "low"
+  },
+  "open.invite": {
+   "en": "You are invited to the grand opening of",
+   "km": "សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីសម្ពោធ​បើក​ដំណើរការ",
+   "risk": "med"
+  },
+  "gala.title": {
+   "en": "Annual Gala Dinner",
+   "km": "ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ",
+   "risk": "med"
+  },
+  "gala.invite": {
+   "en": "The pleasure of your company is requested",
+   "km": "សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស",
+   "risk": "med"
+  },
+  "anniv.title": {
+   "en": "Wedding Anniversary",
+   "km": "ខួប​អាពាហ៍​ពិពាហ៍",
+   "risk": "low"
+  },
+  "anniv.invite": {
+   "en": "Join us as we celebrate our wedding anniversary",
+   "km": "សូម​អញ្ជើញ​ចូលរួម​អបអរសាទរ​ខួប​អាពាហ៍​ពិពាហ៍​របស់​យើងខ្ញុំ",
+   "risk": "med"
+  }
+ },
+ "calendar": {
+  "digits": "០១២៣៤៥៦៧៨៩",
+  "months": [
+   "មករា",
+   "កុម្ភៈ",
+   "មីនា",
+   "មេសា",
+   "ឧសភា",
+   "មិថុនា",
+   "កក្កដា",
+   "សីហា",
+   "កញ្ញា",
+   "តុលា",
+   "វិច្ឆិកា",
+   "ធ្នូ"
+  ],
+  "weekdays": [
+   "ថ្ងៃអាទិត្យ",
+   "ថ្ងៃច័ន្ទ",
+   "ថ្ងៃអង្គារ",
+   "ថ្ងៃពុធ",
+   "ថ្ងៃព្រហស្បតិ៍",
+   "ថ្ងៃសុក្រ",
+   "ថ្ងៃសៅរ៍"
+  ],
+  "day_word": "ថ្ងៃទី",
+  "month_word": "ខែ",
+  "year_word": "ឆ្នាំ"
+ }
+}
