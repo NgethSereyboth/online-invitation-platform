@@ -224,6 +224,10 @@ body.windows-ui-v54 .final-tour * { transition-property: transform, opacity; tra
   body.studio-experience .stage-wrap { padding: 14px 14px 14px; }
   body.studio-experience .v54-canvas-hud {
     position: absolute; inset: auto 8px 8px; margin: 0;
+    /* LT-1.6: the mobile HUD stretched from edge to edge (355px in a 375px
+       viewport) while Fit was hidden ≤600, so its right half was empty. It now
+       hugs its controls at the right edge instead of reserving dead space. */
+    left: auto; width: max-content; max-width: calc(100vw - 16px);
     z-index: 40;
     background: var(--app-surface, #fff);
     border: 1px solid var(--app-line, #e4e4e9);
@@ -376,7 +380,8 @@ body.workspace-experience-v54 .right > h2, body.workspace-experience-v54 .left >
 }
 @media (max-width: 600px) {
   .v54-canvas-hud { position: relative; inset: auto; left: auto; right: auto; bottom: auto; transform: none; margin: 7px auto calc(7px + env(safe-area-inset-bottom)); }
-  .v54-canvas-hud [data-v54-zoom="fit"] { display: none; }
+  /* LT-1.6: Fit stays in the mobile HUD. Hiding it left − / read-out / + in a
+     full-width bar with the zoom's other half empty. */
   .v54-selection-card { display: none; }
   .v54-hover-box { display: none; }
 }
@@ -951,7 +956,11 @@ body[data-page="index"] > main {
   overflow: hidden;
 }
 body[data-page="index"] .studio-document-title { font-size: var(--fs-body-md); font-weight: var(--fw-medium); color: var(--app-muted); }
-body[data-page="index"] .studio-document-title::before { content: "/"; margin-right: var(--space-2); color: var(--app-faint); }
+/* LT-1.6: the title had a decorative `content: "/"` crumb separator with no
+   crumb after it (`.workflow-trail` is the real breadcrumb and is hidden on
+   `design`). At 375 the 97px-wide title wrapped the slash onto its own line
+   above "Sokha & Dara". The title's own left border already separates it from
+   the brand mark, so the orphan slash is removed at the cause. */
 body.studio-experience.rail-collapsed > main { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr) var(--app-inspector-w); }
 
 /* Topbar buttons adopt the shell control metrics. */
@@ -1590,6 +1599,28 @@ body[data-page="index"] #v20ResponsivePreview { padding-inline: 4px !important; 
     height: 26px;
     margin: 0 4px 0 0;
   }
+}
+
+/* LT-1.6 · 375 toolbar at rest: the canvas chip kept its whole content width
+   (125px) in a flex row whose next controls could not shrink, so the chip
+   clipped its own trailing · and the size select ended at x=436 in a 375px
+   viewport ("Custom size…" cut mid-word). The chip is the only flexible item
+   here: it shrinks and ellipsises its page name (the full `page · selection`
+   label lives in its title/aria-label from workflow-ux.js), its separator and
+   selection text drop below 641 where only the page name is actionable, and
+   the select is capped so its selected label is fully visible at rest. */
+@media (max-width: 640px) {
+  body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > #workflowV5Status {
+    flex: 0 1 auto;
+    min-width: 116px;
+    max-width: 46vw;
+  }
+  body[data-page="index"] .workflow-v5-status .page { min-width: 0; }
+  body[data-page="index"] .workflow-v5-status > b,
+  body[data-page="index"] .workflow-v5-status .selection { display: none; }
+}
+@media (max-width: 360px) {
+  body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > #workflowV5Status { min-width: 72px; }
 }
 
 /* U1-21 · Type-floor sweep 2: the remaining 8–10px studio copy lives in the

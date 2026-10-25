@@ -486,8 +486,12 @@ function selectionLabel(){
 }
 function pageLabel(){return $('#activeCanvasLabel')?.textContent?.trim()||'Main hero'}
 function refreshStatus(){
-  $('.page',status).textContent=pageLabel();$('.selection',status).textContent=selectionLabel();
-  const o=selectedOne();status.classList.toggle('has-selection',!!o);status.title=o?'Click to edit the selected object':'Current canvas';
+  const page=pageLabel(),selection=selectionLabel();
+  $('.page',status).textContent=page;$('.selection',status).textContent=selection;
+  const o=selectedOne();status.classList.toggle('has-selection',!!o);
+  // LT-1.6: the chip ellipsises at 375, so the untruncated `page · selection`
+  // label must be reachable by hover and announced by assistive tech.
+  const label=`${page} · ${selection}`;status.title=label;status.setAttribute('aria-label',label);
 }
 status.onclick=()=>{if(selected().length){document.querySelector('[data-inspector-tab="object"]')?.click();if(innerWidth<=1180)body.classList.add('inspector-open')}};
 new MutationObserver(()=>requestAnimationFrame(refreshStatus)).observe(stage,{subtree:true,attributes:true,attributeFilter:['class']});

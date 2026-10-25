@@ -27,6 +27,16 @@
   color:#4a4550;
 }
 #posterSizes:focus-visible{outline:2px solid color-mix(in srgb,var(--accent,#7d4052) 45%,transparent);outline-offset:1px}
+/* LT-1.6: on phones the picker's natural 210px box ended at x=436 in a 375px
+   viewport, so "Custom size…" was cut mid-word. Cap it to a width that fits
+   the selected label at rest; this file is unlayered, so the cap has to live
+   here to outrank `#posterSizes` above rather than in the layered editor sheet. */
+@media(max-width:640px){
+  body[data-page="index"] .stage-wrap>.studio-canvas-toolbar>#posterSizes{max-width:134px}
+}
+@media(max-width:360px){
+  body[data-page="index"] .stage-wrap>.studio-canvas-toolbar>#posterSizes{max-width:118px}
+}
 
 /* 3. Probe diagnostics for poster documents (hidden unless size cannot be applied) */
 .stage[data-poster-size]{border-radius:4px}

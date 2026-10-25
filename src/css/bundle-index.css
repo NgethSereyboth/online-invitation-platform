@@ -1239,6 +1239,7 @@ body.windows-ui-v54 .final-tour * { transition-property: transform, opacity; tra
 body.studio-experience .stage-wrap { padding: 14px 14px 14px; }
 body.studio-experience .v54-canvas-hud {
 position: absolute; inset: auto 8px 8px; margin: 0;
+left: auto; width: max-content; max-width: calc(100vw - 16px);
 z-index: 40;
 background: var(--app-surface, #fff);
 border: 1px solid var(--app-line, #e4e4e9);
@@ -1368,7 +1369,6 @@ body.workspace-experience-v54 .stage-wrap > .toolbar > #safeMarginToggle { displ
 }
 @media (max-width: 600px) {
 .v54-canvas-hud { position: relative; inset: auto; left: auto; right: auto; bottom: auto; transform: none; margin: 7px auto calc(7px + env(safe-area-inset-bottom)); }
-.v54-canvas-hud [data-v54-zoom="fit"] { display: none; }
 .v54-selection-card { display: none; }
 .v54-hover-box { display: none; }
 }
@@ -1810,7 +1810,6 @@ grid-template-columns: calc(var(--app-rail-w-collapsed) + var(--app-rail-w)) min
 overflow: hidden;
 }
 body[data-page="index"] .studio-document-title { font-size: var(--fs-body-md); font-weight: var(--fw-medium); color: var(--app-muted); }
-body[data-page="index"] .studio-document-title::before { content: "/"; margin-right: var(--space-2); color: var(--app-faint); }
 body.studio-experience.rail-collapsed > main { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr) var(--app-inspector-w); }
 body[data-page="index"] > header.studio-topbar button,
 body[data-page="index"] > header.studio-topbar .button-link {
@@ -2267,6 +2266,19 @@ transform: none;
 height: 26px;
 margin: 0 4px 0 0;
 }
+}
+@media (max-width: 640px) {
+body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > #workflowV5Status {
+flex: 0 1 auto;
+min-width: 116px;
+max-width: 46vw;
+}
+body[data-page="index"] .workflow-v5-status .page { min-width: 0; }
+body[data-page="index"] .workflow-v5-status > b,
+body[data-page="index"] .workflow-v5-status .selection { display: none; }
+}
+@media (max-width: 360px) {
+body[data-page="index"] .stage-wrap > .studio-canvas-toolbar > #workflowV5Status { min-width: 72px; }
 }
 body[data-page="index"] .studio-pane small,
 body[data-page="index"] .studio-pane p,
@@ -3288,6 +3300,12 @@ border-color:#e4e4e8;
 color:#4a4550;
 }
 #posterSizes:focus-visible{outline:2px solid color-mix(in srgb,var(--accent,#7d4052) 45%,transparent);outline-offset:1px}
+@media(max-width:640px){
+body[data-page="index"] .stage-wrap>.studio-canvas-toolbar>#posterSizes{max-width:134px}
+}
+@media(max-width:360px){
+body[data-page="index"] .stage-wrap>.studio-canvas-toolbar>#posterSizes{max-width:118px}
+}
 .stage[data-poster-size]{border-radius:4px}
 .stage-wrap .toolbar #posterSizes:invalid{border-color:#c8556f}
 .designer-error-note{color:#7a4956;font-size:13px;margin:6px 0 16px}
