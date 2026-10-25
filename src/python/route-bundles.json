@@ -562,8 +562,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 257315,
-      "scriptSha256": "2865da262c72b5d5351228dc0f3ee65a6f3a651e3ddff5907078b7fd704f69d6",
+      "scriptBytes": 257648,
+      "scriptSha256": "19ab29f2a23a86474344b711ff17c296db5cf5ad9c6e8a11acfee14c113504fb",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"

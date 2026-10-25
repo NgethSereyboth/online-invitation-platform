@@ -1148,3 +1148,5 @@
 "accessMessage","accessMessage","Only studio administrators can open this page; ask a studio owner to grant your account access.","Only studio administrators can open this page; ask a studio owner to grant your account access.","fallback","src/js/pages/admin/admin.js","18"
 "label","khmerNumerals","Khmer numerals","Khmer numerals","fallback","src/html/index.html","126"
 "button","convertDigits","Convert digits to Khmer","Convert digits to Khmer","fallback","src/html/index.html","354"
+"span","messengerShare","Messenger","Messenger","fallback","src/js/public-share-panel.js","12"
+"span","messengerShareDesktop","Messenger sharing opens on a phone. Public link copied instead.","Messenger sharing opens on a phone. Public link copied instead.","fallback","src/js/public-share-panel.js","12"

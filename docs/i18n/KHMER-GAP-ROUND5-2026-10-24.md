@@ -143,3 +143,13 @@ The setting itself is stored in `document.settings.khmerNumerals` and defaults t
    before its map exists.
 3. `Cannot set properties of null (setting 'hidden')` on account is a product defect independent of
    language; it should be fixed in the account-security item, not translated.
+
+## LT-3.2 — public share panel (added 2026-10-25)
+
+| EN | Where seen | Key / source |
+|---|---|---|
+| Messenger | share panel target added next to Telegram / WhatsApp / Facebook | `src/js/public-share-panel.js:12` |
+| Messenger sharing opens on a phone. Public link copied instead. | desktop fallback for the Messenger deep link | `src/js/public-share-panel.js:12` |
+
+Both are `fallback` rows in `TRANSLATIONS.csv`; Khmer mode shows English until a map row exists.
+`Messenger` is a brand name and may be allowlisted rather than translated.
