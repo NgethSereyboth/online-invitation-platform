@@ -18,6 +18,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "account-page.css",
         "modern-ui.css",
@@ -59,6 +60,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "admin-page.css",
         "modern-ui.css",
@@ -89,6 +91,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "analytics-page.css",
         "modern-ui.css",
@@ -117,6 +120,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "billing-page.css",
         "modern-ui.css",
@@ -143,6 +147,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "tokens.css",
         "theme-hardening.css",
@@ -219,6 +224,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "studio-experience.css",
         "designer-page.css",
@@ -249,6 +255,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "guests-page.css",
         "modern-ui.css",
@@ -400,6 +407,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "materials-page.css",
         "modern-ui.css",
@@ -424,6 +432,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "modern-ui.css",
         "compact-theme.css",
@@ -485,6 +494,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "reset-page.css",
         "modern-ui.css",
@@ -515,6 +525,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "responses-page.css",
         "modern-ui.css",
@@ -545,6 +556,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "studio-experience.css",
         "templates-page.css",
@@ -574,6 +586,7 @@
         "ui/app-shell.js"
       ],
       "styles": [
+        "typography-fonts.css",
         "styles.css",
         "verify-page.css",
         "modern-ui.css",

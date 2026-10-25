@@ -37,6 +37,10 @@ body {
    19.06px where the same Latin label renders at 12px). Khmer is optically sized once,
    in its @font-face `size-adjust`; line-height stays per script. */
 body :lang(km), body .khmer-text { line-height: 1.6; }
+/* LT-1.5: `body:not(.guest) > header button` sets 1.15 for the compact Latin
+   chrome (0-2-2, above `body :lang(km)`); Khmer needs the taller line box, so a
+   Khmer header button restates it at a higher specificity. */
+body:not(.guest) > header button:lang(km) { line-height: 1.6; }
 
 /* --- 2. Skeleton A: application shell ------------------------------------ */
 body[data-shell="a"] {

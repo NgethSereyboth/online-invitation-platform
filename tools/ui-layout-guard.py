@@ -16,6 +16,9 @@ into a pass/fail matrix the gate runner can enforce:
   * **header height** — at ≤ 400 px wide, the header must stay ≤ 96 px (FB-28).
   * **auth-card padding** — on the signed-out dashboard the card's inner padding
     and every input's inset must be at least 16 px (VB-01 acceptance).
+  * **Khmer face** (LT-1.5) — a fixed set of chrome labels on every route must
+    declare the app's `EInvite` Khmer stack, paint with a bundled face (CDP
+    `CSS.getPlatformFontsForNode`), and keep line-height ≥ 1.6.
   * **editor contract** — on index.html (FB-29): at ≤ 440 px the canvas
     (`.canvas-viewport`) must occupy ≥ 50 % of the viewport height; toolbars
     must scroll (overflow-x auto/scroll) instead of clipping children; and on
@@ -86,6 +89,36 @@ LONG_TASK_JS = """(() => {
     }).observe({type: 'longtask', buffered: true});
   } catch (e) {}
 })();"""
+
+# LT-1.5: a fixed set of chrome labels that exists on every signed-in route.
+# Each one must resolve through the app's own --font-khmer/--font-display-km stack
+# (declared family starts with "EInvite") AND actually paint with the bundled face;
+# a route whose bundle lacks the @font-face declares the family but silently falls
+# back to a system Khmer font, which is exactly the V3 defect.
+KHMER_FONT_JS = r"""
+() => {
+  const sel = '.skip-link [lang="km"], .app-brand [lang="km"], .app-crumbs [lang="km"], ' +
+              '.app-rail [lang="km"], .app-topbar-right [lang="km"], ' +
+              '.language-switch button[lang="km"], .studio-topbar [lang="km"], ' +
+              '.guest-topbar [lang="km"]';
+  const out = [];
+  for (const el of document.querySelectorAll(sel)) {
+    if (out.length >= 10) break;
+    const s = getComputedStyle(el);
+    if (s.display === 'none' || s.visibility === 'hidden' || s.opacity === '0') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
+    el.setAttribute('data-guard-font', String(out.length));
+    const size = parseFloat(s.fontSize) || 16;
+    const lh = s.lineHeight === 'normal' ? null : parseFloat(s.lineHeight);
+    out.push({ i: out.length, text: (el.textContent || '').trim().slice(0, 24),
+               family: s.fontFamily, weight: s.fontWeight, size,
+               ratio: lh ? +(lh / size).toFixed(2) : null });
+  }
+  return out;
+}
+"""
 
 MEASURE_JS = r"""
 () => {
@@ -397,6 +430,49 @@ def console_matches(message: str, patterns: list[str]) -> bool:
     return False
 
 
+def collect_font_rows(ctx, page, where: str) -> list[tuple[str, bool, str]]:
+    """LT-1.5: every fixed chrome label must paint with the bundled Khmer face and
+    carry the Khmer line box. Returns one `khmer-face` row."""
+    try:
+        samples = page.evaluate(KHMER_FONT_JS)
+    except Exception as exc:  # noqa: BLE001
+        return [("khmer-face", False, f"{where} probe failed: {str(exc)[:120]}")]
+    if not samples:
+        return [("khmer-face", True, f"{where} no fixed-set Khmer label")]
+    cdp = ctx.new_cdp_session(page)
+    cdp.send("DOM.enable")
+    cdp.send("CSS.enable")
+    doc = cdp.send("DOM.getDocument", {"depth": 0})
+    bad = []
+    for s in samples:
+        node = cdp.send("DOM.querySelector", {
+            "nodeId": doc["root"]["nodeId"],
+            "selector": f'[data-guard-font="{s["i"]}"]'})
+        used = []
+        if node.get("nodeId"):
+            try:
+                used = cdp.send("CSS.getPlatformFontsForNode",
+                                {"nodeId": node["nodeId"]}).get("fonts", [])
+            except Exception as exc:  # noqa: BLE001
+                used = [{"error": str(exc)[:80]}]
+        bundled = [f for f in used if f.get("isCustomFont") and f.get("glyphCount")]
+        declared = "EInvite Noto" in (s.get("family") or "")
+        used_names = ",".join(str(f.get("postScriptName") or f.get("familyName") or
+                                f.get("error") or "?") for f in used) or "none"
+        reasons = []
+        if not declared:
+            reasons.append("declared=" + (s.get("family") or "")[:60])
+        if not bundled:
+            reasons.append("used=" + used_names)
+        if s.get("ratio") is not None and s["ratio"] < 1.55:
+            reasons.append(f"line-height={s['ratio']}")
+        if reasons:
+            bad.append(f"{s.get('text')} [{' '.join(reasons)}]")
+    return [("khmer-face", not bad,
+             f"{where} " + ("; ".join(bad) if bad else
+                            f"{len(samples)} labels bundled, line-height ok"))]
+
+
 def run_self_test() -> int:
     """FB-38 negative control: a deliberately broken fixture must fail each new
     check and produce the expected signature row. Exit 0 only when all fire."""
@@ -419,13 +495,16 @@ def run_self_test() -> int:
         page.goto(fixture.as_uri(), wait_until="domcontentloaded")
         page.wait_for_timeout(150)
         data = page.evaluate(MEASURE_JS)
+        font_rows = collect_font_rows(ctx, page, "selftest.html 375x667 light en")
         ctx.close()
         browser.close()
     rows = rows_for("selftest.html", "375x667", "light", "en", data, signed_in=False)
+    rows.extend(font_rows)
     patterns = load_console_patterns(str(DEFAULT_BASELINE))
     console_fails = [m for m in errors if not console_matches(m, patterns)]
     failed_checks = {check for check, ok, _ in rows if not ok}
-    expected = {"empty-control", "clipped-field", "empty-pill", "editor-artboard", "long-task"}
+    expected = {"empty-control", "clipped-field", "empty-pill", "khmer-face",
+                "editor-artboard", "long-task"}
     print("SELFTEST negative control — deliberately broken fixture:")
     for check, ok, detail in rows:
         if not ok and check in expected:
@@ -439,7 +518,7 @@ def run_self_test() -> int:
         print("UI_LAYOUT_GUARD_SELFTEST_FAILED missing=" + ",".join(sorted(missing)))
         return 1
     print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, empty-pill, "
-          "editor-artboard, long-task, console-baseline)")
+          "khmer-face, editor-artboard, long-task, console-baseline)")
     return 0
 
 
@@ -675,6 +754,9 @@ def main() -> int:
                             ctx.close()
                             continue
                         rows.extend(rows_for("public.html", viewport, theme, lang, data, signed_in=False))
+                        if lang == "km" and theme == "light" and viewport == "1440x900":
+                            rows.extend(collect_font_rows(
+                                ctx, page, f"public.html {viewport} {theme} {lang}"))
                         ctx.close()
 
         # ---- signed-in pages ----------------------------------------------
@@ -732,6 +814,9 @@ def main() -> int:
                                 page.close()
                                 continue
                             rows.extend(rows_for(page_name, viewport, theme, lang, data, signed_in=True))
+                            if lang == "km" and theme == "light" and viewport == "1440x900":
+                                rows.extend(collect_font_rows(
+                                    ctx, page, f"{page_name} {viewport} {theme} {lang}"))
                             page.close()
                         ctx.close()
 

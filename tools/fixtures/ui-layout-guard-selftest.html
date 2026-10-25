@@ -22,6 +22,11 @@
 </style>
 </head>
 <body>
+  <!-- LT-1.5 negative control: declares the app's Khmer family but the fixture
+       ships no @font-face, so the glyph must paint with a system face. The text is
+       a Khmer digit generated from its code point (no Khmer is written here). -->
+  <div class="app-brand"><span lang="km" id="font-sample" style="font-family:'EInvite Noto Sans Khmer',serif"></span></div>
+  <script>document.getElementById('font-sample').textContent = String.fromCodePoint(0x17E0);</script>
   <button class="bordered-empty" aria-label="Empty square" id="empty"></button>
   <span class="fp-project-status">Draft</span>
   <span class="app-badge">Draft</span>
