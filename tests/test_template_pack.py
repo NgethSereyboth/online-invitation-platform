@@ -25,6 +25,7 @@ ALLOWED_KHMER_PATHS = (
     "docs/i18n/",
     "template-pack/",
     "assets/template-pack/",
+    "src/python/assets/template-pack/",
     "tests/data/template-pack-khmer-allowlist.txt",
 )
 ALLOWED_EXISTING = ROOT / "tests" / "data" / "template-pack-khmer-allowlist.txt"
@@ -169,6 +170,25 @@ def test_no_placeholder_content_leaks_a_real_identity():
         text = path.read_text(encoding="utf-8")
         for pattern in (r"\b\d{3}[- ]?\d{3}[- ]?\d{3,4}\b", r"@[a-z0-9-]+\.(?:com|net|org)"):
             assert not re.search(pattern, text, re.I), (path.stem, pattern)
+
+
+def test_server_accepts_every_document():
+    """The real server validator is the authority on what an editor may save."""
+    script = (
+        "import glob,json,sys;sys.path.insert(0,'src/python');import server;"
+        "bad=[];"
+        "files=sorted(glob.glob('assets/template-pack/built/*.js'));"
+        "\nfor f in files:\n d=json.loads(open(f,encoding='utf-8').read()[len('export default '):].rstrip().rstrip(';'))\n"
+        " try: server.validate_document(d['document'])\n except Exception as e: bad.append((d['id'],str(e)))\n"
+        "print('TEMPLATE_PACK_DOCUMENTS',len(files),'invalid',len(bad));"
+        "[print('INVALID',i,e) for i,e in bad];sys.exit(1 if bad else 0)"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script], cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+        env={**__import__("os").environ, "EINVITE_DATA_DIR": "/tmp/template-pack-validate"},
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "TEMPLATE_PACK_DOCUMENTS 36 invalid 0" in result.stdout, result.stdout
 
 
 def test_converter_check_is_clean():

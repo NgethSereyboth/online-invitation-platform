@@ -98,6 +98,16 @@ SHAPE_KINDS = {"rectangle": "rectangle", "rect": "rectangle", "ellipse": "circle
 
 PHOTO_MASKS = {"rect": "none", "rectangle": "none", "ellipse": "circle", "circle": "circle", "arch": "arch"}
 
+TEXT_TRANSFORMS = {
+    "none": "none",
+    "upper": "uppercase",
+    "uppercase": "uppercase",
+    "lower": "lowercase",
+    "lowercase": "lowercase",
+    "title": "capitalize",
+    "capitalize": "capitalize",
+}
+
 MAX_PATTERN_TILES = 36
 
 
@@ -192,7 +202,7 @@ def base_object(layer: dict, z: int, canvas_h: int) -> dict:
         "visible": True,
         "locked": False,
         "animation": "none",
-        "duration": "0",
+        "duration": "900",
         "showInHero": False,
         "showInGallery": False,
         "lockedLayer": False,
@@ -204,13 +214,16 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
     role = layer.get("font", "lat.cinzel")
     if role not in FONT_ROLES:
         raise PackError(f"{where}: font role {role!r} is not mapped")
+    # The document model accepts only 400/700 (server.py:1182,
+    # typography_document_model.py:59); nearest allowed weight wins.
+    weight = 700 if float(layer.get("weight", 400) or 400) >= 600 else 400
     obj.update(
         {
             "html": text_html(layer, copy, where),
             "font": FONT_ROLES[role],
             "fontPairing": "ceremonial-khmer" if role.startswith("kh.") else "serif-formal",
             "fontSize": float(layer.get("size", 24)),
-            "fontWeight": str(layer.get("weight", 400)),
+            "fontWeight": str(weight),
             "fontStyle": "normal",
             "colorToken": "heading" if layer.get("color") in ("accent", "ink") else "text",
             "color": hex_colour(palette, layer.get("color", "ink"), where),
@@ -219,7 +232,9 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
             "letterSpacing": 0,
             "lineHeight": float(layer.get("lineHeight", 1.4)),
             "textWrap": "balance",
-            "textTransform": layer.get("transform", "none"),
+            # The document model accepts none/uppercase/lowercase/capitalize
+            # (server.py:1209); the pack writes the short form.
+            "textTransform": TEXT_TRANSFORMS.get(str(layer.get("transform", "none")).lower(), "none"),
             "layerName": str(layer.get("name") or layer.get("copy") or "Text"),
             "alt": "",
             "caption": "",
@@ -404,7 +419,7 @@ def build_page(page, template, ctx, page_index) -> tuple[dict, dict]:
         "backgroundSize": "cover",
         "backgroundOverlay": 0,
         "useMasterBackground": False,
-        "animation": {"preset": "none", "duration": 900},
+        "animation": {"preset": "fade-up", "duration": 900},
         "transition": {"preset": "none", "duration": 600},
         "objects": objects,
     }
@@ -446,8 +461,12 @@ def build_template(template: dict, catalog_entry: dict, copy: dict) -> tuple[dic
         raise PackError(f"{template['id']}: no pages")
     category = template["category"]
     palette = template["palette"]
+    # The pack is a designed card, not a section page: every guest section stays
+    # off and the card pages are the whole guest page. Turning RSVP on from the
+    # editor afterwards is the owner's choice; the app rebuilds sectionOrder from
+    # its own panel on load, so a mixed order would put RSVP before the card.
     settings = {
-        "rsvpEnabled": category in ("wedding", "birthday", "ceremony", "business"),
+        "rsvpEnabled": False,
         "wishesEnabled": False,
         "scheduleEnabled": False,
         "venueEnabled": False,
@@ -458,8 +477,6 @@ def build_template(template: dict, catalog_entry: dict, copy: dict) -> tuple[dic
         "contactEnabled": False,
     }
     section_order = [f"page:{page['id']}" for page in pages]
-    if settings["rsvpEnabled"]:
-        section_order.append("rsvp")
     document = {
         "schemaVersion": 13,
         "eventType": CATEGORY_EVENT[category],
@@ -534,9 +551,24 @@ def build_template(template: dict, catalog_entry: dict, copy: dict) -> tuple[dic
     return built, ornaments
 
 
+THUMB_WIDTH = 420
+
+
+def thumb_size(canvas_key: str) -> tuple[int, int]:
+    width, height = {
+        "a5p": (1000, 1414),
+        "p45": (1080, 1350),
+        "sq": (1080, 1080),
+        "story": (1080, 1920),
+        "land": (1600, 900),
+    }[canvas_key]
+    return THUMB_WIDTH, max(1, int(round(THUMB_WIDTH * height / width)))
+
+
 def catalog_module(catalog: dict, catalog_entries: list[dict]) -> dict:
     templates = []
     for entry in catalog_entries:
+        thumb_width, thumb_height = thumb_size(entry["canvas"])
         templates.append(
             {
                 "id": entry["id"],
@@ -551,6 +583,8 @@ def catalog_module(catalog: dict, catalog_entries: list[dict]) -> dict:
                 "palette": entry.get("palette", {}),
                 "photoSlots": list(entry.get("photoSlots") or []),
                 "thumb": f"{SERVED}/thumbs/{entry['id']}.webp",
+                "thumbWidth": thumb_width,
+                "thumbHeight": thumb_height,
                 "built": f"{SERVED}/built/{entry['id']}.js",
             }
         )

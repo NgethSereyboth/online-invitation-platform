@@ -688,8 +688,8 @@
     },
     "templates.html": {
       "javascript": "bundle-templates.js",
-      "scriptBytes": 109483,
-      "scriptSha256": "ee1cdde8aadecc0662f792db95d9113872cdbad6111ae37d04c57c9a9ae10350",
+      "scriptBytes": 110276,
+      "scriptSha256": "e5f60a79c3f50134ba0ecff15a7407e6f139edbfe336a9a575616756a8fedcc7",
       "sources": {
         "scripts": [
           "core/i18n.js",

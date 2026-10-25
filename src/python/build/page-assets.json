@@ -180,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 413880,
+      "bytes": 414673,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
