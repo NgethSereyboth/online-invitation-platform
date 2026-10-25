@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 172" >
+<path transform="translate(120,150) rotate(-62)" d="M0,0 C26.4,-16.3 21.6,-57.7 0,-74 C-21.6,-57.7 -26.4,-16.3 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150) rotate(62)" d="M0,0 C26.4,-16.3 21.6,-57.7 0,-74 C-21.6,-57.7 -26.4,-16.3 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150) rotate(-40)" d="M0,0 C27.5,-21.1 22.5,-74.9 0,-96 C-22.5,-74.9 -27.5,-21.1 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150) rotate(40)" d="M0,0 C27.5,-21.1 22.5,-74.9 0,-96 C-22.5,-74.9 -27.5,-21.1 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150) rotate(-19)" d="M0,0 C28.6,-24.6 23.4,-87.4 0,-112 C-23.4,-87.4 -28.6,-24.6 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150) rotate(19)" d="M0,0 C28.6,-24.6 23.4,-87.4 0,-112 C-23.4,-87.4 -28.6,-24.6 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150) rotate(0)" d="M0,0 C29.7,-28.2 24.3,-99.8 0,-128 C-24.3,-99.8 -29.7,-28.2 0,0Z" fill="none" stroke="#E2B857" stroke-width="3" stroke-linejoin="round"/>
+<path transform="translate(120,150)" d="M0,-10 C6,-40 6,-80 0,-108" fill="none" stroke="#E2B857" stroke-width="2.2"/>
+<path d="M72,154 C94,164 146,164 168,154" fill="none" stroke="#E2B857" stroke-width="3" stroke-linecap="round"/>
+</svg>

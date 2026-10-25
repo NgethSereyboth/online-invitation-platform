@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 64" >
+<path transform="translate(40,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(40,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(40,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="80,36 84,40 80,44 76,40" fill="#E3BD5E"/>
+<path transform="translate(120,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(120,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(120,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="160,36 164,40 160,44 156,40" fill="#E3BD5E"/>
+<path transform="translate(200,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(200,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(200,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="240,36 244,40 240,44 236,40" fill="#E3BD5E"/>
+<path transform="translate(280,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(280,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(280,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="320,36 324,40 320,44 316,40" fill="#E3BD5E"/>
+<path transform="translate(360,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(360,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(360,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="400,36 404,40 400,44 396,40" fill="#E3BD5E"/>
+<path transform="translate(440,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(440,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(440,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="480,36 484,40 480,44 476,40" fill="#E3BD5E"/>
+<path transform="translate(520,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(520,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(520,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="560,36 564,40 560,44 556,40" fill="#E3BD5E"/>
+<path transform="translate(600,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(600,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(600,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="640,36 644,40 640,44 636,40" fill="#E3BD5E"/>
+<path transform="translate(680,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(680,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(680,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="720,36 724,40 720,44 716,40" fill="#E3BD5E"/>
+<path transform="translate(760,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(760,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(760,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="800,36 804,40 800,44 796,40" fill="#E3BD5E"/>
+<path transform="translate(840,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(840,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(840,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="880,36 884,40 880,44 876,40" fill="#E3BD5E"/>
+<path transform="translate(920,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(920,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(920,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="960,36 964,40 960,44 956,40" fill="#E3BD5E"/>
+<path transform="translate(1000,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(1000,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(1000,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="1040,36 1044,40 1040,44 1036,40" fill="#E3BD5E"/>
+<path transform="translate(1080,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(1080,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(1080,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="1120,36 1124,40 1120,44 1116,40" fill="#E3BD5E"/>
+<path transform="translate(1160,52)" d="M0,0 C12.1,-8.8 9.9,-31.2 0,-40 C-9.9,-31.2 -12.1,-8.8 0,0Z" fill="#E3BD5E"/>
+<path transform="translate(1160,52) rotate(-48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<path transform="translate(1160,52) rotate(48)" d="M0,0 C8.8,-6.2 7.2,-21.8 0,-28 C-7.2,-21.8 -8.8,-6.2 0,0Z" fill="#E3BD5E" opacity="0.85"/>
+<polygon points="1200,36 1204,40 1200,44 1196,40" fill="#E3BD5E"/>
+<path d="M0,58 H1200" stroke="#E3BD5E" stroke-width="3"/>
+</svg>
