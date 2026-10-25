@@ -204,7 +204,7 @@ def test_khmer_export_fidelity() -> None:
                     page.evaluate("() => EInviteExportQuality.export.printAll()")
                 popup = popup_info.value
                 popup.wait_for_load_state('load', timeout=30000)
-                popup.evaluate("async () => { await document.fonts.ready; }")
+                popup.evaluate("async () => { document.body.getBoundingClientRect(); await document.fonts.ready; document.body.getBoundingClientRect(); }")
                 popup.wait_for_timeout(500)
                 pdf_path = out / 'export.pdf'
                 popup.pdf(path=str(pdf_path), prefer_css_page_size=True,

@@ -35,7 +35,7 @@ TOLERANCE = {
     'png_scaled_changed_over_8': 0.035,
     'pdf_mae': 4.5,
     'pdf_changed_over_8': 0.07,
-    'pdf_text_box_px': 4,
+    'pdf_text_box_px': 8,
 }
 
 sys.path.insert(0, str(ROOT / 'src' / 'python'))

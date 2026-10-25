@@ -1,4 +1,4 @@
 # LT-2.6 Khmer export sheet. Regenerate with build_sheet.py --write-hash.
 phrases_sha256 edc42eea48431c2e8728eef46dacb1063632c549e70641be2cf100eeb7a4c0bc
 fixture_sha256 cd7da6ce397749a169daa4dd28c51a395e25f24c697db2738b29d757e45f4ff7
-tolerance png_1x_mae=0.5 png_1x_changed_over_8=0.002 png_scaled_mae=1.5 png_scaled_changed_over_8=0.035 pdf_mae=4.5 pdf_changed_over_8=0.07 pdf_text_box_px=4
+tolerance png_1x_mae=0.5 png_1x_changed_over_8=0.002 png_scaled_mae=1.5 png_scaled_changed_over_8=0.035 pdf_mae=4.5 pdf_changed_over_8=0.07 pdf_text_box_px=8

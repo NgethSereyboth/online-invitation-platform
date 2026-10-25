@@ -1,14 +1,16 @@
 # STATUS-INDEX — work orders, ledgers, and audits
 
-**Update 2026-10-25 (LT-1.11, FB-77):** the queue of record is now
+**Update 2026-10-25 (LT-2.7, FB-82):** the queue of record is
 [`FREEBUFF-LONG-TERM-PLAN-2026-10-24.md`](../FREEBUFF-LONG-TERM-PLAN-2026-10-24.md) with
 [`FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md`](../FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md) as the run
-contract. It supersedes the round-5 order/prompt and every earlier queue. Phase 1 is closed at
-FB-77: all 17 review shots plus six previews are in `artifacts/next-work/review-lt1/after/` with a
-pair table, and the phase-close matrix is `GATES_PASSED` (build, bundles, smoke 16/0/0, layout
-1533/0, pytest 157, budgets 6/6, lhci 16/16 a11y 1.00, csp, canvas 22/0/2, important 3816 ≤ 3823) in
-`artifacts/next-work/gates/20261025-121010/`. The next item is LT-2.1. Work stays local-only
-(OD-3); no push, PR, merge or tag.
+contract. It supersedes the round-5 order/prompt and every earlier queue. **Phase 2 is closed at
+FB-82:** Khmer numerals/dates, wrap and bilingual audits, font self-hosting, IME/paste and export
+fidelity are done; the 17-shot after set plus six previews is in
+`artifacts/next-work/review-lt2/after/` (13/17 pixel-identical to Phase 1), and the phase-close
+matrix is `GATES_PASSED` (build, bundles, smoke 16/0/0, layout 1533/0, pytest **161**, budgets 6/6,
+lhci 16/16 a11y 1.00, csp, canvas 22/0/2, important 3816 ≤ 3823) in
+`artifacts/next-work/gates/20261025-150432/`. The next item is **LT-3.1 capability matrix**. Work
+stays local-only (OD-3); no push, PR, merge or tag.
 
 Verdicts as of 2026-10-21 (`pass/2026-10-21-next-work` pushed at `6f7de27`; code HEAD
 `11e549f`, docs HEAD `8d256e3` plus the harness/docs follow-up that carries this line; legs
@@ -34,7 +36,7 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 
 | Document | Verdict | Date note |
 |---|---|---|
-| `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | **authoritative queue** — Phase 1 closed at FB-77; Phase 2 (LT-2.1) is next. Work local-only | 2026-10-25 |
+| `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | **authoritative queue** — Phase 2 closed at FB-82; Phase 3 (LT-3.1 capability matrix) is next. Work local-only | 2026-10-25 |
 | `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | **authoritative run contract** — autonomous loop, one item/one commit, no owner questions | 2026-10-24 |
 | `NEXT-WORK-TASK.md` | **superseded** — phases 0–7; NW-0–NW-5 executed, NW-6.1–6.6 executed same-day (`nw-6-3/FINDING.md`), NW-3.3–3.5 + NW-2 owner-gated; NW-5.2 closed per FB-13. Kept for history; the long-term plan decides now | 2026-10-21 |
 | `FREEBUFF-OPEN-ISSUES-2026-10-21.md` (repo root) | **completed/superseded** — FB-01…FB-22 landed on `fix/2026-10-22-open-issues`; later passes and the long-term plan supersede its queue | 2026-10-22 |
