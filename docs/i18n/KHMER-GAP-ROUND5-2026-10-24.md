@@ -124,6 +124,16 @@ The editor has **no Khmer chrome** yet. Visible at 375:
 The editor is Phase 4 work (`LT-4.x`); its chrome strings need a map section of their own before
 Phase 4 starts.
 
+## Added by LT-2.2 (2026-10-25)
+
+| EN | Where seen | Key / source |
+|---|---|---|
+| Khmer numerals | editor content panel, checkbox `#khmerNumerals` | static HTML, no i18n pair |
+| Convert digits to Khmer | editor typography controls, button `#convertDigits` | static HTML, no i18n pair |
+
+Both are English fallbacks in `TRANSLATIONS.csv`; Khmer mode shows English until a map row exists.
+The setting itself is stored in `document.settings.khmerNumerals` and defaults to off.
+
 ## Notes for the next addendum
 
 1. The card status/meta (`Draft`, `Published`, `views`, `RSVPs`) and the materials mixed-string

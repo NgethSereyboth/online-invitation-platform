@@ -123,6 +123,7 @@
         <label>Buddhist Era year<input id="khmerYear" type="number" min="2400" max="2700" value="2570"></label>
         <button id="useKhmerDate" type="button">Use this Khmer date</button>
       </details>
+      <label><input id="khmerNumerals" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Khmer numerals</label>
       <label>Venue — English<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
       <label>Venue — Khmer<input id="venueKm" class="khmer-text" lang="km" value="សាលពិធីមង្គលការ រាជធានីភ្នំពេញ"></label>
       <label>Invitation message — English<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
@@ -350,6 +351,7 @@ rsvp</textarea></label>
           <label>Configured font size <span id="fontSizeValue">32px</span><input id="fontSize" type="range" min="8" max="200" step="1" value="32"></label>
           <label>Text alignment<select id="textAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option><option value="justify">Justify</option></select></label>
           <div class="typography-toggle-row"><button type="button" id="fontBold" aria-pressed="false"><strong>B</strong></button><button type="button" id="fontItalic" aria-pressed="false"><em>I</em></button></div>
+          <div class="mini-actions"><button type="button" id="convertDigits">Convert digits to Khmer</button></div>
           <label>Letter spacing <span id="letterSpacingValue">0px</span><input id="letterSpacing" type="range" min="-2" max="20" step="0.5" value="0"></label>
           <label>Line height <span id="lineHeightValue">1.35</span><input id="lineHeight" type="range" min="0.8" max="3" step="0.05" value="1.35"></label>
           <details class="typography-v19-controls" id="advancedTextLayout" open>

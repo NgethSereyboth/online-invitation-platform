@@ -422,7 +422,134 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       boot();
     }
   }
-})(typeof window !== "undefined" ? window : this);;(()=>{let p,a='performance-observability.js,interaction-scheduler.js,incremental-scene-renderer.js,render-worker-bridge.js,professional-workflow.js,navigation-history.js,style-history.js,asset-workflow.js,photo-workflow.js,photo-style-library.js,review.js,direct-manipulation.js,content-browser.js,smart-layout.js,brand-components.js,collaboration-v24.js,export-quality.js,adaptive-templates.js,studio-governance.js,print-readiness.js,template-bindings.js,studio-operations.js,studio-automation.js'.split(',');
+})(typeof window !== "undefined" ? window : this);;/*! core/khmer-format.js — Khmer numerals and locale-safe date/number formatting
+ * LT-2.2 (OD-29), 2026-10-25.
+ *
+ * Pure, dependency-free helpers used by the guest page and the editor:
+ *   - toKhmerDigits / toLatinDigits: digit conversion from Unicode code points.
+ *     Khmer digits are generated with String.fromCodePoint(0x17E0 + n); no Khmer
+ *     character is written into this file.
+ *   - formatDate: Intl.DateTimeFormat with an explicit locale, optional Khmer
+ *     digits (`nu-khmr`) and optional Buddhist Era calendar (`ca-buddhist`).
+ *     A build without Khmer ICU data falls back to English month names, then
+ *     converts the digits itself so the numeral setting still holds.
+ *   - formatTime / formatNumber: the same numeral choice for clock labels and
+ *     countdown values.
+ *
+ * The module never mutates stored invitation text. The editor command calls
+ * toKhmerDigits() on the selected text only when the user runs it.
+ */
+(function (global) {
+  'use strict';
+
+  const KHMER_DIGIT_BASE = 0x17E0;
+  const KHMER_DIGITS = Array.from({ length: 10 }, (_, digit) => String.fromCodePoint(KHMER_DIGIT_BASE + digit)).join('');
+  const KHMER_DIGIT_PATTERN = new RegExp(
+    '[' + String.fromCodePoint(KHMER_DIGIT_BASE) + '-' + String.fromCodePoint(KHMER_DIGIT_BASE + 9) + ']',
+    'g'
+  );
+
+  function toKhmerDigits(value) {
+    return String(value == null ? '' : value).replace(/[0-9]/g, digit => KHMER_DIGITS[Number(digit)]);
+  }
+
+  function toLatinDigits(value) {
+    return String(value == null ? '' : value).replace(KHMER_DIGIT_PATTERN, character => String(character.codePointAt(0) - KHMER_DIGIT_BASE));
+  }
+
+  function hasKhmerDigits(value) {
+    KHMER_DIGIT_PATTERN.lastIndex = 0;
+    return KHMER_DIGIT_PATTERN.test(String(value == null ? '' : value));
+  }
+
+  function numeralsChoice(value) {
+    return value === 'khmr' || value === true ? 'khmr' : 'latn';
+  }
+
+  function localeFor(language, numerals, era) {
+    const base = language === 'km' ? 'km-KH' : 'en-US';
+    const extensions = [];
+    if (numerals === 'khmr') extensions.push('nu-khmr');
+    if (era === 'be') extensions.push('ca-buddhist');
+    return extensions.length ? base + '-u-' + extensions.join('-') : base;
+  }
+
+  function localeSupported(locale) {
+    try {
+      return Intl.DateTimeFormat.supportedLocalesOf([locale]).length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function toDate(value) {
+    if (value instanceof Date) return new Date(value.getTime());
+    if (typeof value === 'number') {
+      const fromNumber = new Date(value);
+      return Number.isNaN(fromNumber.getTime()) ? null : fromNumber;
+    }
+    const text = String(value == null ? '' : value).trim();
+    if (!text) return null;
+    // Date-only values are calendar dates; parse them in local time so the
+    // displayed day never shifts with the server's timezone.
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+    if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function formatDate(value, options) {
+    const settings = options || {};
+    const date = toDate(value);
+    if (!date) return String(value == null ? '' : value);
+    const language = settings.lang === 'km' ? 'km' : 'en';
+    const numerals = numeralsChoice(settings.numerals);
+    const era = settings.era === 'be' ? 'be' : 'ce';
+    let locale = localeFor(language, numerals, era);
+    if (!localeSupported(locale)) locale = localeFor('en', numerals, era);
+    if (!localeSupported(locale)) locale = 'en-US';
+    let formatted;
+    try {
+      formatted = new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(date);
+    } catch (error) {
+      formatted = date.toISOString().slice(0, 10);
+    }
+    if (numerals === 'khmr' && /[0-9]/.test(formatted)) formatted = toKhmerDigits(formatted);
+    return formatted;
+  }
+
+  function formatTime(value, options) {
+    const text = String(value == null ? '' : value).trim();
+    const settings = options || {};
+    if (!/^\d{1,2}:\d{2}/.test(text)) return text;
+    const clock = /^\d{1,2}:\d{2}/.exec(text)[0];
+    const rest = text.slice(clock.length);
+    return (numeralsChoice(settings.numerals) === 'khmr' ? toKhmerDigits(clock) : clock) + rest;
+  }
+
+  function formatNumber(value, options) {
+    const settings = options || {};
+    const number = Number(value);
+    if (!Number.isFinite(number)) return String(value == null ? '' : value);
+    let formatted;
+    try {
+      formatted = new Intl.NumberFormat(settings.lang === 'km' ? 'km-KH' : 'en-US').format(number);
+    } catch (error) {
+      formatted = String(number);
+    }
+    return numeralsChoice(settings.numerals) === 'khmr' ? toKhmerDigits(formatted) : formatted;
+  }
+
+  global.EInviteKhmerFormat = Object.freeze({
+    toKhmerDigits,
+    toLatinDigits,
+    hasKhmerDigits,
+    formatDate,
+    formatTime,
+    formatNumber,
+    numerals: numeralsChoice
+  });
+})(typeof window !== 'undefined' ? window : globalThis);;(()=>{let p,a='performance-observability.js,interaction-scheduler.js,incremental-scene-renderer.js,render-worker-bridge.js,professional-workflow.js,navigation-history.js,style-history.js,asset-workflow.js,photo-workflow.js,photo-style-library.js,review.js,direct-manipulation.js,content-browser.js,smart-layout.js,brand-components.js,collaboration-v24.js,export-quality.js,adaptive-templates.js,studio-governance.js,print-readiness.js,template-bindings.js,studio-operations.js,studio-automation.js'.split(',');
 /* Preload the whole chain before the first script is appended.
    Measured, the serial chain used to spend more wall clock waiting than
    transferring: `tools/module-loading-strategy.mjs` measured a 3174 ms chain
@@ -2588,6 +2715,7 @@ venueEnabled:true,
 galleryEnabled:true,
 videoEnabled:false,
 countdownEnabled:true,
+khmerNumerals:false,
 musicEnabled:false,
 openingEnabled:true,
 contactEnabled:true
@@ -2671,7 +2799,12 @@ return momentkh.format(momentkh.fromGregorian(y,m,d,h||0,min||0))
 return''
 }
 }
+function gregorianNumerals(){const control=$('#khmerNumerals');return (control?control.checked===true:state.settings?.khmerNumerals===true)?'khmr':'latn'}
+function localizedTime(value){return window.EInviteKhmerFormat?EInviteKhmerFormat.formatTime(value,{numerals:gregorianNumerals()}):value}
 function gregorianLabel(fields){
+// LT-2.2 (OD-29): core/khmer-format.js owns the numeral and era choice. Its
+// English fallback keeps month names readable on a build without Khmer ICU data.
+if(window.EInviteKhmerFormat)return EInviteKhmerFormat.formatDate(fields.date,{lang:document.documentElement.lang==='km'?'km':'en',numerals:gregorianNumerals()});
 let date=new Date(fields.date+'T00:00:00');
 if(isNaN(date))return fields.date;
 // LT-1.4 (V2): `undefined`/`km-KH` on a build with filtered ICU data returns the
@@ -2984,6 +3117,7 @@ venueEnabled:$('#venueEnabled').checked,
 galleryEnabled:$('#galleryEnabled').checked,
 videoEnabled:$('#videoEnabled')?.checked===true,
 countdownEnabled:$('#countdownEnabled').checked,
+khmerNumerals:$('#khmerNumerals')?.checked===true,
 musicEnabled:$('#musicEnabled').checked,
 musicSource:$('#musicSource')?.value||'none',
 musicStartAfterOpen:$('#musicStartAfterOpen')?.checked!==false,
@@ -3566,16 +3700,16 @@ if(!state.objects?.subtitle?.richText)subtitle.textContent=message;
 subtitle.classList.toggle('khmer-text',mode==='km');subtitle.lang=mode==='km'?'km':'';title.lang=mode==='km'?'km':''
 }
 let dt=new Date($('#date').value+'T00:00:00');
-let label=isNaN(dt)?$('#date').value:dt.toLocaleDateString(undefined,{
+let label=window.EInviteKhmerFormat?EInviteKhmerFormat.formatDate($('#date').value,{lang:mode==='km'?'km':'en',numerals:gregorianNumerals()}):isNaN(dt)?$('#date').value:dt.toLocaleDateString(undefined,{
 day:'numeric',
 month:'long',
 year:'numeric'
 }),
-time=$('#time').value;
+time=$('#time').value,timeLabel=window.EInviteKhmerFormat?EInviteKhmerFormat.formatTime(time,{numerals:gregorianNumerals()}):time;
 const details=$('[data-id="details"] .content');
 const venueLabel=mode==='km'?($('#venueKm').value||$('#venue').value):$('#venue').value;
 if(details){
-if(!state.objects?.details?.richText)details.innerHTML=`${label}${time?` · ${time}`:''}<br>${venueLabel}`;
+if(!state.objects?.details?.richText)details.innerHTML=`${label}${timeLabel?` · ${timeLabel}`:''}<br>${venueLabel}`;
 details.classList.toggle('khmer-text',mode==='km');details.lang=mode==='km'?'km':''
 }
 refreshKhmerDate();
@@ -3617,6 +3751,7 @@ for(const record of records)for(const node of record.addedNodes)if(node.nodeType
 ['rsvpCloseDate','rsvpMaxGuests','scheduleText','scheduleTextKm','mapUrl','venuesText','venuesTextKm','sectionOrder','countdownTitle','countdownTitleKm','contactPhone','contactTelegram'].forEach(id=>$('#'+id).addEventListener('input',save));
 ['scheduleLayout','venueLayout','customLayout','countdownLayout'].forEach(id=>$('#'+id).addEventListener('change',save));
 ['rsvpEnabled','rsvpMealQuestion','rsvpTransportQuestion','rsvpAccommodationQuestion','scheduleEnabled','venueEnabled','galleryEnabled','videoEnabled','countdownEnabled','musicEnabled','musicSource','musicStartAfterOpen','musicLoop','showMusicControl','youtubeDisplayMode','openingEnabled','openingStyle','dateFormat','contactEnabled'].forEach(id=>$('#'+id)?.addEventListener('change',save));
+$('#khmerNumerals')?.addEventListener('change',()=>{syncFields(false);save();startCountdown()});
 $('#languageMode').addEventListener('change',()=>syncFields());
 $('#invitationPreset').addEventListener('change',e=>{
 let presets={
@@ -4808,6 +4943,24 @@ const value=active?'normal':'italic';
 $('#fontItalic').setAttribute('aria-pressed',active?'false':'true');
 applyTextStyleToSelection('fontStyle',value)
 };
+$('#convertDigits').onclick=()=>{
+// LT-2.2 (OD-29): an explicit, one-way command. Typed and pasted text is never
+// rewritten by the setting itself; only this click edits the selected objects.
+if(!window.EInviteKhmerFormat)return;
+const items=currentSelection().filter(item=>item.querySelector('.content'));
+if(!items.length)return;
+let changed=false;
+items.forEach(item=>{
+const content=item.querySelector('.content'),walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT),nodes=[];
+while(walker.nextNode())nodes.push(walker.currentNode);
+nodes.forEach(node=>{const next=EInviteKhmerFormat.toKhmerDigits(node.nodeValue);if(next!==node.nodeValue){node.nodeValue=next;changed=true}});
+if(content.dataset.richTextRendered==='true')content.dataset.richTextDirty='true';
+if(item.dataset.textAutoFit==='fit')scheduleTextFit([item]);else applyTypographyLayout(item,content)
+});
+if(!changed)return;
+requestAnimationFrame(()=>{updateSelectionBounds();refreshSelectionUI()});
+save()
+};
 $('#letterSpacing').oninput=e=>{$('#letterSpacingValue').textContent=`${e.target.value}px`;applyTextStyleToSelection('letterSpacing',e.target.value)};
 $('#lineHeight').oninput=e=>{$('#lineHeightValue').textContent=Number(e.target.value).toFixed(2).replace(/0$/,'');applyTextStyleToSelection('lineHeight',e.target.value);scheduleTextFit(currentSelection())};
 $('#textAutoFit').onchange=e=>{const mode=e.target.value==='fit'?'fit':'none';transactSelectedTypography('Set text auto-fit',(object,id,doc)=>{const resolved=window.TypographyDocumentModel?.resolveObjectTypography?.(doc,object)||object;setTypographyModelProperty(object,'textAutoFit',mode);if(mode==='fit')setTypographyModelProperty(object,'textAutoFitMax',Math.max(Number(resolved.fontSize||32),Number(resolved.textMinFontSize||10)));delete object.textComputedFontSize});$('#textMinFontSize').disabled=mode!=='fit';$('#fitTextNow').disabled=mode!=='fit';refreshSelectionUI()};
@@ -5502,7 +5655,7 @@ return o.fillMode==='gradient'?`linear-gradient(${Math.max(0,Math.min(360,Number
 function artisticHeroMarkup(d){
 const mode=d.languageMode||'both',f=d.fields||{},objects=Object.entries(d.objects||{}).filter(([,o])=>o.showInHero!==false&&o.visible!==false).sort(([,a],[,b])=>Number(a.zIndex||0)-Number(b.zIndex||0));
 if(!objects.length)return'';
-const contentFor=(id,o)=>{if(id==='title')return languageText(f.names||'',f.namesKm||f.names||'',mode);if(id==='subtitle')return languageText(f.message||'',f.messageKm||f.message||'',mode);if(id==='details'){const date=gregorianLabel(f),venue=languageText(f.venue||'',f.venueKm||f.venue||'',mode);return`${safeHtml(date)}${f.time?` · ${safeHtml(f.time)}`:''}<br>${venue}`}return window.EInviteRenderer?EInviteRenderer.sanitizeRichText(o.html||''):safeHtml(String(o.html||'').replace(/<[^>]+>/g,' ').trim())};
+const contentFor=(id,o)=>{if(id==='title')return languageText(f.names||'',f.namesKm||f.names||'',mode);if(id==='subtitle')return languageText(f.message||'',f.messageKm||f.message||'',mode);if(id==='details'){const date=gregorianLabel(f),venue=languageText(f.venue||'',f.venueKm||f.venue||'',mode);return`${safeHtml(date)}${f.time?` · ${safeHtml(localizedTime(f.time))}`:''}<br>${venue}`}return window.EInviteRenderer?EInviteRenderer.sanitizeRichText(o.html||''):safeHtml(String(o.html||'').replace(/<[^>]+>/g,' ').trim())};
 const rendered=window.EInviteRenderer?.renderObject?objects.map(([id,o])=>EInviteRenderer.renderObject(o,{id,pageHeight:844,content:contentFor(id,o),heroTitle:id==='title',document:d})).join(''):'';
 return`<section class="artistic-hero-section reveal" style="${sectionAnimationStyle(d,'hero')}"><div class="published-artboard">${rendered}</div></section>`
 }
@@ -5523,7 +5676,7 @@ for(const[id,o]of Object.entries(doc.objects||{})){
 const n=q(`.published-text[data-object-id="${CSS.escape(id)}"]`);if(!n)continue;let c=o.html||'';
 if(id==='title')c=lang==='km'?(f.namesKm||f.names||''):(f.names||'');
 else if(id==='subtitle')c=lang==='km'?(f.messageKm||f.message||''):(f.message||'');
-else if(id==='details')c=`${safeHtml(date)}${f.time?` · ${safeHtml(f.time)}`:''}<br>${safeHtml(lang==='km'?(f.venueKm||f.venue||''):(f.venue||''))}`;
+else if(id==='details')c=`${safeHtml(date)}${f.time?` · ${safeHtml(localizedTime(f.time))}`:''}<br>${safeHtml(lang==='km'?(f.venueKm||f.venue||''):(f.venue||''))}`;
 const flow=n.querySelector('.typography-flow');if(flow)flow.innerHTML=R.sanitizeRichText(c);
 const m=M.resolveObjectTypography(doc,o,{text:R.plainText(c),locale:lang});
 L.applyToElement(n,m);await EInviteFontRegistry?.ensureReady?.([m.font]);L.fitAndDiagnose(n,m)
@@ -5623,7 +5776,7 @@ khmer=d.khmerDate||khmerDateFor(f.date,f.time),
 dateBlock=d.dateFormat==='khmer'?`<h2 class="khmer-text" lang="km">${safeHtml(khmer||gregorian)}</h2>`:d.dateFormat==='gregorian'?`<h2>${safeHtml(gregorian)}</h2>`:`<h2 class="khmer-text" lang="km">${safeHtml(khmer||gregorian)}</h2><p>${safeHtml(gregorian)}</p>`,
 rsvp=d.settings?.rsvpEnabled===false?'':`<form id="guestRsvp" class="reveal" style="${combinedSectionStyle(d,'rsvp')}"><h2>${languageText('RSVP','សូមឆ្លើយតបការអញ្ជើញ',mode)}</h2><label>${languageText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120"></label><label>${languageText('Will you attend?','តើអ្នកនឹងចូលរួមទេ?',mode)}<select name="status"><option value="Yes, joyfully" data-en="Yes, joyfully" data-km="បាទ/ចាស ខ្ញុំនឹងចូលរួម">Yes, joyfully</option><option value="Unable to attend" data-en="Unable to attend" data-km="សូមអភ័យទោស ខ្ញុំមិនអាចចូលរួមបានទេ">Unable to attend</option><option value="Maybe" data-en="Maybe" data-km="ប្រហែលជា">Maybe</option></select></label><label>${languageText('Number of guests','ចំនួនភ្ញៀវ',mode)}<input name="count" type="number" min="1" max="10" value="1"></label>${previewRsvpCustomFields(d,mode)}<label>${languageText('Message','សារ',mode)}<textarea name="note" maxlength="1000"></textarea></label><button class="primary">${languageText('Send RSVP','ផ្ញើការឆ្លើយតប',mode)}</button></form>`,
 schedule=d.settings?.scheduleEnabled===false?'':`<section class="schedule-section schedule-layout-${safeHtml(d.sectionLayouts?.schedule||'timeline')} reveal" style="${combinedSectionStyle(d,'schedule')}"><h2>${languageText('Schedule','កម្មវិធី',mode)}</h2><div class="schedule-list">${(d.schedule||[]).map(x=>`<article><strong>${safeHtml(x.time)}</strong><span>${languageText(x.title||'',x.titleKm||x.title||'',mode)}</span></article>`).join('')}</div></section>`,
-countdown=d.settings?.countdownEnabled===false?'':`<section class="countdown-section countdown-layout-${safeHtml(d.sectionLayouts?.countdown||'cards')} reveal" style="${combinedSectionStyle(d,'countdown')}"><h2>${languageText(d.countdownTitle||'Counting down to our celebration',d.countdownTitleKm||d.countdownTitle||'រាប់ថយក្រោយ',mode)}</h2><div class="countdown" data-target="${safeHtml(`${f.date}T${f.time||'00:00'}:00`)}"><span><strong data-unit="days">0</strong>${languageText('Days','ថ្ងៃ',mode)}</span><span><strong data-unit="hours">0</strong>${languageText('Hours','ម៉ោង',mode)}</span><span><strong data-unit="minutes">0</strong>${languageText('Minutes','នាទី',mode)}</span><span><strong data-unit="seconds">0</strong>${languageText('Seconds','វិនាទី',mode)}</span></div></section>`,
+countdown=d.settings?.countdownEnabled===false?'':`<section class="countdown-section countdown-layout-${safeHtml(d.sectionLayouts?.countdown||'cards')} reveal" style="${combinedSectionStyle(d,'countdown')}"><h2>${languageText(d.countdownTitle||'Counting down to our celebration',d.countdownTitleKm||d.countdownTitle||'រាប់ថយក្រោយ',mode)}</h2><div class="countdown" data-target="${safeHtml(`${f.date}T${f.time||'00:00'}:00`)}" data-numerals="${d.settings?.khmerNumerals===true?'khmr':'latn'}"><span><strong data-unit="days">0</strong>${languageText('Days','ថ្ងៃ',mode)}</span><span><strong data-unit="hours">0</strong>${languageText('Hours','ម៉ោង',mode)}</span><span><strong data-unit="minutes">0</strong>${languageText('Minutes','នាទី',mode)}</span><span><strong data-unit="seconds">0</strong>${languageText('Seconds','វិនាទី',mode)}</span></div></section>`,
 map=/^https?:\/\//i.test(d.mapUrl||'')?`<p><a href="${safeHtml(d.mapUrl)}" target="_blank" rel="noopener" class="button-link">${languageText('Open map','បើកផែនទី',mode)}</a></p>`:'',
 extraVenues=(d.venues||[]).map(v=>{
 let link=/^https?:\/\//i.test(v.mapUrl||'')?`<br><a href="${safeHtml(v.mapUrl)}" target="_blank" rel="noopener">${languageText('Open map','បើកផែនទី',mode)}</a>`:'';
@@ -5653,9 +5806,10 @@ hours:Math.floor(left/36e5)%24,
 minutes:Math.floor(left/6e4)%60,
 seconds:Math.floor(left/1e3)%60
 };
+const countdownNumerals=state.settings?.khmerNumerals===true?'khmr':'latn';
 Object.entries(values).forEach(([k,v])=>{
 let el=box.querySelector(`[data-unit="${k}"]`);
-if(el)el.textContent=String(v).padStart(2,'0')
+if(el){const text=String(v).padStart(2,'0');el.textContent=window.EInviteKhmerFormat&&countdownNumerals==='khmr'?EInviteKhmerFormat.toKhmerDigits(text):text}
 });
 if(left<=0&&timer){clearInterval(timer);guestCountdownTimers.delete(scope);timer=0}
 };
@@ -5826,6 +5980,7 @@ $('#contactPhone').value=state.contactPhone||'';
 $('#contactTelegram').value=state.contactTelegram||'';
 $('#dateFormat').value=state.dateFormat||'both';
 $('#countdownEnabled').checked=state.settings?.countdownEnabled!==false;
+if($('#khmerNumerals'))$('#khmerNumerals').checked=state.settings?.khmerNumerals===true;
 $('#countdownTitle').value=state.countdownTitle||initial.countdownTitle;
 $('#countdownTitleKm').value=state.countdownTitleKm||initial.countdownTitleKm;
 $('#rsvpEnabled').checked=state.settings?.rsvpEnabled!==false;
@@ -6482,82 +6637,4 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     refreshFloatingToolbar(); updateStatusbar();
     $('#fitCanvas')?.click();
   });
-})();;(function(){
-'use strict';
-const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const html=document.documentElement, body=document.body;
-body.classList.add('ui-boot');requestAnimationFrame(()=>requestAnimationFrame(()=>{body.classList.remove('ui-boot');body.classList.add('ui-ready')}));
-function currentMode(){return localStorage.getItem('einvite-theme-mode')==='dark'?'dark':'light'}
-function applyTheme(mode,announce=false){
-  const resolved=mode==='dark'?'dark':'light';
-  if(announce){html.classList.add('theme-transition');setTimeout(()=>html.classList.remove('theme-transition'),340)}
-  html.dataset.theme=resolved;html.dataset.themeMode=mode;html.style.colorScheme=resolved;
-  localStorage.setItem('einvite-theme-mode',mode);
-  $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
-  const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
-  if(announce)toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
-}
-applyTheme(currentMode());
-function installThemeControl(){
-  const header=$('body:not(:has(.guest))>header');if(header&&$('.ui-theme',header))return;
-  const wrap=document.createElement('div');wrap.className='ui-theme'+(header?'':' floating');
-  wrap.innerHTML=`<button type="button" class="ui-theme-button" aria-label="Appearance" aria-haspopup="menu" aria-expanded="false" data-ui-tooltip="Appearance (Alt+T)"><span class="ui-theme-icon">◐</span></button><div class="ui-theme-menu" role="menu" hidden>
-  <button type="button" data-mode="light"><span>☀</span><b>Light</b><span class="check">✓</span></button>
-  <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
-  if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
-  const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
-  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);menu.hidden=true;trigger.setAttribute('aria-expanded','false')});
-  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
-  applyTheme(currentMode());
-}
-installThemeControl();
-window.EInviteThemeController=Object.freeze({currentMode,applyTheme,cycle(){const modes=['light','dark'],i=modes.indexOf(currentMode());const next=modes[(i+1)%2];applyTheme(next,true);return next}});
-function installAppLauncher(){
-  const header=$('body:not(:has(.guest))>header');if(!header||$('.ui-app-launcher',header))return;
-  const brand=header.querySelector('strong');if(!brand)return;
-  const wrap=document.createElement('div');wrap.className='ui-app-launcher';
-  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><header><strong>Workspace</strong></header><div class="ui-app-grid">
-  <a href="dashboard.html"><span>⌂</span><div><b>Dashboard</b><small>Your invitations</small></div></a>
-  <a href="templates.html"><span>✦</span><div><b>Templates</b><small>Reusable designs</small></div></a>
-  <a href="materials.html"><span>▣</span><div><b>Materials</b><small>Photos, audio & video</small></div></a>
-  <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
-  <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
-  <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  brand.after(wrap);const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
-  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
-}
-installAppLauncher();
-const page=location.pathname.split('/').pop()||'dashboard.html';$$('body:not(:has(.guest))>header a').forEach(a=>{const href=(a.getAttribute('href')||'').split('?')[0].split('#')[0];if(href===page)a.classList.add('ui-current')});
-addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const r=b.getBoundingClientRect(),s=document.createElement('span');s.className='ui-ripple';const size=Math.max(r.width,r.height);s.style.width=s.style.height=size+'px';s.style.left=(e.clientX-r.left)+'px';s.style.top=(e.clientY-r.top)+'px';b.append(s);setTimeout(()=>s.remove(),560)},true);
-const spotlightSelectors='.invite-card,.metric,.response-card,.wish-card,.usage-card,.plan,.studio-card,.material-card-page,.template-choice,.page-nav-card,.studio-quick-grid button,.page-builder-library button,.element-library button,.block-library button';
-$$(spotlightSelectors).forEach(el=>{el.classList.add('ui-spotlight');el.addEventListener('pointermove',e=>{if(window.EInviteProfessionalEditor?.activeInteraction)return;const r=el.getBoundingClientRect();el.style.setProperty('--mx',`${e.clientX-r.left}px`);el.style.setProperty('--my',`${e.clientY-r.top}px`)})});
-const stack=document.createElement('div');stack.className='ui-toast-stack';document.body.append(stack);
-function toast(message,icon='✓'){const el=document.createElement('div');el.className='ui-toast';el.innerHTML=`<span>${icon}</span><b>${message}</b>`;stack.append(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),240)},2200)}
-window.einviteToast=toast;
-const tip=document.createElement('div');tip.className='ui-tooltip';document.body.append(tip);let tipTimer;
-document.addEventListener('pointerover',e=>{const el=e.target.closest('[data-ui-tooltip],button[title]');if(!el)return;const txt=el.dataset.uiTooltip||el.getAttribute('title');if(!txt)return;clearTimeout(tipTimer);tipTimer=setTimeout(()=>{const r=el.getBoundingClientRect();tip.textContent=txt;tip.style.left=Math.max(8,Math.min(innerWidth-200,r.left+r.width/2))+'px';tip.style.top=Math.max(8,r.bottom+8)+'px';tip.classList.add('show')},350)});
-document.addEventListener('pointerout',e=>{if(e.target.closest?.('[data-ui-tooltip],button[title]')){clearTimeout(tipTimer);tip.classList.remove('show')}});
-if(body.classList.contains('studio-experience')){
-  const main=$('body.studio-experience>main'),toolbar=$('.studio-canvas-toolbar');
-  const canvasViewport=$('.canvas-viewport');
-  let canvasPointerRect=null;
-  canvasViewport?.addEventListener('pointermove',e=>{const r=canvasPointerRect||(canvasPointerRect=canvasViewport.getBoundingClientRect());canvasViewport.style.setProperty('--canvas-pointer-x',`${e.clientX-r.left}px`);canvasViewport.style.setProperty('--canvas-pointer-y',`${e.clientY-r.top}px`)});
-  if(canvasViewport){addEventListener('scroll',()=>{canvasPointerRect=null},true);addEventListener('resize',()=>{canvasPointerRect=null},{passive:true})}
-  let leftWidth=Math.max(300,Math.min(520,Number(localStorage.getItem('einvite-left-width'))||370)),rightWidth=Math.max(280,Math.min(460,Number(localStorage.getItem('einvite-right-width'))||330));
-  function setWidths(){const available=Math.max(900,window.innerWidth||1440),stageMin=360;leftWidth=Math.max(290,Math.min(560,leftWidth,available-rightWidth-stageMin));rightWidth=Math.max(280,Math.min(520,rightWidth,available-leftWidth-stageMin));for(const target of [html,body]){target.style.setProperty('--studio-left-width',`${leftWidth}px`);target.style.setProperty('--einvite-left-width',`${leftWidth}px`);target.style.setProperty('--studio-right-width',`${rightWidth}px`);target.style.setProperty('--einvite-inspector-width',`${rightWidth}px`)}}setWidths();window.addEventListener('resize',setWidths);
-  function addToggle(side,label,symbol){if(!toolbar)return;const b=document.createElement('button');b.type='button';b.className='studio-panel-toggle';b.innerHTML=symbol;b.setAttribute('aria-label',label);b.dataset.uiTooltip=label;b.onclick=()=>{const cls=`studio-${side}-collapsed`;body.classList.toggle(cls);b.setAttribute('aria-pressed',String(body.classList.contains(cls)));localStorage.setItem(`einvite-${side}-collapsed`,body.classList.contains(cls)?'1':'0')};toolbar.prepend(b);if(localStorage.getItem(`einvite-${side}-collapsed`)==='1'){body.classList.add(`studio-${side}-collapsed`);b.setAttribute('aria-pressed','true')}return b}
-  addToggle('right','Toggle inspector','▥');addToggle('left','Toggle creation panel','▤');
-  function resizer(side){if(!main)return;const h=document.createElement('div');h.className=`studio-panel-resizer ${side[0]}`;main.append(h);h.addEventListener('pointerdown',e=>{h.setPointerCapture(e.pointerId);h.classList.add('dragging');body.style.userSelect='none';const start=e.clientX,startL=leftWidth,startR=rightWidth;const move=ev=>{if(side==='left'){leftWidth=Math.max(290,Math.min(560,startL+(ev.clientX-start)))}else{rightWidth=Math.max(280,Math.min(520,startR-(ev.clientX-start)))}setWidths()};const up=()=>{h.classList.remove('dragging');body.style.userSelect='';localStorage.setItem('einvite-left-width',leftWidth);localStorage.setItem('einvite-right-width',rightWidth);h.removeEventListener('pointermove',move);h.removeEventListener('pointerup',up)};h.addEventListener('pointermove',move);h.addEventListener('pointerup',up)})}
-  resizer('left');resizer('right');
-  const context=document.createElement('div');context.className='ui-context-menu';context.hidden=true;
-  context.innerHTML=`<button data-cmd="duplicate"><span>⧉</span><b>Duplicate</b><kbd>Ctrl+D</kbd></button><button data-cmd="copy"><span>□</span><b>Copy</b><kbd>Ctrl+C</kbd></button><button data-cmd="paste"><span>▣</span><b>Paste</b><kbd>Ctrl+V</kbd></button><div class="ui-context-sep"></div><button data-cmd="forward"><span>↑</span><b>Bring forward</b><kbd></kbd></button><button data-cmd="backward"><span>↓</span><b>Send backward</b><kbd></kbd></button><button data-cmd="lock"><span>◇</span><b>Lock / unlock</b><kbd></kbd></button><div class="ui-context-sep"></div><button data-cmd="addText"><span>T</span><b>Add text</b><kbd></kbd></button><button data-cmd="fit"><span>⌗</span><b>Fit canvas</b><kbd></kbd></button><div class="ui-context-sep"></div><button data-cmd="delete" class="danger"><span>×</span><b>Delete</b><kbd>Del</kbd></button>`;
-  document.body.append(context);
-  const cmdMap={duplicate:'duplicate',copy:'copyObjects',paste:'pasteObjects',forward:'bringForward',backward:'sendBackward',addText:'addText',fit:'fitCanvas',delete:'deleteBtn'};
-  context.addEventListener('click',e=>{const b=e.target.closest('[data-cmd]');if(!b)return;const cmd=b.dataset.cmd;if(cmd==='lock'){const lock=$('#objectLocked');if(lock){lock.checked=!lock.checked;lock.dispatchEvent(new Event('change',{bubbles:true}))}}else document.getElementById(cmdMap[cmd])?.click();context.hidden=true});
-  $('#stage')?.addEventListener('contextmenu',e=>{e.preventDefault();const obj=e.target.closest('.object');if(obj&&!obj.classList.contains('selected')&&!obj.classList.contains('multi-selected'))obj.click();context.hidden=false;const w=220,h=390;context.style.left=Math.min(e.clientX,innerWidth-w-8)+'px';context.style.top=Math.min(e.clientY,innerHeight-h-8)+'px'});
-  document.addEventListener('pointerdown',e=>{if(!context.contains(e.target))context.hidden=true});
-}
-addEventListener('click',e=>{const a=e.target.closest('a[href]');if(!a||e.defaultPrevented||a.target==='_blank'||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;const u=new URL(a.href,location.href);if(u.origin!==location.origin||u.pathname===location.pathname&&u.hash)return;if(a.closest('dialog'))return;e.preventDefault();body.classList.add('ui-page-leaving');setTimeout(()=>location.href=u.href,115)});
 })();

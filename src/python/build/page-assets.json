@@ -105,7 +105,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1526862,
+      "bytes": 1534516,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -142,7 +142,7 @@
       ]
     },
     "public.html": {
-      "bytes": 391157,
+      "bytes": 397039,
       "scriptCount": 2,
       "scripts": [
         "backend-mode.js",

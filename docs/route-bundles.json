@@ -353,10 +353,10 @@
       "deferredStylesheetSha256": "bbbc60f2b365679e9bce46860dd22df0bc49e775ee8538567376bc7ad12212a0",
       "javascript": "bundle-index.js",
       "javascript2": "bundle-index-2.js",
-      "javascript2Bytes": 539401,
-      "javascript2Sha256": "6c0fd03567375c0cd1e79168dc4717a68d48f4231859169a70674b7ce0b9e21b",
-      "scriptBytes": 538091,
-      "scriptSha256": "5f53919ea06b0d089ee7799eb618de7a0413c2b56f0b35e2ec5154e6a1be669a",
+      "javascript2Bytes": 551693,
+      "javascript2Sha256": "9d1ff10c50ccbe64f6b2f780795cbbe25ce5ebc8c56c233774ebd5076bce9ca3",
+      "scriptBytes": 533453,
+      "scriptSha256": "4cd090ea263bb9155214789004afb4e6f02b01ceae157be6ab43445321d9b87e",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [
@@ -389,6 +389,7 @@
           "runtime-lifecycle.js",
           "route-deferred-loader.js",
           "core/i18n.js",
+          "core/khmer-format.js",
           "performance-loader.js",
           "editor-command-system.js",
           "typography-contract.js",
@@ -561,8 +562,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 251433,
-      "scriptSha256": "561e0a08bac367484b29060b4d16be4adec0fcc97effc677836e184e46d5cd80",
+      "scriptBytes": 257315,
+      "scriptSha256": "2865da262c72b5d5351228dc0f3ee65a6f3a651e3ddff5907078b7fd704f69d6",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"
@@ -572,6 +573,7 @@
           "runtime-lifecycle.js",
           "route-deferred-loader.js",
           "core/i18n.js",
+          "core/khmer-format.js",
           "typography-contract.js",
           "custom-font-core.js",
           "typography-document-model.js",
