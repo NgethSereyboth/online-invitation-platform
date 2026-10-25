@@ -13,6 +13,9 @@ This tool drives the two flows that actually produced them, against a real
   1. signed-in dashboard: register a fresh account, click the Templates
      quick-start button (the live check FB-20 failed), open the create dialog
   2. editor → publish → public invitation → guest RSVP submit
+  3. designer.html signed in and signed out (OD-14). The page is opened in
+     both session states because its three-script bundle is the one FB-39
+     reported an `unsafe-eval` page error on and the gate did not cover it.
 
 and records every console message and page error on every page. It exits 1 when
 any page produced a CSP violation or could not reach its required state.
@@ -288,6 +291,26 @@ def run_suite(base: str, email: str, password: str) -> None:
         check("published invitation exposes /i/<slug>", match is not None,
               match.group(0) if match else "not found")
         page.screenshot(path=str(OUT / "published.png"))
+
+        # 5 — designer.html signed in and signed out (OD-14) ----------------
+        signed = browser.new_page(viewport={"width": 1440, "height": 900})
+        collect(signed, "designer-signed-in")
+        signed.goto(base + "/designer.html", wait_until="domcontentloaded")
+        signed.wait_for_timeout(2200)
+        check("designer signed-in renders",
+              signed.locator("main.designer-page h1").count() == 1, signed.url)
+        signed.screenshot(path=str(OUT / "designer-signed-in.png"))
+        signed.close()
+
+        anon_context = browser.new_context(viewport={"width": 1440, "height": 900})
+        anon = anon_context.new_page()
+        collect(anon, "designer-signed-out")
+        anon.goto(base + "/designer.html", wait_until="domcontentloaded")
+        anon.wait_for_timeout(2200)
+        check("designer signed-out renders",
+              anon.locator("main.designer-page h1").count() == 1, anon.url)
+        anon.screenshot(path=str(OUT / "designer-signed-out.png"))
+        anon_context.close()
 
         if match:
             slug_path = match.group(0)
