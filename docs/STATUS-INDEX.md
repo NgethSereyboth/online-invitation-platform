@@ -1,5 +1,15 @@
 # STATUS-INDEX — work orders, ledgers, and audits
 
+**Update 2026-10-25 (LT-1.11, FB-77):** the queue of record is now
+[`FREEBUFF-LONG-TERM-PLAN-2026-10-24.md`](../FREEBUFF-LONG-TERM-PLAN-2026-10-24.md) with
+[`FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md`](../FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md) as the run
+contract. It supersedes the round-5 order/prompt and every earlier queue. Phase 1 is closed at
+FB-77: all 17 review shots plus six previews are in `artifacts/next-work/review-lt1/after/` with a
+pair table, and the phase-close matrix is `GATES_PASSED` (build, bundles, smoke 16/0/0, layout
+1533/0, pytest 157, budgets 6/6, lhci 16/16 a11y 1.00, csp, canvas 22/0/2, important 3816 ≤ 3823) in
+`artifacts/next-work/gates/20261025-121010/`. The next item is LT-2.1. Work stays local-only
+(OD-3); no push, PR, merge or tag.
+
 Verdicts as of 2026-10-21 (`pass/2026-10-21-next-work` pushed at `6f7de27`; code HEAD
 `11e549f`, docs HEAD `8d256e3` plus the harness/docs follow-up that carries this line; legs
 `ec0cf91` a11y, `6a30d9e` i18n, `8952381`/`cd56ac0` CI, `837042f`+`15554e3`+`8d256e3` docs,
@@ -24,8 +34,10 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 
 | Document | Verdict | Date note |
 |---|---|---|
-| `NEXT-WORK-TASK.md` | **authoritative** — the live work order (phases 0–7); NW-0–NW-5 executed, NW-6.1–6.6 executed same-day (`nw-6-3/FINDING.md`), NW-3.3–3.5 + NW-2 owner-gated. NW-5.2 closed per FB-13 (2026-10-22 closure note inside) | 2026-10-21 |
-| `FREEBUFF-OPEN-ISSUES-2026-10-21.md` (repo root) | **active work order, approved 2026-10-22** — the 22-item follow-up (FB-01…FB-22) being executed on `fix/2026-10-22-open-issues`. Owner answers: OD-1/2/7 approved, OD-4/5 confirmed, OD-8 deferred, v14 non-blocking, release local-only | 2026-10-22 |
+| `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | **authoritative queue** — Phase 1 closed at FB-77; Phase 2 (LT-2.1) is next. Work local-only | 2026-10-25 |
+| `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | **authoritative run contract** — autonomous loop, one item/one commit, no owner questions | 2026-10-24 |
+| `NEXT-WORK-TASK.md` | **superseded** — phases 0–7; NW-0–NW-5 executed, NW-6.1–6.6 executed same-day (`nw-6-3/FINDING.md`), NW-3.3–3.5 + NW-2 owner-gated; NW-5.2 closed per FB-13. Kept for history; the long-term plan decides now | 2026-10-21 |
+| `FREEBUFF-OPEN-ISSUES-2026-10-21.md` (repo root) | **completed/superseded** — FB-01…FB-22 landed on `fix/2026-10-22-open-issues`; later passes and the long-term plan supersede its queue | 2026-10-22 |
 | `FREEBUFF-UI-REFINEMENT-PROMPT.md` | historical — described the closed 2026-10-21 visual pass (`1cd09d2`); do not re-run | historical |
 | `FREEBUFF-CONTINUATION-2026-10-21.md` | historical — the continuation brief that produced this pass; superseded by this pass's output | 2026-10-21 |
 | `CANVA-UI-TASK.md` | historical — closed at `37bfc8d`, all boxes ticked | 2026-10-15 era |

@@ -981,10 +981,6 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-/* LT-1.4: draft documents store the details line as rendered HTML, and drafts saved
-   by an engine without the requested locale's date data froze ICU's root pattern
-   ("2026 M12 27") into that HTML. Re-derive just the date token from fields.date so
-   the thumbnail never shows the machine pattern; English is the fallback. */
 const calendarLabel=value=>{const dt=new Date(`${value||''}T00:00:00`);if(!value||Number.isNaN(dt.getTime()))return value||'';const wanted=document.documentElement.lang==='km'?'km-KH':'en-US',locale=Intl.DateTimeFormat.supportedLocalesOf([wanted]).length?wanted:'en-US';return new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(dt)};
 const staleDate=/^\d{4} M\d{2} \d{1,2}/;
 function dashboardFinal(){
@@ -1006,9 +1002,6 @@ function dashboardFinal(){
   const timeAgo=value=>{const t=Number(value)||Date.parse(value)||0;if(!t)return'';const sec=Math.max(0,Math.round((Date.now()-t)/1000));if(sec<60)return'Edited just now';if(sec<3600)return`Edited ${Math.floor(sec/60)}m ago`;if(sec<86400)return`Edited ${Math.floor(sec/3600)}h ago`;if(sec<604800)return`Edited ${Math.floor(sec/86400)}d ago`;return`Edited ${new Date(t).toLocaleDateString()}`};
   function decorateCard(card){
     if(card.dataset.fpReady==='1')return;const id=card.querySelector('[data-edit]')?.dataset.edit;if(!id)return;const item=findInvite(id);if(!item)return;card.dataset.fpReady='1';card.dataset.inviteId=id;
-    /* LT-1.4 (V2): the cover used to get a second, English-only status pill on top
-       of the preview (white text on an 88%-white background — the blank white pill).
-       The body badge below the title is the one status: bilingual and now unclipped. */
     const cover=$('.invite-cover',card);if(cover){cover.replaceChildren(buildPreview(item));cover.onclick=()=>{if(!item.archived)card.querySelector('.actions [data-edit]')?.click()}}
     const body=$('.invite-body',card),stats=$('.stats',card),actions=$('.actions',card);if(!body||!actions)return;
     if(stats)stats.innerHTML=`<span>${esc(item.status||'Draft')}</span><span>${esc(timeAgo(item.updatedAt))}</span>`;

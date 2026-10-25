@@ -179,3 +179,18 @@ body[data-page="dashboard"] .canva-auth-panel .auth-card{
   body[data-page="dashboard"] .dash-head{flex-wrap:wrap}
   body[data-page="dashboard"] .dash-head h1{width:100%;margin-right:0}
 }
+
+/* LT-1.4 dashboard card, rail and tile geometry. These belong to the app-page
+   layer that loads after app-shell.css, so the universal shell (and the public
+   page, which does not load this file) does not carry dashboard-only bytes. */
+@media (min-width: 769px) {
+  .app-rail { min-height: calc(100vh - var(--app-topbar-h)); }
+}
+@media (max-width: 768px) {
+  body[data-page="dashboard"] .dash-quickstart button { justify-content: flex-start; padding-top: 10px; }
+  body[data-page="dashboard"] .dash-quickstart button .i18n { text-wrap: balance; }
+}
+body[data-page="dashboard"] #inviteGrid .invite-card { min-height: var(--app-card-h); }
+body[data-page="dashboard"] #inviteGrid .skeleton-card { min-height: var(--app-card-h); }
+.app-badge { flex: none; max-width: 100%; }
+.app-badge .i18n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
