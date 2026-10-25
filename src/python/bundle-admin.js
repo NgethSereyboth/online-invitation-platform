@@ -587,6 +587,7 @@ window.EInvitePosterUnits=Object.freeze({
       refresh:'Refresh now',
       error:'Failed to load admin data',
       unauthorized:'Administrator access required',
+      accessMessage:'Only studio administrators can open this page; ask a studio owner to grant your account access.',
     },
     km: {
       title:'ការគ្រប់គ្រង',
@@ -600,6 +601,7 @@ window.EInvitePosterUnits=Object.freeze({
       refresh:'ធ្វើបច្ចុប្បន្នភាព',
       error:'បរាជ័យក្នុងការផ្ទុកទិន្នន័យអ្នកគ្រប់គ្រង',
       unauthorized:'ត្រូវការសិទ្ធិអ្នកគ្រប់គ្រង',
+      accessMessage:'Only studio administrators can open this page; ask a studio owner to grant your account access.',
     }
   };
 
@@ -780,7 +782,18 @@ window.EInvitePosterUnits=Object.freeze({
     }
     // FB-39: every admin route 403s for a non-admin, so gate before polling.
     let u=null;try{u=(await api.get('/api/auth/me')).user}catch{}
-    if(!u||u.role!=='admin'){const h=document.querySelector('.admin-page')||document.body;h.innerHTML='<h1><span class="i18n i18n-en">'+STRINGS.en.unauthorized+'</span><span class="i18n i18n-km khmer-text" lang="km">'+STRINGS.km.unauthorized+'</span></h1><p><a href="dashboard.html" class="button-link"><span class="i18n i18n-en">Back to dashboard</span><span class="i18n i18n-km khmer-text" lang="km">ត្រឡប់ទៅផ្ទាំងគ្រប់គរង</span></a></p>';return}
+    if(!u||u.role!=='admin'){
+      // LT-1.8: a signed-in non-admin gets the shared empty/error card (icon,
+      // one sentence, primary + secondary action) instead of a bare h1 + link.
+      const h=document.querySelector('.admin-page')||document.body;
+      h.innerHTML='<section class="empty-state error-state admin-access-state" role="status">'
+        +'<span class="empty-state__icon" aria-hidden="true">🔒</span>'
+        +'<h1 class="empty-state__title"><span class="i18n i18n-en">'+STRINGS.en.unauthorized+'</span><span class="i18n i18n-km khmer-text" lang="km">'+STRINGS.km.unauthorized+'</span></h1>'
+        +'<p class="empty-state__message">'+esc(STRINGS.en.accessMessage)+'</p>'
+        +'<div class="empty-state__action"><a class="button-link primary" href="dashboard.html"><span class="i18n i18n-en">Back to dashboard</span><span class="i18n i18n-km khmer-text" lang="km">ត្រឡប់ទៅផ្ទាំងគ្រប់គរង</span></a>'
+        +'<a class="button-link" href="account.html"><span class="i18n i18n-en">Account settings</span><span class="i18n i18n-km khmer-text" lang="km">ការកំណត់គណនី</span></a></div>'
+        +'</section>';
+      return}
     initTabs();
     showImpersonationBanner();
     await pollOnce();

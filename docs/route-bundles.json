@@ -47,8 +47,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-admin.js",
-      "scriptBytes": 146135,
-      "scriptSha256": "43e0973dd1c635a6b037c4f83a0b3daeae04ddef8af87176b618ed29beaf1000",
+      "scriptBytes": 147095,
+      "scriptSha256": "34972ad560396cbb8b3541c7348b0597b91b23085050ffce3532d97dcfd577ce",
       "sources": {
         "deferredScripts": [
           "pages/admin/impersonate.js",
@@ -91,8 +91,8 @@
           "canva-ui.css"
         ]
       },
-      "styleBytes": 265653,
-      "styleSha256": "31af4b48a663dbd94d6c3fa5bc70531e98483b72f41b20ca8d02556540eef800",
+      "styleBytes": 266073,
+      "styleSha256": "de5799a839fd9bb09b7a90fd0ea66d10aeb8897274b6a756a833d6025fed1026",
       "stylesheet": "bundle-admin.css"
     },
     "analytics.html": {

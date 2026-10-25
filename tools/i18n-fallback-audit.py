@@ -12,7 +12,7 @@ from collections import Counter
 
 ROWS = list(csv.DictReader(open('docs/i18n/TRANSLATIONS.csv', encoding='utf-8-sig')))
 FB = [r for r in ROWS if r['status'] == 'fallback']
-assert len(FB) == 1, len(FB)
+assert len(FB) == 2, len(FB)
 
 ADMIN_FILES = {'src/js/pages/admin/feature-flags.js', 'src/js/pages/admin/invitations.js',
                'src/js/pages/admin/audit-log.js', 'src/html/admin.html',
@@ -46,7 +46,7 @@ for r in groups['guest-facing'] + groups['other-user']:
 
 os.makedirs('artifacts/next-work/fb-14', exist_ok=True)
 with open('artifacts/next-work/fb-14/fallback-audit.md', 'w', encoding='utf-8') as fh:
-    fh.write('# FB-14 fallback audit — 1 row classified (LT-1.2 moved the pin from 305)\n\n')
+    fh.write('# FB-14 fallback audit — 2 rows classified (LT-1.2 moved the pin from 305; LT-1.8 added the admin 403 sentence)\n\n')
     fh.write('Date: 2026-10-22. No translation applied (owner gate: audit first; OD-8 / feature-flags deferred separately).\n\n')
     fh.write('| class | rows | disposition |\n|---|---|---|\n')
     fh.write(f"| technical/non-UI (ids, keys, URLs — keep English) | {len(groups['technical'])} | allowlist; no Khmer needed |\n")
@@ -64,7 +64,7 @@ with open('artifacts/next-work/fb-14/fallback-audit.md', 'w', encoding='utf-8') 
     fh.write('| # | en text | first seen in |\n|---|---|---|\n')
     for i, (en, f) in enumerate(ordered, 1):
         fh.write(f'| {i} | {en.replace("|", "\\|")} | {f} |\n')
-    fh.write('\n## Policy\n\nThe remaining row keeps `status=fallback` in the CSV: fallback means "English shown in Khmer mode" until the owner supplies Khmer byte-exact strings. The bilingual checker still passes (fallback is allowed); no row was flipped to translated without an owner string.\n')
+    fh.write('\n## Policy\n\nBoth rows keep `status=fallback` in the CSV: fallback means "English shown in Khmer mode" until the owner supplies Khmer byte-exact strings. The bilingual checker still passes (fallback is allowed); no row was flipped to translated without an owner string.\n')
 
 print('audit written; ordered gaps:', len(ordered))
 print('counts:', {k: len(v) for k, v in groups.items()})

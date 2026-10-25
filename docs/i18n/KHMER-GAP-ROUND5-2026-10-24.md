@@ -101,10 +101,13 @@ chrome. The account figure is dominated by audit/session data; the UI-copy subse
 
 ## Admin — `src/html/admin.html`
 
-The signed-in non-admin state (the only one tested) is the English 403 page; its copy belongs to
-LT-1.8's empty/error-state item. Remaining Latin here is `aria-label` only: Open workspace
-navigation, Open navigation, Appearance, Select interface language, Switch to English, Workspace
-navigation.
+The signed-in non-admin state (the only one tested) is now the shared empty/error card from
+LT-1.8. Its title keeps the bilingual `unauthorized` pair; the new explanatory sentence
+`Only studio administrators can open this page; ask a studio owner to grant your account access.`
+has no map row yet (CSV `accessMessage`, status `fallback`), so Khmer mode shows English until a
+map arrives. The secondary action reuses the existing `Account settings` string. Remaining Latin
+here is `aria-label` only: Open workspace navigation, Open navigation, Appearance, Select
+interface language, Switch to English, Workspace navigation.
 
 ## Editor chrome — `src/html/index.html` + editor JS
 

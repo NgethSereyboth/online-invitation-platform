@@ -42,3 +42,26 @@ body[data-page="admin"] .admin-panel tbody tr:hover { background: var(--app-surf
     mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
   }
 }
+
+@layer components {
+  /* LT-1.8: the signed-in non-admin 403 used to be a bare h1 + link at the
+     top of the page. It now uses the shared empty/error card, centred and
+     capped so it reads as a state, not as a broken admin console. */
+  body[data-page="admin"] main.admin-page > .admin-access-state {
+    width: min(560px, 100%);
+    margin: clamp(24px, 10vh, 96px) auto;
+    text-align: center;
+  }
+  .admin-access-state .empty-state__action {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .admin-access-state .empty-state__action .button-link {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 16px;
+  }
+}

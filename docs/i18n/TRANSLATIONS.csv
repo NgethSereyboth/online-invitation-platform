@@ -1145,3 +1145,4 @@
 "_txt()","_txt","Restore","ស្តារ","translated","src/js/templates.js","37"
 "close","close","Close","បិទ","translated","src/js/toast.js","41"
 "span","span","Poster canvas size (px)","ទំហំផ្ទាំងប៉ូស្ទ័រ (px)","translated","src/html/dashboard.html","74"
+"accessMessage","accessMessage","Only studio administrators can open this page; ask a studio owner to grant your account access.","Only studio administrators can open this page; ask a studio owner to grant your account access.","fallback","src/js/pages/admin/admin.js","18"
