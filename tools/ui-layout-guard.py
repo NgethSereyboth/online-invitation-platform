@@ -111,7 +111,7 @@ MEASURE_JS = r"""
   const out = { scrollWidth: document.documentElement.scrollWidth, innerWidth: vw,
                 widest: [], nameless: [], headerOverlap: [], headerHeight: null,
                 authPadding: null, authInputInset: null, editor: null,
-                emptyControls: [], clippedFields: [],
+                emptyControls: [], clippedFields: [], emptyPills: [],
                 longTasks: (window.__longTasks || []).slice() };
 
   // 1. horizontal scroll: name the widest elements that stick out.
@@ -205,6 +205,62 @@ MEASURE_JS = r"""
     }
   }
   out.clippedFields = out.clippedFields.slice(0, 6);
+
+  // 2d. unreadable pills (LT-1.4): a badge/pill whose text is painted but cannot be
+  // read — white on a white surface (the dashboard's blank "Draft" pill), or text
+  // clipped by its own box (the 6px-tall badge). Contrast is composited through
+  // alpha surfaces, so color(srgb … / .88) and color-mix() backgrounds work.
+  const parseColor = (value) => {
+    if (!value) return null;
+    let m = value.match(/^rgba?\(([^)]+)\)$/);
+    if (m) {
+      const p = m[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
+      if (p.length >= 3) return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+    }
+    m = value.match(/^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)$/);
+    if (m) return [255 * Number(m[1]), 255 * Number(m[2]), 255 * Number(m[3]),
+                   m[4] == null ? 1 : Number(m[4])];
+    if (value === 'transparent') return [0, 0, 0, 0];
+    return null;
+  };
+  const over = (fg, bg) => {
+    const a = fg[3] + bg[3] * (1 - fg[3]);
+    if (a === 0) return [0, 0, 0, 0];
+    const mix = (i) => (fg[i] * fg[3] + bg[i] * bg[3] * (1 - fg[3])) / a;
+    return [mix(0), mix(1), mix(2), a];
+  };
+  const lum = (c) => {
+    const f = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+  };
+  const effectiveBg = (el) => {
+    const layers = [];
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = parseColor(getComputedStyle(n).backgroundColor);
+      if (c && c[3] > 0) layers.push(c);
+      if (c && c[3] >= 1) break;
+    }
+    let bg = [255, 255, 255, 1];
+    for (let i = layers.length - 1; i >= 0; i--) bg = over(layers[i], bg);
+    return bg;
+  };
+  for (const el of document.querySelectorAll('.app-badge, .invite-status-pill, .fp-project-status, .badge, .pill')) {
+    if (!visible(el) || !onScreen(el)) continue;
+    if (!(el.innerText || '').trim()) continue;
+    const s = getComputedStyle(el);
+    const bg = effectiveBg(el);
+    const fg = over(parseColor(s.color) || [0, 0, 0, 1], bg);
+    const l1 = lum(fg), l2 = lum(bg);
+    const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    const clipped = el.scrollHeight > el.clientHeight + 2 && s.overflow !== 'visible';
+    if (ratio < 1.5 || clipped) {
+      out.emptyPills.push(path(el) + ' contrast=' + ratio.toFixed(2) +
+        ' box=' + Math.round(el.clientWidth) + 'x' + Math.round(el.clientHeight) +
+        ' text=' + Math.round(el.scrollWidth) + 'x' + Math.round(el.scrollHeight) +
+        (clipped ? ' clipped' : ''));
+    }
+  }
+  out.emptyPills = out.emptyPills.slice(0, 6);
 
   // 3. header children overlap + 4. header height.
   const header = document.querySelector('body > header');
@@ -369,7 +425,7 @@ def run_self_test() -> int:
     patterns = load_console_patterns(str(DEFAULT_BASELINE))
     console_fails = [m for m in errors if not console_matches(m, patterns)]
     failed_checks = {check for check, ok, _ in rows if not ok}
-    expected = {"empty-control", "clipped-field", "editor-artboard", "long-task"}
+    expected = {"empty-control", "clipped-field", "empty-pill", "editor-artboard", "long-task"}
     print("SELFTEST negative control — deliberately broken fixture:")
     for check, ok, detail in rows:
         if not ok and check in expected:
@@ -382,8 +438,8 @@ def run_self_test() -> int:
     if missing:
         print("UI_LAYOUT_GUARD_SELFTEST_FAILED missing=" + ",".join(sorted(missing)))
         return 1
-    print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, editor-artboard, "
-          "long-task, console-baseline)")
+    print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, empty-pill, "
+          "editor-artboard, long-task, console-baseline)")
     return 0
 
 
@@ -409,6 +465,14 @@ def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, s
             rows.append(("empty-control", False, f"{where} {el}"))
     else:
         rows.append(("empty-control", True, f"{where} none"))
+
+    # LT-1.4: badges/pills whose own text cannot be read (contrast or clipping).
+    pills = data.get("emptyPills") or []
+    if pills:
+        for el in pills:
+            rows.append(("empty-pill", False, f"{where} {el}"))
+    else:
+        rows.append(("empty-pill", True, f"{where} none"))
 
     # FB-38: inputs/selects clipped by their own box, outside a scrolling strip.
     clipped = data.get("clippedFields") or []

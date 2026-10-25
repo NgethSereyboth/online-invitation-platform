@@ -66,7 +66,10 @@ body[data-page="dashboard"] .invite-grid {
 body[data-page="dashboard"] .invite-card {
   position: relative;
   display: flex; flex-direction: column;
-  height: var(--app-card-h);
+  /* LT-1.4 (V2): the fixed 280px box was shorter than the card's content, so flex
+     shrank the status badge to 6px and clipped the hover actions. min-height keeps
+     the row equal (grid items stretch) while the card fits its content at every width. */
+  min-height: var(--app-card-h);
   overflow: hidden;
   background: var(--app-surface);
   border: 1px solid var(--app-line);
@@ -75,7 +78,7 @@ body[data-page="dashboard"] .invite-card {
   transition: box-shadow var(--motion-2) var(--ease-out), transform var(--motion-2) var(--ease-out), border-color var(--motion-2) var(--ease-out);
 }
 body[data-page="dashboard"] .invite-card:hover { box-shadow: var(--app-shadow); transform: translateY(-1px); border-color: var(--app-line-2); }
-body[data-page="dashboard"] .invite-cover { position: relative; aspect-ratio: 16 / 9; background: var(--app-surface-2); border-bottom: 1px solid var(--app-line); overflow: hidden; }
+body[data-page="dashboard"] .invite-cover { position: relative; flex: 0 0 auto; aspect-ratio: 16 / 9; background: var(--app-surface-2); border-bottom: 1px solid var(--app-line); overflow: hidden; }
 body[data-page="dashboard"] .invite-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); min-width: 0; }
 body[data-page="dashboard"] .invite-body h3,
 body[data-page="dashboard"] .invite-body strong { font-size: var(--fs-title-sm); font-weight: var(--fw-title-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

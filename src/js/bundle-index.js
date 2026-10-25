@@ -2673,7 +2673,14 @@ return''
 }
 function gregorianLabel(fields){
 let date=new Date(fields.date+'T00:00:00');
-return isNaN(date)?fields.date:date.toLocaleDateString(undefined,{
+if(isNaN(date))return fields.date;
+// LT-1.4 (V2): `undefined`/`km-KH` on a build with filtered ICU data returns the
+// raw pattern ("2026 M12 27"). Ask for the page's language explicitly and fall
+// back to English when this build cannot format it; the browser supplies the
+// month names (no hand-written Khmer here).
+let wanted=document.documentElement.lang==='km'?'km-KH':'en-US',locale=wanted;
+try{if(!Intl.DateTimeFormat.supportedLocalesOf([wanted]).length)locale='en-US'}catch{}
+return date.toLocaleDateString(locale,{
 dateStyle:'long'
 })
 }

@@ -13,10 +13,18 @@
   /* Broken control: bordered square with nothing painted inside. */
   .bordered-empty { width: 44px; height: 44px; border: 1px solid #ccc; background: #fff; }
   .clipped-strip { width: 80px; }
+  /* LT-1.4 negative control: the dashboard's blank status pill (white on white)
+     and its 6px-tall clipped badge. */
+  .fp-project-status { display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: #fff; color: #fff; font-size: 11px; }
+  .app-badge { display: inline-flex; height: 6px; overflow: hidden; padding: 2px 8px;
+    border-radius: 8px; background: #f8f8fb; color: #1f2026; font-size: 11px; }
 </style>
 </head>
 <body>
   <button class="bordered-empty" aria-label="Empty square" id="empty"></button>
+  <span class="fp-project-status">Draft</span>
+  <span class="app-badge">Draft</span>
   <input id="clip" class="clipped-strip" value="this value is much longer than the box">
   <select id="clipselect" class="clipped-strip">
     <option selected>A selected option label much wider than the box</option>

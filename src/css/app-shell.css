@@ -187,6 +187,12 @@ html[data-theme="dark"] body:not(.guest) > header > a.button-link.primary {
   align-self: start;
   max-height: calc(100vh - var(--app-topbar-h));
 }
+/* LT-1.4 (V2): at 1440 the rail stopped at 438px in a 900px viewport, leaving a
+   406px empty strip below the column. Content-sized is the minimum; on a short
+   page the rail now reaches the viewport bottom and still sticks while scrolling. */
+@media (min-width: 769px) {
+  .app-rail { min-height: calc(100vh - var(--app-topbar-h)); }
+}
 .app-rail__group { margin-top: var(--space-3); }
 .app-rail__label {
   display: block;
@@ -540,9 +546,11 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
     width: var(--app-rail-w); max-height: none; z-index: 60;
     transform: translateX(-100%);
     transition: transform var(--motion-3) var(--ease-out);
-    box-shadow: var(--app-shadow-xl);
   }
-  body.rail-open .app-rail { transform: translateX(0); }
+  /* LT-1.4 (V6): the closed drawer is off-screen but its 90px-blur shadow still
+     bled ~20px into the page over the top bar (z 60 > header 40) — the gray smear
+     at the left edge. A drawer that is not open does not cast one. */
+  body.rail-open .app-rail { transform: translateX(0); box-shadow: var(--app-shadow-xl); }
   body[data-shell="a"] > main { padding: var(--space-4); }
   /* On a phone the rail IS the ☰ drawer, so the collapse control is not offered: its
      only effect is to shrink the drawer to var(--app-rail-w-collapsed) — measured 64px
@@ -766,6 +774,13 @@ body[data-page="dashboard"] .dash-quickstart button {
 }
 body[data-page="dashboard"] .dash-quickstart button:hover { background: var(--app-surface-2); border-color: var(--app-line-2); }
 body[data-page="dashboard"] .dash-quickstart button .i18n:first-of-type:empty { display: none; }
+/* LT-1.4 (V8): 375px centres each tile's column, so a two-line label (the first
+   tile in Khmer) pushed its icon 13px above the other two. Top-align the column
+   and balance the wrap: equal tiles, icons on one line. */
+@media (max-width: 768px) {
+  body[data-page="dashboard"] .dash-quickstart button { justify-content: flex-start; padding-top: 10px; }
+  body[data-page="dashboard"] .dash-quickstart button .i18n { text-wrap: balance; }
+}
 
 /* Filter row: search (240px) + segmented control. */
 .dashboard-filterbar {
@@ -798,7 +813,10 @@ body[data-page="dashboard"] #inviteGrid {
 }
 body[data-page="dashboard"] #inviteGrid .invite-card {
   position: relative;
-  height: 280px;
+  /* LT-1.4: a fixed 280px box was shorter than cover + two-line body + hover
+     actions, so the badge flex-shrunk to 6px and the actions clipped. Size to
+     the content; min-height keeps short cards on the same grid baseline. */
+  min-height: var(--app-card-h);
   display: flex; flex-direction: column;
   background: var(--app-surface);
   border: 1px solid var(--app-line);
@@ -857,7 +875,11 @@ body[data-page="dashboard"] #inviteGrid .invite-card:focus-within .invite-quick 
   border-radius: var(--radius-sm); border: 1px solid var(--app-line);
   background: var(--app-surface-2); color: var(--app-muted);
   font-size: var(--fs-caption); font-weight: var(--fw-medium); letter-spacing: 0.02em;
+  /* LT-1.4: a badge must never be the flex item that gives up its box; long
+     statuses ellipsise inside it instead of spilling or clipping. */
+  flex: none; max-width: 100%;
 }
+.app-badge .i18n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .app-badge--published { color: var(--app-good); border-color: color-mix(in srgb, var(--app-good) 34%, var(--app-line)); }
 .app-badge--draft { color: var(--app-warn); border-color: color-mix(in srgb, var(--app-warn) 34%, var(--app-line)); }
 .app-badge--archived { color: var(--app-faint); }
@@ -875,7 +897,7 @@ body[data-page="dashboard"] #inviteGrid .invite-overflow__menu button:hover { ba
 
 /* Loading skeletons mirror the real card: same height, same cover ratio, two lines. */
 body[data-page="dashboard"] #inviteGrid .skeleton-card {
-  height: 280px; display: flex; flex-direction: column; overflow: hidden;
+  min-height: var(--app-card-h); display: flex; flex-direction: column; overflow: hidden;
   background: var(--app-surface); border: 1px solid var(--app-line); border-radius: var(--radius-md);
 }
 .skeleton-card__cover { display: block; width: 100%; aspect-ratio: 16 / 9; background: var(--app-surface-2); }
