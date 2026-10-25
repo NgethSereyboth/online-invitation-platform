@@ -14,6 +14,12 @@
 //   has a laid-out object.
 // - Skipped entirely if the user interacts first (their selection pays it).
 // - Selection is cleared afterwards; no document/undo state is touched.
+// - LT-1.9: the typography strip is hidden during the warm hold. It is in
+//   normal flow above the canvas, so letting it paint for 140ms pushed the
+//   toolbar and canvas down twice (CLS 0.38). The selection card and bounds
+//   still warm; only the strip's first layout is left to the first real
+//   selection. Inline display (not a class) because typography-system.css is
+//   unlayered and outranks every layered rule.
 (function () {
   'use strict';
   if (window.EInviteFirstSelectionPrewarm) return;
@@ -27,7 +33,13 @@
   var POLL_MS = 80;
   var MAX_ATTEMPTS = 240;
 
-  document.addEventListener('pointerdown', function () { userInteracted = true; }, true);
+  document.addEventListener('pointerdown', function () {
+    userInteracted = true;
+    restoreStrip();
+  }, true);
+  document.addEventListener('keydown', function () {
+    if (api.state === 'done') restoreStrip();
+  }, true);
 
   function candidate() {
     var el = document.querySelector('#stage .object[data-id]');
@@ -39,7 +51,25 @@
     return { id: el.dataset.id, bridge: bridge };
   }
 
+  var strip = null;
+
+  function hideStrip() {
+    strip = document.getElementById('v20TypographyToolbar');
+    if (strip) strip.style.display = 'none';
+  }
+
+  function restoreStrip() {
+    if (strip && strip.style) strip.style.removeProperty('display');
+    strip = null;
+  }
+
   function finish(ok) {
+    // Typography queues one more refresh from the synthetic selection after
+    // the bridge has cleared it; restoring now let that stale pass paint the
+    // strip for ~40ms with nothing selected (and shift the canvas). Give the
+    // queue time to drain while the strip is still display:none, then hand it
+    // back. A real pointer/key selection restores it immediately below.
+    if (ok) setTimeout(restoreStrip, 700); else restoreStrip();
     api.state = 'done';
     api.ok = !!ok;
     api.done = Math.round(performance.now());
@@ -56,6 +86,7 @@
     if (!c) return void setTimeout(warm, POLL_MS);
     api.state = 'active';
     api.at = Math.round(performance.now());
+    hideStrip();
     try { c.bridge.select([c.id]); } catch (e) { return finish(false); }
     setTimeout(function () {
       try { c.bridge.select([]); } catch (e) {}
