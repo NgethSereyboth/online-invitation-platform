@@ -161,3 +161,12 @@ A future release should use this process:
 6. Regenerate the contract.
 7. Run model, hostile-input, WOFF2 metadata, real-browser loading, offline, Khmer shaping, visual geometry, public rendering, and CSP tests.
 8. Never migrate an unknown historical CSS string by heuristic resemblance.
+
+## Template pack (2026-10-25) — no new font file
+
+The 36-template Khmer event pack requests 14 families; the registry ships the four Noto faces above.
+Twelve families are substituted with the nearest registered face rather than added, so this order changes
+no `@font-face` rule, no licence file and no `assetSha256`. The role-by-role map and the owner action that
+would replace each substitution are in `docs/templates/FONT-GAP-2026-10-25.md` and
+`docs/templates/FONT-SUBSTITUTIONS.md`. The pack's documents persist registry ids only, so a future
+TP-OD-1 addition is a registry change plus one line in the converter, never a document migration.
