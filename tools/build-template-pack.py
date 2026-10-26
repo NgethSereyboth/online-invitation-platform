@@ -159,6 +159,10 @@ def recolor_svg(source: str, palette: dict, layer: dict, where: str) -> tuple[st
         raise PackError(f"{where}: ornament carries script or an inline handler")
     if re.search(r"(?:href|src)\s*=\s*[\"'](?!#)", text, re.I):
         raise PackError(f"{where}: ornament references an external resource")
+    # TP-2.1: the editor's SVG sanitiser drops ``preserveAspectRatio`` because it
+    # is not on its allow-list. Strip it here so every served ornament passes the
+    # sanitiser byte-for-byte instead of being silently rewritten on import.
+    text = re.sub(r"\s+preserveAspectRatio\s*=\s*\"[^\"]*\"", "", text)
     return text, slug
 
 
@@ -211,6 +215,14 @@ def base_object(layer: dict, z: int, canvas_h: int) -> dict:
 
 def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
     obj = base_object(layer, z, canvas_h)
+    # The pack's height is the designed line box; the rich-text renderer adds the
+    # font's own line spacing, which is slightly taller after substitution. Give
+    # the box at least the measured line count so a line is never clipped (A3).
+    size_px = float(layer.get("size", 24))
+    lines = max(1, int(layer.get("lines", 1) or 1))
+    line_px = float(layer.get("lineHeight", 1.4) or 1.4)
+    needed = int(round(lines * size_px * line_px * 1.06)) + 18
+    obj["height"] = f"{max(int(obj['height'][:-2]), needed)}px"
     role = layer.get("font", "lat.cinzel")
     if role not in FONT_ROLES:
         raise PackError(f"{where}: font role {role!r} is not mapped")
@@ -229,6 +241,15 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
             "color": hex_colour(palette, layer.get("color", "ink"), where),
             "textAlign": layer.get("align", "center"),
             "textVerticalAlign": "middle",
+            # The pack's boxes are measured to the text itself. The rich-text
+            # default padding of 8 px per side made every box overflow by 8 px
+            # (TP-3 A3), so the padding is removed for pack text.
+            "textPadding": 0,
+            # Substituted families are wider than the pack's display faces. Fit
+            # keeps the designed box and only shrinks a line that would clip.
+            "textAutoFit": "fit",
+            "textAutoFitMax": float(layer.get("size", 24)),
+            "textMinFontSize": 10,
             "letterSpacing": 0,
             "lineHeight": float(layer.get("lineHeight", 1.4)),
             "textWrap": "balance",

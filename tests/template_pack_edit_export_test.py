@@ -133,6 +133,22 @@ def test_flagship_template_opens_edits_and_exports(tmp_path):
             assert first["objects"] > 20, first
             assert first["texts"] >= 6, first
 
+            # Colours: every canvas paragraph must render in its object colour,
+            # never the muted app-chrome colour (regression guard for TP-2.1).
+            colours = page.evaluate(
+                """() => [...document.querySelectorAll('#stage .object')]
+                    .filter(o => o.querySelector('.rt-paragraph'))
+                    .map(o => {
+                        const run = o.querySelector('.rt-run');
+                        const hex = (getComputedStyle(run || o.querySelector('.content')).color.match(/\\d+/g) || [])
+                            .slice(0, 3).map(n => Number(n).toString(16).padStart(2, '0')).join('');
+                        return { hex, wanted: String(o.dataset.color || '').replace('#', '').toLowerCase() };
+                    })"""
+            )
+            assert colours, "no rich-text paragraphs on the canvas"
+            wrong = [row for row in colours if row["hex"] != row["wanted"]]
+            assert wrong == [], wrong
+
             # English edit: double-click a text object, select all, type.
             english = page.locator("#stage .object .content").nth(3)
             english.scroll_into_view_if_needed()

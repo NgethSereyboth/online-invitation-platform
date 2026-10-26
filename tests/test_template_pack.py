@@ -152,6 +152,43 @@ def test_built_documents_match_the_native_shape():
             assert len(z_indexes) == len(set(z_indexes)), (payload["id"], "duplicate z-index")
 
 
+# Mirror of the editor's allow-list in src/js/vector-model.js (TP-2.1). An ornament
+# that is not entirely inside these sets would be silently rewritten on import.
+SVG_TAGS = {
+    "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon",
+    "defs", "lineargradient", "radialgradient", "stop", "clippath", "mask", "title", "desc",
+}
+SVG_ATTRS = {
+    "viewBox", "width", "height", "x", "y", "x1", "y1", "x2", "y2", "cx", "cy", "r", "rx", "ry",
+    "d", "points", "fill", "fill-rule", "stroke", "stroke-width", "stroke-linecap",
+    "stroke-linejoin", "stroke-dasharray", "stroke-dashoffset", "opacity", "transform",
+    "gradientUnits", "gradientTransform", "offset", "stop-color", "stop-opacity", "id",
+    "clip-path", "mask", "aria-label", "role",
+}
+
+
+def test_served_ornaments_pass_the_editor_sanitiser():
+    import xml.etree.ElementTree as ET
+
+    namespace = "{http://www.w3.org/2000/svg}"
+    seen = set()
+    for path in sorted((OUT / "ornaments").glob("*.svg")):
+        root = ET.parse(path).getroot()
+        assert root.tag == namespace + "svg", path.name
+        assert root.get("viewBox"), (path.name, "no viewBox: cannot scale crisply")
+        assert not any(el.tag == namespace + "image" for el in root.iter()), (
+            path.name, "raster <image> in an ornament"
+        )
+        for element in root.iter():
+            tag = element.tag.replace(namespace, "").lower()
+            assert tag in SVG_TAGS, (path.name, tag)
+            for attribute in element.attrib:
+                assert attribute in SVG_ATTRS, (path.name, attribute)
+        assert path.name not in seen, path.name
+        seen.add(path.name)
+    assert len(seen) >= 27, len(seen)
+
+
 def test_every_referenced_ornament_is_served():
     for path in built_files():
         payload = load_module(path)

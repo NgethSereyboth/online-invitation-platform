@@ -3259,6 +3259,8 @@ class Handler(SimpleHTTPRequestHandler):
         request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID"))
         self.request_id=request_id
         self.send_header("X-Request-ID",request_id)
+        cache_value=getattr(self,"_cache_control_value",None)
+        if cache_value:self.send_header("Cache-Control",cache_value)
         if getattr(self,"_expire_stale_session",False) and not getattr(self,"_session_replaced",False):
             stale=f"{SESSION_COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
             csrf="einvite_csrf=; Path=/; Max-Age=0; SameSite=Lax"
@@ -3719,6 +3721,11 @@ class Handler(SimpleHTTPRequestHandler):
 
     def serve_public_static(self):
         if not self.public_static_path():return self.json(404,{"error":"Not found"})
+        # TP-2.1: the template-pack artwork is immutable per filename (ornaments
+        # carry a colour hash) and fetched on demand by the picker, so it is worth
+        # caching. Everything else keeps the previous no-header behaviour.
+        if unquote(urlparse(self.path).path).startswith("/assets/template-pack/"):
+            self._cache_control_value="public, max-age=86400"
         return super().do_GET()
 
     def do_HEAD(self):
