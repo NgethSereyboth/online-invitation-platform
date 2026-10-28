@@ -208,8 +208,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-dashboard.js",
-      "scriptBytes": 342183,
-      "scriptSha256": "63a8591483abb3bb63c5cd45fa6cb0ec1500b1f20cd979ff4cbed1afcbd78014",
+      "scriptBytes": 343059,
+      "scriptSha256": "fcce5475d2d7f38cae66632a981dceff7a15aae0fa1fc1d3efb726266deb38d3",
       "sources": {
         "deferredScripts": [
           "delivery-dialog.js",

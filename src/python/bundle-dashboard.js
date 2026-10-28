@@ -1190,6 +1190,19 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
       });
   }
 
+  /* --- 3b. Quick-start onboarding row ------------------------------------ */
+  /* The tiles repeat New invitation / Templates / Guests, which the header and
+     the rail already offer. They are onboarding for an empty account, so once the
+     grid holds a card they go away. The signal is the same one the empty state
+     reads (#inviteGrid has no .invite-card) — no second counter. The `hidden`
+     attribute is used so assistive tech agrees (accessibility.css maps it to
+     display:none!important). */
+  function syncQuickstart() {
+    const row = view.querySelector('.dash-quickstart');
+    if (!row) return;
+    row.hidden = !!grid.querySelector('.invite-card');
+  }
+
   /* --- 4. Card polish ---------------------------------------------------- */
   const BADGE = {
     published: { en: 'Published', km: 'ផ្សាយ', icon: '●' },
@@ -1228,6 +1241,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
       }
     });
     applyFilters();
+    syncQuickstart();
   }
 
   function schedule() {
@@ -1237,8 +1251,14 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
   }
 
   buildToolbar();
+  syncQuickstart();
   if (!document.querySelector('.invite-card')) showSkeletons();
-  new MutationObserver(() => { if (grid.querySelector('.invite-card')) schedule(); }).observe(grid, { childList: true });
+  new MutationObserver(() => {
+    /* Always re-check the row: a grid emptied back to the empty state must bring
+       the onboarding tiles back too. */
+    syncQuickstart();
+    if (grid.querySelector('.invite-card')) schedule();
+  }).observe(grid, { childList: true });
   document.addEventListener('DOMContentLoaded', () => {
     if (view.hidden) showSkeletons();
     setTimeout(() => { clearSkeletons(); decorate(); probeServer(); }, 400);
