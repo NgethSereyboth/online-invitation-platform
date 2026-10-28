@@ -84,7 +84,7 @@ def main(argv=None):
  elif args.skip_browser:
   print('[DEV SKIP] Browser launch check disabled by --skip-browser; this is not a release gate.')
  if missing:
-  print('\nMissing: '+', '.join(missing));print('Install with: python -m pip install -r requirements-test.txt && python -m playwright install chromium')
+  print('\nMissing: '+', '.join(missing));print('Install with: python -m pip install -r requirements-dev.txt && python -m playwright install chromium')
   return 1
  print('\nV0.52 dependency preflight passed.');return 0
 if __name__=='__main__':raise SystemExit(main())

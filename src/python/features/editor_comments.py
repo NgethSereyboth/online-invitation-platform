@@ -146,13 +146,24 @@ def _send_mention_emails(invitation_id: str, author_name: str, body: str, mentio
             conn = sqlite3.connect(data_dir / "einvite.db", timeout=5)
             conn.row_factory = sqlite3.Row
             try:
+                # ROADMAP §4.1 — users.email is encrypted at rest, so the match
+                # goes through email_hash (indexed) with the pre-migration
+                # plaintext column as a fallback, and the hit is decrypted before
+                # it is used as a recipient address.
+                import hashlib
+                try:
+                    from core.crypto import decrypt_field
+                except Exception:
+                    decrypt_field = lambda value: value  # noqa: E731 - fallback keeps mentions working
+                handle_key = str(handle).strip().lower()
+                handle_hash = hashlib.sha256(handle_key.encode("utf-8")).hexdigest()
                 row = conn.execute(
-                    "SELECT email FROM users WHERE email=? OR username=? OR id=? LIMIT 1",
-                    (handle, handle, handle)
+                    "SELECT email FROM users WHERE email_hash=? OR (lower(email)=? AND (email_hash IS NULL OR email_hash='')) OR id=? LIMIT 1",
+                    (handle_hash, handle_key, handle)
                 ).fetchone()
                 if not row:
                     continue
-                email = row["email"]
+                email = decrypt_field(row["email"])
                 subject = f"[EInvite] {author_name or 'Someone'} mentioned you in a comment"
                 text = (
                     f"{author_name or 'Someone'} mentioned you in a comment thread:\n\n"

@@ -37,7 +37,10 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import random
 import time
+import urllib.error
+import urllib.request
 from typing import Optional
 
 # Webhook receivers must reject signatures older than this (replay protection).
@@ -142,3 +145,70 @@ def generate_webhook_secret() -> str:
     """
     import secrets as _secrets
     return _secrets.token_urlsafe(32)
+
+
+#: Statuses worth retrying: rate limiting, transient server/edge failures.
+#: Every other 4xx is final — an identical retry would be rejected identically.
+RETRYABLE_STATUSES = frozenset({408, 409, 425, 429, 500, 502, 503, 504})
+DEFAULT_ATTEMPTS = 5
+DEFAULT_BACKOFF_BASE_S = 1.0
+MAX_BACKOFF_S = 30.0
+
+
+def deliver(url: str, body: bytes, secret: str, *,
+            attempts: int = DEFAULT_ATTEMPTS,
+            timeout: float = 10.0,
+            backoff_base: float = DEFAULT_BACKOFF_BASE_S,
+            sleep=None,
+            opener=None,
+            timestamp_ms: Optional[int] = None) -> dict:
+    """POST ``body`` to ``url`` signed with ``secret``, retrying with backoff.
+
+    Each attempt is freshly signed (new timestamp), so a retry minutes later
+    still falls inside the receiver's replay window. Retries transport errors,
+    429 and 5xx up to ``attempts`` total tries with exponential backoff
+    (``backoff_base * 2**(n-1)``, capped at 30 s, plus up to 25 % jitter).
+
+    ``sleep``/``opener`` exist for tests; the defaults are ``time.sleep`` and
+    ``urllib.request.urlopen``.
+
+    Returns ``{"ok": bool, "status": int | None, "attempts": int,
+    "error": str | None}``. Never raises for delivery failures.
+    """
+    if not url:
+        raise ValueError("webhook url must be non-empty")
+    if not secret:
+        raise ValueError("webhook secret must be non-empty")
+    body = bytes(body)
+    sleep = sleep or time.sleep
+    opener = opener or urllib.request.urlopen
+    last_status: Optional[int] = None
+    last_error: Optional[str] = None
+    for attempt in range(1, max(1, int(attempts)) + 1):
+        ts = int(timestamp_ms) if timestamp_ms is not None else _now_ms()
+        request = urllib.request.Request(
+            url, data=body, method="POST", headers=build_headers(body, secret, ts)
+        )
+        try:
+            with opener(request, timeout=timeout) as response:
+                status = int(getattr(response, "status", 0) or 0)
+            if status not in RETRYABLE_STATUSES:
+                return {
+                    "ok": 200 <= status < 300,
+                    "status": status,
+                    "attempts": attempt,
+                    "error": None if 200 <= status < 300 else f"HTTP {status}",
+                }
+            last_status, last_error = status, f"HTTP {status}"
+        except urllib.error.HTTPError as exc:
+            status = int(exc.code)
+            if status not in RETRYABLE_STATUSES:
+                return {"ok": False, "status": status, "attempts": attempt, "error": f"HTTP {status}"}
+            last_status, last_error = status, f"HTTP {status}"
+        except Exception as exc:  # DNS, refused, timeout, TLS — all retryable
+            last_status, last_error = None, f"{type(exc).__name__}: {exc}"
+        if attempt < attempts:
+            delay = min(MAX_BACKOFF_S, backoff_base * (2 ** (attempt - 1)))
+            delay *= 1 + random.random() * 0.25
+            sleep(delay)
+    return {"ok": False, "status": last_status, "attempts": int(attempts), "error": last_error}

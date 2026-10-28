@@ -174,6 +174,26 @@ def b64url(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
 
+# ROADMAP §4.5 — API keys. 32 random bytes, `einv_` prefixed for identification,
+# hashed at rest with the same Argon2id/PBKDF2 scheme as recovery codes.
+API_KEY_PREFIX = "einv_"
+
+
+def generate_api_key() -> str:
+    """Return a fresh ``einv_``-prefixed 32-byte key. Shown to the owner once."""
+    return API_KEY_PREFIX + b64url(secrets.token_bytes(32))
+
+
+def hash_api_key(plaintext: str) -> str:
+    """Hash an API key for storage (Argon2id, else PBKDF2-SHA256 310k)."""
+    return hash_recovery_code(plaintext)
+
+
+def verify_api_key(plaintext: str, stored_hash: str) -> bool:
+    """Verify an API key against its stored hash (constant-time)."""
+    return verify_recovery_code(plaintext, stored_hash)
+
+
 def b64url_decode(value: str) -> bytes:
     raw = str(value or "").encode("ascii")
     return base64.urlsafe_b64decode(raw + b"=" * ((4 - len(raw) % 4) % 4))

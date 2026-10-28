@@ -28,9 +28,11 @@ _PLACEHOLDER_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Repo root: this file lives at src/python/secrets_v54.py, so the repo root is
-# two parents up. We resolve lazily so a relocated module still works.
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+# Repo root: this file lives at src/python/features/secrets.py, so the repo root is
+# three parents up. (It was once src/python/secrets_v54.py, where two was correct;
+# the module moved and the path math did not, which wrote .env into src/ instead of
+# the repo root the README and this docstring promise.)
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 _ENV_PATH = _REPO_ROOT / ".env"
 
 

@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formatdate
-from core.auth import (ARGON2_AVAILABLE, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
+from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_api_key, verify_api_key, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
 from core.config import get as config_get
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
@@ -28,12 +28,15 @@ from features.admin_metrics import (compute_metrics as admin_compute_metrics, co
 from features import reports as reports_feature
 from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
+from core.crypto import ensure_encryption_key, hash_for_lookup, key_fingerprint, key_source
+from core.db import find_user_by_email, protect, reveal_connection
+from core.webhooks import deliver as deliver_webhook, generate_webhook_secret
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
 from rich_text_document_model import normalize_document_rich_text
 from document_schema_v32 import normalize_document_v32
 from ai_agent import AgentConfig, AgentService, AgentServiceError, ensure_agent_schema, tool_catalog
-from ai_agent.jit_elevation import JITElevationError, JITElevationManager
+from ai_agent.jit_elevation import JITElevationError, JITElevationManager, ensure_jit_schema
 from platform_v32 import PlatformConfig, PlatformService, PlatformServiceError, ensure_personal_workspace, ensure_platform_schema
 from future_platform_v52 import FuturePlatformService, FuturePlatformError, ensure_future_schema
 
@@ -78,6 +81,120 @@ def require_http_endpoint(value):
         raise ValueError("configured endpoint must use http or https")
     return endpoint
 
+
+# ROADMAP §4.6 — outbound webhook destinations (signing lives in core/webhooks.py).
+def _ensure_webhook_schema(db):
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS webhook_endpoints("
+        "id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, url TEXT NOT NULL, "
+        "events_json TEXT NOT NULL DEFAULT '[]', secret TEXT NOT NULL, "
+        "secret_hint TEXT NOT NULL DEFAULT '', active INTEGER NOT NULL DEFAULT 1, "
+        "created_at INTEGER NOT NULL, last_delivery_at INTEGER, last_status INTEGER, "
+        "failure_count INTEGER NOT NULL DEFAULT 0)"
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS idx_webhook_endpoints_owner ON webhook_endpoints(owner_id,active)")
+
+
+# ROADMAP §4.5 — API keys. Only the routes below are reachable with key auth;
+# the scope each one requires is checked centrally before the handler runs.
+_ALLOWED_API_KEY_SCOPES = ("*", "invitations:read", "invitations:write", "rsvps:read")
+API_KEY_ROUTES = (
+    ("POST", re.compile(r"^/api/invitations/?$"), "invitations:write"),
+    ("GET", re.compile(r"^/api/invitations/[^/]+/?$"), "invitations:read"),
+    ("GET", re.compile(r"^/api/invitations/[^/]+/rsvps/?$"), "rsvps:read"),
+)
+
+
+def _ensure_api_key_schema(db):
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS api_keys("
+        "id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', "
+        "prefix TEXT NOT NULL, hint TEXT NOT NULL DEFAULT '', key_hash TEXT NOT NULL, "
+        "scopes_json TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL, "
+        "last_used_at INTEGER, request_count INTEGER NOT NULL DEFAULT 0, revoked_at INTEGER)"
+    )
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_prefix ON api_keys(prefix)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id,created_at DESC)")
+
+
+def _validate_webhook_url(url):
+    """Require an absolute http(s) URL and refuse private/loopback destinations.
+
+    Best-effort SSRF guard: the host is resolved once here (delivery resolves
+    again). ``EINVITE_ALLOW_PRIVATE_WEBHOOKS=1`` opts out for tests and
+    deliberately private receivers.
+    """
+    endpoint = str(url or "").strip()
+    parsed = urlsplit(endpoint)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc or not parsed.hostname:
+        raise ValueError("Webhook URL must be an absolute http(s) URL")
+    if parsed.username or parsed.password:
+        raise ValueError("Webhook URL must not embed credentials")
+    if platform_env("EINVITE_ALLOW_PRIVATE_WEBHOOKS", "0").lower() in {"1", "true", "yes"}:
+        return endpoint
+    import ipaddress
+    import socket as _socket
+    port = parsed.port or (443 if parsed.scheme.lower() == "https" else 80)
+    try:
+        infos = _socket.getaddrinfo(parsed.hostname, port, proto=_socket.IPPROTO_TCP)
+    except OSError as exc:
+        raise ValueError(f"Webhook host cannot be resolved: {exc}") from exc
+    for info in infos:
+        address = ipaddress.ip_address(info[4][0])
+        if (address.is_private or address.is_loopback or address.is_link_local
+                or address.is_reserved or address.is_multicast or address.is_unspecified):
+            raise ValueError("Webhook URL must not point at a private or loopback address")
+    return endpoint
+
+
+def dispatch_webhook_event(event, data, owner_id):
+    """Deliver a signed ``event`` payload to the owner's active endpoints.
+
+    One daemon thread for the whole fan-out; every attempt is logged as a
+    ``webhook_delivery`` line and the endpoint row records the outcome.
+    """
+    if not owner_id:
+        return
+    try:
+        with connect() as db:
+            _ensure_webhook_schema(db)
+            rows = db.execute(
+                "SELECT id,url,secret,events_json FROM webhook_endpoints "
+                "WHERE owner_id=? AND active=1 LIMIT 25", (owner_id,)).fetchall()
+    except Exception as exc:
+        print(json.dumps({"level":"warning","event":"webhook_dispatch_failed","reason":str(exc)[:200]},ensure_ascii=False), flush=True)
+        return
+    targets = []
+    for row in rows:
+        try:
+            subscribed = json.loads(row["events_json"] or "[]")
+        except Exception:
+            subscribed = []
+        if "*" in subscribed or event in subscribed:
+            targets.append(row)
+    if not targets:
+        return
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()) + f".{int(time.time()*1000)%1000:03d}Z"
+    payload = {"event": event, "timestamp": stamp, "eventId": str(uuid.uuid4()), "data": data}
+    body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+    def run():
+        for row in targets:
+            result = deliver_webhook(row["url"], body, row["secret"])
+            ok = bool(result.get("ok"))
+            try:
+                with connect() as db:
+                    db.execute(
+                        "UPDATE webhook_endpoints SET last_delivery_at=?,last_status=?,"
+                        "failure_count=CASE WHEN ? THEN 0 ELSE failure_count+1 END WHERE id=?",
+                        (int(time.time()*1000), result.get("status"), 1 if ok else 0, row["id"]),
+                    )
+            except Exception as exc:
+                _log.debug("webhook outcome write failed: %s", exc)
+            print(json.dumps({"level":"info" if ok else "warning","event":"webhook_delivery","endpoint":row["id"],"eventName":event,"status":result.get("status"),"attempts":result.get("attempts"),"ok":ok,"error":result.get("error")},ensure_ascii=False), flush=True)
+
+    threading.Thread(target=run, daemon=True, name="webhook-delivery").start()
+
 ROOT = Path(__file__).resolve().parent
 DATA = Path(platform_env("EINVITE_DATA_DIR", str(ROOT / "data"))).expanduser().resolve()
 UPLOADS = DATA / "uploads"
@@ -86,6 +203,18 @@ QUARANTINE = DATA / "quarantine"
 SOCIAL_CACHE = DATA / "social-cache"
 BACKUPS = DATA / "backups"
 DB = DATA / "invites.db"
+
+
+def db_path() -> Path:
+    """Resolve the SQLite file at call time, not import time.
+
+    In-process tests set ``EINVITE_DATA_DIR`` before starting their own server;
+    a path captured at import made a second test reuse the first test's file —
+    and its already-deleted temp directory (ROADMAP §4.8).
+    """
+    return Path(platform_env("EINVITE_DATA_DIR", str(DATA))).expanduser().resolve() / "invites.db"
+
+
 OBJECT_STORAGE_BUCKET = platform_env("EINVITE_OBJECT_STORAGE_BUCKET", "").strip()
 OBJECT_STORAGE_ENDPOINT = platform_env("EINVITE_OBJECT_STORAGE_ENDPOINT", "").strip() or None
 OBJECT_STORAGE_REGION = platform_env("EINVITE_OBJECT_STORAGE_REGION", "auto").strip() or "auto"
@@ -120,6 +249,7 @@ IMAGE_CACHE.mkdir(parents=True, exist_ok=True)
 QUARANTINE.mkdir(parents=True, exist_ok=True)
 SOCIAL_CACHE.mkdir(parents=True, exist_ok=True)
 BACKUPS.mkdir(parents=True, exist_ok=True)
+
 
 def persistent_data_secret(env_name, filename):
     configured=platform_env(env_name,"").strip()
@@ -248,7 +378,14 @@ def current_presence(invite_id):
 SESSION_COOKIE_NAME = platform_env("EINVITE_SESSION_COOKIE_NAME", "einvite_session").strip() or "einvite_session"
 ADMIN_SESSION_IDLE_MS = 30 * 60 * 1000  # 30 minutes — ROADMAP §4.2(b)
 COOKIE_SECURE = platform_env("EINVITE_COOKIE_SECURE", "0").lower() in {"1", "true", "yes"}
-DEV_AUTH_TOKENS_ENABLED = platform_env("EINVITE_DEV_AUTH_TOKENS", "0").lower() in {"1", "true", "yes"}
+def dev_auth_tokens_enabled() -> bool:
+    """Whether dev bearer/devToken helpers are on, read at call time.
+
+    Not cached at import: test files set ``EINVITE_DEV_AUTH_TOKENS`` during
+    collection, and the old module-level constant made the result depend on
+    which test file imported ``server`` first (ROADMAP §4.8).
+    """
+    return platform_env("EINVITE_DEV_AUTH_TOKENS", "0").lower() in {"1", "true", "yes"}
 AI_ENDPOINT = platform_env("EINVITE_AI_ENDPOINT", "").strip()
 AI_API_KEY = platform_env("EINVITE_AI_API_KEY", "").strip()
 AI_MODEL = platform_env("EINVITE_AI_MODEL", "").strip()
@@ -286,6 +423,15 @@ JSON_LOGS = platform_env("EINVITE_JSON_LOGS", "0").lower() in {"1", "true", "yes
 # Phase B (B3): log best-effort cleanup failures instead of suppressing them.
 import logging as _logging_mod
 _log = _logging_mod.getLogger("einvite.server")
+
+# ROADMAP §4.1 — resolve the field-encryption key before the first write, so a
+# data directory that cannot hold the key is reported once here rather than
+# failing a registration later. Only the source and a fingerprint are logged.
+try:
+    ensure_encryption_key()
+    _log.info("field encryption ready (source=%s, key=%s)", key_source(), key_fingerprint())
+except Exception as _encryption_boot_error:  # pragma: no cover - cryptography missing
+    _log.warning("field encryption unavailable: %s", _encryption_boot_error)
 if not _log.handlers:
     _h = _logging_mod.StreamHandler()
     _h.setFormatter(_logging_mod.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
@@ -1210,7 +1356,10 @@ def validate_document(document):
         color_pattern = re.compile(r"^#[0-9a-fA-F]{6}$")
         for key in ("borderColor", "shadowColor", "fillColor", "backgroundColor", "gradientStart", "gradientEnd", "textGradientStart", "textGradientEnd", "textStrokeColor", "textShadowColor"):
             value = obj.get(key)
-            if value not in (None, "") and (not isinstance(value, str) or not color_pattern.fullmatch(value)): raise ValueError("Invalid object color")
+            # A shape frame has no fill: "none" is CSS transparent and predates the
+            # validator (shapeFillStyle already paints it), so accept it for fillColor.
+            allowed = (None, "") + (("none",) if key == "fillColor" else ())
+            if value not in allowed and (not isinstance(value, str) or not color_pattern.fullmatch(value)): raise ValueError("Invalid object color")
         if len(str(obj.get("groupId", ""))) > 120: raise ValueError("Invalid object group")
         if obj.get("visible", True) not in (True, False): raise ValueError("Invalid object visibility")
         if len(str(obj.get("layerName", ""))) > 80: raise ValueError("Invalid layer name")
@@ -1395,9 +1544,27 @@ def validate_document(document):
         if len(video_url)>7_000_000: raise ValueError("Featured video reference is too large")
         if video_url and not (re.match(r"^https?://",video_url,re.I) or video_url.startswith("/uploads/") or video_url.startswith("/data/uploads/") or re.match(r"^data:video/(?:mp4|webm);base64,",video_url,re.I)): raise ValueError("Invalid featured video URL")
         if video.get("mime") and video.get("mime") not in {"video/mp4","video/webm"}: raise ValueError("Invalid featured video type")
+    # LT-3.2 item (8): the display-only gift QR. The image is the one owner-supplied
+    # asset in this block, so it takes the same allowlist as every other stored
+    # image (HTTPS, platform media, or an inline raster data URL — never SVG or a
+    # script URL). The text fields keep owner-entered display text bounded; no
+    # account number, amount or payment control exists in the document.
+    guest_experience = document.get("guestExperience")
+    if guest_experience is not None:
+        if not isinstance(guest_experience, dict): raise ValueError("Invalid guest experience settings")
+        for key in ("dressCode", "transport", "accommodation", "note", "giftLink", "giftLabel", "paymentLink", "paymentLabel"):
+            value = guest_experience.get(key)
+            if value not in (None, "") and (not isinstance(value, str) or len(value) > 5000): raise ValueError("Invalid guest experience text")
+        if "giftQrEnabled" in guest_experience and not isinstance(guest_experience.get("giftQrEnabled"), bool): raise ValueError("Invalid gift QR toggle")
+        gift_qr_label = guest_experience.get("giftQrLabel")
+        if gift_qr_label not in (None, "") and (not isinstance(gift_qr_label, str) or len(gift_qr_label) > 80): raise ValueError("Invalid gift QR caption")
+        gift_qr_image = str(guest_experience.get("giftQrImage", "") or "")
+        if len(gift_qr_image) > 4_000_000: raise ValueError("Gift QR image is too large")
+        if gift_qr_image and not (re.match(r"^https?://", gift_qr_image, re.I) or gift_qr_image.startswith("/uploads/") or gift_qr_image.startswith("/api/media/") or gift_qr_image.startswith("/api/image/") or gift_qr_image.startswith("/data/uploads/") or re.match(r"^data:image/(?:jpeg|png|webp|gif);base64,", gift_qr_image, re.I)): raise ValueError("Invalid gift QR image")
     return document
 
 _SQLITE_SCHEMA_READY=False
+_SQLITE_SCHEMA_READY_PATH=None
 _SQLITE_SCHEMA_LOCK=threading.Lock()
 
 
@@ -1493,18 +1660,21 @@ def _p2a_document_diff(before, after, max_paths=200):
 
 @contextmanager
 def connect_sqlite():
-    db = sqlite3.connect(DB, timeout=10)
+    path = db_path()
+    db = sqlite3.connect(path, timeout=10)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA journal_mode=WAL")
     db.execute("PRAGMA busy_timeout=5000")
     db.execute("PRAGMA foreign_keys=ON")
     try:
-        global _SQLITE_SCHEMA_READY
+        global _SQLITE_SCHEMA_READY, _SQLITE_SCHEMA_READY_PATH
+        if _SQLITE_SCHEMA_READY_PATH != str(path):
+            _SQLITE_SCHEMA_READY = False  # a different data dir needs its own schema pass
         if not _SQLITE_SCHEMA_READY:
             with _SQLITE_SCHEMA_LOCK:
                 if not _SQLITE_SCHEMA_READY:
                     db.executescript("""
-                    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, salt TEXT NOT NULL, password_algo TEXT NOT NULL DEFAULT 'pbkdf2-sha256-v1', created_at INTEGER NOT NULL, role TEXT NOT NULL DEFAULT 'customer', email_verified INTEGER NOT NULL DEFAULT 0, plan TEXT NOT NULL DEFAULT 'free', upload_enabled INTEGER NOT NULL DEFAULT 1, mfa_secret TEXT, mfa_enabled INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER, deletion_scheduled_at INTEGER, privacy_json TEXT NOT NULL DEFAULT '{}', studio_name TEXT NOT NULL DEFAULT '', white_label_json TEXT NOT NULL DEFAULT '{}', tier TEXT NOT NULL DEFAULT 'free', tier_expires_at INTEGER, storage_used_bytes INTEGER NOT NULL DEFAULT 0, stripe_customer_id TEXT, stripe_subscription_id TEXT, failed_login_attempts INTEGER NOT NULL DEFAULT 0, failed_login_first_at BIGINT, locked_until BIGINT);
+                    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, email_hash TEXT, password_hash TEXT NOT NULL, salt TEXT NOT NULL, password_algo TEXT NOT NULL DEFAULT 'pbkdf2-sha256-v1', created_at INTEGER NOT NULL, role TEXT NOT NULL DEFAULT 'customer', email_verified INTEGER NOT NULL DEFAULT 0, plan TEXT NOT NULL DEFAULT 'free', upload_enabled INTEGER NOT NULL DEFAULT 1, mfa_secret TEXT, mfa_enabled INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER, deletion_scheduled_at INTEGER, privacy_json TEXT NOT NULL DEFAULT '{}', studio_name TEXT NOT NULL DEFAULT '', white_label_json TEXT NOT NULL DEFAULT '{}', tier TEXT NOT NULL DEFAULT 'free', tier_expires_at INTEGER, storage_used_bytes INTEGER NOT NULL DEFAULT 0, stripe_customer_id TEXT, stripe_subscription_id TEXT, failed_login_attempts INTEGER NOT NULL DEFAULT 0, failed_login_first_at BIGINT, locked_until BIGINT);
                     CREATE TABLE IF NOT EXISTS billing_orders(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, plan TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending', provider TEXT NOT NULL DEFAULT '', provider_session_id TEXT NOT NULL DEFAULT '', amount_minor INTEGER NOT NULL, currency TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, paid_at INTEGER);
                     CREATE INDEX IF NOT EXISTS idx_billing_orders_user_time ON billing_orders(user_id,created_at DESC);
                     CREATE TABLE IF NOT EXISTS billing_events(id TEXT PRIMARY KEY, event_type TEXT NOT NULL, payload_hash TEXT NOT NULL, received_at INTEGER NOT NULL, processed_at INTEGER);
@@ -1564,7 +1734,7 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_review_tasks_invite ON review_tasks(invitation_id,status,due_date);
                     CREATE INDEX IF NOT EXISTS idx_review_tasks_assignee ON review_tasks(assignee_id,status,due_date);
                     CREATE TABLE IF NOT EXISTS auth_tokens(token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, kind TEXT NOT NULL, expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL);
-                    CREATE TABLE IF NOT EXISTS audit_events(id TEXT PRIMARY KEY, user_id TEXT, action TEXT NOT NULL, target_type TEXT NOT NULL DEFAULT '', target_id TEXT NOT NULL DEFAULT '', metadata_json TEXT NOT NULL DEFAULT '{}', ip_address TEXT NOT NULL DEFAULT '', previous_hash TEXT NOT NULL DEFAULT '', event_hash TEXT NOT NULL, created_at INTEGER NOT NULL);
+                    CREATE TABLE IF NOT EXISTS audit_events(id TEXT PRIMARY KEY, user_id TEXT, action TEXT NOT NULL, target_type TEXT NOT NULL DEFAULT '', target_id TEXT NOT NULL DEFAULT '', metadata_json TEXT NOT NULL DEFAULT '{}', ip_address TEXT NOT NULL DEFAULT '', previous_hash TEXT NOT NULL DEFAULT '', event_hash TEXT NOT NULL, created_at INTEGER NOT NULL, admin_only INTEGER NOT NULL DEFAULT 0);
                     CREATE INDEX IF NOT EXISTS idx_audit_events_user ON audit_events(user_id,created_at DESC);
                     CREATE TABLE IF NOT EXISTS auth_challenges(id TEXT PRIMARY KEY, user_id TEXT, kind TEXT NOT NULL, challenge TEXT NOT NULL, metadata_json TEXT NOT NULL DEFAULT '{}', expires_at INTEGER NOT NULL, used_at INTEGER);
                     CREATE INDEX IF NOT EXISTS idx_auth_challenges_expiry ON auth_challenges(expires_at);
@@ -1641,8 +1811,19 @@ def connect_sqlite():
                     if "failed_login_first_at" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN failed_login_first_at BIGINT")
                     if "locked_until" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN locked_until BIGINT")
                     if "session_never_expires" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN session_never_expires INTEGER NOT NULL DEFAULT 0")
+                    # ROADMAP §4.1 — lookup column for the encrypted users.email.
+                    if "email_hash" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN email_hash TEXT")
+                    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_hash ON users(email_hash) WHERE email_hash IS NOT NULL")
+                    # ROADMAP §4.1 — audit metadata is encrypted at rest, so the
+                    # admin "admin-only events" filter cannot search the JSON in SQL;
+                    # this indexed flag (written with the metadata) keeps it exact.
+                    audit_columns={row["name"] for row in db.execute("PRAGMA table_info(audit_events)")}
+                    if "admin_only" not in audit_columns: db.execute("ALTER TABLE audit_events ADD COLUMN admin_only INTEGER NOT NULL DEFAULT 0")
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_audit_events_admin_only ON audit_events(admin_only,created_at DESC)")
                     settings.ensure_schema(db)
                     ensure_feature_flags_schema(db)
+                    _ensure_webhook_schema(db)
+                    _ensure_api_key_schema(db)
                     session_columns={row["name"] for row in db.execute("PRAGMA table_info(sessions)")}
                     if "user_agent" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN user_agent TEXT NOT NULL DEFAULT ''")
                     if "ip_address" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN ip_address TEXT NOT NULL DEFAULT ''")
@@ -1789,7 +1970,8 @@ def connect_sqlite():
                             version=max(1,int(row["current_version"] or 1));db.execute("INSERT OR IGNORE INTO template_versions(id,template_id,version,document_json,created_at) VALUES(?,?,?,?,?)",(str(uuid.uuid4()),row["id"],version,row["document_json"],row["created_at"]))
                     _ensure_p2a_schema_sqlite(db)
                     _SQLITE_SCHEMA_READY=True
-        yield db
+                    _SQLITE_SCHEMA_READY_PATH=str(path)
+        yield reveal_connection(db)
         db.commit()
     except Exception:
         db.rollback()
@@ -1862,7 +2044,7 @@ def connect_postgres():
     try:
         _ensure_postgres_schema(connection)
         adapter=PostgresAdapter(connection)
-        yield adapter
+        yield reveal_connection(adapter)
         connection.commit()
     except Exception:
         connection.rollback();raise
@@ -1895,15 +2077,26 @@ def write_audit_event(user_id, action, target_type="", target_id="", metadata=No
     with connect() as db:
         previous=db.execute("SELECT event_hash FROM audit_events ORDER BY created_at DESC,id DESC LIMIT 1").fetchone();previous_hash=previous["event_hash"] if previous else ""
         event_id=str(uuid.uuid4());payload=f"{event_id}|{user_id or ''}|{action}|{target_type}|{target_id}|{meta}|{str(ip_address)[:80]}|{previous_hash}|{now}";event_hash=hashlib.sha256(payload.encode()).hexdigest()
-        db.execute("INSERT INTO audit_events(id,user_id,action,target_type,target_id,metadata_json,ip_address,previous_hash,event_hash,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",(event_id,user_id,action,target_type,target_id,meta,str(ip_address)[:80],previous_hash,event_hash,now))
+        # ROADMAP §4.1 — encrypt the metadata; the chain hash stays over the
+        # plaintext JSON (the verifier reads the revealed value), and admin_only
+        # carries the one searchable bit the admin filter needs.
+        admin_only=1 if '"admin":true' in meta else 0
+        db.execute("INSERT INTO audit_events(id,user_id,action,target_type,target_id,metadata_json,ip_address,previous_hash,event_hash,created_at,admin_only) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(event_id,user_id,action,target_type,target_id,protect(meta),str(ip_address)[:80],previous_hash,event_hash,now,admin_only))
     return event_id
 
 
 _AI_AGENT_SERVICE = None
+_AI_AGENT_SCHEMA_PATH = None
 def get_ai_agent_service():
-    global _AI_AGENT_SERVICE
-    if _AI_AGENT_SERVICE is None:
+    global _AI_AGENT_SERVICE, _AI_AGENT_SCHEMA_PATH
+    if _AI_AGENT_SCHEMA_PATH != str(db_path()):
+        # A new data dir (in-process tests) needs its own schema. The JIT table
+        # is normally created by AgentService's constructor, which only runs
+        # once for the singleton — so ensure it here on every path change too.
         ensure_agent_schema(connect)
+        ensure_jit_schema(connect)
+        _AI_AGENT_SCHEMA_PATH = str(db_path())
+    if _AI_AGENT_SERVICE is None:
         def agent_audit(user_id, action, target_type, target_id, metadata):
             write_audit_event(user_id, action, target_type, target_id, metadata, "ai-agent")
         def agent_asset_reader(invitation_id, user_id, asset_id):
@@ -1917,10 +2110,13 @@ def get_ai_agent_service():
     return _AI_AGENT_SERVICE
 
 _PLATFORM_V32_SERVICE = None
+_PLATFORM_SCHEMA_PATH = None
 def get_platform_v32_service():
-    global _PLATFORM_V32_SERVICE
+    global _PLATFORM_V32_SERVICE, _PLATFORM_SCHEMA_PATH
+    if _PLATFORM_SCHEMA_PATH != str(db_path()):
+        ensure_platform_schema(connect)  # a new data dir needs its own schema (ROADMAP §4.8)
+        _PLATFORM_SCHEMA_PATH = str(db_path())
     if _PLATFORM_V32_SERVICE is None:
-        ensure_platform_schema(connect)
         def platform_audit(user_id, action, target_type, target_id, metadata):
             write_audit_event(user_id, action, target_type, target_id, metadata, "platform-v32")
         def platform_upload_validator(raw, mime, name):
@@ -1937,10 +2133,13 @@ def get_platform_v32_service():
     return _PLATFORM_V32_SERVICE
 
 _FUTURE_V52_SERVICE = None
+_FUTURE_SCHEMA_PATH = None
 def get_future_v52_service():
-    global _FUTURE_V52_SERVICE
+    global _FUTURE_V52_SERVICE, _FUTURE_SCHEMA_PATH
+    if _FUTURE_SCHEMA_PATH != str(db_path()):
+        ensure_future_schema(connect)  # a new data dir needs its own schema (ROADMAP §4.8)
+        _FUTURE_SCHEMA_PATH = str(db_path())
     if _FUTURE_V52_SERVICE is None:
-        ensure_future_schema(connect)
         def future_audit(user_id, action, target_type, target_id, metadata):
             write_audit_event(user_id, action, target_type, target_id, metadata, "future-platform-v52")
         _FUTURE_V52_SERVICE = FuturePlatformService(
@@ -3547,14 +3746,54 @@ class Handler(SimpleHTTPRequestHandler):
         # Production browser authentication is cookie-only. Bearer sessions exist solely for
         # explicit automated-development compatibility and are disabled by default.
         candidates=[self.cookie_token()]
-        if DEV_AUTH_TOKENS_ENABLED:candidates.append(self.bearer_token())
+        if dev_auth_tokens_enabled():candidates.append(self.bearer_token())
         for value in candidates:
             if value and value not in values:values.append(value)
         return values
     def auth_token(self):
         tokens=self.auth_tokens()
         return tokens[0] if tokens else None
+    def api_key_value(self):
+        presented=(self.headers.get("X-API-Key") or self.bearer_token() or "").strip()
+        return presented if presented.startswith(API_KEY_PREFIX) else None
+    def _api_key_scope_for_route(self):
+        path=urlparse(self.path).path;method=(self.command or "").upper()
+        for route_method,pattern,scope in API_KEY_ROUTES:
+            if method==route_method and pattern.match(path):return scope
+        return None
+    def user_via_api_key(self,presented):
+        now=int(time.time()*1000)
+        with connect() as db:
+            _ensure_api_key_schema(db)
+            row=db.execute("SELECT id,user_id,key_hash,scopes_json,revoked_at FROM api_keys WHERE prefix=? LIMIT 1",(presented[:12],)).fetchone()
+            if not row or row["revoked_at"] or not verify_api_key(presented,row["key_hash"]):return None
+            try:scopes=json.loads(row["scopes_json"] or "[]")
+            except Exception:scopes=[]
+            scope=self._api_key_scope_for_route()
+            if scope is None or ("*" not in scopes and scope not in scopes):
+                self._auth_response_sent=True
+                self.json(403,{"error":"This API key is not authorized for this endpoint","code":"api_key_scope_denied"})
+                return None
+            if not self.rate_limit(f"api-key:{row['id']}",1000,3600):
+                self._auth_response_sent=True
+                return None
+            user_row=db.execute("SELECT id,email,role,email_verified,plan,upload_enabled,mfa_enabled,deleted_at,session_never_expires FROM users WHERE id=? AND deleted_at IS NULL AND suspended_at IS NULL",(row["user_id"],)).fetchone()
+            if not user_row:return None
+            db.execute("UPDATE api_keys SET last_used_at=?,request_count=request_count+1 WHERE id=?",(now,row["id"]))
+        self._api_key_id=row["id"]
+        # Cache the resolved user for the rest of this request: every later
+        # self.user() call (audit stamps, handler checks) must not re-verify the
+        # presented key, or one request would count twice against the per-key
+        # rate limit and write duplicate api.request audit rows.
+        self._api_key_user=user_row
+        try:self.audit("api.request","api_key",row["id"],{"method":self.command,"path":urlparse(self.path).path,"auth":"api_key"},user_id=row["user_id"])
+        except Exception as exc: _log.debug("api request audit failed: %s", exc)
+        return user_row
     def user(self):
+        cached=getattr(self,"_api_key_user",None)
+        if cached is not None:return cached
+        presented=self.api_key_value()
+        if presented:return self.user_via_api_key(presented)
         tokens=self.auth_tokens()
         if not tokens:return None
         now=int(time.time()*1000)
@@ -3577,7 +3816,7 @@ class Handler(SimpleHTTPRequestHandler):
         return None
     def require_user(self):
         user=self.user()
-        if not user:self.json(401,{"error":"Authentication required"})
+        if not user and not getattr(self,"_auth_response_sent",False):self.json(401,{"error":"Authentication required"})
         return user
     def require_upload_permission(self,user):
         enabled=bool(user["upload_enabled"] if user is not None and "upload_enabled" in user.keys() else 1)
@@ -3964,6 +4203,8 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/account/studio": return self.get_studio_profile()
         if path == "/api/account/mfa/qr.png": return self.mfa_qr_png()
         if path == "/api/account/sessions": return self.list_sessions()
+        if path == "/api/account/webhooks": return self.list_webhooks()
+        if path == "/api/account/api-keys": return self.list_api_keys()
         if path == "/api/account/passkeys": return self.list_passkeys()
         if path == "/api/account/audit": return self.list_audit_events()
         # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
@@ -4144,6 +4385,8 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             if path.startswith("/api/invitations/") and path.endswith("/analytics"):return self.purge_invitation_analytics_data(path.split("/")[3])
             if path.startswith("/api/account/sessions/") and path.count("/")==4:return self.revoke_session(path.split("/")[4] if len(path.split("/"))>4 else path.rsplit("/",1)[-1])
+            if path.startswith("/api/account/webhooks/") and path.count("/")==4:return self.delete_webhook(path.split("/")[4])
+            if path.startswith("/api/account/api-keys/") and path.count("/")==4:return self.revoke_api_key(path.split("/")[4])
             if path.startswith("/api/account/passkeys/") and path.count("/")==4:return self.delete_passkey(path.rsplit("/",1)[-1])
             if path.startswith("/api/uploads/") and path.count("/")==3:return self.cancel_resumable_upload(path.split("/")[3])
             # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
@@ -4265,6 +4508,9 @@ class Handler(SimpleHTTPRequestHandler):
             if path == "/api/account/passkeys/register/options": return self.passkey_register_options()
             if path == "/api/account/passkeys/register/complete": return self.passkey_register_complete()
             if path == "/api/account/sessions/revoke-all": return self.revoke_all_sessions()
+            if path == "/api/account/webhooks": return self.create_webhook()
+            if path == "/api/account/api-keys": return self.create_api_key()
+            if path.startswith("/api/account/webhooks/") and path.endswith("/rotate"): return self.rotate_webhook_secret(path.split("/")[4])
             if path == "/api/account/privacy": return self.update_privacy_preferences()
             if path == "/api/ai-agent/preferences": return self.ai_agent_update_preferences()
             if path == "/api/ai-agent/memories": return self.ai_agent_add_memory()
@@ -4673,14 +4919,9 @@ class Handler(SimpleHTTPRequestHandler):
         return invite_id
 
     def ai_agent_jit_approve(self):
-        """POST /api/ai-agent/jit/approve — host-only. Body: {request_id}.
-
-        Approves a pending JIT elevation request. Sets ``status='granted'``,
-        ``granted_at=now``, ``expires_at=now+300`` (5 minutes). Emits the
-        ``jit.granted`` audit event. Returns ``{ok: true, expires_at: <ts>}``.
-        """
         user = self.require_user()
         if not user: return
+        if not self.rate_limit(f"jit-approve:{user['id']}",60,60): return
         data = self.body(50_000)
         request_id = str(data.get("request_id") or data.get("requestId") or "")[:160]
         if not request_id:
@@ -4699,14 +4940,9 @@ class Handler(SimpleHTTPRequestHandler):
         return self.json(200, {"ok": True, "expires_at": refreshed.get("expiresAt") or refreshed.get("expires_at")})
 
     def ai_agent_jit_deny(self):
-        """POST /api/ai-agent/jit/deny — host-only. Body: {request_id, reason?}.
-
-        Denies a pending JIT elevation request. Sets ``status='denied'`` and
-        ``revoked_at=now``. Emits the ``jit.denied`` audit event. Returns
-        ``{ok: true}``.
-        """
         user = self.require_user()
         if not user: return
+        if not self.rate_limit(f"jit-deny:{user['id']}",60,60): return
         data = self.body(50_000)
         request_id = str(data.get("request_id") or data.get("requestId") or "")[:160]
         if not request_id:
@@ -4829,6 +5065,7 @@ class Handler(SimpleHTTPRequestHandler):
         """
         user = self.require_user()
         if not user: return
+        if not self.rate_limit(f"agent-grant-create:{user['id']}",60,60): return
         data = self.body(50_000)
         target_user_id = str(data.get("user_id") or data.get("userId") or "")[:160]
         resource_type = str(data.get("resource_type") or data.get("resourceType") or "")[:60]
@@ -5150,7 +5387,8 @@ class Handler(SimpleHTTPRequestHandler):
                 if plan!=order["plan"] or event_amount!=order["amount_minor"] or event_currency!=order["currency"]:
                     return self.json(409,{"error":"Paid checkout details do not match the original order"})
                 user_id=order["user_id"]
-            row=db.execute("SELECT id FROM users WHERE id=? OR email=? LIMIT 1",(user_id,email)).fetchone()
+            row=db.execute("SELECT id FROM users WHERE id=? LIMIT 1",(user_id,)).fetchone()
+            if not row: row=find_user_by_email(db,email)
             if not row:return self.json(202,{"received":True,"matched":False})
             db.execute("UPDATE users SET plan=? WHERE id=?",(plan,row["id"]))
             if order_id:db.execute("UPDATE billing_orders SET status='paid',paid_at=?,updated_at=? WHERE id=?",(now,now,order_id))
@@ -5229,6 +5467,7 @@ class Handler(SimpleHTTPRequestHandler):
         """
         user=self.require_user()
         if not user:return
+        if not self.rate_limit(f"tier-upgrade:{user['id']}",30,3600):return
         if REQUIRE_VERIFIED_EMAIL and not self.require_verified_for_sensitive_action(user,"changing your tier"):return
         data=self.body(50_000)
         tier=self._normalize_tier(data.get("tier",""))
@@ -5519,7 +5758,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def admin_set_user_suspended(self, user_id, suspended):
         action = "suspend" if suspended else "unsuspend"
-        admin = self._admin_gate(f"/api/admin/users/{user_id}/{action}", "POST")
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/{action}", "POST")
         if not admin: return
         if not self.rate_limit(f"admin-user-suspend:{admin['id']}", 30, 60): return
         data = self.body(20_000)
@@ -5538,7 +5777,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200, {"suspended": True} if suspended else {"unsuspended": True})
 
     def admin_send_password_reset(self, user_id):
-        admin = self._admin_gate(f"/api/admin/users/{user_id}/reset-password", "POST")
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/reset-password", "POST")
         if not admin: return
         if not self.rate_limit(f"admin-user-reset:{admin['id']}", 20, 3600): return
         with connect() as db:
@@ -5556,7 +5795,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200, {"sent": bool(sent)})
 
     def admin_force_mfa(self, user_id):
-        admin = self._admin_gate(f"/api/admin/users/{user_id}/force-mfa", "POST")
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/force-mfa", "POST")
         if not admin: return
         with connect() as db:
             changed = db.execute("UPDATE users SET force_mfa=1 WHERE id=?", (user_id,)).rowcount
@@ -5824,7 +6063,9 @@ class Handler(SimpleHTTPRequestHandler):
         ip_value=qp("ip").strip()
         if ip_value:clauses.append("ip_address=?");params.append(ip_value[:80])
         if qp("adminOnly")=="1":
-            clauses.append("metadata_json LIKE ?");params.append('%"admin":true%')
+            # §4.1: metadata_json is encrypted at rest, so match the indexed flag
+            # written alongside it; the LIKE still covers pre-migration rows.
+            clauses.append("(metadata_json LIKE ? OR admin_only=1)");params.append('%"admin":true%')
         for param,op in (("from",">="),("to","<=")):
             raw=qp(param).strip()
             if not raw:continue
@@ -5990,15 +6231,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,{"flags":flags,"maintenanceMode":maintenance})
 
     def admin_update_user_plan(self,user_id):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/plan", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/plan", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-user-plan:{admin['id']}",60,60):return
         data=self.body(20_000);plan=str(data.get("plan","free"))
         if plan not in {"free","creator","studio"}:raise ValueError("Invalid account plan")
@@ -6007,15 +6242,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"plan":plan})
 
     def admin_update_user_role(self,user_id):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/role", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/role", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-user-role:{admin['id']}",60,60):return
         data=self.body(20_000);role=str(data.get("role",""))
         if role not in {"customer","designer","admin"}:raise ValueError("Invalid account role")
@@ -6025,15 +6254,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"role":role})
 
     def admin_update_user_upload_permission(self,user_id):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/uploads", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/uploads", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-user-uploads:{admin['id']}",60,60):return
         data=self.body(20_000)
         if not isinstance(data.get("enabled"),bool):raise ValueError("Upload permission must be true or false")
@@ -6057,15 +6280,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,{"settings":items})
 
     def admin_update_session_idle_setting(self):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, "/api/admin/settings/session-idle-days-nonadmin", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup("/api/admin/settings/session-idle-days-nonadmin", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-settings:{admin['id']}",60,60):return
         data=self.body(20_000);days=int(data.get("days",7))
         if days not in {7,15,30}:raise ValueError("session_idle_days_nonadmin must be 7, 15, or 30")
@@ -6075,15 +6292,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200,{"key":"session_idle_days_nonadmin","value":days})
 
     def admin_update_user_session_policy(self,user_id):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, f"/api/admin/users/{user_id}/session-policy", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup(f"/api/admin/users/{user_id}/session-policy", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-user-session-policy:{admin['id']}",60,60):return
         data=self.body(20_000)
         if not isinstance(data.get("neverExpires"),bool):raise ValueError("neverExpires must be true or false")
@@ -6097,15 +6308,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"neverExpires":bool(never)})
 
     def admin_update_template_visibility(self,template_id):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, f"/api/admin/templates/{template_id}/visibility", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup(f"/api/admin/templates/{template_id}/visibility", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-template-visibility:{admin['id']}",60,60):return
         data=self.body(20_000);visibility=str(data.get("visibility","private"))
         if visibility not in {"private","public"}:raise ValueError("Invalid template visibility")
@@ -6115,15 +6320,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.json(200 if changed else 404,{"updated":bool(changed),"visibility":visibility})
 
     def admin_update_invitation_published(self,invite_id):
-        # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
-        client_ip = self.client_ip()
-        allowed, _ = check_admin_ip_allowed(client_ip)
-        if not allowed:
-            audit_admin_ip_denied(client_ip, f"/api/admin/invitations/{invite_id}/published", "PUT")
-            self.json(403, {"error": "Insufficient permissions"})
-            return
-        admin=self.require_role("admin")
-        if not admin:return
+        # Admin IP allowlist + live step-up grant (ROADMAP §4.2, §5.9).
+        admin = self.require_admin_with_stepup(f"/api/admin/invitations/{invite_id}/published", "PUT")
+        if not admin: return
         if not self.rate_limit(f"admin-invitation-published:{admin['id']}",60,60):return
         data=self.body(20_000);published=1 if data.get("published") else 0;now=int(time.time()*1000)
         with connect() as db:changed=db.execute("UPDATE invitations SET is_published=?,updated_at=? WHERE id=?",(published,now,invite_id)).rowcount
@@ -6227,7 +6426,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not self.rate_limit(f"password-reset:{self.client_address[0]}",8,3600):return
         data=self.body(30_000);email=str(data.get("email","")).strip().lower()[:254];sent=False;dev_token=None
         if not self.bot_protection_ok("password-reset",data.get("botToken","")):return self.json(403,{"error":"Password-reset verification failed"})
-        with connect() as db:row=db.execute("SELECT id,email FROM users WHERE email=?",(email,)).fetchone()
+        with connect() as db:row=find_user_by_email(db,email)
         if row:
             token=self._create_auth_token(row["id"],"password-reset",30*60*1000);url=auth_action_url("/reset.html",token)
             try:sent=send_platform_email(row["email"],"Reset your OKID password",f"A password reset was requested for your OKID account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not request this, you can ignore this message.")
@@ -6380,7 +6579,7 @@ class Handler(SimpleHTTPRequestHandler):
         local_admin=bool(admin_email and email==admin_email and ALLOW_LOCAL_ADMIN_BOOTSTRAP and is_loopback_address(self.client_ip()))
         role="admin" if local_admin else "customer"
         try:
-            with connect() as db: db.execute("INSERT INTO users(id,email,password_hash,salt,password_algo,created_at,role,email_verified,plan) VALUES(?,?,?,?,?,?,?,0,?)",(user_id,email,hashed,salt,algo,now,role,"studio" if role=="admin" else "free"))
+            with connect() as db: db.execute("INSERT INTO users(id,email,email_hash,password_hash,salt,password_algo,created_at,role,email_verified,plan) VALUES(?,?,?,?,?,?,?,?,0,?)",(user_id,protect(email),hash_for_lookup(email),hashed,salt,algo,now,role,"studio" if role=="admin" else "free"))
         except Exception as exc:
             if isinstance(exc,sqlite3.IntegrityError) or exc.__class__.__name__ in {"UniqueViolation","IntegrityError"}:return self.json(409,{"error":"An account with this email already exists"})
             raise
@@ -6391,7 +6590,9 @@ class Handler(SimpleHTTPRequestHandler):
         data=self.body(100_000); email=str(data.get("email","")).strip().lower(); password=str(data.get("password",""))
         if len(password)>200:return self.json(401,{"error":"Incorrect email or password"})
         now=int(time.time()*1000)
-        with connect() as db: row=db.execute("SELECT * FROM users WHERE email=? AND deleted_at IS NULL",(email,)).fetchone()
+        with connect() as db:
+            row=find_user_by_email(db,email)
+            if row is not None and row.get("deleted_at"): row=None
         # ── V54.11 (sec-2) — Per-account login lockout (P1-B from ASVS L2 §2.2)
         # ──────────────────────────────────────────────────────────────────────
         # Currently-locked accounts are rejected BEFORE password verification
@@ -6475,7 +6676,7 @@ class Handler(SimpleHTTPRequestHandler):
         csrf_cookie=f"einvite_csrf={csrf}; Path=/; Max-Age={30*24*60*60}; SameSite=Lax"
         if COOKIE_SECURE:cookie+="; Secure";csrf_cookie+="; Secure"
         payload={"user":{"id":user_id,"email":email,"role":role,"emailVerified":bool(email_verified),"plan":plan,"uploadEnabled":bool(row["upload_enabled"] if row and "upload_enabled" in row.keys() else 1),"mfaEnabled":bool(row["mfa_enabled"] if row and "mfa_enabled" in row.keys() else 0)},"expiresAt":expires,"csrfToken":csrf}
-        if DEV_AUTH_TOKENS_ENABLED:payload["token"]=token
+        if dev_auth_tokens_enabled():payload["token"]=token
         self._session_replaced=True
         self.json(201,payload,{"Set-Cookie":[cookie,csrf_cookie]})
 
@@ -6581,6 +6782,93 @@ class Handler(SimpleHTTPRequestHandler):
             else:count=db.execute("DELETE FROM sessions WHERE user_id=?",(user["id"],)).rowcount
         self.audit("session.revoke_all","user",user["id"],{"keepCurrent":keep,"count":int(count or 0)})
         self.json(200,{"revoked":int(count or 0),"keptCurrent":keep})
+
+    def list_webhooks(self):
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            _ensure_webhook_schema(db)
+            rows=db.execute("SELECT id,url,events_json,secret_hint,active,created_at,last_delivery_at,last_status,failure_count FROM webhook_endpoints WHERE owner_id=? ORDER BY created_at DESC LIMIT 100",(user["id"],)).fetchall()
+        self.json(200,{"items":[{"id":r["id"],"url":r["url"],"events":json.loads(r["events_json"] or "[]"),"secretHint":r["secret_hint"],"active":bool(r["active"]),"createdAt":r["created_at"],"lastDeliveryAt":r["last_delivery_at"],"lastStatus":r["last_status"],"failureCount":r["failure_count"]} for r in rows]})
+
+    def create_webhook(self):
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"webhook-create:{user['id']}",30,3600):return
+        data=self.body(20_000)
+        try:
+            url=_validate_webhook_url(data.get("url"))
+        except ValueError as exc:
+            return self.json(400,{"error":str(exc)})
+        events=data.get("events")
+        if not isinstance(events,list) or not events:events=["*"]
+        events=[str(e)[:64] for e in events][:20]
+        secret=generate_webhook_secret();endpoint_id=str(uuid.uuid4());now=int(time.time()*1000)
+        with connect() as db:
+            _ensure_webhook_schema(db)
+            db.execute("INSERT INTO webhook_endpoints(id,owner_id,url,events_json,secret,secret_hint,active,created_at,failure_count) VALUES(?,?,?,?,?,?,1,?,0)",(endpoint_id,user["id"],url,json.dumps(events),protect(secret),secret[-4:],now))
+        self.audit("webhook.created","webhook",endpoint_id,{"url":url,"events":events})
+        self.json(201,{"id":endpoint_id,"url":url,"events":events,"secret":secret,"secretHint":secret[-4:],"createdAt":now})
+
+    def rotate_webhook_secret(self,endpoint_id):
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"webhook-rotate:{user['id']}",30,3600):return
+        secret=generate_webhook_secret()
+        with connect() as db:
+            _ensure_webhook_schema(db)
+            changed=db.execute("UPDATE webhook_endpoints SET secret=?,secret_hint=? WHERE id=? AND owner_id=?",(protect(secret),secret[-4:],endpoint_id,user["id"])).rowcount
+        if not changed:return self.json(404,{"error":"Webhook endpoint not found"})
+        self.audit("webhook.secret_rotated","webhook",endpoint_id,{})
+        self.json(200,{"id":endpoint_id,"secret":secret,"secretHint":secret[-4:]})
+
+    def delete_webhook(self,endpoint_id):
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"webhook-delete:{user['id']}",30,3600):return
+        with connect() as db:
+            _ensure_webhook_schema(db)
+            changed=db.execute("DELETE FROM webhook_endpoints WHERE id=? AND owner_id=?",(endpoint_id,user["id"])).rowcount
+        if not changed:return self.json(404,{"error":"Webhook endpoint not found"})
+        self.audit("webhook.revoked","webhook",endpoint_id,{})
+        self.json(200,{"revoked":True})
+
+    def list_api_keys(self):
+        user=self.require_user()
+        if not user:return
+        with connect() as db:
+            _ensure_api_key_schema(db)
+            rows=db.execute("SELECT id,name,prefix,hint,scopes_json,created_at,last_used_at,request_count,revoked_at FROM api_keys WHERE user_id=? ORDER BY created_at DESC LIMIT 200",(user["id"],)).fetchall()
+        self.json(200,{"items":[{"id":r["id"],"name":r["name"],"prefix":r["prefix"],"hint":r["hint"],"scopes":json.loads(r["scopes_json"] or "[]"),"createdAt":r["created_at"],"lastUsedAt":r["last_used_at"],"requestCount":r["request_count"],"revokedAt":r["revoked_at"]} for r in rows]})
+
+    def create_api_key(self):
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"api-key-create:{user['id']}",30,3600):return
+        data=self.body(10_000)
+        name=str(data.get("name") or "").strip()[:80]
+        scopes=data.get("scopes")
+        if not isinstance(scopes,list) or not scopes:scopes=["invitations:read","rsvps:read"]
+        scopes=[str(s).strip()[:40] for s in scopes if str(s).strip()][:10]
+        invalid=[s for s in scopes if s not in _ALLOWED_API_KEY_SCOPES]
+        if invalid:return self.json(400,{"error":"Unsupported scope: "+invalid[0],"code":"api_key_scope_invalid"})
+        key=generate_api_key();key_id=str(uuid.uuid4());now=int(time.time()*1000)
+        with connect() as db:
+            _ensure_api_key_schema(db)
+            db.execute("INSERT INTO api_keys(id,user_id,name,prefix,hint,key_hash,scopes_json,created_at,request_count) VALUES(?,?,?,?,?,?,?,?,0)",(key_id,user["id"],name,key[:12],key[-4:],hash_api_key(key),json.dumps(scopes),now))
+        self.audit("api_key.created","api_key",key_id,{"name":name,"scopes":scopes})
+        self.json(201,{"id":key_id,"name":name,"key":key,"prefix":key[:12],"hint":key[-4:],"scopes":scopes,"createdAt":now})
+
+    def revoke_api_key(self,key_id):
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"api-key-revoke:{user['id']}",60,60):return
+        with connect() as db:
+            _ensure_api_key_schema(db)
+            changed=db.execute("UPDATE api_keys SET revoked_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL",(int(time.time()*1000),key_id,user["id"])).rowcount
+        if not changed:return self.json(404,{"error":"API key not found"})
+        self.audit("api_key.revoked","api_key",key_id,{})
+        self.json(200,{"revoked":True})
 
     def mfa_qr_png(self):
         user=self.require_user()
@@ -6699,7 +6987,8 @@ class Handler(SimpleHTTPRequestHandler):
         # stored format (AAAA-AAAA-AAAA).
         canonical=f"{normalised[0:4]}-{normalised[4:8]}-{normalised[8:12]}"
         with connect() as db:
-            row=db.execute("SELECT id,email,role,email_verified FROM users WHERE email=? AND deleted_at IS NULL",(email,)).fetchone()
+            row=find_user_by_email(db,email)
+            if row is not None and row.get("deleted_at"): row=None
             # Always fetch the candidate rows for this user (cheap, ≤10 rows)
             # — never short-circuit on user existence so timing doesn't leak.
             candidates=db.execute("SELECT id,code_hash FROM mfa_recovery_codes WHERE user_id=? AND used_at IS NULL",(row["id"],)).fetchall() if row else []
@@ -6783,7 +7072,9 @@ class Handler(SimpleHTTPRequestHandler):
         if not self.rate_limit(f"passkey-options:{self.client_ip()}",30,600):return
         data=self.body(30_000);email=str(data.get("email","")).strip().lower()
         with connect() as db:
-            user=db.execute("SELECT id,email FROM users WHERE email=? AND deleted_at IS NULL",(email,)).fetchone();rows=db.execute("SELECT credential_id,transports_json FROM passkeys WHERE user_id=?",(user["id"],)).fetchall() if user else []
+            user=find_user_by_email(db,email)
+            if user is not None and user.get("deleted_at"): user=None
+            rows=db.execute("SELECT credential_id,transports_json FROM passkeys WHERE user_id=?",(user["id"],)).fetchall() if user else []
         if not user or not rows:
             # Return an indistinguishable, non-persisted challenge so this public
             # endpoint cannot be used to enumerate registered email addresses.
@@ -7407,7 +7698,7 @@ class Handler(SimpleHTTPRequestHandler):
                     db.execute(
                         "INSERT INTO invitation_edit_history(id,invitation_id,edited_by,edited_at,diff_json,reason,document_version) VALUES(?,?,?,?,?,?,?)",
                         (history_id, invite_id, user["id"], now,
-                         json.dumps(diff, ensure_ascii=False)[:50000],
+                         protect(json.dumps(diff, ensure_ascii=False)[:50000]),
                          str(data.get("editReason") or "post-send edit")[:500],
                          int(db.execute("SELECT document_version FROM invitations WHERE id=?",(invite_id,)).fetchone()["document_version"] or 0))
                     )
@@ -7527,7 +7818,7 @@ class Handler(SimpleHTTPRequestHandler):
         if role not in {"viewer","content","designer","manager"}:raise ValueError("Invalid collaborator role")
         with connect() as db:
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Management permission required"})
-            target=db.execute("SELECT id,email FROM users WHERE email=?",(email,)).fetchone()
+            target=find_user_by_email(db,email)
             if not target:return self.json(404,{"error":"That email does not have an account yet"})
             owner=db.execute("SELECT owner_id FROM invitations WHERE id=?",(invite_id,)).fetchone()
             if owner and owner["owner_id"]==target["id"]:return self.json(409,{"error":"The invitation owner already has full access"})
@@ -7660,7 +7951,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
             if new_slug and db.execute("SELECT 1 FROM guests WHERE invitation_id=? AND slug=? AND id<>?",(invite_id,new_slug,guest_id)).fetchone():
                 return self.json(409,{"error":"That guest link code is already used in this invitation"})
-            changed=db.execute("UPDATE guests SET name=?,phone=?,email=?,group_name=?,household_id=?,tags_json=?,table_name=?,seat_label=?,slug=COALESCE(?,slug) WHERE id=? AND invitation_id=?",(str(data.get("name","")).strip()[:120],str(data.get("phone","")).strip()[:40],str(data.get("email","")).strip()[:254],str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],new_slug,guest_id,invite_id)).rowcount
+            changed=db.execute("UPDATE guests SET name=?,phone=?,email=?,group_name=?,household_id=?,tags_json=?,table_name=?,seat_label=?,slug=COALESCE(?,slug) WHERE id=? AND invitation_id=?",(str(data.get("name","")).strip()[:120],protect(str(data.get("phone","")).strip()[:40]),protect(str(data.get("email","")).strip()[:254]),str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],new_slug,guest_id,invite_id)).rowcount
         self.json(200 if changed else 404,{"updated":bool(changed),"slug":new_slug or ""})
 
     def update_invitation_operations(self,invite_id):
@@ -8028,7 +8319,7 @@ class Handler(SimpleHTTPRequestHandler):
             # The legacy token column remains as a non-secret compatibility key only.
             sentinel="hashed-"+guest_id
             tags=data.get("tags",[]);tags=tags if isinstance(tags,list) else []
-            db.execute("INSERT INTO guests(id,invitation_id,name,phone,email,group_name,household_id,tags_json,table_name,seat_label,token,token_hash,token_salt,token_version,token_expires_at,created_at,slug) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(guest_id,invite_id,name,str(data.get("phone","")).strip()[:40],str(data.get("email","")).strip()[:254],str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],sentinel,token_hash,salt,version,expires,int(time.time()*1000),slug))
+            db.execute("INSERT INTO guests(id,invitation_id,name,phone,email,group_name,household_id,tags_json,table_name,seat_label,token,token_hash,token_salt,token_version,token_expires_at,created_at,slug) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(guest_id,invite_id,name,protect(str(data.get("phone","")).strip()[:40]),protect(str(data.get("email","")).strip()[:254]),str(data.get("groupName","")).strip()[:80],str(data.get("householdId","")).strip()[:80],json.dumps([str(x)[:50] for x in tags[:20]],ensure_ascii=False),str(data.get("tableName","")).strip()[:80],str(data.get("seatLabel","")).strip()[:40],sentinel,token_hash,salt,version,expires,int(time.time()*1000),slug))
         self.json(201,{"id":guest_id,"name":name,"slug":slug,"token":token,"tokenExpiresAt":expires})
 
     def freeze_guest_links(self,invite_id):
@@ -8186,6 +8477,8 @@ class Handler(SimpleHTTPRequestHandler):
                     try:float(value)
                     except ValueError:raise ValueError("Invalid numeric RSVP answer")
             guest=None
+            owner_row=db.execute("SELECT owner_id FROM invitations WHERE id=?",(pub["invitation_id"],)).fetchone()
+            owner_id=owner_row["owner_id"] if owner_row else None
             if guest_token:guest=self.lookup_guest_by_token(db,pub["invitation_id"],guest_token)
             guest_id=guest["id"] if guest else None;normalized=re.sub(r"\s+"," ",name.lower()).strip();now=int(time.time()*1000);note=str(data.get("note",""))[:1000]
             existing=None
@@ -8196,6 +8489,7 @@ class Handler(SimpleHTTPRequestHandler):
                 rid=existing["id"];db.execute("UPDATE rsvps SET publication_id=?,guest_id=COALESCE(guest_id,?),name=?,normalized_name=?,status=?,guest_count=?,note=?,updated_at=?,answers_json=? WHERE id=?",(pub["publication_id"],guest_id,name,normalized,status,count,note,now,json.dumps(answers,ensure_ascii=False),rid));updated=True
             else:
                 rid=str(uuid.uuid4());db.execute("INSERT INTO rsvps(id,invitation_id,publication_id,guest_id,name,normalized_name,status,guest_count,note,created_at,updated_at,answers_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(rid,pub["invitation_id"],pub["publication_id"],guest_id,name,normalized,status,count,note,now,now,json.dumps(answers,ensure_ascii=False)));updated=False
+        dispatch_webhook_event("rsvp.updated" if updated else "rsvp.created",{"invitationId":pub["invitation_id"],"rsvpId":rid,"name":name,"status":status,"guestCount":count},owner_id)
         self.json(200 if updated else 201,{"id":rid,"saved":True,"updated":updated})
 
     def get_rsvps(self, invite_id):
@@ -10570,7 +10864,7 @@ class Handler(SimpleHTTPRequestHandler):
                     attempt_id = str(uuid.uuid4())
                     db.execute(
                         "INSERT INTO delivery_attempts(id,invitation_id,channel,recipient,status,guest_id,queued_at,metadata_json) VALUES(?,?,?,?,?,?,?,?)",
-                        (attempt_id, invite_id, channel_name, recipient or "", "queued", guest_id, now, "{}")
+                        (attempt_id, invite_id, channel_name, protect(recipient or ""), "queued", guest_id, now, "{}")
                     )
                     channel = _delivery_get_channel(channel_name)
                     if channel is None:
@@ -10949,7 +11243,7 @@ class Handler(SimpleHTTPRequestHandler):
         Validates the manifest, verifies double-signature, stores in marketplace_plugins.
         Returns the plugin id + status ('pending' until manual review).
         """
-        if not self.rate_limit("marketplace-submit:" + self.client_address[0], 10, 60): return
+        if not self.rate_limit(f"marketplace-submit:{self.client_address[0]}", 10, 60): return
         user = self.require_user()
         if not user: return
         data = self.body(5_000_000)  # 5 MB limit
@@ -11013,7 +11307,7 @@ class Handler(SimpleHTTPRequestHandler):
         Body: {plugin_id, approved_permissions: [...]}
         Verifies the plugin is approved, stores in plugin_installations_v48.
         """
-        if not self.rate_limit("plugin-install:" + self.client_address[0], 10, 60): return
+        if not self.rate_limit(f"plugin-install:{self.client_address[0]}", 10, 60): return
         user = self.require_user()
         if not user: return
         data = self.body(100_000)
@@ -11087,7 +11381,7 @@ class Handler(SimpleHTTPRequestHandler):
         """
         user = self.require_user()
         if not user: return
-        if not self.rate_limit("canva-oauth:" + user["id"], 10, 60): return
+        if not self.rate_limit(f"canva-oauth:{user['id']}", 10, 60): return
         data = self.body(50_000)
         code = str(data.get("code") or "")[:2000]
         if not code:
@@ -11133,7 +11427,7 @@ class Handler(SimpleHTTPRequestHandler):
         """
         user = self.require_user()
         if not user: return
-        if not self.rate_limit("canva-import:" + user["id"], 10, 60): return
+        if not self.rate_limit(f"canva-import:{user['id']}", 10, 60): return
         data = self.body(10_000_000)  # 10 MB limit for uploads
         canva_url = str(data.get("canva_url") or "")[:2000]
         file_b64 = str(data.get("file_bytes") or "")
@@ -11176,7 +11470,7 @@ class Handler(SimpleHTTPRequestHandler):
         """
         user = self.require_user()
         if not user: return
-        if not self.rate_limit("canva-export:" + user["id"], 10, 60): return
+        if not self.rate_limit(f"canva-export:{user['id']}", 10, 60): return
         data = self.body(50_000)
         invitation_id = str(data.get("invitation_id") or "")[:160]
         if not invitation_id:
@@ -11271,6 +11565,7 @@ class Handler(SimpleHTTPRequestHandler):
         """POST /api/onboarding/skip — skip the onboarding flow."""
         user = self.require_user()
         if not user: return
+        if not self.rate_limit(f"onboarding-skip:{user['id']}", 60, 60): return
         with connect() as db:
             db.execute("UPDATE users SET onboarding_skipped=1, onboarding_completed_at=? WHERE id=?", (int(time.time()*1000), user["id"]))
         self.audit("onboarding.skipped", "user", user["id"], {})
@@ -11640,11 +11935,15 @@ if __name__ == "__main__":
             if stopping.wait(60):break
     threading.Thread(target=backup_scheduler_loop,daemon=True,name="studio-backup-scheduler").start()
     def analytics_reconstruction_loop():
-        # ROADMAP Part 6 §6.4 — close idle sessions, drop spam sessions,
+        # ROADMAP Part 6 §6.4/§6.10 — close idle sessions, drop spam sessions,
         # aggregate the daily summary and prune past the retention window.
+        # Every run is logged (ROADMAP §6.8: retention "runs daily and is
+        # logged"); the prune itself is the last step of run_session_reconstruction.
         while not stopping.is_set():
             try:
-                with connect() as db:run_session_reconstruction(db)
+                with connect() as db:result=run_session_reconstruction(db)
+                pruned=result.get("pruned") or {}
+                print(json.dumps({"level":"info","event":"analytics_retention_run","closedIdleSessions":result.get("closedIdleSessions"),"deletedSpamSessions":result.get("deletedSpamSessions"),"aggregatedRows":result.get("aggregatedRows"),"prunedEvents":pruned.get("events"),"prunedSessions":pruned.get("sessions"),"prunedSummaries":pruned.get("summaries"),"retentionDays":pruned.get("retentionDays")},ensure_ascii=False),flush=True)
             except Exception as exc:
                 if JSON_LOGS:print(json.dumps({"level":"warning","event":"analytics_reconstruction_failed","message":str(exc)}),flush=True)
             if stopping.wait(300):break

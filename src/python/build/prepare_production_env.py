@@ -5,15 +5,26 @@ from __future__ import annotations
 import argparse
 import os
 import secrets
+import sys
 from pathlib import Path
 from urllib.parse import quote, urlparse
 
-from core.preflight import audit_environment, load_env_file
+# Run directly from the repo (`python3 src/python/build/prepare_production_env.py`),
+# this file has no package context, so `core` is not importable until src/python is on
+# the path. Bootstrap it here rather than requiring PYTHONPATH from the caller.
+_PYTHON_ROOT = Path(__file__).resolve().parents[1]
+if str(_PYTHON_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PYTHON_ROOT))
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+from core.preflight import audit_environment, load_env_file  # noqa: E402  (after sys.path)
+
+# This file lives at src/python/build/prepare_production_env.py, so the repo root is
+# three parents up. The default output and the Docker instruction both expect
+# ./.env.production at the repo root.
+ROOT = Path(__file__).resolve().parents[3]
 # The template lives in deploy/; older checkouts kept it under src/. Resolve
 # whichever exists so the generator works on both layouts.
-_TEMPLATE_CANDIDATES = (ROOT.parent / "deploy" / ".env.production.example", ROOT / ".env.production.example")
+_TEMPLATE_CANDIDATES = (ROOT / "deploy" / ".env.production.example", ROOT / "src" / ".env.production.example")
 TEMPLATE = next((p for p in _TEMPLATE_CANDIDATES if p.is_file()), _TEMPLATE_CANDIDATES[0])
 
 
