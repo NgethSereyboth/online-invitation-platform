@@ -1,8 +1,0 @@
-### index.html
-marker=index title=E-invitation-website script/link nodes=87 visible text=2465
---- page errors (0)
-
---- console (errors/warnings)
-
---- 4xx/5xx (0)
-

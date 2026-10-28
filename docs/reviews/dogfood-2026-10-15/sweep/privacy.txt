@@ -1,8 +1,0 @@
-### privacy.html
-marker=privacy title=<span class="i18n i18n-en">Privacy — E-i script/link nodes=3 visible text=3666
---- page errors (0)
-
---- console (errors/warnings)
-
---- 4xx/5xx (0)
-

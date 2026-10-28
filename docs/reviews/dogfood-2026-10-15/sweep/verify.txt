@@ -1,8 +1,0 @@
-### verify.html
-marker=verify title=Verify email — E-invitation-website script/link nodes=5 visible text=176
---- page errors (0)
-
---- console (errors/warnings)
-
---- 4xx/5xx (0)
-

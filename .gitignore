@@ -151,3 +151,12 @@ src/python/fixture-*.html
 # never shipped and never served. The pack's own design sources stay tracked.
 template-pack/previews/
 template-pack/_preview/
+
+# Historical review evidence added after 2026-10-24 (screenshots and sweep reports).
+# Kept on disk; they contain Khmer screenshots and are evidence, not product strings.
+docs/reviews/sweep/
+docs/reviews/sweep-d4-1280/
+docs/reviews/dogfood-2026-10-15/
+docs/reviews/fix-run-2026-10-15/
+docs/reviews/page-sweep-2026-10-15.md
+docs/reviews/*.png

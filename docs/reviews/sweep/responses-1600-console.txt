@@ -1,7 +1,0 @@
-# responses.html @1600
-
-## console
-(none)
-
-## failed requests
-net::ERR_CONNECTION_REFUSED http://127.0.0.1:4175/responses.html

@@ -1,8 +1,0 @@
-### checkin.html
-marker=checkin title=Event Check-in — E-invitation-website script/link nodes=6 visible text=191
---- page errors (0)
-
---- console (errors/warnings)
-
---- 4xx/5xx (0)
-
