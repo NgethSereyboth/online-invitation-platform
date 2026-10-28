@@ -11,11 +11,16 @@ rules below.
 ```bash
 # Python 3.12+
 python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt          # -> docs/requirements-production.txt
+pip install -r requirements-dev.txt      # pytest + the test toolchain (docs/requirements-test.txt)
+pip install -r requirements.txt          # production-only pins -> docs/requirements-production.txt
 
 # Node (only needed for Lighthouse perf runs and the Playwright-based tests)
 nvm use                                  # reads .nvmrc
 ```
+
+`requirements-dev.txt` is what makes `pytest tests/` and the browser tests runnable; the
+production file does not include pytest. `make test` and `tools/run-gates.py` use `.venv/bin/python`
+when it exists.
 
 Optional environment variables live in `.env.example`; copy it to `.env` and
 fill in what you need. Never commit a filled `.env`.

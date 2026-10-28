@@ -1,6 +1,11 @@
 # eInvite Platform — Architecture
 
 > **Phase 0.2 deliverable of `docs/ROADMAP.md`.** This rewrite replaces the pre-V29 era draft with an accurate picture of the current codebase (V53.1 + V54 hardening). Every claim below is grounded in a specific file path.
+>
+> **Re-verified 2026-10-28 (LT-8.2)** against the Phase 8 tree for the three systems the plan names:
+> the editor script split and generated bundle (§3.11), the inspector shell (§7.4) and the bilingual
+> pipeline (§7.5). The builder file paths in §3.11 were stale (they are under `src/python/build/`,
+> with deprecated root shims) and are corrected here.
 
 ---
 
@@ -245,8 +250,10 @@ The document model is normalized through `src/python/document_schema_v32.py` (cu
 
 ### 3.11 Asset Pipeline & Build System (route-bundle manifests)
 
-- **Files**: `src/python/build_route_bundles.py`, `src/python/build_editor_bundle.py`, `src/python/build_page_manifests.py`, `src/python/sync_frontend_assets.py`, `docs/route-bundle-sources.json`, `docs/route-bundles.json`.
-- **What it does**: Concatenates source JS/CSS files declared in `docs/route-bundle-sources.json` into `bundle-<page>.js` / `.css` written to **both** `src/python/` (server-served) AND `src/js/` + `src/css/` (repo truth). `--check` mode verifies byte-identical hashes. `sync_frontend_assets.py` mirrors HTML, `vendor/`, `assets/`, `licenses/` into `src/python/`. `server.py::ensure_frontend_assets` runs all three builders with `--check` at startup (and rebuilds in dev mode).
+- **Files**: `src/python/build/build_route_bundles.py`, `src/python/build/build_editor_bundle.py`, `src/python/build/build_page_manifests.py`, `src/python/build/sync_frontend_assets.py`, `docs/route-bundle-sources.json`, `docs/route-bundles.json`. The repo-root `build_route_bundles.py`, `build_editor_bundle.py` and `build_page_manifests.py` are **deprecated shims** that forward to these; `build.py` is the only supported entry point.
+- **What it does**: Concatenates source JS/CSS files declared in `docs/route-bundle-sources.json` into `bundle-<page>.js` / `.css` written to **both** `src/python/` (server-served) AND `src/js/` + `src/css/` (repo truth). `--check` mode verifies byte-identical hashes. `sync_frontend_assets.py` mirrors HTML, `vendor/`, `assets/`, `licenses/` into `src/python/`. `server.py::ensure_frontend_assets` runs all three builders with `--check` at startup (and rebuilds in dev mode). Step order is `editor → bundles → manifests → mirror`, because the manifest measures bundle bytes and the mirror must verify a fully-generated tree.
+- **The editor route ships two startup scripts.** `docs/route-bundle-sources.json` gives `index.html` a `scriptSplitAt` of 24, so the eager editor JavaScript is cut into `bundle-index.js` and `bundle-index-2.js`. The two files carry the same bytes in the same order and execute in document order (behaviour unchanged, and the page keeps its script count by folding a former head script into the first part); the split exists so a ~1 MB editor bundle does not land as one ~700 ms long task — each file compiles in its own task. A third artifact, `bundle-index-deferred.js`, is generated the same way but never referenced from HTML: `route-deferred-loader.js` injects it after first paint. `docs/route-bundles.json` records both startup hashes, the split index and the deferred chunk.
+- **The editor enhancement bundle is one JS + one CSS artifact, written to three roots.** `build_editor_bundle.py` concatenates five JS modules (`canvas-plus`, `editor-builders`, `editor-pro`, `photo-editor`, `creative-packs`) into `editor-suite.js` and seven CSS modules (those five plus `collaboration` and `collaboration-live`) into `editor-suite.css`, then writes each to `src/python/` (the server's ROOT), `src/js` / `src/css` (the source mirror) and `src/python/build/` (legacy readers). Collaboration **JavaScript** is deliberately excluded from the JS bundle: it has its own network lifecycle (SSE plus polling) and bundling it duplicated connections and listeners when the bundle was regenerated. Its **styles** stay in the CSS bundle, so the separately loaded UI keeps its appearance without another stylesheet request.
 - **Dependencies**: Python 3 stdlib only.
 
 ---
@@ -369,6 +376,11 @@ The project deliberately remains **build-tool-free**. The editor has been decomp
 ### 7.1 Core
 
 - `app.js` — legacy editor state/document orchestration and compatibility layer.
+- **Icons — no sprite ships.** `plans/004-ux-ui-and-code-quality-pass.md` UX-4 proposes a single
+  inline-SVG sprite at `assets/icons.svg` used through `<use>`; it was never executed. The tree has
+  no `assets/icons.svg`, no `<svg>`/`<use>` in `src/html/index.html` or `dashboard.html`, and the
+  shell's affordances are text glyphs (the inspector toggle is `▤`) plus CSS-drawn shapes. A doc that
+  describes an icon set is ahead of the code; adding one is the UX-4 work order, not a doc change.
 - `renderer-core.js` — shared safe object renderer used by editor/public rendering paths.
 - `storage.js` — browser persistence boundary.
 - `upload-client.js` — shared material-upload boundary; prefers signed browser-direct R2/S3 uploads, falls back to authenticated server uploads for local deployments.
@@ -390,6 +402,71 @@ The project deliberately remains **build-tool-free**. The editor has been decomp
 ### 7.3 Management modules
 
 Dashboard, materials, templates, guests, responses, analytics, billing, account, designer, and admin each have isolated page controllers (`dashboard.js`, `materials.js`, `templates.js`, `guests.js`, `responses.js`, `analytics.js`, `billing.js`, `account.js`, `designer.js`, `admin.js`).
+
+### 7.4 Inspector shell (markup-first)
+
+The editor's right aside is a five-tab inspector: `object` (Edit), `layers`, `sections`, `theme`
+(Design) and `publish` (Share). The shell ships **in markup**, not in script:
+`src/html/index.html` contains the `.v54-inspector-mode` bar with `[data-v54-inspector-toggle]`, the
+empty `.studio-inspector-tabs` nav, and `.studio-inspector-host` with the active
+`[data-inspector-pane="object"]` section, its heading and the no-selection placeholder.
+
+`studio-experience.js::buildInspector()` therefore only fills the row: it creates one
+`[data-inspector-tab]` button per tab and adds any pane a later module contributes. It does not
+create the row or the host. This matters for layout rather than tidiness — before OD-23 the row and
+host were created at ~1.8 s, which pushed `#canvasViewport` up by 62 px after first paint. Tab
+activation (`activateRight(id)`) toggles `.active` on `[data-inspector-pane]` and persists the choice
+in `localStorage['einvite-editor-right-tab']`. Pages without the shipped shell fall back to the
+legacy path, which wraps existing children into panes by heading.
+
+Modules mount **inside** the shell instead of adding tabs: `typography-editor.js` owns
+`#typographyControls` in the Edit pane, and `properties` / `noSelection` are the object pane's own
+containers.
+
+### 7.5 Bilingual pipeline (map-driven)
+
+One resolver plus declarative maps — there is no per-page language code.
+
+- **Resolver.** `src/js/core/i18n.js` is listed in `earlyScripts` and runs synchronously in `<head>`,
+  so `<html lang>` is correct before first paint (no flash of both languages). `<html lang>` is the
+  source of truth; the choice persists in `localStorage['einvite-lang']`; a first visit follows
+  `navigator.language` (`km…` → Khmer, otherwise English). API: `EInviteI18n.get()/set()/t()/
+  langText()/subscribe()`, with `EInviteI18N.getLocale()` kept as an alias for the page modules that
+  already call it. A change dispatches `einvite:lang-changed` on `<html>` for surfaces that re-render.
+- **Markup maps.** Pairs live in the DOM as `data-en` / `data-km` attributes (the resolver sets
+  `placeholder` and `aria-label` from them) and as sibling `.i18n-en` / `.i18n-km` elements toggled
+  by CSS, so switching language needs no re-render. `src/js/core/khmer-format.js` owns Khmer digits
+  and dates; Khmer numerals are always produced from code points, never typed literally.
+- **String tables.** Module tables use either shape — per-key `{key: {en, km}}` or per-locale
+  `{en: {…}, km: {…}}`. `scripts/check-bilingual-consistency.py` walks `src/js/*.js` (skipping
+  generated `bundle-*.js`) and **fails** when an `en` string has no `km` counterpart; byte-identical
+  pairs are reported as `fallback` and listed in `docs/i18n/TRANSLATIONS.csv` for the translation
+  pass. New Khmer text is applied from `docs/i18n/KHMER-TRANSLATION-MAP-*.md` by script (paste, never
+  generate) and every applied string is tracked in `docs/i18n/KHMER-REVIEW-QUEUE.md` pending native
+  review.
+
+### 7.6 Template-pack loader (36 Khmer event templates)
+
+The pack is data, not code in a bundle. `src/js/template-pack-loader.js` is loaded on demand by the
+Template Studio and fetches:
+
+```text
+/assets/template-pack/catalog.js      the 36-entry catalogue
+/assets/template-pack/built/<id>.js   one template's native document
+```
+
+Both are **ES modules rather than JSON**: the server's static whitelist refuses every `.json`
+(a disclosure fix), and a new API route would add a server surface for assets that are already
+cacheable. Nothing in the pack is imported by `index.html`, so the editor's two script bundles and
+`editor-suite.js` do not change when the pack grows (TP-OD-4, measured: the editor page assets and
+the editor bundle stay byte-identical with and without the pack). The loader caches the catalogue
+promise and one document promise per id, validates catalogue shape (`count === templates.length`),
+and restricts ids to `^[a-z0-9-]+$`.
+
+`src/js/template-pack-gallery.js` renders the pack as its own section above the Template Studio grid
+and hands a chosen built document to `templates.js` through a custom event, so the existing
+create-from-document flow stays in one place. `docs/ASSETS.md` owns the asset/hash inventory for the
+ornaments and thumbnails.
 
 ---
 

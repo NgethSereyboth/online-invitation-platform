@@ -1,0 +1,7 @@
+# guests.html @1024
+
+## console
+(none)
+
+## failed requests
+net::ERR_CONNECTION_REFUSED http://127.0.0.1:4175/guests.html

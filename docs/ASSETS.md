@@ -175,42 +175,42 @@ Rendered in the real editor at 420 px width by `tools/render-template-thumbs.py`
 
 | file | bytes | SHA-256 |
 |---|---|---|
-| `anniv-golden.webp` | 4948 | `bab046df6e97bdfceee5741cff1e9078ccd57d97fe7f23e966b038d9fac0462d` |
-| `bd-first-pastel.webp` | 9082 | `1621d9acb8338c9cd856cc9e7070096631af13c2d45c0682e3b917efac5cf00a` |
-| `bd-golden-soiree.webp` | 6366 | `dc6a2438c24ba79d61f542a8468396700dc62e53b34ffde1fd42db7e0fceb9bf` |
-| `bd-kids-party.webp` | 10380 | `9067f5c00d599329be0b90444436952b682220362ba59b7ed220b0617ff2e7ce` |
-| `bd-longevity-60.webp` | 15934 | `8114e8da446e0f5793d07078088743dd79d13b8be0f28094c485916539eed247` |
-| `bd-modern-bold.webp` | 5282 | `289001c76b5f56d86f19a3fe384bb2771434dd4f27d936b60ed12533ecc76376` |
-| `biz-corporate-gala.webp` | 7210 | `e7bbc4d346cd9a2b06096a0bc2fd0847a58582a400c0cad9c2e10cb9baa6ca85` |
-| `biz-grand-opening.webp` | 8706 | `05430b56c14e34756df7da9f490140dc62a8c5ce5bc93ff6285008778fa9db3e` |
-| `gr-blessings.webp` | 12794 | `7129a71a1cd72dc278a2428be3afed36aa77b2a08b8e6c0252620ddc2fc52ea7` |
-| `gr-get-well.webp` | 6274 | `64435b5d0fafa02b4faedb946804809e9b174c31894d1265cecb3fb5c92b8bdc` |
-| `gr-global-new-year.webp` | 18222 | `7d892ffbe3e0bb15d58dcb805c9d8ba8331ec52b6ade4e1bd7143f25c707d7dd` |
-| `gr-graduation.webp` | 4626 | `d7f3328f69de723d2f69dce2683aba2cea1b83396a1e205035cabf3fc036fd13` |
-| `gr-khmer-new-year.webp` | 13744 | `06f24bb5e1876711ba4a4649ac479fb543d65eee3c618c43ac4b0a0922fd8805` |
-| `gr-newborn.webp` | 7292 | `6df355fd1ee8f09adc32723c311fcd49874fc9ccd6b189b751cf8df73d008db2` |
-| `gr-sympathy.webp` | 4224 | `5d619f07cb082a979642e3691d1d87f804a7bb3a53c901adcb3e943608f49248` |
-| `gr-thank-you.webp` | 4872 | `836d21bed57b72c4436a7fcd80ff746db2c8ae679ccf9c2676b74753d94c5981` |
-| `gr-water-festival.webp` | 7002 | `678f822218a49559d6c7066ea9d771849a354bfd9cc75e552e39039d92c146b2` |
-| `hw-housewarming.webp` | 10476 | `21288fbf26a72b9f0f2a5658788c9809b1f6fd2b07b436ff90425d6aa41a672f` |
-| `kathina-robe.webp` | 8604 | `b95642a3841e25876e1b401cdbb07785a9e02b8ccb088a2008654d336c5cfb0f` |
-| `memorial-ceremony.webp` | 6764 | `83600752be636abcec4e73810f8ff1cb510cf2fe31886d000de6783d56e34ffc` |
-| `merit-dana.webp` | 14688 | `9da11a0a8b0e2c880c751141aa65fad93d8337f8e59ebf0f5eba07442b660269` |
-| `pchum-ben.webp` | 4144 | `d31f0a121cee067195fd801183da05cabdf86c1534569705c2bef40923f45613` |
-| `wd-hair-cutting.webp` | 11422 | `141191591b7fa6f8d85935d0a0cd33b151dc5f25c086a0a5c8cfcefca6973a2a` |
-| `wd-ivory-kbach-frame.webp` | 15574 | `6be858fb7bcd68807a5f92878f45d671a440426afab9599fc9f58596cf4f6552` |
-| `wd-jade-garden.webp` | 20518 | `ee9bf52543d10c4f5cb6ab38449e8a32f830188ee93d739f1b9dedf8bc4f7d9e` |
-| `wd-lotus-watercolour.webp` | 11856 | `49492d5ee602a76ccf64afab7ec90487ea12ee329d7f387f98d066a046a18a6a` |
-| `wd-midnight-navy-gold.webp` | 10438 | `e40e0c7de5537f59ce235d996a68b387c091a87e55ece3d8bc46417eebc64eed` |
-| `wd-photo-modern.webp` | 5620 | `85ba1224861f8b7f79f0d71c6baa260cb307ffad8025aefd453a13b08e6278f1` |
-| `wd-quiet-ivory.webp` | 7568 | `6dfd4c3e8207705afc03f01b7b20f0145d68ec37a20eb619d316ba4086182c8b` |
-| `wd-reception-dark-plum.webp` | 8504 | `14fee1f318b60438f874ddf5b7fe072d5981bcc63b3086105e0e6bdc4bf8cb0a` |
-| `wd-red-gold-story.webp` | 14902 | `d0c6ec363069388fb009bb8a7d09300b27191ae4a4358163bf2d0afd9b1b0090` |
-| `wd-royal-maroon-gold.webp` | 23022 | `ad600bc4f154586d2a6148511707e5a1559ff29b97f6ca1a5b4ec46d2295ac82` |
-| `wd-saffron-sunrise.webp` | 13522 | `fb160913d5b379d90df90f05ef60a2e33a3a7f47a1d9833b9bd441bd13d34b19` |
-| `wd-save-the-date.webp` | 7240 | `1f3890d9f17a5b21b6f2cccf0a39e47b8a50b256219cf794bd11d2dcca5c64c2` |
-| `wd-temple-arch.webp` | 12990 | `8d5b773188604a4e49125ecda04bc0504bdcb7d12ceb3d95c3bc07663d8795fe` |
-| `wd-three-day-program.webp` | 10940 | `20754e53fde9e124515439266d3006f70d601030608b989b906e055976939e3c` |
+| `anniv-golden.webp` | 16410 | `8bf8be5dd97507c7b2f1faa8cee2b7c334a3c8d3b01d96c0ee0fe085193b65d2` |
+| `bd-first-pastel.webp` | 15390 | `11348d813a6355eecfeaa8125538148f8805c2e69a2240628b7f36e1356111d0` |
+| `bd-golden-soiree.webp` | 13436 | `7264dbcdd6c83a821c132aeb70e151367c7e5e0028caabcac54d0899b4d05673` |
+| `bd-kids-party.webp` | 16240 | `b7f6804c7b27376fd063a601a1631e398de312b46b2a5629384cefc5710b8532` |
+| `bd-longevity-60.webp` | 20974 | `72f2f8e7850030be0fdef65e0a7db41e6705b86ca9e21d411111856d87a64890` |
+| `bd-modern-bold.webp` | 9232 | `05ce0ebf8c72d3985ca42b5c7e7e48d9bef45afdbd1e723534491148083de0b6` |
+| `biz-corporate-gala.webp` | 17222 | `b99dc50c902d0f255340ae91c39ee0c7239a8c476b6465dd1c7ca339616e0ef0` |
+| `biz-grand-opening.webp` | 14820 | `234a38aa9037dabd4865ef09363db657c1ab46ca57bd81988df3cb41c319a81e` |
+| `gr-blessings.webp` | 17282 | `a687c0a84b07a1b2fff09d61a1f85bb7785dbd7030a8600296409f7de55bd6bc` |
+| `gr-get-well.webp` | 8936 | `eebcf4f79a381214a7572b6ddae32e1c886d47de9e2eecdb1f082a15bbf1ca85` |
+| `gr-global-new-year.webp` | 24078 | `230a9ba7971585a6f167d914b1cd21b6a0cf9735287c5f33656a0b6ee13afe5c` |
+| `gr-graduation.webp` | 8800 | `9713346eb91ceca9d8a94267d96d5ca7a89a860a29b128c2349cac297c2a8cc4` |
+| `gr-khmer-new-year.webp` | 19668 | `fedf42e5a730b46b7a4fe013c2694715c3ba3b969b6883f9e957bf75aa83afcd` |
+| `gr-newborn.webp` | 10534 | `8a3d1993f5a8251d88ee05df632f8bd04ebe1b23668041796e47165874bdf491` |
+| `gr-sympathy.webp` | 6476 | `bd0ff218fe768562843f6958d8db0ff65889ea09caa7cf9364d804ebd24142c9` |
+| `gr-thank-you.webp` | 7452 | `e8ccecca4991dd104afc7168d53e690983090f68f33f167c7c3e0efee5e1388b` |
+| `gr-water-festival.webp` | 11566 | `002617939d8aa6f0ed7547430f0ccd0971b1d2acd4e27295768de87363b9fc6b` |
+| `hw-housewarming.webp` | 14744 | `cadca14eceeb5fd81f8405273d6dd920179d9455a6a9ed2e3cdc1071e2326789` |
+| `kathina-robe.webp` | 14250 | `d66aa40a5641977a5d878f1a6a507d1073279b93691dc3ad39e793bb87d7b57b` |
+| `memorial-ceremony.webp` | 13362 | `9b02b61f38470fc9f5b73d7994b6165a5e08aea4a787eaf0eb2ae9ae4682907e` |
+| `merit-dana.webp` | 19868 | `396aadea7de5d0eb669af8ae11d3bb2f120ff281e0ba72d9f420b3aab807ced1` |
+| `pchum-ben.webp` | 11278 | `e02a9c1566496ca3780bcecb421197b85674341fb2b4dfbf4ec458af88c53982` |
+| `wd-hair-cutting.webp` | 16504 | `384996ff108c97bcf2f1785b81fbc589e404c32757c5fe3bc256091aa878cecb` |
+| `wd-ivory-kbach-frame.webp` | 22872 | `f4a97cb46088077620161e82642be4db15d81ef3850a6c0015fe3a173b45b405` |
+| `wd-jade-garden.webp` | 28026 | `aa85633113cb37248b7cbd227215726b47b36f3f6a082cd6c8cc9e875c74bdec` |
+| `wd-lotus-watercolour.webp` | 18392 | `1c4dfebd5247423e5176fdeb18f16e3e22837a6059565e0d14dbc41a495c8f30` |
+| `wd-midnight-navy-gold.webp` | 32116 | `0f7e8d1d2bdef8fc0dfe167fdc7944fa6eea328195dc33dbd318e68209668f22` |
+| `wd-photo-modern.webp` | 9596 | `e8c2b78b9dc99ddd6dd1d59eadb428f1216aec2f5d3ad5689a6e8d43ba4f21d9` |
+| `wd-quiet-ivory.webp` | 12656 | `f10215cdd0c80f126729ac481207d5168472f3e187a2f719697da14c4735cf5b` |
+| `wd-reception-dark-plum.webp` | 18126 | `fbcd576ba7159aa9326c565dbac0b3d3f23a7614f53025f48340c6446837b8db` |
+| `wd-red-gold-story.webp` | 38446 | `e37b6621f428b98fd43a9125025f8f9898977d0791a4fe48c8e3f6b48f251b90` |
+| `wd-royal-maroon-gold.webp` | 33208 | `079637dc770a22b37040ed1f5b4c939afb5df73b97858707782dfef6f794c8e4` |
+| `wd-saffron-sunrise.webp` | 21052 | `b08c6bafd5a1209ba3f5aec31914cbb9138c12e66c5f853addcb255c0f0a2489` |
+| `wd-save-the-date.webp` | 13030 | `a649d80f3160ba05e4f23fee6c896d4aaddcec5508c8557a6db0dc79dd600361` |
+| `wd-temple-arch.webp` | 16026 | `02e8d18a24cfa048fcacb52f79f1a54dc767ae7fde4014cb6af7c03bdd5024cf` |
+| `wd-three-day-program.webp` | 15286 | `a1b957b92681af601b6b1363fbb64db8085b3479b82789328f528a14acff77c5` |
 
 Thumbnail total: **365750 bytes** across 36 files.
 
@@ -220,7 +220,7 @@ Thumbnail total: **365750 bytes** across 36 files.
 
 ## Fonts
 
-The pack asks for 14 families (`template-pack/fonts.json`). The app registry ships four self-hosted OFL faces (Noto Sans, Noto Serif, Noto Sans Khmer, Noto Serif Khmer). The other ten families are substituted with the nearest registered face rather than downloaded; the role-by-role decision, and the owner action that would replace it, are in `docs/templates/FONT-GAP-2026-10-25.md` and `docs/templates/FONT-SUBSTITUTIONS.md`. No font file was added for this order, so no new licence row is needed here.
+The pack asks for 14 families (`template-pack/fonts.json`, 14 entries under `roles`). The app registry ships four self-hosted OFL faces (Noto Sans, Noto Serif, Noto Sans Khmer, Noto Serif Khmer); two of those appear in the pack's own list and the other **twelve** families are substituted with the nearest registered face rather than downloaded; the role-by-role decision, and the owner action that would replace it, are in `docs/templates/FONT-GAP-2026-10-25.md` and `docs/templates/FONT-SUBSTITUTIONS.md`. No font file was added for this order, so no new licence row is needed here.
 
 | family | requested by | licence | shipped? |
 |---|---|---|---|

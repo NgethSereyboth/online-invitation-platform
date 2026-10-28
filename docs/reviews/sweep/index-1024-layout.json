@@ -1,0 +1,32 @@
+{
+ "route": "index.html",
+ "width": 1024,
+ "navError": null,
+ "console": [],
+ "failures": [],
+ "docScrollW": 1024,
+ "overflow": false,
+ "escapeCount": 0,
+ "escapes": [],
+ "overlayCount": 1,
+ "overlays": [
+  {
+   "sel": "button.fp-mobile-pane-handle",
+   "box": {
+    "x": 16,
+    "y": 842,
+    "w": 34,
+    "h": 42,
+    "r": 50,
+    "b": 884
+   },
+   "z": "97",
+   "overlap": {
+    "w": 34,
+    "h": 42
+   }
+  }
+ ],
+ "brokenLinks": [],
+ "controls": 8
+}

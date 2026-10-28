@@ -1,0 +1,583 @@
+{
+ "route": "public.html",
+ "controls": [
+  {
+   "i": 0,
+   "sel": "button.active",
+   "text": "EN",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1195,
+    "y": 14,
+    "w": 52,
+    "h": 28
+   }
+  },
+  {
+   "i": 1,
+   "sel": "button",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1248,
+    "y": 14,
+    "w": 39,
+    "h": 28
+   }
+  },
+  {
+   "i": 2,
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1315,
+    "y": 9,
+    "w": 58,
+    "h": 38
+   }
+  },
+  {
+   "i": 3,
+   "sel": "button#lang-km",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1377,
+    "y": 9,
+    "w": 42,
+    "h": 38
+   }
+  },
+  {
+   "i": 4,
+   "sel": "button.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 665,
+    "y": 179,
+    "w": 65,
+    "h": 38
+   }
+  },
+  {
+   "i": 5,
+   "sel": "button",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 733,
+    "y": 179,
+    "w": 42,
+    "h": 38
+   }
+  },
+  {
+   "i": 6,
+   "sel": "button#addCalendar",
+   "text": "Add to calendarបន្ថែមទៅប្រតិទិន",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 572,
+    "y": 507,
+    "w": 145,
+    "h": 36
+   }
+  },
+  {
+   "i": 7,
+   "sel": "button#shareInvitation",
+   "text": "Share invitationចែករំលែកការអញ្ជើញ",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 722,
+    "y": 507,
+    "w": 145,
+    "h": 36
+   }
+  },
+  {
+   "i": 8,
+   "sel": "button",
+   "text": "Add event to calendarបន្ថែមកម្មវិធីទៅប្រតិទិន",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 635,
+    "y": 1260,
+    "w": 170,
+    "h": 44
+   }
+  },
+  {
+   "i": 9,
+   "sel": "button",
+   "text": "Add event to calendarបន្ថែមកម្មវិធីទៅប្រតិទិន",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 635,
+    "y": 1500,
+    "w": 170,
+    "h": 44
+   }
+  },
+  {
+   "i": 10,
+   "sel": "select",
+   "text": "Yes, joyfullyUnable to attendMaybe",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2301,
+    "w": 330,
+    "h": 39
+   }
+  },
+  {
+   "i": 11,
+   "sel": "select",
+   "text": "Selectសូមជ្រើសរើសStandardVegetarianVeganOther",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2479,
+    "w": 330,
+    "h": 39
+   }
+  },
+  {
+   "i": 12,
+   "sel": "select",
+   "text": "Select an optionសូមជ្រើសរើសYes, I will attendSor",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2568,
+    "w": 330,
+    "h": 39
+   }
+  },
+  {
+   "i": 13,
+   "sel": "button.primary",
+   "text": "Send RSVPផ្ញើការឆ្លើយតប",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2755,
+    "w": 330,
+    "h": 41
+   }
+  },
+  {
+   "i": 15,
+   "sel": "button",
+   "text": "‹",
+   "disabled": true,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 403,
+    "y": 835,
+    "w": 38,
+    "h": 38
+   }
+  },
+  {
+   "i": 16,
+   "sel": "button.guest-journey-current",
+   "text": "1 / 6Event details",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 445,
+    "y": 832,
+    "w": 466,
+    "h": 44
+   }
+  },
+  {
+   "i": 17,
+   "sel": "button",
+   "text": "›",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 911,
+    "y": 835,
+    "w": 38,
+    "h": 38
+   }
+  },
+  {
+   "i": 18,
+   "sel": "button",
+   "text": "↗",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 953,
+    "y": 835,
+    "w": 38,
+    "h": 38
+   }
+  }
+ ],
+ "dead": [
+  {
+   "i": 17,
+   "sel": "button",
+   "text": "›",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 911,
+    "y": 835,
+    "w": 38,
+    "h": 38
+   },
+   "why": "no observable state change"
+  }
+ ],
+ "inputRequired": [
+  {
+   "i": 6,
+   "sel": "button#addCalendar",
+   "text": "Add to calendarបន្ថែមទៅប្រតិទិន",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 572,
+    "y": 507,
+    "w": 145,
+    "h": 36
+   },
+   "why": "needs input before it can act"
+  },
+  {
+   "i": 9,
+   "sel": "button",
+   "text": "Add event to calendarបន្ថែមកម្មវិធីទៅប្រតិទិន",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 635,
+    "y": 1500,
+    "w": 170,
+    "h": 44
+   },
+   "why": "needs input before it can act"
+  },
+  {
+   "i": 13,
+   "sel": "button.primary",
+   "text": "Send RSVPផ្ញើការឆ្លើយតប",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2755,
+    "w": 330,
+    "h": 41
+   },
+   "why": "needs input before it can act"
+  }
+ ],
+ "skipped": [
+  {
+   "i": 0,
+   "sel": "button.active",
+   "text": "EN",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1195,
+    "y": 14,
+    "w": 52,
+    "h": 28
+   },
+   "why": "already in the state a click produces"
+  },
+  {
+   "i": 2,
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1315,
+    "y": 9,
+    "w": 58,
+    "h": 38
+   },
+   "why": "already in the state a click produces"
+  },
+  {
+   "i": 4,
+   "sel": "button.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 665,
+    "y": 179,
+    "w": 65,
+    "h": 38
+   },
+   "why": "already in the state a click produces"
+  },
+  {
+   "i": 10,
+   "sel": "select",
+   "text": "Yes, joyfullyUnable to attendMaybe",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2301,
+    "w": 330,
+    "h": 39
+   },
+   "why": "select needs an option choice"
+  },
+  {
+   "i": 11,
+   "sel": "select",
+   "text": "Selectសូមជ្រើសរើសStandardVegetarianVeganOther",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2479,
+    "w": 330,
+    "h": 39
+   },
+   "why": "select needs an option choice"
+  },
+  {
+   "i": 12,
+   "sel": "select",
+   "text": "Select an optionសូមជ្រើសរើសYes, I will attendSor",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 555,
+    "y": 2568,
+    "w": 330,
+    "h": 39
+   },
+   "why": "select needs an option choice"
+  },
+  {
+   "i": 15,
+   "sel": "button",
+   "text": "‹",
+   "disabled": true,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 403,
+    "y": 835,
+    "w": 38,
+    "h": 38
+   },
+   "why": "disabled on a fresh load"
+  }
+ ],
+ "covered": [],
+ "coveredAtLoad": [
+  {
+   "sel": "button.active",
+   "text": "EN",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button",
+   "text": "ខ្មែរ",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button#lang-km",
+   "text": "ខ្មែរ",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button.active",
+   "text": "English",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button",
+   "text": "ខ្មែរ",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button#addCalendar",
+   "text": "Add to calendarបន្ថែមទៅប្រតិទិន",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button#shareInvitation",
+   "text": "Share invitationចែករំលែកការអញ្ជើញ",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button",
+   "text": "‹",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button.guest-journey-current",
+   "text": "1 / 6Event details",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button",
+   "text": "›",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  },
+  {
+   "sel": "button",
+   "text": "↗",
+   "by": "button#openCover.open-cover.opening-scene-soft-monogram"
+  }
+ ],
+ "dismissed": [
+  "#openCoveropen-cover"
+ ],
+ "resetReloads": 0,
+ "contaminated": []
+}

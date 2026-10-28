@@ -78,7 +78,7 @@ einvite-platform/
 
 ---
 
-## 🚀 Quick Start (verified on clean Ubuntu 22.04)
+## 🚀 Quick Start (verified from a clean clone; Ubuntu 24.04 · Python 3.12)
 
 ### Option A — Production-style install (with malware scanning)
 
@@ -90,7 +90,8 @@ sudo apt-get install -y python3 python3-venv python3-pip \
 sudo systemctl enable --now clamav-daemon
 sudo freshclam                                   # first-time virus DB
 
-# 2. Clone (or unzip) and enter the repo
+# 2. Clone (or unzip) and enter the repo — <YOUR_REPO_URL> is a placeholder:
+#    pass your fork's clone URL, or a local path ending in .git
 git clone <YOUR_REPO_URL> einvite-platform
 cd einvite-platform
 
@@ -111,22 +112,28 @@ PYTHONPATH=src/python:. .venv/bin/python src/python/server.py --host 127.0.0.1 -
 ```bash
 git clone <YOUR_REPO_URL> einvite-platform
 cd einvite-platform
-pip install -r docs/requirements-production.txt
-PYTHONPATH=. EINVITE_ALLOW_NO_SCANNER=1 python3 src/python/server.py
+python3 -m venv .venv
+.venv/bin/pip install -r docs/requirements-production.txt
+PYTHONPATH=src/python:. EINVITE_ALLOW_NO_SCANNER=1 .venv/bin/python src/python/server.py
 # → http://127.0.0.1:4175
 ```
+
+> Ubuntu 24.04+ and Debian 12+ mark the system interpreter as externally managed
+> (PEP 668), so a bare `pip install` is refused. The venv above is the supported
+> path on every machine — no `sudo`, no `--break-system-packages`.
 
 ### Option C — One-command demo
 
 ```bash
 # One-liner for evaluation (ClamAV-less dev mode)
 git clone <YOUR_REPO_URL> einvite-platform && cd einvite-platform \
-  && pip install -r docs/requirements-production.txt \
-  && PYTHONPATH=src/python:. EINVITE_ALLOW_NO_SCANNER=1 python3 src/python/server.py
+  && python3 -m venv .venv \
+  && .venv/bin/pip install -r docs/requirements-production.txt \
+  && PYTHONPATH=src/python:. EINVITE_ALLOW_NO_SCANNER=1 .venv/bin/python src/python/server.py
 # → open http://127.0.0.1:4175
 ```
 
-> The server auto-generates `EINVITE_SECRET_KEY` and `EINVITE_BILLING_WEBHOOK_SECRET` into a repo-root `.env` (mode 0600) on first run via `secrets_v54.py`. You do **not** need to pre-set secrets for the dev fast path.
+> The server auto-generates `EINVITE_SECRET_KEY` and `EINVITE_BILLING_WEBHOOK_SECRET` into a repo-root `.env` (mode 0600) on first run via `src/python/features/secrets.py`. You do **not** need to pre-set secrets for the dev fast path.
 
 ### Windows laptop hosting
 
@@ -140,8 +147,12 @@ git clone <YOUR_REPO_URL> einvite-platform && cd einvite-platform \
 > ℹ️ **V2 syntax.** The legacy `docker-compose` V1 CLI is deprecated. Use `docker compose` (V2 plugin) with the `--env-file` flag.
 
 ```bash
-# Generate production secrets into .env.production
-python3 src/python/build/prepare_production_env.py
+# Generate production secrets into ./.env.production (repo root, mode 0600).
+# Both flags are required: your canonical HTTPS origin, and the CIDRs/IPs allowed
+# to reach /api/admin/* (your reverse proxy or VPN ranges).
+python3 src/python/build/prepare_production_env.py \
+  --public-url https://events.example.com \
+  --admin-ip-allowlist 203.0.113.0/24
 
 # Start with the production overlay
 docker compose --env-file .env.production \
@@ -206,15 +217,24 @@ All documentation lives under `docs/`. Key entry points:
 ## 🔧 Development
 
 ```bash
-# Install dependencies
-pip install -r docs/requirements-production.txt
+# Install the dev/test toolchain. requirements-dev.txt is the supported target:
+# it pins pytest (and pytest-timeout) and pulls in docs/requirements-test.txt
+# for Playwright, Pillow, qrcode, fonttools and Brotli.
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
 
-# Run tests
-python -m pytest tests/
+# Browser tests need Chromium; without it they skip unless EINVITE_REQUIRE_BROWSER=1.
+.venv/bin/python -m playwright install chromium
+
+# Run tests (the Makefile uses .venv/bin/python when it exists, as the gates do)
+.venv/bin/python -m pytest tests/
+
+# Production-only dependencies, for a deployment that does not run tests
+.venv/bin/pip install -r docs/requirements-production.txt
 
 # Start development server (PYTHONPATH includes src/python/ for local
 # module imports + repo root for ai_agent/, platform_v32/, future_platform_v52/)
-PYTHONPATH=src/python:. EINVITE_ALLOW_NO_SCANNER=1 python3 src/python/server.py
+PYTHONPATH=src/python:. EINVITE_ALLOW_NO_SCANNER=1 .venv/bin/python src/python/server.py
 
 # Rebuild every generated artifact after editing JS/CSS sources
 python3 build.py all

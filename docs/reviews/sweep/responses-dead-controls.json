@@ -1,0 +1,246 @@
+{
+ "route": "responses.html",
+ "controls": [
+  {
+   "i": 0,
+   "sel": "button.app-rail-toggle",
+   "text": "«",
+   "disabled": false,
+   "expanded": "true",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 16,
+    "y": 8,
+    "w": 44,
+    "h": 40
+   }
+  },
+  {
+   "i": 1,
+   "sel": "button.ui-app-launcher-button",
+   "text": "",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 235,
+    "y": 8,
+    "w": 38,
+    "h": 40
+   }
+  },
+  {
+   "i": 5,
+   "sel": "button.ui-theme-button",
+   "text": "☾",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1238,
+    "y": 8,
+    "w": 36,
+    "h": 40
+   }
+  },
+  {
+   "i": 8,
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1295,
+    "y": 8,
+    "w": 75,
+    "h": 40
+   }
+  },
+  {
+   "i": 9,
+   "sel": "button#lang-km",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1373,
+    "y": 8,
+    "w": 46,
+    "h": 40
+   }
+  },
+  {
+   "i": 10,
+   "sel": "button#exportRsvp",
+   "text": "Export RSVP CSV",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 678,
+    "y": 101,
+    "w": 142,
+    "h": 44
+   }
+  },
+  {
+   "i": 11,
+   "sel": "button.active",
+   "text": "RSVP responses",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 270,
+    "y": 313,
+    "w": 137,
+    "h": 40
+   }
+  },
+  {
+   "i": 12,
+   "sel": "button",
+   "text": "Guest wishes",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 412,
+    "y": 313,
+    "w": 116,
+    "h": 40
+   }
+  }
+ ],
+ "dead": [],
+ "inputRequired": [
+  {
+   "i": 10,
+   "sel": "button#exportRsvp",
+   "text": "Export RSVP CSV",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 678,
+    "y": 101,
+    "w": 142,
+    "h": 44
+   },
+   "why": "needs input before it can act"
+  }
+ ],
+ "skipped": [
+  {
+   "i": 8,
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1295,
+    "y": 8,
+    "w": 75,
+    "h": 40
+   },
+   "why": "already in the state a click produces"
+  },
+  {
+   "i": 11,
+   "sel": "button.active",
+   "text": "RSVP responses",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 270,
+    "y": 313,
+    "w": 137,
+    "h": 40
+   },
+   "why": "already in the state a click produces"
+  }
+ ],
+ "covered": [],
+ "coveredAtLoad": [],
+ "dismissed": [],
+ "resetReloads": 5,
+ "contaminated": [
+  {
+   "sel": "button.app-rail-toggle",
+   "text": "«",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button.ui-theme-button",
+   "text": "☾",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"ui-theme-button\"],\"openPanels\":[\"div\"]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#lang-km",
+   "text": "ខ្មែរ",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#exportRsvp",
+   "text": "Export RSVP CSV",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button",
+   "text": "Guest wishes",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/responses.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  }
+ ]
+}

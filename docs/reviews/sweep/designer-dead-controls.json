@@ -1,0 +1,142 @@
+{
+ "route": "designer.html",
+ "controls": [
+  {
+   "i": 0,
+   "sel": "button.app-rail-toggle",
+   "text": "«",
+   "disabled": false,
+   "expanded": "true",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 16,
+    "y": 8,
+    "w": 36,
+    "h": 40
+   }
+  },
+  {
+   "i": 1,
+   "sel": "button.ui-app-launcher-button",
+   "text": "",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 227,
+    "y": 8,
+    "w": 38,
+    "h": 40
+   }
+  },
+  {
+   "i": 5,
+   "sel": "button.ui-theme-button",
+   "text": "☾",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1237,
+    "y": 8,
+    "w": 36,
+    "h": 40
+   }
+  },
+  {
+   "i": 8,
+   "sel": "button#lang-en",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1294,
+    "y": 8,
+    "w": 75,
+    "h": 40
+   }
+  },
+  {
+   "i": 9,
+   "sel": "button#lang-km.active",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1373,
+    "y": 8,
+    "w": 46,
+    "h": 40
+   }
+  }
+ ],
+ "dead": [],
+ "inputRequired": [],
+ "skipped": [
+  {
+   "i": 9,
+   "sel": "button#lang-km.active",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1373,
+    "y": 8,
+    "w": 46,
+    "h": 40
+   },
+   "why": "already in the state a click produces"
+  }
+ ],
+ "covered": [],
+ "coveredAtLoad": [],
+ "dismissed": [],
+ "resetReloads": 3,
+ "contaminated": [
+  {
+   "sel": "button.app-rail-toggle",
+   "text": "«",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button.ui-theme-button",
+   "text": "☾",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"ui-theme-button\"],\"openPanels\":[\"div\"]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#lang-en",
+   "text": "English",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/designer.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}"
+  }
+ ]
+}

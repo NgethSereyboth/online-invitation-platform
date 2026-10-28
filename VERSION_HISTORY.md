@@ -31,6 +31,60 @@ production-certified release.
 
 ---
 
+## 0.68.4 — Template pack: Khmer leading, measured A11/A4, public-page proof
+
+- **Khmer line-height (A4).** `runStyle` forced the registered face's 1.55–1.6 onto every
+  Khmer run, overriding the object's 1.75–1.95. A run now takes the larger of the object's
+  line-height and the face recommendation, and `tools/build-template-pack.py` floors every
+  object that renders Khmer (by text or by `kh.*` font role) at 1.7 before it is written.
+  Twelve templates were re-built; the acceptance matrix measures 1.70–1.95 on all 36 and A4
+  reads pass everywhere. `tests/v22_0_3_khmer_custom_font_quality_test.py` still sees the
+  recommendation-only value (1.48) for a document that sets no line-height.
+- **Decorative alt text on the public page.** `guest-layouts.js` and its two bundles
+  replaced a missing alt with `"Invitation photo"`, so every ornament reached assistive tech
+  as a photo. They now leave `alt=""` and add `aria-hidden="true"`.
+- **A11 and A4 are measured, not asserted.** `tools/acceptance-report.py` reads the shipped
+  document's image alts (all `""` for ornaments) and the catalogue's bilingual name, and reads
+  each Khmer run's computed line-height; the old A11 cell was a fixed string.
+- **Public-page proof.** `tools/proof-public-page.py` publishes one template per category and
+  measures the guest page at 375 km / 375 en / 1440 km: no horizontal overflow, CSP clean, 0
+  console errors, 0 blurry images, 85/85 ornaments `alt=""|aria-hidden="true"`. It also found
+  a product defect: guest text keeps design-pixel font sizes inside percentage boxes, so at
+  375 px 32/34 flows spill on the flagship wedding page and 6 are cut. Recorded in
+  `docs/templates/PUBLIC-PROOF-2026-10-25.md` and OWNER-QUEUE; TP-5.2 is partial until the
+  guest renderer scales or fits text.
+- **Primary files:** `src/js/{rich-text-renderer,guest-layouts,bundle-public,bundle-index-2}.js`,
+  `src/python/{rich-text-renderer,guest-layouts}.js` (mirror), `tools/{build-template-pack,
+  acceptance-report,proof-public-page,design-review-report,contact-sheet}.py`,
+  `docs/templates/{ACCEPTANCE-2026-10-25,DESIGN-REVIEW-2026-10-25,PUBLIC-PROOF-2026-10-25}.md`.
+
+---
+
+## 0.68.3 — Template pack close-out: export fidelity, decorative alt text, acceptance
+
+- **Export geometry bug (PNG/SVG).** `nodeSvg()` in `src/js/export-quality.js` removed the
+  selection chrome (a direct child of `#stage`, plus per-object handles) from the *clone*
+  before baking computed styles, so every later child inherited its predecessor's style:
+  pattern tiles filled the canvas and corner ornaments took the frame's box. The snapshot
+  now runs before the removal. Guarded by
+  `tests/template_pack_edit_export_test.py` (exported object widths must equal the stage).
+- **Decorative images.** The editor and the public renderer printed
+  `alt="Invitation image"` for images without alt text, including 43 decorative ornaments
+  per page. They now emit `alt=""` plus `aria-hidden="true"`; informative images keep
+  their alt.
+- **Acceptance harness.** `tools/accept-template-pack.py` opens a fresh page per template
+  (a long-lived canvas page stops reaching `editorReady` in headless Chromium), records
+  375 on a fixed-width page instead of resizing, and writes after each row.
+  `tools/acceptance-report.py` renders the A1–A12 matrix.
+- **Docs.** `docs/DESIGN.md`, `docs/templates/{CATALOG,HOW-TO-ADD-A-TEMPLATE,
+  ACCEPTANCE-2026-10-25,DESIGN-REVIEW-2026-10-25,KHMER-HYGIENE-2026-10-25,
+  CULTURAL-CHECKLIST-2026-10-25}.md`, thumbnail hashes refreshed in `docs/ASSETS.md`.
+- **Primary files:** `src/js/export-quality.js`, `src/js/renderer-core.js`, `src/js/app.js`,
+  `tools/{accept-template-pack,acceptance-report,design-review-report,contact-sheet}.py`,
+  `tools/render-template-thumbs.py`.
+
+---
+
 ## 0.68.2 — Phase B: consolidate helpers, replace B110 suppressions with logging, fix B404 placement, verify cryptography pin
 
 - **B1 — Consolidated duplicate SQL helper modules:** Deleted `src/python/core/sql_safety.py` (duplicate of `security_helpers.py`). Updated `server.py` import from `core.sql_safety` to `core.security_helpers`. `security_helpers.py` is the single canonical location.

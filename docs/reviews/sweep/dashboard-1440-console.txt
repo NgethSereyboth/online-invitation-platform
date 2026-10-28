@@ -1,0 +1,7 @@
+# dashboard.html @1440
+
+## console
+(none)
+
+## failed requests
+net::ERR_CONNECTION_REFUSED http://127.0.0.1:8124/dashboard.html

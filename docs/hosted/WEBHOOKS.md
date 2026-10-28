@@ -1,9 +1,24 @@
 # Outbound webhooks (v0.62.1)
 
 This document describes how outbound webhooks from the eInvite platform are
-signed and how receivers should verify them. Applies to all webhook
-destinations registered via the platform's outbound-notification system
-(billing, RSVP events, AI events, plugin marketplace events).
+signed and how receivers should verify them.
+
+## Registering a destination
+
+Destinations are managed over the account API (session or bearer auth):
+
+| Method | Path | Body / result |
+|---|---|---|
+| `POST`   | `/api/account/webhooks` | `{url, events: ["rsvp.created", …]}` (or `["*"]`); returns `{id, secret, secretHint, …}` — the **secret is shown once** |
+| `GET`    | `/api/account/webhooks` | list; carries `secretHint` (last 4) and the last delivery status, never the secret |
+| `POST`   | `/api/account/webhooks/{id}/rotate` | new secret, shown once; deliveries use it immediately |
+| `DELETE` | `/api/account/webhooks/{id}` | revoke; deliveries stop immediately |
+
+URLs must be absolute `http(s)` and must not resolve to private/loopback
+addresses; set `EINVITE_ALLOW_PRIVATE_WEBHOOKS=1` only for deliberately
+private receivers. Deliveries retry transport errors, 429 and 5xx up to 5
+attempts with exponential backoff; any other 4xx is final. Each attempt is
+freshly signed, so a retry minutes later still verifies.
 
 ## Header layout
 
@@ -104,26 +119,30 @@ listings.
 
 If a secret is compromised:
 
-1. Generate a new secret via the webhook-destination rotation endpoint.
+1. `POST /api/account/webhooks/{id}/rotate` and capture the new secret.
 2. Update the receiver with the new secret.
-3. The old secret is invalid immediately for new requests; the platform
-   keeps the previous secret for 24 hours (dual-key window) so requests
-   in flight when the rotation happens still verify. See
+3. Every request is signed **at send time** with the current secret, so no
+   sender-side dual-key window exists or is needed: once the receiver has the
+   new secret, verifications succeed. If you want a receiver-side overlap,
+   accept both secrets there for a few minutes. See
    [`docs/ops/SECRETS-ROTATION.md`](../ops/SECRETS-ROTATION.md) for the
    full rotation runbook.
 
 ## Event types
 
-| Event                | Fired when                                            |
-|----------------------|------------------------------------------------------|
-| `rsvp.created`        | A guest submits an RSVP.                             |
-| `rsvp.updated`        | A guest updates their RSVP.                          |
-| `invitation.published`| A host publishes an invitation.                      |
-| `invitation.unpublished` | A host unpublishes an invitation.                 |
-| `invitation.archived` | A host archives an invitation.                       |
-| `billing.checkout_completed` | A billing checkout session was paid.         |
-| `billing.subscription_cancelled` | A subscription was cancelled.              |
-| `ai.blueprint_created` | An AI agent generated a design blueprint.         |
+| Event                | Fired when                                            | Status |
+|----------------------|------------------------------------------------------|--------|
+| `rsvp.created`        | A guest submits an RSVP.                             | wired |
+| `rsvp.updated`        | A guest updates their RSVP.                          | wired |
+| `invitation.published`| A host publishes an invitation.                      | reserved |
+| `invitation.unpublished` | A host unpublishes an invitation.                 | reserved |
+| `invitation.archived` | A host archives an invitation.                       | reserved |
+| `billing.checkout_completed` | A billing checkout session was paid.         | reserved |
+| `billing.subscription_cancelled` | A subscription was cancelled.              | reserved |
+| `ai.blueprint_created` | An AI agent generated a design blueprint.         | reserved |
+
+“Reserved” events are part of the contract but have no emitter yet; a
+destination subscribed to one simply receives nothing until the emitter lands.
 
 Each event body has the shape:
 

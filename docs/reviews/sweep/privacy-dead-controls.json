@@ -1,0 +1,66 @@
+{
+ "route": "privacy.html",
+ "controls": [
+  {
+   "i": 0,
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1315,
+    "y": 6,
+    "w": 58,
+    "h": 44
+   }
+  },
+  {
+   "i": 1,
+   "sel": "button#lang-km",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1377,
+    "y": 6,
+    "w": 42,
+    "h": 44
+   }
+  }
+ ],
+ "dead": [],
+ "inputRequired": [],
+ "skipped": [
+  {
+   "i": 0,
+   "sel": "button#lang-en.active",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1315,
+    "y": 6,
+    "w": 58,
+    "h": 44
+   },
+   "why": "already in the state a click produces"
+  }
+ ],
+ "covered": [],
+ "coveredAtLoad": [],
+ "dismissed": [],
+ "resetReloads": 0,
+ "contaminated": []
+}

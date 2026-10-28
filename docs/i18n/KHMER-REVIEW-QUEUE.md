@@ -233,3 +233,129 @@ new English text as well as its Khmer. ADDENDUM-2 rows are JS keys, listed as `k
 
 The ADDENDUM §4 terminology replacement (the "text template" word → the term-base word) was applied
 to 24 occurrences in 14 files; the file:line list is in `artifacts/next-work/lt-1-2/NOTES.md`.
+
+## Khmer event template pack (TP-6.1)
+
+Every key in `template-pack/copy-bank.json` (117), copied verbatim into the 36 built
+templates. English is the pack's own companion line; the Khmer is the copy bank's,
+unreviewed by a native speaker. Review before launch (OD-18).
+
+| Source | Key · English | Khmer |
+|---|---|---|
+| `template-pack/copy-bank.json` | key `anniv.invite` · Join us as we celebrate our wedding anniversary | សូម​អញ្ជើញ​ចូលរួម​អបអរសាទរ​ខួប​អាពាហ៍​ពិពាហ៍​របស់​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `anniv.title` · Wedding Anniversary | ខួប​អាពាហ៍​ពិពាហ៍ |
+| `template-pack/copy-bank.json` | key `baby.line` · A new life, a new joy | ជីវិត​ថ្មី សេចក្តី​រីករាយ​ថ្មី |
+| `template-pack/copy-bank.json` | key `baby.title` · Welcome, Little One | សូមស្វាគមន៍​សមាជិក​ថ្មី |
+| `template-pack/copy-bank.json` | key `bd.first` · My First Birthday | ខួបកំណើត​គម្រប់ ១ ឆ្នាំ |
+| `template-pack/copy-bank.json` | key `bd.happy` · Happy Birthday | រីករាយ​ថ្ងៃកំណើត |
+| `template-pack/copy-bank.json` | key `bd.invite` · You are invited to celebrate the birthday of | សូម​អញ្ជើញ​ចូលរួម​អបអរសាទរ​ខួបកំណើត​របស់ |
+| `template-pack/copy-bank.json` | key `bd.kids_invite` · Come and celebrate with us! | សូម​អញ្ជើញ​មក​អបអរសាទរ​ជាមួយ​យើង! |
+| `template-pack/copy-bank.json` | key `bd.longevity.invite` · Join us in honouring our elder on this special birthday | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីបុណ្យ​ចម្រើន​អាយុ |
+| `template-pack/copy-bank.json` | key `bd.longevity.title` · Longevity Blessing Ceremony | ពិធីបុណ្យ​ចម្រើន​អាយុ |
+| `template-pack/copy-bank.json` | key `bd.longevity.wish` · May you enjoy a long life and good health | សូមជូនពរ​ឱ្យ​មាន​អាយុ​យឺនយូរ សុខភាព​ល្អ |
+| `template-pack/copy-bank.json` | key `bd.sixty` · 60th Birthday | ខួបកំណើត​គម្រប់ ៦០ ឆ្នាំ |
+| `template-pack/copy-bank.json` | key `bd.title` · Birthday Celebration | ពិធី​អបអរសាទរ​ខួបកំណើត |
+| `template-pack/copy-bank.json` | key `bless.elder` · May you be blessed with long life, good health, strength and wisdom | សូម​ឱ្យ​លោកអ្នក​មាន​អាយុ​យឺនយូរ សុខភាព​ល្អ កម្លាំង​មាំមួន និង​ប្រាជ្ញាវាងវៃ |
+| `template-pack/copy-bank.json` | key `bless.line` · May your life be filled with happiness, health and good fortune | សូម​ឱ្យ​ជីវិត​របស់​លោកអ្នក​ពោរពេញ​ដោយ​សុភមង្គល សុខភាព​ល្អ និង​សំណាងល្អ |
+| `template-pack/copy-bank.json` | key `bless.title` · Blessings and Good Wishes | សូមជូនពរ |
+| `template-pack/copy-bank.json` | key `cong.title` · Congratulations | សូម​អបអរសាទរ |
+| `template-pack/copy-bank.json` | key `gala.invite` · The pleasure of your company is requested | សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស |
+| `template-pack/copy-bank.json` | key `gala.title` · Annual Gala Dinner | ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ |
+| `template-pack/copy-bank.json` | key `gny.title` · Happy New Year | សួស្តី​ឆ្នាំ​សកល​ថ្មី |
+| `template-pack/copy-bank.json` | key `gny.wish` · Wishing you a bright and joyful year ahead | សូមជូនពរ​ឱ្យ​លោកអ្នក​មាន​ឆ្នាំ​ថ្មី​ដ៏​ភ្លឺស្វាង និង​ពោរពេញ​ដោយ​សេចក្តី​សុខ |
+| `template-pack/copy-bank.json` | key `grad.title` · Congratulations, Graduate | អបអរសាទរ​បញ្ចប់​ការសិក្សា |
+| `template-pack/copy-bank.json` | key `grad.wish` · Wishing you success in every step ahead | សូមជូនពរ​ឱ្យ​ទទួល​បាន​ជោគជ័យ​គ្រប់​ជំហាន​បន្ទាប់ |
+| `template-pack/copy-bank.json` | key `hw.invite` · We invite you to bless our new home | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីបុណ្យ​ឡើងផ្ទះ​ថ្មី​របស់​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `hw.title` · House Blessing Ceremony | ពិធីបុណ្យ​ឡើងផ្ទះ​ថ្មី |
+| `template-pack/copy-bank.json` | key `kathina.invite` · We invite all benefactors to join the Kathina ceremony | សូម​អញ្ជើញ​សប្បុរសជន​ចូលរួម​បុណ្យកឋិន​ទាន |
+| `template-pack/copy-bank.json` | key `kathina.title` · Kathina Robe Offering | បុណ្យកឋិន​ទាន |
+| `template-pack/copy-bank.json` | key `label.afternoon` · Afternoon | ពេលរសៀល |
+| `template-pack/copy-bank.json` | key `label.bride` · Bride | កូនក្រមុំ |
+| `template-pack/copy-bank.json` | key `label.contact` · Contact | ទំនាក់ទំនង |
+| `template-pack/copy-bank.json` | key `label.date` · Date | កាលបរិច្ឆេទ |
+| `template-pack/copy-bank.json` | key `label.daughter_of` · Daughter of | កូនស្រី​របស់ |
+| `template-pack/copy-bank.json` | key `label.day1` · Day 1 | ថ្ងៃទី ១ |
+| `template-pack/copy-bank.json` | key `label.day2` · Day 2 | ថ្ងៃទី ២ |
+| `template-pack/copy-bank.json` | key `label.day3` · Day 3 | ថ្ងៃទី ៣ |
+| `template-pack/copy-bank.json` | key `label.dress_traditional` · Traditional Khmer attire | ស្លៀកពាក់​ប្រពៃណី​ខ្មែរ |
+| `template-pack/copy-bank.json` | key `label.dresscode` · Dress code | ការ​ស្លៀកពាក់ |
+| `template-pack/copy-bank.json` | key `label.evening` · Evening | ពេលល្ងាច |
+| `template-pack/copy-bank.json` | key `label.groom` · Groom | កូនកំលោះ |
+| `template-pack/copy-bank.json` | key `label.host` · Hosts | ម្ចាស់​ពិធី |
+| `template-pack/copy-bank.json` | key `label.hosted_by` · Hosted by | រៀបចំ​ដោយ |
+| `template-pack/copy-bank.json` | key `label.in_memory` · In loving memory | ក្នុង​សេចក្តី​នឹករលឹក |
+| `template-pack/copy-bank.json` | key `label.invited` · You are cordially invited | សូម​គោរព​អញ្ជើញ |
+| `template-pack/copy-bank.json` | key `label.location` · Location | ទីតាំង |
+| `template-pack/copy-bank.json` | key `label.map` · Map | ផែនទី |
+| `template-pack/copy-bank.json` | key `label.morning` · Morning | ពេលព្រឹក |
+| `template-pack/copy-bank.json` | key `label.program` · Programme | កម្មវិធី |
+| `template-pack/copy-bank.json` | key `label.rsvp` · Kindly confirm your attendance | សូម​បញ្ជាក់​ការចូលរួម |
+| `template-pack/copy-bank.json` | key `label.save_the_date` · Save the Date | សូម​កត់ទុក​ថ្ងៃ |
+| `template-pack/copy-bank.json` | key `label.son_of` · Son of | កូនប្រុស​របស់ |
+| `template-pack/copy-bank.json` | key `label.time` · Time | ម៉ោង |
+| `template-pack/copy-bank.json` | key `label.venue` · Venue | ទីកន្លែង |
+| `template-pack/copy-bank.json` | key `label.with_love` · With love and gratitude | ដោយ​ក្តី​ស្រឡាញ់ និង​ការ​ដឹងគុណ |
+| `template-pack/copy-bank.json` | key `label.with_respect` · With respect, we wish you | ដោយ​ក្តី​គោរព សូមជូនពរ |
+| `template-pack/copy-bank.json` | key `memorial.invite` · You are respectfully invited to a ceremony dedicating merit to | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីបុណ្យ​ឧទ្ទិស​កុសល​ជូន |
+| `template-pack/copy-bank.json` | key `memorial.title` · Memorial Ceremony | ពិធីបុណ្យ​ខួប |
+| `template-pack/copy-bank.json` | key `memorial.wish` · May the soul rest in peace | សូម​ឱ្យ​វិញ្ញាណក្ខន្ធ​បាន​ទៅកាន់​សុគតិភព |
+| `template-pack/copy-bank.json` | key `merit.invite` · You are invited to join us in making merit | សូម​គោរព​អញ្ជើញ​ចូលរួម​ធ្វើបុណ្យ​ទាន |
+| `template-pack/copy-bank.json` | key `merit.title` · Merit-Making Ceremony | ពិធីបុណ្យ​ទាន |
+| `template-pack/copy-bank.json` | key `ny.greeting` · Happy Khmer New Year | សួស្តី​ឆ្នាំ​ថ្មី |
+| `template-pack/copy-bank.json` | key `ny.title` · Khmer New Year | បុណ្យចូលឆ្នាំ​ថ្មី​ប្រពៃណី​ខ្មែរ |
+| `template-pack/copy-bank.json` | key `ny.wish` · May the new year bring you health, happiness and prosperity | សូមជូនពរ​លោកអ្នក​ប្រកបដោយ​សុខភាព​ល្អ សុភមង្គល និង​ភាព​រុងរឿង​ក្នុង​ឆ្នាំ​ថ្មី |
+| `template-pack/copy-bank.json` | key `open.invite` · You are invited to the grand opening of | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីសម្ពោធ​បើក​ដំណើរការ |
+| `template-pack/copy-bank.json` | key `open.title` · Grand Opening | ពិធីសម្ពោធ​បើក​ដំណើរការ |
+| `template-pack/copy-bank.json` | key `pchum.invite` · In remembrance of our ancestors | ដើម្បីរំលឹក​គុណ​ដូនតា |
+| `template-pack/copy-bank.json` | key `pchum.line` · You are invited to join the ceremony and dedicate merit to our ancestors | សូម​អញ្ជើញ​ចូលរួម​បុណ្យភ្ជុំបិណ្ឌ ឧទ្ទិស​កុសល​ជូន​ដូនតា |
+| `template-pack/copy-bank.json` | key `pchum.title` · Pchum Ben | បុណ្យភ្ជុំបិណ្ឌ |
+| `template-pack/copy-bank.json` | key `ph.address` · [Address] | [អាសយដ្ឋាន] |
+| `template-pack/copy-bank.json` | key `ph.age` · [Age] | [អាយុ] |
+| `template-pack/copy-bank.json` | key `ph.baby` · [Baby name] | [ឈ្មោះ​កូន] |
+| `template-pack/copy-bank.json` | key `ph.bride` · [Bride name] | [ឈ្មោះ​កូនក្រមុំ] |
+| `template-pack/copy-bank.json` | key `ph.company` · [Company name] | [ឈ្មោះ​ក្រុមហ៊ុន] |
+| `template-pack/copy-bank.json` | key `ph.date` · [Date] | [កាលបរិច្ឆេទ] |
+| `template-pack/copy-bank.json` | key `ph.departed` · [Name of the departed] | [ឈ្មោះ​អ្នក​ដែល​បាន​ចែកឋាន] |
+| `template-pack/copy-bank.json` | key `ph.groom` · [Groom name] | [ឈ្មោះ​កូនកំលោះ] |
+| `template-pack/copy-bank.json` | key `ph.host` · [Host name] | [ឈ្មោះ​ម្ចាស់​ពិធី] |
+| `template-pack/copy-bank.json` | key `ph.message` · [Your message] | [សារ​ជូនពរ​របស់​អ្នក] |
+| `template-pack/copy-bank.json` | key `ph.name` · [Name] | [ឈ្មោះ] |
+| `template-pack/copy-bank.json` | key `ph.parents_bride` · [Bride's parents] | [ឪពុក​ម្តាយកូន​ក្រមុំ] |
+| `template-pack/copy-bank.json` | key `ph.parents_groom` · [Groom's parents] | [ឪពុក​ម្តាយកូន​កំលោះ] |
+| `template-pack/copy-bank.json` | key `ph.phone` · [Phone] | [លេខទូរស័ព្ទ] |
+| `template-pack/copy-bank.json` | key `ph.school` · [School or university] | [សាលា ឬ សាកល​វិទ្យាល័យ] |
+| `template-pack/copy-bank.json` | key `ph.time` · [Time] | [ម៉ោង] |
+| `template-pack/copy-bank.json` | key `ph.venue` · [Venue] | [ទីកន្លែង] |
+| `template-pack/copy-bank.json` | key `sched.ancestors` · Offering to ancestors | ពិធី​សែនដូនតា |
+| `template-pack/copy-bank.json` | key `sched.banquet` · Wedding banquet | ពិធីជប់លៀង |
+| `template-pack/copy-bank.json` | key `sched.ceremony` · Wedding ceremony | ពិធី​រៀប​អាពាហ៍​ពិពាហ៍ |
+| `template-pack/copy-bank.json` | key `sched.chanting` · Monks' blessing chant | ពិធីសូត្រមន្ត |
+| `template-pack/copy-bank.json` | key `sched.dinner` · Dinner | អាហារ​ពេលល្ងាច |
+| `template-pack/copy-bank.json` | key `sched.engagement` · Engagement ceremony | ពិធី​ភ្ជាប់ពាក្យ |
+| `template-pack/copy-bank.json` | key `sched.hair` · Hair-cutting ceremony | ពិធីកាត់សក់ |
+| `template-pack/copy-bank.json` | key `sched.lunch` · Lunch | អាហារ​ថ្ងៃត្រង់ |
+| `template-pack/copy-bank.json` | key `sched.monks_meal` · Chanting and meal offering to the monks | សូត្រ​មន្ត និង​ប្រគេន​ភត្តាហារ​ដល់​ព្រះសង្ឃ |
+| `template-pack/copy-bank.json` | key `sched.procession` · Gift procession | ពិធីហែជំនូន |
+| `template-pack/copy-bank.json` | key `sched.ribbon` · Ribbon-cutting | ពិធី​កាត់ខ្សែបូ |
+| `template-pack/copy-bank.json` | key `sched.welcome` · Welcome of guests | ពិធី​ស្វាគមន៍​ភ្ញៀវ |
+| `template-pack/copy-bank.json` | key `sched.wrist` · Wrist-tying blessing | ពិធីចងដៃ |
+| `template-pack/copy-bank.json` | key `symp.line` · Our thoughts are with you and your family | យើងខ្ញុំ​សូម​រំលែកទុក្ខ​ជាមួយ​លោកអ្នក និង​ក្រុម​គ្រួសារ |
+| `template-pack/copy-bank.json` | key `symp.title` · With Deepest Sympathy | សូម​ចូលរួម​រំលែកទុក្ខ |
+| `template-pack/copy-bank.json` | key `thanks.line` · Thank you for celebrating with us | អរគុណ​ដែល​បាន​ចូលរួម​អបអរសាទរ​ជាមួយ​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `thanks.title` · Thank You | សូម​អរគុណ |
+| `template-pack/copy-bank.json` | key `wedding.engagement.invite` · You are warmly invited to witness our engagement ceremony | សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស​ក្នុង​ពិធី​ភ្ជាប់ពាក្យ |
+| `template-pack/copy-bank.json` | key `wedding.engagement.title` · Engagement Ceremony | ពិធី​ភ្ជាប់ពាក្យ |
+| `template-pack/copy-bank.json` | key `wedding.hair.invite` · Join us for the traditional blessing before the wedding | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីកាត់សក់ តាម​ប្រពៃណី​ខ្មែរ មុន​ពិធី​អាពាហ៍​ពិពាហ៍ |
+| `template-pack/copy-bank.json` | key `wedding.hair.title` · Hair-Cutting Ceremony | ពិធីកាត់សក់ |
+| `template-pack/copy-bank.json` | key `wedding.honour` · Your presence is a great honour to us | ការចូលរួម​របស់​លោកអ្នក គឺជា​កិត្តិយស​ដ៏​ខ្ពង់ខ្ពស់​សម្រាប់​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `wedding.invite_formal` · Together with their families, request the honour of your presence at the wedding of their son and daughter | សូម​គោរព​អញ្ជើញ ឯកឧត្តម លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា ចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស ក្នុង​ពិធី​អាពាហ៍​ពិពាហ៍​កូនប្រុស និង​កូនស្រី​របស់​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `wedding.invite_short` · Together with our families, we invite you to celebrate our wedding | សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​អបអរសាទរ​ពិធី​អាពាហ៍​ពិពាហ៍​របស់​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `wedding.program.intro` · Please join us for the following ceremonies | សូម​គោរព​អញ្ជើញ​ចូលរួម​ក្នុង​ពិធី​ដូច​ខាងក្រោម |
+| `template-pack/copy-bank.json` | key `wedding.program.title` · Three Days of Celebration | កម្មវិធី​អាពាហ៍​ពិពាហ៍​បី​ថ្ងៃ |
+| `template-pack/copy-bank.json` | key `wedding.reception.invite` · Join us for an evening of dinner and celebration | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីជប់លៀង​អាហារ​ពេលល្ងាច ដើម្បី​អបអរសាទរ​អាពាហ៍​ពិពាហ៍ |
+| `template-pack/copy-bank.json` | key `wedding.reception.title` · Wedding Reception | ពិធីជប់លៀង​អាពាហ៍​ពិពាហ៍ |
+| `template-pack/copy-bank.json` | key `wedding.title` · Wedding Ceremony | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ |
+| `template-pack/copy-bank.json` | key `well.line` · Wishing you good health again very soon | សូមជូនពរ​ឱ្យ​មាន​សុខភាព​ល្អ​ឡើង​វិញ​ឆាប់​ៗ |
+| `template-pack/copy-bank.json` | key `well.title` · Get Well Soon | សូម​ឱ្យ​ឆាប់​ជាសះស្បើយ |
+| `template-pack/copy-bank.json` | key `wf.title` · Water Festival | បុណ្យអុំទូក |
+| `template-pack/copy-bank.json` | key `wf.wish` · Wishing you joy and good fortune this Water Festival | សូមជូនពរ​ឱ្យ​លោកអ្នក​រីករាយ និង​ជួប​តែ​សំណាងល្អ​ក្នុង​បុណ្យអុំទូក |

@@ -9,7 +9,11 @@
 #     budget looks violated.
 #   * every tool writes its output to artifacts/ (gitignored), never to /tmp.
 
-PYTHON ?= python3
+# Prefer the repo's own venv when it exists: requirements-dev.txt installs the test
+# toolchain there, and tools/run-gates.py / tools/reproduce.sh already resolve .venv/
+# the same way. `make test PYTHON=python3` still overrides.
+VENV_PY := $(firstword $(wildcard .venv/bin/python .venv/Scripts/python.exe))
+PYTHON ?= $(if $(VENV_PY),$(VENV_PY),python3)
 PORT   ?= 8124
 STATIC_ROOT ?= src/python
 LHCI_CONFIG ?= tools/lighthouserc.js

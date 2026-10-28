@@ -9,8 +9,51 @@ fidelity are done; the 17-shot after set plus six previews is in
 `artifacts/next-work/review-lt2/after/` (13/17 pixel-identical to Phase 1), and the phase-close
 matrix is `GATES_PASSED` (build, bundles, smoke 16/0/0, layout 1533/0, pytest **161**, budgets 6/6,
 lhci 16/16 a11y 1.00, csp, canvas 22/0/2, important 3816 ≤ 3823) in
-`artifacts/next-work/gates/20261025-150432/`. The next item is **LT-3.1 capability matrix**. Work
-stays local-only (OD-3); no push, PR, merge or tag.
+`artifacts/next-work/gates/20261025-150432/`. **Phase 3 closed 2026-10-27 (LT-3.10, FB-91):**
+`docs/CAPABILITY-MATRIX-2026-10-24.md` is at final truth (pack rows and the new guest-language-switch
+`partial`), the guest-page gap line LT-3.2…LT-3.9 is complete, and the phase-close matrix is
+`GATES_PASSED` (build, bundles, smoke 16/0/0, layout, pytest **183 passed**, budgets 6/6, lhci 16/16
+a11y 1.00, csp, canvas 22/0/2, important 3816 ≤ 3823) in
+`artifacts/next-work/gates/20261027-120242/` (`artifacts/next-work/fb-91/NOTES.md`). **Phase 4 has
+started: LT-4.1 — the visible guest language switch now drives the invitation — landed 2026-10-27
+(FB-92, `artifacts/next-work/lt-4-1/NOTES.md`, gate row green except the documented `lt_2_6` host
+metric), LT-4.2 — the editor unsaved-changes guard — (FB-93, `artifacts/next-work/lt-4-2/NOTES.md`)
+and LT-4.3 — colour-picker extras (recents, eyedropper, contrast hint) — (FB-94,
+`artifacts/next-work/lt-4-3/NOTES.md`) all landed 2026-10-27 with the same one documented red.
+**LT-4.4 (bilingual per-run authoring) landed 2026-10-27 (FB-95)** — the run range now survives the
+re-render, the controls live in the inspector's typography panel, and exactly one run moves; evidence
+`artifacts/next-work/lt-4-4/NOTES.md`. It surfaced a separate, pre-existing defect — a same-profile
+reload booting the title as one flattened run although the draft and server kept both — which was
+then fixed as **FB-96**: the boot `capture()` ran before the lazily loaded rich-text modules, so the
+rebuilt title lost its stored model. The test now reloads the same profile, and the guard was proven
+both ways (disabled → the one-run failure; restored → green) —
+`artifacts/next-work/lt-4-4/RELOAD-DEFECT.md`. **Phase 4 closed 2026-10-27 (LT-4.close, FB-97):** one
+full matrix is `GATES_PASSED` — including **`187 passed`** with no red — in
+`artifacts/next-work/gates/20261027-162311/gates.log`
+(`artifacts/next-work/lt-4-close/NOTES.md`). **Phase 6 is underway:** LT-6.1 — long-task headroom
+watch — (FB-98), LT-6.2 — budget state in numbers — (FB-99) and LT-6.3 — the `!important` ratchet
+lane, three passes, 7 provably-dead tokens removed and the pin lowered 3823 → **3809** — (FB-100),
+LT-6.4 — large-upload handling, a 20 MB probe with **zero defects** — (FB-101) and LT-6.5 — memory
+and history, 50 page cycles plus a 500-step undo history inside stated CDP bounds with a 400-cycle
+discriminator showing **no leak** — (FB-102) are done. **Phase 6 closed 2026-10-27 (LT-6.close,
+FB-103):** one full matrix `GATES_PASSED`, all ten phases exit 0 — including **`189 passed in
+577.31s`** with no red — in `artifacts/next-work/gates/20261027-211049/gates.log`
+(`artifacts/next-work/lt-6-close/gates-all.log`). **Phase 7 started 2026-10-27 (LT-7.1, FB-104,
+read-only):** `docs/ROADMAP-RECONCILIATION-2026-10-24.md` carries one row per acceptance bullet of
+roadmap Parts 3–6 — **37 bullets: 22 `exists` / 10 `partial` / 5 `absent`** — and it replaces the plan's
+LT-7.2 risk order, because tenant isolation, session management and analytics privacy/export already
+exist and pass (`artifacts/next-work/lt-7-1/`). **Phase 7 closed 2026-10-28 (LT-7.2 FB-105 and
+LT-7.close FB-106):** the eight absent/partial rows are closed (field-level encryption with
+migration/rollback/re-encrypt, step-up on 15 destructive admin routes **plus an admin page that can
+obtain the grant**, scoped API keys, signed webhook delivery, a rotation doc + script, the analytics
+retention log line and the `security_*` collection-order fix), so the reconciliation now reads **30
+`exists` / 6 `partial` / 1 `absent`** and Parts 4–5 have no open row. Gate record, stated plainly:
+build, bundles, smoke 16/0/0, layout 1533 checks, budgets 6/6, LHCI 16/16 `minA11y 1.00`, CSP 0
+violations, canvas 22/0/2 and `!important` 3809 ≤ pin 3809 are green; pytest is **200 passed, 1
+failed** on the pre-existing `lt_2_6` PDF metric, which sits on its 4.5 tolerance
+(`artifacts/next-work/lt-7-close/`). Next is **Phase 8, LT-8.1** (README quick-start on a clean
+checkout).
+**Work stays local-only (OD-3); no push, PR, merge or tag.**
 
 Verdicts as of 2026-10-21 (`pass/2026-10-21-next-work` pushed at `6f7de27`; code HEAD
 `11e549f`, docs HEAD `8d256e3` plus the harness/docs follow-up that carries this line; legs
@@ -36,7 +79,8 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 
 | Document | Verdict | Date note |
 |---|---|---|
-| `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | **authoritative queue** — Phase 2 closed at FB-82; Phase 3 (LT-3.1 capability matrix) is next. Work local-only | 2026-10-25 |
+| `FREEBUFF-TEMPLATES-WORKORDER-2026-10-25.md` | **completed** — TP-0.1…TP-6.4 ticked; 36-template pack in the working tree, uncommitted (OD-3). Supersedes LT-5.1–LT-5.8, amends the plan only by TP-OD-1…6 | 2026-10-27 |
+| `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | **authoritative queue** — **Phase 3 closed 2026-10-27 (LT-3.10, FB-91)** and **Phase 4 closed 2026-10-27 (LT-4.close, FB-97):** LT-4.1 (visible guest language switch, FB-92), LT-4.2 (unsaved-changes guard, FB-93), LT-4.3 (colour-picker extras, FB-94), LT-4.4 (bilingual per-run authoring, FB-95) and FB-96 (same-profile reload flattening, found inside LT-4.4) done; one full matrix `GATES_PASSED` with **`187 passed`** (`artifacts/next-work/lt-4-close/NOTES.md`). **Phase 6 closed 2026-10-27 (LT-6.close, FB-103):** LT-6.1 (three layout-guard runs, no route near the 600 ms ceiling, FB-98), LT-6.2 (`docs/perf/BUDGET-STATE-2026-10-24.md`, FB-99), LT-6.3 (`!important` ratchet lane: 7 tokens removed, pin 3823 → 3809, FB-100), LT-6.4 (large-upload probe, zero defects, FB-101) and LT-6.5 (heap/history bounds, no leak, FB-102) done; one full matrix `GATES_PASSED` with **`189 passed in 577.31s`** and no red (`artifacts/next-work/lt-6-close/gates-all.log` → `artifacts/next-work/gates/20261027-211049/gates.log`). **Phase 7 started 2026-10-27 (LT-7.1, FB-104):** `docs/ROADMAP-RECONCILIATION-2026-10-24.md` reconciles all 37 acceptance bullets of Parts 3–6 (22 `exists` / 10 `partial` / 5 `absent`) and replaces the LT-7.2 order — tenant isolation, session management and analytics privacy/export already exist and pass; the absent rows are field encryption of the listed columns, API keys, secrets rotation, automatic version snapshots and the analytics retention scheduler; it also isolated a red in the `pytest tests/security_*` bullet (1/47, collection-order coupling). **Phase 7 closed 2026-10-28 (LT-7.2 FB-105, LT-7.close FB-106):** the eight closure items are done and the reconciliation reads **30 exists / 6 partial / 1 absent** (Parts 4–5 complete; minor bumps 0.69.0/0.70.0, patch 0.70.1 drafted in `OWNER-QUEUE.md`). Nine gate phases green; pytest `200 passed, 1 failed` on the pre-existing `lt_2_6` PDF metric at its 4.5 tolerance — no threshold touched (`artifacts/next-work/lt-7-close/`). **Phase 8 closed 2026-10-28 (LT-8.5, FB-111) — the plan is exhausted:** LT-8.1 (FB-107) verified the quick-start, LT-8.2 (FB-108) audited the docs set, LT-8.3 (FB-109) rewrote `RELEASE-CANDIDATE.md` and added the external-evidence templates, LT-8.4 (FB-110) rebuilt this index (table below), LT-8.5 wrote `artifacts/next-work/FINAL-REPORT.md` and rewrote HANDOFF; `CERTIFICATION.md` stays `pending` because no load test, DR drill or pen test has been run. What remains is `artifacts/next-work/OWNER-QUEUE.md`. Work local-only | 2026-10-28 |
 | `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | **authoritative run contract** — autonomous loop, one item/one commit, no owner questions | 2026-10-24 |
 | `NEXT-WORK-TASK.md` | **superseded** — phases 0–7; NW-0–NW-5 executed, NW-6.1–6.6 executed same-day (`nw-6-3/FINDING.md`), NW-3.3–3.5 + NW-2 owner-gated; NW-5.2 closed per FB-13. Kept for history; the long-term plan decides now | 2026-10-21 |
 | `FREEBUFF-OPEN-ISSUES-2026-10-21.md` (repo root) | **completed/superseded** — FB-01…FB-22 landed on `fix/2026-10-22-open-issues`; later passes and the long-term plan supersede its queue | 2026-10-22 |
@@ -52,11 +96,43 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 | `docs/a11y/RESPONSIVE-AUDIT.md` | historical, its 2.5.5-as-AA label rows corrected to 2.5.8 (AA) | 2026-10-21 |
 | `docs/reviews/*` status ledgers | historical; `STATE.md` (`artifacts/ui-audit/fixes/`) is the live continuation ledger — note it was **reconstructed** on 2026-10-21 on the Linux box | 2026-10-21 |
 | `docs/i18n/TRANSLATIONS.csv` | **authoritative** ledger of translation states; updated 2026-10-21 (286 rows archived `stale-*`, none deleted) | 2026-10-21 |
+| `docs/templates/*` (`CATALOG`, `ACCEPTANCE`, `DESIGN-REVIEW`, `PUBLIC-PROOF`, `FONT-GAP`, `KHMER-HYGIENE`, `CULTURAL-CHECKLIST`, `FINAL-REPORT`) | **authoritative (current)** — the pack's catalogue, generated A1–A12 matrix (432/432), design review, public proof, font substitution record, hygiene and cultural audit, close-out report | 2026-10-27 |
 | `docs/ROADMAP*.md` / `plans/001–003` | historical — completed/blocked; out of continuation scope | earlier |
+| `artifacts/next-work/FINAL-REPORT.md` | **final report** — plan §8: phases and verdicts, the LT-8.5 gate matrix, Khmer files to draft next, `OWNER-QUEUE.md` contents, the final numbers and the final HEAD | 2026-10-28 |
+
+## Superseded work orders — every root `FREEBUFF-*.md`
+
+The plan decides; this table says what each root work order used to queue and what replaced it. **No
+file was moved or deleted** — the originals stay at the repo root for their FB numbers and evidence, and
+the two files marked authoritative below are the only ones to follow.
+
+| Root file | What it queued | Replaced by | Status |
+|---|---|---|---|
+| `FREEBUFF-PROMPT.md` | Canvas-motion fixes + the 2026-10-21 UI visual audit (Windows paths) | Plan Phases 1 and 6 | historical |
+| `FREEBUFF-UI-REFINEMENT-PROMPT.md` | The 2026-10-21 visual-quality/research pass | Plan Phase 1 (closed at `1cd09d2`) | historical |
+| `FREEBUFF-CONTINUATION-2026-10-21.md` | Brief that resumed the NW pass | `NEXT-WORK-TASK.md`, then the plan (Phases 0–6) | historical |
+| `FREEBUFF-OPEN-ISSUES-2026-10-21.md` | FB-01…FB-22, the original open-issue sweep | Plan Phases 1–2 | completed |
+| `FREEBUFF-REFINEMENT-ORDER-2026-10-22.md` | FB-23…FB-34 (round 2 refinement) | Plan Phase 1 | completed |
+| `FREEBUFF-REFINEMENT-PROMPT.md` | The prompt for that round-2 order | `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | historical |
+| `FREEBUFF-REFINEMENT-ORDER-2026-10-23.md` | FB-35…FB-41 (round 3) | Plan Phase 1 | completed |
+| `FREEBUFF-REFINEMENT-PROMPT-2026-10-23.md` | The prompt for round 3 | `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | historical |
+| `FREEBUFF-REFINEMENT-ORDER-ROUND4-2026-10-23.md` | FB-46…FB-57 (brand, Khmer map, colour work) | Plan Phase 2 | completed |
+| `FREEBUFF-REFINEMENT-PROMPT-ROUND4-2026-10-23.md` | The prompt for round 4 | `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | historical |
+| `FREEBUFF-REFINEMENT-ORDER-ROUND5-2026-10-24.md` | FB-66…FB-79 (round 5 backlog) | **Explicitly superseded by the plan** (Phase 1 carries it) | superseded |
+| `FREEBUFF-REFINEMENT-PROMPT-ROUND5-2026-10-24.md` | The prompt for round 5 | **`FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md`** (banner in the file) | superseded |
+| `FREEBUFF-TEMPLATES-WORKORDER-2026-10-25.md` | TP-0.1…TP-6.4, the 36-template pack | Plan Phase 5 (completed; it also superseded LT-5.1–LT-5.8) | completed |
+| `FREEBUFF-TEMPLATES-PROMPT-2026-10-25.md` | The prompt for the template pack | Plan Phase 5 (completed) | historical |
+| `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | Phases 1–8, the current queue | — | **authoritative** |
+| `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | The autonomous run contract | — | **authoritative** |
+| `FREEBUFF-NEXT-STEPS-2026-10-27.md` | A re-sequenced queue written from documents only (no code read) | Plan (advisory); its Stage F additions were adopted into LT-8.2/LT-8.3 | advisory |
+| `FREEBUFF-OWNER-INBOX.md` | Owner-reported issues, one bullet each | — | **live channel** |
+| `FREEBUFF-QUESTIONS-2026-10-28.md` | Questions from the document-only reviewer to the agent | — | answered record |
+| `NEXT-WORK-TASK.md` | NW-0…NW-6, the Phase 0–6 predecessor | `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | completed/superseded |
 
 ## Superseded-report banners
 
 The bookkeeping pass of 2026-10-20 already banners the earliest three; as of 2026-10-21 the
 remaining historical docs above are listed here rather than individually re-bannered, because
 their content is not contradicted — only their currency. If a doc's instructions ever conflict
-with `NEXT-WORK-TASK.md`, this index decides: **NEXT-WORK-TASK.md wins**.
+with the queue, this index decides: **`FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` wins**. `NEXT-WORK-TASK.md`
+was that authority until 2026-10-24 and is now itself superseded (see the table above).

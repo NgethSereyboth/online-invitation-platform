@@ -1,0 +1,357 @@
+{
+ "route": "guests.html",
+ "controls": [
+  {
+   "i": 0,
+   "sel": "button.app-rail-toggle",
+   "text": "»",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 16,
+    "y": 8,
+    "w": 44,
+    "h": 40
+   }
+  },
+  {
+   "i": 1,
+   "sel": "button.ui-app-launcher-button",
+   "text": "",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 235,
+    "y": 8,
+    "w": 38,
+    "h": 40
+   }
+  },
+  {
+   "i": 5,
+   "sel": "button.ui-theme-button",
+   "text": "☾",
+   "disabled": false,
+   "expanded": "false",
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1237,
+    "y": 8,
+    "w": 36,
+    "h": 40
+   }
+  },
+  {
+   "i": 8,
+   "sel": "button#lang-en",
+   "text": "English",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1294,
+    "y": 8,
+    "w": 75,
+    "h": 40
+   }
+  },
+  {
+   "i": 9,
+   "sel": "button#lang-km.active",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1373,
+    "y": 8,
+    "w": 46,
+    "h": 40
+   }
+  },
+  {
+   "i": 10,
+   "sel": "button#exportBtn",
+   "text": "Export CSVនាំចេញ CSV",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 505,
+    "y": 152,
+    "w": 135,
+    "h": 53
+   }
+  },
+  {
+   "i": 11,
+   "sel": "button#linksBtn",
+   "text": "Guest links",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 650,
+    "y": 156,
+    "w": 26,
+    "h": 44
+   }
+  },
+  {
+   "i": 12,
+   "sel": "input#selectAllGuests",
+   "text": "",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 690,
+    "y": 154,
+    "w": 74,
+    "h": 36
+   }
+  },
+  {
+   "i": 13,
+   "sel": "button#copyLinksBtn",
+   "text": "Copy all links",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 843,
+    "y": 156,
+    "w": 26,
+    "h": 44
+   }
+  },
+  {
+   "i": 14,
+   "sel": "button.primary",
+   "text": "Add guest",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 757,
+    "y": 550,
+    "w": 287,
+    "h": 51
+   }
+  },
+  {
+   "i": 15,
+   "sel": "select#statusFilter",
+   "text": "All RSVP statusesAttendingDeclinedPendingChecked",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 398,
+    "y": 617,
+    "w": 200,
+    "h": 44
+   }
+  }
+ ],
+ "dead": [],
+ "inputRequired": [
+  {
+   "i": 10,
+   "sel": "button#exportBtn",
+   "text": "Export CSVនាំចេញ CSV",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 505,
+    "y": 152,
+    "w": 135,
+    "h": 53
+   },
+   "why": "needs input before it can act"
+  },
+  {
+   "i": 11,
+   "sel": "button#linksBtn",
+   "text": "Guest links",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 650,
+    "y": 156,
+    "w": 26,
+    "h": 44
+   },
+   "why": "needs input before it can act"
+  },
+  {
+   "i": 14,
+   "sel": "button.primary",
+   "text": "Add guest",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "control",
+   "inputRequired": true,
+   "coveredBy": null,
+   "box": {
+    "x": 757,
+    "y": 550,
+    "w": 287,
+    "h": 51
+   },
+   "why": "needs input before it can act"
+  }
+ ],
+ "skipped": [
+  {
+   "i": 9,
+   "sel": "button#lang-km.active",
+   "text": "ខ្មែរ",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": true,
+   "kind": "control",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 1373,
+    "y": 8,
+    "w": 46,
+    "h": 40
+   },
+   "why": "already in the state a click produces"
+  },
+  {
+   "i": 15,
+   "sel": "select#statusFilter",
+   "text": "All RSVP statusesAttendingDeclinedPendingChecked",
+   "disabled": false,
+   "expanded": null,
+   "alreadyOn": false,
+   "kind": "select",
+   "inputRequired": false,
+   "coveredBy": null,
+   "box": {
+    "x": 398,
+    "y": 617,
+    "w": 200,
+    "h": 44
+   },
+   "why": "select needs an option choice"
+  }
+ ],
+ "covered": [],
+ "coveredAtLoad": [],
+ "dismissed": [],
+ "resetReloads": 8,
+ "contaminated": [
+  {
+   "sel": "button.app-rail-toggle",
+   "text": "»",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button.ui-theme-button",
+   "text": "☾",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\",\"ui-theme-button\"],\"openPanels\":[\"div\"]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#lang-en",
+   "text": "English",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#exportBtn",
+   "text": "Export CSVនាំចេញ CSV",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#linksBtn",
+   "text": "Guest links",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "input#selectAllGuests",
+   "text": "",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button#copyLinksBtn",
+   "text": "Copy all links",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  },
+  {
+   "sel": "button.primary",
+   "text": "Add guest",
+   "why": "still open after a reset reload",
+   "was": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "after": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[\"app-rail-toggle\"],\"openPanels\":[]}",
+   "clean": "{\"url\":\"http://127.0.0.1:4175/guests.html\",\"dialogs\":[],\"details\":[],\"expandedTrue\":[],\"openPanels\":[]}"
+  }
+ ]
+}

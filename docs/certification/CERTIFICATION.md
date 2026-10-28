@@ -66,6 +66,11 @@ The project is **build-tool-free** (vanilla JS, no transpiler, no bundler). Brow
 
 ## §3. Penetration test scope (OWASP ASVS 5.0.0 L2)
 
+> **Engagement record:** copy [`PEN-TEST-INTAKE-TEMPLATE.md`](./PEN-TEST-INTAKE-TEMPLATE.md) when a firm is
+> commissioned; it captures independence, scope, rules of engagement, the findings register and the
+> re-test sign-off that this section summarises. The template is not evidence — the signed report goes in
+> `docs/security/pen-test-reports/`.
+
 Full scope, methodology, and per-chapter test cases live in [`PEN-TEST-SCOPE.md`](./PEN-TEST-SCOPE.md). The gap analysis the pen test scopes against lives in [`docs/security/ASVS-L2-GAP-ANALYSIS.md`](../security/ASVS-L2-GAP-ANALYSIS.md) (Phase 1b deliverable — 14 chapters, 154 requirement rows, prioritized remediation list P1-A through P4-F).
 
 | ID | Scope item | Status | Evidence | Sign-off |
@@ -88,6 +93,10 @@ Full scope, methodology, and per-chapter test cases live in [`PEN-TEST-SCOPE.md`
 
 ## §4. Load test plan (k6)
 
+> **Result record:** when the plan is actually run, copy [`LOAD-TEST-RESULT-TEMPLATE.md`](./LOAD-TEST-RESULT-TEMPLATE.md)
+> to `LOAD-TEST-RESULT-<YYYY-MM-DD>.md` and fill it (run metadata, the plan's §8 metric tables, artifacts,
+> sign-off). No such file exists yet; every L1–L8 row above is `pending`.
+
 Full plan, scenarios, and reference-deployment numbers live in [`LOAD-TEST-PLAN.md`](./LOAD-TEST-PLAN.md). The k6 script lives at [`tests/load_test_k6.js`](../../tests/load_test_k6.js). The k6 script was chosen over Locust because k6 is JS-based and easier to integrate with a stdlib-only setup (Locust requires `pip install locust` and a separate runner).
 
 | ID | Scenario | Target | Status | Evidence | Sign-off |
@@ -109,6 +118,10 @@ Full plan, scenarios, and reference-deployment numbers live in [`LOAD-TEST-PLAN.
 ---
 
 ## §5. Disaster recovery drill (second quarterly drill)
+
+> **Report template:** [`docs/ops/BACKUP-DR.md`](../ops/BACKUP-DR.md) §9.4 is the signed-report template
+> (timeline, measured vs target, action items, sign-off). File the completed report under
+> `docs/ops/drill-reports/<YYYY>-Q<n>.md`; that directory has no report for this candidate yet.
 
 The first quarterly DR drill plan and report template live in [`docs/ops/BACKUP-DR.md`](../ops/BACKUP-DR.md) §5 (Phase 1c deliverable). Phase 3 adds the **second quarterly drill** section in [`docs/ops/BACKUP-DR.md`](../ops/BACKUP-DR.md) §9 — see the appended section.
 

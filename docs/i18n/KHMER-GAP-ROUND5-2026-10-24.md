@@ -153,3 +153,40 @@ The setting itself is stored in `document.settings.khmerNumerals` and defaults t
 
 Both are `fallback` rows in `TRANSLATIONS.csv`; Khmer mode shows English until a map row exists.
 `Messenger` is a brand name and may be allowlisted rather than translated.
+
+## LT-3.2 item (8) — gift QR and the sanitised `?guest=` greeting (added 2026-10-27)
+
+| EN | Where seen | Key / source |
+|---|---|---|
+| Gift QR (display only) | Studio Ops → Guest info card heading | `src/js/product-operations.js:19` |
+| Show a gift QR image on the guest page | owner toggle in that card | `src/js/product-operations.js:19` |
+| QR image | material file input label | `src/js/product-operations.js:19` |
+| Caption | owner-entered caption label | `src/js/product-operations.js:19` |
+| Remove the current QR image | clear-image checkbox label | `src/js/product-operations.js:19` |
+| Upload a KHQR or bank QR image. Guests see the image only — the platform never processes payments and stores no account numbers. | card help text | `src/js/product-operations.js:19` |
+| Scan to send a gift. Display only — the platform never processes payments. | guest-page gift block, below the image | `src/js/public-page.js:64` |
+| Gift QR | default caption when the owner leaves it blank | `src/js/public-page.js:64` |
+
+All eight are `fallback` rows in `TRANSLATIONS.csv` (the pin moved 6 → 14); Khmer mode shows
+English until a map row exists. `KHQR` is a Cambodian QR standard name and may be allowlisted
+rather than translated. The `DEAR` kicker the `?guest=` greeting reuses is **not** a new string: it
+is the inline `langText('DEAR','ជូនចំពោះ',mode)` pair the previous public bundle already shipped
+(`src/python/build/bundle-public-v15.js:1478`), restored verbatim. Like its neighbours
+(`YOU ARE INVITED`, `Dress code`) it is an inline pair, not a `TRANSLATIONS.csv` row, so no new gap
+row is needed for the greeting.
+
+## LT-7.2 step 5 (2026-10-28) — API keys card, `src/html/account.html` + `src/js/account-security.js`
+
+Added with the feature; kept English per the standing rule (no map row exists yet). The three static
+strings carry `.i18n-en` + a byte-identical `.i18n-km` fallback span and have `fallback` rows in
+`docs/i18n/TRANSLATIONS.csv` (line 37 of `account.html`); the JS-rendered rows are English like the
+rest of this page's dynamic text (already counted by the account route's inventory).
+
+| EN | Where seen | Key / source |
+|---|---|---|
+| API keys | card `h2` inside `#v13SecurityRoot` | static HTML span pair (fallback) |
+| API keys let scripts create invitations and read RSVPs for your account. Each key is scoped, rate-limited, and shown in full only once when you create it. | card `p.download-note` | static HTML span pair (fallback) |
+| Create API key | `button#v13CreateApiKey` | static HTML span pair (fallback) |
+| No API keys yet. · Last used … · Revoked · Revoke · API key revoked. · Revoke this API key? Scripts using it stop working immediately. | list rows + status | `src/js/account-security.js` (JS-rendered, English like the rest of the page) |
+| Create an API key · The full key is shown once. Copy it before closing the next dialog. · Key name · Permissions · Invitations and RSVPs (read) · Create invitations · Read RSVPs only · All scopes · Cancel · Create key | create dialog | `src/js/account-security.js` |
+| Copy your API key now · This is the only time the full key is shown. Store it somewhere safe. · API key · Copy · Done · API key copied. · Copy failed — select the key and copy it manually. | show-once dialog | `src/js/account-security.js` |

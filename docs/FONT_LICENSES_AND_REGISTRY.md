@@ -4,10 +4,12 @@
 
 V20 treats fonts as trusted application resources, not document-supplied CSS. Invitation documents persist stable font IDs and English/Khmer pairing IDs. The renderer resolves those IDs through generated, fixed stacks.
 
-The editable registry source is `typography-contract.json`. Do not hand-edit generated `typography-contract.js`, `typography_contract.py`, or `typography-fonts.css`; regenerate them with:
+The editable registry source is `docs/typography-contract.json`. Do not hand-edit the generated
+`typography-contract.js`, `typography_contract.py`, or `typography-fonts.css`; regenerate them from the
+repo root with:
 
 ```text
-python generate_typography_contract.py
+python3 src/python/generate_typography_contract.py
 ```
 
 ## Bundled license
@@ -43,9 +45,9 @@ directly by `src/css/canvas-plus.css` via `@font-face` rather than through
 
 | Family | Source | License | Weights | Asset (SHA-256) |
 |---|---|---|---:|---|
-| `Inter` | Bundled WOFF2 (Inter v4.1 static, subset to Latin `U+0000-024F,U+1E00-1EFF,U+2000-206F`) | SIL OFL 1.1 — `licenses/fonts/Inter-OFL-1.1.txt` | 400 | `assets/fonts/inter-latin-400.woff2` (`97edcf8a67cc43159561cc9d9373e571dba4e070adbcd6cbac2399edd202e5b3`) |
-| `Inter` | same | same | 700 | `assets/fonts/inter-latin-700.woff2` (`3ca84b5dc6300eb808da36bdb85f93e42d41127ef93e29168a3930f8cc153f85`) |
-| `Inter` | same | same | 800 | `assets/fonts/inter-latin-800.woff2` (`6760ea85f41cf656a4241ba7d56a0102f0660f402bfe0daba13ca41725617e89`) |
+| `Inter` | Bundled WOFF2 (Inter v4.1 static, subset to Latin `U+0000-024F,U+1E00-1EFF,U+2000-206F`) | SIL OFL 1.1 — `licenses/fonts/Inter-OFL-1.1.txt` | 400 | `assets/fonts/inter-latin-400.woff2` (`09ff6647afcf600eed2fd4e2e8a7cca6a275d9ff97f6d06b74fbfd5e795775fc`) |
+| `Inter` | same | same | 700 | `assets/fonts/inter-latin-700.woff2` (`ec43bf5290c66996f99f947107681b5940abc578ac8e6d1135d2a79eb5e45d39`) |
+| `Inter` | same | same | 800 | `assets/fonts/inter-latin-800.woff2` (`ef3b7c9d5d14a43607498b1ec74f4f251e35d7b57b381c12b3f32b4f13fc9a30`) |
 
 The `@font-face` rules use `font-display:swap` and the same `unicode-range` as the
 bundled Noto Latin faces, so Inter is only requested for Latin script; Khmer
@@ -156,7 +158,7 @@ A future release should use this process:
 1. Confirm embedding and redistribution rights.
 2. Add the license text under `licenses/fonts/`.
 3. Add optimized WOFF2 files under `assets/fonts/`.
-4. Record stable ID, family, scripts, weights, assets, license metadata, copyright, and SHA-256 values in `typography-contract.json`.
+4. Record stable ID, family, scripts, weights, assets, license metadata, copyright, and SHA-256 values in `docs/typography-contract.json`.
 5. Add an English/Khmer pairing only when both language paths have reliable shaping and fallback.
 6. Regenerate the contract.
 7. Run model, hostile-input, WOFF2 metadata, real-browser loading, offline, Khmer shaping, visual geometry, public rendering, and CSP tests.
@@ -166,7 +168,11 @@ A future release should use this process:
 
 The 36-template Khmer event pack requests 14 families; the registry ships the four Noto faces above.
 Twelve families are substituted with the nearest registered face rather than added, so this order changes
-no `@font-face` rule, no licence file and no `assetSha256`. The role-by-role map and the owner action that
+no `@font-face` rule, no licence file and no `assetSha256`. **No new font file ships with this phase.**
+The display-font item proposed as D-4 in `FREEBUFF-NEXT-STEPS-2026-10-27.md` (Moul, Moulpali, Kantumruy
+Pro, Koulen, Battambang and seven others) was **not executed**; the pack substitutes registered faces,
+and adding a real face is the registry process below — a licence file, WOFF2 assets, registry metadata
+and a new digest — not a documentation change. The role-by-role map and the owner action that
 would replace each substitution are in `docs/templates/FONT-GAP-2026-10-25.md` and
 `docs/templates/FONT-SUBSTITUTIONS.md`. The pack's documents persist registry ids only, so a future
 TP-OD-1 addition is a registry change plus one line in the converter, never a document migration.

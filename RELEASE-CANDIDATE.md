@@ -1,192 +1,107 @@
-# RELEASE-CANDIDATE — session end 2026-10-21
+# RELEASE-CANDIDATE — Phase 8 tree, 2026-10-28
 
-**OD-3 update 2026-10-21 (owner): the push was approved after this snapshot was written.** The
-pre-push state below is kept for the record. Do not tag or edit `VERSION_HISTORY.md` without an
-explicit owner decision.
+**This is a candidate record, not a release.** No tag, push, merge or PR was made (OD-3: local-only).
+`VERSION_HISTORY.md` is owner-held and unchanged; the three entries this tree needs are drafted in
+`artifacts/next-work/OWNER-QUEUE.md`.
 
-## HEAD and commits
+The previous snapshot (2026-10-21, `pass/2026-10-21-next-work`) was replaced by this record. Its text
+remains in git at `f05ee2e` if the older gate numbers are needed.
 
-- Branch: `pass/2026-10-21-next-work` (cut from `50721ef` per the continuation §7).
-- `ec0cf91` — fix(a11y): all six WCAG 2.2 AA code asks (`NW-1.1`–`NW-1.6`).
-- `6a30d9e` — feat(i18n): bilingual `<option>` labels (14), CSV reconcile archive, Khmer sweep (NW-4.1–4.4).
-- `8952381` — test(ci): portable gate runner + allowlist startup race fix (NW-5).
-- `cd56ac0` — test(ci): the allowlist implementation file omitted from `8952381`.
-- `837042f` — docs: RELEASE-CANDIDATE reader + STATUS-INDEX.
-- `ca53dbe` — fix(a11y): dashboard profile gradient light stop passes AA (white 4.56).
-- `11e549f` — fix(a11y): canvas toolbar overflow scroll discoverable from 701px up (NW-6.3).
-- `15554e3` — docs: STATUS-INDEX + RELEASE-CANDIDATE refreshed to the code HEAD.
-- `8d256e3` — docs: per-commit branch review note for reviewers.
-- final commit — test(tools)/docs: the eight verification harnesses this pass used (plus the
-  continuation brief) and docs HEAD/count corrections.
-- Untracked owner work preserved untouched (78 paths, incl. `.claude/`, `data/`, review PNGs);
-  `wip/2026-10-21-backup` branch untouched.
+## 1. Tree state
 
-## Gate matrix at this HEAD (exact commands + evidence)
+| Field | Value |
+|---|---|
+| Branch | `fix/2026-10-22-open-issues` |
+| HEAD | `f05ee2e` — no commit has been made since |
+| Working tree | 423 changed/untracked entries (282 tracked modifications, 141 untracked) |
+| Version | 0.69.0 / 0.70.0 / 0.70.1 **drafted, not applied** (Parts 4, 5 and the Phase 7 close) |
+| Distribution | local only; nothing pushed, tagged or published |
 
-| Gate | Command | Result |
+Phases 1–7 are closed (`artifacts/ui-audit/fixes/STATE.md`). Phase 8 is closed through LT-8.5: LT-8.1
+(quick-start verified on a clean clone), LT-8.2 (docs audited against the code), LT-8.3 (this record),
+LT-8.4 (status index rebuilt) and LT-8.5 (final report, `artifacts/next-work/FINAL-REPORT.md`).
+
+## 2. Gate matrix on this tree
+
+Run at the Phase 7 close (`artifacts/next-work/lt-7-close/gates-all.log` →
+`artifacts/next-work/gates/20261028-071637/gates.log`, plus `gates-rest-phases.log` for the nine phases
+run separately).
+
+| Gate | Signature | Result |
 |---|---|---|
-| Build | `python3 build.py all --check` → exit 0 (`BUILD_OK… MIRROR_CHECK_PASSED (up_to_date=327)`) | PASS |
-| Bundles | `python3 build.py bundles --check` → exit 0 (`ROUTE_BUNDLE_CHECK_PASSED`) | PASS |
-| Smoke | `node tools/page-errors.mjs --all` → `TOTAL pages=16 consoleErrors=0 non2xx=0` | PASS |
-| LHCI | `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js` → 16/16 reports, **a11y 1.00**, budgets pass | PASS |
-| Bilingual checker | `python3 scripts/check-bilingual-consistency.py` → exit 0 (`OK: … passed.`) | PASS |
-| Full pytest (default capture) | `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q` → **157 passed / 0 failed**, three consecutive runs (4:30 / 4:28 / 4:28) — FB-26 | PASS |
-| Canvas acceptance | frozen harness `--phase all` (absolute `--output`) → `pass=22 fail=0 skipped=2`, `CANVAS_MOTION_VERIFY_PASSED` | PASS |
-| Canvas perf | env-blocked on this machine (3 launch modes, presentation-quantized timings; `inputToPaintMs` 11.5 under budget) | NOT VERIFIED HERE |
-| Canvas visual | frozen baseline absent (`artifacts/canvas-motion/baseline/**` stayed on the Windows box) | NOT RUN |
-| Focus-obscured (NW-1.1) | `tools/a11y-focus-obscured.py` → 92 controls, 0 rows, 4 viewports × light/dark | PASS |
-| Target size (NW-1.5) | `tools/a11y-target-size.py` → 24×24 desktop hit box, 44×44 mobile, 2 runs | PASS |
-| Reorder keyboard (NW-1.2) | `tools/page_reorder_keyboard_check.py` → 8/8 | PASS |
-| Option labels (NW-4.1) | `tools/option_labels_i18n_check.py` → 0 failed (2 pages × 6 checks) | PASS |
-| Khmer sweep (NW-4.4) | `tools/khmer-visual-sweep.py` → 21 shots, 0 failures | PASS |
-| Gate runner (NW-5.3) | `tools/run-gates.py --phase all` → 7/7 phases **PASS**, `GATES_PASSED` (log `artifacts/next-work/gates/20261022-184517/`) — FB-26 | PASS |
+| build | `MIRROR_CHECK_PASSED (up_to_date=528)` · `BUILD_OK editor bundles manifests mirror (check)` | PASS |
+| bundles | `ROUTE_BUNDLE_CHECK_PASSED` · `BUILD_OK bundles (check)` | PASS |
+| smoke | `TOTAL pages=16 consoleErrors=0 non2xx=0` | PASS |
+| layout | `UI_LAYOUT_GUARD_PASSED` (1533 checks, 0 failed, incl. `long-task`) | PASS |
+| pytest | `1 failed, 200 passed` | **1 red** (below) |
+| budgets | `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED (6 pages within budget)` | PASS |
+| lhci | `reports=16/16 minA11y=1.00` | PASS |
+| csp | `CSP_CHECK_PASSED` (0 violations) | PASS |
+| canvas | `CANVAS_MOTION_VERIFY_PASSED` (22 pass / 0 fail / 2 skipped) | PASS |
+| important | `total=3809 ≤ pin 3809` | PASS |
 
-The single pytest failure is the documented `v27_3_5` README digest pin — **OD-7**, content-identical
-CRLF/LF hash; every other baseline red was fixed (allowlist race ×2) or remains environment-bound.
+**The open red is known and diagnosed.** `lt_2_6` compares an editor screenshot with a PDF raster;
+Chromium prints the 420 px `@page` as 315.12 pt (420.16 px), so identical runs read 4.24–4.75 against a
+locked 4.5 tolerance. This tree's close run read `pdf_mae 4.6270 > 4.5`. No threshold, fixture or
+assertion was touched. Its future is an owner decision (queue row `lt_2_6`). Everything else is green.
 
-## Remaining owner decisions
+**Independent confirmation from a clean clone** (LT-8.1, working tree overlaid on `f05ee2e`):
+`collected 201 items` → `1 failed, 200 passed, 2 warnings in 610.19s`, **0 skipped** — the browser
+modules ran. The only red was the same `lt_2_6`. Log:
+`artifacts/next-work/lt-8-1/make-test-clean-clone.log`.
 
-OD-1 (CSS cleanup), OD-2 (dashboard parity), OD-3 (push/release), OD-7 (digest pin),
-OD-8 (11 Khmer strings) — evidence and recommendations in
-[artifacts/next-work/DECISIONS.md](artifacts/next-work/DECISIONS.md).
+## 3. Verification recipe
 
-## Known limitations
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m playwright install chromium
+python3 build.py all --check                 # BUILD_OK … (check)
+.venv/bin/python -m pytest tests/ -q         # 1 known red: lt_2_6
+.venv/bin/python tools/run-gates.py --phase all
+```
 
-- Canvas perf + visual gates need the Windows box (or the owner copying
-  `artifacts/canvas-motion/baseline/` here).
-- Files only ever measured against `tools/serve-gzip.py` (no production hosting evidence in
-  this pass; `deploy/sites/` is owner work, untouched).
-- NW-6.3–6.6 (floating controls, motion audit, contrast sweep, privacy headroom) executed
-  same-day (see `artifacts/next-work/nw-6-3/FINDING.md`): one reachability defect fixed in
-  `11e549f`, one gradient AA residual fixed in `ca53dbe`; NW-6.6 headroom measured (139 KB
-  of 174 KB budget); NW-6.4 reduced-motion contract verified via
-  `tests/canvas_motion_contract_test.py` (2/2).
-- RILL-WALKTHROUGH end-to-end flow not executed this session (no throwaway account flow run);
-  documented as not run, not assumed.
+`tools/run-gates.py` prefers `.venv/bin/python` and runs build → bundles → smoke → layout → pytest →
+budgets → lhci → csp → canvas → important. Do **not** export `EINVITE_REQUIRE_BROWSER=1` for the pytest
+phase: it turns `layers_panel_guard_test`'s tolerated harness skip into a failure.
 
-## Push instruction (resolved 2026-10-22)
+## 4. Roadmap §8.3 — 1.0.0 criteria
 
-**OD-3 answered 2026-10-22:** the branch WAS pushed at `6f7de27`; `main` remains
-`50721ef`; no tag and no `VERSION_HISTORY.md` edit. **All further work uses local
-commits only — no push, no PR, no merge, no tag** until the owner explicitly orders
-otherwise. The pre-push snapshot below is preserved for the record. (FB-22)
+| # | Criterion | Status | What is still needed |
+|---|---|---|---|
+| 1 | All six roadmap parts complete | **Open** | Part 3 rows 3.7, 3.9, 3.10, 3.11 and Part 6 rows 6.3, 6.4, 6.6 (`docs/ROADMAP-RECONCILIATION-2026-10-24.md`) |
+| 2a | Load test run with real numbers | **Not run** | Copy `docs/certification/LOAD-TEST-RESULT-TEMPLATE.md`, run the k6 plan on the reference deployment, record results |
+| 2b | DR drill run, signed report in `docs/ops/` | **Not run** | Execute `docs/ops/BACKUP-DR.md` §9, file `docs/ops/drill-reports/<YYYY>-Q<n>.md` from its §9.4 template |
+| 2c | Native platform matrix executed | **Pending** | All six N1–N6 rows in `docs/certification/CERTIFICATION.md` §1 are `pending` |
+| 2d | Browser matrix executed | **Pending** | All six B1–B6 rows in §2 are `pending` |
+| 2e | Pen test commissioned, Critical/High fixed | **Not commissioned** | Copy `docs/certification/PEN-TEST-INTAKE-TEMPLATE.md`, commission an independent firm (ASVS 5.0.0 L2), file the report |
+| 3 | `CERTIFICATION.md` signed by maintainer + auditor | **Unsigned** | Every §1–§5 row is `pending`; the signature fields are empty |
+| 4 | Tenant isolation suite passes | **Yes** | `tests/security_tenant_isolation_test.py` is green in the suite above |
+| 5 | Field encryption live in production | **Not attestable here** | Code, migration and rollback exist (LT-7.2 step 4); “live in production” needs a deployed instance |
+| 6 | Analytics has ≥ 30 days of real data | **No** | Needs a production deployment collecting for a month |
 
----
+Criteria 4 is met; 5 is implemented but cannot be attested from this checkout; 1–3 and 6 are open.
 
-## 2026-10-22 continuation addendum (`fix/2026-10-22-open-issues`, FB-12/22/15)
+## 5. Known limitations carried into the candidate
 
-Follow-up pass over the owner-approved work order
-[FREEBUFF-OPEN-ISSUES-2026-10-21.md](FREEBUFF-OPEN-ISSUES-2026-10-21.md).
-Scope: local commits only (OD-3). State at the pass end:
+- **`lt_2_6`** — the one pytest red, as diagnosed above.
+- **Browser coverage** — the suite runs Chromium only; the six-browser matrix is a separate manual
+  execution and remains `pending`.
+- **Icon set** — no sprite exists (UX-4 was never executed); the shell uses text glyphs. Documented in
+  `docs/ARCHITECTURE.md` §7.1 and queued for the owner.
+- **Khmer display fonts** — the pack substitutes registered faces for 12 of its 14 requested families;
+  D-4 (real display faces) was not executed (`docs/FONT_LICENSES_AND_REGISTRY.md`).
+- **Windows/macOS** — the native matrix is unexecuted; the only verified host for this candidate is
+  Ubuntu 24.04 / Python 3.12.
+- **External evidence** — load test, DR drill and penetration test are templates only; none has been run
+  or commissioned.
 
-| Gate | Command | Result |
-|---|---|---|
-| Build | `python3 build.py all --check` | PASS (exit 0) |
-| Bundles | `python3 build.py bundles --check` | PASS (`ROUTE_BUNDLE_CHECK_PASSED`) |
-| v55 route-weight budget (run-gates `budgets` phase, FB-08) | `.venv/bin/python tools/run-gates.py --phase budgets` | PASS — `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED (6 pages within budget)`; the FB-03 admin regression is fixed |
-| v14 aspirational budgets | `python tests/v14_performance_budget_test.py` | **KNOWN RED, non-blocking** (owner answer 2026-10-22, OD-6): `AssertionError: ('editor','index.html','styles',2,1)` — aspirational count; see [docs/perf/v14-decision-note.md](docs/perf/v14-decision-note.md) |
-| Full pytest (default capture) | `PYTHONIOENCODING=utf-8 .venv/bin/python -m pytest tests/ -q` | **146 passed / 0 failed in 4:03** (first fully green run incl. OD-7 fix FB-04 + FB-05/08 additions). Repeat runs: see FB-15 matrix |
-| Security scan | pip-audit `docs/requirements-production.txt` | PASS — clean after the Pillow 13.0.0 bump (FB-01) |
-| npm audit | `npm audit` | **0 vulnerabilities** after the @lhci/cli removal (FB-10); 17 → 0 locally. GitHub Dependabot alert closure is deferred to a future push |
-| Bilingual checker | `scripts/check-bilingual-consistency.py` | PASS (fallback allowed; FB-14 audit recorded, nothing translated) |
-| LHCI clean-checkout autorun | `npx --yes @lhci/cli@0.15.1 autorun --config=tools/lighthouserc.js` | PASS — 16/16 URLs, a11y 1.00, reports under `.lighthouseci/reports` (FB-02) |
+## 6. Owner decisions before any release
 
-The scope of "GATES_PASSED" claims in this document is per-phase (each row names the exact
-phase run); no single `--phase all` runner claim is made here.
+1. **OD-3** — whether to commit/push this tree at all (nothing has been committed since `f05ee2e`).
+2. **`VERSION_HISTORY.md`** — apply 0.69.0, 0.70.0 and 0.70.1 from `OWNER-QUEUE.md`, or revise them.
+3. **`lt_2_6`** — widen/redesign the metric, or accept a documented red at close.
+4. **UX-4 / D-4** — run the icon and font work, or ship without them (the docs record their absence).
+5. **External engagements** — commission the load test, the DR drill and the penetration test; none can
+   be produced by an agent from this checkout.
 
-Owner decisions carried into the ledgers (2026-10-22): OD-1 and OD-2 approved
-(FB-19 executed 2026-10-22, 4033 → 3819; FB-20 executed same pass), OD-3 local-only,
-OD-4/OD-5 confirmed, OD-7 Option A (implemented, FB-04), OD-8 deferred, i18n audit-first
-(FB-14), v14 non-blocking (FB-11).
-
-### FB-15 final matrix (2026-10-22, same branch)
-
-Every row has a fresh run behind it; full commands, exit codes and log paths are in
-[artifacts/next-work/fb-15/RESULTS.md](artifacts/next-work/fb-15/RESULTS.md).
-
-- `tools/run-gates.py --phase all` → **all 7 phases green** (build, bundles, smoke
-  16/16, pytest 146/0 in 248.44s, budgets, lhci, canvas 22/0/2):
-  `artifacts/next-work/gates/20261022-095502/summary.json`.
-- Fresh LHCI autorun (`npx --yes @lhci/cli@0.15.1`): 16/16 URLs, **a11y 1.00 on all 16**,
-  budget assertions pass (`fb-15/lhci-autorun.log`, `fb-15/lhci-fresh-scores.json`).
-  The runner's own lhci phase is assert-only against prior reports — row #8 of the
-  RESULTS matrix records that distinction.
-- v14 rerun: still the documented known red (exit 1, non-blocking per the owner answer).
-- pip-audit: production **clean**; dev/test clean after lifting the test-toolchain Pillow
-  pin to `>=13,<14` in `docs/requirements-test.txt` (same 13.x as the installed, fully
-  tested environment; pre-fix red log kept in `fb-15/pip-audit-dev.log`).
-- npm audit: **0 vulnerabilities**. GitHub Dependabot alert state: not verifiable from
-  this machine — recorded as NOT RUN, not claimed.
-- `git status` at matrix time: only the 79 owner/work-order/evidence untracked paths;
-  no accidental staging; no push/PR/merge/tag performed (OD-3).
-
-Verdict: the release candidate is evidence-complete on this Linux box; the explicit
-non-gating remainder is v14 (quarantined), canvas visual/perf (Windows box) and the
-GitHub-side alert UI.
-
-## Gate-matrix addendum — 2026-10-22 evening (FB-26)
-
-The rows above were the 2026-10-21 snapshot. Re-run in full at `6fa3f48` after
-FB-23/24/25 (`tools/run-gates.py --phase all` → **`GATES_PASSED`**, 7/7). Signature
-lines, per phase: `BUILD_OK` + `MIRROR_CHECK_PASSED (after sync)`; `ROUTE_BUNDLE_CHECK_PASSED`;
-`TOTAL pages=16 consoleErrors=0 non2xx=0`; `157 passed in 269.44s`; 
-`V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED (6 pages within budget)`; `Done running Lighthouse!`
-with `reports=16/16 minA11y=1.00`; `pass=22 fail=0 skipped=2` + `CANVAS_MOTION_VERIFY_PASSED`.
-
-**Test-count reconciliation (FB-26):** 146 (FB-15) + 9 (`config_adapter_test.py` from
-`829af12`) + 2 (`lhci_invocation_test.py` from FB-23) = **157**. The "162 passed" figure
-in `fb-20/RESULTS.md` is not reproducible at any HEAD in this session and is superseded.
-
-**Correction (FB-23):** the earlier "LHCI assert → exit 0" row described a phase that ran a
-squatted placeholder package and never started Lighthouse. The LHCI row now names the real
-phase and its completion line.
-
-## Refactor disposition — `829af12` `core.config` (FB-27)
-
-`829af12` (*refactor(config): deepen EINVITE env reads behind one core.config adapter*)
-was not in the work order and landed after the previous pass's last gate run. It is
-**kept, verified, and not extended** (rule R1):
-
-- `server.platform_env` now delegates to `core/config.py::get`; precedence
-  `override > EINVITE_X > SOVAN_X > default` proven by `tests/config_adapter_test.py` (9 tests).
-- Import-time behaviour unchanged: starting the server with `EINVITE_DATA_DIR=<tmp>` and
-  with the legacy `SOVAN_DATA_DIR=<tmp>` yields identical data directories
-  (`invites.db` + four secret files) — `artifacts/next-work/fb-27/logs/data-dir-precedence.txt`.
-- 28 live direct `EINVITE_*` reads remain outside `platform_env`, each with a structural
-  reason (import-time constants, standalone feature modules, harness env construction) —
-  enumerated in `artifacts/next-work/fb-27/NOTES.md`.
-- Verified on the same HEAD as the FB-26 matrix: 25 targeted tests pass, three consecutive
-  full runs pass (157/0), `run-gates.py --phase all` → `GATES_PASSED`.
-- **OD-9 is OPEN** in `artifacts/next-work/DECISIONS.md`: keep or drop the adapter.
-  Recommendation: keep.
-
-## 2026-10-22/23 — Wave 2 of the refinement order (`FREEBUFF-REFINEMENT-ORDER-2026-10-22.md`)
-
-Visual-bug wave on the same branch, one commit per bug plus harness commits:
-
-| Item | Commit | Scope / result |
-|---|---|---|
-| FB-19 (earlier in this branch's ledger) | — | staged `!important` cleanup 4033 → 3819, full evidence in `RELEASE-…` §FB-26 era docs (see STATE.md FB-19 entry) |
-| FB-28 (VB-01…03) | `581113a` | auth-card inputs ≥ 16 px at 1440/1024/375, empty icon button removed, header ≤ 96 px at 375, breadcrumb ellipsis at 768 |
-| FB-29 (VB-04…06) | `22822ba` | editor responsive contract written against canvas-share/auto-fit races; index-mobile captures repeatable |
-| FB-30 (VB-07/08) | `ff9d788` + `1414bd1` | Khmer headings stop degrading to the Latin display face (`:lang(km)`; one justified `!important` counted in the ratchet); language-pill/lang agreement already gate-checked |
-| FB-31 | `782abc3` | `layout` phase (tools/ui-layout-guard.py) + `csp` phase (tools/csp-violation-check.py) wired into run-gates.py |
-| FB-32 | `17707e8` | `important` phase — `!important` ratchet at pin 3823 |
-| FB-34 | (no UI change) | fresh-account RILL: 9/9 steps pass, 0 console / 0 CSP-classified errors; OD-11 input recorded (EN 1 tap + 3 screens, KM 2 taps + 3 screens to RSVP at 375 px) — `artifacts/next-work/fb-34/RESULTS.md` |
-
-Owner decisions raised by this wave (open, `artifacts/next-work/DECISIONS.md`):
-OD-9 (core.config keep/drop — recommendation: keep), OD-10 (continue CSS cleanup toward
-25–40 % or stop at the ratchet — ratchet shipped, continuation owner-gated), OD-11 (direct
-RSVP splash shortcut — decide on the FB-34 measurement), OD-12 (native Khmer strings).
-
-Push/PR/merge/tag remain forbidden (OD-3 local-only, standing).
-
-### Full gate matrix at close-out (2026-10-23, HEAD `98dcc82`)
-
-`tools/run-gates.py --phase all` → **10/10 phases PASS, `GATES_PASSED`**
-(`artifacts/next-work/gates/20261023-101255/gates.log`): build (`BUILD_OK` + `MIRROR_CHECK_PASSED`),
-bundles, smoke `TOTAL pages=16 consoleErrors=0 non2xx=0`, **layout** `UI_LAYOUT_GUARD_PASSED`
-(new FB-31 phase, first full-matrix green; horizontal-scroll 0 / nameless-control 0),
-pytest **157/0** (346 s), budgets `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED`, LHCI 16/16 minA11y **1.00**,
-**csp** `CSP_CHECK_PASSED`, canvas `pass=22 fail=0 skipped=2` + `CANVAS_MOTION_VERIFY_PASSED`,
-**important** ratchet holds (3823 ≤ pin 3823).
+Only then does `git tag v1.0.0` become a question, and this file does not propose one.
