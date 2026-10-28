@@ -160,3 +160,29 @@ docs/reviews/dogfood-2026-10-15/
 docs/reviews/fix-run-2026-10-15/
 docs/reviews/page-sweep-2026-10-15.md
 docs/reviews/*.png
+
+# ---------------------------------------------------------------------------
+# A-3 root hygiene (2026-10-28).
+#
+# The `pip-*` scratch dirs, `tmp*` names, `.scan-*` / `.pip-modules` venv leftovers
+# and `.test_ac_data_deny_*` fixtures that local tool runs leave at the repo root
+# were moved, unchanged, to `../einvite-backups/clutter-2026-10-28/` (D-13: no
+# deletion). These patterns stop the same names reappearing in `git status`.
+# ---------------------------------------------------------------------------
+/pip-*/
+/tmpd4qkybe5/
+/tmprpozhnaw/
+/tmp_orn.html
+/.scan-tmp/
+/.scan-venv/
+/.test_ac_data_deny_*/
+/.pip-modules/
+
+# Owner/agent order files and dispatch boxes are local working documents, never
+# staged (the A-1 never-stage list). They are listed here only so `git status`
+# keeps showing the product; tracked files with these names are unaffected.
+/FREEBUFF-*.md
+/*-TASK.md
+/RILL-WALKTHROUGH.md
+/.claude/
+/deploy/sites/
