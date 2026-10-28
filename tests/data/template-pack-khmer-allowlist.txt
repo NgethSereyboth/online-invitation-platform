@@ -399,3 +399,4 @@ tests/v28_agent_registry_browser_test.py
 tests/v28_agent_tool_contract_test.py
 tests/v53_1_ai_project_operator_contract_test.py
 vendor/momentkh.js
+docs/templates/CATALOG.md

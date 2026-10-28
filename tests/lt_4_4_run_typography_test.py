@@ -40,7 +40,10 @@ from browser_runtime import dismiss_editor_onboarding, launch_chromium
 ROOT = Path(__file__).resolve().parents[1]
 SLUG = "lt-4-4-run-typography"
 
-_KHMER = "សុភា និង តារា"
+# Built from code points: agents never write Khmer, not even in a fixture.
+_KHMER = ''.join(chr(code) for code in (
+    0x179F, 0x17BB, 0x1797, 0x17B6, 0x20, 0x1793, 0x17B7, 0x1784, 0x20, 0x178F, 0x17B6, 0x179A, 0x17B6,
+))
 _ENGLISH = "Sophea & Dara"
 
 _TITLE = {
@@ -69,7 +72,7 @@ _TITLE = {
                 "id": "p-run",
                 "runs": [
                     {"id": "r-en", "text": "Sophea & Dara", "marks": {"fontPairing": "serif-formal", "fontSize": 28}, "locale": "en"},
-                    {"id": "r-km", "text": "សុភា និង តារា", "marks": {"fontPairing": "sans-modern", "fontSize": 20}, "locale": "km"},
+                    {"id": "r-km", "text": _KHMER, "marks": {"fontPairing": "sans-modern", "fontSize": 20}, "locale": "km"},
                 ],
                 "list": {"type": "none", "level": 0, "start": 1, "marker": "disc"},
             }
