@@ -140,9 +140,11 @@ def capture(page, base: str, invitation_id: str, page_id: str) -> bytes:
         }""",
         arg=ZOOM,
     )
+    # Page switches animate (opacity/transform). Screenshot after the canvas has
+    # settled, or a thumbnail catches the fade mid-flight and looks washed out.
+    page.wait_for_timeout(900)
+    page.evaluate("async () => { if (document.fonts && document.fonts.ready) await document.fonts.ready; await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); }")
     page.wait_for_timeout(350)
-    page.evaluate("async () => { if (document.fonts && document.fonts.ready) await document.fonts.ready; }")
-    page.wait_for_timeout(150)
     return page.locator("#stage").screenshot(timeout=30000)
 
 
@@ -151,6 +153,7 @@ def main(argv=None) -> int:
     parser.add_argument("--only", action="append", default=[], help="template id (repeatable)")
     parser.add_argument("--base", default="", help="reuse a running server at this base URL")
     parser.add_argument("--keep-png", action="store_true", default=True)
+    parser.add_argument("--update-assets", action="store_true", help="rewrite the thumbnail hash table in docs/ASSETS.md")
     args = parser.parse_args(argv)
 
     try:
@@ -197,6 +200,21 @@ def main(argv=None) -> int:
                 browser = play.chromium.launch()
                 failures = run(browser, base, "template-thumbs@example.com")
                 browser.close()
+
+    if args.update_assets:
+        import hashlib
+        assets = ROOT / "docs" / "ASSETS.md"
+        text = assets.read_text(encoding="utf-8")
+        start = text.index("## Gallery thumbnails (36)")
+        marker = "| `%s`"
+        table_start = text.index("|---|---|---|", start) + len("|---|---|---|")
+        table_end = text.index("\n\n", table_start)
+        lines = []
+        for path in sorted(OUT.glob("*.webp")):
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            lines.append(f"| `{path.name}` | {path.stat().st_size} | `{digest}` |")
+        assets.write_text(text[:table_start] + "\n" + "\n".join(lines) + text[table_end:], encoding="utf-8")
+        print(f"ASSETS_UPDATED {len(lines)} thumbnail rows")
 
     total = sum(path.stat().st_size for path in OUT.glob("*.webp"))
     count = len(list(OUT.glob("*.webp")))

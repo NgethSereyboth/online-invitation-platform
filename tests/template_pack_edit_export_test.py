@@ -77,6 +77,21 @@ def open_page(page, page_id: str) -> None:
     )
 
 
+def exported_width(svg: str, object_id: str) -> int | None:
+    """The px width baked onto an object in an exported SVG (TP-3 A8 guard)."""
+    import re
+
+    marker = svg.find(f'data-id="{object_id}"')
+    if marker < 0:
+        return None
+    start = svg.find(' style="', marker)
+    if start < 0:
+        return None
+    end = svg.find('"', start + len(' style="'))
+    match = re.search(r"width:(\d+(?:\.\d+)?)px", svg[start:end])
+    return int(float(match.group(1))) if match else None
+
+
 def test_flagship_template_opens_edits_and_exports(tmp_path):
     sync_playwright = pytest.importorskip("playwright.sync_api")
     from v14_test_utils import app_server
@@ -148,6 +163,36 @@ def test_flagship_template_opens_edits_and_exports(tmp_path):
             assert colours, "no rich-text paragraphs on the canvas"
             wrong = [row for row in colours if row["hex"] != row["wanted"]]
             assert wrong == [], wrong
+
+            # A8: the SVG (and therefore the PNG) keeps every object's own
+            # geometry. Regression guard for a style-snapshot offset that
+            # stretched the pattern tiles over the whole canvas and gave the
+            # frame's box to the corner ornaments.
+            page.evaluate("() => window.EInviteCommandRegistry.execute('quality.open')")
+            page.wait_for_selector('[data-tab="export"]', timeout=15000)
+            page.locator('[data-tab="export"]').click()
+            with page.expect_download(timeout=30000) as svg_info:
+                page.locator("[data-export-svg]").click()
+            svg_target = tmp_path / svg_info.value.suggested_filename
+            svg_info.value.save_as(svg_target)
+            svg = svg_target.read_text(encoding="utf-8")
+            widths = page.evaluate(
+                """() => Object.fromEntries([...document.querySelectorAll('#stage .object')]
+                    .map(el => [el.dataset.id, Math.round(el.getBoundingClientRect().width
+                        / document.querySelector('#stage').getBoundingClientRect().width * 1000)]))"""
+            )
+            for object_id in (
+                "wd-royal-maroon-gold-p1-pattern-02-0-0",
+                "wd-royal-maroon-gold-p1-svg-03",
+                "wd-royal-maroon-gold-p1-svg-04",
+            ):
+                baked = exported_width(svg, object_id)
+                assert baked is not None, object_id
+                assert abs(baked - widths[object_id]) <= 2, (object_id, baked, widths[object_id])
+            assert exported_width(svg, "wd-royal-maroon-gold-p1-pattern-02-0-0") < 400
+            assert exported_width(svg, "wd-royal-maroon-gold-p1-svg-04") < 400
+            page.evaluate("() => document.querySelector('#v24QualityDialog')?.close()")
+
 
             # English edit: double-click a text object, select all, type.
             english = page.locator("#stage .object .content").nth(3)

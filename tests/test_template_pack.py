@@ -202,6 +202,20 @@ def test_every_referenced_ornament_is_served():
                 assert served.stat().st_size <= 12 * 1024, src
 
 
+def test_style_kit_and_opening_scene_use_existing_ids():
+    kits = {"royal-khmer-gold", "modern-cambodian-luxury", "botanical-blush"}
+    scenes = {"soft-monogram", "royal-khmer-gate", "silk-curtain", "floral-reveal", "cinematic-photo", "minimal-editorial"}
+    for path in built_files():
+        document = load_module(path)["document"]
+        kit = document.get("styleKit") or {}
+        scene = document.get("openingScene") or {}
+        assert kit.get("id") in kits, (path.stem, kit.get("id"))
+        assert scene.get("id") in scenes, (path.stem, scene.get("id"))
+        assert scene.get("skipAllowed") is True, path.stem
+        assert int(scene.get("duration") or 0) > 0, path.stem
+        assert scene.get("textVariant") in {"dark", "light"}, path.stem
+
+
 def test_no_placeholder_content_leaks_a_real_identity():
     for path in built_files():
         text = path.read_text(encoding="utf-8")

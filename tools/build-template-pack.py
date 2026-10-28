@@ -60,6 +60,57 @@ FONT_ROLES = {
     "lat.jost": "noto-sans",
 }
 
+def luminance(hex_value: str) -> float:
+    channels = [int(hex_value[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+    linear = [(c / 12.92) if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+# TP-5.1 — closest existing style kit / opening scene (Appendix D). Never invent
+# a scene: these are the six ids the editor offers.
+SCENE_GROUPS = {
+    # The most formal curtain/lotus opening.
+    "wd-royal-maroon-gold": ("royal-khmer-gold", "silk-curtain"),
+    "wd-red-gold-story": ("royal-khmer-gold", "silk-curtain"),
+    "wd-ivory-kbach-frame": ("royal-khmer-gold", "silk-curtain"),
+    "wd-temple-arch": ("royal-khmer-gold", "silk-curtain"),
+    "wd-midnight-navy-gold": ("royal-khmer-gold", "silk-curtain"),
+    "wd-reception-dark-plum": ("royal-khmer-gold", "silk-curtain"),
+    # Soft, gentle reveal.
+    "wd-lotus-watercolour": ("botanical-blush", "floral-reveal"),
+    "wd-jade-garden": ("botanical-blush", "floral-reveal"),
+    "wd-saffron-sunrise": ("botanical-blush", "floral-reveal"),
+    "wd-hair-cutting": ("botanical-blush", "floral-reveal"),
+    "wd-three-day-program": ("botanical-blush", "soft-monogram"),
+    "wd-photo-modern": ("botanical-blush", "floral-reveal"),
+    "anniv-golden": ("botanical-blush", "soft-monogram"),
+    "wd-quiet-ivory": ("botanical-blush", "soft-monogram"),
+    "wd-save-the-date": ("botanical-blush", "soft-monogram"),
+    # Playful / festive reveal.
+    "bd-first-pastel": ("botanical-blush", "floral-reveal"),
+    "bd-kids-party": ("botanical-blush", "floral-reveal"),
+    "gr-khmer-new-year": ("botanical-blush", "floral-reveal"),
+    "gr-water-festival": ("botanical-blush", "floral-reveal"),
+    "gr-global-new-year": ("modern-cambodian-luxury", "cinematic-photo"),
+    "bd-golden-soiree": ("modern-cambodian-luxury", "cinematic-photo"),
+    "bd-modern-bold": ("modern-cambodian-luxury", "cinematic-photo"),
+    "gr-graduation": ("modern-cambodian-luxury", "cinematic-photo"),
+    "biz-grand-opening": ("modern-cambodian-luxury", "cinematic-photo"),
+    "biz-corporate-gala": ("modern-cambodian-luxury", "cinematic-photo"),
+    # Quietest option — never a flourish.
+    "bd-longevity-60": ("modern-cambodian-luxury", "minimal-editorial"),
+    "hw-housewarming": ("modern-cambodian-luxury", "minimal-editorial"),
+    "merit-dana": ("modern-cambodian-luxury", "minimal-editorial"),
+    "kathina-robe": ("modern-cambodian-luxury", "minimal-editorial"),
+    "pchum-ben": ("modern-cambodian-luxury", "minimal-editorial"),
+    "memorial-ceremony": ("modern-cambodian-luxury", "minimal-editorial"),
+    "gr-sympathy": ("modern-cambodian-luxury", "minimal-editorial"),
+    "gr-get-well": ("modern-cambodian-luxury", "minimal-editorial"),
+    "gr-blessings": ("modern-cambodian-luxury", "minimal-editorial"),
+    "gr-thank-you": ("modern-cambodian-luxury", "minimal-editorial"),
+    "gr-newborn": ("botanical-blush", "soft-monogram"),
+}
+
 CATEGORY_EVENT = {
     "wedding": "Wedding",
     "birthday": "Birthday",
@@ -213,6 +264,14 @@ def base_object(layer: dict, z: int, canvas_h: int) -> dict:
     }
 
 
+KHMER_START, KHMER_END = "\u1780", "\u17ff"
+
+
+def has_khmer(markup: str) -> bool:
+    """True when the markup holds a Khmer codepoint (U+1780-U+17FF)."""
+    return any(KHMER_START <= ch <= KHMER_END for ch in markup)
+
+
 def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
     obj = base_object(layer, z, canvas_h)
     # The pack's height is the designed line box; the rich-text renderer adds the
@@ -220,7 +279,14 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
     # the box at least the measured line count so a line is never clipped (A3).
     size_px = float(layer.get("size", 24))
     lines = max(1, int(layer.get("lines", 1) or 1))
+    html = text_html(layer, copy, where)
     line_px = float(layer.get("lineHeight", 1.4) or 1.4)
+    # A4: Khmer needs generous leading (stacked vowels and coeng clusters), so any
+    # object that renders Khmer is floored at 1.7 no matter what the layout asked for.
+    # A Khmer font role counts too: slot-bound objects carry a Latin placeholder in
+    # `html` and only turn Khmer when the guest fills the field.
+    if has_khmer(html) or str(layer.get("font", "")).startswith("kh."):
+        line_px = max(line_px, 1.7)
     needed = int(round(lines * size_px * line_px * 1.06)) + 18
     obj["height"] = f"{max(int(obj['height'][:-2]), needed)}px"
     role = layer.get("font", "lat.cinzel")
@@ -231,7 +297,7 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
     weight = 700 if float(layer.get("weight", 400) or 400) >= 600 else 400
     obj.update(
         {
-            "html": text_html(layer, copy, where),
+            "html": html,
             "font": FONT_ROLES[role],
             "fontPairing": "ceremonial-khmer" if role.startswith("kh.") else "serif-formal",
             "fontSize": float(layer.get("size", 24)),
@@ -251,7 +317,7 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
             "textAutoFitMax": float(layer.get("size", 24)),
             "textMinFontSize": 10,
             "letterSpacing": 0,
-            "lineHeight": float(layer.get("lineHeight", 1.4)),
+            "lineHeight": line_px,
             "textWrap": "balance",
             # The document model accepts none/uppercase/lowercase/capitalize
             # (server.py:1209); the pack writes the short form.
@@ -276,22 +342,27 @@ def shape_object(layer, z, canvas_h, palette, where) -> dict:
     kind = SHAPE_KINDS.get(str(layer.get("shape", "rectangle")).lower())
     if kind is None:
         raise PackError(f"{where}: shape {layer.get('shape')!r} is not supported")
-    # A stroke-only rule carries fill=None; the app paints shapeKind 'line' as a
-    # filled bar, so the stroke colour becomes the fill and the bar keeps its
-    # stroked thickness.
-    fill_role = layer.get("fill") or layer.get("stroke") or "accent"
+    # A stroke-only rule carries fill=None. The app always paints a shape
+    # background, so:
+    #  * shapeKind 'line' is a filled bar -> the stroke colour becomes the fill and
+    #    the bar keeps its stroked thickness;
+    #  * any closed shape is a frame -> an explicit transparent fill, with the
+    #    border colour carrying the stroke. Using the stroke colour as the fill
+    #    painted a full-canvas gold rectangle over every framed template.
+    stroke_width = float(layer.get("strokeWidth", 0) or 0)
+    fill_role = layer.get("fill")
     if kind == "line":
-        stroke = float(layer.get("strokeWidth", 0) or 0)
-        if stroke:
-            obj["height"] = f"{max(1, int(round(stroke)))}px"
+        fill_role = fill_role or layer.get("stroke") or "accent"
+        if stroke_width:
+            obj["height"] = f"{max(1, int(round(stroke_width)))}px"
     obj.update(
         {
             "type": "shape",
             "shapeKind": kind,
-            "fillColor": hex_colour(palette, fill_role, where),
+            "fillColor": hex_colour(palette, fill_role, where) if fill_role else "none",
             "fillMode": "solid",
-            "borderColor": hex_colour(palette, layer.get("stroke") or fill_role, where),
-            "borderWidth": float(layer.get("strokeWidth", 0) or 0),
+            "borderColor": hex_colour(palette, layer.get("stroke") or fill_role or "accent", where),
+            "borderWidth": stroke_width,
             "borderRadius": float(layer.get("radius", 0) or 0),
             "layerName": str(layer.get("name") or "Shape"),
         }
@@ -545,8 +616,9 @@ def build_template(template: dict, catalog_entry: dict, copy: dict) -> tuple[dic
         "music": None,
         "video": None,
         "mapUrl": "",
+        "styleKit": {"id": SCENE_GROUPS[template["id"]][0], "overrides": {}},
         "openingScene": {
-            "id": "minimal-editorial",
+            "id": SCENE_GROUPS[template["id"]][1],
             "monogram": "",
             "subtitle": "",
             "backgroundColor": palette["bg"],
@@ -555,7 +627,8 @@ def build_template(template: dict, catalog_entry: dict, copy: dict) -> tuple[dic
             "enterText": "Open invitation",
             "enterTextKm": "",
             "duration": 1100,
-            "textVariant": "dark",
+            # Opening-scene copy sits on the template's own background colour.
+            "textVariant": "dark" if luminance(palette["bg"]) > 0.45 else "light",
             "skipAllowed": True,
         },
         "socialCard": {"photo": "", "alignment": "center", "textVariant": "dark", "language": "both", "monogram": ""},

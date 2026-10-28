@@ -96,14 +96,14 @@
     {
      "type": "text",
      "x": 14,
-     "y": 37.28,
+     "y": 39.2,
      "w": 72,
      "h": 2.27,
      "lang": "en",
      "font": "lat.jost",
      "size": 21.9,
      "weight": 500,
-     "color": "paper",
+     "color": "deep",
      "align": "center",
      "lineHeight": 1.4,
      "letterSpacing": 0.3,
@@ -113,7 +113,8 @@
      "id": "text-05",
      "name": "open.title",
      "rot": 0,
-     "opacity": 1
+     "opacity": 1,
+     "note": "hand-edited 2026-10-26: subtitle straddled the ribbon edge (1.07:1); moved below the band and set to deep ink"
     },
     {
      "type": "text",
