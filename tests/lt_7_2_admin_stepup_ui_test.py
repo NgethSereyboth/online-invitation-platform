@@ -17,9 +17,15 @@ Flow, with nothing stubbed:
    endpoint ``/api/admin/users`` does not select ``suspended_at`` — a
    pre-existing display gap, recorded in NOTES.md, not something this item
    changes.)
-4. The grant is cached: the next destructive action (reset password) goes
-   straight through — **200** with no second prompt.
-5. No stray error alert appears, and the console stays clean.
+4. The prompt is a real modal (``showModal``): both inputs have programmatic
+   labels, Escape closes it **without replaying** the refused request, and focus
+   returns to the button that opened it (the success path re-renders the table,
+   so there the assertion is that no dialog is left open).
+5. The grant is cached in memory only (D-7): the next destructive action (reset
+   password) goes straight through — **200**, no second prompt.
+6. No step-up token is written to browser storage (D-7): after a reload the
+   only grant is the server-side one bound to the session cookie.
+7. No stray error alert appears, and the console stays clean.
 """
 from __future__ import annotations
 
@@ -79,6 +85,8 @@ def test_admin_pages_can_complete_the_step_up():  # noqa: C901 - linear scenario
             page.set_default_timeout(15000)
             console: list[str] = []
             page_errors: list[str] = []
+            responses: list[str] = []
+            page.on("response", lambda r: responses.append(r.url))
             page.on("pageerror", lambda e: page_errors.append(str(e)))
             page.on(
                 "console",
@@ -118,31 +126,87 @@ def test_admin_pages_can_complete_the_step_up():  # noqa: C901 - linear scenario
                 row.locator('[data-action="suspend"]').click()
             assert refused.value.status == 403, refused.value.status
 
-            # 2) The prompt opens on its own with focus in the password field.
+            # 2) The prompt opens on its own with focus in the password field,
+            #    real modal semantics, and programmatic labels for both inputs.
             password_field = page.locator("#adminStepUpPassword")
             password_field.wait_for(state="visible")
             assert page.evaluate("() => document.activeElement && document.activeElement.id") == "adminStepUpPassword"
+            assert page.evaluate(
+                "() => { const d = document.querySelector('dialog[aria-labelledby=adminStepUpTitle]');"
+                " return !!d && d.open === true && d.matches(':modal'); }"
+            ), "the prompt must be a modal dialog"
+            labels = page.evaluate(
+                """() => {
+                  const name = (id) => {
+                    const el = document.getElementById(id);
+                    return el && el.labels && el.labels.length ? el.labels[0].textContent.trim() : '';
+                  };
+                  return { password: name('adminStepUpPassword'), code: name('adminStepUpCode') };
+                }"""
+            )
+            assert labels["password"], labels
+            assert labels["code"], labels
 
-            # 3) Verify with the real password; the original request is replayed.
+            # 3) Escape closes it without replaying the refused request, and
+            #    focus returns to the button that opened it (WCAG 2.4.3).
+            suspend_urls = lambda: [url for url in responses if "/suspend" in url]  # noqa: E731
+            assert len(suspend_urls()) == 1, suspend_urls()
+            page.keyboard.press("Escape")
+            password_field.wait_for(state="detached")
+            page.wait_for_timeout(600)
+            assert len(suspend_urls()) == 1, f"Escape replayed the request: {suspend_urls()}"
+            assert page.evaluate(
+                "() => document.activeElement && document.activeElement.getAttribute('data-action')"
+            ) == "suspend", "focus must return to the triggering button"
+
+            # 4) Verify with the real password; the original request is replayed
+            #    once and focus returns to the row button again.
+            with page.expect_response(lambda r: "/suspend" in r.url) as refused_again:
+                row.locator('[data-action="suspend"]').click()
+            assert refused_again.value.status == 403, refused_again.value.status
+            password_field.wait_for(state="visible")
             password_field.fill(PASSWORD)
             with page.expect_response(lambda r: "/suspend" in r.url) as replayed:
                 page.locator("dialog:has(#adminStepUpPassword) button[data-confirm]").click()
             assert replayed.value.status == 200, replayed.value.status
             assert replayed.value.json() == {"suspended": True}, replayed.value.json()
             password_field.wait_for(state="detached")
+            # A successful replay re-renders the users table, so the original
+            # button is gone; the dialog must still be fully closed and nothing
+            # may be left focused inside a removed dialog.
+            assert page.evaluate("() => !document.querySelector('dialog[open]')")
             # The mutation happened server-side; the row still renders (the tab
             # reloads + re-renders after the retry) and nothing threw.
             row.wait_for(state="visible")
-            until = page.evaluate("() => sessionStorage.getItem('einvite:admin-step-up-until')")
-            assert until and float(until) > time.time() * 1000
 
-            # 4) The cached grant carries the next destructive action through.
+            # 5) The grant is cached in memory for this page lifetime: the next
+            #    destructive action goes straight through with no second prompt.
             with page.expect_response(lambda r: "/reset-password" in r.url) as reset:
                 row.locator('[data-action="reset-password"]').click()
             assert reset.value.status == 200, reset.value.status
             assert page.locator("#adminStepUpPassword").count() == 0
 
-            # 5) No uncaught error. The one console error allowed is the browser's
+            # 6) D-7: no client-side grant is persisted. The only grant is the
+            #    server-side one bound to the session cookie, so a reload keeps
+            #    the server happy without any browser storage carrying a token.
+            page.reload(wait_until="domcontentloaded")
+            row = page.locator("tbody tr", has_text=victim_email).first
+            row.wait_for(state="visible")
+            persisted = page.evaluate(
+                """() => {
+                  const keys = [];
+                  for (const store of [window.sessionStorage, window.localStorage]) {
+                    for (let i = 0; i < store.length; i += 1) {
+                      const key = store.key(i) || '';
+                      if (key.includes('step-up')) keys.push(key);
+                    }
+                  }
+                  return keys;
+                }"""
+            )
+            assert persisted == [], f"step-up state leaked into browser storage: {persisted}"
+
+            # 7) No uncaught error. The one console error allowed is the browser's
             # own "Failed to load resource: 403" line for the *refused* request —
             # that is the gate doing its job, not a defect.
             assert not page_errors, page_errors

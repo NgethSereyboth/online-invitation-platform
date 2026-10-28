@@ -573,9 +573,10 @@ window.EInvitePosterUnits=Object.freeze({
  *
  * Destructive admin routes answer 403 {code:'step_up_required'} until the admin
  * re-verifies with their password (plus a TOTP code when MFA is enabled). This
- * module owns the prompt and a session cache of the 30-minute server grant, and
- * `pages/admin/admin.js` retries through it, so every admin page gets the flow
- * without changing each call site.
+ * module owns the prompt and an **in-memory** cache of the 30-minute server
+ * grant (D-7: no browser-storage persistence, so a reload re-prompts),
+ * and `pages/admin/admin.js` retries through it, so every admin page gets the
+ * flow without changing each call site.
  *
  * No HTML strings are built except the dialog's own fixed skeleton; user text is
  * set with textContent. Khmer rows do not exist yet (OWNER-QUEUE), so the `km`
@@ -584,10 +585,10 @@ window.EInvitePosterUnits=Object.freeze({
  */
 (function(){
   'use strict';
-  if (window.EInviteAdminStepUp && window.EInviteAdminStepUp.version >= 69) return;
+  if (window.EInviteAdminStepUp && window.EInviteAdminStepUp.version >= 70) return;
 
-  var STORE_KEY = 'einvite:admin-step-up-until';
   var TTL_MS = 30 * 60 * 1000;
+  var grantUntil = 0;
   var pending = null;
 
   var STRINGS = {
@@ -624,15 +625,9 @@ window.EInvitePosterUnits=Object.freeze({
     return bank[key] || STRINGS.en[key] || key;
   }
 
-  function until(){
-    try { return Number(sessionStorage.getItem(STORE_KEY) || 0) || 0; } catch (e) { return 0; }
-  }
-  function remember(expiresAt){
-    try { sessionStorage.setItem(STORE_KEY, String(Number(expiresAt) || (Date.now() + TTL_MS))); } catch (e) {}
-  }
-  function forget(){
-    try { sessionStorage.removeItem(STORE_KEY); } catch (e) {}
-  }
+  function until(){ return grantUntil; }
+  function remember(expiresAt){ grantUntil = Number(expiresAt) || (Date.now() + TTL_MS); }
+  function forget(){ grantUntil = 0; }
   function granted(){ return until() > Date.now(); }
 
   function ask(){
@@ -640,6 +635,8 @@ window.EInvitePosterUnits=Object.freeze({
       var dialog = document.createElement('dialog');
       dialog.className = 'ei-dialog';
       dialog.setAttribute('aria-labelledby', 'adminStepUpTitle');
+      dialog.setAttribute('aria-describedby', 'adminStepUpMessage');
+      var opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
       var form = document.createElement('form');
       form.method = 'dialog';
@@ -656,6 +653,7 @@ window.EInvitePosterUnits=Object.freeze({
       title.textContent = t('title');
       var message = document.createElement('p');
       message.className = 'ei-dialog-message';
+      message.id = 'adminStepUpMessage';
       message.textContent = t('message');
       headText.append(title, message);
       head.append(icon, headText);
@@ -701,8 +699,13 @@ window.EInvitePosterUnits=Object.freeze({
       function finish(value){
         if (done) return;
         done = true;
-        resolve(value);
         dialog.remove();
+        // WCAG 2.4.3: focus goes back to whatever opened the prompt, so a
+        // keyboard user is not dropped at the top of the document.
+        if (opener && opener.isConnected && typeof opener.focus === 'function') {
+          try { opener.focus({ preventScroll: true }); } catch (e) { opener.focus(); }
+        }
+        resolve(value);
       }
       cancel.addEventListener('click', function(){ dialog.close(); finish(null); });
       dialog.addEventListener('cancel', function(event){ event.preventDefault(); dialog.close(); finish(null); });
@@ -760,7 +763,7 @@ window.EInvitePosterUnits=Object.freeze({
   }
 
   window.EInviteAdminStepUp = Object.freeze({
-    version: 69,
+    version: 70,
     request: request,
     forget: forget,
     granted: granted
