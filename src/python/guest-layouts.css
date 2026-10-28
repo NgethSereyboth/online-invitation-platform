@@ -103,4 +103,7 @@ body[data-page="public"] #publicRoot form button[type="submit"],
 body[data-page="public"] #publicRoot .rsvp-submit { width: 100%; }
 body[data-page="public"] #publicRoot .demo-badge { position: fixed; bottom: var(--space-3); left: var(--space-3); }
 
+.guest-gift-qr{text-align:center}
+.guest-gift-qr img{width:min(240px,100%);height:auto}
+
 }

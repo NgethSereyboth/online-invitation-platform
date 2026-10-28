@@ -1,4 +1,245 @@
-;(function(){
+;/* LT-4.3: the editor's native colour inputs get a small popover with recents, an
+   eyedropper where the browser has one, and a contrast hint for text colours.
+   The native input stays the source of truth: every choice is written back to it
+   and both `input` and `change` are dispatched, so the existing editor handlers
+   keep doing the applying. No new colour logic in app.js, no HTML change. */
+(() => {
+  'use strict';
+  const body = document.body;
+  if (!body || (!document.querySelector('#stage') && !document.querySelector('#main'))) return;
+  if (window.EInviteColorExtras) return;
+  const RECENTS_KEY = 'einvite-color-recents-v1';
+  const MAX_RECENTS = 8;
+  const HEX = /^#[0-9a-f]{6}$/i;
+
+  function recents() {
+    try {
+      const list = JSON.parse(localStorage.getItem(RECENTS_KEY) || '[]');
+      return Array.isArray(list) ? list.filter((x) => HEX.test(String(x))).slice(0, MAX_RECENTS) : [];
+    } catch { return []; }
+  }
+  function remember(hex) {
+    const value = String(hex || '').toLowerCase();
+    if (!HEX.test(value)) return recents();
+    const next = [value, ...recents().filter((x) => x !== value)].slice(0, MAX_RECENTS);
+    try { localStorage.setItem(RECENTS_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  }
+
+  // --- contrast -------------------------------------------------------------
+  function toRgb(color) {
+    const value = String(color || '').trim();
+    const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hex) {
+      const raw = hex[1].length === 3 ? hex[1].replace(/(.)/g, '$1$1') : hex[1];
+      const n = parseInt(raw, 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    const rgb = value.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
+    return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
+  }
+  function luminance(color) {
+    const rgb = toRgb(color);
+    if (!rgb) return null;
+    const [r, g, b] = rgb.map((channel) => {
+      const c = channel / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function contrastRatio(foreground, background) {
+    const a = luminance(foreground), b = luminance(background);
+    if (a === null || b === null) return null;
+    const light = Math.max(a, b), dark = Math.min(a, b);
+    return (light + 0.05) / (dark + 0.05);
+  }
+  // The page surface the text is read on: the document palette, then the stage,
+  // then white. Shapes/text both sit on that surface in this editor.
+  function pageBackground() {
+    const palette = window.state?.palette;
+    const stage = document.querySelector('#stage');
+    const stageColor = stage ? getComputedStyle(stage).backgroundColor : '';
+    for (const candidate of [palette?.background, stageColor, '#ffffff']) {
+      if (toRgb(candidate)) return candidate;
+    }
+    return '#ffffff';
+  }
+  function contrastHint(hex) {
+    const ratio = contrastRatio(hex, pageBackground());
+    if (ratio === null) return '';
+    const rounded = `${ratio.toFixed(1)}:1`;
+    if (ratio >= 4.5) return `AA text — ${rounded}`;
+    if (ratio >= 3) return `Large text only — ${rounded}`;
+    return `Below AA — ${rounded}`;
+  }
+
+  // --- popover --------------------------------------------------------------
+  let host = null;
+  let dialog = null;
+  let restoreFocus = null;
+
+  function apply(hex) {
+    if (!host || !HEX.test(hex)) return;
+    const value = hex.toLowerCase();
+    host.value = value;
+    if (dialog) {
+      dialog.querySelector('[data-cp-value]').value = value;
+      dialog.querySelector('[data-cp-native]').value = value;
+      renderDetails(value);
+    }
+    host.dispatchEvent(new Event('input', { bubbles: true }));
+    host.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function renderDetails(hex) {
+    if (!dialog) return;
+    const hint = dialog.querySelector('[data-cp-contrast]');
+    // Only text colours get a contrast verdict; a shape border on a page has no
+    // readable text to judge, and a wrong hint is worse than none.
+    const role = host?.dataset.ctx || host?.id || '';
+    const isText = /(^|-)color$|^color$|text|accent|heading/i.test(role) && !/fill|border|shadow|background/i.test(role);
+    hint.hidden = !isText;
+    hint.textContent = isText ? contrastHint(hex) : '';
+    hint.dataset.level = isText ? (contrastHint(hex).startsWith('AA') ? 'pass' : contrastHint(hex).startsWith('Large') ? 'large' : 'fail') : '';
+    const list = dialog.querySelector('[data-cp-recents]');
+    const recent = recents();
+    list.replaceChildren();
+    recent.forEach((value) => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'cp-recent';
+      swatch.dataset.color = value;
+      swatch.style.setProperty('--cp-swatch', value);
+      swatch.setAttribute('aria-label', `Use recent colour ${value}`);
+      swatch.addEventListener('click', () => { apply(value); remember(value); renderDetails(value); });
+      list.append(swatch);
+    });
+    const empty = dialog.querySelector('[data-cp-empty]');
+    empty.hidden = recent.length > 0;
+  }
+
+  function close({ focus = false } = {}) {
+    if (!dialog) return;
+    const closing = dialog;
+    dialog = null;
+    closing.remove();
+    if (focus && restoreFocus && typeof restoreFocus.focus === 'function') restoreFocus.focus();
+    restoreFocus = null;
+    host = null;
+  }
+
+  // Editor JS builds no HTML strings (repo rule): the popover is nodes only.
+  function el(tag, attrs = {}, text = '') {
+    const node = document.createElement(tag);
+    Object.entries(attrs).forEach(([name, value]) => {
+      if (name === 'class') node.className = value; else node.setAttribute(name, value);
+    });
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  function build() {
+    const node = el('div', { class: 'cp-extras', role: 'dialog', 'aria-label': 'Colour picker extras' });
+    const head = el('div', { class: 'cp-extras-head' });
+    head.append(
+      el('span', { class: 'cp-extras-title' }, 'Colour'),
+      el('button', { type: 'button', class: 'cp-extras-close', 'data-cp-close': '', 'aria-label': 'Close colour picker' }, '×'),
+    );
+    const row = el('div', { class: 'cp-extras-row' });
+    row.append(
+      el('input', { 'data-cp-native': '', type: 'color', 'aria-label': 'Pick a colour' }),
+      el('input', { 'data-cp-value': '', type: 'text', inputmode: 'text', spellcheck: 'false', maxlength: '7', 'aria-label': 'Hex colour value', placeholder: '#9d4555' }),
+    );
+    const actions = el('div', { class: 'cp-extras-actions' });
+    actions.append(el('button', { type: 'button', class: 'cp-extras-pick', 'data-cp-eyedropper': '', hidden: '' }, 'Eyedropper'));
+    node.append(
+      head,
+      row,
+      el('p', { class: 'cp-extras-label' }, 'Recent colours'),
+      el('div', { class: 'cp-extras-recents', 'data-cp-recents': '', role: 'group', 'aria-label': 'Recent colours' }),
+      el('p', { class: 'cp-extras-empty', 'data-cp-empty': '', hidden: '' }, 'No recent colours yet.'),
+      el('p', { class: 'cp-extras-contrast', 'data-cp-contrast': '', hidden: '' }),
+      actions,
+    );
+    body.append(node);
+    return node;
+  }
+
+  function open(input) {
+    if (!input || input.type !== 'color') return false;
+    if (dialog && host === input) { close({ focus: true }); return false; }
+    close();
+    host = input;
+    restoreFocus = input;
+    dialog = build();
+    dialog.querySelector('[data-cp-native]').value = input.value;
+    dialog.querySelector('[data-cp-value]').value = input.value;
+    dialog.querySelector('[data-cp-native]').addEventListener('input', (event) => { apply(event.target.value); remember(event.target.value); });
+    dialog.querySelector('[data-cp-value]').addEventListener('change', (event) => {
+      const value = event.target.value.trim();
+      if (!HEX.test(value)) { event.target.value = host?.value || ''; return; }
+      apply(value); remember(value); renderDetails(value);
+    });
+    dialog.querySelector('[data-cp-close]').addEventListener('click', () => close({ focus: true }));
+    const picker = dialog.querySelector('[data-cp-eyedropper]');
+    if ('EyeDropper' in window) {
+      picker.hidden = false;
+      picker.addEventListener('click', async () => {
+        try {
+          const result = await new window.EyeDropper().open();
+          if (result?.sRGBHex) { apply(result.sRGBHex); remember(result.sRGBHex); renderDetails(result.sRGBHex); }
+        } catch { /* the user cancelled the eyedropper; nothing to apply */ }
+      });
+    }
+    renderDetails(input.value);
+    position(input);
+    dialog.querySelector('[data-cp-value]').focus({ preventScroll: true });
+    return true;
+  }
+
+  function position(input) {
+    if (!dialog) return;
+    const anchor = input.getBoundingClientRect();
+    const box = dialog.getBoundingClientRect();
+    const gap = 8;
+    let left = Math.min(anchor.left, window.innerWidth - box.width - 12);
+    left = Math.max(12, left);
+    let top = anchor.bottom + gap;
+    if (top + box.height > window.innerHeight - 12) top = Math.max(12, anchor.top - box.height - gap);
+    dialog.style.left = `${Math.round(left)}px`;
+    dialog.style.top = `${Math.round(top)}px`;
+  }
+
+  // Delegated: every colour input in the editor, including ones the panels and
+  // the studio build later. `preventDefault` keeps the OS dialog closed while
+  // the popover owns the interaction; the native input inside is one click away.
+  document.addEventListener('click', (event) => {
+    const input = event.target.closest?.('input[type="color"]');
+    if (!input || !input.closest('#main, #stage, body[data-page="index"]')) return;
+    if (input.closest('.cp-extras')) return;
+    event.preventDefault();
+    open(input);
+  }, true);
+  // Window capture: the editor's own Escape handlers sit on document and some stop
+  // immediate propagation there, so the popover listens one level earlier.
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && dialog) { event.preventDefault(); close({ focus: true }); }
+  }, true);
+  document.addEventListener('pointerdown', (event) => {
+    if (!dialog || event.target.closest('.cp-extras') || event.target.closest('input[type="color"]')) return;
+    close();
+  }, true);
+  window.addEventListener('resize', () => close(), { passive: true });
+
+  window.EInviteColorExtras = Object.freeze({
+    version: 1,
+    open,
+    close,
+    recents,
+    remember,
+    contrast: { ratio: contrastRatio, hint: contrastHint, background: pageBackground },
+  });
+})();;(function(){
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const html=document.documentElement, body=document.body;
@@ -1963,7 +2204,7 @@ function apply(root,d){
   const cover=root.querySelector(':scope > #openCover');if(cover)cover.remove();const content=document.createElement('div');content.className='guest-layout-content';while(root.firstChild)content.append(root.firstChild);const shell=document.createElement('div');shell.className=`guest-layout-shell guest-layout-${layout}`;
   if(layout==='editorial-split'){const f=d.fields||{},mode=d.languageMode||'both',summary=document.createElement('aside'),names=mode==='km'?(f.namesKm||f.names):(f.names||'Invitation'),venue=mode==='km'?(f.venueKm||f.venue):(f.venue||'');summary.className='guest-layout-summary';summary.innerHTML=`<small>${mode==='km'?'សូមគោរពអញ្ជើញ':'YOU ARE INVITED'}</small><h1>${window.EInviteRenderer?.esc(names||'Invitation')}</h1><p>${window.EInviteRenderer?.esc(f.date||'')}</p><p>${window.EInviteRenderer?.esc(venue||'')}</p>`;shell.append(summary)}
   shell.append(content);root.append(shell);if(cover)root.append(cover);root.dataset.desktopLayout=layout;
-  root.querySelectorAll('img').forEach((img,i)=>{if(!img.loading)img.loading=i<2?'eager':'lazy';img.decoding='async';if(!img.getAttribute('alt'))img.alt='Invitation photo';});root.querySelectorAll('section').forEach(s=>s.classList.add('guest-lazy-section'));
+  root.querySelectorAll('img').forEach((img,i)=>{if(!img.loading)img.loading=i<2?'eager':'lazy';img.decoding='async';if(!img.getAttribute('alt')){img.alt='';img.setAttribute('aria-hidden','true');}});root.querySelectorAll('section').forEach(s=>s.classList.add('guest-lazy-section'));
 }
 window.EInviteGuestLayouts={apply,kitStyle,safeAmbientPhoto};
 })();;(()=>{
@@ -2129,7 +2370,16 @@ let liveRegion;
 function announce(message){if(liveRegion)liveRegion.textContent=message}
 function inspectorGroup(title,controls){const section=el('section',{class:'v20-inspector-group'});section.append(el('h3',{},title));for(const c of controls)if(c)section.append(c);return section}
 function takeControl(id){const control=$('#'+id);return control?.closest('label,.typography-toggle-row,.typography-fit-status,p')||control}
-function buildInspector(){const root=$('#typographyControls');if(!root)return;const styleSelect=el('select',{id:'v20TextStyle','aria-label':'Semantic text style'});styleSelect.addEventListener('change',()=>setStyle(styleSelect.value));const styleActions=el('div',{class:'v20-style-actions'});styleActions.append(button('Edit','v20EditStyle',editStyle,{'aria-label':'Edit linked text style'}),button('Create','v20CreateStyle',createStyle,{'data-style-limit-action':'create'}),button('Rename','v20RenameStyle',renameStyle),button('Duplicate','v20DuplicateStyle',duplicateStyle,{'data-style-limit-action':'duplicate'}),button('Delete','v20DeleteStyle',deleteStyle));const linkActions=el('div',{class:'v20-one-click-actions'});linkActions.append(button('Detach','v20DetachStyle',detach),button('Reset override','v20ResetOverride',resetOverrides));const status=el('div',{id:'v20TypographyStatus',class:'v20-status-grid','aria-live':'polite'});status.innerHTML='<span>Maximum <strong data-v20-max>—</strong></span><span>Live <strong data-v20-live>—</strong></span><span>Minimum <strong data-v20-min>—</strong></span><span>Overflow <strong data-v20-overflow>—</strong></span>';const warnings=el('div',{id:'v20TypographyWarnings',class:'v20-warning-list',role:'status','aria-live':'polite'});const oneClick=el('div',{class:'v20-one-click-actions'});oneClick.append(button('Fit','v20Fit',fitNow),button('Expand box','v20ExpandBox',expandBox),button('Reduce text','v20ReduceText',reduceText),button('Reset override','v20ResetOverride2',resetOverrides));const advanced=$('#advancedTextLayout');const vertical=el('select',{id:'v20VerticalAlign','aria-label':'Vertical text alignment'});for(const value of['top','middle','bottom'])vertical.append(el('option',{value},value[0].toUpperCase()+value.slice(1)));vertical.addEventListener('change',()=>setOverride('textVerticalAlign',vertical.value,'Set vertical alignment'));const padding=el('input',{id:'v20TextPadding',type:'range',min:0,max:64,step:1,value:8,'aria-label':'Text box padding'});padding.addEventListener('input',()=>setOverride('textPadding',Number(padding.value),'Set text padding'));const toggleRow=takeControl('fontBold');const digitCommand=$('#convertDigits'),digitActions=digitCommand?el('div',{class:'v20-one-click-actions'}):null;if(digitActions)digitActions.append(digitCommand);const groups=[inspectorGroup('Text',[labeled('Semantic style',styleSelect),styleActions,linkActions,takeControl('font'),takeControl('color'),takeControl('fontSize'),toggleRow,...(digitActions?[digitActions]:[])]),inspectorGroup('Paragraph',[takeControl('textAlign'),takeControl('letterSpacing'),takeControl('lineHeight'),takeControl('textWrap')]),inspectorGroup('Auto-fit and overflow',[takeControl('textAutoFit'),takeControl('textMinFontSize'),takeControl('fitTextNow'),status,oneClick,warnings,takeControl('typographyV19State')]),inspectorGroup('Columns',[takeControl('textColumns'),takeControl('textColumnGap')]),inspectorGroup('Advanced appearance',[labeled('Vertical alignment',vertical),labeled('Text box padding',padding)])];const shell=el('details',{id:'advancedTextLayout',class:'typography-v19-controls v20-typography-shell',open:true});shell.append(el('summary',{class:'v20-shell-summary'},'Typography controls'),...groups);root.replaceChildren(shell);root._v20Advanced={vertical,padding};liveRegion=el('div',{class:'sr-only',role:'status','aria-live':'polite'});shell.append(liveRegion)}
+function buildInspector(){const root=$('#typographyControls');if(!root)return;const styleSelect=el('select',{id:'v20TextStyle','aria-label':'Semantic text style'});styleSelect.addEventListener('change',()=>setStyle(styleSelect.value));const styleActions=el('div',{class:'v20-style-actions'});styleActions.append(button('Edit','v20EditStyle',editStyle,{'aria-label':'Edit linked text style'}),button('Create','v20CreateStyle',createStyle,{'data-style-limit-action':'create'}),button('Rename','v20RenameStyle',renameStyle),button('Duplicate','v20DuplicateStyle',duplicateStyle,{'data-style-limit-action':'duplicate'}),button('Delete','v20DeleteStyle',deleteStyle));const linkActions=el('div',{class:'v20-one-click-actions'});linkActions.append(button('Detach','v20DetachStyle',detach),button('Reset override','v20ResetOverride',resetOverrides));const status=el('div',{id:'v20TypographyStatus',class:'v20-status-grid','aria-live':'polite'});status.innerHTML='<span>Maximum <strong data-v20-max>—</strong></span><span>Live <strong data-v20-live>—</strong></span><span>Minimum <strong data-v20-min>—</strong></span><span>Overflow <strong data-v20-overflow>—</strong></span>';const warnings=el('div',{id:'v20TypographyWarnings',class:'v20-warning-list',role:'status','aria-live':'polite'});const oneClick=el('div',{class:'v20-one-click-actions'});oneClick.append(button('Fit','v20Fit',fitNow),button('Expand box','v20ExpandBox',expandBox),button('Reduce text','v20ReduceText',reduceText),button('Reset override','v20ResetOverride2',resetOverrides));const advanced=$('#advancedTextLayout');const vertical=el('select',{id:'v20VerticalAlign','aria-label':'Vertical text alignment'});for(const value of['top','middle','bottom'])vertical.append(el('option',{value},value[0].toUpperCase()+value.slice(1)));vertical.addEventListener('change',()=>setOverride('textVerticalAlign',vertical.value,'Set vertical alignment'));const padding=el('input',{id:'v20TextPadding',type:'range',min:0,max:64,step:1,value:8,'aria-label':'Text box padding'});padding.addEventListener('input',()=>setOverride('textPadding',Number(padding.value),'Set text padding')); const runFont=el('select',{id:'v20RunFont','aria-label':'Font pairing for selected text'});
+ for(const[value,entry]of Object.entries(window.EInviteFontRegistry?.data?.pairings||{}))runFont.append(el('option',{value},entry.label||value));
+ const runSize=el('select',{id:'v20RunSize','aria-label':'Size for selected text'});
+ for(const value of[10,12,14,16,18,20,24,28,32,36,42,48,56,64,72,80])runSize.append(el('option',{value:String(value)},`${value}px`));
+ const runStatus=el('p',{id:'v20RunStatus',class:'v20-ok',role:'status','aria-live':'polite'},'Select text inside the object to format one run.');
+ const runApply=button('Apply to selected text','v20RunApply',()=>{window.RichTextEditing?.applyRunMark?.({fontPairing:runFont.value,fontSize:Number(runSize.value)});refresh()},{'aria-describedby':'v20RunStatus'});
+ runApply.disabled=true;runApply.setAttribute('aria-disabled','true');
+ const runActions=el('div',{class:'v20-one-click-actions'});runActions.append(runApply);
+ const runGroup=inspectorGroup('Selected text (run)',[labeled('Font pairing',runFont),labeled('Size',runSize),runActions,runStatus]);
+ const toggleRow=takeControl('fontBold');const digitCommand=$('#convertDigits'),digitActions=digitCommand?el('div',{class:'v20-one-click-actions'}):null;if(digitActions)digitActions.append(digitCommand);const groups=[inspectorGroup('Text',[labeled('Semantic style',styleSelect),styleActions,linkActions,takeControl('font'),takeControl('color'),takeControl('fontSize'),toggleRow,...(digitActions?[digitActions]:[])]),inspectorGroup('Paragraph',[takeControl('textAlign'),takeControl('letterSpacing'),takeControl('lineHeight'),takeControl('textWrap')]),inspectorGroup('Auto-fit and overflow',[takeControl('textAutoFit'),takeControl('textMinFontSize'),takeControl('fitTextNow'),status,oneClick,warnings,takeControl('typographyV19State')]),inspectorGroup('Columns',[takeControl('textColumns'),takeControl('textColumnGap')]),inspectorGroup('Advanced appearance',[labeled('Vertical alignment',vertical),labeled('Text box padding',padding)]),runGroup];const shell=el('details',{id:'advancedTextLayout',class:'typography-v19-controls v20-typography-shell',open:true});shell.append(el('summary',{class:'v20-shell-summary'},'Typography controls'),...groups);root.replaceChildren(shell);root._v20Advanced={vertical,padding};liveRegion=el('div',{class:'sr-only',role:'status','aria-live':'polite'});shell.append(liveRegion)}
 function proxySelect(sourceId,label,handler){const source=$('#'+sourceId),control=source?.cloneNode(true);if(!control)return null;control.removeAttribute('id');control.dataset.v20Proxy=sourceId;control.setAttribute('aria-label',label);control.addEventListener('change',()=>{if(control.value!=='__mixed__')handler(control.value,source)});return control}
 function buildToolbar(){
  const host=$('.stage-wrap > .toolbar');if(!host)return;
@@ -2168,7 +2418,8 @@ function syncInactiveSurfaces(){document.querySelectorAll('dialog').forEach(node
 let v20InertTimer=0;function scheduleInactiveSync(){if(v20InertTimer)return;v20InertTimer=setTimeout(()=>{v20InertTimer=0;if(window.EInviteProfessionalEditor?.activeInteraction)return;syncInactiveSurfaces()},220)}
 let v20LimitControlCache=null;const v20LimitControls=()=>{if(v20LimitControlCache&&v20LimitControlCache.length&&v20LimitControlCache[0].isConnected)return v20LimitControlCache;v20LimitControlCache=[...document.querySelectorAll('[data-style-limit-action]')];return v20LimitControlCache};
 function diagnosticsForSelected(){const node=document.querySelector('.object.selected .content')||document.querySelector('.object .content'),objectNode=node?.closest('.object'),doc=bridge()?.getState?.(),object=firstSelected(doc);if(!node||!object||!doc)return null;const model=MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''});node.__typographyModel=model;return{model,result:LAYOUT()?.fitAndDiagnose(node,model),objectNode}}
-function refresh(){const doc=bridge()?.getState?.();if(!doc||!MODEL())return;const entries=selectedEntries(doc),selected=entries[0]?.[1]||null,textSelected=!!selected,selectionSignature=entries.map(([id])=>id).sort().join('|');const atStyleLimit=Object.keys(doc.typography?.styles||{}).length>=MODEL().MAX_TEXT_STYLES;v20LimitControls().forEach(control=>{control.disabled=atStyleLimit;control.setAttribute('aria-disabled',String(atStyleLimit));control.title=atStyleLimit?`Maximum ${MODEL().MAX_TEXT_STYLES} text styles reached`:''});const inspector=$('#v20TextStyle'),toolbar=$('#v20TypographyToolbar');if(inspector){styleOptions(inspector);inspector.disabled=!textSelected;const adv=$('#typographyControls')?._v20Advanced;if(adv&&textSelected){const m=MODEL().resolveObjectTypography(doc,selected);adv.vertical.value=m.textVerticalAlign;adv.padding.value=String(m.textPadding)}}if(toolbar){toolbar.hidden=!textSelected;toolbar.setAttribute('aria-hidden',String(!textSelected));if(textSelected){const r=toolbar._refs,models=entries.map(([,object])=>MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''})),model=models[0],fonts=[...new Set(models.map(m=>m.font))];styleOptions(r.style);const mixed=fonts.length>1,mixedOption=r.font?.querySelector('option[value="__mixed__"]');if(mixedOption){mixedOption.hidden=!mixed;mixedOption.disabled=!mixed}if(r.font){r.font.value=mixed?'__mixed__':model.font;r.font.dataset.mixed=String(mixed);r.font.setAttribute('aria-label',mixed?'Font for selected text, mixed values':'Font for selected text')}r.size.value=model.textAutoFit==='fit'?model.textAutoFitMax:model.fontSize;r.bold.setAttribute('aria-pressed',String(model.fontWeight==='700'));r.italic.setAttribute('aria-pressed',String(model.fontStyle==='italic'));r.align.value=model.textAlign;r.color.value=/^#[0-9a-f]{6}$/i.test(model.color)?model.color:'#000000';r.fit.textContent=model.textAutoFit==='fit'?`Auto-fit ${model.textMinFontSize}–${model.textAutoFitMax}px`:'Auto-fit off';if(selectionSignature&&selectionSignature!==lastTextSelectionSignature){const activeInspector=document.querySelector('[data-inspector-tab].active')?.dataset.inspectorTab||'';const preserveLayerWorkflow=activeInspector==='layers'&&document.body.dataset.keyboardOwner!=='canvas';if(!preserveLayerWorkflow){const responsive=window.EInviteResponsiveLayout,layout=responsive?.mode?.()||'desktop',tab=document.querySelector('[data-inspector-tab="object"]');if(layout==='desktop')tab?.click();else{document.querySelectorAll('[data-inspector-tab]').forEach(node=>node.classList.toggle('active',node===tab));document.querySelectorAll('[data-inspector-pane]').forEach(node=>node.classList.toggle('active',node.dataset.inspectorPane==='object'));localStorage.setItem('einvite-editor-right-tab','object')}}}}}lastTextSelectionSignature=selectionSignature;const d=textSelected?diagnosticsForSelected():null,model=d?.model,diag=d?.result?.diagnostics;const set=(selector,value)=>{const n=$(selector);if(n&&n.textContent!==value)n.textContent=value};set('[data-v20-max]',model?`${model.textAutoFitMax}px`:'—');set('[data-v20-live]',diag?`${diag.computedSize.toFixed(1)}px`:'—');set('[data-v20-min]',model?`${model.textMinFontSize}px`:'—');set('[data-v20-overflow]',diag?(diag.overflow?'Clipped':'Clear'):'—');const warnings=$('#v20TypographyWarnings');const wSig=diag?(diag.overflow?'1':'0')+'|'+(diag.warnings||[]).map(w=>w.severity+':'+w.message).join('|'):'';if(warnings&&warnings.dataset.v20WarnSig!==wSig){warnings.dataset.v20WarnSig=wSig;warnings.replaceChildren(...(diag?.warnings||[]).map(w=>el('p',{class:`v20-warning v20-${w.severity}`},w.message)));if(!diag?.warnings?.length)warnings.append(el('p',{class:'v20-ok'},'No typography accessibility warnings.'))}const mobile=$('#v20MobileSelectionSummary');if(mobile)mobile.textContent=textSelected?`${selected.textStyleId||'Body'} · ${model?.fontSize||'—'}px · ${model?.locale==='km'?'Khmer':'English'} · ${diag?.overflow?'Overflow':'Fits'}`:'No text object selected'}
+function refresh(){const doc=bridge()?.getState?.();if(!doc||!MODEL())return;const entries=selectedEntries(doc),selected=entries[0]?.[1]||null,textSelected=!!selected,selectionSignature=entries.map(([id])=>id).sort().join('|');const atStyleLimit=Object.keys(doc.typography?.styles||{}).length>=MODEL().MAX_TEXT_STYLES;v20LimitControls().forEach(control=>{control.disabled=atStyleLimit;control.setAttribute('aria-disabled',String(atStyleLimit));control.title=atStyleLimit?`Maximum ${MODEL().MAX_TEXT_STYLES} text styles reached`:''});const inspector=$('#v20TextStyle'),toolbar=$('#v20TypographyToolbar');if(inspector){styleOptions(inspector);inspector.disabled=!textSelected;const adv=$('#typographyControls')?._v20Advanced;if(adv&&textSelected){const m=MODEL().resolveObjectTypography(doc,selected);adv.vertical.value=m.textVerticalAlign;adv.padding.value=String(m.textPadding)}}if(toolbar){toolbar.hidden=!textSelected;toolbar.setAttribute('aria-hidden',String(!textSelected));if(textSelected){const r=toolbar._refs,models=entries.map(([,object])=>MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''})),model=models[0],fonts=[...new Set(models.map(m=>m.font))];styleOptions(r.style);const mixed=fonts.length>1,mixedOption=r.font?.querySelector('option[value="__mixed__"]');if(mixedOption){mixedOption.hidden=!mixed;mixedOption.disabled=!mixed}if(r.font){r.font.value=mixed?'__mixed__':model.font;r.font.dataset.mixed=String(mixed);r.font.setAttribute('aria-label',mixed?'Font for selected text, mixed values':'Font for selected text')}r.size.value=model.textAutoFit==='fit'?model.textAutoFitMax:model.fontSize;r.bold.setAttribute('aria-pressed',String(model.fontWeight==='700'));r.italic.setAttribute('aria-pressed',String(model.fontStyle==='italic'));r.align.value=model.textAlign;r.color.value=/^#[0-9a-f]{6}$/i.test(model.color)?model.color:'#000000';r.fit.textContent=model.textAutoFit==='fit'?`Auto-fit ${model.textMinFontSize}–${model.textAutoFitMax}px`:'Auto-fit off';if(selectionSignature&&selectionSignature!==lastTextSelectionSignature){const activeInspector=document.querySelector('[data-inspector-tab].active')?.dataset.inspectorTab||'';const preserveLayerWorkflow=activeInspector==='layers'&&document.body.dataset.keyboardOwner!=='canvas';if(!preserveLayerWorkflow){const responsive=window.EInviteResponsiveLayout,layout=responsive?.mode?.()||'desktop',tab=document.querySelector('[data-inspector-tab="object"]');if(layout==='desktop')tab?.click();else{document.querySelectorAll('[data-inspector-tab]').forEach(node=>node.classList.toggle('active',node===tab));document.querySelectorAll('[data-inspector-pane]').forEach(node=>node.classList.toggle('active',node.dataset.inspectorPane==='object'));localStorage.setItem('einvite-editor-right-tab','object')}}}}}lastTextSelectionSignature=selectionSignature;const d=textSelected?diagnosticsForSelected():null,model=d?.model,diag=d?.result?.diagnostics;const set=(selector,value)=>{const n=$(selector);if(n&&n.textContent!==value)n.textContent=value};set('[data-v20-max]',model?`${model.textAutoFitMax}px`:'—');set('[data-v20-live]',diag?`${diag.computedSize.toFixed(1)}px`:'—');set('[data-v20-min]',model?`${model.textMinFontSize}px`:'—');set('[data-v20-overflow]',diag?(diag.overflow?'Clipped':'Clear'):'—');const warnings=$('#v20TypographyWarnings');const wSig=diag?(diag.overflow?'1':'0')+'|'+(diag.warnings||[]).map(w=>w.severity+':'+w.message).join('|'):'';if(warnings&&warnings.dataset.v20WarnSig!==wSig){warnings.dataset.v20WarnSig=wSig;warnings.replaceChildren(...(diag?.warnings||[]).map(w=>el('p',{class:`v20-warning v20-${w.severity}`},w.message)));if(!diag?.warnings?.length)warnings.append(el('p',{class:'v20-ok'},'No typography accessibility warnings.'))}const run=window.RichTextEditing?.runSelection?.(),runFont=$('#v20RunFont'),runSize=$('#v20RunSize'),runApply=$('#v20RunApply'),runStatus=$('#v20RunStatus');if(runApply){runApply.disabled=!run;runApply.setAttribute('aria-disabled',String(!run))}if(run&&runFont&&run.marks?.fontPairing)runFont.value=run.marks.fontPairing;if(run&&runSize&&run.marks?.fontSize)runSize.value=String(run.marks.fontSize);if(runStatus)runStatus.textContent=run?`${run.locale==='km'?'Khmer':'Latin'} run: ${run.text.slice(0,40)}`:'Select text inside the object to format one run.';
+const mobile=$('#v20MobileSelectionSummary');if(mobile)mobile.textContent=textSelected?`${selected.textStyleId||'Body'} · ${model?.fontSize||'—'}px · ${model?.locale==='km'?'Khmer':'English'} · ${diag?.overflow?'Overflow':'Fits'}`:'No text object selected'}
 function install(){if(!MODEL()||!LAYOUT()||!bridge())return;buildInspector();buildToolbar();buildPreview();buildMobileSummary();syncInactiveSurfaces();refresh();document.addEventListener('selectionchange',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:editor-command',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:state-applied',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:typography-selection-diagnostics',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:request-typography-fit',event=>{const object=event.detail?.node,content=object?.querySelector('.content'),doc=bridge().getState(),map=canvasMap(doc),data=map[object?.dataset?.id];if(content&&data){const model=MODEL().resolveObjectTypography(doc,data,{text:content.textContent||''});LAYOUT().fitAndDiagnose(content,model)}});let v20RefreshQueued=false;new MutationObserver(()=>{if(v20RefreshQueued)return;v20RefreshQueued=true;requestAnimationFrame(()=>{v20RefreshQueued=false;refresh()})}).observe($('#stage'),{subtree:true,attributes:true,attributeFilter:['class']});new MutationObserver(()=>scheduleInactiveSync()).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','open']});window.EInviteTypographyV20={refresh,openPreview,command,applyLayout,setStyle,setOverride,resetOverrides}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,0),{once:true});else setTimeout(install,0);
 })();;(()=>{

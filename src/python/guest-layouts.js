@@ -7,7 +7,7 @@ function apply(root,d){
   const cover=root.querySelector(':scope > #openCover');if(cover)cover.remove();const content=document.createElement('div');content.className='guest-layout-content';while(root.firstChild)content.append(root.firstChild);const shell=document.createElement('div');shell.className=`guest-layout-shell guest-layout-${layout}`;
   if(layout==='editorial-split'){const f=d.fields||{},mode=d.languageMode||'both',summary=document.createElement('aside'),names=mode==='km'?(f.namesKm||f.names):(f.names||'Invitation'),venue=mode==='km'?(f.venueKm||f.venue):(f.venue||'');summary.className='guest-layout-summary';summary.innerHTML=`<small>${mode==='km'?'សូមគោរពអញ្ជើញ':'YOU ARE INVITED'}</small><h1>${window.EInviteRenderer?.esc(names||'Invitation')}</h1><p>${window.EInviteRenderer?.esc(f.date||'')}</p><p>${window.EInviteRenderer?.esc(venue||'')}</p>`;shell.append(summary)}
   shell.append(content);root.append(shell);if(cover)root.append(cover);root.dataset.desktopLayout=layout;
-  root.querySelectorAll('img').forEach((img,i)=>{if(!img.loading)img.loading=i<2?'eager':'lazy';img.decoding='async';if(!img.getAttribute('alt'))img.alt='Invitation photo';});root.querySelectorAll('section').forEach(s=>s.classList.add('guest-lazy-section'));
+  root.querySelectorAll('img').forEach((img,i)=>{if(!img.loading)img.loading=i<2?'eager':'lazy';img.decoding='async';if(!img.getAttribute('alt')){img.alt='';img.setAttribute('aria-hidden','true');}});root.querySelectorAll('section').forEach(s=>s.classList.add('guest-lazy-section'));
 }
 window.EInviteGuestLayouts={apply,kitStyle,safeAmbientPhoto};
 })();

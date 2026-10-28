@@ -21,8 +21,7 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
    normalization is required because most Latin-optimised system fonts would
    otherwise render Khmer with cramped line-height / overlapping conjuncts.
    Loaded on every page via the universal styles.css bundle entry. */
-:lang(km){line-height:1.6;font-size:16px;letter-spacing:normal;font-feature-settings:normal;font-synthesis:none}
-[lang="km"]{line-height:1.6;font-size:16px;letter-spacing:normal;font-feature-settings:normal;font-synthesis:none}
+:lang(km):not(.rt-run):not(.rt-paragraph):not(.rt-document):not(.typography-flow){line-height:1.6;font-size:16px;letter-spacing:normal;font-feature-settings:normal;font-synthesis:none}
 /* Phase 2b (V2-UX-5, P1-E): WCAG 1.3.1 / 4.1.2 — screen-reader-only label utility.
    Defined here (universal) so .sr-only is available on every page that loads
    styles.css, regardless of which other CSS bundles the page mounts. Mirrors

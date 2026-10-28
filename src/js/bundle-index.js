@@ -899,7 +899,7 @@ function styleObject(model={}){
  const wrap=model.textWrap==='normal'?'wrap':model.textWrap;
  const vertical=model.textVerticalAlign==='top'?'flex-start':model.textVerticalAlign==='bottom'?'flex-end':'center';
  const khmer=model.locale==='km'||KHMER_RE.test(String(model.text||'')),meta=khmer&&String(model.font||'').startsWith('custom-')?globalThis.EInviteFontRegistry?.data?.fonts?.[model.font]:null,lineHeight=meta?.khmerReady?Math.max(finite(model.lineHeight,1.35,.8,3),finite(meta.recommendedLineHeight,1.42,1.15,1.8)):finite(model.lineHeight,1.35,.8,3);
- return{outer:{display:'flex',flexDirection:'column',justifyContent:vertical,alignItems:'stretch',overflow:'hidden',padding:`${finite(model.textPadding,8,0,64)}px`,fontFamily:model.fontStack||'serif',fontSize:`${model.textAutoFit==='fit'?finite(model.textAutoFitMax,model.fontSize,8,200):finite(model.fontSize,32,8,200)}px`,fontWeight:String(model.fontWeight)==='700'?'700':'400',fontStyle:model.fontStyle==='italic'?'italic':'normal',letterSpacing:`${finite(model.letterSpacing,0,-2,20)}px`,lineHeight:String(lineHeight),textAlign:['left','center','right','justify'].includes(model.textAlign)?model.textAlign:'left',color:model.color||'inherit',wordBreak:'normal',overflowWrap:khmer?'normal':'anywhere',lineBreak:khmer?'strict':'auto',textRendering:'optimizeLegibility',fontSynthesis:'none'},flow:{width:'100%',maxWidth:'100%',columnCount:String(Math.round(finite(model.textColumns,1,1,3))),columnGap:Math.round(finite(model.textColumns,1,1,3))>1?`${finite(model.textColumnGap,24,0,64)}px`:'normal',columnFill:'balance',textWrap:wrap,wordBreak:'normal',overflowWrap:khmer?'normal':'anywhere',lineBreak:khmer?'strict':'auto',hyphens:khmer?'none':'manual'}};
+ return{outer:{display:'flex',flexDirection:'column',justifyContent:vertical,alignItems:'stretch',overflow:'hidden',padding:`${finite(model.textPadding,8,0,64)}px`,fontFamily:model.fontStack||'serif',fontSize:`${model.textAutoFit==='fit'?finite(model.textAutoFitMax,model.fontSize,8,200):finite(model.fontSize,32,8,200)}px`,fontWeight:String(model.fontWeight)==='700'?'700':'400',fontStyle:model.fontStyle==='italic'?'italic':'normal',letterSpacing:`${finite(model.letterSpacing,0,-2,20)}px`,lineHeight:String(lineHeight),textAlign:['left','center','right','justify'].includes(model.textAlign)?model.textAlign:'left',color:model.color||'inherit',wordBreak:'normal',overflowWrap:khmer?'normal':'anywhere',lineBreak:khmer?'strict':'auto',textRendering:'optimizeLegibility',fontSynthesis:'none'},flow:{width:'100%',maxWidth:'100%',lineHeight:'inherit',columnCount:String(Math.round(finite(model.textColumns,1,1,3))),columnGap:Math.round(finite(model.textColumns,1,1,3))>1?`${finite(model.textColumnGap,24,0,64)}px`:'normal',columnFill:'balance',textWrap:wrap,wordBreak:'normal',overflowWrap:khmer?'normal':'anywhere',lineBreak:khmer?'strict':'auto',hyphens:khmer?'none':'manual'}};
 }
 const STYLE_ORDER=Object.freeze(['display','flexDirection','justifyContent','alignItems','overflow','padding','fontFamily','fontSize','fontWeight','fontStyle','letterSpacing','lineHeight','textAlign','color','wordBreak','overflowWrap','lineBreak','textRendering','fontSynthesis','width','maxWidth','columnCount','columnGap','columnFill','textWrap','hyphens']);
 const kebab=value=>value.replace(/[A-Z]/g,m=>`-${m.toLowerCase()}`);
@@ -971,7 +971,13 @@ function installResponsive(root=document,options={}){
  // re-fits. The convergence is at most one extra pass.
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>{const source=entry.target;const rect=entry.contentRect;const key=`${Math.round(rect.width)}x${Math.round(rect.height)}`;if(source.__typographyFitBox===key)return;source.__typographyFitBox=key;schedule(source)})):null;
  const observe=(source,model)=>{if(!source)return source;sources.add(source);const target=targetFor(source);if(model&&target)target.__typographyModel=model;observer?.observe(source);return source};
- const discover=()=>{scope.querySelectorAll?.(selector).forEach(observe);return sources};
+ // `observe`'s second parameter is the caller's model, not a callback payload: passing it to
+ // `forEach` directly handed it the array INDEX, so every element after the first cached a
+ // number as its typography model. `modelFor` returns that cache first, so the fit pass then
+ // applied a blank model (font-size 32, textAutoFit none) and text stopped being fitted at all
+ // — the guest page rendered 33 of 34 pack text objects unfitted and clipped. Call it without
+ // the extra arguments; nothing else about discovery changes.
+ const discover=()=>{scope.querySelectorAll?.(selector).forEach(source=>observe(source));return sources};
  discover();sources.forEach(run);
  const fontDone=()=>sources.forEach(schedule);document.fonts?.ready?.then(fontDone).catch(()=>{});document.fonts?.addEventListener?.('loadingdone',fontDone);
  const resize=()=>sources.forEach(schedule);addEventListener('resize',resize,{passive:true});
@@ -1067,7 +1073,7 @@ function renderObject(o={},options={}){
  const borderWidth=Math.max(0,Math.min(12,Number(o.borderWidth||0))),borderRadius=Math.max(0,Math.min(120,Number(o.borderRadius||0))),shadowBlur=Math.max(0,Math.min(60,Number(o.shadowBlur||0))),opacity=Math.max(.1,Math.min(1,Number(o.opacity??1))),shadow=shadowBlur?`0 ${Math.max(2,Math.round(shadowBlur/3))}px ${shadowBlur}px ${esc(o.shadowColor||'#000000')}55`:'none';
  const height=String(o.height||'80px').includes('%')?o.height:`${parseFloat(o.height||80)/pageHeight*100}%`,top=String(o.top||'0').includes('%')?o.top:`${parseFloat(o.top||0)/pageHeight*100}%`;
  const common=`left:${esc(o.left||'0')};top:${esc(top)};width:${esc(objectDimension(o.width,'x'))};height:${esc(height)};z-index:${Number(o.zIndex||1)};transform:rotate(${Number(o.rotation||0)}deg);opacity:${opacity};border:${borderWidth}px solid ${esc(o.borderColor||'#ffffff')};border-radius:${borderRadius}px;box-shadow:${shadow};animation-name:${animationName(o.animation)};animation-duration:${Math.max(300,Math.min(3000,Number(o.duration||900)))}ms;${advancedObjectStyle(o)}`;
- if(o.type==='image'&&o.src){const masks={none:'none',circle:'ellipse(50% 50% at 50% 50%)',arch:'inset(0 round 48% 48% 12% 12%)',diamond:'polygon(50% 0,100% 50%,50% 100%,0 50%)',hexagon:'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',blob:'polygon(50% 0,78% 8%,96% 35%,91% 72%,66% 100%,31% 94%,6% 68%,0 32%,22% 7%)'},frames={none:['0','transparent'],white:['8px','#ffffff'],gold:['8px','#c79b42'],dark:['8px','#201b1b']},frame=frames[o.imageFrame||'none']||frames.none;return`<div class="published-object published-image reveal" data-object-id="${esc(id)}" style="${common};${o.dominantColor?`background:${esc(o.dominantColor)};`:''}"><img src="${esc(o.src)}"${responsiveImageAttributes(o)} alt="${esc(o.alt||'Invitation image')}" loading="lazy" decoding="async" style="object-fit:${esc(o.imageFit||'cover')};object-position:${Number(o.imagePositionX??50)}% ${Number(o.imagePositionY??50)}%;border-radius:inherit;clip-path:${masks[o.imageMask||'none']||'none'};padding:${frame[0]};background:${frame[1]};box-sizing:border-box;filter:${imageFilterStyle(o)};transform:${imageTransformStyle(o)};${imageMaskStyle(o)}"></div>`}
+ if(o.type==='image'&&o.src){const masks={none:'none',circle:'ellipse(50% 50% at 50% 50%)',arch:'inset(0 round 48% 48% 12% 12%)',diamond:'polygon(50% 0,100% 50%,50% 100%,0 50%)',hexagon:'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',blob:'polygon(50% 0,78% 8%,96% 35%,91% 72%,66% 100%,31% 94%,6% 68%,0 32%,22% 7%)'},frames={none:['0','transparent'],white:['8px','#ffffff'],gold:['8px','#c79b42'],dark:['8px','#201b1b']},frame=frames[o.imageFrame||'none']||frames.none;return`<div class="published-object published-image reveal" data-object-id="${esc(id)}"${String(o.alt||'').trim()?'':' aria-hidden="true"'} style="${common};${o.dominantColor?`background:${esc(o.dominantColor)};`:''}"><img src="${esc(o.src)}"${responsiveImageAttributes(o)} alt="${String(o.alt||'').trim()?esc(o.alt):''}" loading="lazy" decoding="async" style="object-fit:${esc(o.imageFit||'cover')};object-position:${Number(o.imagePositionX??50)}% ${Number(o.imagePositionY??50)}%;border-radius:inherit;clip-path:${masks[o.imageMask||'none']||'none'};padding:${frame[0]};background:${frame[1]};box-sizing:border-box;filter:${imageFilterStyle(o)};transform:${imageTransformStyle(o)};${imageMaskStyle(o)}"></div>`}
  if(o.type==='shape'){const kind=['rectangle','circle','line'].includes(o.shapeKind)?o.shapeKind:'rectangle',radius=kind==='circle'?'999px':'inherit';return`<div class="published-object published-shape published-shape-${kind} reveal" data-object-id="${esc(id)}" aria-hidden="true" style="${common};background:${shapeFillStyle(o)};border-radius:${radius}"></div>`}
  const t=RendererAdapters.project(options.document||{},o,{id,text:plainText(content),locale:options.locale});
  const outerStyle=RendererAdapters.outerStyle(t),flowStyle=RendererAdapters.flowStyle(t),attrs=RendererAdapters.attributes(t);
@@ -3342,6 +3348,16 @@ if(previousObject?.richTextModelVersion===RichTextDocumentModel.MODEL_VERSION&&(
 captured.richTextModelVersion=previousObject.richTextModelVersion;captured.richText=clone(previousObject.richText);captured.html=previousHtml;captured.text=RichTextDocumentModel.exportPlainText(previousObject.richText);
 }else Object.assign(captured,RichTextDocumentModel.normalizeObject(o.dataset.id,captured,state,{strict:false}));
 }
+// FB-96: the rich-text modules load lazily, so the first capture of a page can run
+// before `RichTextDocumentModel` exists. The DOM is plain text at that point and the
+// block above cannot run, which used to drop `richText` entirely; the lazy loader then
+// rebuilt a flat one-run model from the legacy html. Keep the stored model instead.
+if(!window.RichTextDocumentModel&&['text','decoration'].includes(state.objects[o.dataset.id]?.type)){
+const captured=state.objects[o.dataset.id],contentNode=o.querySelector('.content');
+if(previousObject?.richText&&previousObject.richTextModelVersion!=null&&contentNode?.dataset.richTextDirty!=='true'){
+captured.richText=clone(previousObject.richText);captured.richTextModelVersion=previousObject.richTextModelVersion;captured.html=previousObject.html??captured.html;captured.text=previousObject.text??captured.text
+}
+}
 if(o.classList.contains('image-object'))imageIds.push(o.dataset.id);
 });
 state.galleryOrder=[...existingOrder.filter(id=>imageIds.includes(id)),...imageIds.filter(id=>!existingOrder.includes(id))];
@@ -3356,19 +3372,28 @@ state.galleryOrder=heroGalleryOrderBeforePageCapture||[];
 if(window.EInviteEditorSchema?.syncLegacy)window.EInviteEditorSchema.syncLegacy(state);
 return state
 }
+/* LT-4.2: a scheduled write is not in the draft for ~220 ms; the guard mirrors the
+   visible "Saving…" state so a close/reload inside that window asks first.
+   `data-save-pending` is the machine-readable form (tests read it). */
+let pendingWrite=false;
+function setPendingWrite(value){
+pendingWrite=!!value;document.documentElement.dataset.savePending=pendingWrite?'true':'false'}
+setPendingWrite(false);
+window.addEventListener('beforeunload',event=>{
+if(!pendingWrite)return;event.preventDefault();event.returnValue=''});
 function save(options={}){
 options=options&&typeof options==='object'?options:{};
 if(options.history===false)clearTimeout(historyTimer);
 if(options.capture!==false)capture();
-$('#saveState').textContent='Saving…';
+$('#saveState').textContent='Saving…';setPendingWrite(true);
 const generation=++saveGeneration;clearTimeout(saveTimer);
 saveTimer=setTimeout(()=>{
 if(generation!==saveGeneration)return;
 const serialized=JSON.stringify(state);
-if(serialized===lastLocalFingerprint){$('#saveState').textContent='Saved';return}
+if(serialized===lastLocalFingerprint){$('#saveState').textContent='Saved';setPendingWrite(false);return}
 lastLocalFingerprint=serialized;const snapshot=structuredClone(state);inviteStore.write(draftKey,snapshot);
 if(options.history!==false&&!activeUndoTransaction){clearTimeout(historyTimer);historyTimer=setTimeout(()=>pushHistory(snapshot),260)}
-$('#saveState').textContent='Saved';
+$('#saveState').textContent='Saved';setPendingWrite(false);
 const activeManagerEditor=document.activeElement?.closest?.('.custom-block-editor,.gallery-item-editor,.section-animation-row,.section-style-row,.design-page-editor,.ei-builder-card');
 if(activeManagerEditor)renderLayers();else renderEditorManagers();
 clearTimeout(serverSaveTimer);if(serverIdleSaveHandle&&'cancelIdleCallback'in window)cancelIdleCallback(serverIdleSaveHandle);serverIdleSaveHandle=0;
@@ -3566,7 +3591,7 @@ const content=o.querySelector('.content');setTypographyContent(content,d.html||'
 }
 if(o.querySelector('img')&&d.src){
 o.querySelector('img').src=d.src;
-o.querySelector('img').alt=d.alt||'Invitation image';
+const image=o.querySelector('img');image.alt=d.alt||'';image.toggleAttribute('aria-hidden',!d.alt);
 o.querySelector('img').style.objectFit=d.imageFit||'cover';
 o.querySelector('img').style.objectPosition=`${d.imagePositionX ?? 50}% ${d.imagePositionY ?? 50}%`;
 o.querySelector('img').style.filter=imageFilterStyle(d);
@@ -5085,7 +5110,7 @@ target.style.zIndex=String(nextZIndex());
 if(data.type==='image'){
 const img=target.querySelector('img');
 img.src=data.src;
-img.alt=data.alt||'Invitation image';
+img.alt=data.alt||'';img.toggleAttribute('aria-hidden',!data.alt);
 img.style.objectFit=data.imageFit||'cover';
 img.style.objectPosition=`${data.imagePositionX ?? 50}% ${data.imagePositionY ?? 50}%`
 }else{
@@ -5125,7 +5150,7 @@ async function loadAccountComponents(){if(serverInvite){try{const[blocks,groups]
 async function deleteSavedGroup(group){if(!(await uiConfirm(`Delete reusable group “${group.name}”?`,{title:'Delete reusable group',danger:true,confirmText:'Delete'})))return;try{if(group.remote){await api(`/api/components/${group.id}`,{method:'DELETE'});accountSavedGroups=accountSavedGroups.filter(x=>x.id!==group.id)}else writeSavedGroups(readSavedGroups().filter(x=>x.id!==group.id));renderSavedGroups()}catch(error){alert(error.message)}}
 function renderSavedGroups(){const panel=$('#savedGroups');if(!panel)return;const groups=[...accountSavedGroups.map(x=>({...x,...clone(x.payload),remote:true})),...readSavedGroups().map(x=>({...x,remote:false}))];panel.innerHTML=groups.length?'':'<p class="hint">No reusable groups saved yet.</p>';groups.forEach(group=>{const row=document.createElement('div');row.className='saved-group-row';row.innerHTML='<strong></strong><small></small><div class="mini-actions"><button type="button" data-insert>Insert</button><button type="button" class="danger" data-delete>Delete</button></div>';row.querySelector('strong').textContent=group.name;row.querySelector('small').textContent=group.remote?'Account':'This browser';row.querySelector('[data-insert]').onclick=()=>insertSavedGroup(group);row.querySelector('[data-delete]').onclick=()=>deleteSavedGroup(group);panel.append(row)})}
 async function saveSelectedReusableGroup(){const items=currentSelection();if(!items.length)return alert('Select one or more objects first.');const name=await uiPrompt('Name this reusable element group:','My design group',{title:'Save reusable group'});if(!name)return;capture();const sr=$('#stage').getBoundingClientRect(),frames=items.map(item=>{const r=item.getBoundingClientRect();return{id:item.dataset.id,left:(r.left-sr.left)/sr.width*100,top:(r.top-sr.top)/sr.height*100,width:r.width/sr.width*100,height:r.height/sr.height*100,data:clone(state.objects[item.dataset.id])}});const minL=Math.min(...frames.map(x=>x.left)),minT=Math.min(...frames.map(x=>x.top)),maxR=Math.max(...frames.map(x=>x.left+x.width)),maxB=Math.max(...frames.map(x=>x.top+x.height)),w=Math.max(1,maxR-minL),h=Math.max(1,maxB-minT);const group={id:`saved-${Date.now()}`,name:name.slice(0,80),createdAt:Date.now(),aspect:w/h,items:frames.map(x=>({data:x.data,rel:{left:(x.left-minL)/w,top:(x.top-minT)/h,width:x.width/w,height:x.height/h}}))};try{if(serverInvite){const saved=await api('/api/components',{method:'POST',body:JSON.stringify({kind:'group',name:group.name,category:'Design group',payload:group})});accountSavedGroups.unshift(saved);renderSavedGroups()}else{const groups=readSavedGroups();groups.unshift(group);writeSavedGroups(groups.slice(0,40))}alert('Reusable group saved.')}catch(error){alert(`The reusable group could not be saved: ${error.message}`)}}
-function hydrateObjectFromData(object,data){Object.entries(data||{}).forEach(([key,value])=>{if(['left','top','width','height','html','src','zIndex','type'].includes(key))return;const datasetKey=key;object.dataset[datasetKey]=typeof value==='boolean'?(value?'true':'false'):String(value??'')});const content=object.querySelector('.content');if(content)setTypographyContent(content,data.html||'New text',data,{editable:true});const image=object.querySelector('img');if(image&&data.src){image.src=data.src;image.alt=data.alt||'Invitation image'};applyObjectVisualStyle(object)}
+function hydrateObjectFromData(object,data){Object.entries(data||{}).forEach(([key,value])=>{if(['left','top','width','height','html','src','zIndex','type'].includes(key))return;const datasetKey=key;object.dataset[datasetKey]=typeof value==='boolean'?(value?'true':'false'):String(value??'')});const content=object.querySelector('.content');if(content)setTypographyContent(content,data.html||'New text',data,{editable:true});const image=object.querySelector('img');if(image&&data.src){image.src=data.src;image.alt=data.alt||'';image.toggleAttribute('aria-hidden',!data.alt)};applyObjectVisualStyle(object)}
 function insertSavedGroup(group){if(!group?.items?.length)return;const groupId=`group-${Date.now()}`,baseLeft=12,baseTop=18;let targetWidth=55,targetHeight=targetWidth/(group.aspect||1);if(targetHeight>68){targetHeight=68;targetWidth=Math.min(76,targetHeight*(group.aspect||1))}const created=[];group.items.forEach((item,index)=>{const id=`element-${Date.now()}-${index}-${Math.random().toString(36).slice(2,6)}`,object=createObject(id,item.data.type||'text');hydrateObjectFromData(object,item.data);object.dataset.groupId=groupId;object.style.left=`${baseLeft+item.rel.left*targetWidth}%`;object.style.top=`${baseTop+item.rel.top*targetHeight}%`;object.style.width=`${item.rel.width*targetWidth}%`;object.style.height=`${item.rel.height*targetHeight}%`;object.style.zIndex=String(nextZIndex()+index);$('#stage').append(object);created.push(object)});setSelection(created);save()}
 $('#saveElementGroup').onclick=saveSelectedReusableGroup;
 function groupSelection(){
@@ -5503,7 +5528,7 @@ async function settleServerWritesBeforePublish(){
 publishBarrier=true;cancelScheduledServerWrites();await serverSaveDrain;
 if(serverSaveBlockedByConflict)throw Object.assign(Error('Reload the latest invitation before publishing because another session changed it.'),{code:'revision_conflict'});
 cancelScheduledServerWrites();const documentSnapshot=structuredClone(capture());pendingServerDocument=null;
-lastLocalFingerprint=JSON.stringify(documentSnapshot);inviteStore.write(draftKey,documentSnapshot);$('#saveState').textContent='Saved';return documentSnapshot
+lastLocalFingerprint=JSON.stringify(documentSnapshot);inviteStore.write(draftKey,documentSnapshot);$('#saveState').textContent='Saved';setPendingWrite(false);return documentSnapshot
 }
 function releasePublishWriteBarrier(){
 publishBarrier=false;
@@ -5584,15 +5609,29 @@ if(!events.length)return'';
 const timezone=String(d.timezone||'').trim();
 return`<section class="event-journey reveal" style="${combinedSectionStyle(d,'events')}"><h2>${languageText('Events & ceremonies','កម្មវិធី និងពិធី',mode)}</h2>${timezone?`<p class="event-timezone">${languageText('Timezone','តំបន់ពេលវេលា',mode)}: ${safeHtml(timezone)}</p>`:''}<div class="event-journey-list">${events.map(event=>{const date=event.date?new Date(`${event.date}T${event.time||'00:00'}:00`):null,dateText=date&&!Number.isNaN(date.getTime())?date.toLocaleString(undefined,{dateStyle:'medium',timeStyle:event.time?'short':undefined}):[event.date,event.time].filter(Boolean).join(' '),map=/^https?:\/\//i.test(event.mapUrl||'')?`<a href="${safeHtml(event.mapUrl)}" target="_blank" rel="noopener">${languageText('Directions','ទិសដៅ',mode)}</a>`:'';return `<article class="event-journey-card"><span class="event-type">${safeHtml(event.type||'event')}</span><h3>${safeHtml(event.name)}</h3>${dateText?`<p><strong>${safeHtml(dateText)}</strong></p>`:''}${event.venue?`<p>${safeHtml(event.venue)}</p>`:''}${map}</article>`}).join('')}</div></section>`
 }
+/* LT-3.2 item (8): the display-only gift QR — the same block the guest page renders, so the
+   editor preview cannot drift from the public route. The image allowlist matches
+   public-page.js: platform media, HTTPS, or an inline raster data URL. */
+function safeGiftQrImageUrl(value){
+const raw=String(value||'').trim();
+if(/^https?:\/\//i.test(raw)||raw.startsWith('/uploads/')||raw.startsWith('/api/media/')||raw.startsWith('/api/image/')||raw.startsWith('/data/uploads/')||/^data:image\/(?:jpeg|png|webp|gif);base64,/i.test(raw))return raw;
+return''
+}
+function guestGiftQrMarkupEditor(info){
+const image=info.giftQrEnabled===true?safeGiftQrImageUrl(info.giftQrImage):'';
+if(!image)return'';
+const label=String(info.giftQrLabel||'').trim().slice(0,80)||'Gift QR';
+return`<article class="guest-gift-qr" data-gift-qr="display-only"><h3>${safeHtml(label)}</h3><img src="${safeHtml(image)}" alt="${safeHtml(label)}" loading="lazy" decoding="async"><p>Scan to send a gift. Display only — the platform never processes payments.</p></article>`
+}
 function guestExperienceMarkupEditor(d){
 const mode=d.languageMode||'both',info=d.guestExperience||{},items=[];
 if(info.dressCode)items.push([languageText('Dress code','ការស្លៀកពាក់',mode),info.dressCode]);
 if(info.transport)items.push([languageText('Transport','ការធ្វើដំណើរ',mode),info.transport]);
 if(info.accommodation)items.push([languageText('Accommodation','កន្លែងស្នាក់នៅ',mode),info.accommodation]);
 if(info.note)items.push([languageText('Guest note','សេចក្តីជូនដំណឹង',mode),info.note]);
-const gift=/^https?:\/\//i.test(info.giftLink||'')?`<a class="button-link" href="${safeHtml(info.giftLink)}" target="_blank" rel="noopener noreferrer">${safeHtml(info.giftLabel||'Gift registry')}</a>`:'',payment=/^https?:\/\//i.test(info.paymentLink||'')?`<a class="button-link" href="${safeHtml(info.paymentLink)}" target="_blank" rel="noopener noreferrer">${safeHtml(info.paymentLabel||'Contribution / payment')}</a>`:'';
-if(!items.length&&!gift&&!payment)return'';
-return`<section class="guest-information reveal" style="${combinedSectionStyle(d,'guest-info')}"><h2>${languageText('Guest information','ព័ត៌មានសម្រាប់ភ្ញៀវ',mode)}</h2><div class="guest-information-grid">${items.map(([label,value])=>`<article><strong>${label}</strong><p>${safeHtml(value)}</p></article>`).join('')}</div>${gift||payment?`<div class="guest-information-actions">${gift}${payment}</div>`:''}</section>`
+const gift=/^https?:\/\//i.test(info.giftLink||'')?`<a class="button-link" href="${safeHtml(info.giftLink)}" target="_blank" rel="noopener noreferrer">${safeHtml(info.giftLabel||'Gift registry')}</a>`:'',payment=/^https?:\/\//i.test(info.paymentLink||'')?`<a class="button-link" href="${safeHtml(info.paymentLink)}" target="_blank" rel="noopener noreferrer">${safeHtml(info.paymentLabel||'Contribution / payment')}</a>`:'',qr=guestGiftQrMarkupEditor(info);
+if(!items.length&&!gift&&!payment&&!qr)return'';
+return`<section class="guest-information reveal" style="${combinedSectionStyle(d,'guest-info')}"><h2>${languageText('Guest information','ព័ត៌មានសម្រាប់ភ្ញៀវ',mode)}</h2><div class="guest-information-grid">${items.map(([label,value])=>`<article><strong>${label}</strong><p>${safeHtml(value)}</p></article>`).join('')}${qr}</div>${gift||payment?`<div class="guest-information-actions">${gift}${payment}</div>`:''}</section>`
 }
 function sectionAnimationStyle(d,name){
 const setting=d.sectionAnimations?.[name]||initial.sectionAnimations?.[name]||{preset:'fade-up',duration:900};
