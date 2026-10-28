@@ -63,9 +63,12 @@ LHCI_PAGES=16
 # FB-32 ratchet pin: inventory total must not exceed this. 3819 at FB-19 close
 # (artifacts/next-work/fb-19/inventory-after2); +4 documented exceptions landed with
 # evidenced fixes after that pin (FB-28 editor-styles ×2, FB-30 km display-face
-# editor-suite ×1 / canvas-plus ×1) → 3823. LOWER this number as cleanups land;
-# the phase fails as soon as the count climbs above it.
-IMPORTANT_PIN=3823
+# editor-suite ×1 / canvas-plus ×1) → 3823. LOWER this number as cleanups land:
+# LT-6.3 pass 1 (2026-10-27) removed 7 provably-dead tokens (3816 → 3809:
+# .fp-project-status 1 — LT-1.4 leftover; .flow-design-search input 6 — stale
+# v15-only surface) and lowered the pin to the new count. The phase fails as
+# soon as the count climbs above it.
+IMPORTANT_PIN=3809
 # Signature each phase must print before its exit code counts (rule R2).
 MARKERS={
     'build':   ('BUILD_OK','MIRROR_CHECK_PASSED'),

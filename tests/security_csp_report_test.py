@@ -39,6 +39,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -132,6 +133,44 @@ def fetch_csp_audit_events(db):
         "created_at FROM audit_events WHERE action='csp.violation' "
         "ORDER BY created_at ASC"
     ).fetchall()
+
+
+def reveal_metadata(data_dir, value):
+    """Parse audit metadata, decrypting it when stored as a protected column.
+
+    ROADMAP §4.1 made ``audit_events.metadata_json`` a protected column, so a raw
+    SQLite read can hold a Fernet token; this test asserts on the *content*, so it
+    decrypts with the app's own primitive and the data dir's persisted key.
+    """
+    if not value:
+        return {}
+    try:
+        return json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        pass
+    src_python = str(ROOT / "src" / "python")
+    if src_python not in sys.path:
+        sys.path.insert(0, src_python)
+    from core import crypto  # noqa: E402  (path setup above)
+    key_file = Path(data_dir) / ".field-encryption-key"
+    previous = os.environ.get("EINVITE_FIELD_ENCRYPTION_KEY")
+    if key_file.is_file():
+        os.environ["EINVITE_FIELD_ENCRYPTION_KEY"] = key_file.read_text(encoding="utf-8").strip()
+    # Another test in the same pytest process may have resolved a key for its own
+    # data directory; drop that cache so this one uses the file above.
+    crypto.reset_key_cache()
+    try:
+        plaintext = crypto.decrypt_field(value)
+    finally:
+        # Do not leak the key into os.environ: later tests start servers with a
+        # copy of this environment, and an inherited key stops a server from
+        # writing its own sidecar.
+        if previous is None:
+            os.environ.pop("EINVITE_FIELD_ENCRYPTION_KEY", None)
+        else:
+            os.environ["EINVITE_FIELD_ENCRYPTION_KEY"] = previous
+        crypto.reset_key_cache()
+    return json.loads(plaintext or "{}")
 
 
 SAMPLE_LEGACY_REPORT = {
@@ -275,7 +314,7 @@ def run_authenticated_legacy(base, data, token):
         f"audit event user_id must be set for authenticated report: {dict(row)}")
     assert_eq(row["action"], "csp.violation", "audit event action")
     assert_eq(row["target_type"], "csp", "audit event target_type")
-    meta = json.loads(row["metadata_json"] or "{}")
+    meta = reveal_metadata(data, row["metadata_json"])
     assert_eq(meta.get("violated_directive"), "script-src",
               "audit metadata violated_directive")
     assert_eq(meta.get("blocked_uri"), "https://evil.com/script.js",
@@ -308,7 +347,7 @@ def run_reporting_api_shape(base, data, token):
         rows = fetch_csp_audit_events(db)
     assert_eq(after, before + 1,
               "reporting-api report must write one audit event")
-    meta = json.loads(rows[-1]["metadata_json"] or "{}")
+    meta = reveal_metadata(data, rows[-1]["metadata_json"])
     assert_eq(meta.get("blocked_uri"), "https://evil.com/script.js",
               "reporting-api audit blocked_uri (normalised from blockedURL)")
     assert_eq(meta.get("violated_directive"), "script-src",

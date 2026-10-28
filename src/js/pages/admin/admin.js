@@ -72,7 +72,7 @@
       if (ct.includes('application/json')) return r.json();
       return r.text();
     },
-    async send(path, method, body){
+    async send(path, method, body, _retried){
       const r = await fetch(path, {
         method, credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -80,7 +80,16 @@
       });
       let data;
       try { data = await r.json(); } catch(e){ data = {}; }
-      if (!r.ok) throw new Error(data.error || `${r.status} ${r.statusText}`);
+      if (!r.ok) {
+        // Destructive admin routes demand a live step-up grant (ROADMAP §4.2,
+        // §5.9). Ask once, then replay the exact request.
+        const stepUp = window.EInviteAdminStepUp;
+        if (r.status === 403 && data && data.code === 'step_up_required' && stepUp && !_retried) {
+          stepUp.forget();
+          if (await stepUp.request()) return api.send(path, method, body, true);
+        }
+        throw new Error(data.error || `${r.status} ${r.statusText}`);
+      }
       return data;
     },
   };

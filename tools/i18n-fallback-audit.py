@@ -12,7 +12,7 @@ from collections import Counter
 
 ROWS = list(csv.DictReader(open('docs/i18n/TRANSLATIONS.csv', encoding='utf-8-sig')))
 FB = [r for r in ROWS if r['status'] == 'fallback']
-assert len(FB) == 6, len(FB)
+assert len(FB) == 14, len(FB)
 
 ADMIN_FILES = {'src/js/pages/admin/feature-flags.js', 'src/js/pages/admin/invitations.js',
                'src/js/pages/admin/audit-log.js', 'src/html/admin.html',
@@ -46,7 +46,7 @@ for r in groups['guest-facing'] + groups['other-user']:
 
 os.makedirs('artifacts/next-work/fb-14', exist_ok=True)
 with open('artifacts/next-work/fb-14/fallback-audit.md', 'w', encoding='utf-8') as fh:
-    fh.write('# FB-14 fallback audit — 6 rows classified (LT-1.2 moved the pin from 305; LT-1.8 added the admin 403 sentence; LT-2.2 added the Khmer numerals label and command; LT-3.2 added the Messenger label and desktop fallback)\n\n')
+    fh.write('# FB-14 fallback audit — 14 rows classified (LT-1.2 moved the pin from 305; LT-1.8 added the admin 403 sentence; LT-2.2 added the Khmer numerals label and command; LT-3.2 added the Messenger label and desktop fallback; LT-3.2 item 8 added the gift-QR card, help text and the guest-page display-only line)\n\n')
     fh.write('Date: 2026-10-22. No translation applied (owner gate: audit first; OD-8 / feature-flags deferred separately).\n\n')
     fh.write('| class | rows | disposition |\n|---|---|---|\n')
     fh.write(f"| technical/non-UI (ids, keys, URLs — keep English) | {len(groups['technical'])} | allowlist; no Khmer needed |\n")

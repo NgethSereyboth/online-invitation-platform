@@ -59,14 +59,8 @@
     return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
   };
 
-  // V54.18 (§3.4) — Inject the upload-progress CSS once per document. The
-  // task scope forbids editing any .css file, so the styles live in a
-  // <style> element appended from JS. Idempotent: if the tag already exists
-  // (e.g. the module is bundled into a page that loads album.js twice), the
-  // second invocation is a no-op. The rules use the existing design tokens
-  // (--brand / --brand-2 / --danger / --surface-2 / --border-1 / --text-2)
-  // with hard-coded fallbacks so the bar is legible even on a page that has
-  // not loaded tokens.css.
+  // V54.18 (§3.4) — upload-progress CSS injected once per document from JS (the task
+  // scope forbade .css edits); idempotent, existing tokens with hard-coded fallbacks.
   const PROGRESS_STYLE_ID = 'einvite-album-progress-style-v54-18';
   if (!document.getElementById(PROGRESS_STYLE_ID)) {
     const styleEl = document.createElement('style');
@@ -198,16 +192,9 @@
       startUpload();
     }
 
-    // V54.18 (§3.4) — Replace fetch() with XMLHttpRequest for the album
-    // upload path ONLY. The endpoint, FormData fields, MIME allow-list
-    // (the accept="image/..." attribute on the input), and success →
-    // reset + reload contract are unchanged. The XHR gives us:
-    //   • xhr.upload 'progress' → live % bar.
-    //   • xhr.upload 'load'     → switch to "Processing…" (malware scan).
-    //   • xhr 'abort'           → Cancel button (calls xhr.abort()).
-    //   • xhr 'error'           → network failure → Retry button.
-    //   • xhr 'load'            → response: 2xx = success, 422+malware =
-    //                             distinct malware message, else generic.
+    // V54.18 (§3.4) — XHR only for the album upload path (endpoint, FormData, MIME
+    // allow-list and success contract unchanged) so progress / processing / abort /
+    // error / retry states exist.
     function startUpload() {
       const file = form.querySelector('input[name=file]').files[0];
       const caption = form.querySelector('input[name=caption]').value;

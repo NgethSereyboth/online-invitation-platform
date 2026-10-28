@@ -8,3 +8,5 @@ body[data-page="index"] .v13-ops-launcher{position:fixed;right:18px;bottom:148px
    inspector instead; below 1181 the inspector is a drawer, so the base
    right:18px still applies. */
 @media(min-width:1181px){body[data-page="index"] .v13-ops-launcher{right:calc(var(--studio-right-width,330px) + 18px)}}
+/* LT-3.2 item (8): the gift QR is a display-only image; keep the preview inside the card. */
+.v13-gift-qr-preview{display:block;max-width:220px;width:100%;height:auto;border:1px solid var(--border,#ded6d1);border-radius:10px}

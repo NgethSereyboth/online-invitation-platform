@@ -204,6 +204,15 @@ def test_khmer_export_fidelity() -> None:
                     page.evaluate("() => EInviteExportQuality.export.printAll()")
                 popup = popup_info.value
                 popup.wait_for_load_state('load', timeout=30000)
+                # The print page pulls the editor's stylesheets via <link>, and every
+                # shipped face lives inside @layer components, so the bundled Khmer
+                # @font-face only exists once those sheets have parsed. Wait for that
+                # face to be *declared and loaded* before printing: otherwise pdf()
+                # sometimes embeds the system Khmer fallback instead, which shifts the
+                # raster slightly (the 4.2–4.7 MAE cluster) and made this metric flaky.
+                popup.wait_for_function(
+                    "() => [...document.fonts].some(f => f.family.replaceAll('\\\"','').includes('EInvite Noto Sans Khmer') && f.status === 'loaded')",
+                    timeout=15000)
                 popup.evaluate("async () => { document.body.getBoundingClientRect(); await document.fonts.ready; document.body.getBoundingClientRect(); }")
                 popup.wait_for_timeout(500)
                 pdf_path = out / 'export.pdf'

@@ -36,7 +36,7 @@ body {
    factor compounded once per nesting level (measured: the account chip rendered at
    19.06px where the same Latin label renders at 12px). Khmer is optically sized once,
    in its @font-face `size-adjust`; line-height stays per script. */
-body :lang(km), body .khmer-text { line-height: 1.6; }
+body .khmer-text { line-height: 1.6; }
 /* LT-1.5: `body:not(.guest) > header button` sets 1.15 for the compact Latin
    chrome (0-2-2, above `body :lang(km)`); Khmer needs the taller line box, so a
    Khmer header button restates it at a higher specificity. */
@@ -1249,7 +1249,6 @@ html[data-theme="dark"] body[data-page="checkin"] .checkin-hero .eyebrow {
   opacity: 1;
 }
 
-:lang(km) { line-height: 1.6; }
 
 
 

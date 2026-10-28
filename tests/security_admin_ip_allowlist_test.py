@@ -123,6 +123,40 @@ def count_audit_ip_denied(data_dir, client_ip):
         conn.close()
 
 
+def _reveal_metadata(data_dir, value):
+    """Return audit metadata as JSON, decrypting it when it is stored as ciphertext.
+
+    ROADMAP §4.1 made ``audit_events.metadata_json`` a protected column, so a raw
+    SQLite read can hold a Fernet token; this test asserts on the *content*, so it
+    decrypts with the app's own primitive and the data dir's persisted key.
+    """
+    try:
+        return json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        pass
+    key_file = Path(data_dir) / ".field-encryption-key"
+    from core import crypto  # src/python is on sys.path (below)
+    previous = os.environ.get("EINVITE_FIELD_ENCRYPTION_KEY")
+    if key_file.is_file():
+        os.environ["EINVITE_FIELD_ENCRYPTION_KEY"] = key_file.read_text(encoding="utf-8").strip()
+    # Another test in the same pytest process may already have resolved a key for
+    # its own data directory; drop that cache so this one uses the file above.
+    crypto.reset_key_cache()
+    try:
+        plaintext = crypto.decrypt_field(value)
+    finally:
+        # Do not leak the key into ``os.environ``: later tests start servers with
+        # a copy of this environment, and an inherited key stops the server from
+        # writing its own sidecar (breaking this suite's other assertions).
+        if previous is None:
+            os.environ.pop("EINVITE_FIELD_ENCRYPTION_KEY", None)
+        else:
+            os.environ["EINVITE_FIELD_ENCRYPTION_KEY"] = previous
+        crypto.reset_key_cache()
+    assert isinstance(plaintext, str) and plaintext.startswith("{"), f"decrypt did not reveal metadata: {str(plaintext)[:24]!r}"
+    return json.loads(plaintext) if plaintext else None
+
+
 def get_audit_metadata(data_dir, client_ip):
     """Get the metadata of the latest admin.ip_denied event for a given IP."""
     db_path = Path(data_dir) / "invites.db"
@@ -137,7 +171,7 @@ def get_audit_metadata(data_dir, client_ip):
             (client_ip,)
         ).fetchone()
         if row and row[0]:
-            return json.loads(row[0])
+            return _reveal_metadata(data_dir, row[0])
         return None
     finally:
         conn.close()

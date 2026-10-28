@@ -91,9 +91,11 @@ def _promote_to_admin(data_dir, email):
     so a test that needs the admin API has to promote the user itself. This is
     the same step `tools/analytics-live-flag-probe.py` takes.
     """
+    from core.crypto import hash_for_lookup  # users.email is stored encrypted (ROADMAP §4.1)
+
     conn = sqlite3.connect(Path(data_dir) / "invites.db")
     try:
-        cur = conn.execute("UPDATE users SET role='admin' WHERE email=?", (email,))
+        cur = conn.execute("UPDATE users SET role='admin' WHERE email_hash=?", (hash_for_lookup(email),))
         changed = cur.rowcount
         conn.commit()
     finally:

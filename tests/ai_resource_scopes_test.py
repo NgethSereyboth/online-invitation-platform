@@ -87,8 +87,9 @@ def http_json(base, path, method='GET', body=None, token=None, expected=200):
 
 
 def lookup_user_id(server, email):
+    from core.crypto import hash_for_lookup  # users.email is stored encrypted (ROADMAP §4.1)
     with server.connect() as db:
-        row = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+        row = db.execute("SELECT id FROM users WHERE email_hash=?", (hash_for_lookup(email),)).fetchone()
         return row['id'] if row else None
 
 

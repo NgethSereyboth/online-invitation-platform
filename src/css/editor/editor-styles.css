@@ -1683,4 +1683,56 @@ body[data-page="index"] header .studio-document-title {
   body[data-page="index"] .studio-topbar > .language-switch { display: none; }
 }
 
+/* LT-4.3 — colour-input extras popover (src/js/color-picker-extras.js). Fixed so
+   it can float over the inspector columns; 260px keeps it usable at 375 where
+   the editor's panels are drawers. Colours come from the app tokens only. */
+.cp-extras {
+  position: fixed; z-index: 9997; width: 260px; max-width: calc(100vw - 24px);
+  padding: var(--space-3); display: grid; gap: var(--space-2);
+  background: var(--app-surface); color: var(--app-text);
+  border: 1px solid var(--app-border, rgba(52, 44, 38, .14)); border-radius: var(--radius-md, 12px);
+  box-shadow: var(--app-shadow-lg, 0 18px 40px rgba(20, 16, 12, .18));
+  font-size: var(--fs-body-sm);
+}
+.cp-extras-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.cp-extras-title { font-weight: var(--fw-semibold); }
+.cp-extras-close {
+  width: 28px; height: 28px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: var(--radius-sm); background: transparent;
+  color: var(--app-muted); font-size: 18px; line-height: 1; cursor: pointer;
+}
+.cp-extras-close:hover { background: var(--app-surface-alt, rgba(52, 44, 38, .06)); color: var(--app-text); }
+.cp-extras-row { display: grid; grid-template-columns: 40px 1fr; gap: var(--space-2); align-items: center; }
+.cp-extras-row input[type="color"] {
+  width: 40px; height: 32px; padding: 2px; border: 1px solid var(--app-border, rgba(52, 44, 38, .18));
+  border-radius: var(--radius-sm); background: var(--app-surface); cursor: pointer;
+}
+.cp-extras-row input[type="text"] {
+  min-height: 32px; padding: 0 var(--space-2); border: 1px solid var(--app-border, rgba(52, 44, 38, .18));
+  border-radius: var(--radius-sm); background: var(--app-surface); color: var(--app-text);
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--fs-body-sm);
+}
+.cp-extras-label { margin: 0; color: var(--app-muted); font-size: var(--fs-body-xs, 12px); }
+.cp-extras-recents { display: flex; flex-wrap: wrap; gap: 6px; }
+.cp-recent {
+  width: 26px; height: 26px; padding: 0; border-radius: 50%; cursor: pointer;
+  border: 1px solid rgba(20, 16, 12, .18); background: var(--cp-swatch, #ffffff);
+}
+.cp-recent:hover { outline: 2px solid var(--app-accent, #9d4555); outline-offset: 1px; }
+.cp-extras-empty { margin: 0; color: var(--app-muted); font-size: var(--fs-body-xs, 12px); }
+.cp-extras-contrast {
+  margin: 0; padding: 6px var(--space-2); border-radius: var(--radius-sm);
+  background: var(--app-surface-alt, rgba(52, 44, 38, .06)); font-size: var(--fs-body-xs, 12px);
+}
+.cp-extras-contrast[data-level="pass"] { color: #1d6b3f; }
+.cp-extras-contrast[data-level="large"] { color: #8a5a12; }
+.cp-extras-contrast[data-level="fail"] { color: #9d2b2b; }
+.cp-extras-actions { display: flex; justify-content: flex-end; }
+.cp-extras-pick {
+  min-height: 30px; padding: 0 var(--space-3); border: 1px solid var(--app-border, rgba(52, 44, 38, .18));
+  border-radius: var(--radius-sm); background: var(--app-surface); color: var(--app-text);
+  font-size: var(--fs-body-sm); cursor: pointer;
+}
+.cp-extras-pick:hover { border-color: var(--app-accent, #9d4555); }
+
 }

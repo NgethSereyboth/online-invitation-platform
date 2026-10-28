@@ -237,9 +237,59 @@ def test_public_rendering_and_editor_round_trip() -> None:
             assert page.locator('#khmerNumerals').is_checked() is True
 
             page.evaluate("() => EInviteEditorBridge.select(['title'])")
+            # The bridge's select is a no-op while a canvas pointer interaction is in flight,
+            # and a stale selection (an image restored from the draft, say) also shows
+            # #textContent — for its alt text. Assert the object is actually selected before
+            # typing, so a dropped input reports its cause instead of timing out later.
+            try:
+                page.wait_for_function(
+                    "() => (window.EInviteEditorBridge?.getSelectedIds?.() || []).join(',') === 'title'",
+                    timeout=15000,
+                )
+            except Exception as exc:
+                diagnostics = page.evaluate(
+                    """() => ({
+                        selectedIds: window.EInviteEditorBridge?.getSelectedIds?.() || [],
+                        pointerInteraction: document.body.dataset.pePointerInteraction || '',
+                        fieldValue: document.querySelector('#textContent')?.value ?? null,
+                        labelHidden: document.querySelector('#textContentLabel')?.hidden ?? null,
+                        objects: [...document.querySelectorAll('.object')].map(node => node.dataset.id)
+                    })"""
+                )
+                raise AssertionError(f'select([title]) did not apply: {diagnostics}') from exc
             text = page.locator('#textContent')
             text.wait_for(state='visible', timeout=15000)
             text.fill('Couple 2')
+            # The inspector commits on input, but the canvas node is re-rendered on the
+            # following frame; clicking convert before that lands acts on the pre-fill
+            # document and leaves the title unconverted (observed as an intermittent
+            # 15 s timeout on the wait below). Wait for the render, not for a delay; the
+            # dump on failure separates a dropped input from a render that never ran.
+            try:
+                page.wait_for_function(
+                    "() => { const node = document.querySelector('[data-id=\"title\"] .content'); return !!node && node.textContent.trim() === 'Couple 2'; }",
+                    timeout=15000,
+                )
+            except Exception as exc:
+                diagnostics = page.evaluate(
+                    """() => {
+                        const field = document.querySelector('#textContent');
+                        const names = document.querySelector('#names');
+                        const node = document.querySelector('[data-id="title"] .content');
+                        return {
+                            selectedIds: window.EInviteEditorBridge?.getSelectedIds?.() || [],
+                            fieldValue: field?.value ?? null,
+                            fieldHandler: typeof field?.oninput,
+                            namesValue: names?.value ?? null,
+                            stateNames: window.EInviteEditorBridge?.getState?.()?.fields?.names ?? null,
+                            titleContent: node?.textContent ?? null,
+                            titleMatches: document.querySelectorAll('[data-id="title"]').length,
+                            pointerInteraction: document.body.dataset.pePointerInteraction || '',
+                            saveState: document.querySelector('#saveState')?.textContent ?? null
+                        };
+                    }"""
+                )
+                raise AssertionError(f'title text did not render after fill: {diagnostics}') from exc
             page.locator('#convertDigits').click()
             page.wait_for_function(
                 "() => { const node = document.querySelector('[data-id=\"title\"] .content'); return !!node && node.textContent.includes(String.fromCodePoint(0x17E0 + 2)); }",

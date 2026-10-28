@@ -103,8 +103,9 @@ def fetch_all_recovery_rows(server, user_id):
 
 
 def lookup_user_id(server, email):
+    from core.crypto import hash_for_lookup  # users.email is stored encrypted (ROADMAP §4.1)
     with server.connect() as db:
-        row = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+        row = db.execute("SELECT id FROM users WHERE email_hash=?", (hash_for_lookup(email),)).fetchone()
         return row['id'] if row else None
 
 

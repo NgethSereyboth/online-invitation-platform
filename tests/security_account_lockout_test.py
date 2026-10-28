@@ -44,6 +44,12 @@ ROOT = Path(__file__).resolve().parents[1]
 DB_FILENAME = "invites.db"
 
 
+def email_lookup_hash(email):
+    """users.email is stored encrypted (ROADMAP §4.1); raw SQL keys on the hash."""
+    from core.crypto import hash_for_lookup
+    return hash_for_lookup(email)
+
+
 def free_port():
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
@@ -90,7 +96,7 @@ def open_db(data_dir: Path):
 def fetch_user(db, email):
     return db.execute(
         'SELECT failed_login_attempts, failed_login_first_at, locked_until '
-        'FROM users WHERE email=?', (email,)).fetchone()
+        'FROM users WHERE email_hash=?', (email_lookup_hash(email),)).fetchone()
 
 
 def count_audit(db, action, user_id=None):
@@ -143,7 +149,7 @@ def run_lockout_lifecycle(base, data):
             f'(now={now_ms})')
 
         user_row = db.execute(
-            'SELECT id FROM users WHERE email=?', (EMAIL,)).fetchone()
+            'SELECT id FROM users WHERE email_hash=?', (email_lookup_hash(EMAIL),)).fetchone()
         user_id = user_row['id']
         locked_events = count_audit(db, 'login.account_locked', user_id)
         assert_eq(locked_events, 1,
@@ -181,7 +187,7 @@ def run_lockout_lifecycle(base, data):
     # (the in-memory row snapshot was refreshed by the lazy-clear).
     with open_db(data) as db:
         db.execute(
-            'UPDATE users SET locked_until=0 WHERE email=?', (EMAIL,))
+            'UPDATE users SET locked_until=0 WHERE email_hash=?', (email_lookup_hash(EMAIL),))
         db.commit()
 
     status, body = http_json(base, '/api/auth/login', 'POST',
@@ -227,8 +233,8 @@ def run_sliding_window(base, data):
         # burst), NOT increment to 2.
         jump = int(first_at) - (16 * 60 * 1000)
         db.execute(
-            'UPDATE users SET failed_login_first_at=? WHERE email=?',
-            (jump, EMAIL))
+            'UPDATE users SET failed_login_first_at=? WHERE email_hash=?',
+            (jump, email_lookup_hash(EMAIL)))
         db.commit()
 
     status, _ = http_json(base, '/api/auth/login', 'POST',
@@ -245,8 +251,8 @@ def run_sliding_window(base, data):
     with open_db(data) as db:
         db.execute(
             'UPDATE users SET failed_login_attempts=0, '
-            'failed_login_first_at=NULL, locked_until=NULL WHERE email=?',
-            (EMAIL,))
+            'failed_login_first_at=NULL, locked_until=NULL WHERE email_hash=?',
+            (email_lookup_hash(EMAIL),))
         db.commit()
 
 
@@ -309,7 +315,7 @@ def run_lockout_persists_restart():
                 db.execute(
                     'UPDATE users SET failed_login_attempts=0, '
                     'failed_login_first_at=NULL, locked_until=NULL '
-                    'WHERE email=?', ('sec2-restart@example.com',))
+                    'WHERE email_hash=?', (email_lookup_hash('sec2-restart@example.com'),))
                 db.commit()
 
             status, _ = http_json(base2, '/api/auth/login', 'POST',

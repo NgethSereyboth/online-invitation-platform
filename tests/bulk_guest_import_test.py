@@ -344,10 +344,20 @@ def test_guest_slug_migration_is_additive_and_idempotent():
         # process opening the legacy database ends up with the column, no empty
         # slugs and the index.
         module._SQLITE_SCHEMA_READY = False
-        with module.connect() as db:
-            columns = {row["name"] for row in db.execute("PRAGMA table_info(guests)")}
-            empty = db.execute("SELECT COUNT(*) AS c FROM guests WHERE slug IS NULL OR slug=''").fetchone()["c"]
-            indexes = {row["name"] for row in db.execute("PRAGMA index_list(guests)")}
+        # server.connect() resolves EINVITE_DATA_DIR at call time (ROADMAP §4.8), so pin
+        # it here: the loader restores the ambient value once the module is built.
+        previous_data_dir = os.environ.get("EINVITE_DATA_DIR")
+        os.environ["EINVITE_DATA_DIR"] = str(data_dir)
+        try:
+            with module.connect() as db:
+                columns = {row["name"] for row in db.execute("PRAGMA table_info(guests)")}
+                empty = db.execute("SELECT COUNT(*) AS c FROM guests WHERE slug IS NULL OR slug=''").fetchone()["c"]
+                indexes = {row["name"] for row in db.execute("PRAGMA index_list(guests)")}
+        finally:
+            if previous_data_dir is None:
+                os.environ.pop("EINVITE_DATA_DIR", None)
+            else:
+                os.environ["EINVITE_DATA_DIR"] = previous_data_dir
         assert "slug" in columns and empty == 0 and "idx_guests_slug" in indexes, (columns, empty, indexes)
         cleanup_path(data_dir)
 
