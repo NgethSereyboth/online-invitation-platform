@@ -639,6 +639,27 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
   body:not(.guest) > header .app-topbar-right { margin-left: 42px; }
   .app-account { max-width: min(220px, calc(100vw - 240px)); }
 }
+/* UX-1 (FB-122): at ≤540 the signed-in bar cannot fit brand + launcher + account +
+   Refresh + drawer toggle + theme + language switch in one row — measured 583 px of
+   content in a 320 px viewport. `organized/styles.css` keeps the one row at the design
+   height and lets it scroll horizontally (VB-02/FB-28 measured a wrapped 113–171 px bar
+   that pushed content below the fold); this sheet's base `overflow:hidden` was winning
+   over that intent and clipping the tail instead (Refresh cut at the right edge, theme
+   and language switch entirely off-screen and unreachable). Restore the scroll, drop
+   the account chip (its value stays on the Account page and in its `title`) and the
+   now-stale 42 px launcher reserve, so the only control that still needs a swipe is the
+   language switch. The editor (`data-page="index"`) keeps its own header: frozen
+   canvas route. */
+@media (max-width: 540px) {
+  body:not(.guest):not([data-page="index"]) > header {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  /* The 42 px ≤700 reserve stays: the workspace launcher is injected inside the
+     brand and overflows it (measured at 320: launcher 111–149, cluster would start
+     at 115 without the reserve and paint over the launcher). */
+  body:not(.guest):not([data-page="index"]) > header .app-account { display: none; }
+}
 .app-theme-toggle {
   width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center;
   border: 1px solid transparent; border-radius: var(--radius-sm);

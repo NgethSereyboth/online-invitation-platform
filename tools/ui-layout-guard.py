@@ -299,6 +299,26 @@ MEASURE_JS = r"""
   const header = document.querySelector('body > header');
   if (header && visible(header)) {
     out.headerHeight = Math.round(header.getBoundingClientRect().height);
+    // 3b. UX-1: every visible header control must be reachable. The shell keeps
+    // ONE row at the design height on phones and scrolls horizontally (VB-02/FB-28),
+    // so "reachable" means inside the header's scrollable content box — not inside
+    // the viewport at scrollLeft 0. A bar that clips instead (overflow not
+    // auto/scroll) is the defect this cell exists to catch.
+    const hs = getComputedStyle(header);
+    const hr = header.getBoundingClientRect();
+    const scrollable = (hs.overflowX === 'auto' || hs.overflowX === 'scroll') &&
+                       header.scrollWidth > header.clientWidth + 1;
+    const limit = scrollable ? hr.left + header.scrollWidth : hr.right;
+    out.headerScrollable = scrollable;
+    out.topbarClipped = [];
+    for (const el of header.querySelectorAll('*')) {
+      if (!visible(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.right <= limit + 1) continue;
+      out.topbarClipped.push(path(el) + ' right=' + Math.round(r.right) +
+                             ' limit=' + Math.round(limit));
+    }
+    out.topbarClipped = out.topbarClipped.slice(0, 6);
     const kids = [...header.children].filter(visible);
     for (let i = 0; i < kids.length; i++) {
       for (let j = i + 1; j < kids.length; j++) {
@@ -504,7 +524,7 @@ def run_self_test() -> int:
     console_fails = [m for m in errors if not console_matches(m, patterns)]
     failed_checks = {check for check, ok, _ in rows if not ok}
     expected = {"empty-control", "clipped-field", "empty-pill", "khmer-face",
-                "editor-artboard", "long-task"}
+                "editor-artboard", "long-task", "topbar-cluster-reachable"}
     print("SELFTEST negative control — deliberately broken fixture:")
     for check, ok, detail in rows:
         if not ok and check in expected:
@@ -518,7 +538,8 @@ def run_self_test() -> int:
         print("UI_LAYOUT_GUARD_SELFTEST_FAILED missing=" + ",".join(sorted(missing)))
         return 1
     print("UI_LAYOUT_GUARD_SELFTEST_PASSED (empty-control, clipped-field, empty-pill, "
-          "khmer-face, editor-artboard, long-task, console-baseline)")
+          "khmer-face, editor-artboard, long-task, topbar-cluster-reachable, "
+          "console-baseline)")
     return 0
 
 
@@ -564,6 +585,14 @@ def rows_for(page_name: str, viewport: str, theme: str, lang: str, data: dict, s
     rows.append(("header-overlap", not data["headerOverlap"],
                  f"{where} " + ("; ".join(" x ".join(p) for p in data["headerOverlap"])
                                 if data["headerOverlap"] else "none")))
+
+    # UX-1: the bar may scroll horizontally on a phone, but nothing may be clipped
+    # by a non-scrollable edge. The editor keeps its own frozen header (canvas gate).
+    clipped_top = data.get("topbarClipped")
+    if clipped_top is not None and page_name != "index.html":
+        rows.append(("topbar-cluster-reachable", not clipped_top,
+                     f"{where} scrollable={data.get('headerScrollable')} " +
+                     ("; ".join(clipped_top) if clipped_top else "none")))
 
     # FB-45: main-thread budget — one task over the ceiling is a real regression, not noise.
     tasks = data.get("longTasks") or []

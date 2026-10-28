@@ -1419,6 +1419,13 @@ font-size: var(--fs-body-sm); color: var(--app-muted);
 body:not(.guest) > header .app-topbar-right { margin-left: 42px; }
 .app-account { max-width: min(220px, calc(100vw - 240px)); }
 }
+@media (max-width: 540px) {
+body:not(.guest):not([data-page="index"]) > header {
+overflow-x: auto;
+overflow-y: hidden;
+}
+body:not(.guest):not([data-page="index"]) > header .app-account { display: none; }
+}
 .app-theme-toggle {
 width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center;
 border: 1px solid transparent; border-radius: var(--radius-sm);

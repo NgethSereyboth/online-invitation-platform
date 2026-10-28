@@ -19,9 +19,14 @@
     background: #fff; color: #fff; font-size: 11px; }
   .app-badge { display: inline-flex; height: 6px; overflow: hidden; padding: 2px 8px;
     border-radius: 8px; background: #f8f8fb; color: #1f2026; font-size: 11px; }
+  /* UX-1 negative control: a header that CLIPS an over-wide control instead of
+     scrolling it (overflow:hidden). The reachability cell must flag it. */
+  body > header { display: flex; align-items: center; height: 40px; overflow: hidden; }
+  #wide-control { display: block; flex: none; width: 400px; height: 30px; background: #eee; }
 </style>
 </head>
 <body>
+  <header><span id="wide-control">wide control</span></header>
   <!-- LT-1.5 negative control: declares the app's Khmer family but the fixture
        ships no @font-face, so the glyph must paint with a system face. The text is
        a Khmer digit generated from its code point (no Khmer is written here). -->
