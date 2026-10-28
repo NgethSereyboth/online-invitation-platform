@@ -60,13 +60,16 @@ A public, user-facing summary of this policy is served at `/privacy.html`.
 - **Configurable:** The operator sets `EINVITE_ANALYTICS_RETENTION_DAYS`
   in the environment. Setting it to `0` is treated as `1` (one day
   minimum) to avoid accidentally deleting the entire table on boot.
-- **Auto-prune:** A background job runs every 5 minutes and deletes
-  events older than the cutoff. Active sessions (those without an
-  `ended_at`) are never pruned — they're closed first by the close-idle
-  pass.
-- **Prune audit:** The count of rows pruned per pass is written to the
-  `audit_events` table so the operator can confirm the policy is
-  working.
+- **Auto-prune cadence:** the retention prune runs **at most once per 24 h**
+  (`EINVITE_ANALYTICS_RETENTION_INTERVAL_HOURS`, default `24`, floored at
+  `1`). It deletes events older than the cutoff, then ended sessions, then
+  daily summaries. Active sessions (those without an `ended_at`) are never
+  pruned — they're closed first by the close-idle pass, which still runs
+  every 5 minutes along with spam cleanup and daily aggregation.
+- **Prune audit:** every actual prune writes one `analytics_retention_run`
+  log line and one `analytics.retention_pruned` row in `audit_events`, with
+  the rows pruned per table, the retention window and the run duration, so
+  the operator can confirm the policy is working after the log rotates.
 
 ---
 

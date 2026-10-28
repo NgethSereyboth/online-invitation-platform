@@ -53,6 +53,7 @@ from features.analytics import (
     ensure_schema as ensure_analytics_schema,
     record_event_batch,
     run_session_reconstruction,
+    maybe_run_retention,
     purge_invitation_analytics,
     set_invitation_analytics_enabled,
     is_invitation_analytics_enabled,
@@ -11935,15 +11936,27 @@ if __name__ == "__main__":
             if stopping.wait(60):break
     threading.Thread(target=backup_scheduler_loop,daemon=True,name="studio-backup-scheduler").start()
     def analytics_reconstruction_loop():
-        # ROADMAP Part 6 §6.4/§6.10 — close idle sessions, drop spam sessions,
-        # aggregate the daily summary and prune past the retention window.
-        # Every run is logged (ROADMAP §6.8: retention "runs daily and is
-        # logged"); the prune itself is the last step of run_session_reconstruction.
+        # ROADMAP Part 6 §6.4/§6.10 — close idle sessions and aggregate every 5
+        # minutes; the retention prune (§6.8) is gated to its own interval
+        # (default 24 h, EINVITE_ANALYTICS_RETENTION_INTERVAL_HOURS) and each
+        # actual prune writes one log line plus one audit row.
+        last_retention_ms=0
         while not stopping.is_set():
             try:
-                with connect() as db:result=run_session_reconstruction(db)
-                pruned=result.get("pruned") or {}
-                print(json.dumps({"level":"info","event":"analytics_retention_run","closedIdleSessions":result.get("closedIdleSessions"),"deletedSpamSessions":result.get("deletedSpamSessions"),"aggregatedRows":result.get("aggregatedRows"),"prunedEvents":pruned.get("events"),"prunedSessions":pruned.get("sessions"),"prunedSummaries":pruned.get("summaries"),"retentionDays":pruned.get("retentionDays")},ensure_ascii=False),flush=True)
+                # The audit row opens its own connection, so it must run after
+                # this block commits — doing it inside would deadlock the
+                # writer against the prune's pending DELETE (seen as a 45 s
+                # "prune did not run" in lt_7_2_retention_scheduler_test).
+                with connect() as db:
+                    run_session_reconstruction(db,prune=False)
+                    retention=maybe_run_retention(db,last_run_ms=last_retention_ms)
+                if retention:
+                    last_retention_ms=int(retention["ranAtMs"])
+                    try:
+                        write_audit_event(None,"analytics.retention_pruned","analytics","retention",retention,"system")
+                    except Exception as audit_exc:
+                        print(json.dumps({"level":"warning","event":"analytics_retention_audit_failed","message":str(audit_exc)}),flush=True)
+                    print(json.dumps({"level":"info","event":"analytics_retention_run","ranAtMs":retention["ranAtMs"],"durationMs":retention["durationMs"],"prunedEvents":retention.get("events"),"prunedSessions":retention.get("sessions"),"prunedSummaries":retention.get("summaries"),"retentionDays":retention.get("retentionDays")},ensure_ascii=False),flush=True)
             except Exception as exc:
                 if JSON_LOGS:print(json.dumps({"level":"warning","event":"analytics_reconstruction_failed","message":str(exc)}),flush=True)
             if stopping.wait(300):break

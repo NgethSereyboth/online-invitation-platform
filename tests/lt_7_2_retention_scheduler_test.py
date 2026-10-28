@@ -15,7 +15,12 @@ logged"), so this test proves both halves against a real server process:
 * boot `src/python/server.py` with `EINVITE_ANALYTICS_RETENTION_DAYS=1` and wait
   for the loop's first pass;
 * assert the expired rows are gone, the controls remain, and the server log
-  carries one `analytics_retention_run` line with the prune counts.
+  carries one `analytics_retention_run` line with the prune counts and exactly
+  one `analytics.retention_pruned` audit row.
+
+Since B-2 the prune is gated to its own interval (default 24 h), so this test's
+45 s window can only observe the first pass — the 23 h/25 h behaviour is covered
+with an injected clock in `tests/analytics_retention_schedule_test.py`.
 
 Prints ``LT_7_2_RETENTION_SCHEDULER_PASSED`` on success.
 """
@@ -151,6 +156,11 @@ def test_retention_scheduler_runs_and_logs():
             assert (run.get("prunedSessions") or 0) == 1, run
             assert (run.get("prunedSummaries") or 0) == 1, run
             assert (run.get("retentionDays") or 0) == 1, run
+            # B-2: each actual prune also leaves one audit row, so the run
+            # outlives the log file. The 24 h gate means the 45 s window can
+            # only contain the first pass.
+            audit_rows = _count(db_file, "SELECT COUNT(*) FROM audit_events WHERE action='analytics.retention_pruned'")
+            assert audit_rows == 1, f"expected exactly one retention audit row, got {audit_rows}"
             print("[OK] retention prune ran on the server's first pass and was logged:", json.dumps(run, ensure_ascii=False), flush=True)
         finally:
             stop_process(process)

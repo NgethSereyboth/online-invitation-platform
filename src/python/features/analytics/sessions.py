@@ -24,16 +24,26 @@ scheduler loop). Each invocation:
 4. (§6.10) Prunes analytics older than
    ``EINVITE_ANALYTICS_RETENTION_DAYS`` (default 365). Deletes events
    first, then sessions, then daily summaries. Never deletes a session
-   that's still active (no ``ended_at``).
+   that's still active (no ``ended_at``). The prune itself runs at most
+   once per ``EINVITE_ANALYTICS_RETENTION_INTERVAL_HOURS`` (default 24),
+   not on every 5-minute pass — the other steps still run that often.
 
-5. Logs prune counts to the audit log so the operator can see the
-   retention policy working.
+5. Writes the prune counts and duration to one ``analytics_retention_run``
+   log line **and** one ``analytics.retention_pruned`` audit row per prune
+   run (ROADMAP §6.8 "runs daily and is logged"), so the operator can see
+   the policy working and the row survives the log file.
 
 Public API
 ----------
-``run_session_reconstruction(db)``
-    Full pass: close idle → delete spam → aggregate → prune. Returns a
+``run_session_reconstruction(db, prune=True)``
+    Full pass: close idle → delete spam → aggregate → prune. Pass
+    ``prune=False`` when the caller gates retention separately. Returns a
     dict of counts for logging/audit.
+
+``maybe_run_retention(db, last_run_ms, now_ms=None, interval_ms=None, audit=None)``
+    Run the retention prune only when the interval has elapsed. ``now_ms``
+    is injectable so tests can simulate 23 h / 25 h without waiting. Returns
+    the prune payload (with ``ranAtMs`` and ``durationMs``) or ``None``.
 
 ``close_idle_sessions(db, now_ms=None)``
     Mark idle sessions ended. Returns count closed.
@@ -54,6 +64,11 @@ from __future__ import annotations
 import os
 import time
 from typing import Optional
+
+#: Default cadence of the retention prune itself (ROADMAP §6.8: daily). The
+#: reconstruction passes that close sessions and aggregate summaries stay at
+#: the server's 5-minute cadence.
+RETENTION_INTERVAL_DEFAULT_HOURS = 24.0
 
 from .model import (
     SESSION_IDLE_TIMEOUT_MS,
@@ -224,8 +239,12 @@ def aggregate_daily_summary(db, *, day: Optional[str] = None,
     return upserted
 
 
-def run_retention_prune(db, retention_days: Optional[int] = None) -> dict:
+def run_retention_prune(db, retention_days: Optional[int] = None,
+                        now_ms: Optional[int] = None) -> dict:
     """Delete analytics older than the retention window.
+
+    ``now_ms`` is injectable so the scheduler tests can simulate 23 h/25 h
+    without waiting; the default is the wall clock.
 
     Order: events → sessions → daily summaries. Never deletes a session
     that's still active (no ``ended_at``).
@@ -237,7 +256,7 @@ def run_retention_prune(db, retention_days: Optional[int] = None) -> dict:
     days = int(retention_days or os.environ.get("EINVITE_ANALYTICS_RETENTION_DAYS")
                or RETENTION_DEFAULT_DAYS)
     days = max(1, days)
-    cutoff = _now_ms() - days * 24 * 60 * 60 * 1000
+    cutoff = int(now_ms if now_ms is not None else _now_ms()) - days * 24 * 60 * 60 * 1000
     e = db.execute(
         "DELETE FROM analytics_events WHERE created_at < ?",
         (cutoff,)
@@ -262,18 +281,57 @@ def run_retention_prune(db, retention_days: Optional[int] = None) -> dict:
     }
 
 
-def run_session_reconstruction(db, *, now_ms: Optional[int] = None) -> dict:
+def retention_interval_ms() -> int:
+    """How often the retention prune may run (default 24 h, env-configurable)."""
+    raw = os.environ.get("EINVITE_ANALYTICS_RETENTION_INTERVAL_HOURS")
+    try:
+        hours = float(raw) if raw not in (None, "") else RETENTION_INTERVAL_DEFAULT_HOURS
+    except (TypeError, ValueError):
+        hours = RETENTION_INTERVAL_DEFAULT_HOURS
+    return int(max(1.0, hours) * 60 * 60 * 1000)   # never tighter than an hour
+
+
+def maybe_run_retention(db, *, last_run_ms: int = 0, now_ms: Optional[int] = None,
+                        interval_ms: Optional[int] = None, audit=None) -> Optional[dict]:
+    """Prune once per interval; return the payload or ``None`` when throttled.
+
+    ``now_ms`` and ``interval_ms`` are injectable so tests can advance a clock
+    instead of waiting a day, and ``audit`` is the row writer (the server passes
+    ``write_audit_event``; tests pass a list appender). The caller owns the
+    ``analytics_retention_run`` log line, because only it knows the process.
+    """
+    now = int(now_ms if now_ms is not None else _now_ms())
+    interval = int(interval_ms if interval_ms is not None else retention_interval_ms())
+    if last_run_ms and now - int(last_run_ms) < interval:
+        return None
+    started = time.monotonic()
+    pruned = run_retention_prune(db, now_ms=now)
+    payload = {
+        **pruned,
+        "ranAtMs": now,
+        "durationMs": int((time.monotonic() - started) * 1000),
+    }
+    if audit is not None:
+        audit(payload)
+    return payload
+
+
+def run_session_reconstruction(db, *, now_ms: Optional[int] = None, prune: bool = True) -> dict:
     """Full background pass: close-idle → delete-spam → aggregate → prune.
+
+    ``prune=False`` lets the server gate the retention step on its own daily
+    interval while the cheap passes keep running every 5 minutes.
 
     Returns a dict of counts suitable for audit logging.
     """
     closed = close_idle_sessions(db, now_ms)
     spam_deleted = delete_spam_sessions(db, now_ms)
     aggregated = aggregate_daily_summary(db)
-    pruned = run_retention_prune(db)
-    return {
+    result = {
         "closedIdleSessions": closed,
         "deletedSpamSessions": spam_deleted,
         "aggregatedRows": aggregated,
-        "pruned": pruned,
     }
+    if prune:
+        result["pruned"] = run_retention_prune(db, now_ms=now_ms)
+    return result

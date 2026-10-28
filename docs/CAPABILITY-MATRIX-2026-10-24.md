@@ -155,8 +155,8 @@ One full matrix on the frozen tree: `artifacts/next-work/gates/20261027-120242/g
   rows are closed — field-level encryption of all six listed columns (with a migration /
   rollback / `--reencrypt` path and a per-data-dir key), step-up on 15 destructive admin routes
   **plus the admin page that can obtain the grant**, scoped API keys with a per-key limit and audit,
-  signed webhook delivery with retries, a secrets-rotation doc + script, one
-  `analytics_retention_run` log line per prune pass, and the `security_*` collection-order coupling
+  signed webhook delivery with retries, a secrets-rotation doc + script, a daily
+  `analytics_retention_run` log line plus one audit row per prune run, and the `security_*` collection-order coupling
   fixed at the cause. [`docs/ROADMAP-RECONCILIATION-2026-10-24.md`](ROADMAP-RECONCILIATION-2026-10-24.md)
   now reads **30 `exists` / 6 `partial` / 1 `absent`** (from 22/10/5); Parts 4 and 5 have no open row.
   Gate record, stated plainly: build, bundles, smoke `16/0/0`, layout (1533 checks), budgets 6/6,

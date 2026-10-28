@@ -60,6 +60,8 @@ from .model import (
 from .sessions import (
     run_session_reconstruction,
     run_retention_prune,
+    maybe_run_retention,
+    retention_interval_ms,
     aggregate_daily_summary,
     close_idle_sessions,
     delete_spam_sessions,
@@ -99,6 +101,8 @@ __all__ = [
     "is_invitation_analytics_enabled",
     "run_session_reconstruction",
     "run_retention_prune",
+    "maybe_run_retention",
+    "retention_interval_ms",
     "aggregate_daily_summary",
     "close_idle_sessions",
     "delete_spam_sessions",
