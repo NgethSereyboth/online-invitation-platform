@@ -4,9 +4,16 @@ How to rotate every long-lived secret this build reads, with the downtime each r
 The goal is **no read downtime**: rotate the key that verifies old material *behind* the new one,
 re-encrypt or wait out the old material, then drop the old key.
 
-The companion script is [`scripts/rotate-secrets.sh`](../../scripts/rotate-secrets.sh); it edits an
-env file in place, keeps a timestamped backup, and prints **fingerprints**, never values (add
-`--print` only when you must copy a value into a secret manager).
+There are two companion scripts, for the two ways a host stores secrets:
+
+* [`scripts/rotate-secrets.sh`](../../scripts/rotate-secrets.sh) — edits a local env file **in place**,
+  keeps a timestamped backup, and prints fingerprints, never values (add `--print` only when you must
+  copy a value into a secret manager). Use it when this machine owns the env file.
+* [`scripts/rotate-secrets.py`](../../scripts/rotate-secrets.py) — writes a **candidate file** at a path
+  you name (`--out`), mode 0600, containing only the rotated names. Use it when the deployment reads
+  secrets from a platform store: review the file, paste the values there, then restart. It never edits
+  the live env file, never writes inside `data/`, and **dry run is its default** (no `--out` = write
+  nothing).
 
 ## Inventory — what this build actually reads
 
@@ -30,7 +37,7 @@ auto-generated as 0600 sidecar files in the data directory (`.upload-signing-sec
 rotation makes the sidecar irrelevant. To see which source is live, read the boot log:
 `field encryption ready (source=env, key=<fingerprint>)`.
 
-## The script
+## The in-place script (`rotate-secrets.sh`)
 
 ```
 scripts/rotate-secrets.sh [--env-file PATH] [--dry-run] [--print]
@@ -46,6 +53,46 @@ scripts/rotate-secrets.sh [--env-file PATH] [--dry-run] [--print]
   (exit 2, nothing written) if the active key is not in the env file — if it lives in the data
   directory's sidecar, copy that value into `_PREVIOUS` yourself first or put it in the env file.
 - Exit codes: `0` success, `1` error / invalid existing key, `2` field key not found.
+
+## The candidate-file script (`rotate-secrets.py`)
+
+```
+scripts/rotate-secrets.py [--env-file PATH] [--out PATH] [--force]
+                          [--with-preflight] [--field-encryption]
+```
+
+- **Dry run is the default.** Without `--out` it prints names and fingerprints and writes nothing.
+- `--out PATH` writes only a candidate file, mode **0600**; it refuses to overwrite an existing file
+  unless `--force`, and refuses any path inside a `data` directory. It never reads or writes the data
+  directory.
+- Default names are the three app-generated secrets from `.env.example`: `EINVITE_SECRET_KEY` (line 17),
+  `EINVITE_BILLING_WEBHOOK_SECRET` (line 65), `EINVITE_STRIPE_WEBHOOK_SECRET` (line 76).
+  `--with-preflight` adds the three production signing secrets from `core/preflight.py`
+  (`EINVITE_UPLOAD_SIGNING_SECRET`, `EINVITE_MEDIA_SIGNING_SECRET`, `EINVITE_GUEST_TOKEN_SECRET`).
+- `--field-encryption` mirrors Procedure B: the new key becomes current and the old value is written as
+  `EINVITE_FIELD_ENCRYPTION_KEY_PREVIOUS`. It exits `2` without writing if the active key is not in the
+  source env file (if it lives in the data sidecar, copy it into `_PREVIOUS` first), and `1` if the value
+  is not a valid Fernet key.
+- **Nothing secret is printed.** Only `sha256:<12 hex>` fingerprints, so an operator can match values
+  across systems without moving them through a terminal.
+- Provider-issued names are listed as reminders and never generated.
+- Exit codes: `0` success, `1` error / unsafe path, `2` field key not found, `3` `--out` exists without
+  `--force`.
+
+Order of operations with a platform store:
+
+1. `scripts/rotate-secrets.py --env-file .env` — dry run; check the names and fingerprints.
+2. `scripts/rotate-secrets.py --env-file .env --out /tmp/rotation-<date>.env` — candidate file (0600).
+3. Copy the values into the platform's secret store **before** the old ones are revoked; keep the source
+   env file as the fingerprint reference.
+4. Restart (or roll the deployment) so the new values are read; for media/upload secrets keep the old
+   value in the `*_PREVIOUS_SECRETS` list for one URL TTL.
+5. Verify, then revoke the old values at the provider and delete the candidate file.
+
+Rollback: keep the platform's previous values until step 5. Restoring them and restarting is the whole
+rollback for app-generated secrets; the candidate file is disposable (delete it, nothing else changed).
+For the field-encryption key, roll back as in Procedure B (restore the env file backup or keep both keys
+set — reads fall back to `_PREVIOUS`).
 
 ## Procedure A — app-generated secrets (no downtime)
 
@@ -94,7 +141,8 @@ SMTP and object-storage credentials cannot be generated locally:
 ```
 # 1. The rotation + encryption suites:
 .venv/bin/python -m pytest tests/security_field_encryption_test.py \
-                             tests/lt_7_2_secrets_rotation_test.py -q
+                             tests/lt_7_2_secrets_rotation_test.py \
+                             tests/ops_rotate_secrets_candidate_test.py -q
 
 # 2. The live key fingerprint matches the env file (never prints the key):
 PYTHONPATH=src/python .venv/bin/python -c \
