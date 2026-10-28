@@ -18,6 +18,175 @@ production-certified release.
 
 ---
 
+---
+
+## 0.68.6 — Phase 3 close: guest-page completion and capability truth
+
+- **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 3 (LT-3.1…LT-3.10, commits
+  FB-83…FB-91), executed locally on `fix/2026-10-22-open-issues`.
+- **Capability truth (LT-3.1):** `docs/CAPABILITY-MATRIX-2026-10-24.md` statuses every guest-page,
+  editor, template, export and Khmer-engine capability as `exists` / `partial` / `absent` with
+  evidence, and is now at final truth (the 36-template pack and the guest-page language switch
+  included).
+- **Guest page completed (LT-3.2…LT-3.9, item 8):** a display-only gift/KHQR block behind an owner
+  toggle — one raster image through the platform upload route, server-side allowlist, caption, no
+  payment control and no account numbers stored — plus a strictly sanitised `?guest=<name>` greeting
+  (NFC, control/format/markup characters stripped, 40 chars, escaped) render on the public route;
+  Messenger joins Telegram/WhatsApp/Facebook share. Evidence:
+  `tests/lt_3_2_gift_greeting_test.py`, `artifacts/next-work/fb-90/NOTES.md`.
+- **Verification:** one full matrix `GATES_PASSED` — build, bundles, smoke 16 pages / 0 errors,
+  layout, pytest **183 passed**, budgets 6/6, LHCI 16/16 `minA11y 1.00`, CSP 0 violations, canvas
+  22 pass / 0 fail / 2 skipped, `!important` 3816 ≤ 3823
+  (`artifacts/next-work/gates/20261027-120242/`).
+- **Not done (Phase 4 scope):** the guest-page language switch found at the close (the visible
+  control does not change the invitation), the unsaved-changes guard, colour-picker extras and
+  bilingual per-run font/size authoring.
+- **Primary files:** `docs/CAPABILITY-MATRIX-2026-10-24.md`, `src/js/public-page.js`,
+  `src/js/product-operations.js`, `src/js/app.js`, `src/css/guest-layouts.css`,
+  `src/python/server.py`, `tests/lt_3_2_gift_greeting_test.py`, `docs/i18n/TRANSLATIONS.csv`,
+  `docs/STATUS-INDEX.md`.
+
+---
+
+## 0.68.7 — Phase 4: guest language switch, unsaved guard, colour and run typography
+
+- **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 4 (LT-4.1…LT-4.4), executed
+  locally on `fix/2026-10-22-open-issues`.
+- **Guest language switch (LT-4.1, FB-92):** the visible topbar switch and the hidden proxy pair now
+  both delegate to the renderer's `setLanguage`, and the i18n layer mirrors it, so the control cannot
+  claim a language the page is not showing.
+- **Unsaved-changes guard (LT-4.2, FB-93):** `app.js` keeps a `pendingWrite` flag (mirrored to
+  `data-save-pending`) while the 220 ms local write is in flight and cancels `beforeunload` only then.
+- **Colour-picker extras (LT-4.3, FB-94):** a popover around the native colour inputs with 8
+  persisted recents, an eyedropper where the API exists, and a text-only WCAG contrast verdict;
+  choices go back through the host input, so the editor still applies them.
+- **Per-run typography (LT-4.4, FB-95):** the rich-text run selection now survives a re-render, and
+  the inspector's "Selected text (run)" group applies a font pairing and a size preset to exactly the
+  selected run in one commit. `applyMark` is now bounded to the selected runs (it previously also
+  marked neighbouring runs).
+- **Verification:** build, bundles, smoke 16 pages / 0 errors, layout, budgets 6/6 and CSP green for
+  each item; the only pytest red is the documented `lt_2_6` export-host oscillation. Evidence:
+  `artifacts/next-work/lt-4-{1,2,3,4}/NOTES.md`.
+- **Boot defect fixed (FB-96):** a same-profile editor reload used to boot the title as one flattened
+  run even though the draft and server kept the runs, because the boot `capture()` ran before the
+  lazily loaded rich-text modules; the stored model is now carried forward. The test reloads the same
+  profile and asserts both runs; the trace is in `artifacts/next-work/lt-4-4/RELOAD-DEFECT.md`.
+- **Primary files:** `src/js/app.js`, `src/js/rich-text-editing.js`, `src/js/typography-editor.js`,
+  `src/js/color-picker-extras.js`, `src/js/public-page.js`, `src/css/editor/editor-styles.css`,
+  `tests/lt_4_{1,2,3,4}_*_test.py`, `docs/CAPABILITY-MATRIX-2026-10-24.md`, `docs/STATUS-INDEX.md`.
+
+---
+
+## 0.68.9 — Phase 6 close: performance, weight and the gate's long-term health
+
+- **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 6 (LT-6.1…LT-6.5), executed
+  locally on `fix/2026-10-22-open-issues`.
+- **Headroom watch (LT-6.1):** three layout-guard runs on one tree; the worst route is
+  `index.html` at 420 ms of the 600 ms long-task ceiling (70 %), nothing within 15 %, so no bundle
+  split — the startup bundle's compile/execute is unchanged since FB-64/FB-66.
+- **Budgets in numbers (LT-6.2):** new `docs/perf/BUDGET-STATE-2026-10-24.md` — all six budgeted
+  routes inside (thinnest `public.html` 0.4 KB of 259 KB); editor median 2,153 ms to
+  `editorReady`; viewer LCP median 4,716 ms under Slow-4G + 4× CPU with CLS 0 (unthrottled 832 ms);
+  `templates.html` perf 77 / CLS 0.604 and `index.html` perf 73 recorded as outliers inside gate
+  tolerance.
+- **`!important` ratchet (LT-6.3):** three passes; the two provably-dead rules were removed —
+  `final-polish.css` `.fp-project-status` and `organized/workflow-refine.css` `.flow-design-search
+  input`, 7 tokens, 3816 → 3809 — and `IMPORTANT_PIN` was lowered to 3809 in the same pass. Proof
+  chain: static inventory, live rest probe, a new interaction-state probe (hover/focus/click/drag),
+  and a 240-shot pixel gate at 63/240 fully classified against a same-source control at 62/240.
+  Passes 2–3 found no new candidates.
+- **Large uploads (LT-6.4):** a 21.9 MB image is refused with a named limit on all three entry
+  points (inspector, asset browser, materials) with no upload write and no long task; an allowed
+  8.3 MB 5000×3500 JPEG is stored as a 2.18 MB 2200×1540 WebP; a 20 MB raw POST returns HTTP 400.
+  Zero defects — no source change.
+- **Memory and history (LT-6.5):** after a warm-up, 50 page open/close cycles grow the heap by
+  590 KB (bound 8 MB) and a 500-step undo history is flat (bound 24 MB; `pushHistory` keeps at most
+  50 snapshots); a 400-cycle discriminator shows a decaying, non-monotone ~5 KB/cycle tail with flat
+  DOM node/canvas/dialog counts — no leak, no source change.
+- **Verification:** one full matrix `GATES_PASSED`, all ten phases exit 0 — build, bundles,
+  smoke `16/0/0`, layout, pytest **`189 passed in 577.31s`** (no red), budgets 6/6, LHCI 16/16
+  `minA11y 1.00`, CSP 0 violations, canvas 22 pass / 0 fail / 2 skipped, `!important total=3809` ≤
+  pin 3809 (`artifacts/next-work/gates/20261027-211049/gates.log`).
+- **Primary files:** `docs/perf/BUDGET-STATE-2026-10-24.md`, `tests/lt_6_4_large_upload_test.py`,
+  `tests/lt_6_5_memory_history_test.py`, `src/css/final-polish.css`,
+  `src/css/organized/workflow-refine.css`, `tools/css-important-inventory.py` (pin already held),
+  `docs/CAPABILITY-MATRIX-2026-10-24.md`, `docs/STATUS-INDEX.md`.
+
+---
+
+## 0.69.0 — Roadmap Part 4 complete: backend security hardening
+
+- **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 7 / LT-7.2 step 4 (+fix-up), step
+  9, FB-105, executed locally on `fix/2026-10-22-open-issues`. Every acceptance bullet of
+  `docs/ROADMAP-v0.54-to-v1.0.md` Part 4 is now `exists` in
+  `docs/ROADMAP-RECONCILIATION-2026-10-24.md` (8/8).
+- **Field-level encryption (4.1, absent → exists):** `core/crypto.py` (Fernet key resolution —
+  env → per-data-dir sidecar → ephemeral — `EINVITE_FIELD_ENCRYPTION` kill switch, previous-key
+  window, fingerprints), `core/db.py` read wrapper + `protect()` write helper, `users.email_hash`
+  with the plaintext fallback, and **every listed column encrypted on the write path**
+  (`users.email`, `guests.email`/`phone`, `delivery_attempts.recipient`,
+  `audit_events.metadata_json` with a new indexed `admin_only` flag replacing the SQL `LIKE`, and
+  `invitation_edit_history.diff_json`). Migration/rollback/re-encrypt:
+  `scripts/migrate_encrypt_sensitive_fields.py` (never against `data/`).
+- **Step-up coverage (4.2/5.9):** 15 destructive admin routes gated; the admin shell can obtain a
+  grant (`src/js/pages/admin/step-up.js` + the `403 step_up_required` retry hook in `admin.js`).
+- **Secrets rotation (4.7) and webhook signing (4.6):** `docs/ops/SECRETS-ROTATION.md` +
+  `scripts/rotate-secrets.sh`; the webhook delivery path with per-attempt signatures and bounded
+  retries, documented in `docs/hosted/WEBHOOKS.md`.
+- **Test isolation (4.8):** the `security_*` collection-order coupling fixed at the cause
+  (call-time dev-token flag, per-call DB path, path-keyed schema flag, path-aware service schemas);
+  the bullet's own `pytest tests/security_*` is green in both file orders.
+- **Verification:** nine gate phases green (build, bundles, smoke, layout, budgets, LHCI, CSP,
+  canvas, `!important`) and pytest `200 passed, 1 failed` on the pre-existing `lt_2_6` PDF metric —
+  `artifacts/next-work/lt-7-close/`; per-item evidence in `artifacts/next-work/lt-7-2/NOTES.md` and
+  `tests/security_field_encryption_test.py` (3 passed).
+- **Primary files:** `src/python/core/crypto.py`, `src/python/core/db.py`, `src/python/server.py`,
+  `scripts/migrate_encrypt_sensitive_fields.py`, `scripts/rotate-secrets.sh`,
+  `docs/security/FIELD-ENCRYPTION.md`, `docs/ops/SECRETS-ROTATION.md`, `docs/hosted/WEBHOOKS.md`.
+
+---
+
+## 0.70.0 — Roadmap Part 5 complete: admin and super-admin tools
+
+- **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 7 / LT-7.2 step 3, FB-105. Every
+  acceptance bullet of Part 5 is now `exists` (9/9) in
+  `docs/ROADMAP-RECONCILIATION-2026-10-24.md`; the last open row was 5.9's "every admin route
+  requires role + step-up for destructive actions".
+- **What changed:** the remaining ten destructive mutations (user role/plan/uploads/session-policy,
+  reset-password, force-MFA, suspend/unsuspend, non-admin idle window, template visibility) joined
+  the five already gated, and — the half no previous build had — an admin page can now actually
+  complete the check: `src/js/pages/admin/step-up.js` prompts for password (+TOTP), caches the
+  30-minute grant in `sessionStorage`, and `api.send` replays the original request after a
+  `403 {code:'step_up_required'}`.
+- **APIs (4.5, absent → exists):** `api_keys` with scoped `X-API-Key` auth (`einv_` keys, Argon2id
+  hashes, route allowlist, 1000/h per key, `api.request` audit rows with `auth=api_key`), routes
+  `GET/POST /api/account/api-keys`, `DELETE /api/account/api-keys/{id}`, and the account-page card
+  (create → show-once → revoke).
+- **Verification:** `tests/lt_7_2_admin_stepup_test.py`, `tests/lt_7_2_admin_stepup_ui_test.py`,
+  `tests/security_api_keys_test.py`, `tests/lt_7_2_api_keys_ui_test.py` all green; nine gate phases
+  green and pytest `200 passed, 1 failed` (the `lt_2_6` metric) — `artifacts/next-work/lt-7-close/`.
+- **Primary files:** `src/python/server.py`, `src/python/core/auth.py`,
+  `src/js/pages/admin/step-up.js`, `src/js/pages/admin/admin.js`, `src/html/account.html`,
+  `src/js/account-security.js`.
+
+---
+
+## 0.70.1 — Phase 7 close: roadmap reconciliation closed, Phase 8 next
+
+- **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 7 (LT-7.1, LT-7.2, LT-7.close),
+  executed locally on `fix/2026-10-22-open-issues` (FB-104, FB-105, FB-106).
+- **Reconciliation closed:** of the 37 acceptance bullets of roadmap Parts 3–6, 30 are `exists`,
+  6 `partial` and 1 `absent` — down from 22/10/5. Parts 4 and 5 have no open row (their minor bumps
+  are 0.69.0 / 0.70.0); the remaining rows are Part 3's 3.7 (two-client cursor proof), 3.9
+  (automatic version snapshots), 3.10/3.11 and Part 6's 6.3 (analytics dashboard DOM test), 6.4
+  (composite sort/filter) and 6.6 (shared-chrome Khmer), all recorded as out of LT-7.2's list.
+- **Verification:** nine gate phases green on the final tree plus pytest `200 passed, 1 failed` on
+  the pre-existing `lt_2_6` PDF metric (no threshold touched) — `artifacts/next-work/lt-7-close/`.
+- **Primary files:** `docs/ROADMAP-RECONCILIATION-2026-10-24.md`,
+  `artifacts/next-work/lt-7-2/NOTES.md`, `docs/STATUS-INDEX.md`,
+  `artifacts/ui-audit/fixes/STATE.md`.
+
+
 ## 0.68.1 — Security hardening: SQL injection fix + shared helpers + path/header/ReDoS/logging fixes
 
 - **Triggered by:** GitHub Copilot security scan (Bandit B608 HIGH + pip-audit + Gitleaks).
@@ -51,8 +220,9 @@ production-certified release.
   console errors, 0 blurry images, 85/85 ornaments `alt=""|aria-hidden="true"`. It also found
   a product defect: guest text keeps design-pixel font sizes inside percentage boxes, so at
   375 px 32/34 flows spill on the flagship wedding page and 6 are cut. Recorded in
-  `docs/templates/PUBLIC-PROOF-2026-10-25.md` and OWNER-QUEUE; TP-5.2 is partial until the
-  guest renderer scales or fits text.
+  `docs/templates/PUBLIC-PROOF-2026-10-25.md` and OWNER-QUEUE. The spill was fixed in the same
+  pass (the `installResponsive` model-parameter bug); only `p1-text-13` remains, an English
+  copy/box call, not a renderer gap.
 - **Primary files:** `src/js/{rich-text-renderer,guest-layouts,bundle-public,bundle-index-2}.js`,
   `src/python/{rich-text-renderer,guest-layouts}.js` (mirror), `tools/{build-template-pack,
   acceptance-report,proof-public-page,design-review-report,contact-sheet}.py`,

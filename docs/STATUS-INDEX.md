@@ -99,6 +99,7 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 | `docs/templates/*` (`CATALOG`, `ACCEPTANCE`, `DESIGN-REVIEW`, `PUBLIC-PROOF`, `FONT-GAP`, `KHMER-HYGIENE`, `CULTURAL-CHECKLIST`, `FINAL-REPORT`) | **authoritative (current)** — the pack's catalogue, generated A1–A12 matrix (432/432), design review, public proof, font substitution record, hygiene and cultural audit, close-out report | 2026-10-27 |
 | `docs/ROADMAP*.md` / `plans/001–003` | historical — completed/blocked; out of continuation scope | earlier |
 | `artifacts/next-work/FINAL-REPORT.md` | **final report** — plan §8: phases and verdicts, the LT-8.5 gate matrix, Khmer files to draft next, `OWNER-QUEUE.md` contents, the final numbers and the final HEAD | 2026-10-28 |
+| `FREEBUFF-NEXT-STEPS-2026-10-27.md` (repo root) | **authoritative order** — Stages A–F after the long-term plan: A backup/truth/demo, B cheap security rows, C plan 004, D product-quality gaps, E roadmap security, F Phase 8; §9 is the live checklist | 2026-10-28 |
 
 ## Superseded work orders — every root `FREEBUFF-*.md`
 
@@ -134,5 +135,7 @@ the two files marked authoritative below are the only ones to follow.
 The bookkeeping pass of 2026-10-20 already banners the earliest three; as of 2026-10-21 the
 remaining historical docs above are listed here rather than individually re-bannered, because
 their content is not contradicted — only their currency. If a doc's instructions ever conflict
-with the queue, this index decides: **`FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` wins**. `NEXT-WORK-TASK.md`
-was that authority until 2026-10-24 and is now itself superseded (see the table above).
+with the queue, this index decides: **`FREEBUFF-NEXT-STEPS-2026-10-27.md` wins on order**, and the
+protocol plus per-item rules are **`FREEBUFF-LONG-TERM-PLAN-2026-10-24.md`** (every §6 item is ticked;
+it is exhausted, not repealed). `NEXT-WORK-TASK.md` was that authority until 2026-10-24 and is now
+itself superseded (see the table above).
