@@ -1,0 +1,25 @@
+/* --- One icon set: assets/icons.svg --------------------------------------
+   Original 24×24 symbols authored in this repo (docs/ASSETS.md), one stroke
+   weight and one size. Colour is inherited, so a rail item, its aria-current
+   state and a button's hover colour all paint the same stroke.
+
+   Only the shell routes that actually draw an icon link this file (see
+   docs/route-bundle-sources.json); public.html and privacy.html do not, which
+   keeps their stylesheet inside the route-weight budget. */
+.icon {
+  width: 1.25em; height: 1.25em;
+  fill: none; stroke: currentColor; stroke-width: 1.75;
+  stroke-linecap: round; stroke-linejoin: round;
+  flex: none;
+}
+.app-rail .icon { display: block; }
+/* The dashboard tiles are display-size. dashboard-page.css sits in @layer
+   components, so an unlayered rule here is the one that wins. */
+.dash-quickstart button > .icon { width: 22px; height: 22px; }
+/* One chevron pair; the collapsed state rotates it (app-shell.js no longer
+   swaps text, so the icon is the only glyph). */
+body.rail-collapsed .app-rail-toggle .icon { transform: rotate(180deg); }
+/* Both appearance symbols ship; the theme state chooses one. */
+.app-theme-toggle .icon--moon { display: none; }
+html[data-theme="dark"] .app-theme-toggle .icon--sun { display: none; }
+html[data-theme="dark"] .app-theme-toggle .icon--moon { display: block; }

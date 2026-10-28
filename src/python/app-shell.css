@@ -177,9 +177,6 @@ html[data-theme="dark"] body:not(.guest) > header > a.button-link.primary {
 }
 .app-rail-toggle:hover, .app-drawer-toggle:hover { background: var(--app-surface-3); color: var(--app-text); }
 
-/* Breadcrumb/primary-action slot reserved inside the topbar. */
-.app-topbar-action { margin-left: var(--space-2); }
-
 /* --- 4. Left rail --------------------------------------------------------- */
 .app-rail {
   background: var(--app-surface);
@@ -191,7 +188,6 @@ html[data-theme="dark"] body:not(.guest) > header > a.button-link.primary {
   align-self: start;
   max-height: calc(100vh - var(--app-topbar-h));
 }
-.app-rail__group { margin-top: var(--space-3); }
 .app-rail__label {
   display: block;
   margin: var(--space-3) var(--space-2) var(--space-1);
@@ -223,11 +219,9 @@ html[data-theme="dark"] body:not(.guest) > header > a.button-link.primary {
 .app-rail a[aria-current="page"] { background: var(--app-accent-soft); color: var(--app-accent); font-weight: var(--fw-semibold); }
 .app-rail .app-rail__icon { width: 20px; text-align: center; font-size: 16px; color: var(--app-muted); }
 .app-rail a[aria-current="page"] .app-rail__icon { color: var(--app-accent); }
-.app-rail__count { margin-left: auto; font-size: var(--fs-body-sm); color: var(--app-faint); font-variant-numeric: tabular-nums; }
 
 body.rail-collapsed .app-rail { padding-left: var(--space-1); padding-right: var(--space-1); }
-body.rail-collapsed .app-rail__label,
-body.rail-collapsed .app-rail__count { display: none; }
+body.rail-collapsed .app-rail__label { display: none; }
 body.rail-collapsed .app-rail a, body.rail-collapsed .app-rail button.app-rail__item { justify-content: center; padding: 0; }
 
 /* --- 5. Skeleton B: focused flow ----------------------------------------- */
@@ -508,8 +502,6 @@ select { appearance: none; background-image: linear-gradient(45deg, transparent 
   font-size: var(--fs-body-sm);
   border-top: 1px solid var(--app-line);
 }
-.app-statusbar__item { display: inline-flex; align-items: center; gap: var(--space-2); }
-.app-statusbar__spacer { margin-left: auto; }
 
 /* --- 10. Overlays ------------------------------------------------------- */
 dialog { border: 1px solid var(--app-line); border-radius: var(--radius-xl); box-shadow: var(--app-shadow-xl); background: var(--app-surface); color: var(--app-text); }
@@ -524,7 +516,7 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
      `rail-collapsed`: a 64px drawer whose link text spilled out of it. Above 768 the
      rail's width comes from the grid track, which §2's ≥769 `body[data-shell="a"]
      .rail-collapsed` rule already handles. */
-  .app-rail__label, .app-rail__count { display: none; }
+  .app-rail__label { display: none; }
   .app-rail a, .app-rail button.app-rail__item { justify-content: center; padding: 0; }
   /* ≤1024 the shell pins the rail column to var(--app-rail-w-collapsed) itself, so the
      collapse control has nothing left to do here (measured at 1024px: clicking it left

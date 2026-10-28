@@ -239,6 +239,34 @@ The pack asks for 14 families (`template-pack/fonts.json`, 14 entries under `rol
 | Montserrat | `template-pack/fonts.json` | SIL OFL 1.1 (Google Fonts) | no — substituted |
 | Jost | `template-pack/fonts.json` | SIL OFL 1.1 (Google Fonts) | no — substituted |
 
+## Interface icons (`assets/icons.svg`)
+
+Original, authored in this repo for the shell (UX-4, 2026-10-28). Nothing was traced, copied or
+downloaded; the shapes are hand-written paths on a 24×24 grid with a 1.75 stroke, round caps and
+joins, `fill:none`, and `currentColor`, so one symbol serves every theme and state. Author: Claude
+(Anthropic) for the OKID owner, 2026-10-28. Licence: owner's property, no third-party rights.
+
+| symbol | used by |
+|---|---|
+| `i-home` | rail: Dashboard |
+| `i-sparkle` | rail: Templates; auth-card brand mark; auth-card bullets |
+| `i-image-grid` | rail: Materials; dashboard Templates tile |
+| `i-users` | rail: Guest list; dashboard Guest list tile |
+| `i-list` | rail: Responses |
+| `i-pie` | rail: Analytics |
+| `i-card` | rail: Plans |
+| `i-cog` | rail: Account |
+| `i-chevrons-left` / `i-chevrons-right` | rail collapse toggle (left rotates 180° when collapsed) |
+| `i-menu` | mobile drawer toggle |
+| `i-sun` / `i-moon` | appearance toggle (one shown per `html[data-theme]`) |
+| `i-plus` | dashboard New invitation tile |
+| `i-star` | reserved for the template favourite control |
+
+The symbols are referenced once per page as
+`<svg class="icon" aria-hidden="true" focusable="false"><use href="assets/icons.svg#i-home"/></svg>`;
+`src/css/icons.css` is the single style owner and is linked only by the routes that draw an icon
+(`docs/route-bundle-sources.json`). The editor keeps its own Unicode sidebar glyph.
+
 ## Acquisition log
 
 | date | what | source URL | author | licence | SHA-256 | used in |

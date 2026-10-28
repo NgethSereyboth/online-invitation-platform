@@ -1102,7 +1102,6 @@ font-size: 16px; line-height: 1; cursor: pointer;
 transition: background var(--motion-1) var(--ease-out), color var(--motion-1) var(--ease-out);
 }
 .app-rail-toggle:hover, .app-drawer-toggle:hover { background: var(--app-surface-3); color: var(--app-text); }
-.app-topbar-action { margin-left: var(--space-2); }
 .app-rail {
 background: var(--app-surface);
 border-right: 1px solid var(--app-line);
@@ -1113,7 +1112,6 @@ top: var(--app-topbar-h);
 align-self: start;
 max-height: calc(100vh - var(--app-topbar-h));
 }
-.app-rail__group { margin-top: var(--space-3); }
 .app-rail__label {
 display: block;
 margin: var(--space-3) var(--space-2) var(--space-1);
@@ -1145,10 +1143,8 @@ transition: background var(--motion-1) var(--ease-out), color var(--motion-1) va
 .app-rail a[aria-current="page"] { background: var(--app-accent-soft); color: var(--app-accent); font-weight: var(--fw-semibold); }
 .app-rail .app-rail__icon { width: 20px; text-align: center; font-size: 16px; color: var(--app-muted); }
 .app-rail a[aria-current="page"] .app-rail__icon { color: var(--app-accent); }
-.app-rail__count { margin-left: auto; font-size: var(--fs-body-sm); color: var(--app-faint); font-variant-numeric: tabular-nums; }
 body.rail-collapsed .app-rail { padding-left: var(--space-1); padding-right: var(--space-1); }
-body.rail-collapsed .app-rail__label,
-body.rail-collapsed .app-rail__count { display: none; }
+body.rail-collapsed .app-rail__label { display: none; }
 body.rail-collapsed .app-rail a, body.rail-collapsed .app-rail button.app-rail__item { justify-content: center; padding: 0; }
 body[data-shell="b"] { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--app-topbar-h) minmax(0, 1fr); min-height: 100vh; }
 body[data-shell="b"] > main { display: block; padding: var(--space-10) var(--space-4) var(--space-16); }
@@ -1402,13 +1398,11 @@ color: var(--app-muted);
 font-size: var(--fs-body-sm);
 border-top: 1px solid var(--app-line);
 }
-.app-statusbar__item { display: inline-flex; align-items: center; gap: var(--space-2); }
-.app-statusbar__spacer { margin-left: auto; }
 dialog { border: 1px solid var(--app-line); border-radius: var(--radius-xl); box-shadow: var(--app-shadow-xl); background: var(--app-surface); color: var(--app-text); }
 dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 @media (max-width: 1024px) {
 body[data-shell="a"]:has(> .app-rail:not([hidden])) { grid-template-columns: var(--app-rail-w-collapsed) minmax(0, 1fr); }
-.app-rail__label, .app-rail__count { display: none; }
+.app-rail__label { display: none; }
 .app-rail a, .app-rail button.app-rail__item { justify-content: center; padding: 0; }
 body:not(.guest) > header .app-rail-toggle { display: none; }
 }
@@ -2063,7 +2057,7 @@ letter-spacing:-.03em;
 }
 .canva-auth-points{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3)}
 .canva-auth-points li{display:flex;gap:10px;align-items:baseline;color:var(--app-muted);font-size:14px}
-.canva-auth-points li > span:first-child{color:var(--app-accent)}
+.canva-auth-points li > .icon{color:var(--app-accent)}
 .canva-auth-panel{display:flex;justify-content:center}
 body[data-page="dashboard"] .canva-auth-panel .auth-card{
 width:100%;
@@ -2103,3 +2097,15 @@ body[data-page="dashboard"] #inviteGrid .invite-card { min-height: var(--app-car
 body[data-page="dashboard"] #inviteGrid .skeleton-card { min-height: var(--app-card-h); }
 .app-badge { flex: none; max-width: 100%; }
 .app-badge .i18n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon {
+width: 1.25em; height: 1.25em;
+fill: none; stroke: currentColor; stroke-width: 1.75;
+stroke-linecap: round; stroke-linejoin: round;
+flex: none;
+}
+.app-rail .icon { display: block; }
+.dash-quickstart button > .icon { width: 22px; height: 22px; }
+body.rail-collapsed .app-rail-toggle .icon { transform: rotate(180deg); }
+.app-theme-toggle .icon--moon { display: none; }
+html[data-theme="dark"] .app-theme-toggle .icon--sun { display: none; }
+html[data-theme="dark"] .app-theme-toggle .icon--moon { display: block; }

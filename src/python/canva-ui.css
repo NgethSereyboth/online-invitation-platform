@@ -149,7 +149,7 @@ body[data-page="dashboard"] .canva-auth-layout{
 }
 .canva-auth-points{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-3)}
 .canva-auth-points li{display:flex;gap:10px;align-items:baseline;color:var(--app-muted);font-size:14px}
-.canva-auth-points li > span:first-child{color:var(--app-accent)}
+.canva-auth-points li > .icon{color:var(--app-accent)}
 .canva-auth-panel{display:flex;justify-content:center}
 body[data-page="dashboard"] .canva-auth-panel .auth-card{
   width:100%;

@@ -670,21 +670,12 @@ if(page==='dashboard')dashboard();
 if(page==='materials')materials();
 if(page==='index')setTimeout(editor,0);
 })();;/**
- * ui/app-shell.js — V55 application shell behaviour (dispatch §2).
+ * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
  *
- * Deliberately tiny and dependency-free. It owns exactly three things:
- *
- *   1. Rail collapse  — [data-rail-toggle] toggles `body.rail-collapsed`
- *      (persisted in localStorage['einvite-rail-collapsed']).
- *   2. Rail drawer    — below 768px the rail becomes a drawer; [data-drawer-toggle]
- *      toggles `body.rail-open`, which is also closed on Escape, on an outside
- *      click, and on hashchange.
- *   3. Appearance     — [data-theme-toggle] cycles light/dark using the SAME
- *      storage key as core/theme.js (`einvite-theme-mode`), so pages that do not
- *      load modern-ui.js (public.html, checkin.html) still get a working toggle.
- *
- * Accessibility: the toggle buttons carry aria-expanded and the rail is a
- * landmark; nothing here traps focus or blocks pointer events when closed.
+ * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
+ * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
+ * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
+ * still work. Toggles expose aria-expanded; nothing traps focus.
  */
 (function () {
   'use strict';
@@ -706,8 +697,9 @@ if(page==='index')setTimeout(editor,0);
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
+      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
       var glyph = btn.querySelector('[data-rail-glyph]');
-      if (glyph) glyph.textContent = collapsed ? '»' : '«';
+      if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
   function applyRailOpen(open) {
@@ -755,8 +747,8 @@ if(page==='index')setTimeout(editor,0);
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      var glyph = btn.querySelector('[data-theme-glyph]');
-      if (glyph) glyph.textContent = next === 'dark' ? '☾' : '☀';
+      /* Both symbols live in the button; the theme attribute on <html> shows the
+         right one, so nothing is assigned here. */
     });
   }
 
