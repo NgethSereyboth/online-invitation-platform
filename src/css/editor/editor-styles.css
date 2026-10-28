@@ -980,12 +980,19 @@ body[data-page="index"] > header.studio-topbar .button-link {
   min-width: 36px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
+  font-size: var(--fs-body-md);
+}
+/* UX-5: publish is the one primary control in this bar, so it must not take the
+   transparent paint below; `button.primary` then supplies the accent and its
+   audited dark-mode mix (white: 6.72:1 light, 5.40:1 dark). The AI tool keeps
+   its previous neutral treatment — `primary` in its markup is a styling hook. */
+body[data-page="index"] > header.studio-topbar button:not(#publishBtn),
+body[data-page="index"] > header.studio-topbar .button-link {
   border: 1px solid transparent;
   background: transparent;
   color: var(--app-text);
-  font-size: var(--fs-body-md);
 }
-body[data-page="index"] > header.studio-topbar button:hover { background: var(--app-surface-3); }
+body[data-page="index"] > header.studio-topbar button:not(#publishBtn):hover { background: var(--app-surface-3); }
 body[data-page="index"] > header.studio-topbar #saveState,
 body[data-page="index"] > header.studio-topbar #serverState {
   display: inline-flex; align-items: center; gap: var(--space-1);
