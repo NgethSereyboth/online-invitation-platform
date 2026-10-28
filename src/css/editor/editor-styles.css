@@ -431,6 +431,38 @@ body.workspace-experience-v54 .studio-inspector-tab small { max-width: 100%; ove
    nested pane keeps this rule hiding only the property controls. */
 body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty) { display: none; }
 body.workspace-experience-v54.v54-inspector-essential.v54-has-selection [data-inspector-pane="object"] > .v54-advanced-control { display: none; }
+/* UX-6: with nothing selected the pane stacked three headings over one empty
+   card ("Edit", the 18px "Style & motion", then the card's own title). The big
+   heading returns as soon as a selection exists; the section label stays. */
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] h2.studio-inspector-heading { display: none; }
+/* Graphics diagnostics is an advanced tool: keep it in the DOM (the panel keeps
+   updating) but show it only when the inspector is in "All controls" mode. */
+body.v54-inspector-essential .right > .ei-graphics-diagnostics { display: none; }
+/* UX-6: the Timeline and Studio Ops pills are secondary chrome, not primary
+   actions. Same DOM and position; 12px label, 32px pill, flat surface, no
+   shadow, and quiet until hover/focus. */
+body[data-page="index"].workspace-experience-v54 .ei-timeline-launch,
+body[data-page="index"].workspace-experience-v54 .v13-ops-launcher {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 11px;
+  font-size: 12px;
+  background: var(--app-surface-3);
+  /* 12% text + 88% muted: at the specified 0.9 element opacity this keeps the
+     12px label at 4.54–4.57:1 on the light canvas (5.84:1 dark); the plain
+     muted token measured 4.04:1 at 0.9. */
+  color: color-mix(in srgb, var(--app-text) 12%, var(--app-muted));
+  box-shadow: none;
+  opacity: .9;
+}
+body[data-page="index"].workspace-experience-v54 .ei-timeline-launch:hover,
+body[data-page="index"].workspace-experience-v54 .ei-timeline-launch:focus-visible,
+body[data-page="index"].workspace-experience-v54 .v13-ops-launcher:hover,
+body[data-page="index"].workspace-experience-v54 .v13-ops-launcher:focus-visible {
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  opacity: 1;
+}
 
 /* Toolbar horizontal scroll (when narrow) — keep buttons in place. */
 body.workspace-experience-v54 .stage-wrap > .studio-canvas-toolbar { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
