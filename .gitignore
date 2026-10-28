@@ -186,3 +186,8 @@ docs/reviews/*.png
 /RILL-WALKTHROUGH.md
 /.claude/
 /deploy/sites/
+
+# The server's default local data directory (SQLite DB, media, generated key
+# sidecars). It is runtime state, never a source input; the never-stage list has
+# always covered it, this keeps it out of `git status` too.
+/src/python/data/
