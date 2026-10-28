@@ -250,12 +250,30 @@ def _restore_from_backup(db, table: str, dry_run: bool) -> list[str] | None:
     common = [c for c in cols if c in backup_cols]
     if dry_run:
         return common
+    # ``audit_events`` is append-only: its triggers abort DELETE/UPDATE. A
+    # rollback has to replace rows from the backup to bring the plaintext
+    # metadata back, so the triggers are captured, dropped for the restore and
+    # recreated verbatim. The rows come from the backup taken in this same run,
+    # so the hash chain being restored is the one that was live before it.
+    triggers = [
+        (row["name"], row["sql"])
+        for row in db.execute(
+            "SELECT name, sql FROM sqlite_master WHERE type='trigger' AND tbl_name=?", (table,)
+        ).fetchall()
+    ]
+    for name, _sql in triggers:
+        db.execute(f"DROP TRIGGER IF EXISTS {name}")
     # Replace the live table with the backup (plaintext) contents.
     col_list = ",".join(common)
     db.execute(f"DELETE FROM {table}")
     db.execute(f"INSERT INTO {table}({col_list}) SELECT {col_list} FROM {backup}")
     db.execute(f"DROP TABLE {backup}")
+    for _name, sql in triggers:
+        if sql:
+            db.execute(sql)
     db.commit()
+    if triggers:
+        print(f"  [note] {table}: {len(triggers)} trigger(s) restored after the rollback")
     return common
 
 
