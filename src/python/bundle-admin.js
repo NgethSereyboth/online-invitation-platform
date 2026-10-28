@@ -1039,12 +1039,12 @@ window.EInvitePosterUnits=Object.freeze({
  */
 (function(){
   'use strict';
-  if (window.EInviteAdminUsers && window.EInviteAdminUsers.version >= 64) return;
+  if (window.EInviteAdminUsers && window.EInviteAdminUsers.version >= 65) return;
   const shell = () => window.EInviteAdminShell || {};
   const esc = v => String(v==null?'':v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const STRINGS = {
-    en: { title:'Users', search:'Search by email, role, or plan', prev:'Previous', next:'Next', suspend:'Suspend', unsuspend:'Unsuspend', resetPw:'Reset password', forceMfa:'Force MFA', impersonate:'Impersonate', confirmSuspend:'Suspend this user? Active sessions will be invalidated.', confirmResetPw:'Send a password-reset email to this user?', confirmForceMfa:'Force this user to re-enroll MFA on next login?', confirmImpersonate:'Start an impersonation session as this user? You will be logged in as them for 30 minutes.', suspendReason:'Reason', noUsers:'No users found.', role:'Role', plan:'Plan', created:'Created', lastActive:'Last active', invitations:'Invitations', status:'Status', actions:'Actions', tipStepUp:'Super-admin (step-up) required', allowUploads:'Allow uploads', saveUploads:'Save uploads' },
-    km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះឬ? សម័យដែលកំពុងសកម្មនឹងត្រូវលុបចោល។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលចូលគណនីលើកក្រោយឬ?', confirmImpersonate:'ចាប់ផ្ដើមសម័យតំណាងក្នុងនាមអ្នកប្រើនេះឬ? អ្នកនឹងចូលគណនីក្នុងនាមពួកគេរយៈពេល 30 នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការសិទ្ធិអ្នកគ្រប់គ្រងជាន់ខ្ពស់ (ការផ្ទៀងផ្ទាត់បន្ថែម)', allowUploads:'អនុញ្ញាតឱ្យផ្ទុកឡើង', saveUploads:'រក្សាទុកការផ្ទុកឡើង' }
+    en: { title:'Users', search:'Search by email, role, or plan', prev:'Previous', next:'Next', suspend:'Suspend', unsuspend:'Unsuspend', resetPw:'Reset password', forceMfa:'Force MFA', impersonate:'Impersonate', confirmSuspend:'Suspend this user? Active sessions will be invalidated.', confirmResetPw:'Send a password-reset email to this user?', confirmForceMfa:'Force this user to re-enroll MFA on next login?', confirmImpersonate:'Start an impersonation session as this user? You will be logged in as them for 30 minutes.', suspendReason:'Reason', noUsers:'No users found.', role:'Role', plan:'Plan', created:'Created', lastActive:'Last active', invitations:'Invitations', status:'Status', actions:'Actions', tipStepUp:'Super-admin (step-up) required', allowUploads:'Allow uploads', saveUploads:'Save uploads', suspended:'Suspended', active:'Active' },
+    km: { title:'អ្នកប្រើ', search:'ស្វែងរកតាមអ៊ីមែល តួនាទី ឬគម្រោង', prev:'មុន', next:'បន្ទាប់', suspend:'ផ្អាក', unsuspend:'ឈប់ផ្អាក', resetPw:'កំណត់ពាក្យសម្ងាត់ឡើងវិញ', forceMfa:'បង្ខំ MFA', impersonate:'សាកល្បងក្នុងនាម', confirmSuspend:'ផ្អាកអ្នកប្រើនេះឬ? សម័យដែលកំពុងសកម្មនឹងត្រូវលុបចោល។', confirmResetPw:'ផ្ញើអ៊ីមែលកំណត់ពាក្យសម្ងាត់ឡើងវិញទៅអ្នកប្រើនេះ?', confirmForceMfa:'បង្ខំអ្នកប្រើនេះឱ្យចុះឈ្មោះ MFA ឡើងវិញនៅពេលចូលគណនីលើកក្រោយឬ?', confirmImpersonate:'ចាប់ផ្ដើមសម័យតំណាងក្នុងនាមអ្នកប្រើនេះឬ? អ្នកនឹងចូលគណនីក្នុងនាមពួកគេរយៈពេល 30 នាទី។', suspendReason:'មូលហេតុ', noUsers:'រកមិនឃើញអ្នកប្រើ។', role:'តួនាទី', plan:'គម្រោង', created:'បង្កើត', lastActive:'សកម្មចុងក្រោយ', invitations:'ការអញ្ជើញ', status:'ស្ថានភាព', actions:'សកម្មភាព', tipStepUp:'ត្រូវការសិទ្ធិអ្នកគ្រប់គ្រងជាន់ខ្ពស់ (ការផ្ទៀងផ្ទាត់បន្ថែម)', allowUploads:'អនុញ្ញាតឱ្យផ្ទុកឡើង', saveUploads:'រក្សាទុកការផ្ទុកឡើង', suspended:'Suspended', active:'Active' }
   };
   function t(key, ...args) {
     var out = window.EInviteI18n
@@ -1075,7 +1075,8 @@ window.EInvitePosterUnits=Object.freeze({
     const host = document.getElementById('usersPanel');
     if (!host) return;
     const rows = state.items.map(u => {
-      // The list endpoint does not report suspension, so show a status only when it is known.
+      // The list endpoint reports `suspended` as an additive field, so the badge
+      // follows the server state (B-5). Unknown values still render as a dash.
       const status = typeof u.suspended !== 'boolean' ? '—' : u.suspended ? `<span class="ei-tag ei-tag-warn">${t('suspended')}</span>` : `<span class="ei-tag ei-tag-ok">${t('active')}</span>`;
       const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—';
       const last = u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : '—';
@@ -1161,7 +1162,7 @@ window.EInvitePosterUnits=Object.freeze({
     }
   }
 
-  window.EInviteAdminUsers = Object.freeze({ version: 64, mount, render, load });
+  window.EInviteAdminUsers = Object.freeze({ version: 65, mount, render, load });
 })();;/* v0.64.2 — invitations management (ROADMAP §5.3)
  * Browse, search, unpublish, flag, transfer ownership.
  */

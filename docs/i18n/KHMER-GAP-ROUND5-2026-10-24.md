@@ -109,6 +109,8 @@ map arrives. The secondary action reuses the existing `Account settings` string.
 here is `aria-label` only: Open workspace navigation, Open navigation, Appearance, Select
 interface language, Switch to English, Workspace navigation.
 
+| Suspended, Active | Users tab status cell (`.ei-tag`) | `src/js/pages/admin/users.js` STRINGS keys `suspended` / `active` (B-5; km bank carries the English fallback until a map row exists) |
+
 ## Editor chrome — `src/html/index.html` + editor JS
 
 The editor has **no Khmer chrome** yet. Visible at 375:

@@ -47,8 +47,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-admin.js",
-      "scriptBytes": 154891,
-      "scriptSha256": "3a2b44dcbe61569b9e4887f2cce50601cb5502cd552cf6498030265a1ebd9cc0",
+      "scriptBytes": 155038,
+      "scriptSha256": "a5a863e0e2ae8ef04396bd9bae00821533d250c572269002d9aff1d95c4aac28",
       "sources": {
         "deferredScripts": [
           "pages/admin/impersonate.js",

@@ -29,7 +29,7 @@ from features import reports as reports_feature
 from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from core.crypto import ensure_encryption_key, hash_for_lookup, key_fingerprint, key_source
-from core.db import find_user_by_email, protect, reveal_connection
+from core.db import find_user_by_email, protect, reveal, reveal_connection
 from core.webhooks import deliver as deliver_webhook, generate_webhook_secret
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
@@ -5702,8 +5702,10 @@ class Handler(SimpleHTTPRequestHandler):
         user=self.require_role("admin")
         if not user:return
         with connect() as db:
-            rows=db.execute("SELECT u.id,u.email,u.role,u.plan,u.upload_enabled,u.created_at,(SELECT COUNT(*) FROM invitations i WHERE i.owner_id=u.id) invitation_count,(SELECT COUNT(*) FROM user_templates t WHERE t.owner_id=u.id) template_count FROM users u ORDER BY u.created_at DESC LIMIT 1000").fetchall()
-        self.json(200,[{"id":r["id"],"email":r["email"],"role":r["role"],"plan":r["plan"],"uploadEnabled":bool(r["upload_enabled"]),"createdAt":r["created_at"],"invitationCount":r["invitation_count"],"templateCount":r["template_count"]} for r in rows])
+            # `suspended` is additive for the Users tab badge (B-5); the v2 list
+            # already reported it, this legacy array did not.
+            rows=db.execute("SELECT u.id,u.email,u.role,u.plan,u.upload_enabled,u.created_at,u.suspended_at,(SELECT COUNT(*) FROM invitations i WHERE i.owner_id=u.id) invitation_count,(SELECT COUNT(*) FROM user_templates t WHERE t.owner_id=u.id) template_count FROM users u ORDER BY u.created_at DESC LIMIT 1000").fetchall()
+        self.json(200,[{"id":r["id"],"email":reveal(r["email"]),"role":r["role"],"plan":r["plan"],"uploadEnabled":bool(r["upload_enabled"]),"createdAt":r["created_at"],"suspended":r["suspended_at"] is not None,"invitationCount":r["invitation_count"],"templateCount":r["template_count"]} for r in rows])
 
     def _admin_gate(self, path, method):
         # Admin IP allowlist check (ROADMAP §4.2a) — before authentication
@@ -5735,8 +5737,11 @@ class Handler(SimpleHTTPRequestHandler):
         cursor = (query.get("cursor") or [""])[0]
         clauses, params = [], []
         if search:
-            clauses.append("LOWER(u.email) LIKE ?")
-            params.append(f"%{search}%")
+            # ``users.email`` is encrypted at rest (part 4.1), so a substring
+            # LIKE only sees ciphertext. An exact address still finds its row
+            # through the lookup hash the write path maintains.
+            clauses.append("(LOWER(u.email) LIKE ? OR u.email_hash = ?)")
+            params.extend([f"%{search}%", hash_for_lookup(search)])
         if cursor:
             try:
                 cursor_created, cursor_id = cursor.split(":", 1)
@@ -5751,7 +5756,7 @@ class Handler(SimpleHTTPRequestHandler):
             rows = db.execute("SELECT u.id,u.email,u.role,u.plan,u.upload_enabled,u.created_at,u.suspended_at,u.force_mfa,(SELECT COUNT(*) FROM invitations i WHERE i.owner_id=u.id) invitation_count,(SELECT COUNT(*) FROM user_templates t WHERE t.owner_id=u.id) template_count FROM users u" + where + " ORDER BY u.created_at DESC, u.id DESC LIMIT ?", (*params, limit + 1)).fetchall()  # nosec B608
         has_more = len(rows) > limit
         rows = rows[:limit]
-        items = [{"id": r["id"], "email": r["email"] if unmask else self._mask_email(r["email"]), "role": r["role"], "plan": r["plan"], "uploadEnabled": bool(r["upload_enabled"]), "createdAt": r["created_at"], "suspended": r["suspended_at"] is not None, "forceMfa": bool(r["force_mfa"]), "invitationCount": r["invitation_count"], "templateCount": r["template_count"]} for r in rows]
+        items = [{"id": r["id"], "email": (reveal(r["email"]) if unmask else self._mask_email(reveal(r["email"]))), "role": r["role"], "plan": r["plan"], "uploadEnabled": bool(r["upload_enabled"]), "createdAt": r["created_at"], "suspended": r["suspended_at"] is not None, "forceMfa": bool(r["force_mfa"]), "invitationCount": r["invitation_count"], "templateCount": r["template_count"]} for r in rows]
         if unmask:
             self.audit("admin.users_unmasked", "user", "", {"count": len(items)}, user_id=admin["id"])
         next_cursor = f"{rows[-1]['created_at']}:{rows[-1]['id']}" if has_more else None

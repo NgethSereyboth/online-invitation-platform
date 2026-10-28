@@ -13,10 +13,8 @@ Flow, with nothing stubbed:
    the admin types the password and submits.
 3. ``POST /api/admin/step-up`` is called with that password and the original
    request is replayed → **200** with ``{"suspended": true}``, and the tab
-   re-renders without an error. (The tab cannot *show* the new state: its list
-   endpoint ``/api/admin/users`` does not select ``suspended_at`` — a
-   pre-existing display gap, recorded in NOTES.md, not something this item
-   changes.)
+   re-renders without an error. The row now shows the **Suspended** badge from
+   the list endpoint's ``suspended`` field (B-5), with no page reload.
 4. The prompt is a real modal (``showModal``): both inputs have programmatic
    labels, Escape closes it **without replaying** the refused request, and focus
    returns to the button that opened it (the success path re-renders the table,
@@ -175,9 +173,11 @@ def test_admin_pages_can_complete_the_step_up():  # noqa: C901 - linear scenario
             # button is gone; the dialog must still be fully closed and nothing
             # may be left focused inside a removed dialog.
             assert page.evaluate("() => !document.querySelector('dialog[open]')")
-            # The mutation happened server-side; the row still renders (the tab
-            # reloads + re-renders after the retry) and nothing threw.
+            # The mutation happened server-side; the tab refetches and re-renders
+            # after the replay, so the badge must follow without a page reload.
             row.wait_for(state="visible")
+            badge = row.locator("td:nth-child(5) .ei-tag").inner_text().strip()
+            assert badge == "Suspended", f"status badge is {badge!r}, expected 'Suspended'"
 
             # 5) The grant is cached in memory for this page lifetime: the next
             #    destructive action goes straight through with no second prompt.
