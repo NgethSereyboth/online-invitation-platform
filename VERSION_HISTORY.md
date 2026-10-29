@@ -20,6 +20,27 @@ production-certified release.
 
 ---
 
+## 0.70.12 — E-4: LT-7.close — the roadmap reconciliation reaches 0 absent
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-4 (LT-7.close). Every row of roadmap Parts
+  3–6 was re-read against the tree that Stages C–E left, not against the notes that preceded them.
+- **3.9 closes:** the last `absent` row was “version history shows ≥ 5 snapshots after 30 minutes of
+  editing”. D-7 wired the unused auto-snapshot module into the draft save (hash change **and** ≥ 5
+  minutes, 50 kept), and `lt_3_9` proves six snapshots across 31 simulated minutes with an injected
+  clock. The row is `exists`; Part 3 now has no `absent` row.
+- **Stage E rows kept honest:** 4.1, 4.5 and 4.6 were already `exists` after LT-7.2, so Stage E did
+  not move a status — it replaced “the code exists” with a proof for each open bullet (1,000-row
+  encryption migration with a byte-identical rollback, cross-tenant API-key reads plus a per-key 429,
+  durable webhook delivery under the D-6 SSRF rules). Stated that way in the document rather than
+  inflating the count.
+- **Counts:** **31 `exists` / 6 `partial` / 0 `absent`** of 37 bullets (was 22/10/5 at LT-7.1 and
+  30/6/1 at the Phase 7 close). The six partials — 3.7, 3.10, 3.11, 6.3, 6.4, 6.6 — are backlog items
+  or blocked on owner Khmer, so no Part reaches all-`exists` and Stage E closes as a **patch**.
+- **Gate:** one `--phase all` on the final tree, `artifacts/next-work/gates/20261029-203542/`
+  `GATES_PASSED`, all ten phases exit 0 and `stoppedAt: null`: build, bundles, smoke `16/0/0`, layout
+  `UI_LAYOUT_GUARD_PASSED`, pytest **223 passed**, budgets 6 pages, LHCI 16/16 `minA11y 1.00`, CSP 0
+  violations, canvas 22/0/2, `!important` **3791 ≤ 3791**.
+
 ## 0.70.11 — E-3: field-encryption runbook and the 1,000-row migration proof
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-3. The feature itself shipped in

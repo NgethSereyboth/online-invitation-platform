@@ -159,6 +159,13 @@ One full matrix on the frozen tree: `artifacts/next-work/gates/20261027-120242/g
   `analytics_retention_run` log line plus one audit row per prune run, and the `security_*` collection-order coupling
   fixed at the cause. [`docs/ROADMAP-RECONCILIATION-2026-10-24.md`](ROADMAP-RECONCILIATION-2026-10-24.md)
   now reads **30 `exists` / 6 `partial` / 1 `absent`** (from 22/10/5); Parts 4 and 5 have no open row.
+- **Stages D and E closed 2026-10-29 (D-7 FB-135, E-1 FB-138 … E-4):** the last `absent` row, 3.9
+  (version history), closed with automatic draft snapshots, and the three Stage E rows (4.1, 4.5, 4.6)
+  gained the proofs LT-7.2 had left open — a 1,000-row encryption migration that rolls back
+  byte-identical, a cross-tenant API-key read that leaks nothing and a per-key 429, and durable
+  webhook delivery under the full SSRF contract. The reconciliation now reads **31 `exists` / 6
+  `partial` / 0 `absent`**; the six partials are 3.7, 3.10, 3.11, 6.3, 6.4 and 6.6, all queued as
+  backlog or blocked on owner Khmer, not on code.
   Gate record, stated plainly: build, bundles, smoke `16/0/0`, layout (1533 checks), budgets 6/6,
   LHCI 16/16 `minA11y 1.00`, CSP 0 violations, canvas 22/0/2 and `!important` 3809 ≤ pin 3809 are
   green; pytest is **200 passed, 1 failed** on the pre-existing `lt_2_6` PDF metric, which reads

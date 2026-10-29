@@ -55,6 +55,18 @@ failed** on the pre-existing `lt_2_6` PDF metric, which sits on its 4.5 toleranc
 checkout).
 **Work stays local-only (OD-3); no push, PR, merge or tag.**
 
+**Update 2026-10-29 (Stages C, D and E closed):** Plan 004 Parts A and B (0.70.2–0.70.3), Stage D
+(D-5…D-9, 0.70.4–0.70.8) and Stage E (E-1…E-4, 0.70.9–0.70.12) are committed on
+`fix/2026-10-22-open-issues`. The roadmap reconciliation now reads **31 `exists` / 6 `partial` / 0
+`absent`** of 37 bullets — 3.9 closed with D-7's automatic snapshots, and Stage E replaced “the code
+exists” with a proof for 4.1, 4.5 and 4.6 (1,000-row encryption rollback, cross-tenant API-key reads +
+per-key 429, durable webhooks under the SSRF rules). Stage E's single matrix
+(`artifacts/next-work/gates/20261029-203542/`) is **`GATES_PASSED`**, all ten phases exit 0 and
+`stoppedAt: null`: smoke `16/0/0`, pytest **223 passed in 726.27 s**, LHCI 16/16 `minA11y 1.00`, CSP 0
+violations, canvas **22/0/2**, `!important` **3791 ≤ 3791**. Next is **Stage F** (Phase 8 re-run on this
+tree, then the final report); `docs/qa/DEVICE-CHECKLIST.md` is ready to run once A-4 has a
+phone-reachable host.
+
 Verdicts as of 2026-10-21 (`pass/2026-10-21-next-work` pushed at `6f7de27`; code HEAD
 `11e549f`, docs HEAD `8d256e3` plus the harness/docs follow-up that carries this line; legs
 `ec0cf91` a11y, `6a30d9e` i18n, `8952381`/`cd56ac0` CI, `837042f`+`15554e3`+`8d256e3` docs,
@@ -127,9 +139,11 @@ the two files marked authoritative below are the only ones to follow.
 | `FREEBUFF-TEMPLATES-PROMPT-2026-10-25.md` | The prompt for the template pack | Plan Phase 5 (completed) | historical |
 | `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | Phases 1–8, the current queue | — | **authoritative** |
 | `FREEBUFF-LONG-TERM-PROMPT-2026-10-24.md` | The autonomous run contract | — | **authoritative** |
-| `FREEBUFF-NEXT-STEPS-2026-10-27.md` | A re-sequenced queue written from documents only (no code read) | Plan (advisory); its Stage F additions were adopted into LT-8.2/LT-8.3 | advisory |
+| `FREEBUFF-NEXT-STEPS-2026-10-27.md` | A re-sequenced queue written from documents only (no code read) | Plan (advisory); its Stage F additions were adopted into LT-8.2/LT-8.3 | **authoritative order** (Stages A–F; §9 is the live checklist — see the row above) |
 | `FREEBUFF-OWNER-INBOX.md` | Owner-reported issues, one bullet each | — | **live channel** |
 | `FREEBUFF-QUESTIONS-2026-10-28.md` | Questions from the document-only reviewer to the agent | — | answered record |
+| `FREEBUFF-ANSWERS-2026-10-28.md` | The answers to those questions, plus the demo credentials block the demo and the device checklist point at | — | answered record (untracked by design: it holds the demo password) |
+| `FREEBUFF-UI-AUDIT-FIX-ORDER-2026-10-29.md` | The UI-1…UI-n fixes for the 2026-10-29 audit corpus (`artifacts/ui-audit-2026-10-29/pass2/`) | Adds to this queue; the corpus itself is done | **open** (fix pass not started) |
 | `NEXT-WORK-TASK.md` | NW-0…NW-6, the Phase 0–6 predecessor | `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` | completed/superseded |
 
 ## Superseded-report banners
