@@ -100,6 +100,7 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 | `docs/ROADMAP*.md` / `plans/001–003` | historical — completed/blocked; out of continuation scope | earlier |
 | `artifacts/next-work/FINAL-REPORT.md` | **final report** — plan §8: phases and verdicts, the LT-8.5 gate matrix, Khmer files to draft next, `OWNER-QUEUE.md` contents, the final numbers and the final HEAD | 2026-10-28 |
 | `FREEBUFF-NEXT-STEPS-2026-10-27.md` (repo root) | **authoritative order** — Stages A–F after the long-term plan: A backup/truth/demo, B cheap security rows, C plan 004, D product-quality gaps, E roadmap security, F Phase 8; §9 is the live checklist | 2026-10-28 |
+| `plans/004-ux-ui-and-code-quality-pass.md` | **closed (both parts)** — Part A UX-1…UX-9 (0.70.2) and Part B CQ-1…CQ-4 (0.70.3). CQ-1 `!important` lane closes at 3809 → 3791 with a documented stop; CQ-2 stopped on its canvas-controller condition (Layout 859 ms, `updateCanvasView` 130 ms); CQ-3 stopped as stale (service already deferred, old consumer not shipped); CQ-4 removed 551 B of superseded `dashboard-page.css` rules. Evidence `artifacts/next-work/fb-131`, `fb-132`; after-set `review-ux2/after` | 2026-10-29 |
 
 ## Superseded work orders — every root `FREEBUFF-*.md`
 
