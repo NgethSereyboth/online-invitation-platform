@@ -348,6 +348,79 @@ def test_migration_script_apply_and_rollback_on_a_temp_database():
         print("[OK] apply + rollback round trip on a temp database", flush=True)
 
 
+def test_migration_scale_and_byte_identical_rollback():
+    """E-3: 1,000 rows per table, dry run, apply, roll back to the exact bytes."""
+    from v14_test_utils import temporary_data
+
+    rows = 1000
+    with temporary_data("einvite-enc-scale-") as shared_data:
+        env = dict(ADMIN_ENV)
+        env["EINVITE_DATA_DIR"] = str(shared_data)
+        with _server(env) as (base, _data):
+            assert _register(base, "scale-owner@einvite.test")[0] in {200, 201}
+        key = (shared_data / ".field-encryption-key").read_text(encoding="utf-8").strip()
+
+        now = int(time.time() * 1000)
+        users = [(str(uuid.uuid4()), f"legacy-{index:04d}@einvite.test") for index in range(rows)]
+        guests = [(str(uuid.uuid4()), f"Guest {index:04d}", f"guest-{index:04d}@einvite.test",
+                   f"+8551000{index:04d}") for index in range(rows)]
+        connection = sqlite3.connect(str(shared_data / "invites.db"))
+        try:
+            connection.executemany(
+                "INSERT INTO users(id,email,email_hash,password_hash,salt,password_algo,created_at,role,email_verified,plan)"
+                " VALUES(?,?,NULL,'not-a-real-hash','legacy-salt','pbkdf2-sha256-v1',?,'customer',0,'free')",
+                [(user_id, email, now) for user_id, email in users],
+            )
+            connection.executemany(
+                "INSERT INTO guests(id,invitation_id,name,email,phone,token,slug,created_at)"
+                " VALUES(?,?,?,?,?,?,?,?)",
+                [(guest_id, "scale-invitation", name, email, phone, f"scale-token-{index}",
+                  f"scale-guest-{index}", now)
+                 for index, (guest_id, name, email, phone) in enumerate(guests)],
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        def run_script(*extra):
+            return subprocess.run(
+                [sys.executable, str(REPO / "scripts" / "migrate_encrypt_sensitive_fields.py"),
+                 "--data-dir", str(shared_data), *extra],
+                capture_output=True, text=True, cwd=REPO,
+                env={**os.environ, "EINVITE_FIELD_ENCRYPTION_KEY": key},
+            )
+
+        dry = run_script("--dry-run")
+        assert dry.returncode == 0, (dry.returncode, dry.stdout, dry.stderr)
+        stored = _db_rows(shared_data, "SELECT email FROM users WHERE id=?", (users[0][0],))
+        assert stored[0]["email"] == users[0][1], "--dry-run changed a row"
+
+        applied = run_script()
+        assert applied.returncode == 0, (applied.returncode, applied.stdout, applied.stderr)
+        first = _db_rows(shared_data, "SELECT email, email_hash FROM users WHERE id=?", (users[0][0],))[0]
+        last = _db_rows(shared_data, "SELECT email FROM users WHERE id=?", (users[-1][0],))[0]
+        assert first["email"].startswith(CIPHERTEXT_PREFIX), first
+        assert last["email"].startswith(CIPHERTEXT_PREFIX), last
+        assert first["email_hash"] == hashlib.sha256(users[0][1].encode()).hexdigest(), first
+        guest_rows = _db_rows(shared_data, "SELECT email, phone FROM guests WHERE id IN (?,?)",
+                              (guests[0][0], guests[-1][0]))
+        assert all(row["email"].startswith(CIPHERTEXT_PREFIX) for row in guest_rows), guest_rows
+        assert all(row["phone"].startswith(CIPHERTEXT_PREFIX) for row in guest_rows), guest_rows
+
+        rolled_back = run_script("--rollback")
+        assert rolled_back.returncode == 0, (rolled_back.returncode, rolled_back.stdout, rolled_back.stderr)
+        restored_users = _db_rows(shared_data, "SELECT id, email FROM users WHERE email_hash IS NULL ORDER BY id")
+        restored_guests = _db_rows(shared_data, "SELECT id, email, phone FROM guests ORDER BY id")
+        # Rollback restores exactly the migrated rows; the owner registered while
+        # encryption was on stays a ciphertext row (it was never in the backup).
+        assert len(restored_users) == rows, len(restored_users)
+        assert {(row["id"], row["email"]) for row in restored_users} == set(users)
+        assert {(row["id"], row["email"], row["phone"]) for row in restored_guests} == {
+            (guest_id, email, phone) for guest_id, _name, email, phone in guests
+        }, "rollback is not byte-identical"
+        print("[OK] 1,000 users + 1,000 guests: dry run, apply, byte-identical rollback", flush=True)
+
+
 # --- helper: boot the server on a caller-owned data directory -----------------
 
 class _server:
