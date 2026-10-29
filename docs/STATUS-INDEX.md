@@ -118,8 +118,9 @@ see `git log fix/2026-10-22-open-issues` (this index is not HEAD-bound going for
 ## Superseded work orders — every root `FREEBUFF-*.md`
 
 The plan decides; this table says what each root work order used to queue and what replaced it. **No
-file was moved or deleted** — the originals stay at the repo root for their FB numbers and evidence, and
-the two files marked authoritative below are the only ones to follow.
+file was moved or deleted** — the originals stay at the repo root for their FB numbers and evidence. The
+rows marked **authoritative** are the protocol and its run contract; the row marked **authoritative
+order** is the live checklist. Everything else is a record.
 
 | Root file | What it queued | Replaced by | Status |
 |---|---|---|---|
