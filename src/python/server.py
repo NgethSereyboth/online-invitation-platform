@@ -18,6 +18,11 @@ from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_
 from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured, marketplace_summary)
 from features.secrets import ensure_secret as v54_ensure_secret
 from features import settings
+from features.invitation_versions import (
+    capture_auto_snapshot as version_capture_auto_snapshot,
+    get_version as get_invitation_version,
+    list_versions as list_invitation_versions,
+)
 from features.settings import get_setting_int, list_settings, set_setting
 from features.feature_flags import list_flags, set_flag, ensure_schema as ensure_feature_flags_schema, DEFAULT_FLAGS, is_enabled as feature_flag_enabled, public_flags_for_tier
 # ROADMAP-v0.54-to-v1.0 Part 5 (§5.1, §5.6, §5.9) — admin dashboard stat
@@ -7676,13 +7681,24 @@ class Handler(SimpleHTTPRequestHandler):
             if expected is not None and expected!=current:
                 return self.json(409,{"error":"This invitation changed in another session. Reload the latest version before saving again.","code":"revision_conflict","updatedAt":current,"clientId":row["last_client_id"],"mutationId":row["last_mutation_id"]})
             now=max(int(time.time()*1000),current+1)
+            serialized=json.dumps(document)
             if expected is None:
-                changed=db.execute("UPDATE invitations SET draft_json=?,updated_at=?,last_client_id=?,last_mutation_id=?,document_version=COALESCE(document_version,0)+1 WHERE id=?",(json.dumps(document),now,client_id or None,mutation_id or None,invite_id)).rowcount
+                changed=db.execute("UPDATE invitations SET draft_json=?,updated_at=?,last_client_id=?,last_mutation_id=?,document_version=COALESCE(document_version,0)+1 WHERE id=?",(serialized,now,client_id or None,mutation_id or None,invite_id)).rowcount
             else:
-                changed=db.execute("UPDATE invitations SET draft_json=?,updated_at=?,last_client_id=?,last_mutation_id=?,document_version=COALESCE(document_version,0)+1 WHERE id=? AND updated_at=?",(json.dumps(document),now,client_id or None,mutation_id or None,invite_id,current)).rowcount
+                changed=db.execute("UPDATE invitations SET draft_json=?,updated_at=?,last_client_id=?,last_mutation_id=?,document_version=COALESCE(document_version,0)+1 WHERE id=? AND updated_at=?",(serialized,now,client_id or None,mutation_id or None,invite_id,current)).rowcount
                 if not changed:
                     latest=db.execute("SELECT updated_at,last_client_id,last_mutation_id FROM invitations WHERE id=?",(invite_id,)).fetchone()
                     return self.json(409,{"error":"This invitation changed in another session. Reload the latest version before saving again.","code":"revision_conflict","updatedAt":int(latest["updated_at"] or current) if latest else current,"clientId":latest["last_client_id"] if latest else None,"mutationId":latest["last_mutation_id"] if latest else None})
+            # LT-3.9 (D-7) — automatic version snapshots. The save is the only
+            # writer: a snapshot is stored when the content hash changed and at
+            # least five minutes passed since the last auto snapshot, capped at
+            # 50 and skipped above 2 MB. Version history must never block a
+            # save, so a failure here is logged and the draft keeps its write.
+            if changed:
+                try:
+                    version_capture_auto_snapshot(db,invite_id,serialized,author_id=user["id"],author_name=user["email"] or "")
+                except Exception as exc:
+                    print(f"[invitation_versions] auto snapshot failed for {invite_id}: {exc}",flush=True)
             # Phase 2a (V54.1) — when editing AFTER the first delivery,
             # record an entry in invitation_edit_history so the host UI can
             # show "Edited at {ts}" and the host can trigger an update
@@ -8564,17 +8580,33 @@ class Handler(SimpleHTTPRequestHandler):
         if not user:return
         with connect() as db:
             if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
-            rows=db.execute("SELECT id,version,published_at,length(document_json) document_bytes FROM publications WHERE invitation_id=? ORDER BY published_at DESC",(invite_id,)).fetchall()
-        self.json(200,[dict(r) for r in rows])
+            rows=[dict(r) for r in db.execute("SELECT id,version,published_at,length(document_json) document_bytes FROM publications WHERE invitation_id=? ORDER BY published_at DESC",(invite_id,)).fetchall()]
+            # LT-3.9 (D-7) — automatic snapshots sit on the same timeline,
+            # labelled by isAuto so the list can say "Auto" instead of a
+            # version number. Publication rows are unchanged.
+            try:
+                autos=list_invitation_versions(db,invite_id,limit=50)
+            except Exception as exc:
+                autos=[];print(f"[invitation_versions] could not list auto snapshots for {invite_id}: {exc}",flush=True)
+        for snapshot in autos:
+            rows.append({"id":snapshot["id"],"version":"auto","published_at":snapshot["createdAt"],"isAuto":True,"authorName":snapshot["authorName"]})
+        rows.sort(key=lambda row:int(row.get("published_at") or 0),reverse=True)
+        self.json(200,rows)
 
     def get_version(self,invite_id,version):
         user=self.require_user()
         if not user:return
+        payload=None
         with connect() as db:
             if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             row=db.execute("SELECT id,version,published_at,document_json FROM publications WHERE invitation_id=? AND (id=? OR CAST(version AS TEXT)=?) ORDER BY published_at DESC LIMIT 1",(invite_id,str(version),str(version))).fetchone()
-        if not row:return self.json(404,{"error":"Published version not found"})
-        self.json(200,{"id":row["id"],"version":row["version"],"publishedAt":row["published_at"],"document":json.loads(row["document_json"])})
+            if row:
+                payload={"id":row["id"],"version":row["version"],"publishedAt":row["published_at"],"document":json.loads(row["document_json"])}
+            else:
+                snapshot=get_invitation_version(db,invite_id,str(version))
+                if not snapshot:return self.json(404,{"error":"Version not found"})
+                payload={"id":snapshot["id"],"version":"auto","publishedAt":snapshot["createdAt"],"isAuto":True,"document":json.loads(snapshot["documentJson"])}
+        self.json(200,payload)
 
     def restore_published_version(self,invite_id):
         user=self.require_user()
@@ -8585,8 +8617,16 @@ class Handler(SimpleHTTPRequestHandler):
         with connect() as db:
             if not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Editing permission required"})
             row=db.execute("SELECT document_json FROM publications WHERE invitation_id=? AND (id=? OR CAST(version AS TEXT)=?) ORDER BY published_at DESC LIMIT 1",(invite_id,version,version)).fetchone()
-            if not row:return self.json(404,{"error":"Published version not found"})
-            document=validate_document(json.loads(row["document_json"]));now=int(time.time()*1000)
+            if row:
+                document=validate_document(json.loads(row["document_json"]))
+            else:
+                # LT-3.9 (D-7) — an automatic snapshot restores through this
+                # same path: it replaces the draft only, so publish state and
+                # the immutable publication history are untouched.
+                snapshot=get_invitation_version(db,invite_id,version)
+                if not snapshot:return self.json(404,{"error":"Version not found"})
+                document=validate_document(json.loads(snapshot["documentJson"]))
+            now=int(time.time()*1000)
             db.execute("UPDATE invitations SET draft_json=?,updated_at=?,last_client_id=NULL,last_mutation_id=NULL WHERE id=?",(json.dumps(document,ensure_ascii=False),now,invite_id))
         self.audit("invitation.version_restored","invitation",invite_id,{"version":version})
         self.json(200,{"restored":True,"updatedAt":now,"document":document})

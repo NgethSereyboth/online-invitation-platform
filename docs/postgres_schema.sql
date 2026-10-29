@@ -88,6 +88,20 @@ CREATE TABLE IF NOT EXISTS publications (
 );
 CREATE INDEX IF NOT EXISTS idx_publications_invitation ON publications(invitation_id, published_at DESC);
 
+-- LT-3.9 (D-7) — automatic draft snapshots. created_at is epoch milliseconds,
+-- so BIGINT, matching publications.published_at rather than INTEGER.
+CREATE TABLE IF NOT EXISTS invitation_versions (
+  id TEXT PRIMARY KEY,
+  invitation_id TEXT NOT NULL REFERENCES invitations(id) ON DELETE CASCADE,
+  document_json TEXT NOT NULL,
+  author_id TEXT NOT NULL,
+  author_name TEXT NOT NULL DEFAULT '',
+  summary TEXT NOT NULL DEFAULT '',
+  is_auto INTEGER NOT NULL DEFAULT 0,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_invitation_versions_invitation ON invitation_versions(invitation_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS rsvps (
   id TEXT PRIMARY KEY,
   invitation_id TEXT NOT NULL REFERENCES invitations(id) ON DELETE CASCADE,

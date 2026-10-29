@@ -1164,3 +1164,7 @@
 "span","emptyImageAddPhoto","Add photo","Add photo","fallback","src/js/app.js","1955"
 "label","printBleed","Bleed","Bleed","fallback","src/js/export-quality.js","57"
 "label","printCropMarks","Crop marks","Crop marks","fallback","src/js/export-quality.js","57"
+"h3","versionHistoryTitle","Version history","Version history","fallback","src/js/product-operations.js","23"
+"p","versionHistoryHelp","Published snapshots are immutable. An automatic snapshot is kept as you edit — at most one every five minutes. Restoring any snapshot copies it back into the draft without changing the publication history.","Published snapshots are immutable. An automatic snapshot is kept as you edit — at most one every five minutes. Restoring any snapshot copies it back into the draft without changing the publication history.","fallback","src/js/product-operations.js","23"
+"strong","versionAutoLabel","Auto","Auto","fallback","src/js/product-operations.js","23"
+"p","noVersionsYet","No versions yet.","No versions yet.","fallback","src/js/product-operations.js","23"

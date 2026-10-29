@@ -50,7 +50,7 @@ Phase 3-5. Read-only: no product file changed for this item.
 | Unsaved-changes guard | exists | `src/js/app.js` `pendingWrite`/`setPendingWrite` + one `beforeunload`; `tests/lt_4_2_unsaved_guard_test.py` | Cancellable `beforeunload` + `data-save-pending` while the 220 ms write is in flight; the native dialog itself is host-dependent (headless Chromium records none), and the local draft is asserted after the write |
 | Shortcut cheat-sheet | exists | `src/js/editor-command-system.js:167`; `src/js/command-palette.js:13,49` | `?` opens the shortcut surface; profiles Standard / Canva / Photoshop; custom bindings |
 | Comments | exists | `src/js/collaboration-v24.js:31`; server table `invitation_comments` | Page-level review comments, assignments, CSV export; collaboration UI |
-| Version history | exists | `src/js/product-operations.js:23`; `src/js/app.js:3383` | Published snapshots, compare, restore as draft; local named checkpoints in `navigation-history.js:67` |
+| Version history | exists | `src/js/product-operations.js:23`; `src/python/server.py` `get_versions`; `tests/lt_3_9_auto_versions_test.py` | Published snapshots, compare, restore as draft, plus automatic server-side snapshots on draft save (content hash changed and ≥ 5 min since the last, 50 kept, skipped with a log line above 2 MB) labelled `Auto` in the same list; local named checkpoints in `navigation-history.js:67` |
 
 ## 3. Templates and assets
 

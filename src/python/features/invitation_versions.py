@@ -37,14 +37,31 @@ Public API
 
 ``get_version_document(db, invitation_id, version_id)``
     Return only the document JSON for one version (used by preview).
+
+``capture_auto_snapshot(db, invitation_id, document_json, *, author_id,
+                        author_name, now_ms)``
+    The draft-save hook. Stores an automatic snapshot only when the content
+    hash changed and ``AUTO_SNAPSHOT_MIN_INTERVAL_MS`` has elapsed since the
+    last auto snapshot; a document above ``AUTO_SNAPSHOT_MAX_DOCUMENT_BYTES``
+    is skipped with a log line. Returns ``{"created", "reason", "id"}`` where
+    reason is one of ``created`` / ``unchanged`` / ``too_soon`` / ``size``.
+    ``now_ms`` is passed in so the five-minute rule is testable with an
+    injected clock instead of sleeping.
 """
 from __future__ import annotations
+import hashlib
 import json
 import time
 import uuid
 from typing import Optional
 
 MAX_SNAPSHOTS_PER_INVITATION = 50
+
+# Automatic snapshots are a safety net, not a save log: one per five minutes
+# of real editing, at most 50 kept, and nothing that would double a document
+# of embedded images into version history.
+AUTO_SNAPSHOT_MIN_INTERVAL_MS = 5 * 60 * 1000
+AUTO_SNAPSHOT_MAX_DOCUMENT_BYTES = 2 * 1024 * 1024
 
 SCHEMA_STATEMENTS = [
     """CREATE TABLE IF NOT EXISTS invitation_versions(
@@ -99,7 +116,8 @@ def list_versions(db, invitation_id: str, limit: int = 50, include_document: boo
 
 def create_snapshot(db, invitation_id: str, *, document_json: str,
                     author_id: str, author_name: str = "",
-                    summary: str = "", is_auto: bool = False) -> str:
+                    summary: str = "", is_auto: bool = False,
+                    now_ms: Optional[int] = None) -> str:
     """Insert a snapshot row. Prune oldest over the cap. Returns the new id."""
     ensure_schema(db)
     snapshot_id = str(uuid.uuid4())
@@ -114,10 +132,80 @@ def create_snapshot(db, invitation_id: str, *, document_json: str,
         "VALUES(?,?,?,?,?,?,?,?)",
         (snapshot_id, invitation_id, document_json,
          author_id, author_name[:200], str(summary or "")[:240],
-         1 if is_auto else 0, _now_ms())
+         1 if is_auto else 0, _now_ms() if now_ms is None else int(now_ms))
     )
     _prune(db, invitation_id)
     return snapshot_id
+
+
+def _document_hash(document_json: str) -> str:
+    """Hash the *content*, not the serialisation.
+
+    Two saves of the same document can differ in key order; comparing raw
+    strings would then store a snapshot whose content is unchanged, which is
+    exactly what the five-minute rule exists to prevent.
+    """
+    try:
+        canonical = json.dumps(json.loads(document_json), sort_keys=True,
+                               separators=(",", ":"), ensure_ascii=False)
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError(f"Invalid document JSON: {exc}")
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def latest_auto_snapshot(db, invitation_id: str) -> Optional[dict]:
+    """Return the newest auto snapshot's ``{id, created_at, document_json}``."""
+    ensure_schema(db)
+    row = db.execute(
+        "SELECT id,created_at,document_json FROM invitation_versions "
+        "WHERE invitation_id=? AND is_auto=1 ORDER BY created_at DESC LIMIT 1",
+        (invitation_id,)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def capture_auto_snapshot(db, invitation_id: str, document_json: str, *,
+                          author_id: str, author_name: str = "",
+                          now_ms: Optional[int] = None) -> dict:
+    """Snapshot a saved draft when the content changed and the gap allows it.
+
+    Returns ``{"created": bool, "reason": str, "id": str|None}``. A document
+    that cannot be parsed is reported as ``invalid`` instead of raised; a
+    database failure still raises, so the caller can log it and keep the save
+    it already wrote.
+    """
+    now = _now_ms() if now_ms is None else int(now_ms)
+    try:
+        size = len(document_json.encode("utf-8"))
+    except (AttributeError, UnicodeError):
+        return {"created": False, "reason": "invalid", "id": None}
+    if size > AUTO_SNAPSHOT_MAX_DOCUMENT_BYTES:
+        print(
+            f"[invitation_versions] auto snapshot skipped: document {size} B "
+            f"exceeds {AUTO_SNAPSHOT_MAX_DOCUMENT_BYTES} B (invitation {invitation_id})",
+            flush=True,
+        )
+        return {"created": False, "reason": "size", "id": None}
+    try:
+        digest = _document_hash(document_json)
+    except ValueError:
+        return {"created": False, "reason": "invalid", "id": None}
+    latest = latest_auto_snapshot(db, invitation_id)
+    if latest is not None:
+        if _document_hash(latest["document_json"]) == digest:
+            return {"created": False, "reason": "unchanged", "id": None}
+        if now - int(latest["created_at"] or 0) < AUTO_SNAPSHOT_MIN_INTERVAL_MS:
+            return {"created": False, "reason": "too_soon", "id": None}
+    snapshot_id = create_snapshot(
+        db, invitation_id,
+        document_json=document_json,
+        author_id=author_id,
+        author_name=author_name,
+        summary="Auto",
+        is_auto=True,
+        now_ms=now,
+    )
+    return {"created": True, "reason": "created", "id": snapshot_id}
 
 
 def _prune(db, invitation_id: str) -> int:
@@ -142,6 +230,16 @@ def _prune(db, invitation_id: str) -> int:
             (row["id"], invitation_id)
         )
     return len(stale)
+
+
+def get_version(db, invitation_id: str, version_id: str) -> Optional[dict]:
+    """Return one snapshot row (document included), or None if not found."""
+    ensure_schema(db)
+    row = db.execute(
+        "SELECT * FROM invitation_versions WHERE id=? AND invitation_id=?",
+        (version_id, invitation_id)
+    ).fetchone()
+    return _row(row, include_document=True) if row else None
 
 
 def get_version_document(db, invitation_id: str, version_id: str) -> Optional[str]:

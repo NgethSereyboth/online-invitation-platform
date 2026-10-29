@@ -355,8 +355,8 @@
     },
     "index.html": {
       "deferredJavascript": "bundle-index-deferred.js",
-      "deferredJavascriptBytes": 149836,
-      "deferredJavascriptSha256": "8bc3ec9cc1e48e92890460ba6707ba81fa7d65771d02fba6ae570721b9c64833",
+      "deferredJavascriptBytes": 150047,
+      "deferredJavascriptSha256": "f5bca4a780862a7b1fae18203330c64deadf4ab873644aa4d0738b7502665e6b",
       "deferredStylesheet": "bundle-index-deferred.css",
       "deferredStylesheetBytes": 51160,
       "deferredStylesheetSha256": "f46a5caf1d839b6e26374e5d81c413256800721d2f5cdd40ce37ac20d379816b",

@@ -20,6 +20,41 @@ production-certified release.
 
 ---
 
+## 0.70.6 — D-7: automatic version snapshots on every meaningful save
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-7 / roadmap 3.9 on
+  `fix/2026-10-22-open-issues`. `src/python/features/invitation_versions.py` had existed since
+  v0.58.0 and was imported by **nothing**; version history only showed published snapshots.
+- **Measured first:** stored drafts in `data/invites.db` (7 rows) are 57 299 B median / 85 087 B max,
+  all already carrying inline `data:image` URIs — the pattern that grows. At that max the 50-snapshot
+  cap costs ≈ 4.2 MB per invitation; the 2 MB per-document skip bounds it at 100 MB. The skip rule is
+  kept even though no current document reaches it.
+- **Rule:** the draft save is the only writer. A snapshot is stored when the content hash changed
+  **and** at least 5 minutes passed since the last auto snapshot; 50 are kept (oldest pruned), and a
+  document above 2 MB is skipped with one `[invitation_versions] auto snapshot skipped: …` log line.
+  The hash is over canonical JSON (`sort_keys`, tight separators), so a save that only reorders keys
+  does not manufacture a snapshot. `now_ms` is an argument rather than a hidden `time.time()`, so the
+  five-minute rule is testable with an injected clock instead of sleeping.
+- **Wiring:** `save_draft` serialises once and calls `capture_auto_snapshot` after a successful write,
+  wrapped so history can never block a save. `GET /api/invitations/<id>/versions` merges auto
+  snapshots into the publication list (`isAuto: true`, `version: "auto"`, `id`, `published_at`);
+  compare and the existing restore-as-draft endpoint fall back to a snapshot id. Restore rewrites
+  `draft_json` only — publish state and immutable publications are untouched. Studio Ops labels the
+  rows **Auto**.
+- **Schema:** `invitation_versions` is now declared in `docs/postgres_schema.sql` with `created_at
+  BIGINT` (epoch ms would overflow `INTEGER` on Postgres), so SQLite and Postgres cannot drift.
+- **Verification:** new `tests/lt_3_9_auto_versions_test.py` — injected clock: 6 changes across 31
+  simulated minutes → **6** snapshots; unchanged content → none; a change 2 minutes later →
+  `too_soon`; exactly-5-minute gaps → created; 60 further changes → **50 rows**, oldest pruned; a
+  2.2 MB document → skipped with the log line. Real server, temp data dir: save → one auto snapshot,
+  identical and near-in-time saves → still one, restore by snapshot id → draft equals the snapshot
+  byte-for-byte. `python tests/v13_product_lifecycle_test.py` still passes (publications, restore by
+  version, list ≥ 2). Full matrix `gates/20261029-183437` `GATES_PASSED`: build
+  `BUILD_OK`/`MIRROR_CHECK_PASSED`, bundles, smoke 16/0/0, layout, pytest **216 passed** (710.97 s),
+  budgets 6, LHCI 16/16 `minA11y 1.00`, CSP, canvas 22/0/2, `!important` 3791 ≤ 3791.
+- **Docs:** capability-matrix `Version history` row now records automatic snapshots; four
+  `fallback` rows for the new UI strings in `docs/i18n/TRANSLATIONS.csv`.
+
 ## 0.70.5 — D-6: PDF bleed and crop marks
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-6 on `fix/2026-10-22-open-issues`.
