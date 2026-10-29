@@ -149,6 +149,8 @@ def test_khmer_export_fidelity() -> None:
 
                 platform = page.evaluate(PLATFORM_FONTS)
                 assert platform['check'] is True, platform
+                editor_run_color = page.evaluate(
+                    "() => getComputedStyle(document.querySelector('.object[data-id=\"sheet\"] .rt-run')).color")
                 cdp = context.new_cdp_session(page)
                 cdp.send('DOM.enable')
                 cdp.send('CSS.enable')
@@ -215,6 +217,18 @@ def test_khmer_export_fidelity() -> None:
                     timeout=15000)
                 popup.evaluate("async () => { document.body.getBoundingClientRect(); await document.fonts.ready; document.body.getBoundingClientRect(); }")
                 popup.wait_for_timeout(500)
+                # The printed sheet must be the document, not the app chrome: the editor's
+                # own `body:not(.guest)` typography overrides must not reach `.print-page`,
+                # and the public page's entrance animations must not be mid-flight when the
+                # PDF snapshot is taken (they made this metric drift between 3.5 and 4.6).
+                print_css = popup.evaluate("""() => {
+                    const run = document.querySelector('.print-page .rt-run');
+                    const animated = [...document.querySelectorAll('.print-page, .print-page *')]
+                        .filter(el => getComputedStyle(el).animationName !== 'none').length;
+                    return {runColor: run ? getComputedStyle(run).color : null, animated};
+                }""")
+                assert print_css['runColor'] == editor_run_color, (print_css, editor_run_color)
+                assert print_css['animated'] == 0, print_css
                 pdf_path = out / 'export.pdf'
                 popup.pdf(path=str(pdf_path), prefer_css_page_size=True,
                           margin={'top': '0', 'bottom': '0', 'left': '0', 'right': '0'}, print_background=True)

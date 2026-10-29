@@ -20,6 +20,47 @@ production-certified release.
 
 ---
 
+## 0.70.4 — D-5: "Print all pages" was printing the app chrome, not the invitation
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-5 ("`lt_2_6` PDF metric: root cause, not
+tolerance") on `fix/2026-10-22-open-issues`. No tolerance, budget, threshold or frozen-harness value
+was changed (D-11). B-1 (`security_*` collection order) was also verified closed: `server.py` reads the
+maintenance flag per request since `74f48da`, so every order passes (30 security tests, `1 passed` in
+both pair orders).
+- **The distribution:** `lt_2_6_export_fidelity_test.py` was bimodal, not noisy — 20 isolated runs gave
+10 failures with values `{2.932, 3.525, 4.490, 4.498, 4.615, 4.627, 4.748}`. The passing cluster sat
+0.01 MAE under the 4.5 limit, i.e. the tolerance was absorbing a constant defect while the flake
+decided whether the extra 0.13 landed on it.
+- **Root cause 1 — app-chrome cascade (deterministic).** `printAllPages()` writes a fresh document that
+links the editor's stylesheets but has no `#stage`. `theme-hardening.css` carries
+`body:not(.guest) p:not(#stage *){color:var(--app-muted)!important}`; in the editor the sheet is inside
+`#stage` and is exempt, in the print document it is not, so every printed paragraph was repainted
+`#646773` instead of the document ink `#342c26` (PDF content stream confirmed both values; CDP
+`getMatchedStylesForNode` named the rule).
+- **Root cause 2 — the print document replayed the public entrance animation (the on/off state).**
+`createPageNode()` emits the live object markup, which carries `.reveal` + inline
+`animation-name:fadeUp` 900 ms; `page.pdf()` could snapshot at computed `opacity 0.837`, and a human
+pressing the auto-print at 500 ms could print a half-faded page. `printCurrent()` is unaffected (it
+rasterises `stageSvg()` into an `<img>`), which is why only "Print all pages" was wrong.
+- **Fix:** the print document is now `<body class="print-doc">` with
+`.print-page …{animation:none!important;transition:none!important}` in its inline sheet (FB-130 already
+removed the hidden `.reveal` base state, so nothing can be left invisible), and the muted-paragraph rule
+gained `:not(.print-doc *)` — necessarily in that selector, because `:not(#stage *)` carries ID
+specificity and no class-based `!important` override can beat it. The rest of the rule's selectors
+(`.hint`, `.download-note`, …) are unchanged. Bundles and the `src/python` mirror rebuilt.
+- **Test:** two assertions added to the fidelity test before `pdf()` — the printed run's computed colour
+equals the editor's, and nothing under `.print-page` has a running animation. Both failed first
+(`runColor: rgb(100,103,115)` vs `rgb(52,44,38)`, `animated: 1`). No existing assertion touched.
+- **Verification:** post-fix PDF MAE is **byte-identical `3.5922`** in all 20 isolated runs and all 10
+runs under four CPU busy-loops (`fb-133/isolated-fixed.json`, `load-fixed.json`; 0 failures, vs 10/20
+before). The residue is rasteriser antialiasing (Chrome screenshot vs `pdftoppm -r 96` linear-light
+coverage), not document content. Full matrix `GATES_PASSED` (`gates/20261029-170041`): build
+`BUILD_OK`/`MIRROR_CHECK_PASSED`, bundles, smoke 16 pages/0 console errors/0 non-2xx, layout, pytest
+**214 passed**, budgets 6 pages, LHCI **16/16 minA11y 1.00**, CSP, canvas **22/0/2**, `!important`
+**3791 ≤ 3791**. A first matrix attempt was discarded: the D-5 load generators were still running and
+produced the documented `lt_2_2` load flake plus one dropped HTTP connection (`20261029-164418`); both
+tests pass isolated and in the clean rerun.
+
 ## 0.70.3 — Plan 004 Part B: the CSS/layout debt, with two measured stops
 
 - **Triggered by:** `plans/004-ux-ui-and-code-quality-pass.md` Part B (CQ-1…CQ-4) on `fix/2026-10-22-open-issues`.
