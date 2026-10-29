@@ -1090,7 +1090,8 @@ o.querySelector('img').style.objectFit=d.imageFit||'cover';
 o.querySelector('img').style.objectPosition=`${d.imagePositionX ?? 50}% ${d.imagePositionY ?? 50}%`;
 o.querySelector('img').style.filter=imageFilterStyle(d);
 if(window.EInviteRenderer?.imageTransformStyle)o.querySelector('img').style.transform=EInviteRenderer.imageTransformStyle(d);
-if(window.EInviteRenderer?.imageMaskStyle)o.querySelector('img').style.cssText+=';'+EInviteRenderer.imageMaskStyle(d)
+if(window.EInviteRenderer?.imageMaskStyle)o.querySelector('img').style.cssText+=';'+EInviteRenderer.imageMaskStyle(d);
+syncEmptyImage(o)
 }
 });
 syncFields(false);
@@ -1918,6 +1919,7 @@ image.style.boxSizing='border-box';
 image.style.filter=imageFilterStyle(o.dataset);
 image.style.transform=`scaleX(${o.dataset.imageFlipX==='true'?-1:1}) scaleY(${o.dataset.imageFlipY==='true'?-1:1})`
 }
+syncEmptyImage(o);
 const surface=o.querySelector('.shape-surface');
 if(surface){
 const kind=o.dataset.shapeKind||'rectangle';
@@ -1925,6 +1927,40 @@ surface.style.background=o.dataset.fillMode==='gradient'?`linear-gradient(${Numb
 surface.style.borderRadius=kind==='circle'?'999px':'inherit';
 surface.className=`shape-surface shape-${kind}`
 }
+}
+// UX-7: an image object that still carries the built-in placeholder bitmap is
+// an empty photo slot. Mark it (editor-only CSS draws the dashed slot and the
+// "Add photo" chip); never change the document value, so export, guest output
+// and dashboard thumbnails keep rendering exactly what is stored.
+function isBuiltinImagePlaceholder(src){
+const value=String(src||'').trim();
+if(!value||!/^data:image\/svg\+xml/i.test(value))return false;
+let decoded=value;try{decoded=decodeURIComponent(value)}catch{}
+return /<svg\b/i.test(decoded)&&/<rect\b/i.test(decoded)&&/fill=['"]#9d4555['"]/i.test(decoded)&&!/<image\b/i.test(decoded)
+}
+function syncEmptyImage(o){
+if(!o||!o.classList?.contains('image-object'))return;
+const src=o.querySelector(':scope > img')?.getAttribute('src')||'';
+const hasAsset=Boolean(o.dataset.assetId||o.dataset.localAssetId||o.dataset.serverId||o.dataset.originalSrc);
+const empty=!src||(!hasAsset&&isBuiltinImagePlaceholder(src));
+o.classList.toggle('ei-image-empty',empty);
+if(!empty){o.removeAttribute('data-image-placeholder');o.querySelector(':scope > .ei-image-placeholder')?.remove();return}
+o.setAttribute('data-image-placeholder','true');
+if(o.querySelector(':scope > .ei-image-placeholder'))return;
+const slot=document.createElement('span'),chip=document.createElement('span'),label=document.createElement('span'),svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),use=document.createElementNS('http://www.w3.org/2000/svg','use');
+slot.className='ei-image-placeholder';slot.setAttribute('aria-hidden','true');
+chip.className='ei-image-placeholder-chip';
+svg.setAttribute('class','ei-image-placeholder-icon');svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
+use.setAttribute('href','assets/icons.svg#i-image');svg.append(use);
+label.className='ei-image-placeholder-label';label.textContent='Add photo';
+chip.append(svg,label);slot.append(chip);o.append(slot)
+}
+let emptyImageObserver=null;
+function installEmptyImageObserver(){
+const stage=$('#stage');
+if(!stage||emptyImageObserver)return;
+emptyImageObserver=new MutationObserver(records=>{for(const record of records){const object=record.target?.closest?.('.image-object');if(object)syncEmptyImage(object)}});
+emptyImageObserver.observe(stage,{subtree:true,attributes:true,attributeFilter:['src']})
 }
 function updateSelectionBounds(){
 const stage=$('#stage');
@@ -3550,6 +3586,7 @@ $('#messageKm').value=state.fields?.messageKm||'';
 $('#undoBtn').onclick=undo;
 $('#redoBtn').onclick=redo;
 window.addEventListener('resize',()=>{updateSelectionBounds();updateCanvasView()});
+installEmptyImageObserver();
 apply();
 renderSavedGroups();
 updateCanvasView();

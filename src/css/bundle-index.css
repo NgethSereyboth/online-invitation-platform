@@ -2388,6 +2388,55 @@ border-radius: var(--radius-sm); background: var(--app-surface); color: var(--ap
 font-size: var(--fs-body-sm); cursor: pointer;
 }
 .cp-extras-pick:hover { border-color: var(--app-accent, #9d4555); }
+body[data-page="index"] #stage .object.image-object.ei-image-empty > img {
+visibility: hidden;
+}
+body[data-page="index"] #stage .ei-image-placeholder {
+position: absolute;
+inset: 0;
+z-index: 2;
+display: flex;
+align-items: center;
+justify-content: center;
+padding: 8px;
+box-sizing: border-box;
+overflow: hidden;
+border: 1.5px dashed color-mix(in srgb, var(--app-line-2) 30%, #fff);
+border-radius: inherit;
+background: color-mix(in srgb, var(--app-surface) 14%, transparent);
+color: var(--app-text);
+pointer-events: none;
+}
+body[data-page="index"] #stage .ei-image-placeholder-chip {
+display: inline-flex;
+align-items: center;
+gap: 6px;
+min-width: 0;
+max-width: 100%;
+padding: 5px 10px;
+border-radius: 999px;
+background: var(--app-surface);
+box-shadow: 0 1px 2px rgba(20, 16, 12, .16);
+font-size: 12px;
+font-weight: 600;
+line-height: 1;
+}
+body[data-page="index"] #stage .ei-image-placeholder-icon {
+width: 16px;
+height: 16px;
+flex: none;
+fill: none;
+stroke: currentColor;
+stroke-width: 1.75;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+body[data-page="index"] #stage .ei-image-placeholder-label {
+min-width: 0;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
 }@layer components {
 html { -webkit-text-size-adjust: 100%; color-scheme: light dark; }
 body {
