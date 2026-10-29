@@ -20,6 +20,32 @@ production-certified release.
 
 ---
 
+## 0.70.5 — D-6: PDF bleed and crop marks
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-6 on `fix/2026-10-22-open-issues`.
+- **Option:** `printAllPages` / `printCurrent` now accept `{bleedMm, cropMarks}` (0–10 mm, marks only
+  when bleed > 0) and the dialog's PDF card exposes `Bleed` 0/3/5 mm plus `Crop marks`, so the
+  buttons, the command palette and the API share one path. Each printed page is a
+  `.print-sheet` of trim + 2×bleed with `padding = bleed` around the unchanged `.print-page`: objects
+  keep their trim-relative position, and the sheet carries the page background so solid fills,
+  gradients and image fills continue through the bleed while the trim keeps its own copy. Corner
+  marks are eight 1 px vector ticks, 2 px outside each trim corner.
+- **Renderer limit, measured:** Chrome quantises the PDF page box to 1/300 in (0.24 pt) and does not
+  honour a fractional `@page` request exactly (443 px → 331.92 pt; 457.796 px → 342.96 pt). The
+  no-bleed page itself lands 0.16 px above 420 px, so comparing two measured pages compounded two
+  roundings and pushed 5 mm to 0.506 pt. The test therefore measures the bleed page against the
+  **exact** trim + 2×bleed size — stricter, and achievable: **0.087 pt at 3 mm, 0.386 pt at 5 mm**,
+  inside the queue's ±0.5 pt. Nothing was widened.
+- **Verification:** `lt_2_6` now exports at 0/3/5 mm and asserts MediaBox, embedded Khmer face, trim
+  copy inside the existing 4.5 MAE tolerance, and marks confined to the margin; it also drives the
+  dialog controls (3 mm + marks → 443 px sheet, one `.print-marks`). Suite `214 passed` (704.81 s);
+  build `BUILD_OK`/`MIRROR_CHECK_PASSED`, bundles, smoke 16/0/0, layout in `gates/20261029-174452`,
+  then canvas, `!important` 3791 ≤ 3791, CSP and LHCI 16/16 `minA11y 1.00` in `181734`/`181813`/
+  `181815`/`181912`. That chain stopped at pytest on the **documented** `lt_2_2` load flake (it
+  passed solo and in the full re-run); no `lt_2_2` assertion or timeout changed.
+- **Docs:** matrix row `PDF bleed / crop marks` flips to `exists` with the quantisation limitation;
+  `Bleed` / `Crop marks` recorded as English `fallback` rows in `docs/i18n/TRANSLATIONS.csv`.
+
 ## 0.70.4 — D-5: "Print all pages" was printing the app chrome, not the invitation
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-5 ("`lt_2_6` PDF metric: root cause, not

@@ -89,7 +89,7 @@ Phase 3-5. Read-only: no product file changed for this item.
 |---|---|---|---|
 | PNG 1x / 2x / 3x | exists | `src/js/export-quality.js:45,53`; `tests/lt_2_6_export_fidelity_test.py` | MAE 0.0 / 1.03 / 0.89 against the editor |
 | PDF with embedded fonts | exists | `src/js/export-quality.js:47`; LT-2.6 PDF probe | 1 page, `NotoSansKhmer` embedded, MAE 2.0-3.6 at 96 dpi |
-| PDF bleed / crop marks | absent | `src/js/export-quality.js:47` (`@page margin:0`, no bleed box) | Print surface is exact page size; no bleed allowance or marks |
+| PDF bleed / crop marks | **exists** | `src/js/export-quality.js` — `printAllPages`/`printCurrent` take `{bleedMm, cropMarks}`; dialog PDF card has Bleed 0/3/5 mm + Crop marks | Page = trim + 2×bleed, backgrounds extend into the bleed, marks in the margin only. Limitation: Chrome quantises the PDF page box to 1/300 in, so the MediaBox lands ≤0.4 pt off the exact trim+2×bleed (checked ±0.5 pt in `lt_2_6`); marks are vector hairlines. |
 
 ## 6. Quality bars (Phase 3 close, 2026-10-27)
 

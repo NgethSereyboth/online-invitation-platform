@@ -250,6 +250,79 @@ def test_khmer_export_fidelity() -> None:
                 pdf_text = _text_box(pdf_image)
                 assert len(pdf_text) == 4 and all(abs(a - b) <= tolerance['pdf_text_box_px'] for a, b in zip(pdf_text, editor_text)), (pdf_text, editor_text)
 
+                # D-6 — bleed. Page size = trim + 2×bleed, so the MediaBox must grow by exactly
+                # 2×bleed (bbox is in pt; CSS px × 0.75), the trim region must still match the
+                # no-bleed export inside the same LT-2.6 tolerance, the Khmer face must stay
+                # embedded, and crop marks may only add ink in the bleed margin.
+                def _media_box(path: Path) -> tuple[float, float]:
+                    info_text = subprocess.run(['pdfinfo', str(path)], capture_output=True, text=True).stdout
+                    match = re.search(r'Page size:\s+([\d.]+) x ([\d.]+) pts', info_text)
+                    assert match, info_text
+                    return float(match.group(1)), float(match.group(2))
+
+                trim_w, trim_h = editor_full.size
+                trim_box = _media_box(pdf_path)
+                assert abs(trim_box[0] - trim_w * 0.75) <= 0.6, trim_box
+                assert abs(trim_box[1] - trim_h * 0.75) <= 0.6, trim_box
+                metrics['bleed'] = {}
+                for bleed_mm, marks in ((3, False), (5, True)):
+                    with context.expect_page(timeout=30000) as bleed_info:
+                        page.evaluate(
+                            "options => EInviteExportQuality.export.printAll(options)",
+                            {'bleedMm': bleed_mm, 'cropMarks': marks})
+                    bleed_popup = bleed_info.value
+                    bleed_popup.wait_for_load_state('load', timeout=30000)
+                    bleed_popup.wait_for_function(
+                        "() => [...document.fonts].some(f => f.family.replaceAll('\\\"','').includes('EInvite Noto Sans Khmer') && f.status === 'loaded')",
+                        timeout=15000)
+                    bleed_popup.evaluate("async () => { await document.fonts.ready; }")
+                    bleed_path = out / f'export-bleed-{bleed_mm}.pdf'
+                    bleed_popup.pdf(path=str(bleed_path), prefer_css_page_size=True,
+                                    margin={'top': '0', 'bottom': '0', 'left': '0', 'right': '0'},
+                                    print_background=True)
+                    box = _media_box(bleed_path)
+                    grow = 2 * bleed_mm * 96 / 25.4 * 0.75
+                    # Measured against the exact trim + 2×bleed size, not against the other
+                    # PDF: Chrome quantises each page box to 1/300 in independently, so
+                    # subtracting two measured pages compounds two rounding errors.
+                    assert abs(box[0] - (trim_w * 0.75 + grow)) <= 0.5, (bleed_mm, box, grow)
+                    assert abs(box[1] - (trim_h * 0.75 + grow)) <= 0.5, (bleed_mm, box, grow)
+                    assert any('Khmer' in line for line in _pdf_fonts(bleed_path)), _pdf_fonts(bleed_path)
+                    subprocess.run(['pdftoppm', '-r', '96', '-png', '-singlefile', str(bleed_path), str(out / f'bleed-{bleed_mm}')], check=True)
+                    bleed_image = Image.open(out / f'bleed-{bleed_mm}.png')
+                    bleed_px = round(bleed_mm * 96 / 25.4)
+                    # Chrome's PDF page box is quantised to 1/300 in (~0.5 px at 96 dpi),
+                    # so the raster may sit one pixel either side of the requested sheet.
+                    expected_size = (round(trim_w + 2 * bleed_mm * 96 / 25.4), round(trim_h + 2 * bleed_mm * 96 / 25.4))
+                    assert all(abs(a - b) <= 1 for a, b in zip(bleed_image.size, expected_size)), (bleed_mm, bleed_image.size, expected_size)
+                    trim_copy = bleed_image.crop((bleed_px, bleed_px, bleed_px + trim_w, bleed_px + trim_h))
+                    result = _compare(pdf_image, _artboard(trim_copy))
+                    metrics['bleed'][str(bleed_mm)] = {key: round(value, 4) for key, value in result.items()}
+                    assert result['mae'] <= tolerance['pdf_mae'], (bleed_mm, result)
+                    margin = bleed_image.crop((0, 0, bleed_image.width, bleed_px)).convert('L')
+                    histogram = margin.histogram()
+                    darkest = next(index for index, count in enumerate(histogram) if count)
+                    if marks:
+                        # A vector hairline is antialiased by the 96 dpi rasteriser, so
+                        # assert ink is present rather than a particular darkness.
+                        assert darkest < 140, (bleed_mm, darkest)
+                    else:
+                        assert darkest > 240, (bleed_mm, darkest)
+                    bleed_popup.close()
+
+                # The dialog's own controls must drive the same path (state, not just the API).
+                page.evaluate("() => EInviteExportQuality.open('export')")
+                page.select_option('[data-print-bleed]', '3')
+                page.check('[data-print-marks]')
+                with context.expect_page(timeout=30000) as ui_info:
+                    page.click('[data-print-all]')
+                ui_popup = ui_info.value
+                ui_popup.wait_for_load_state('load', timeout=30000)
+                ui = ui_popup.evaluate("() => { const s = document.querySelector('.print-sheet'); return {w: s ? s.getBoundingClientRect().width : 0, marks: document.querySelectorAll('.print-marks').length}; }")
+                assert abs(ui['w'] - round(420 + 2 * 3 * 96 / 25.4)) <= 1 and ui['marks'] == 1, ui
+                ui_popup.close()
+                page.evaluate("() => document.getElementById('v24QualityDialog')?.close()")
+
                 assert not errors, errors
                 print('LT-2.6 metrics', metrics)
                 context.close()

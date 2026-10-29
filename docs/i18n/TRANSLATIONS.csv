@@ -1162,3 +1162,5 @@
 "span","span","API keys let scripts create invitations and read RSVPs for your account. Each key is scoped, rate-limited, and shown in full only once when you create it.","API keys let scripts create invitations and read RSVPs for your account. Each key is scoped, rate-limited, and shown in full only once when you create it.","fallback","src/html/account.html","37"
 "span","span","Create API key","Create API key","fallback","src/html/account.html","37"
 "span","emptyImageAddPhoto","Add photo","Add photo","fallback","src/js/app.js","1955"
+"label","printBleed","Bleed","Bleed","fallback","src/js/export-quality.js","57"
+"label","printCropMarks","Crop marks","Crop marks","fallback","src/js/export-quality.js","57"
