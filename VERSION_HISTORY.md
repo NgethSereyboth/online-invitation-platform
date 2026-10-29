@@ -51,9 +51,9 @@ specificity and no class-based `!important` override can beat it. The rest of th
 - **Test:** two assertions added to the fidelity test before `pdf()` — the printed run's computed colour
 equals the editor's, and nothing under `.print-page` has a running animation. Both failed first
 (`runColor: rgb(100,103,115)` vs `rgb(52,44,38)`, `animated: 1`). No existing assertion touched.
-- **Verification:** post-fix PDF MAE is **byte-identical `3.5922`** in all 20 isolated runs and all 10
-runs under four CPU busy-loops (`fb-133/isolated-fixed.json`, `load-fixed.json`; 0 failures, vs 10/20
-before). The residue is rasteriser antialiasing (Chrome screenshot vs `pdftoppm -r 96` linear-light
+- **Verification:** post-fix PDF MAE is **byte-identical `3.5922`** in all 40 post-fix runs — 30 isolated
+plus 10 under four CPU busy-loops (`fb-133/isolated-fixed.json`, `isolated-extra.json`,
+`load-fixed.json`; 0 failures, vs 10/20 before). The residue is rasteriser antialiasing (Chrome screenshot vs `pdftoppm -r 96` linear-light
 coverage), not document content. Full matrix `GATES_PASSED` (`gates/20261029-170041`): build
 `BUILD_OK`/`MIRROR_CHECK_PASSED`, bundles, smoke 16 pages/0 console errors/0 non-2xx, layout, pytest
 **214 passed**, budgets 6 pages, LHCI **16/16 minA11y 1.00**, CSP, canvas **22/0/2**, `!important`
