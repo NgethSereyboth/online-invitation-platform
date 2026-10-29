@@ -1185,7 +1185,12 @@ input[type="checkbox"], input[type="radio"] {
    privacy env-token <code> (364px) measured wider than the 320px document. */
 body:not(.guest) main h1,
 body:not(.guest) main h1 .i18n { overflow-wrap: anywhere; }
-body[data-page="admin"] .admin-page > h1 { font-size: clamp(26px, 8.5vw, 48px) !important; }
+body[data-page="admin"] .admin-page > h1 {
+  font-size: clamp(26px, 8.5vw, 48px);
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--app-text);
+}
 body[data-page="privacy"] main code { overflow-wrap: anywhere; word-break: break-word; }
 
 /* The templates "Favorites only" row pushed the toolbar to 345px at 320. */

@@ -894,7 +894,7 @@ html[data-theme="dark"] body.studio-experience .khmer-picker summary{color:var(-
 .canvas-inline-editing{outline:2px solid var(--app-accent)!important;outline-offset:2px;background:color-mix(in srgb,var(--app-surface) 92%,transparent)!important;cursor:text!important;user-select:text!important}
 .canvas-bg-presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.canvas-bg-presets button{min-height:40px!important;border-radius:12px!important;font-size:11px!important;font-weight:700!important;background:var(--app-surface)!important;border:1px solid var(--app-line)!important;color:var(--app-text)!important}
 .layer-tools{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:9px}.layer-tools input{min-height:38px!important;border-radius:11px!important;margin:0!important}.layer-tools button{min-width:42px!important;border-radius:11px!important}.layer-list{display:grid;gap:6px}.layer-row.active{border-color:var(--app-accent)!important;background:var(--app-accent-soft)!important}.layer-row .layer-eye,.layer-row .layer-lock{width:30px!important;height:30px!important;min-height:30px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--app-muted)!important}.layer-row .layer-main{display:grid!important;grid-template-columns:24px minmax(0,1fr);align-items:center;text-align:left!important;gap:6px;min-height:34px!important;padding:4px 6px!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--app-text)!important}.layer-row .layer-main strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px!important;color:inherit!important}body[data-page="designer"] .designer-page,body[data-page="admin"] .admin-page,body[data-page="analytics"] .analytics,body[data-page="responses"] .response-admin,body[data-page="guests"] .guest-admin,body[data-page="templates"] .studio{max-width:1260px!important;padding:38px 24px 90px!important;margin:auto}
-body[data-page="designer"] .designer-page>h1,body[data-page="admin"] .admin-page>h1,body[data-page="templates"] .studio>h1{font-size:48px!important;font-weight:800!important;margin:0 0 8px!important;color:var(--app-text)!important}
+body[data-page="designer"] .designer-page>h1,body[data-page="templates"] .studio>h1{font-size:48px!important;font-weight:800!important;margin:0 0 8px!important;color:var(--app-text)!important}
 body[data-page="designer"] .designer-page>p,body[data-page="admin"] .admin-page>p,body[data-page="templates"] .studio>p,body[data-page="analytics"] .analytics-head p{color:var(--app-muted)!important;font-size:15px;line-height:1.65;max-width:760px}
 body[data-page="designer"] .designer-grid{gap:18px!important;margin:28px 0!important}
 body[data-page="designer"] .workspace-card{background:var(--app-surface)!important;border:1px solid var(--app-line)!important;border-radius:24px!important;padding:24px!important;box-shadow:var(--canvas-shadow)!important;transition:transform .28s var(--canvas-ease),box-shadow .28s,border-color .28s}
@@ -2200,7 +2200,12 @@ block-size: 16px;
 }
 body:not(.guest) main h1,
 body:not(.guest) main h1 .i18n { overflow-wrap: anywhere; }
-body[data-page="admin"] .admin-page > h1 { font-size: clamp(26px, 8.5vw, 48px) !important; }
+body[data-page="admin"] .admin-page > h1 {
+font-size: clamp(26px, 8.5vw, 48px);
+font-weight: 800;
+margin: 0 0 8px;
+color: var(--app-text);
+}
 body[data-page="privacy"] main code { overflow-wrap: anywhere; word-break: break-word; }
 .toggle-row { flex-wrap: wrap; min-width: 0; }
 @media (max-width: 420px) {
