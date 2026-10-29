@@ -23,3 +23,130 @@ instead of shifting the name, status and action cells. */
     mask-image: linear-gradient(90deg, #000 calc(100% - 18px), transparent);
   }
 }
+
+/* UX-8 (FB-129) — the row was eight grid children in six columns: Remove wrapped
+   into row two and stretched to the whole name column, and at 375 every child
+   stacked. One checkbox, one name/meta block and one 36px actions group; the
+   group wraps under the name below 640px. Unlayered so it wins over the
+   components layer above and the surface-only !important rule in the shell. */
+body[data-page="guests"] .guest-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "pick main actions";
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+}
+body[data-page="guests"] .guest-row > .guest-pick {
+  grid-area: pick;
+  align-self: center;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+}
+body[data-page="guests"] .guest-row > .guest-pick input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+}
+body[data-page="guests"] .guest-row > .guest-main {
+  grid-area: main;
+  min-width: 0;
+  display: block;
+}
+body[data-page="guests"] .guest-row > .guest-actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+body[data-page="guests"] .guest-row > .guest-actions button {
+  width: auto;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+body[data-page="guests"] .guest-actions button.danger {
+  color: var(--danger, #c6404d);
+}
+body[data-page="guests"] .guest-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+body[data-page="guests"] .guest-head strong {
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+body[data-page="guests"] .guest-status {
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--app-muted);
+}
+body[data-page="guests"] .guest-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  min-width: 0;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--app-muted);
+}
+body[data-page="guests"] .guest-sub small {
+  font-size: 11px;
+  line-height: 1.35;
+  color: inherit;
+}
+body[data-page="guests"] .guest-sub .guest-meta {
+  display: inline;
+  font: inherit;
+  line-height: 1.35;
+  color: inherit;
+}
+body[data-page="guests"] .guest-meta:not(:empty)::before {
+  content: "·";
+  margin-right: 6px;
+}
+body[data-page="guests"] .guest-sub .tags {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0;
+}
+body[data-page="guests"] .guest-sub .tag {
+  padding: 2px 6px;
+  font-size: 9px;
+  line-height: 1.1;
+}
+@media (max-width: 640px) {
+  body[data-page="guests"] .guest-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "pick main"
+      "actions actions";
+    column-gap: 10px;
+  }
+  body[data-page="guests"] .guest-row > .guest-pick {
+    height: 44px;
+  }
+  body[data-page="guests"] .guest-row > .guest-pick input {
+    min-height: 44px;
+  }
+  body[data-page="guests"] .guest-row > .guest-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+}

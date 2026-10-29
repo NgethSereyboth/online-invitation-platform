@@ -315,8 +315,8 @@
     },
     "guests.html": {
       "javascript": "bundle-guests.js",
-      "scriptBytes": 126608,
-      "scriptSha256": "f11e224ab66d7ba672f0031e264e01faa25f820a7b9a1e08e0dfa376d1232041",
+      "scriptBytes": 126738,
+      "scriptSha256": "5e41e5127c20c22f991355123b991af3476b57b1f2b3fd942f4f89e8ce673023",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -349,8 +349,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 266307,
-      "styleSha256": "c5f3c3b78ec124610ce0bac016f84abee7d36de83b9ee12d8f8156d682a96d27",
+      "styleBytes": 268803,
+      "styleSha256": "7874698c12aaadfbe48fa1106be1cc0794c4ed07388303644dcf389f29cd3ee8",
       "stylesheet": "bundle-guests.css"
     },
     "index.html": {
