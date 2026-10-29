@@ -68,7 +68,7 @@ LHCI_PAGES=16
 # .fp-project-status 1 — LT-1.4 leftover; .flow-design-search input 6 — stale
 # v15-only surface) and lowered the pin to the new count. The phase fails as
 # soon as the count climbs above it.
-IMPORTANT_PIN=3808
+IMPORTANT_PIN=3791
 # Signature each phase must print before its exit code counts (rule R2).
 MARKERS={
     'build':   ('BUILD_OK','MIRROR_CHECK_PASSED'),

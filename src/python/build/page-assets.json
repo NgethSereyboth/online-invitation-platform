@@ -1,7 +1,7 @@
 {
   "pages": {
     "account.html": {
-      "bytes": 382782,
+      "bytes": 382760,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -14,7 +14,7 @@
       ]
     },
     "admin.html": {
-      "bytes": 429280,
+      "bytes": 429258,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -27,7 +27,7 @@
       ]
     },
     "analytics.html": {
-      "bytes": 365962,
+      "bytes": 365940,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -40,7 +40,7 @@
       ]
     },
     "billing.html": {
-      "bytes": 363583,
+      "bytes": 363561,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -66,7 +66,7 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 667217,
+      "bytes": 667195,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -79,7 +79,7 @@
       ]
     },
     "designer.html": {
-      "bytes": 383947,
+      "bytes": 383337,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -92,7 +92,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 403678,
+      "bytes": 403656,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -105,7 +105,7 @@
       ]
     },
     "index.html": {
-      "bytes": 1556667,
+      "bytes": 1556057,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -118,7 +118,7 @@
       ]
     },
     "materials.html": {
-      "bytes": 432388,
+      "bytes": 432366,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -154,7 +154,7 @@
       ]
     },
     "reset.html": {
-      "bytes": 353521,
+      "bytes": 353499,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -167,7 +167,7 @@
       ]
     },
     "responses.html": {
-      "bytes": 371050,
+      "bytes": 371028,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -180,7 +180,7 @@
       ]
     },
     "templates.html": {
-      "bytes": 414445,
+      "bytes": 413835,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -193,7 +193,7 @@
       ]
     },
     "verify.html": {
-      "bytes": 351362,
+      "bytes": 351340,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
