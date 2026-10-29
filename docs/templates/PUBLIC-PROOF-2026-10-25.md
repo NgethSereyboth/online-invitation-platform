@@ -134,3 +134,21 @@ model fidelity pass; what remains is a copy/box decision for `p1-text-13` plus 0
 rounding on three objects, both queued in `artifacts/next-work/OWNER-QUEUE.md`. Scaled
 screenshots and the machine-readable measurements are in `review-tp/` and
 `review-tp/public-proof.json`.
+
+## Update 2026-10-29 — the recorded residual is closed (D-8)
+
+Re-ran the same probe after the fix in `docs/templates/DESIGN-DEVIATIONS.md` row 3. On
+`wd-royal-maroon-gold`:
+
+| View | clipped | spilled | horizontal overflow |
+|---|---|---|---|
+| 375 km | **0** | **0** | none |
+| 375 en | **0** | **0** | none |
+| 1440 km | **0** | **0** | none |
+
+The lead's English string was shortened (Khmer untouched) and the English name pair and `&`
+were given 1.3 leading with a taller groom box. The root cause of the three `clipped`
+objects was measured, not guessed: the runtime fit reaches the 10 px floor and wraps the lead
+to three lines in a 30.14 px box, and Noto Serif's content area is ≈1.29 em, so a 1.15/1.0
+`line-height` makes `scrollHeight` exceed `clientHeight` by 2–6 px even on a single line.
+No proof predicate, tolerance or allowance was changed.

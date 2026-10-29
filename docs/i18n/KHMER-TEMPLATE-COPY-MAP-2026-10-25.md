@@ -63,7 +63,7 @@ Source of truth: `copy-bank.json`. Word breaks (U+200B) are stripped here for re
 | `sched.ribbon` | Ribbon-cutting | ពិធីកាត់ខ្សែបូ | low |
 | `wedding.title` | Wedding Ceremony | សិរីមង្គលអាពាហ៍ពិពាហ៍ | low |
 | `wedding.invite_formal` | Together with their families, request the honour of your presence at the wedding of their son and daughter | សូមគោរពអញ្ជើញ ឯកឧត្តម លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា ចូលរួមជាភ្ញៀវកិត្តិយស ក្នុងពិធីអាពាហ៍ពិពាហ៍កូនប្រុស និងកូនស្រីរបស់យើងខ្ញុំ | med |
-| `wedding.invite_short` | Together with our families, we invite you to celebrate our wedding | សូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរពិធីអាពាហ៍ពិពាហ៍របស់យើងខ្ញុំ | med |
+| `wedding.invite_short` | Together with our families, we invite you to our wedding | សូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរពិធីអាពាហ៍ពិពាហ៍របស់យើងខ្ញុំ | med |
 | `wedding.honour` | Your presence is a great honour to us | ការចូលរួមរបស់លោកអ្នក គឺជាកិត្តិយសដ៏ខ្ពង់ខ្ពស់សម្រាប់យើងខ្ញុំ | med |
 | `wedding.engagement.title` | Engagement Ceremony | ពិធីភ្ជាប់ពាក្យ | low |
 | `wedding.engagement.invite` | You are warmly invited to witness our engagement ceremony | សូមគោរពអញ្ជើញលោកអ្នកចូលរួមជាភ្ញៀវកិត្តិយសក្នុងពិធីភ្ជាប់ពាក្យ | med |

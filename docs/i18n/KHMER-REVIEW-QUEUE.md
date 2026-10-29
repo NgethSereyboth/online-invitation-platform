@@ -349,7 +349,7 @@ unreviewed by a native speaker. Review before launch (OD-18).
 | `template-pack/copy-bank.json` | key `wedding.hair.title` · Hair-Cutting Ceremony | ពិធីកាត់សក់ |
 | `template-pack/copy-bank.json` | key `wedding.honour` · Your presence is a great honour to us | ការចូលរួម​របស់​លោកអ្នក គឺជា​កិត្តិយស​ដ៏​ខ្ពង់ខ្ពស់​សម្រាប់​យើងខ្ញុំ |
 | `template-pack/copy-bank.json` | key `wedding.invite_formal` · Together with their families, request the honour of your presence at the wedding of their son and daughter | សូម​គោរព​អញ្ជើញ ឯកឧត្តម លោកជំទាវ លោក លោកស្រី អ្នកនាង កញ្ញា ចូលរួម​ជា​ភ្ញៀវ​កិត្តិយស ក្នុង​ពិធី​អាពាហ៍​ពិពាហ៍​កូនប្រុស និង​កូនស្រី​របស់​យើងខ្ញុំ |
-| `template-pack/copy-bank.json` | key `wedding.invite_short` · Together with our families, we invite you to celebrate our wedding | សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​អបអរសាទរ​ពិធី​អាពាហ៍​ពិពាហ៍​របស់​យើងខ្ញុំ |
+| `template-pack/copy-bank.json` | key `wedding.invite_short` · Together with our families, we invite you to our wedding | សូម​គោរព​អញ្ជើញលោក​អ្នកចូលរួម​អបអរសាទរ​ពិធី​អាពាហ៍​ពិពាហ៍​របស់​យើងខ្ញុំ |
 | `template-pack/copy-bank.json` | key `wedding.program.intro` · Please join us for the following ceremonies | សូម​គោរព​អញ្ជើញ​ចូលរួម​ក្នុង​ពិធី​ដូច​ខាងក្រោម |
 | `template-pack/copy-bank.json` | key `wedding.program.title` · Three Days of Celebration | កម្មវិធី​អាពាហ៍​ពិពាហ៍​បី​ថ្ងៃ |
 | `template-pack/copy-bank.json` | key `wedding.reception.invite` · Join us for an evening of dinner and celebration | សូម​គោរព​អញ្ជើញ​ចូលរួម​ពិធីជប់លៀង​អាហារ​ពេលល្ងាច ដើម្បី​អបអរសាទរ​អាពាហ៍​ពិពាហ៍ |
