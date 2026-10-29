@@ -31,7 +31,9 @@ queue as `INBOX-n`.
 ## 1. Khmer keyboard typing in the editor
 
 **Do:** open `<DEMO URL>/index.html`, sign in, open Dashboard and the demo wedding invitation in the
-editor, tap the bride's name on the canvas, clear it, and type `សុភា` with the phone's Khmer keyboard.
+editor, tap the bride's name on the canvas, clear it, and type a two-cluster Khmer name with the
+phone's Khmer keyboard (build it from code points if you need a fixture — this repo forbids typed
+Khmer; U+179F U+17BB U+1797 U+17B6 is a short one).
 The same invitation's guest page is `/i/demo-wd-royal-maroon-gold` (steps 4–10).
 
 **Expected:** every cluster appears in order as typed; no Latin fallback, no blank boxes, no
@@ -41,8 +43,8 @@ Result: ☐ PASS ☐ FAIL ☐ SKIP — notes: ______________________________
 
 ## 2. Khmer paste into the editor
 
-**Do:** copy `សូមគោរពអញ្ជើញ` from another app, paste it into the same field. Then paste a two-line
-Khmer block from a message.
+**Do:** copy a Khmer greeting line from another app (compose it from code points if you need one),
+paste it into the same field. Then paste a two-line Khmer block from a message.
 
 **Expected:** the paste lands as one run, clusters intact, no mojibake; two-line paste keeps its
 line break or wraps cleanly. Reload keeps the pasted text.
