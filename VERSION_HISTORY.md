@@ -20,6 +20,16 @@ production-certified release.
 
 ---
 
+## 0.70.2 — Plan 004 Part A: the visible UI defects closed
+
+- **Triggered by:** `plans/004-ux-ui-and-code-quality-pass.md` Part A (UX-1…UX-9, commits FB-122…FB-130) on `fix/2026-10-22-open-issues`.
+- **Mobile chrome (UX-1, FB-122):** the top bar's clipping `!important` was removed at the source so the documented one-row contract scrolls again; the account chip hides ≤640 px, every control is reachable, and the layout guard gained the `topbar-cluster-reachable` cell with a clipped negative control. The tail (language switch) still needs a swipe at 320/375 — recorded as a partial.
+- **Dashboard and shell (UX-2…UX-5, FB-123…FB-126):** the dark dashboard search field is one box (the two `!important` input fills narrowed at the source); the quick-start tiles read the invitation grid and hide once an account has an invitation; one original 16-symbol SVG sprite (`assets/icons.svg` + `src/css/icons.css`) replaces the shell's glyph icons; and Publish snapshot is the studio bar's single primary control (superseded gradient deleted, no new `!important`).
+- **Editor (UX-6…UX-8, FB-127…FB-129):** the empty inspector shows one label and the empty card (the heading returns with a selection), diagnostics is gated to All-controls mode, the Timeline/Studio Ops pills are flat 32 px chrome; the built-in empty photo now shows an editor-only dashed slot + `i-image` chip while the stored value, export snapshot and public page stay unchanged (`tests/lt_2_6_empty_photo_placeholder_test.py`); guest rows are one checkbox + name/status/meta + one 36 px action group, 66 px at 1440 (target ≤72) with no overflow at 375 and Remove in danger text.
+- **Public page (UX-9, FB-130):** schedule and venue no longer render a heading without content (82 px and 98 px blank blocks at 1440/375), and a section animation preset of None no longer strands a populated section at `opacity: 0` — the redundant initial hidden state is gone while `fadeUp` still supplies its own first frame. Reduced motion with a never-firing `IntersectionObserver` leaves every section visible; `tests/ux9_public_sections_test.py` covers all three states.
+- **Verification:** one full matrix `GATES_PASSED` (`artifacts/next-work/gates/20261029-134220/`) — build `BUILD_OK`/`MIRROR_CHECK_PASSED`, bundles `ROUTE_BUNDLE_CHECK_PASSED`, smoke 16 pages / 0 errors / 0 non-2xx, layout `UI_LAYOUT_GUARD_PASSED`, pytest **214 passed**, budgets 6 pages, LHCI 16/16 `minA11y 1.00`, `CSP_CHECK_PASSED`, canvas 22 pass / 0 fail / 2 skipped, `!important` 3809 ≤ pin 3809. The Part A after-set is `artifacts/next-work/review-ux1/after/` (17 shots + 4 previews, `INDEX.md`).
+- **Findings raised, not fixed (owner queue):** the guest-row action buttons lost their handlers in `92806ad` (found in UX-8); the guest-feature modules print raw `HTTP 401` on every public invitation (found in UX-9); UX-1's language switch still needs a swipe at 320/375. No budget, threshold or frozen harness was changed.
+
 ## 0.68.6 — Phase 3 close: guest-page completion and capability truth
 
 - **Triggered by:** `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` Phase 3 (LT-3.1…LT-3.10, commits
