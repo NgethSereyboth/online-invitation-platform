@@ -20,6 +20,36 @@ production-certified release.
 
 ---
 
+## 0.70.13 — Stage F: Phase 8 re-run on the final tree
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` Stage F. Phase 8 had closed on 2026-10-28
+  against `f05ee2e`; Stages A–E then changed the tree, so every Phase 8 artifact was re-checked rather
+  than assumed.
+- **LT-8.1 — clean clone, no fix needed:** a plain clone of `e11e5c8` followed only the README.
+  Clone 55 s, venv 4 s, `pip install -r requirements-dev.txt` 14 s, `playwright install chromium` 1 s,
+  `build.py all --check` 2 s (`MIRROR_CHECK_PASSED (up_to_date=530)`), `make test`
+  **`223 passed, 2 warnings in 661.90s`** with 0 failed and 0 skipped, and the server answered `200`
+  4 s after boot with `KHMER_FONT_STATUS … shaping=True`. The tracked tree stayed clean.
+- **LT-8.2 — docs refreshed:** `docs/ARCHITECTURE.md` now records the Stage C–E subsystems — the
+  `webhook.deliver` job shape, backoff and single SSRF guard; field-level encryption; scoped API keys;
+  the 15-route admin step-up; the `body.print-doc` print contract with bleed/crop marks; and the
+  five-minute auto-snapshot rule. The icon sprite and the display fonts remain documented as absent.
+  Checks: `architecture_doc_test` + `readme_quickstart_test` + pack-asset **6 passed**, 11/11 font
+  digests verify.
+- **LT-8.3 — candidate record rebuilt:** `RELEASE-CANDIDATE.md` described an uncommitted 423-entry tree
+  and an open `lt_2_6` red that no longer exist. It now carries the clean tree at `e11e5c8`, 0.70.12,
+  the ten-gate matrix, the clean-clone table, the 1.0.0 criteria re-scored (31 / 6 / 0) and the
+  limitations that actually remain — canvas visual not run, device checklist on A-4, Chromium-only
+  automation, no sprite, substituted fonts, external evidence templates only, two open product findings.
+- **LT-8.4 — index contradiction fixed:** the superseded-work-orders section said “two files marked
+  authoritative” while three rows carry a mark; it now names the protocol pair and the authoritative
+  order. Coverage: **21/21** root `FREEBUFF-*.md` present, 0 replacement characters, 0 broken links.
+- **LT-8.5 — final report and handoff:** `artifacts/next-work/FINAL-REPORT.md` and
+  `artifacts/next-work/HANDOFF.md` rewritten. The report corrects the previous handoff's claim that
+  D-1…D-4 were “closed as not required” — they were never executed, and each is listed with its
+  reason and queue pointer. No product code changed in this entry; the Stage E matrix remains the
+  gate of record (`223 passed`, `3791 ≤ 3791`).
+
 ## 0.70.12 — E-4: LT-7.close — the roadmap reconciliation reaches 0 absent
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-4 (LT-7.close). Every row of roadmap Parts
