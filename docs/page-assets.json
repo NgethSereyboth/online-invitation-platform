@@ -66,7 +66,7 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 667195,
+      "bytes": 666377,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
