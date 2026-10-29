@@ -287,6 +287,15 @@ The document model is normalized through `src/python/document_schema_v32.py` (cu
 
 - In-process `queue.Queue` (maxsize 10 000) + 0–32 worker threads.
 - DB-backed `platform_jobs` table for durability + idempotency keys + retry tracking + cancellation flag.
+- **Webhook delivery is queued, not threaded** (`src/python/core/webhooks.py`, Stage E 2026-10-29):
+  `dispatch_webhook_event` writes one `webhook.deliver` row per endpoint into `background_jobs`, and
+  `process_webhook_jobs` performs one attempt per due job — 1/2/4/8 s backoff, the fifth failure
+  final, non-retryable statuses final immediately. The worker tick is every second under
+  `EINVITE_BACKGROUND_MEDIA=1`; otherwise dispatch drains the queue inline. `now_ms` is injectable, so
+  the backoff is tested with a clock rather than sleeps. `validate_destination` is the single SSRF
+  guard: https only (`allow_private` is the explicit local-receiver opt-out), no userinfo, every
+  resolved address public, re-resolved per attempt with the socket pinned to the validated address,
+  no redirect followed, 5 s timeout and a 64 KiB reply cap.
 
 ### 4.5 SMTP (optional)
 
@@ -366,6 +375,9 @@ sequenceDiagram
 | **Host allowlist** | `src/python/server.py::guard_request_boundary` (line 2551) | 421 Misdirected Request when `Host` not in `EINVITE_ALLOWED_HOSTS` (comma/space-separated) AND not a published invitation `custom_domain`. Skip-when-unset preserves dev. |
 | **Request framing validation** | `src/python/server.py::guard_request_boundary` (lines 2523–2528) | Rejects non-identity Transfer-Encoding + ambiguous duplicate Content-Length with 400. |
 | **Production preflight** | `src/python/production_preflight.py` | Enforces `EINVITE_COOKIE_SECURE`, `EINVITE_ALLOWED_HOSTS`, `EINVITE_REQUIRE_MALWARE_SCAN` in production mode. |
+| **Field-level encryption** | `src/python/core/crypto.py` + `src/python/core/db.py` | Fernet key resolution (env → per-data-dir sidecar → ephemeral), `protect()` on the write path and a read wrapper for six columns: `users.email`, `guests.email`, `guests.phone`, `delivery_attempts.recipient`, `audit_events.metadata_json`, `invitation_edit_history.diff_json`. `users.email_hash` is the blind index for sign-in; `encrypt_field` / `decrypt_field` / `hash_for_lookup`, dual-read keeps pre-encryption rows working, and `scripts/migrate_encrypt_sensitive_fields.py` has `--dry-run`, `--rollback` and `--reencrypt`. Default **on**; `EINVITE_FIELD_ENCRYPTION=off` is the stop-switch. Operator path: `docs/ops/FIELD-ENCRYPTION-RUNBOOK.md`. |
+| **Scoped API keys** | `src/python/core/auth.py` + `src/python/server.py` | `eik_`-prefixed keys shown once and stored as SHA-256, constant-time compare, route allowlist by scope (`invitations:read`, `invitations:write`, `rsvps:read`; anything else `403 api_key_scope_denied`), per-key `rate_limit(1000/h, EINVITE_API_KEY_RATE_LIMIT)`, `X-API-Key` auth path and `api.request` audit rows with `auth=api_key`. Create/list/revoke routes and the account-security card. |
+| **Admin step-up** | `src/python/server.py::require_admin_with_stepup` | 15 destructive admin routes require a live `admin-stepup` grant issued after password + TOTP; the grant lives in a module variable only (no browser storage), the admin shell can obtain it, and Escape dismisses the prompt without replaying the refused request. |
 
 ---
 
@@ -474,6 +486,20 @@ ornaments and thumbnails.
 
 `renderer-core.js` owns the shared object-level rendering contract: safe rich text, dimensions, filters, transforms, shape fills and animation styles. Both editor-generated preview markup and the public renderer (`advanced-public-renderer.js`) delegate artistic object rendering to it.
 
+**Print/PDF** (`src/js/export-quality.js`) rasterises the stage and prints through a dedicated
+`body.print-doc` document. That class exists for two measured reasons: the app's
+`body:not(.guest) p:not(#stage *)` rule otherwise repaints printed paragraphs in the muted UI ink
+instead of the document ink, and the live `.reveal` markup otherwise replays its 900 ms entrance so
+`pdf()` can snapshot a half-faded page. Print pages take `{bleedMm, cropMarks}` — page = trim +
+2 × bleed (0/3/5 mm exposed in the export dialog), backgrounds continue through the bleed, the trim
+stays pixel-identical and eight vector ticks sit outside it.
+
+**Draft version snapshots** (`src/python/features/invitation_versions.py`, wired in by D-7
+2026-10-29) run inside the server-side draft save: one snapshot when the canonical content hash
+changed **and** at least five minutes passed since the last auto snapshot, 50 kept with the oldest
+pruned, documents above 2 MB skipped with one log line. Rows join the publication list as `isAuto`
+and restore through the existing restore-as-draft endpoint.
+
 ---
 
 ## 9. Future Direction
@@ -491,4 +517,4 @@ Phase 1+ of `docs/ROADMAP.md` will introduce:
 
 ---
 
-*Phase 0.2 deliverable of `docs/ROADMAP.md`. Verified against actual code 2026-09-14.*
+*Phase 0.2 deliverable of `docs/ROADMAP.md`. Verified against actual code 2026-10-29 (Stage F).*
