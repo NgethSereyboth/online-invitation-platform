@@ -20,6 +20,34 @@ production-certified release.
 
 ---
 
+## 0.70.8 — D-9: a real-phone checklist, and Stage D closed
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-9, the last item of Stage D. Headless
+  Chromium on this box has no Khmer ICU data, no IME, no Android share sheet and no phone audio
+  stack, so the gate matrix cannot answer the questions a phone answers.
+- **Added:** `docs/qa/DEVICE-CHECKLIST.md` — twelve one-screen steps, each with **Do / Expected /
+  Result (PASS·FAIL·SKIP + notes)**: Khmer keyboard typing and paste in the editor, the editor at
+  375 px (layers, 1 px nudge, undo, notch), opening `/i/demo-wd-royal-maroon-gold` from a chat app
+  and the address bar, RSVP success and failure, music across lock screen and audio-focus loss, the
+  language switch both ways, the share sheet to Telegram / Messenger / WhatsApp, copy link, Khmer
+  PDF at 0 and 3 mm bleed plus PNG 1×, and two tabs. The header records the phone/build contract and
+  points at the untracked answers file for the demo password, so no secret is committed.
+- **Honest about the blocker:** A-4 still has no phone-reachable host, so the file says so at the
+  top — run it on the desktop browser at 375 px today, mark the phone-only rows `SKIP`, and paste the
+  host URL into the single blank line when A-4 unblocks. Nothing else changes.
+- **Fixed in passing:** the first row insert split the neighbouring `plans/004` row in
+  `docs/STATUS-INDEX.md`; the table is repaired and re-checked (three rows, each with its date cell).
+- **Stage D closed:** the single Stage-D `--phase all` matrix on this tree —
+  `gates/20261029-192649` **GATES_PASSED**: build `MIRROR_CHECK_PASSED` + `BUILD_OK`, bundles
+  `ROUTE_BUNDLE_CHECK_PASSED`, smoke 16 pages / 0 console errors / 0 non-2xx, layout
+  `UI_LAYOUT_GUARD_PASSED` (nameless-control 0, topbar 0), pytest **216 passed**, budgets 6 pages,
+  LHCI 16/16 a11y 1.00, `CSP_CHECK_PASSED`, canvas **22/0/2**, `!important` **3791 ≤ 3791**. This
+  is a second full run inside Stage D: the `183437` run preceded D-8, which changed shipped template
+  assets, so the final tree needed its own pass rather than trusting a pre-change matrix.
+- **Files:** `docs/qa/DEVICE-CHECKLIST.md` (new), `docs/STATUS-INDEX.md` (row + repair),
+  `FREEBUFF-NEXT-STEPS-2026-10-27.md` (§9), this entry. Docs only — no product code, asset or test
+  changed, which is also why the matrix above is unchanged from the D-8 numbers.
+
 ## 0.70.7 — D-8: the wedding template's text no longer clips
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-8 on `fix/2026-10-22-open-issues`. The
