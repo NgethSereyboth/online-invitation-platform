@@ -9,9 +9,12 @@ which has no subagent dispatch, no MCP config, and no plugin API.
   (hard rules, current pass, open items, next move); update its Done / Active / Next Move at the
   end of a work session.
 - Resume: `artifacts/next-work/HANDOFF.md` (where the run stands, the last gate lines, the exact next
-  command). Queue: `FREEBUFF-NEXT-STEPS-2026-10-27.md` (Stages A–F, §9 checklist); the long-term plan
-  `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` is exhausted but remains the protocol and the per-item rules.
-  STATE.md carries the ledger; read all three before editing anything.
+  command). The long-term plan `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` and its re-sequenced queue
+  `FREEBUFF-NEXT-STEPS-2026-10-27.md` are **exhausted**: Stages A–F closed 2026-10-29 and §9 records the
+  four deliberately unexecuted D-items. `artifacts/next-work/FINAL-REPORT.md` is the closing record.
+  Open work lives in `FREEBUFF-UI-AUDIT-FIX-ORDER-2026-10-29.md` (UI fixes, not started) and
+  `artifacts/next-work/OWNER-QUEUE.md` (owner-held decisions). STATE.md carries the ledger; read it,
+  HANDOFF and the fix order before editing anything.
 - Sessions started outside this repo can reach the same pointer via the global `einvite-project`
   skill (`~/.agents/skills/einvite-project/SKILL.md`).
 
@@ -23,10 +26,12 @@ which has no subagent dispatch, no MCP config, and no plugin API.
 - Follow the skill's guidance while executing. If a step assumes tooling that does not exist here
   (see "Not portable"), do the equivalent with the tools you have and say what you substituted.
 - No matching skill → proceed normally; never force-fit one.
-- Match examples: documents → docx/pptx/xlsx/pdf; web/UI → frontend-design, webapp-testing,
-  web-design-guidelines, playwright-expert; reverse engineering → reverse-engineer-anything;
-  plans and implementation → writing-plans, subagent-driven-development; creative work →
-  brainstorming, canvas-design, algorithmic-art.
+- Match examples from the skills actually installed here: PDF work → `pdf`; web/UI verification →
+  `webapp-testing`, `agent-browser`, `web-design-guidelines`, `accessibility`, `performance`;
+  visual direction → `frontend-design`; plans and execution → `writing-plans`, `executing-plans`;
+  reviews → `review`, `security-review`, `requesting-code-review`, `receiving-code-review`;
+  docs → `documentation-writer`, `doc-coauthoring`; creative artefacts → `brainstorming`,
+  `canvas-design`. Git commits → `git-commit`.
 - Skill locations: `~/.agents/skills/<name>/SKILL.md` (global, shared with opencode) and
   `.agents/skills/<name>/SKILL.md` (project). Install new skills there; don't invent a third location.
 
