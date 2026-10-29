@@ -12,7 +12,8 @@ at `f05ee2e` if the older gate numbers are needed.
 | Field | Value |
 |---|---|
 | Branch | `fix/2026-10-22-open-issues` |
-| HEAD | `e11e5c8` + the LT-8.3 record commit that follows it |
+| Gate head | `4880fcb` — the Stage E matrix; **no product code changed after it** |
+| Docs head at writing | `2e50379` (architecture, index, this record and the final report are docs-only) |
 | Working tree | **clean tracked tree**; the only untracked paths are the two audit harnesses `tools/ui-audit.py` / `tools/ui-audit-report.py` and the git-ignored `FREEBUFF-*.md` owner channel |
 | Version | **0.70.12** — 0.68.6 … 0.70.12 all recorded (no tag) |
 | Distribution | local only; nothing pushed, tagged or published |
