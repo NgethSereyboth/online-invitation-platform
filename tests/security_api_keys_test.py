@@ -160,5 +160,84 @@ def test_api_keys_generate_scope_revoke():
         print("LT_7_2_API_KEYS_PASSED", flush=True)
 
 
+def test_api_keys_tenant_isolation_and_rate_limit():
+    """E-2: a key reads only its owner's rows, and the per-key limit trips.
+
+    The production limit is 1000/h; ``EINVITE_API_KEY_RATE_LIMIT=4`` makes the
+    429 observable without a thousand requests, and the default is unchanged.
+    """
+    with temporary_data("einvite-lt-7-2-keys-iso-") as data_dir:
+        env = {
+            "EINVITE_DATA_DIR": str(data_dir),
+            "EINVITE_DEV_AUTH_TOKENS": "1",
+            "EINVITE_REQUIRE_EMAIL_VERIFICATION": "0",
+            "EINVITE_ALLOW_NO_SCANNER": "1",
+            "EINVITE_FIELD_ENCRYPTION": "0",
+            "EINVITE_API_KEY_RATE_LIMIT": "4",
+        }
+        document = {"schemaVersion": 14, "eventType": "Wedding",
+                    "fields": {"names": "Iso Couple"}, "objects": {}, "designPages": [],
+                    "settings": {"rsvpEnabled": True}}
+        with app_server(extra_env=env) as (_process, base, _data):
+            accounts = {}
+            for name in ("owner-a", "owner-b"):
+                status, auth = _request(base, "POST", "/api/auth/register",
+                                        {"email": f"{name}@einvite.test", "password": "Test1234!Pass"})
+                assert status in (200, 201) and auth.get("token"), (status, auth)
+                status, created = _request(base, "POST", "/api/invitations",
+                                           {"slug": f"iso-{name}", "document": document},
+                                           token=auth["token"])
+                assert status in (200, 201), (status, created)
+                accounts[name] = {"token": auth["token"], "email": f"{name}@einvite.test",
+                                  "id": created["id"]}
+
+            status, key = _request(base, "POST", "/api/account/api-keys",
+                                   {"name": "A reader",
+                                    "scopes": ["invitations:read", "rsvps:read"]},
+                                   token=accounts["owner-a"]["token"])
+            assert status == 201, (status, key)
+
+            # 1/3: the key reads its own owner's invitation.
+            status, own = _request(base, "GET", f"/api/invitations/{accounts['owner-a']['id']}",
+                                   api_key=key["key"])
+            assert status == 200, (status, own)
+
+            # 2/3: another tenant's invitation is a 404 with no owner detail.
+            status, foreign = _request(base, "GET", f"/api/invitations/{accounts['owner-b']['id']}",
+                                       api_key=key["key"])
+            assert status == 404, (status, foreign)
+            raw = json.dumps(foreign)
+            assert accounts["owner-b"]["id"] not in raw, foreign
+            assert accounts["owner-b"]["email"] not in raw, foreign
+
+            # 3/3: the RSVP collection answers the same way as any unknown id,
+            # so the refusal is not an existence oracle. The product uses 403
+            # here (one permission helper for "not yours" and "not found"),
+            # unlike the invitation GET's 404; both leak nothing.
+            status, rsvps = _request(base, "GET",
+                                     f"/api/invitations/{accounts['owner-b']['id']}/rsvps",
+                                     api_key=key["key"])
+            assert status in (403, 404), (status, rsvps)
+            assert accounts["owner-b"]["email"] not in json.dumps(rsvps), rsvps
+            status_missing, _ = _request(base, "GET",
+                                         "/api/invitations/00000000-0000-4000-8000-000000000000/rsvps",
+                                         api_key=key["key"])
+            assert status_missing == status, (status, status_missing)
+
+            # A fresh key proves the 4/hour limit: four reads pass, the fifth 429s.
+            status, limited_key = _request(base, "POST", "/api/account/api-keys",
+                                           {"name": "A limited reader", "scopes": ["invitations:read"]},
+                                           token=accounts["owner-a"]["token"])
+            assert status == 201, (status, limited_key)
+            for attempt in range(1, 5):
+                status, body = _request(base, "GET", f"/api/invitations/{accounts['owner-a']['id']}",
+                                        api_key=limited_key["key"])
+                assert status == 200, (attempt, status, body)
+            status, limited = _request(base, "GET", f"/api/invitations/{accounts['owner-a']['id']}",
+                                       api_key=limited_key["key"])
+            assert status == 429, (status, limited)
+            print("[OK] api key reads only its owner's rows; per-key 429", flush=True)
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-x", "-q"]))

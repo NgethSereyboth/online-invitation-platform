@@ -20,6 +20,51 @@ production-certified release.
 
 ---
 
+## 0.70.11 — E-3: field-encryption runbook and the 1,000-row migration proof
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-3. The feature itself shipped in
+  the Phase 7 close (six columns, dual-read, `--dry-run` / `--rollback` / `--reencrypt`,
+  per-data-dir key), but two of the item's deliverables were missing: the owner-facing
+  runbook and the 1,000-row scale/rollback proof.
+- **Added `docs/ops/FIELD-ENCRYPTION-RUNBOOK.md`:** backup (database copy **and** the key
+  sidecar) → dry run → apply → the five verification reads (sign-in, `/api/auth/me`,
+  register, guest list/edit, admin audit) → rollback, plus the failure table and the
+  two-key rotation window that `docs/ops/SECRETS-ROTATION.md` and
+  `scripts/rotate-secrets.py --field-encryption` own. It states plainly that losing every
+  copy of the key loses those six columns.
+- **Default documented, not silently changed:** E-3 asked for "default off"; the shipped
+  posture is **on by default** (`core/crypto.encryption_enabled` returns False only when
+  `EINVITE_FIELD_ENCRYPTION` is explicitly off), because a new install must not write
+  plaintext by accident and dual-read keeps pre-encryption rows working. The runbook
+  documents the switch as a stop-switch. Recorded as a deviation from the item text.
+- **New test:** `test_migration_scale_and_byte_identical_rollback` — 1,000 legacy users and
+  1,000 guests on a temp database, `--dry-run` leaves every row unchanged, apply turns all
+  of them into `gAAAAA…` with the expected `email_hash`, `--rollback` restores the exact
+  `(id, email)` and `(id, email, phone)` sets and drops the backup tables. The owner row
+  registered while encryption was on stays ciphertext (it was never in the backup) —
+  asserted, so the distinction is pinned.
+- **Verification:** `tests/security_field_encryption_test.py` **4 passed** (the 3 existing
+  live/route/migration tests plus the new scale one).
+
+## 0.70.10 — E-2: API-key tenancy and the per-key limit proven
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-2. The feature shipped in the
+  Phase 7 close (table, create/list/revoke, three scopes on an allowlist, audit, show-once
+  secret), and its two tests passed, but two of the item's four proof bullets were absent:
+  cross-tenant reads through a key and the rate limit actually tripping.
+- **Cross-tenant proof:** a key issued to account A gets `200` on A's invitation, `404` on
+  B's invitation, and the RSVP collection answers `403` — **the same status B's invitation
+  and a random nonexistent id get**, so the refusal is not an existence oracle; the body
+  never contains B's id or email. The `403` is the product's one permission helper for
+  "not yours" and "not found"; changing ten call sites to `404` was rejected as a wider
+  behaviour change with no security gain. The item asked for `404`; the test records the
+  actual, equally non-leaking contract.
+- **Rate-limit proof:** `EINVITE_API_KEY_RATE_LIMIT` (default **1000**, unchanged) makes the
+  limit injectable; with `4`, four reads pass and the fifth returns `429`. The knob exists
+  so the test does not flood a thousand requests.
+- **Verification:** `tests/security_api_keys_test.py` **2 passed**;
+  `scripts/check-rate-limit-coverage.py` still reports 0 missing write routes.
+
 ## 0.70.9 — E-1: webhook delivery is durable and obeys the D-6 SSRF rules
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-1. The delivery path

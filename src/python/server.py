@@ -113,6 +113,19 @@ API_KEY_ROUTES = (
 )
 
 
+def api_key_rate_limit():
+    """Requests per hour for one API key; 1000 by default.
+
+    ``EINVITE_API_KEY_RATE_LIMIT`` exists so a test can prove the 429 without a
+    thousand real requests; the product default is unchanged.
+    """
+    try:
+        value = int(platform_env("EINVITE_API_KEY_RATE_LIMIT", "1000"))
+    except (TypeError, ValueError):
+        value = 1000
+    return max(1, min(value, 1_000_000))
+
+
 def _ensure_api_key_schema(db):
     db.execute(
         "CREATE TABLE IF NOT EXISTS api_keys("
@@ -3829,7 +3842,7 @@ class Handler(SimpleHTTPRequestHandler):
                 self._auth_response_sent=True
                 self.json(403,{"error":"This API key is not authorized for this endpoint","code":"api_key_scope_denied"})
                 return None
-            if not self.rate_limit(f"api-key:{row['id']}",1000,3600):
+            if not self.rate_limit(f"api-key:{row['id']}",api_key_rate_limit(),3600):
                 self._auth_response_sent=True
                 return None
             user_row=db.execute("SELECT id,email,role,email_verified,plan,upload_enabled,mfa_enabled,deleted_at,session_never_expires FROM users WHERE id=? AND deleted_at IS NULL AND suspended_at IS NULL",(row["user_id"],)).fetchone()
