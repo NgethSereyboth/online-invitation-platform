@@ -20,6 +20,44 @@ production-certified release.
 
 ---
 
+## 0.70.9 — E-1: webhook delivery is durable and obeys the D-6 SSRF rules
+
+- **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` E-1. The delivery path
+  from the Phase 7 close worked, but it ran in an untracked daemon thread and only part of
+  D-6's rule set was enforced: plain `http` was accepted, `urllib` followed `3xx` (a second
+  request to a host the guard never checked), the timeout was 10 s, the reply body was unbounded
+  and there was no IP pinning. A process restart silently dropped every retry.
+- **Queue:** `dispatch_webhook_event` now writes one `webhook.deliver` job per subscribed endpoint
+  into the existing `background_jobs` table (the same table `storage.delete` uses) instead of
+  spawning a thread. `process_webhook_jobs` attempts each due job once, re-queues a transport error
+  or 408/409/425/429/5xx at **1, 2, 4, 8 s** and makes the fifth failure final; every other answer
+  (including a `4xx` and a redirect) is final at the first attempt. A worker loop drains the queue
+  every second when `EINVITE_BACKGROUND_MEDIA=1`; with it off the dispatch drains inline, exactly
+  like `queue_physical_deletions`, so the dev/demo path is not blocked. `now_ms` is injectable, so
+  the schedule is tested without sleeping.
+- **SSRF, in one place:** `core.webhooks.validate_destination` enforces https only (the explicit
+  `allow_private` opt-out also permits `http`), no userinfo, and refuses every address in the
+  private / loopback / link-local / reserved / multicast / unspecified ranges across **all** DNS
+  answers, so `169.254.169.254` and `::1` fail the same test. Registration calls it for the early
+  error; delivery calls it again per attempt and connects to the address it just validated, so a
+  DNS answer that changes between attempts cannot move the request. TLS still verifies the
+  certificate against the hostname (SNI + `check_hostname`), so pinning cannot weaken it.
+- **Transport:** `_post_pinned` speaks `http.client` to the pinned address, which never follows a
+  redirect — a `3xx` comes back as a final status. Timeout **5 s**, reply read through
+  `_read_capped` at **64 KiB**.
+- **Tests:** `tests/lt_7_2_webhook_delivery_test.py` — destination rules (https, private ranges,
+  userinfo, IPv6 loopback), the 64 KiB cap, a 302 whose `Location` is never fetched, a local
+  delivery where both attempts verify, and a child-process queue proof with an injected clock:
+  three endpoints, 10 steps, processed `[3,0,2,0,2,1,1,0,0,0]`, final states `done/failed/failed`,
+  attempts `1/3/5`, hits `3/1/5`. The existing `lt_7_2_webhook_signing_test.py` keeps its
+  assertions; its local `deliver` calls now pass the documented `allow_private=True` opt-out and
+  its docstring points at the new file for the guard. Both files: **7 passed**; `py_compile` clean;
+  smoke **16 pages / 0 console / 0 non-2xx** (`gates/20261029-200428`).
+- **Docs:** `docs/hosted/WEBHOOKS.md` now states https-only, the two resolve points, the pinned
+  connection, no redirects, 5 s / 64 KiB and the durable 1/2/4/8 s retry schedule.
+- **Not changed:** event names (`rsvp.created`, `rsvp.updated` — the documented pair), signing,
+  rotation, the secret storage, or any budget/threshold.
+
 ## 0.70.8 — D-9: a real-phone checklist, and Stage D closed
 
 - **Triggered by:** `FREEBUFF-NEXT-STEPS-2026-10-27.md` D-9, the last item of Stage D. Headless

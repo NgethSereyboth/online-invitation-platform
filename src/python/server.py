@@ -35,7 +35,9 @@ from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from core.crypto import ensure_encryption_key, hash_for_lookup, key_fingerprint, key_source
 from core.db import find_user_by_email, protect, reveal, reveal_connection
-from core.webhooks import deliver as deliver_webhook, generate_webhook_secret
+from core.webhooks import (QUEUE_BACKOFF_BASE_S, QUEUE_MAX_ATTEMPTS, RETRYABLE_STATUSES,
+                           deliver as deliver_webhook, generate_webhook_secret,
+                           validate_destination)
 from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
 from rich_text_document_model import normalize_document_rich_text
@@ -123,53 +125,40 @@ def _ensure_api_key_schema(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id,created_at DESC)")
 
 
+def allow_private_webhooks():
+    """True only for a deliberate private receiver (tests, a local relay)."""
+    return platform_env("EINVITE_ALLOW_PRIVATE_WEBHOOKS", "0").strip().lower() in {"1", "true", "yes"}
+
+
 def _validate_webhook_url(url):
-    """Require an absolute http(s) URL and refuse private/loopback destinations.
+    """Apply the D-6 destination rules (https, public address) at registration time.
 
-    Best-effort SSRF guard: the host is resolved once here (delivery resolves
-    again). ``EINVITE_ALLOW_PRIVATE_WEBHOOKS=1`` opts out for tests and
-    deliberately private receivers.
+    The delivery worker validates again and connects to the address it just
+    checked, so this call is the early, friendly error rather than the guard.
     """
-    endpoint = str(url or "").strip()
-    parsed = urlsplit(endpoint)
-    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc or not parsed.hostname:
-        raise ValueError("Webhook URL must be an absolute http(s) URL")
-    if parsed.username or parsed.password:
-        raise ValueError("Webhook URL must not embed credentials")
-    if platform_env("EINVITE_ALLOW_PRIVATE_WEBHOOKS", "0").lower() in {"1", "true", "yes"}:
-        return endpoint
-    import ipaddress
-    import socket as _socket
-    port = parsed.port or (443 if parsed.scheme.lower() == "https" else 80)
-    try:
-        infos = _socket.getaddrinfo(parsed.hostname, port, proto=_socket.IPPROTO_TCP)
-    except OSError as exc:
-        raise ValueError(f"Webhook host cannot be resolved: {exc}") from exc
-    for info in infos:
-        address = ipaddress.ip_address(info[4][0])
-        if (address.is_private or address.is_loopback or address.is_link_local
-                or address.is_reserved or address.is_multicast or address.is_unspecified):
-            raise ValueError("Webhook URL must not point at a private or loopback address")
-    return endpoint
+    return validate_destination(url, allow_private=allow_private_webhooks())["url"]
 
 
-def dispatch_webhook_event(event, data, owner_id):
-    """Deliver a signed ``event`` payload to the owner's active endpoints.
+def dispatch_webhook_event(event, data, owner_id, process=True):
+    """Queue a signed ``event`` payload for the owner's subscribed endpoints.
 
-    One daemon thread for the whole fan-out; every attempt is logged as a
-    ``webhook_delivery`` line and the endpoint row records the outcome.
+    One ``webhook.deliver`` job per endpoint in the durable ``background_jobs``
+    queue, so a retry scheduled in the future survives a restart. With
+    ``EINVITE_BACKGROUND_MEDIA=0`` the queue is drained inline (one attempt per
+    job) exactly like ``queue_physical_deletions``; the worker loop retries the
+    rest when that flag is on.
     """
     if not owner_id:
-        return
+        return 0
     try:
         with connect() as db:
             _ensure_webhook_schema(db)
             rows = db.execute(
-                "SELECT id,url,secret,events_json FROM webhook_endpoints "
+                "SELECT id,events_json FROM webhook_endpoints "
                 "WHERE owner_id=? AND active=1 LIMIT 25", (owner_id,)).fetchall()
     except Exception as exc:
         print(json.dumps({"level":"warning","event":"webhook_dispatch_failed","reason":str(exc)[:200]},ensure_ascii=False), flush=True)
-        return
+        return 0
     targets = []
     for row in rows:
         try:
@@ -179,27 +168,87 @@ def dispatch_webhook_event(event, data, owner_id):
         if "*" in subscribed or event in subscribed:
             targets.append(row)
     if not targets:
-        return
+        return 0
     stamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime()) + f".{int(time.time()*1000)%1000:03d}Z"
     payload = {"event": event, "timestamp": stamp, "eventId": str(uuid.uuid4()), "data": data}
     body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    for row in targets:
+        enqueue_background_job("webhook.deliver", {
+            "endpointId": row["id"],
+            "event": event,
+            "body": body.decode("utf-8"),
+            "ownerId": owner_id,
+        })
+    if process and not BACKGROUND_MEDIA_ENABLED:
+        process_webhook_jobs(limit=len(targets))
+    return len(targets)
 
-    def run():
-        for row in targets:
-            result = deliver_webhook(row["url"], body, row["secret"])
-            ok = bool(result.get("ok"))
-            try:
-                with connect() as db:
-                    db.execute(
-                        "UPDATE webhook_endpoints SET last_delivery_at=?,last_status=?,"
-                        "failure_count=CASE WHEN ? THEN 0 ELSE failure_count+1 END WHERE id=?",
-                        (int(time.time()*1000), result.get("status"), 1 if ok else 0, row["id"]),
-                    )
-            except Exception as exc:
-                _log.debug("webhook outcome write failed: %s", exc)
-            print(json.dumps({"level":"info" if ok else "warning","event":"webhook_delivery","endpoint":row["id"],"eventName":event,"status":result.get("status"),"attempts":result.get("attempts"),"ok":ok,"error":result.get("error")},ensure_ascii=False), flush=True)
 
-    threading.Thread(target=run, daemon=True, name="webhook-delivery").start()
+def process_webhook_jobs(limit=25, now_ms=None):
+    """Attempt due ``webhook.deliver`` jobs once each; schedule the retries.
+
+    Backoff is 1, 2, 4, 8 s between attempts and the fifth failure is final
+    (``QUEUE_MAX_ATTEMPTS``). A transport error and a retryable status
+    (408/409/425/429/5xx) are retried; every other answer is final. ``now_ms``
+    is injectable so the schedule is tested without sleeping.
+    """
+    processed = 0
+    allow_private = allow_private_webhooks()
+    for _ in range(max(0, int(limit))):
+        now = int(now_ms if now_ms is not None else time.time() * 1000)
+        with connect() as db:
+            row = db.execute(
+                "SELECT id,payload_json,attempts FROM background_jobs "
+                "WHERE kind='webhook.deliver' AND state='queued' AND available_at<=? "
+                "ORDER BY created_at LIMIT 1", (now,)).fetchone()
+            if not row:
+                break
+            changed = db.execute(
+                "UPDATE background_jobs SET state='running',locked_at=?,attempts=attempts+1,updated_at=? "
+                "WHERE id=? AND state='queued'", (now, now, row["id"])).rowcount
+            if not changed:
+                continue
+        attempt = int(row["attempts"] or 0) + 1
+        try:
+            job = json.loads(row["payload_json"] or "{}")
+        except Exception:
+            job = {}
+        endpoint_id = str(job.get("endpointId") or "")
+        event = str(job.get("event") or "")
+        body = str(job.get("body") or "").encode("utf-8")
+        with connect() as db:
+            endpoint = db.execute(
+                "SELECT id,url,secret,active FROM webhook_endpoints WHERE id=?", (endpoint_id,)).fetchone()
+        if not endpoint or not int(endpoint["active"] or 0):
+            with connect() as db:
+                db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,last_error='endpoint removed',updated_at=? WHERE id=?", (now, row["id"]))
+            processed += 1
+            continue
+        result = deliver_webhook(endpoint["url"], body, endpoint["secret"], attempts=1, allow_private=allow_private)
+        ok = bool(result.get("ok"))
+        status = result.get("status")
+        retryable = (not ok) and (status is None or int(status) in RETRYABLE_STATUSES)
+        if ok:
+            with connect() as db:
+                db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,last_error='',updated_at=? WHERE id=?", (now, row["id"]))
+        elif retryable and attempt < QUEUE_MAX_ATTEMPTS:
+            delay_ms = int(min(30.0, QUEUE_BACKOFF_BASE_S * (2 ** (attempt - 1))) * 1000)
+            with connect() as db:
+                db.execute("UPDATE background_jobs SET state='queued',locked_at=NULL,last_error=?,available_at=?,updated_at=? WHERE id=?",
+                           (str(result.get("error") or "")[:1000], now + delay_ms, now, row["id"]))
+        else:
+            with connect() as db:
+                db.execute("UPDATE background_jobs SET state='failed',locked_at=NULL,last_error=?,updated_at=? WHERE id=?",
+                           (str(result.get("error") or "")[:1000], now, row["id"]))
+        with connect() as db:
+            db.execute(
+                "UPDATE webhook_endpoints SET last_delivery_at=?,last_status=?,"
+                "failure_count=CASE WHEN ? THEN 0 ELSE failure_count+1 END WHERE id=?",
+                (now, status, 1 if ok else 0, endpoint_id),
+            )
+        print(json.dumps({"level":"info" if ok else "warning","event":"webhook_delivery","endpoint":endpoint_id,"eventName":event,"status":status,"attempts":attempt,"ok":ok,"error":result.get("error"),"jobId":row["id"]},ensure_ascii=False), flush=True)
+        processed += 1
+    return processed
 
 ROOT = Path(__file__).resolve().parent
 DATA = Path(platform_env("EINVITE_DATA_DIR", str(ROOT / "data"))).expanduser().resolve()
@@ -11944,6 +11993,7 @@ if __name__ == "__main__":
     with connect() as _analytics_db:ensure_analytics_ready(_analytics_db)
     cleanup_expired_security_rows()
     process_storage_delete_jobs(limit=100)
+    process_webhook_jobs(limit=25)
     cleanup_upload_sessions()
     cleanup_quarantine()
     evict_image_cache()
@@ -12006,6 +12056,18 @@ if __name__ == "__main__":
                 if JSON_LOGS:print(json.dumps({"level":"warning","event":"analytics_reconstruction_failed","message":str(exc)}),flush=True)
             if stopping.wait(300):break
     threading.Thread(target=analytics_reconstruction_loop,daemon=True,name="analytics-reconstruction").start()
+    if BACKGROUND_MEDIA_ENABLED:
+        # Durable webhook retries: one attempt per due job, the queue's
+        # available_at carries the backoff. It lives beside the storage-delete
+        # processor because both drain the same background_jobs table.
+        def webhook_delivery_loop():
+            while not stopping.is_set():
+                try:
+                    process_webhook_jobs(limit=25)
+                except Exception as exc:
+                    print(json.dumps({"level":"warning","event":"webhook_queue_failed","message":str(exc)[:200]}),flush=True)
+                if stopping.wait(1.0):break
+        threading.Thread(target=webhook_delivery_loop,daemon=True,name="webhook-delivery").start()
     def request_stop(*_):
         if stopping.is_set():return
         stopping.set();threading.Thread(target=server.shutdown,daemon=True).start()

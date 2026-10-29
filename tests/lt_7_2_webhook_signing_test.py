@@ -19,9 +19,11 @@ Part 2 — end-to-end over HTTP with a real server:
 * rotate the secret and prove the next delivery verifies with the new one;
 * the list endpoint exposes only the hint, and delete stops deliveries.
 
-`EINVITE_ALLOW_PRIVATE_WEBHOOKS=1` is set for the test server so the SSRF guard
-accepts the loopback receiver (it is asserted separately in part 1 of the URL
-validation below).
+`EINVITE_ALLOW_PRIVATE_WEBHOOKS=1` is set for the test server, and every local
+`deliver` call passes `allow_private=True`, so the D-6 guard accepts this
+loopback receiver. The guard itself — https only, private ranges refused,
+redirects not followed, the 64 KiB read cap — is asserted in
+`tests/lt_7_2_webhook_delivery_test.py`.
 
 Prints ``LT_7_2_WEBHOOK_SIGNING_PASSED`` on success.
 """
@@ -139,7 +141,8 @@ def test_signature_and_retry_policy():
 
     flaky = _Receiver(fail_first=2)
     try:
-        result = deliver(flaky.url, body, secret, attempts=4, backoff_base=0.01, timeout=5)
+        result = deliver(flaky.url, body, secret, attempts=4, backoff_base=0.01, timeout=5,
+                         allow_private=True)
         assert result == {"ok": True, "status": 200, "attempts": 3, "error": None}, result
         assert len(flaky.requests) == 3
     finally:
@@ -147,7 +150,8 @@ def test_signature_and_retry_policy():
 
     rejecting = _Receiver(fail_first=99)  # every request is a 500
     try:
-        result = deliver(rejecting.url, body, secret, attempts=2, backoff_base=0.01, timeout=5)
+        result = deliver(rejecting.url, body, secret, attempts=2, backoff_base=0.01, timeout=5,
+                         allow_private=True)
         assert result["ok"] is False and result["attempts"] == 2 and result["status"] == 500, result
     finally:
         rejecting.close()
@@ -167,7 +171,7 @@ def test_signature_and_retry_policy():
     thread.start()
     try:
         result = deliver(f"http://127.0.0.1:{server.server_address[1]}/hook", body, secret,
-                         attempts=4, backoff_base=0.01, timeout=5)
+                         attempts=4, backoff_base=0.01, timeout=5, allow_private=True)
         assert result == {"ok": False, "status": 400, "attempts": 1, "error": "HTTP 400"}, result
         assert _Reject400.calls == 1
     finally:

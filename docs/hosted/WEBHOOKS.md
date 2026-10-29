@@ -14,11 +14,21 @@ Destinations are managed over the account API (session or bearer auth):
 | `POST`   | `/api/account/webhooks/{id}/rotate` | new secret, shown once; deliveries use it immediately |
 | `DELETE` | `/api/account/webhooks/{id}` | revoke; deliveries stop immediately |
 
-URLs must be absolute `http(s)` and must not resolve to private/loopback
-addresses; set `EINVITE_ALLOW_PRIVATE_WEBHOOKS=1` only for deliberately
-private receivers. Deliveries retry transport errors, 429 and 5xx up to 5
-attempts with exponential backoff; any other 4xx is final. Each attempt is
-freshly signed, so a retry minutes later still verifies.
+URLs must be absolute **https** and must not resolve to private, loopback,
+link-local (including the cloud metadata address) or reserved addresses; set
+`EINVITE_ALLOW_PRIVATE_WEBHOOKS=1` only for a deliberately private receiver
+(a local relay or the test suite), which also permits plain `http`. The host is
+resolved at registration **and again before every attempt**, and the request is
+sent to the address that was just checked, so a DNS answer that changes later
+cannot redirect a delivery. Redirects are **not** followed: a `3xx` is a final
+answer. Each attempt has a 5 s timeout and reads at most 64 KiB of the reply.
+
+Deliveries are durable. `dispatch_webhook_event` writes one `webhook.deliver`
+job per subscribed endpoint into the `background_jobs` queue; a worker drains it
+and retries transport errors, 408/409/425/429 and 5xx on a 1, 2, 4, 8 s backoff,
+with the fifth failure final. Any other status (including a `4xx` and a
+redirect) is final immediately. Each attempt is freshly signed, so a retry
+minutes later still verifies.
 
 ## Header layout
 
