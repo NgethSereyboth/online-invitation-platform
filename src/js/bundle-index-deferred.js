@@ -760,7 +760,7 @@ function ensureTextWorkspace(){
   if(!pane){
     pane=document.createElement('section');pane.className='studio-pane studio-text-pane workflow-v7-text-pane';pane.dataset.studioPane='text';
     pane.innerHTML=`
-      <div class="studio-pane-heading"><div><small>Create</small><h1>Text</h1></div><div class="workflow-pane-actions"><button type="button" class="workflow-pane-back">‹ <span>Back</span></button><button type="button" class="workflow-pane-close" title="Hide panel">×</button></div></div>
+      <div class="studio-pane-heading"><div><small>Create</small><h2>Text</h2></div><div class="workflow-pane-actions"><button type="button" class="workflow-pane-back">‹ <span>Back</span></button><button type="button" class="workflow-pane-close" title="Hide panel">×</button></div></div>
       <label class="refine-text-search"><span>⌕</span><input type="search" placeholder="Search fonts and text styles" aria-label="Search fonts and text styles"></label>
       <button type="button" class="refine-add-text">T &nbsp; Add a text box</button>
       <button type="button" class="refine-magic-write">✦ Write with AI</button>
@@ -784,7 +784,7 @@ function ensureTextWorkspace(){
   pane.classList.add('workflow-v7-text-pane');
   let heading=$('.studio-pane-heading',pane);
   if(!heading){
-    heading=document.createElement('div');heading.className='studio-pane-heading';heading.innerHTML='<div><small>Create</small><h1>Text</h1></div>';pane.prepend(heading);
+    heading=document.createElement('div');heading.className='studio-pane-heading';heading.innerHTML='<div><small>Create</small><h2>Text</h2></div>';pane.prepend(heading);
   }
   let actions=$('.workflow-pane-actions',heading);
   if(!actions){actions=document.createElement('div');actions.className='workflow-pane-actions';heading.append(actions)}

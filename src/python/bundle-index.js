@@ -6234,7 +6234,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       pane.dataset.studioPane = tab.id;
       const paneHead = document.createElement('div');
       paneHead.className = 'studio-pane-heading';
-      paneHead.innerHTML = `<div><small>${config.eyebrow || 'Create'}</small><h1>${tab.label}</h1></div>`;
+      paneHead.innerHTML = `<div><small>${config.eyebrow || 'Create'}</small><h2>${tab.label}</h2></div>`;
       pane.append(paneHead);
       (groups.get(tab.id) || []).forEach(node => pane.append(node));
       host.append(pane); panes.set(tab.id, pane);

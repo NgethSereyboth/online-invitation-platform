@@ -1864,4 +1864,19 @@ body[data-page="index"] #stage .ei-image-placeholder-label {
   white-space: nowrap;
 }
 
+/* PW-9/PW-12 — the editor's phone chrome cleared WCAG 2.2's 24px floor but not
+   the 44px comfortable size: drawer toggles 36x44, canvas "more" 42x44 and the
+   whole canvas toolbar 38 high. Grow the hit area, not the glyph. The status
+   bar keeps its 30px contract and is deliberately excluded. */
+@media (max-width: 640px), (pointer: coarse) {
+  .studio-canvas-toolbar { --toolbar-control-h: 44px; }
+  body[data-page="index"] #v54SidebarCollapse,
+  body[data-page="index"] #v54InspectorDrawer { width: 44px; min-width: 44px; }
+  body[data-page="index"] .canvas-header-more-trigger { width: 44px; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar button,
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar select { min-height: 44px; }
+  body.windows-ui-v54 .stage-wrap > .studio-canvas-toolbar button { min-width: 44px; }
+  body[data-page="index"] .v54-canvas-hud button { min-width: 44px; min-height: 44px; }
+}
+
 }

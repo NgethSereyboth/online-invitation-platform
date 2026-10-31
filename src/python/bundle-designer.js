@@ -667,7 +667,7 @@ function editor(){
     const elementsBtn=$('[data-studio-tab="elements"]',rail);
     const b=document.createElement('button');b.type='button';b.className='studio-rail-button';b.dataset.studioTab='text';b.innerHTML='<span class="studio-nav-icon">T</span><span>Text</span>';b.title='Text, fonts and typography';rail.insertBefore(b,elementsBtn||null);
     const pane=document.createElement('section');pane.className='studio-pane studio-text-pane';pane.dataset.studioPane='text';pane.innerHTML=`
-      <div class="studio-pane-heading"><div><small>Create</small><h1>Text</h1></div></div>
+      <div class="studio-pane-heading"><div><small>Create</small><h2>Text</h2></div></div>
       <label class="refine-text-search"><span>⌕</span><input type="search" placeholder="Search fonts and combinations"></label>
       <button type="button" class="refine-add-text">T &nbsp; Add a text box</button>
       <button type="button" class="refine-magic-write">✦ Magic invitation writing</button>

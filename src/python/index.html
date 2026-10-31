@@ -107,6 +107,9 @@
     </div>
   </header>
   <main id="main" tabindex="-1">
+    <!-- PW: the editor shell had no page-level heading once the panes collapsed at 390.
+         One real h1 (visually hidden) keeps the landmark; pane titles are h2. -->
+    <h1 class="sr-only" id="editorPageHeading">Invitation editor</h1>
     <aside class="left">
       <h2>Content</h2>
       <label>Guest language mode<select id="languageMode"><option value="en">English only</option><option value="km">Khmer only</option><option value="both">Khmer + English</option></select></label>
