@@ -61,8 +61,8 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
      padding moved too. Measured before/after in artifacts/next-work/fb-40/, so the
      declarations stay forceful and the ratchet pin stays at 3823. */
   header{
-    flex-wrap:nowrap!important;
-    height:var(--app-topbar-h,56px)!important;
+    flex-wrap: nowrap;
+    height:var(--app-topbar-h,56px);
     min-height:var(--app-topbar-h,56px);
     padding:8px 12px!important;
     gap:8px!important;

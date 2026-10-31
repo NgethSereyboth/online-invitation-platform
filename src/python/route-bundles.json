@@ -2,8 +2,8 @@
   "pages": {
     "account.html": {
       "javascript": "bundle-account.js",
-      "scriptBytes": 112522,
-      "scriptSha256": "e1fffcdcd205a72d6e933a67aca3ab1c2d990c0eb1204338d99973b1aa817e26",
+      "scriptBytes": 114923,
+      "scriptSha256": "a8c3c42dc666cff5d8a5ab62233f09a6299bb4248cf5ef83ff0a307ca45d7345",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -36,8 +36,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 271668,
-      "styleSha256": "477c747806a19a6700f6b21112596a4575ff39ef40d54cc09ad2a321c9e4babd",
+      "styleBytes": 271623,
+      "styleSha256": "0f2b0795bebd18dc3580e2ddba8fb9fc8695049bda02e49d4fcc9a65eb6c21cd",
       "stylesheet": "bundle-account.css"
     },
     "admin.html": {
@@ -48,8 +48,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-admin.js",
-      "scriptBytes": 159541,
-      "scriptSha256": "d258b74b3d97557dd9ef029dbba6b0a7e317708471bfd37deba98b5d389f3e13",
+      "scriptBytes": 161942,
+      "scriptSha256": "88a357eef4b5eb2d20d4ee1cf2c78335f073c9098d71fd43beccab99bcc91933",
       "sources": {
         "deferredScripts": [
           "pages/admin/impersonate.js",
@@ -94,14 +94,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 272572,
-      "styleSha256": "931bb91c53d81c9d67b86007c39ca0fa2cb43f3c9aa4191830688d78d29e905a",
+      "styleBytes": 272527,
+      "styleSha256": "0d0d8e121c9c84222d56fa1f62c1903b612788eeabcf19fa5de03594e030d2a4",
       "stylesheet": "bundle-admin.css"
     },
     "analytics.html": {
       "javascript": "bundle-analytics.js",
-      "scriptBytes": 95046,
-      "scriptSha256": "4a8cfbd343a72c9d970a99ce0c2713d13db75fadc5f75ef5ff76de582fbcdb1a",
+      "scriptBytes": 97447,
+      "scriptSha256": "8a6098080f34fd2975646c028754b0262dceffef52b29ae4406660908cc30a33",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -134,14 +134,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 272324,
-      "styleSha256": "3cf2a966acfcf294d55dffdea5718bd706d161d4256bd70fb0c1049a214f0b5a",
+      "styleBytes": 272279,
+      "styleSha256": "dfcc625b5175d8ae1284c2c60442f293ee0b703ac536cfdade313563303662b6",
       "stylesheet": "bundle-analytics.css"
     },
     "billing.html": {
       "javascript": "bundle-billing.js",
-      "scriptBytes": 91169,
-      "scriptSha256": "a037d8e30d6713ee42b2334b3c8d1a95aeb73b615c4d347d4b6a0a27f7b05ce6",
+      "scriptBytes": 93570,
+      "scriptSha256": "d5ba88c16a64d7980b54e6e6949919b11f684f4ec8cf3c979e142bb898eca6c1",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -171,14 +171,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 273822,
-      "styleSha256": "4c638270215053109238e00b789321e45e9a88c17872fc184b8faaaa3024e774",
+      "styleBytes": 273777,
+      "styleSha256": "6b7e9005b4a5b520128156a5ff85d299623d0e0c4366b9af767c63d91d3bdd23",
       "stylesheet": "bundle-billing.css"
     },
     "checkin.html": {
       "javascript": "bundle-checkin.js",
-      "scriptBytes": 43419,
-      "scriptSha256": "ee5ac29c6a5e8a428694498eb94068aa49086723a7a1afc29ac80d0568ce06dc",
+      "scriptBytes": 45820,
+      "scriptSha256": "0a4743c93ce2f3d6d470be72e660281588894b1bf2b72efa591003a333a1cd3a",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -201,8 +201,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 140739,
-      "styleSha256": "303c8c40d4246ca628bd868df6f3c8bf876cd891a652a92cd9d5827210f8777a",
+      "styleBytes": 140720,
+      "styleSha256": "ad3b9fbc1e4416cc2f640ebad82be51061d0fb5dbfb36e670943b02815abaada",
       "stylesheet": "bundle-checkin.css"
     },
     "dashboard.html": {
@@ -213,8 +213,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-dashboard.js",
-      "scriptBytes": 347915,
-      "scriptSha256": "97925c1b1136de6c77d95723f045f3b41f8692af206ecb875503f36b5c05fe30",
+      "scriptBytes": 351280,
+      "scriptSha256": "c39aeb7b6d000169cd92c23f628e9002e2896d05339f57217fc56debe9f8949b",
       "sources": {
         "deferredScripts": [
           "delivery-dialog.js",
@@ -270,14 +270,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 323910,
-      "styleSha256": "0b881142d61ab1793ba6da6bd169378a4ec69aeee43fedf6f1af8d19efb1b8e9",
+      "styleBytes": 323932,
+      "styleSha256": "a197d1625c46eb1e0615d7ab5ed5b0ca60e8a158728729efd7f7402494cb9b11",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
       "javascript": "bundle-designer.js",
-      "scriptBytes": 86994,
-      "scriptSha256": "168ebd3b87423edbf34d105f9fd23fe5d27e9bced1ae309981ae17c10260db3f",
+      "scriptBytes": 89395,
+      "scriptSha256": "2bfffffc91bf4dc0f963cccfbbe4b049c60de9a43160de21ebf629fbafa8cac3",
       "sources": {
         "scripts": [
           "yjs-bridge.js",
@@ -309,14 +309,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 298680,
-      "styleSha256": "add041853f1bbc022c2edea83f45ab7c5b349cecc5576f230a8f2fc9cda68180",
+      "styleBytes": 298635,
+      "styleSha256": "30b9f9302553ba17cb92d7b7b321b18acfbed13c24dff0068be8d6ab66dbc864",
       "stylesheet": "bundle-designer.css"
     },
     "guests.html": {
       "javascript": "bundle-guests.js",
-      "scriptBytes": 130217,
-      "scriptSha256": "8da3f827ffe62fde13f009082a194a9075657c8edb802170c91dbc297067d6c5",
+      "scriptBytes": 132618,
+      "scriptSha256": "28dcbf1b6b804ac95de47fc32d8e9b57c598080e041556108e471e6dbf2ecc20",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -349,8 +349,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 274869,
-      "styleSha256": "b06e633f492bee389086c54396dd9c54058699eb87bf47b9d6fd27121533435e",
+      "styleBytes": 274824,
+      "styleSha256": "261676003a64b9b5f80b89730a7c098b2690b970f13dbf0e85ecb2f987248de7",
       "stylesheet": "bundle-guests.css"
     },
     "index.html": {
@@ -362,8 +362,8 @@
       "deferredStylesheetSha256": "e72539220a16edcdb1e54bce5fe92dd90ff6c33021a82afa0b05bab0cec71e9a",
       "javascript": "bundle-index.js",
       "javascript2": "bundle-index-2.js",
-      "javascript2Bytes": 596453,
-      "javascript2Sha256": "910cb7227eba48b5c0621b67d4e2b3bc8e8aed7483b19e325282d4fb5443a475",
+      "javascript2Bytes": 598854,
+      "javascript2Sha256": "a92fe9fd6b6bbd274fbc073c494508b780448e3f73c3c26155325d745dc4d349",
       "scriptBytes": 543043,
       "scriptSha256": "bfb6ea0a7a15dec2a82b027f26e0e187b4dfe1e2f5d19e8c14bf67a5313c3035",
       "scriptSplitAt": 24,
@@ -484,8 +484,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 477149,
-      "styleSha256": "3f59c1022be91f5a2960126dccb9522e730dfa82aa859bd89ca40a704b0325f7",
+      "styleBytes": 477073,
+      "styleSha256": "c4ca5f26868af91eb568feb4b1717b6d7ac47f518abba68315367cc670ff532a",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
@@ -496,8 +496,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-materials.js",
-      "scriptBytes": 142171,
-      "scriptSha256": "88e11bd3e28c117073b2d2fc5667a5ac325d05963df3201a4ba56a75c20dfdcb",
+      "scriptBytes": 144572,
+      "scriptSha256": "a5f7dc74aef8e71eba2838193179aa35d257631b811642a4c02ded3050ebfb94",
       "sources": {
         "deferredScripts": [
           "ux-refine.js"
@@ -539,14 +539,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 291625,
-      "styleSha256": "b537e0286be65e99f0758da1f705258594dcc2a720b609cbd06dff293ca2c2b0",
+      "styleBytes": 291580,
+      "styleSha256": "edd16e26239af86d8908c762d5ee60f62c999c20a5a931470c427b0d2697d471",
       "stylesheet": "bundle-materials.css"
     },
     "privacy.html": {
       "javascript": "bundle-privacy.js",
-      "scriptBytes": 20715,
-      "scriptSha256": "3c8a8871dfb96cb9a7675cc6aa9d18cf45308c56745a68f37518d061c0287c0a",
+      "scriptBytes": 23116,
+      "scriptSha256": "3f2f029b9ca23a13918cc78b305e6f2eeb5d5c0adee8523b15c23bfd00856174",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -563,8 +563,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 162630,
-      "styleSha256": "c0d24b62b5bbff7e475485b3d59b775dc656971ceeb20c231f13d548a4e6a78d",
+      "styleBytes": 162611,
+      "styleSha256": "bfef56c6657f5ba8e4fc244327604fed2dae438d4ac56424c797c54e85d8c1ba",
       "stylesheet": "bundle-privacy.css"
     },
     "public.html": {
@@ -575,8 +575,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 261766,
-      "scriptSha256": "8286fa2692e5a725622bbc3956ac72ad2bfca1279d0cc3387b24684f0d336093",
+      "scriptBytes": 264167,
+      "scriptSha256": "bdc21b834ce7d9701c842b9c3a05a8fbd9203389b5f400c3b5d971b0d1f2f13b",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"
@@ -619,14 +619,14 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 139880,
-      "styleSha256": "20a7e7b01c58add45dddf12d5579fb5a5c4a4a73d92e4bb20aa7032ec1bf9b8c",
+      "styleBytes": 139861,
+      "styleSha256": "e91c27952f1378450890547e8cdcc96e4091ae1ec3fe282e8a5c9cbed564cc54",
       "stylesheet": "bundle-public.css"
     },
     "reset.html": {
       "javascript": "bundle-reset.js",
-      "scriptBytes": 85305,
-      "scriptSha256": "fc0023a35481f32b860ba0714270d5ba4e90230a2c0d3cb4e67b026b42eef154",
+      "scriptBytes": 87706,
+      "scriptSha256": "118ea33b9e336fb6ac05f2872d637c24e46b651790f5394e6b10f0fca7ac4a81",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -656,14 +656,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 269624,
-      "styleSha256": "39b2545a3a0ef8be13425b291e1e66c5dab82341123a9b3625184e08fd6ad91d",
+      "styleBytes": 269579,
+      "styleSha256": "1d363467d712289166cc818d545db6ee8288d6f8345561312274d60fcb2a611e",
       "stylesheet": "bundle-reset.css"
     },
     "responses.html": {
       "javascript": "bundle-responses.js",
-      "scriptBytes": 100133,
-      "scriptSha256": "8eb8ef267e8b762dc8c5c9e60eae955945ac0b40d0028345afc311235015325c",
+      "scriptBytes": 102534,
+      "scriptSha256": "768e2c4374ab31267614dffe382c9e1d3228975e59cf22b8e5a734d5be6c68a7",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -697,14 +697,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 272325,
-      "styleSha256": "c3665cf5aad9de373fd04b0456a141d6f4e89ead6ba5d7fdd9f40aa2410ab4ba",
+      "styleBytes": 272280,
+      "styleSha256": "b1a8394200080e68762605342c3f73b35121a3fdba0c56e0a26ecc76e8fa749e",
       "stylesheet": "bundle-responses.css"
     },
     "templates.html": {
       "javascript": "bundle-templates.js",
-      "scriptBytes": 113722,
-      "scriptSha256": "79116b513b7d8f8c72f4017e033fde840d7c11a55e6d65196ff7cfb674dd778f",
+      "scriptBytes": 116123,
+      "scriptSha256": "626aaa6d61966757eea7a6d73776b5542e65271f7ee25af5bffd25d6e714cb63",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -738,14 +738,14 @@
           "icons.css"
         ]
       },
-      "styleBytes": 303245,
-      "styleSha256": "5f88803b7b3647a11b4a9e674f4b30e260d5f820a94efda16dede2811e530787",
+      "styleBytes": 303200,
+      "styleSha256": "ff4feea88c283a5ad4e907999d60631e08863f06b93359db54c40fc2b730ae15",
       "stylesheet": "bundle-templates.css"
     },
     "verify.html": {
       "javascript": "bundle-verify.js",
-      "scriptBytes": 83249,
-      "scriptSha256": "47f34810387a16055c3bfc7e6f2b1cb5dfcc8add6da2955e06c893e736d39ad2",
+      "scriptBytes": 85650,
+      "scriptSha256": "a2129fde581d94f202e1589df1945a29feae930a0bb6a16814679e83c8a6f0ec",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -775,8 +775,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 269521,
-      "styleSha256": "64dc99585a7f6005f4c7fcbd3708c4c9942304eb13405b9e84e2509b1a3195af",
+      "styleBytes": 269476,
+      "styleSha256": "eacc35adbfe9fb8ee88070a7709af8b911051d99f98aa156e01ea40c2af4451f",
       "stylesheet": "bundle-verify.css"
     }
   },

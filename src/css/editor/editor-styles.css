@@ -1388,7 +1388,7 @@ body[data-page="index"] #documentTitle {
     height: 56px !important;
     min-height: 56px !important;
     max-height: 56px !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: nowrap;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
@@ -1635,7 +1635,7 @@ body[data-page="index"] #v20TypographyToolbar .rt-toolbar-tools button {
    Below 361 the bar stays a single row and the last button drops its text — the
    ••• glyph (aria-haspopup dialog) already carries the meaning. */
 @media (max-width: 360px) {
-  body[data-page="index"] #mobileEditorV14Bar { flex-wrap: nowrap !important; }
+  body[data-page="index"] #mobileEditorV14Bar { flex-wrap: nowrap; }
   body[data-page="index"] #mobileEditorV14Bar #mobileAdvancedV14 {
     flex: 0 0 auto !important;
     min-width: 36px !important;

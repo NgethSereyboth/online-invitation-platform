@@ -27,8 +27,8 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
 html{font-size:16px}
 body{font-size:16px!important}
 header{
-flex-wrap:nowrap!important;
-height:var(--app-topbar-h,56px)!important;
+flex-wrap: nowrap;
+height:var(--app-topbar-h,56px);
 min-height:var(--app-topbar-h,56px);
 padding:8px 12px!important;
 gap:8px!important;

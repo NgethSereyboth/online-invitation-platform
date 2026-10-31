@@ -867,3 +867,60 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     setTheme: applyTheme
   });
 })();
+
+/*
+ * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
+ * workspace, appearance, drawer, account and both language pills on one
+ * non-wrapping row (740px of content in a 390px bar), so the language switch
+ * painted past the viewport.
+ *
+ * The CSS route is blocked: app-shell.css is inside @layer components, and every
+ * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
+ * the generated route bundle, which concatenates sources in manifest order. A
+ * deterministic shell hook keeps the wrap correct at any width without another
+ * !important and without depending on which sheet happens to load last.
+ */
+(() => {
+  'use strict';
+  if (document.body.classList.contains('guest')) return;
+  // The app bar is a direct child of body on the shell routes, but a wrapper
+  // (#app) on some pages; look for it either way and never pick a dialog header.
+  const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
+    .find((node) => !node.closest('dialog')) || null;
+  if (!header) return;
+  header.dataset.appShellWrap = '1';
+  const NARROW = 600;
+  const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
+  const SWITCH_PROPS = ['flex', 'order', 'justifyContent', 'margin', 'background', 'border', 'boxShadow', 'padding'];
+  const clear = (node, props) => props.forEach((key) => { node.style[key] = ''; });
+  function sync() {
+    const narrow = window.innerWidth <= NARROW;
+    const langSwitch = header.querySelector(':scope > .language-switch');
+    if (!narrow) {
+      clear(header, HEADER_PROPS);
+      if (langSwitch) clear(langSwitch, SWITCH_PROPS);
+      return;
+    }
+    header.style.flexWrap = 'wrap';
+    header.style.height = 'auto';
+    header.style.minHeight = '56px';
+    header.style.overflow = 'visible';
+    header.style.rowGap = '4px';
+    if (langSwitch) {
+      langSwitch.style.flex = '1 0 100%';
+      langSwitch.style.order = '20';
+      langSwitch.style.justifyContent = 'flex-end';
+      langSwitch.style.margin = '0';
+      langSwitch.style.padding = '0';
+      langSwitch.style.background = 'transparent';
+      langSwitch.style.border = '0';
+      langSwitch.style.boxShadow = 'none';
+    }
+  }
+  sync();
+  let timer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(timer);
+    timer = setTimeout(sync, 120);
+  });
+})();

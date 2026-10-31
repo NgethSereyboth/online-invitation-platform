@@ -143,3 +143,4 @@ body[data-page="dashboard"] .dashboard-empty-preview strong { font-size: var(--f
    so its :has() override lost to the unlayered .invite-card rule above; keep
    the override here, next to that rule. */
 .invite-card:has(.invite-overflow__menu:not([hidden])) { overflow: visible; position: relative; z-index: 5; }
+.invite-overflow__menu{max-height:min(70vh,420px);overflow-y:auto}

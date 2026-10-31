@@ -870,7 +870,7 @@ function dashboardThumbnail(i){
  return hasObjects?`<div class="dashboard-thumb-v14" style="--thumb-bg:${escapeHtml(bg)};--thumb-text:${escapeHtml(text)}"></div>`:`<div class="dashboard-thumb-v14" style="--thumb-bg:${escapeHtml(bg)};--thumb-text:${escapeHtml(text)}"><div class="thumb-fallback"><strong>${escapeHtml(fields.names||i.title||'Invitation')}</strong><small>${escapeHtml(p.eventType||i.type||'Invitation')}</small></div></div>`;
 }
 
-function render(){$('#inviteGrid').innerHTML=invites.map(i=>`<article class="invite-card" style="opacity:${i.archived?.72:1}"><button class="invite-cover" data-edit="${i.id}" data-dashboard-thumbnail="${i.id}" aria-label="Open ${escapeHtml(i.title)}" ${i.archived?'disabled':''}>${dashboardThumbnail(i)}</button><div class="invite-body"><h2 title="${escapeHtml(i.title)}">${escapeHtml(i.title)}</h2><span class="invite-status-pill">${escapeHtml(i.status)}</span><div class="stats"><span>${i.views||0} views</span>${i.rsvpEnabled===false?'<span>Invitation only</span>':`<span>${i.rsvps||0} RSVPs</span>`}</div><div class="invite-overflow"><button type="button" class="invite-overflow__toggle" aria-haspopup="menu" aria-expanded="false" title="${_txt('More actions','សកម្មភាពច្រើន')}">⋮</button><menu class="invite-overflow__menu" hidden><button data-edit="${i.id}" ${i.archived?'disabled':''}>${_html('Edit','កែប្រែ')}</button><button data-guests="${i.id}">${_html('Guests','ភ្ញៀវ')}</button><button data-responses="${i.id}">${_html('Responses','ការឆ្លើយតប')}</button><button data-analytics="${i.id}">${_html('Analytics','ការវិភាគ')}</button><button data-sheets="${i.id}">${_html('Sign-up sheets','សន្លឹកចុះឈ្មោះ')}</button><button data-polls="${i.id}">${_html('Polls','ការស្ទង់មតិ')}</button><button data-history="${i.id}">${_html('Version history','ប្រវត្តិកំណែ')}</button><button data-copy="${i.id}">${_html('Duplicate','ចម្លង')}</button><button data-archive="${i.id}">${i.archived?_html('Restore','ស្ដារ'):_html('Archive','បង្ងា')}</button><button data-delete="${i.id}" class="danger">${_html('Delete','លុប')}</button></menu></div></div></article>`).join('');document.querySelectorAll('.invite-overflow__toggle').forEach(b=>{b.onclick=()=>{const menu=b.nextElementSibling;const expanded=b.getAttribute('aria-expanded')==='true';menu.hidden=expanded;b.setAttribute('aria-expanded',String(!expanded))}});document.querySelectorAll('[data-edit]').forEach(b=>{b.onclick=()=>{const t=b.closest('.invite-card')?.querySelector('.invite-overflow__toggle');if(t){t.setAttribute('aria-expanded','false');t.nextElementSibling.hidden=true}openEditor(b.dataset.edit)}});document.querySelectorAll('[data-guests]').forEach(b=>b.onclick=()=>{const t=b.closest('.invite-card').querySelector('.invite-overflow__toggle');t.setAttribute('aria-expanded','false');t.nextElementSibling.hidden=true;window.EInviteContext?.navigate?.(b.dataset.guests,'guests')});document.querySelectorAll('[data-responses]').forEach(b=>b.onclick=()=>window.EInviteContext?.navigate?.(b.dataset.responses,'responses'));document.querySelectorAll('[data-analytics]').forEach(b=>b.onclick=()=>window.EInviteContext?.navigate?.(b.dataset.analytics,'analytics'));
+function render(){$('#inviteGrid').innerHTML=invites.map(i=>`<article class="invite-card" style="opacity:${i.archived?.72:1}"><button class="invite-cover" data-edit="${i.id}" data-dashboard-thumbnail="${i.id}" aria-label="Open ${escapeHtml(i.title)}" ${i.archived?'disabled':''}>${dashboardThumbnail(i)}</button><div class="invite-body"><h2 title="${escapeHtml(i.title)}">${escapeHtml(i.title)}</h2><span class="invite-status-pill">${escapeHtml(i.status)}</span><div class="stats"><span>${i.views||0} views</span>${i.rsvpEnabled===false?'<span>Invitation only</span>':`<span>${i.rsvps||0} RSVPs</span>`}</div><div class="invite-overflow"><button type="button" class="invite-overflow__toggle" aria-haspopup="menu" aria-expanded="false" title="${_txt('More actions','សកម្មភាពច្រើន')}">⋮</button><menu class="invite-overflow__menu" hidden><button data-edit="${i.id}" ${i.archived?'disabled':''}>${_html('Edit','កែប្រែ')}</button><button data-guests="${i.id}">${_html('Guests','ភ្ញៀវ')}</button><button data-responses="${i.id}">${_html('Responses','ការឆ្លើយតប')}</button><button data-analytics="${i.id}">${_html('Analytics','ការវិភាគ')}</button><button data-sheets="${i.id}">${_html('Sign-up sheets','សន្លឹកចុះឈ្មោះ')}</button><button data-polls="${i.id}">${_html('Polls','ការស្ទង់មតិ')}</button><button data-history="${i.id}">${_html('Version history','ប្រវត្តិកំណែ')}</button><button data-copy="${i.id}">${_html('Duplicate','ចម្លង')}</button><button data-archive="${i.id}">${i.archived?_html('Restore','ស្ដារ'):_html('Archive','បង្ងា')}</button><button data-delete="${i.id}" class="danger">${_html('Delete','លុប')}</button></menu></div></div></article>`).join('');document.querySelectorAll('.invite-overflow__toggle').forEach(b=>{b.onclick=()=>{const menu=b.nextElementSibling;const expanded=b.getAttribute('aria-expanded')==='true';menu.hidden=expanded;b.setAttribute('aria-expanded',String(!expanded));const card=b.closest('.invite-card');if(card)card.style.overflow=expanded?'':'visible';if(!expanded)positionOverflowMenu(menu,b)}});document.querySelectorAll('[data-edit]').forEach(b=>{b.onclick=()=>{const t=b.closest('.invite-card')?.querySelector('.invite-overflow__toggle');if(t){t.setAttribute('aria-expanded','false');t.nextElementSibling.hidden=true}openEditor(b.dataset.edit)}});document.querySelectorAll('[data-guests]').forEach(b=>b.onclick=()=>{const t=b.closest('.invite-card').querySelector('.invite-overflow__toggle');t.setAttribute('aria-expanded','false');t.nextElementSibling.hidden=true;window.EInviteContext?.navigate?.(b.dataset.guests,'guests')});document.querySelectorAll('[data-responses]').forEach(b=>b.onclick=()=>window.EInviteContext?.navigate?.(b.dataset.responses,'responses'));document.querySelectorAll('[data-analytics]').forEach(b=>b.onclick=()=>window.EInviteContext?.navigate?.(b.dataset.analytics,'analytics'));
 // NW-3.1 / FB-20 parity entry points (OD-2 approved subset, 2026-10-22):
 // sheets + polls mount the already-shipped host panels (host-signup-sheets.js /
 // host-polls.js live in this bundle) for the clicked invitation — no panel
@@ -910,8 +910,21 @@ if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.
 };function syncPosterRow(){const isPoster=$('#newType')?.value==='Poster';if($('#posterSizeRow'))$('#posterSizeRow').hidden=!isPoster}
 if($('#newType'))$('#newType').addEventListener('change',syncPosterRow);
 syncPosterRow();
-function closeOverflowMenu(button){const card=button.closest?.('.invite-card');const toggle=card&&card.querySelector('.invite-overflow__toggle');if(toggle){toggle.setAttribute('aria-expanded','false');toggle.nextElementSibling.hidden=true}}
-function closeAllOverflowMenus(){document.querySelectorAll('.invite-overflow__menu').forEach(m=>{m.hidden=true;m.previousElementSibling?.setAttribute('aria-expanded','false')})}
+// A ten-item menu opened from a card low in the viewport ran past the bottom
+// edge (450px of menu from y=519 in an 844px window), hiding Archive/Delete.
+// Cap it to the space below the toggle and let the menu scroll. Flipping it
+// above with `bottom:100%` is wrong here: the menu's containing block is the
+// page, not the toggle, so it jumped under the header.
+function positionOverflowMenu(menu,toggle){
+  menu.style.maxHeight='';menu.style.overflowY='';menu.style.top='';menu.style.bottom='';
+  const t=toggle.getBoundingClientRect();
+  const below=innerHeight-t.bottom-16;
+  const want=menu.scrollHeight||menu.offsetHeight||420;
+  menu.style.maxHeight=Math.min(want,Math.max(180,below))+'px';
+  menu.style.overflowY='auto';
+}
+function closeOverflowMenu(button){const card=button.closest?.('.invite-card');const toggle=card&&card.querySelector('.invite-overflow__toggle');if(toggle){toggle.setAttribute('aria-expanded','false');toggle.nextElementSibling.hidden=true}if(card)card.style.overflow=''}
+function closeAllOverflowMenus(){document.querySelectorAll('.invite-overflow__menu').forEach(m=>{m.hidden=true;m.previousElementSibling?.setAttribute('aria-expanded','false');const card=m.closest?.('.invite-card');if(card)card.style.overflow=''})}
 // Registered once, not inside render(): the old capture listener was re-added on every
 // render, and because it ran before the toggle's own click it also closed the menu the
 // toggle had just opened, so the ⋮ button could never toggle its menu shut.
@@ -3444,5 +3457,62 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     openRail: applyRailOpen,
     syncAutoRail: syncAutoRail,
     setTheme: applyTheme
+  });
+})();
+
+/*
+ * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
+ * workspace, appearance, drawer, account and both language pills on one
+ * non-wrapping row (740px of content in a 390px bar), so the language switch
+ * painted past the viewport.
+ *
+ * The CSS route is blocked: app-shell.css is inside @layer components, and every
+ * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
+ * the generated route bundle, which concatenates sources in manifest order. A
+ * deterministic shell hook keeps the wrap correct at any width without another
+ * !important and without depending on which sheet happens to load last.
+ */
+(() => {
+  'use strict';
+  if (document.body.classList.contains('guest')) return;
+  // The app bar is a direct child of body on the shell routes, but a wrapper
+  // (#app) on some pages; look for it either way and never pick a dialog header.
+  const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
+    .find((node) => !node.closest('dialog')) || null;
+  if (!header) return;
+  header.dataset.appShellWrap = '1';
+  const NARROW = 600;
+  const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
+  const SWITCH_PROPS = ['flex', 'order', 'justifyContent', 'margin', 'background', 'border', 'boxShadow', 'padding'];
+  const clear = (node, props) => props.forEach((key) => { node.style[key] = ''; });
+  function sync() {
+    const narrow = window.innerWidth <= NARROW;
+    const langSwitch = header.querySelector(':scope > .language-switch');
+    if (!narrow) {
+      clear(header, HEADER_PROPS);
+      if (langSwitch) clear(langSwitch, SWITCH_PROPS);
+      return;
+    }
+    header.style.flexWrap = 'wrap';
+    header.style.height = 'auto';
+    header.style.minHeight = '56px';
+    header.style.overflow = 'visible';
+    header.style.rowGap = '4px';
+    if (langSwitch) {
+      langSwitch.style.flex = '1 0 100%';
+      langSwitch.style.order = '20';
+      langSwitch.style.justifyContent = 'flex-end';
+      langSwitch.style.margin = '0';
+      langSwitch.style.padding = '0';
+      langSwitch.style.background = 'transparent';
+      langSwitch.style.border = '0';
+      langSwitch.style.boxShadow = 'none';
+    }
+  }
+  sync();
+  let timer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(timer);
+    timer = setTimeout(sync, 120);
   });
 })();
