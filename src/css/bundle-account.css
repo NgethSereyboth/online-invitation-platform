@@ -1396,14 +1396,14 @@ html body[data-shell="b"], html body[data-page="public"], html body[data-page="c
 }
 @media (min-width: 761px) {
 body.studio-experience .studio-canvas-toolbar {
-flex-wrap: wrap !important;
-height: auto !important;
-max-height: none !important;
-overflow: visible !important;
+flex-wrap: wrap;
+height: auto;
+max-height: none;
+overflow: visible;
 row-gap: 6px;
 }
 body.studio-experience .studio-canvas-toolbar .v23-context-toolbar {
-margin-left: auto !important;
+margin-left: auto;
 max-width: 100%;
 }
 }
@@ -1415,13 +1415,13 @@ mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
 }
 @media (max-width: 600px) {
 body:not(.guest) > header {
-flex-wrap: wrap !important;
-overflow: visible !important;
-height: auto !important;
+flex-wrap: wrap;
+overflow: visible;
+height: auto;
 min-height: 56px;
-padding: 6px 10px !important;
-gap: 6px !important;
-row-gap: 4px !important;
+padding: 6px 10px;
+gap: 6px;
+row-gap: 4px;
 }
 body:not(.guest) > header .app-topbar-left {
 flex: 1 1 auto;
@@ -1430,7 +1430,7 @@ gap: 6px;
 }
 body:not(.guest) > header .app-topbar-left .ui-app-launcher-button,
 body:not(.guest) > header .app-topbar-right a.button-link,
-body:not(.guest) > header .app-crumbs { display: none !important; }
+body:not(.guest) > header .app-crumbs { display: none; }
 body:not(.guest) > header .app-brand { min-width: 0; overflow: hidden; }
 body:not(.guest) > header .app-brand strong {
 display: block;
@@ -1440,7 +1440,7 @@ text-overflow: ellipsis;
 white-space: nowrap;
 }
 body:not(.guest) > header .app-brand .brand-full { display: none; }
-body:not(.guest) > header .app-brand .brand-short { display: inline !important; }
+body:not(.guest) > header .app-brand .brand-short { display: inline; }
 body:not(.guest) > header .ui-theme,
 body:not(.guest) > header .app-topbar-right,
 body:not(.guest) > header .app-drawer-toggle,
@@ -1449,20 +1449,20 @@ body:not(.guest) > header > .language-switch {
 flex: 1 0 100%;
 order: 20;
 justify-content: flex-end;
-margin: 0 !important;
-background: transparent !important;
-border: 0 !important;
-box-shadow: none !important;
-padding: 0 !important;
+margin: 0;
+background: transparent;
+border: 0;
+box-shadow: none;
+padding: 0;
 }
 body:not(.guest) > header > .language-switch button {
-min-height: 30px !important;
-padding: 3px 10px !important;
-font-size: 11px !important;
+min-height: 30px;
+padding: 3px 10px;
+font-size: 11px;
 }
 body:not(.guest) > header > .language-switch button[lang="km"] {
-font-size: 15px !important;
-padding: 2px 9px !important;
+font-size: 15px;
+padding: 2px 9px;
 box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
 }
 }
@@ -1476,15 +1476,15 @@ pointer-events: none;
 transition: opacity .18s ease;
 }
 body.rail-open .app-drawer-scrim { opacity: 1; pointer-events: auto; }
-body.rail-open .app-rail { z-index: 90 !important; }
+body.rail-open .app-rail { z-index: 90; }
 body[data-page="admin"] .admin-panel table thead th {
-top: 0 !important;
-z-index: 3 !important;
+top: 0;
+z-index: 3;
 }
 body[data-page="admin"] .admin-panel table { min-width: 0; width: 100%; }
 body[data-page="admin"] .admin-panel tbody td {
-padding: 8px 10px !important;
-vertical-align: middle !important;
+padding: 8px 10px;
+vertical-align: middle;
 }
 body[data-page="admin"] .admin-panel td.ei-row-actions {
 white-space: normal;
@@ -1493,14 +1493,14 @@ max-width: 430px;
 }
 body[data-page="admin"] .admin-panel td.ei-row-actions > button,
 body[data-page="admin"] .admin-panel td.ei-row-actions > .admin-upload-toggle {
-display: inline-flex !important;
+display: inline-flex;
 align-items: center;
 gap: 4px;
-width: auto !important;
-min-height: 30px !important;
-padding: 4px 8px !important;
-margin: 2px 4px 2px 0 !important;
-font-size: 11px !important;
+width: auto;
+min-height: 30px;
+padding: 4px 8px;
+margin: 2px 4px 2px 0;
+font-size: 11px;
 vertical-align: middle;
 white-space: nowrap;
 }
@@ -1510,17 +1510,17 @@ body[data-page="admin"] .admin-panel table { min-width: 760px; }
 html[data-theme="dark"] .fp-simple-symbols,
 html[data-theme="dark"] .fp-simple-symbols summary,
 html[data-theme="dark"] .final-library-search {
-background: var(--app-surface-2) !important;
-color: var(--app-text) !important;
-border-color: var(--app-line) !important;
+background: var(--app-surface-2);
+color: var(--app-text);
+border-color: var(--app-line);
 }
-body[data-page="public"]:has(#openCover) .guest-topbar { z-index: 10001 !important; }
+body[data-page="public"]:has(#openCover) .guest-topbar { z-index: 10001; }
 body[data-page="public"]:has(#openCover) .guest-topbar > *:not(.language-switch) {
-visibility: hidden !important;
-pointer-events: none !important;
+visibility: hidden;
+pointer-events: none;
 }
 body[data-page="public"]:has(#openCover) .language-switch {
-position: fixed !important;
+position: fixed;
 top: 12px;
 right: 12px;
 padding: 3px;
@@ -1785,7 +1785,7 @@ body[data-page="dashboard"] #inviteGrid .error-state { grid-column: 1 / -1; }
 body[data-page="dashboard"] #dashboardView { max-width: none; margin: 0; padding: 0; }
 body[data-page="dashboard"] #inviteGrid .invite-overflow { position: absolute; top: var(--space-2); right: var(--space-2); z-index: 2; }
 body[data-page="dashboard"] #inviteGrid .invite-card:has(.invite-overflow__menu:not([hidden])) {
-overflow: visible !important;
+overflow: visible;
 position: relative;
 z-index: 5;
 }
@@ -2066,17 +2066,17 @@ body:not(.guest) .studio-statusbar:has(.v54-footer-tools-menu:not([hidden])) > d
 overflow: visible;
 }
 body:not(.guest) .studio-statusbar .v54-footer-tools-trigger {
-min-height: 22px !important;
-height: 22px !important;
-padding: 1px 7px !important;
-font-size: 9px !important;
-line-height: 1.1 !important;
+min-height: 22px;
+height: 22px;
+padding: 1px 7px;
+font-size: 9px;
+line-height: 1.1;
 }
 body:not(.guest) .studio-statusbar .v54-footer-tools-menu button {
-height: 30px !important;
-min-height: 30px !important;
-padding: 5px 8px !important;
-font-size: 9px !important;
+height: 30px;
+min-height: 30px;
+padding: 5px 8px;
+font-size: 9px;
 }
 body:not(.guest) .studio-statusbar kbd { padding: 1px 5px; }@layer components {
 .ui-stagger > * { animation: cuStagger var(--motion) var(--smooth) both; }

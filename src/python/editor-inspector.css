@@ -28,9 +28,9 @@ body[data-page="index"] #v20TypographyToolbar {
   backdrop-filter: blur(18px) saturate(140%);
   overflow: visible;
 }
-body[data-page="index"] #v20TypographyToolbar[hidden] { display: none !important; }
+body[data-page="index"] #v20TypographyToolbar[hidden] { display: none; }
 body[data-page="index"] #v20TypographyToolbar.collapsed { gap: 0; padding: 4px; }
-body[data-page="index"] #v20TypographyToolbar.collapsed > :not(#v20ToolbarToggle) { display: none !important; }
+body[data-page="index"] #v20TypographyToolbar.collapsed > :not(#v20ToolbarToggle) { display: none; }
 
 body[data-page="index"] #v20TypographyToolbar button {
   display: inline-flex;
@@ -50,12 +50,12 @@ body[data-page="index"] #v20TypographyToolbar button {
 }
 body[data-page="index"] #v20TypographyToolbar button:hover { background: var(--app-surface-3, #f1eff3); }
 body[data-page="index"] #v20TypographyToolbar .v20-toolbar-toggle {
-  width: 32px !important;
-  min-width: 32px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  padding: 0 !important;
-  font-size: 11px !important;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  font-size: 11px;
   white-space: nowrap;
 }
 body[data-page="index"] #v20TypographyToolbar .v20-color-wrap:hover { background: var(--app-surface-3, #f1eff3); }
@@ -71,7 +71,7 @@ body[data-page="index"] #v20TypographyToolbar .v20-compact-select {
   align-items: center;
   gap: 2px;
   height: 32px;
-  min-width: 0 !important;
+  min-width: 0;
   min-height: 32px;
   margin: 0;
   padding: 0 4px 0 6px;
@@ -92,10 +92,10 @@ body[data-page="index"] #v20TypographyToolbar select {
   height: 28px;
   margin: 0;
   padding: 0 12px 0 3px;
-  border: 0 !important;
+  border: 0;
   border-radius: 6px;
-  background: transparent !important;
-  box-shadow: none !important;
+  background: transparent;
+  box-shadow: none;
   color: var(--app-text, #2b2a2f);
   font: 500 11px/1 Inter, system-ui, sans-serif;
   text-overflow: ellipsis;
@@ -104,8 +104,8 @@ body[data-page="index"] #v20TypographyToolbar #v20ToolbarStyle { width: 92px; }
 body[data-page="index"] #v20TypographyToolbar #v20VisibleFont { width: 126px; }
 body[data-page="index"] #v20TypographyToolbar .rt-toolbar-tools,
 body[data-page="index"] #v20TypographyToolbar .ei-rich-toolbar,
-body[data-page="index"] #v20TypographyToolbar [data-rt-toolbar] { display: none !important; }
-body[data-page="index"] #v20TypographyToolbar select:focus-visible { box-shadow: 0 0 0 2px var(--app-accent, #8b465b) inset !important; }
+body[data-page="index"] #v20TypographyToolbar [data-rt-toolbar] { display: none; }
+body[data-page="index"] #v20TypographyToolbar select:focus-visible { box-shadow: 0 0 0 2px var(--app-accent, #8b465b) inset; }
 
 body[data-page="index"] #v20TypographyToolbar .v20-size-group {
   display: inline-flex;
@@ -130,9 +130,9 @@ body[data-page="index"] #v20TypographyToolbar .v20-size-group input {
   min-height: 28px;
   margin: 0;
   padding: 0;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   color: var(--app-text, #2b2a2f);
   text-align: center;
   font: 700 12px/1 Inter, system-ui, sans-serif;
@@ -156,7 +156,7 @@ body[data-page="index"] #v20TypographyToolbar .v20-color-wrap {
   align-items: center;
   justify-content: center;
   width: 32px;
-  min-width: 32px !important;
+  min-width: 32px;
   height: 32px;
   max-width: 32px;
   border-radius: 9px;
@@ -271,45 +271,44 @@ body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > .
 
 .ix-groups { display: grid; gap: 7px; margin-top: 2px; padding-bottom: 26px; }
 .ix-groups .ix-group { scroll-margin-top: 58px; }
-body[data-page="index"] #v54CanvasHud { display: none !important; }
 /* The text toolbar and the floating selection card occupied the same strip
    above a text object. The toolbar is the richer control, so the card stands
    down while it is open (it still serves shapes and images). */
-body[data-page="index"]:has(#v20TypographyToolbar:not([hidden])) #v54SelectionCard { display: none !important; }
+body[data-page="index"]:has(#v20TypographyToolbar:not([hidden])) #v54SelectionCard { display: none; }
 body[data-page="index"] .studio-inspector-pane input[type="range"] { accent-color: var(--app-accent, #8b465b); }
 /* The floating selection strip sat across the lower third of the invitation
    and repeated Copy style / Paste style / Lock / Group / Tidy, which already
    live in the Style, Arrange and More groups plus the object context menu.
    It also swallowed clicks on the artwork. Keep the command paths, drop the
    duplicate overlay. */
-body[data-page="index"] .studio-selection-toolbar { display: none !important; }
+body[data-page="index"] .studio-selection-toolbar { display: none; }
 /* Text formatting belongs to the canvas while the Edit tab is open. On
    Layers, Sections and Share it floated above the panel the user was reading
    and covered the invitation; hide it there. */
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v20TypographyToolbar { display: none !important; }
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) .v54-selection-card { display: none !important; }
+body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v20TypographyToolbar { display: none; }
+body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) .v54-selection-card { display: none; }
 /* The contextual Styles/Position/Duplicate/Delete strip is the Edit tab's
    quick-action row. On Layers its commands duplicate the row menu, and on
    Sections/Share they act on an object the user is not editing. */
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v23ContextToolbar { display: none !important; }
+body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v23ContextToolbar { display: none; }
 /* A pointer selection focuses #stage (so the keyboard can nudge objects), which
    made the generic [tabindex]:focus-visible ring paint a second blue border
    around the whole invitation. The object outline is the selection signal. */
 body.studio-experience #stage:focus,
-body.studio-experience #stage:focus-visible { outline: none !important; }
+body.studio-experience #stage:focus-visible { outline: none; }
 /* editor-styles.css hides every direct child of the Edit pane without a
    selection. The Page group must stay reachable then, so keep the group stack
    visible (the object groups inside are hidden by their own [hidden]). The
    seven object-only tool buttons are all disabled in this state, so showing
    them only added a grey icon strip above the empty-state message. */
-body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-toolbox { display: none !important; }
-body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-groups { display: grid !important; }
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-toolbox { display: none; }
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-groups { display: grid; }
 body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > h2.studio-inspector-heading { display: none; }
 body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > #noSelection { margin: 2px 0 12px; }
 /* The selection count already appears in the canvas action row and the
    status bar. Repeating it above every inspector group cost 33px and made the
    tooltip for the first icon collide with a third copy of the same sentence. */
-body[data-page="index"] [data-inspector-pane="object"] #properties > .selection-summary { display: none !important; }
+body[data-page="index"] [data-inspector-pane="object"] #properties > .selection-summary { display: none; }
 .ix-group {
   border: 1px solid var(--app-line, #e4e4e9);
   border-radius: 12px;
@@ -355,9 +354,9 @@ body[data-page="index"] [data-inspector-pane="object"] #properties > .selection-
 /* Label display rules in the editor intentionally outrank the [hidden]
    attribute. Without this, a multi-selection still showed an empty Text
    content field that looked editable but wrote to only one object. */
-.ix-body [hidden] { display: none !important; }
-.ix-body > :first-child { margin-top: 0 !important; }
-.ix-body > h2:first-child { border-top: 0 !important; padding-top: 0 !important; }
+.ix-body [hidden] { display: none; }
+.ix-body > :first-child { margin-top: 0; }
+.ix-body > h2:first-child { border-top: 0; padding-top: 0; }
 .ix-group[data-ix-group="style"] .ix-body > h2:first-child { display: none; }
 .ix-body .final-advanced-inspector,
 .ix-body .pe-transform-panel {
@@ -449,8 +448,8 @@ body[data-page="index"] .studio-inspector-pane[data-inspector-pane="publish"] { 
   padding: 0 9px;
   border: 1px solid var(--app-line, #e4e4e9);
   border-radius: 8px;
-  background: var(--app-surface-2, #f7f6f8) !important;
-  color: var(--app-text, #2b2a2f) !important;
+  background: var(--app-surface-2, #f7f6f8);
+  color: var(--app-text, #2b2a2f);
   font: 500 10px/1 Inter, system-ui, sans-serif;
   text-overflow: ellipsis;
 }
