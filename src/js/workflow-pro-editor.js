@@ -187,7 +187,9 @@ function renderFlow(){const list=$('.workflow-v6-flow-list',flow),order=currentO
     item.querySelector('[data-move="up"]').onclick=e=>{e.stopPropagation();const next=currentOrder();if(index<=0)return;[next[index-1],next[index]]=[next[index],next[index-1]];writeOrder(next)};item.querySelector('[data-move="down"]').onclick=e=>{e.stopPropagation();const next=currentOrder();if(index>=next.length-1)return;[next[index+1],next[index]]=[next[index],next[index+1]];writeOrder(next)};list.append(item)});
   const dock=$('#workflowPageDock');if(dock)$$('.workflow-page-chip',dock).forEach(chip=>{const token=chip.dataset.canvasId,idx=order.indexOf(token);let badge=$('.workflow-v6-order-badge',chip);if(!badge){badge=document.createElement('i');badge.className='workflow-v6-order-badge';chip.append(badge)}badge.textContent=idx>=0?String(idx+2):'–';badge.title=idx>=0?`Invitation position ${idx+2}`:'Not in published flow'})
 }
-function toggleFlow(force){const open=force??!flow.classList.contains('open');flow.classList.toggle('open',open);if(open){renderFlow();body.classList.remove('inspector-open')}}
+function syncFlowA11y(open){flow.inert=!open;flow.setAttribute('aria-hidden',String(!open))}
+syncFlowA11y(false);
+function toggleFlow(force){const open=force??!flow.classList.contains('open');flow.classList.toggle('open',open);syncFlowA11y(open);if(open){renderFlow();body.classList.remove('inspector-open')}}
 flow.querySelector('[data-flow-close]').onclick=()=>toggleFlow(false);
 document.addEventListener('pointerdown',e=>{if(flow.classList.contains('open')&&!e.target.closest('#workflowV6Flow,#workflowV6FlowBtn'))toggleFlow(false)},true);
 if(toolbar&&!$('#workflowV6FlowBtn')){const b=document.createElement('button');b.id='workflowV6FlowBtn';b.type='button';b.textContent='Flow';b.title='Reorder invitation pages and sections';const pos=$('#workflowV6PositionBtn');pos?.insertAdjacentElement('beforebegin',b);b.onclick=()=>toggleFlow()}

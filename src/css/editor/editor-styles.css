@@ -140,8 +140,30 @@ body.windows-ui-v54 .stage-wrap > .workflow-page-dock {
 body.windows-ui-v54 .workflow-page-dock-track { min-width: 0; scrollbar-width: none; }
 body.windows-ui-v54 .workflow-page-dock-track::-webkit-scrollbar { display: none; }
 
-/* Keep modal close buttons above the toolbar More panel. */
-body.windows-ui-v54 #modal.final-dialog > .close { z-index: 10001; pointer-events: auto; }
+/* Keep modal close buttons above the toolbar More panel and above the guest
+   cover (#openCover, z 9999) the preview renders inside the dialog. The dialog
+   itself does not always carry .final-dialog, so target #modal directly. */
+body.windows-ui-v54 #modal.final-dialog > .close,
+body.windows-ui-v54 #modal > .close {
+  position: fixed;
+  z-index: 10001;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffffff3d;
+  border-radius: 50%;
+  background: #1f1a1dcc;
+  color: #fff;
+  font: 400 23px/1 Arial, sans-serif;
+  box-shadow: 0 8px 24px #0003;
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+body.windows-ui-v54 #modal > .close:hover { background: #1f1a1de6; border-color: #ffffff70; }
 
 /* -------------------------------------------------------------------------
    2. Toolbar "More" overflow menu (formerly windows-ui-v16.css)
@@ -268,6 +290,16 @@ body.workspace-experience-v54 {
   --v54-muted: #6f6874;
   --v54-accent: #7f4779;
   --v54-line: #20172718;
+}
+/* The canvas token was fixed to a light grey, so dark mode kept a light frame
+   down both edges of the viewport while the topbar, rail and footer went dark
+   (measured at 390: rgb(236,238,242) at x=10 inside a dark editor). */
+html[data-theme="dark"] body.workspace-experience-v54 {
+  --v54-canvas: #101117;
+  --v54-panel: #191a21;
+  --v54-ink: #f3f4f8;
+  --v54-muted: #b2b4be;
+  --v54-line: #ffffff14;
 }
 
 body.workspace-experience-v54 .stage-wrap { position: relative; background: var(--v54-canvas); min-width: 0; }
@@ -1453,7 +1485,7 @@ body[data-page="index"] .ei-timeline-launch {
    a 72px overflow inside the 330px inspector (same inside the 360px mobile
    drawer). Flexible tracks + ellipsised captions keep all five reachable. */
 body[data-page="index"] .studio-inspector-tabs {
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   min-width: 0 !important;
   overflow: hidden !important;
 }

@@ -449,8 +449,8 @@
     selectionCard.innerHTML = '<div class="v54-selection-actions" role="toolbar" aria-label="Selection actions">' +
       '<button type="button" data-v54-action="text" title="Edit text" aria-label="Edit text"><span aria-hidden="true">T</span></button>' +
       '<button type="button" data-v54-action="crop" title="Crop" aria-label="Crop"><span aria-hidden="true">\u25A3</span></button>' +
-      '<button type="button" data-v54-action="duplicate" title="Duplicate" aria-label="Duplicate"><span aria-hidden="true">\u29C9</span></button>' +
-      '<button type="button" data-v54-action="delete" title="Delete" aria-label="Delete"><span aria-hidden="true">\u232B</span></button>' +
+      // Duplicate/Delete stay in the canvas action bar; repeating them in this
+      // card made three copies of the same destructive command on one screen.
       '<button type="button" data-v54-action="more" title="More actions" aria-label="More actions"><span aria-hidden="true">\u22EF</span></button>' +
       '</div>' +
       '<div class="v54-selection-readout"><small data-v54-page></small><strong data-v54-label></strong><span data-v54-metrics></span></div>';
@@ -1259,13 +1259,6 @@
       });
     }
 
-    // Tag device buttons with a single-letter short label for compact toolbars.
-    $$('.studio-canvas-toolbar [data-device]').forEach(button => {
-      button.classList.add('v54-device-button');
-      button.dataset.short = button.textContent.trim().slice(0, 1);
-      button.setAttribute('aria-label', `${button.textContent.trim()} canvas`);
-      button.title = `Preview ${button.textContent.trim().toLowerCase()} canvas`;
-    });
   }
 
   /**
@@ -1445,6 +1438,19 @@
     on(document, 'einvite:selection-changed', onSelectionChanged);
     // Also try to patch the typography service once it's available.
     on(window, 'einvite:editor-ready', () => { AutoFitGuard.patch(); organizeHeader(); organizeFooter(); });
+
+    // Keyboard parity for the same popovers: a role="menu" must close on Escape,
+    // and focus has to land back on the control that opened it.
+    on(document, 'keydown', event => {
+      if (event.key !== 'Escape') return;
+      if (popover && !popover.hidden) { closeZoomMenu(); $('.v54-zoom-value')?.focus(); }
+      const tools = $('.v54-footer-tools-menu');
+      if (tools && !tools.hidden) {
+        tools.hidden = true;
+        $('.v54-footer-tools-trigger')?.setAttribute('aria-expanded', 'false');
+        $('.v54-footer-tools-trigger')?.focus();
+      }
+    });
 
     // Close popovers on outside interaction.
     on(document, 'pointerdown', event => {

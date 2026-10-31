@@ -283,11 +283,11 @@ rsvp</textarea></label>
       <p class="hint">Select an object, then drag it, use the lower-right handle to resize, or drag the top rotation handle. Drag on empty canvas space to box-select multiple objects.</p>
     </aside>
     <section class="stage-wrap">
-      <!-- FB-50: the toolbar's final class and the device buttons' short labels used to arrive
-           from studio-experience.js / editor-core.js, so the bar painted at its full width and
-           collapsed ~0.12 of the editor's CLS a second later. Both are static here now. -->
+      <!-- FB-50: the toolbar's final class used to arrive from studio-experience.js, so the bar
+           painted at its full width and collapsed ~0.12 of the editor's CLS a second later. It is
+           static here now. The old Mobile/Tablet/Desktop buttons were removed: nothing listened for
+           them, and the canvas is a fixed invitation artboard whose size comes from #posterSizes. -->
       <div class="toolbar studio-canvas-toolbar">
-        <button data-device="390" class="v54-device-button" data-short="M">Mobile</button><button data-device="760" class="v54-device-button" data-short="T">Tablet</button><button data-device="1100" class="v54-device-button" data-short="D">Desktop</button>
         <span class="toolbar-divider"></span>
         <select id="posterSizes" aria-label="Canvas size" title="Canvas size preset">
           <option value="custom">Custom size…</option>
