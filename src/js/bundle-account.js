@@ -550,7 +550,13 @@ function applyTheme(mode,announce=false){
   localStorage.setItem('einvite-theme-mode',mode);
   $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
-  if(announce)toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
+  if(announce){
+    // Two quick toggles used to leave both "Dark appearance" and "Light appearance"
+    // stacked for 2.2s. Replace the previous theme toast instead of stacking.
+    document.querySelectorAll('.ui-toast[data-theme-toast]').forEach(el=>el.remove());
+    const el=toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
+    if(el)el.dataset.themeToast='1';
+  }
 }
 applyTheme(currentMode());
 function installThemeControl(){
@@ -610,7 +616,7 @@ addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||b.d
 const spotlightSelectors='.invite-card,.metric,.response-card,.wish-card,.usage-card,.plan,.studio-card,.material-card-page,.template-choice,.page-nav-card,.studio-quick-grid button,.page-builder-library button,.element-library button,.block-library button';
 $$(spotlightSelectors).forEach(el=>{el.classList.add('ui-spotlight');el.addEventListener('pointermove',e=>{if(window.EInviteProfessionalEditor?.activeInteraction)return;const r=el.getBoundingClientRect();el.style.setProperty('--mx',`${e.clientX-r.left}px`);el.style.setProperty('--my',`${e.clientY-r.top}px`)})});
 const stack=document.createElement('div');stack.className='ui-toast-stack';document.body.append(stack);
-function toast(message,icon='✓'){const el=document.createElement('div');el.className='ui-toast';el.innerHTML=`<span>${icon}</span><b>${message}</b>`;stack.append(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),240)},2200)}
+function toast(message,icon='✓'){const el=document.createElement('div');el.className='ui-toast';el.innerHTML=`<span>${icon}</span><b>${message}</b>`;stack.append(el);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),240)},2200);return el}
 window.einviteToast=toast;
 const tip=document.createElement('div');tip.className='ui-tooltip';document.body.append(tip);let tipTimer;
 document.addEventListener('pointerover',e=>{const el=e.target.closest('[data-ui-tooltip],button[title]');if(!el)return;const txt=el.dataset.uiTooltip||el.getAttribute('title');if(!txt)return;clearTimeout(tipTimer);tipTimer=setTimeout(()=>{const r=el.getBoundingClientRect();tip.textContent=txt;tip.style.left=Math.max(8,Math.min(innerWidth-200,r.left+r.width/2))+'px';tip.style.top=Math.max(8,r.bottom+8)+'px';tip.classList.add('show')},350)});

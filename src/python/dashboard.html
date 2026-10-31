@@ -54,13 +54,13 @@
         </div>
         <h1 id="authTitle"><span class="i18n i18n-en">Welcome back</span><span class="i18n i18n-km khmer-text" lang="km">សូមស្វាគមន៍ត្រឡប់មកវិញ</span></h1>
         <p id="authIntro"><span class="i18n i18n-en">Sign in to continue working on your invitations and events.</span><span class="i18n i18n-km khmer-text" lang="km">ចូលគណនីដើម្បីបន្តធ្វើការលើការអញ្ជើញ និងព្រឹត្តិការណ៍របស់អ្នក។</span></p>
-        <div class="canvas-auth-form">
+        <form class="canvas-auth-form" id="authForm" autocomplete="on">
           <label for="email"><span><span class="i18n i18n-en">Email</span><span class="i18n i18n-km khmer-text" lang="km">អ៊ីមែល</span></span><input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
           <label for="password"><span><span class="i18n i18n-en">Password</span><span class="i18n i18n-km khmer-text" lang="km">ពាក្យសម្ងាត់</span></span><input id="password" type="password" autocomplete="current-password" placeholder="At least 8 characters" data-en="At least 8 characters" data-km="At least 8 characters"></label>
           <label id="registerConfirmWrap" for="registerConfirmPassword" hidden><span><span class="i18n i18n-en">Confirm password</span><span class="i18n i18n-km khmer-text" lang="km">បញ្ជាក់ពាក្យសម្ងាត់</span></span><input id="registerConfirmPassword" type="password" autocomplete="new-password" placeholder="Repeat your password" data-en="Repeat your password" data-km="Repeat your password"></label>
-        </div>
+        </form>
         <div class="auth-card__actions">
-          <button id="loginBtn" class="primary full"><span class="i18n i18n-en">Sign in</span><span class="i18n i18n-km khmer-text" lang="km">ចូល</span></button>
+          <button id="loginBtn" type="submit" form="authForm" class="primary full"><span class="i18n i18n-en">Sign in</span><span class="i18n i18n-km khmer-text" lang="km">ចូល</span></button>
           <div class="auth-card__divider"><span class="i18n i18n-en">or</span><span class="i18n i18n-km khmer-text" lang="km">ឬ</span></div>
           <button id="passkeyLoginBtn" type="button" class="full"><span class="i18n i18n-en">Use a passkey</span><span class="i18n i18n-km khmer-text" lang="km">ប្រើ passkey</span></button>
         </div>
