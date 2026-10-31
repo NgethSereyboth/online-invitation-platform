@@ -1,7 +1,7 @@
-;/* v0.65.3 — impersonation (ROADMAP §5.8)
- * Super-admin logs in as another user. 30-minute hard cap. Red banner
- * everywhere when active. Every action audited with `impersonated_by`.
- */
+;
+
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminImpersonate && window.EInviteAdminImpersonate.version >= 65) return;
@@ -66,15 +66,15 @@
   async function mount(){
     try { await loadCurrent(); } catch(e) {}
     render();
-    // Surface the red banner globally if active.
+
     const banner = document.getElementById('impersonationBanner');
     if (banner) banner.hidden = !state.current;
   }
   window.EInviteAdminImpersonate = Object.freeze({ version: 65, mount, render, loadCurrent });
-})();;/* v0.65.0 — feature flags (ROADMAP §5.4)
- * Super-admin toggles features on/off without deploying.
- * Adds non-admin session idle window selector (7/15/30 days).
- */
+})();;
+
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminFeatureFlags && window.EInviteAdminFeatureFlags.version >= 65) return;
@@ -183,12 +183,12 @@
     if (saveBtn) saveBtn.addEventListener('click', handleSaveSessionIdle);
   }
 
-  /*
-   * Flag changes confirm through the toast system, never through alert()
-   * (dispatch §3 Group 6). alert() blocks the page, cannot be styled, and is
-   * announced without context; the toast is announced politely by toast.js and
-   * carries both languages.
-   */
+
+
+
+
+
+
   function notify(message, type){
     const text = String(message || '').trim();
     if (!text) return;
@@ -235,8 +235,8 @@
   async function mount(){
     try { await load(); } catch(e) {}
     render();
-    // POC (v0.68.3): re-render the (already-loaded) flag list on language switch
-    // without re-fetching — t() now reads the active language from EInviteI18n.
+
+
     if (!_langUnsub && window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
       _langUnsub = window.EInviteI18n.subscribe(render);
     }

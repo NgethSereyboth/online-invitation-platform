@@ -20,12 +20,12 @@ function iconSvg(kind){
   };
   return icons[kind]||icons.pages;
 }
-/* The left "Design" home pane was retired on the owner's instruction. The tool
-   rail's own tabs are the navigation, and the pane's remaining content already
-   exists elsewhere: invitation styles and the palette live in the inspector's
-   Page group, Event details / Content blocks are rail tabs, and canvas
-   background controls mount into the same Page group. Pages is the default
-   rail item; no home pane is created. */
+
+
+
+
+
+
 function reorderRail(){
   const order=['pages','elements','text','media','event','blocks'];
   order.forEach(id=>{const b=$(`[data-studio-tab="${id}"]`,rail);if(b)rail.append(b)});
@@ -52,7 +52,7 @@ function fitCanvasSoon(){
 }
 function applyMode(id){
   const content=['event','blocks'].includes(id);
-  // DESIGN-FIX P2: content mode keeps the canvas visible; only the inspector collapses.
+
   body.classList.toggle('studio-content-mode',content);
   body.classList.toggle('studio-design-mode',!content);
   body.dataset.studioSection=id;
@@ -140,9 +140,9 @@ function safetyPass(){
 reorderRail();
 decorateTopbar();
 normalizeInitialFlow();
-/* Interaction routing is intentionally centralized in workflow-continuity.js.
-   Keeping the older rail/selection/mobile listeners disabled avoids duplicate
-   state changes, inspector jumps, and sidebar races. */
+
+
+
 setTimeout(safetyPass,400);
 localStorage.setItem('einvite-workflow-version',FLOW_VERSION);
 })();;(()=>{
@@ -162,9 +162,9 @@ const CONTENT=new Set(['event','blocks']);
 const COMPACT=()=>innerWidth<=1180;
 const scrollMemory=new Map();
 const history=[];
-// FB-43: start from the tab the session will actually open (requested → saved →
-// Pages), not from the pane host's synthetic first tab. Reading the DOM default
-// here made boot enter content mode and then leave it, which moved <main> twice.
+
+
+
 const bootTab=sessionStorage.getItem('einvite-open-editor-tab')||localStorage.getItem('einvite-editor-left-tab');
 let current=($(`.studio-pane[data-studio-pane="${bootTab}"]`,host)||$('.studio-pane.active',host))?.dataset.studioPane||'pages';
 let lastDesign=CONTENT.has(current)?'pages':current;
@@ -282,8 +282,8 @@ function renderRecent(){
   items.forEach(id=>{const [icon,name,desc]=labels[id];const b=document.createElement('button');b.type='button';b.dataset.workflowRecent=id;b.innerHTML=`<span>${icon}</span><div><b>${name}</b><small>${desc}</small></div>`;b.onclick=()=>navigate(id,{source:'recent'});grid.append(b)});
 }
 function improveDesignSearch(){
-  // The Design home pane is retired; its inline search went with it and the
-  // panel search in studio-experience.js is the only one left.
+
+
   const design=pane('design');if(!design)return;
   const input=$('.flow-design-search input',design);if(!input||$('#workflowSearchResults'))return;
   const results=document.createElement('div');results.id='workflowSearchResults';results.className='workflow-search-results';results.hidden=true;input.closest('.flow-design-search').after(results);
@@ -403,8 +403,8 @@ const clickFirst=(...sels)=>{for(const s of sels){const el=$(s);if(el){el.click(
 let focusMode=false,previousPanelHidden=false;
 const status=document.createElement('div');status.id='workflowV5Status';status.className='workflow-v5-status';status.innerHTML='<span class="page">Main hero</span><b>·</b><span class="selection">Nothing selected</span>';
 $('.stage-wrap')?.append(status);
-// FB-47: on phones the chip shares the canvas toolbar's own scroll row instead of
-// floating over the lane where the typography strip appears.
+
+
 const statusHost=matchMedia('(max-width:640px)');
 function placeStatus(){const host=statusHost.matches&&toolbar?toolbar:$('.stage-wrap');if(host&&status.parentElement!==host){host.prepend(status);host.scrollLeft=0}}
 placeStatus();statusHost.addEventListener('change',placeStatus);
@@ -417,8 +417,8 @@ function refreshStatus(){
   const page=pageLabel(),selection=selectionLabel();
   $('.page',status).textContent=page;$('.selection',status).textContent=selection;
   const o=selectedOne();status.classList.toggle('has-selection',!!o);
-  // LT-1.6: the chip ellipsises at 375, so the untruncated `page · selection`
-  // label must be reachable by hover and announced by assistive tech.
+
+
   const label=`${page} · ${selection}`;status.title=label;status.setAttribute('aria-label',label);
 }
 status.onclick=()=>{if(selected().length){document.querySelector('[data-inspector-tab="object"]')?.click();if(innerWidth<=1180)body.classList.add('inspector-open')}};
@@ -480,10 +480,10 @@ document.addEventListener('pointerdown',e=>{if(!e.target.closest('#workflowV5Con
 
 const dock=$('#workflowPageDock');
 let lastRevealedChip=null;
-// The observer below fires on every class change under the dock, and a dock
-// re-render toggles `active` on many chips in a row. scrollIntoView forces a
-// style recalculation + layout, so only a change of WHICH chip is active is
-// worth one; an unchanged chip would also be scrolled against the user's wish.
+
+
+
+
 function revealActivePage(){const active=$('.workflow-page-chip.active',dock);if(active===lastRevealedChip)return;lastRevealedChip=active;active?.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'})}
 if(dock){new MutationObserver(()=>requestAnimationFrame(revealActivePage)).observe(dock,{subtree:true,attributes:true,attributeFilter:['class']});dock.addEventListener('wheel',e=>{const track=$('.workflow-page-dock-track',dock);if(!track||Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;e.preventDefault();track.scrollLeft+=e.deltaY},{passive:false})}
 function extendQuickAdd(){
@@ -932,10 +932,10 @@ function wireScrollable(root=document){
 wireScrollable();new MutationObserver(records=>{const added=[];for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)added.push(node);if(!added.length)return;requestAnimationFrame(()=>{if(window.EInviteProfessionalEditor?.activeInteraction)return;for(const node of added)if(node.isConnected)wireScrollable(node)})}).observe(document.body,{childList:true,subtree:true});
 let lastVisibleChip=null;
 function keepActivePageVisible(){
-  // scrollIntoView forces a style recalculation + layout, and the observer below
-  // fires on every class change anywhere under #pageNavigator — including the
-  // class churn of a dock re-render. Only a change of WHICH chip is active needs
-  // a scroll; re-scrolling an unchanged chip would also fight a user's own scroll.
+
+
+
+
   const active=$('.workflow-page-chip.active');
   if(active===lastVisibleChip)return;
   lastVisibleChip=active;

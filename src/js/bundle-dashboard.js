@@ -1,12 +1,12 @@
-;/*
- * yjs-bridge.js — publishes the vendored Y.js bundle as `window.Y`.
- *
- * vendor/yjs/y.js is an ES module, and the CSP (`script-src 'self'`) forbids
- * inline scripts. This file is concatenated into the page's classic route
- * bundle, so it uses dynamic import() instead of a static `import` statement.
- * The /vendor/yjs/y.js <link rel="modulepreload"> with its SRI hash in the page
- * head makes this import use the integrity-checked copy.
- */
+;
+
+
+
+
+
+
+
+
 (() => {
   if (window.Y) return;
   import('/vendor/yjs/y.js').then(
@@ -20,23 +20,23 @@
   );
 })();;(() => {
   'use strict';
-  // route-deferred-loader — injects the per-route deferred chunk after
-  // first paint. Bundled at the head of each route bundle, it derives the
-  // deferred bundle name from its own <script> URL (bundle-<page>.js →
-  // bundle-<page>-deferred.{js,css}) so no HTML/inline script is needed
-  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
-  // on the first user interaction, whichever comes first, so on-demand
-  // modules never delay first paint or the route-weight budget.
+
+
+
+
+
+
+
   if (window.EInviteDeferredRouteLoaderV15) return;
-  // `ready` resolves once the deferred chunk has been evaluated (or failed to
-  // load), so consumers that lazily mount a deferred module can retry on it.
+
+
   let resolveReady;
   const ready = new Promise((res) => { resolveReady = res; });
   window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
   const current = document.currentScript;
   const src = (current && current.src) || '';
-  // The lazy stem plus the optional `-deferred` suffix means the deferred
-  // chunk's own URL cannot be mistaken for a route bundle's.
+
+
   const match = /bundle-([A-Za-z0-9_-]+?)(?:-deferred)?\.js/.exec(src);
   if (!match) { resolveReady(); return; }
   const prefix = src.slice(0, src.lastIndexOf('/') + 1);
@@ -60,42 +60,42 @@
   for (const type of ['pointerdown', 'keydown', 'touchstart']) {
     window.addEventListener(type, start, { once: true, passive: true, capture: true });
   }
-})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
- * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
- *
- * Responsibilities:
- *   - Source of truth for UI language = <html lang>.
- *   - Persisted to localStorage key `einvite-lang` ('en'|'km').
- *   - First-visit default: navigator.language starts with `km` -> Khmer, else English.
- *   - Exposes EInviteI18n.get()/set()/t()/langText()/subscribe().
- *   - Backwards-compatible alias EInviteI18N.getLocale() (the 23 page modules already
- *     call window.EInviteI18N?.getLocale?.(); this makes them resolve through the
- *     single resolver instead of falling back to <html lang>).
- *   - Dispatches a synchronous `einvite:lang-changed` CustomEvent on <html> so any
- *     bilingual surface can re-render, and notifies subscribers.
- *   - Injects a bilingual language switch into every <header> (shared header + the
- *     editor app-bar). The switch itself is the one place both languages coexist.
- *   - Walks [data-en][data-km] form fields and sets placeholder/aria-label to the
- *     active language (text labels are handled by the .i18n-en/.i18n-km CSS hiding
- *     convention, no JS needed there).
- *
- * This file is designed to be the FIRST script in every page bundle (it is listed
- * first in earlyScripts and as the first entry of each page's `scripts`). It runs
- * synchronously in <head> (bundles are loaded blocking in <head>) so <html lang> is
- * correct before first paint -> no FOIL flash of both languages. Every public
- * method is guarded so a missing DOM / storage / navigator never throws.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   "use strict";
-  // Guard against double-injection (earlyScripts + per-page scripts, or a future
-  // head <script src>).
+
+
   if (global.EInviteI18n && global.EInviteI18N && global.EInviteI18N.version) return;
   if (global.EInviteI18n && global.EInviteI18n.version >= 1) return;
 
   var doc = global.document;
   var STORAGE_KEY = "einvite-lang";
 
-  // --- Language detection ----------------------------------------------------
+
   function navigatorLang() {
     try {
       var nav = global.navigator && global.navigator.language;
@@ -129,13 +129,13 @@
     } catch (e) { /* noop */ }
   }
   function get() {
-    // Persisted user choice wins; otherwise the live <html lang> wins (set by the
-    // public page observer, the head inline, or the previous switch click); finally
-    // the navigator default.
+
+
+
     return persistedLang() || htmlLang();
   }
 
-  // --- Persistence + notification -------------------------------------------
+
   var subscribers = [];
   function persist(lang) {
     try { global.localStorage && global.localStorage.setItem(STORAGE_KEY, lang); }
@@ -152,19 +152,19 @@
     for (var i = 0; i < subscribers.length; i++) {
       try { subscribers[i](lang, get); } catch (e) { /* keep other subscribers alive */ }
     }
-    // Re-sync every injected language switch after a real language change.
-    // The `einvite:lang-changed` event re-runs boot()->injectSwitches(), but
-    // injectSwitches() skips any <header> that already holds a switch, so
-    // without this refresh the buttons' aria-pressed / active class stay frozen
-    // at the pre-click value and read as inverted on the now-inactive button.
-    // syncSwitch(null, lang) covers all switches across all <header> elements.
+
+
+
+
+
+
     syncSwitch(null, lang);
   }
 
-  // --- Form-field helper (placeholder/aria-label for [data-en][data-km]) ----
-  // Text labels (label/span/button/h2/th) are NOT touched here: the
-  // `.i18n-en`/`.i18n-km` CSS convention hides the inactive span, so no JS is
-  // needed for them and they re-render live on toggle via CSS.
+
+
+
+
   function applyFormFields(root) {
     var scope = root || doc;
     if (!scope.querySelectorAll) return;
@@ -183,16 +183,16 @@
     }
   }
 
-  // --- Language switch injection (into every <header>) ----------------------
+
   function escHTML(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
-  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
-  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
-  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
-  // the delegated click handler and `syncSwitch` use.
+
+
+
+
   var switchCount = 0;
   function makeSwitch() {
     var first = switchCount === 0;
@@ -219,12 +219,12 @@
       b.classList.toggle("active", on);
     }
   }
-  // One delegated listener instead of one per injected switch. The editor rebuilds its header
-  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
-  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
-  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
-  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
-  // survives re-renders and duplicate mounts.
+
+
+
+
+
+
   var delegated = false;
   function onLanguageClick(e) {
     var target = e.target;
@@ -240,9 +240,9 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
-      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
-      // check, command palette) is a layout heading, not the app bar, and the injected switch
-      // landed in the middle of those panels. Clean up any copy injected before this guard.
+
+
+
       if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
         var stray = h.querySelector(".language-switch");
         if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
@@ -260,10 +260,10 @@
     try { injectSwitches(); } catch (e) { /* keep going */ }
     applyOptions();
   }
-  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+
   function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
-  // --- Public resolver -------------------------------------------------------
+
   var EInviteI18n = {
     version: "1.0",
     STORAGE_KEY: STORAGE_KEY,
@@ -271,24 +271,24 @@
     getLocale: get, // backward-compat: EInviteI18N?.getLocale()
     set: function (lang) {
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
-      // If the language isn't actually changing, just (re)sync the DOM attribute
-      // and form fields so a forced re-render is idempotent.
+
+
       if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
       applyOptions();
       return lang;
     },
-    // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
-    // Optional {token:value} params are substituted as {token} -> value.
+
+
     t: function (key, strings, params) {
       var lang = get();
       var dict = (strings && (strings[lang] || strings.en)) || {};
       var s = dict[key];
       if ((s === undefined || s === null) && strings && strings.en) s = strings.en[key];
       if (s === undefined || s === null) s = key;
-      // Function-valued entries (pageLabel(n), pinLabel(n)) are invoked with the
-      // caller args; their own template fills the positional values.
+
+
       if (typeof s === "function") { try { return s(params); } catch (e) { return key; } }
       s = String(s);
       if (params && typeof params === "object" && !Array.isArray(params)) {
@@ -299,10 +299,10 @@
       }
       return s;
     },
-    // Backward-compatible langText('en','km',mode) inline shape.
-    // 'en'/'km' force a language; anything else (both/guest/host/undefined)
-    // renders both spans — the live <html lang> / [data-language] CSS hides the
-    // inactive one, so the switch updates the page instantly without re-render.
+
+
+
+
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
@@ -310,11 +310,11 @@
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
-    // convention (the HTML parser strips elements inside <option>), so their
-    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
-    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
-    // The guarded calls above resolve to it only on routes that include it.
+
+
+
+
+
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -325,8 +325,8 @@
   };
 
   global.EInviteI18n = EInviteI18n;
-  // Alias the uppercase name that 15 pre-existing modules already call via
-  // `window.EInviteI18N?.getLocale?.()` so they resolve through this resolver.
+
+
   global.EInviteI18N = {
     version: "1.0",
     getLocale: get,
@@ -334,21 +334,21 @@
     t: EInviteI18n.t,
   };
 
-  // Listen for external language changes (e.g. the public page's per-invitation
-  // observer writing <html lang> from root[data-language]) so the switch and
-  // form fields stay in sync.
+
+
+
   try {
     doc.addEventListener("einvite:lang-changed", boot);
   } catch (e) { /* noop */ }
 
-  // --- Synchronous init (runs in <head> before first paint) ------------------
+
   var initLang = persistedLang() || navigatorLang();
   applyHtmlLang(initLang);
   applyFormFields();
   if (doc && doc.addEventListener) {
     doc.addEventListener("DOMContentLoaded", boot);
-    // If the bundle is injected after parse, DOMContentLoaded may have already
-    // fired; boot immediately as a safety net.
+
+
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
@@ -506,21 +506,21 @@ function fit(outer,model={},options={}){
  if(!outer)return null;ensureFlow(outer);applyToElement(outer,model);
  if(model.textAutoFit!=='fit'){delete outer.dataset.textComputedFontSize;return measurement(outer)}
  const available=availableSpace(outer);if(available.width<2||available.height<2)return measurement(outer);
- // Autofit is a 16-step search, and every step writes font-size and then reads
- // layout, i.e. one forced document style recalculation per step. The search is
- // a pure function of (available box, model), so when neither has changed it
- // would return exactly the value it returned last time: reuse that value and
- // pay one measurement instead of sixteen. The key includes the whole model, so
- // any edit that could move the result still recomputes.
+
+
+
+
+
+
  const fitKey=`${Math.round(available.width)}x${Math.round(available.height)}|${options.set===false?'probe':'apply'}|${JSON.stringify(model)}`;
  const fitCached=outer.__typographyFitCache;
  if(fitCached&&fitCached.key===fitKey){
-  // A hit still has to leave the DOM in the fitted state. applyToElement runs
-  // on every pass (modelFor in the editor), which resets the inline font-size
-  // to the auto-fit maximum; skipping the rewrite here left the element at max
-  // size with the fitted value only in the dataset, and the final state became
-  // dependent on whether a cache miss happened to come last (FB-29 race: the
-  // title rendered at 88px on some loads, 41.6px on others, same seed).
+
+
+
+
+
+
   outer.style.fontSize=`${fitCached.result.computedSize}px`;
   outer.dataset.textComputedFontSize=String(fitCached.result.computedSize);
   return{...fitCached.result};
@@ -549,27 +549,27 @@ function assertRenderedClusterIntegrity(outer,locale='km'){const result=rendered
 function installResponsive(root=document,options={}){
  const scope=root||document,selector=options.selector||'[data-text-auto-fit="fit"],[data-typography-model-version]',targetFor=options.targetFor||((source)=>source),modelFor=options.modelFor||((target)=>target?.__typographyModel||null),onResult=options.onResult||(()=>{}),delay=Math.max(0,Number(options.delay??48)),events=options.events||[],sources=new Set(),timers=new Map();
  const boxKey=node=>{const rect=node.getBoundingClientRect();return `${Math.round(rect.width)}x${Math.round(rect.height)}`};
- // `run` writes typography sizing onto the element it measures, so the element's
- // own box changes as a result of being fitted. Recording the box the fit left
- // behind is what lets the ResizeObserver below tell "the fit moved this box"
- // (already handled) from "something outside resized it" (must re-fit).
+
+
+
+
  const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);source.__typographyFitBox=boxKey(source);onResult(result,target,source,model);return result};
  const schedule=source=>{if(!source)return;clearTimeout(timers.get(source));timers.set(source,setTimeout(()=>{timers.delete(source);run(source)},delay))};
- // An unconditional re-schedule here is a self-triggered loop: the fit changes
- // the measured box, the observer reports that change, the fit runs again.
- // Measured on index.html before this change, the loop produced 74 refits worth
- // 457 ms of style recalculation plus 37 re-installations of the controller.
- // A box this element has already been fitted at is not new information, so it
- // is skipped; a genuine resize or a font swap still changes the box and still
- // re-fits. The convergence is at most one extra pass.
+
+
+
+
+
+
+
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>{const source=entry.target;const rect=entry.contentRect;const key=`${Math.round(rect.width)}x${Math.round(rect.height)}`;if(source.__typographyFitBox===key)return;source.__typographyFitBox=key;schedule(source)})):null;
  const observe=(source,model)=>{if(!source)return source;sources.add(source);const target=targetFor(source);if(model&&target)target.__typographyModel=model;observer?.observe(source);return source};
- // `observe`'s second parameter is the caller's model, not a callback payload: passing it to
- // `forEach` directly handed it the array INDEX, so every element after the first cached a
- // number as its typography model. `modelFor` returns that cache first, so the fit pass then
- // applied a blank model (font-size 32, textAutoFit none) and text stopped being fitted at all
- // — the guest page rendered 33 of 34 pack text objects unfitted and clipped. Call it without
- // the extra arguments; nothing else about discovery changes.
+
+
+
+
+
+
  const discover=()=>{scope.querySelectorAll?.(selector).forEach(source=>observe(source));return sources};
  discover();sources.forEach(run);
  const fontDone=()=>sources.forEach(schedule);document.fonts?.ready?.then(fontDone).catch(()=>{});document.fonts?.addEventListener?.('loadingdone',fontDone);
@@ -689,8 +689,8 @@ function buildDialog({title='Please confirm',message='',icon='✦',input=false,v
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  // A short "Poster title:" style prompt is the field's label, not a second
-  // heading above a generic "Value" label. Long instructions stay as help text.
+
+
   const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
   const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
   let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
@@ -701,19 +701,19 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
-// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
-// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
-// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
-// custom canvas-size prompt (app.js) and the Template Studio custom poster
-// size prompt (templates.js); lives here because both route bundles already
-// load ui-dialogs.js before their consumer modules.
+
+
+
+
+
+
 window.EInvitePosterUnits=Object.freeze({
  PX_PER:{in:96,cm:96/2.54,ft:1152},
  parse(value){
   const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
   const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
   if(!m)return null;
-  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+
   return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
  },
  toPx(number,unit){
@@ -730,11 +730,11 @@ window.EInvitePosterUnits=Object.freeze({
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
- // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
- // resolve it as if it were a real invitation: the signed-in editor asked the server for
- // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
- // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+
+
+
+
+
  const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
  function getInvitationId(options={}){
    const direct=safe(explicitId);if(direct)return direct;
@@ -794,7 +794,7 @@ function posterDocument(title,width,height){
  doc.sectionOrder=[];doc.designPages=[];doc.schedule=[];doc.venues=[];doc.customBlocks=[];
  doc.palette={background:'#ffffff',surface:'#ffffff',text:'#2a2430',heading:'#7d4052'};
  doc.accent='#7d4052';doc.palettePreset='custom';doc.theme='rose';
- // Centered editable starter layout scaled for the chosen canvas.
+
  const u=Math.min(width,height)/1080;
  const addObject=(id,type,left,top,w,h,extra)=>{doc.objects[id]={id,type,left,top,width:w,height:h,opacity:1,borderWidth:0,borderColor:'#ffffff',borderRadius:0,shadowBlur:0,shadowColor:'#000000',animation:'none',duration:'900',rotation:0,showInHero:true,showInGallery:false,zIndex:2,...extra}};
  addObject('posterTitle','text','8%',(height>width?'18%':'28%'),'84%',`${Math.round(90*u)}px`,{html:title||'Your poster',font:'serif-georgia',color:'#2a2430',fontSize:Math.round(64*u),textAlign:'center',fontWeight:'700',letterSpacing:0,lineHeight:1.08});
@@ -871,11 +871,11 @@ function dashboardThumbnail(i){
 }
 
 function render(){$('#inviteGrid').innerHTML=invites.map(i=>`<article class="invite-card" style="opacity:${i.archived?.72:1}"><button class="invite-cover" data-edit="${i.id}" data-dashboard-thumbnail="${i.id}" aria-label="Open ${escapeHtml(i.title)}" ${i.archived?'disabled':''}>${dashboardThumbnail(i)}</button><div class="invite-body"><h2 title="${escapeHtml(i.title)}">${escapeHtml(i.title)}</h2><span class="invite-status-pill">${escapeHtml(i.status)}</span><div class="stats"><span>${i.views||0} views</span>${i.rsvpEnabled===false?'<span>Invitation only</span>':`<span>${i.rsvps||0} RSVPs</span>`}</div><div class="invite-overflow"><button type="button" class="invite-overflow__toggle" aria-haspopup="menu" aria-expanded="false" title="${_txt('More actions','សកម្មភាពច្រើន')}">⋮</button><menu class="invite-overflow__menu" hidden><button data-edit="${i.id}" ${i.archived?'disabled':''}>${_html('Edit','កែប្រែ')}</button><button data-guests="${i.id}">${_html('Guests','ភ្ញៀវ')}</button><button data-responses="${i.id}">${_html('Responses','ការឆ្លើយតប')}</button><button data-analytics="${i.id}">${_html('Analytics','ការវិភាគ')}</button><button data-sheets="${i.id}">${_html('Sign-up sheets','សន្លឹកចុះឈ្មោះ')}</button><button data-polls="${i.id}">${_html('Polls','ការស្ទង់មតិ')}</button><button data-history="${i.id}">${_html('Version history','ប្រវត្តិកំណែ')}</button><button data-copy="${i.id}">${_html('Duplicate','ចម្លង')}</button><button data-archive="${i.id}">${i.archived?_html('Restore','ស្ដារ'):_html('Archive','បង្ងា')}</button><button data-delete="${i.id}" class="danger">${_html('Delete','លុប')}</button></menu></div></div></article>`).join('');document.querySelectorAll('.invite-overflow__toggle').forEach(b=>{b.onclick=()=>{const menu=b.nextElementSibling;const expanded=b.getAttribute('aria-expanded')==='true';menu.hidden=expanded;b.setAttribute('aria-expanded',String(!expanded));const card=b.closest('.invite-card');if(card)card.style.overflow=expanded?'':'visible';if(!expanded)positionOverflowMenu(menu,b)}});document.querySelectorAll('[data-edit]').forEach(b=>{b.onclick=()=>{const t=b.closest('.invite-card')?.querySelector('.invite-overflow__toggle');if(t){t.setAttribute('aria-expanded','false');t.nextElementSibling.hidden=true}openEditor(b.dataset.edit)}});document.querySelectorAll('[data-guests]').forEach(b=>b.onclick=()=>{const t=b.closest('.invite-card').querySelector('.invite-overflow__toggle');t.setAttribute('aria-expanded','false');t.nextElementSibling.hidden=true;window.EInviteContext?.navigate?.(b.dataset.guests,'guests')});document.querySelectorAll('[data-responses]').forEach(b=>b.onclick=()=>window.EInviteContext?.navigate?.(b.dataset.responses,'responses'));document.querySelectorAll('[data-analytics]').forEach(b=>b.onclick=()=>window.EInviteContext?.navigate?.(b.dataset.analytics,'analytics'));
-// NW-3.1 / FB-20 parity entry points (OD-2 approved subset, 2026-10-22):
-// sheets + polls mount the already-shipped host panels (host-signup-sheets.js /
-// host-polls.js live in this bundle) for the clicked invitation — no panel
-// re-implementation; edit history is the cheap ⋮-link variant that opens the
-// editor where "Published versions" (#historyBtn) lives.
+
+
+
+
+
 document.querySelectorAll('[data-sheets]').forEach(b=>b.onclick=()=>{closeOverflowMenu(b);mountEventPanel('signup-sheets',b.dataset.sheets)});
 document.querySelectorAll('[data-polls]').forEach(b=>b.onclick=()=>{closeOverflowMenu(b);mountEventPanel('polls',b.dataset.polls)});
 document.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>{closeOverflowMenu(b);openEditor(b.dataset.history)});
@@ -906,16 +906,16 @@ const v13BytesToB64=value=>{const raw=Array.from(new Uint8Array(value),b=>String
 const v13AssertionJSON=credential=>({id:credential.id,type:credential.type,rawId:v13BytesToB64(credential.rawId),response:{clientDataJSON:v13BytesToB64(credential.response.clientDataJSON),authenticatorData:v13BytesToB64(credential.response.authenticatorData),signature:v13BytesToB64(credential.response.signature),userHandle:credential.response.userHandle?v13BytesToB64(credential.response.userHandle):null}});
 if($('#passkeyLoginBtn'))$('#passkeyLoginBtn').onclick=async()=>{const email=$('#email').value.trim(),status=$('#authStatus'),button=$('#passkeyLoginBtn');if(!/^.+@.+\..+$/.test(email)){status.textContent=_txt('Enter your email first, then choose Use a passkey.','បញ្ចូលអ៊ីមែលរបស់អ្នកជាមុនសិន រួចជ្រើសប្រើ passkey។');return}if(!window.PublicKeyCredential||!navigator.credentials){status.textContent=_txt('This browser does not support passkeys.','ប៊្រោស៊ើរនេះមិនគាំទ្រ passkey ទេ។');return}button.disabled=true;status.textContent=_txt('Waiting for your passkey…','កំពុងរង់ចាំ passkey របស់អ្នក…');try{const data=await request('/api/auth/passkeys/login/options',{method:'POST',body:JSON.stringify({email})}),opts=data.publicKey;opts.challenge=v13B64ToBytes(opts.challenge);opts.allowCredentials=(opts.allowCredentials||[]).map(x=>({...x,id:v13B64ToBytes(x.id)}));const credential=await navigator.credentials.get({publicKey:opts});const result=await request('/api/auth/passkeys/login/complete',{method:'POST',body:JSON.stringify({challengeId:data.challengeId,credential:v13AssertionJSON(credential)})});account=result.user;await Promise.all([loadServerInvites(),loadTemplates()]);status.textContent='';show()}catch(e){status.textContent=_txt(e.message||'Passkey sign-in was cancelled.',e.message||'Passkey sign-in was cancelled.')}finally{button.disabled=false}};
 if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.EInviteI18n.subscribe(function(){try{setAuthMode(authMode)}catch(e){}})
-// NW-3.1 / FB-20 row 62: the create-dialog poster branch (#posterWidth /
-// #posterHeight) only applies when the invitation type is Poster.
+
+
 };function syncPosterRow(){const isPoster=$('#newType')?.value==='Poster';if($('#posterSizeRow'))$('#posterSizeRow').hidden=!isPoster}
 if($('#newType'))$('#newType').addEventListener('change',syncPosterRow);
 syncPosterRow();
-// A ten-item menu opened from a card low in the viewport ran past the bottom
-// edge (450px of menu from y=519 in an 844px window), hiding Archive/Delete.
-// Cap it to the space below the toggle and let the menu scroll. Flipping it
-// above with `bottom:100%` is wrong here: the menu's containing block is the
-// page, not the toggle, so it jumped under the header.
+
+
+
+
+
 function positionOverflowMenu(menu,toggle){
   menu.style.maxHeight='';menu.style.overflowY='';menu.style.top='';menu.style.bottom='';
   const t=toggle.getBoundingClientRect();
@@ -926,15 +926,15 @@ function positionOverflowMenu(menu,toggle){
 }
 function closeOverflowMenu(button){const card=button.closest?.('.invite-card');const toggle=card&&card.querySelector('.invite-overflow__toggle');if(toggle){toggle.setAttribute('aria-expanded','false');toggle.nextElementSibling.hidden=true}if(card)card.style.overflow=''}
 function closeAllOverflowMenus(){document.querySelectorAll('.invite-overflow__menu').forEach(m=>{m.hidden=true;m.previousElementSibling?.setAttribute('aria-expanded','false');const card=m.closest?.('.invite-card');if(card)card.style.overflow=''})}
-// Registered once, not inside render(): the old capture listener was re-added on every
-// render, and because it ran before the toggle's own click it also closed the menu the
-// toggle had just opened, so the ⋮ button could never toggle its menu shut.
+
+
+
 document.addEventListener('click',event=>{if(event.target.closest?.('.invite-overflow'))return;closeAllOverflowMenus()},true);
 document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;const open=document.querySelector('.invite-overflow__menu:not([hidden])');if(!open)return;const toggle=open.previousElementSibling;closeAllOverflowMenus();toggle?.focus()});
-// NW-3.1 / FB-20 rows 65/66: mount the shipped host panel (host-signup-sheets.js
-// / host-polls.js, already in bundle-dashboard.js) for a specific invitation on
-// request. Same availability contract as the panels' own dashboard auto-mount:
-// in static mode they can only 404, so the server-required message is shown.
+
+
+
+
 async function mountEventPanel(kind,invitationId){
   try{await window.EInviteBackend?.ready}catch(_){}
   if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return alert(_txt(kind==='signup-sheets'?'Sign-up sheets require the full application server.':'Polls require the full application server.',kind==='signup-sheets'?'សន្លឹកចុះឈ្មោះត្រូវការម៉ាស៊ីនបម្រើកម្មវិធីពេញលេញ។':'ការស្ទង់មតិត្រូវការម៉ាស៊ីនបម្រើកម្មវិធីពេញលេញ។'));
@@ -952,8 +952,8 @@ function readBuiltInFavorites(){
 function writeBuiltInFavorites(set){localStorage.setItem(builtInFavoriteKey,JSON.stringify([...set]))}
 function templateDoc(item){
   if(item.kind==='user'||item.kind==='market') return item.document||{};
-  // Preview the design with its own name. The old placeholder ("Your Event")
-  // leaked into the thumbnail, the preview cover and every page caption.
+
+
   try{return builtInDocument(item.name,item.category==='Business'?'Business':item.category||'Wedding',item.id)}catch{return {fields:{names:item.name},palette:{background:'#fff7f3',text:'#342c26',heading:'#9d4555'},designPages:[],objects:{}}}
 }
 function stripMarkup(value){const div=document.createElement('div');div.innerHTML=String(value||'');return div.textContent||div.innerText||''}
@@ -1049,8 +1049,8 @@ function openTemplatePreview(item){
   previewTemplateItem=item;const doc=templateDoc(item),p=templatePalette(doc,item),pages=doc.designPages||[],title=item.name;
   const pageCount=`${pages.length} visual page${pages.length===1?'':'s'}`;
   const sectionList=(doc.sectionOrder||[]).filter(x=>!String(x).startsWith('page:')).join(' · ')||'Flexible sections';
-  // One cover, one message. The old preview stacked the heading on top of every
-  // absolutely-positioned hero object, so "Your Event" printed over the copy.
+
+
   $('#templatePreviewBody').innerHTML=`<div class="template-preview-shell"><div class="template-preview-phone"><div class="template-preview-screen" style="--p-bg:${p.background};--p-text:${p.text};--p-heading:${p.heading}"><section class="template-preview-hero"><span class="template-preview-eyebrow">${escapeHtml(item.category||'Invitation')} design</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(item.description||'Reusable invitation design')}</p><span class="template-preview-count">${pageCount}</span></section><div class="template-preview-pages">${pages.map(page=>previewPageMarkup(page,doc.masterPageStyle)).join('')}<div class="template-preview-page"><div><strong>Event sections</strong><small style="display:block;margin-top:6px;opacity:.7">${escapeHtml(sectionList)}</small></div></div></div></div></div><div class="template-preview-info"><p class="invite-kicker">${escapeHtml(item.category||'Invitation')} template</p><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.description||'Reusable invitation design')}</p><div class="template-preview-tags">${(item.tags||[]).map(tag=>`<span>${escapeHtml(tag)}</span>`).join('')}</div><div class="template-preview-features"><div class="template-preview-feature"><strong>${pages.length}</strong><br><small>Visual pages</small></div><div class="template-preview-feature"><strong>${Object.keys(doc.objects||{}).length}</strong><br><small>Hero elements</small></div><div class="template-preview-feature"><strong>${item.kind==='user'||item.kind==='market'?'Version '+(item.currentVersion||1):'Curated'}</strong><br><small>${item.kind==='user'?'Your template':item.kind==='market'?'Shared template':'Built-in design'}</small></div><div class="template-preview-feature"><strong>${doc.languageMode==='both'?'Bilingual ready':'Flexible'}</strong><br><small>Content system</small></div></div><div class="preview-page-list">${pages.map((page,i)=>`<div><span>${i+1}. ${escapeHtml(page.name||'Visual page')}</span><small>${escapeHtml(page.preset||'custom')}</small></div>`).join('')}</div></div></div>`;
   $('#templatePreviewDialog').showModal()
 }
@@ -1059,9 +1059,9 @@ if($('#closeTemplatePreview'))$('#closeTemplatePreview').onclick=()=>$('#templat
 if($('#usePreviewTemplate'))$('#usePreviewTemplate').onclick=()=>{
   if(!previewTemplateItem)return;
   const chosen=previewTemplateItem;
-  // "Use this template" is the commit action, not a second selection state.
-  // It used to only highlight a card behind the two dialogs, so the button
-  // looked dead; from a preview the only sensible next step is creation.
+
+
+
   $('#newTemplate').value=chosen.id;
   if($('#newType'))$('#newType').value=chosen.category==='Birthday'?'Birthday':chosen.category==='Business'?'Business':'Wedding';
   if($('#newTitle')&&!$('#newTitle').value.trim())$('#newTitle').value=chosen.name;
@@ -1069,29 +1069,29 @@ if($('#usePreviewTemplate'))$('#usePreviewTemplate').onclick=()=>{
   if($('#createForm'))$('#createForm').requestSubmit();
 };
 if($('#templateSearch'))$('#templateSearch').oninput=renderTemplateChoices;
-document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{templateFilter=b.dataset.templateFilter;document.querySelectorAll('[data-template-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTemplateChoices()});;/*
- * dashboard-polish.js — V55 (dispatch Group 2): the dashboard's filter row and
- * its async states.
- *
- * Before: this module injected a marketing intro ("Create beautiful moments,
- * manage every guest."), four metric cards and a second filter bar, all with
- * English-only copy, and final-polish.css hid the real .dash-head. It is now the
- * single owner of the dashboard toolbar:
- *
- *   1. Filter row   — search (240px) + segmented control (All / Published / Archive).
- *   2. Loading      — skeleton cards that mirror the real card (same height, same
- *                     16:9 cover, same two-line body). Replaced as soon as the real
- *                     cards or the empty state land.
- *   3. Error        — when the invitations endpoint fails and there is nothing in
- *                     local storage: icon, plain-English reason, Retry.
- *   4. Card polish  — status badge (state only, never decoration), hover
- *                     quick-actions row, uniform card height.
- *
- * Bilingual: EN + KM spans through the platform `[lang] .i18n-km` mechanism.
- * Strings without a trusted Khmer source reuse the English text ("fallback" in
- * docs/i18n/TRANSLATIONS.csv) and are listed as KH_PENDING in
- * docs/reviews/redesign-report.md. Khmer is never invented here.
- */
+document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{templateFilter=b.dataset.templateFilter;document.querySelectorAll('[data-template-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTemplateChoices()});;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   const view = document.querySelector('#dashboardView');
@@ -1115,7 +1115,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
     ));
   }
 
-  /* --- 1. Filter row ------------------------------------------------------ */
+
   let toolbar = null;
   let query = '';
   let segment = 'all';
@@ -1184,7 +1184,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
     }
   }
 
-  /* --- 2. Loading skeletons ---------------------------------------------- */
+
   function showSkeletons() {
     if (grid.querySelector('.invite-card, .empty-state, .error-state')) return;
     if (grid.querySelector('.skeleton-card')) return;
@@ -1199,7 +1199,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
     grid.querySelectorAll('.skeleton-card').forEach(node => node.remove());
   }
 
-  /* --- 3. Error state ---------------------------------------------------- */
+
   function renderError(reason) {
     if (grid.querySelector('.error-state')) return;
     clearSkeletons();
@@ -1215,16 +1215,16 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
   }
 
   async function probeServer() {
-    /* Static mode (no application server): the backend module already knows, so
-       do not fire a request whose only possible answer is a 404 (G8). The local
-       draft store stays authoritative. */
+
+
+
     if (window.EInviteBackend?.ready) { try { await window.EInviteBackend.ready; } catch (e) { /* ignore */ } }
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) return;
     let localInvites = null;
     try { localInvites = JSON.parse(localStorage.getItem('sovan-multi-invites-v1') || 'null'); } catch (e) { localInvites = null; }
-    /* Local-first: an array (empty or not) is authoritative enough. Only a device
-       that has never seen this account needs the server, and only then can a failed
-       request be reported as an error state. */
+
+
+
     if (Array.isArray(localInvites)) return;
     const controller = typeof AbortController === 'function' ? new AbortController() : null;
     const timer = controller ? setTimeout(() => controller.abort(), 7000) : null;
@@ -1239,20 +1239,20 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
       });
   }
 
-  /* --- 3b. Quick-start onboarding row ------------------------------------ */
-  /* The tiles repeat New invitation / Templates / Guests, which the header and
-     the rail already offer. They are onboarding for an empty account, so once the
-     grid holds a card they go away. The signal is the same one the empty state
-     reads (#inviteGrid has no .invite-card) — no second counter. The `hidden`
-     attribute is used so assistive tech agrees (accessibility.css maps it to
-     display:none!important). */
+
+
+
+
+
+
+
   function syncQuickstart() {
     const row = view.querySelector('.dash-quickstart');
     if (!row) return;
     row.hidden = !!grid.querySelector('.invite-card');
   }
 
-  /* --- 4. Card polish ---------------------------------------------------- */
+
   const BADGE = {
     published: { en: 'Published', km: 'ផ្សាយ', icon: '●' },
     draft: { en: 'Draft', km: 'ព្រាង', icon: '◐' },
@@ -1261,7 +1261,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
 
   function decorate() {
     grid.querySelectorAll('.invite-card').forEach(card => {
-      /* Status badge: state only — never "New!" or "Recommended". */
+
       const pill = card.querySelector('.invite-status-pill');
       if (pill) {
         const raw = (pill.textContent || '').trim().toLowerCase();
@@ -1271,7 +1271,7 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
         pill.dataset.state = state;
         pill.innerHTML = `<span aria-hidden="true">${meta.icon}</span>${i18nHtml(meta.en, meta.km)}`;
       }
-      /* Hover quick actions — visible affordance before the drag/click begins. */
+
       if (!card.querySelector('.invite-quick')) {
         const body = card.querySelector('.invite-body');
         if (body) {
@@ -1303,8 +1303,8 @@ document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{te
   syncQuickstart();
   if (!document.querySelector('.invite-card')) showSkeletons();
   new MutationObserver(() => {
-    /* Always re-check the row: a grid emptied back to the empty state must bring
-       the onboarding tiles back too. */
+
+
     syncQuickstart();
     if (grid.querySelector('.invite-card')) schedule();
   }).observe(grid, { childList: true });
@@ -1329,8 +1329,8 @@ function applyTheme(mode,announce=false){
   $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
   if(announce){
-    // Two quick toggles used to leave both "Dark appearance" and "Light appearance"
-    // stacked for 2.2s. Replace the previous theme toast instead of stacking.
+
+
     document.querySelectorAll('.ui-toast[data-theme-toast]').forEach(el=>el.remove());
     const el=toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
     if(el)el.dataset.themeToast='1';
@@ -1345,10 +1345,10 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
-  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
-  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
-  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+
+
+
+
   document.body.append(menu);
   function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
   function openThemeMenu(){
@@ -1378,9 +1378,9 @@ function installAppLauncher(){
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
-  // there made every click on it navigate (a full reload) before the menu could open.
-  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+
+
+
   const brandAnchor=brand.closest('a');
   (brandAnchor||brand).after(wrap);
   const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
@@ -1578,11 +1578,11 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+
+
+
+
+
 function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
@@ -1705,10 +1705,10 @@ function editorFinal(){
   const stage=$('#stage'),host=$('.studio-pane-host'),rail=$('.studio-tool-rail');if(!stage||!host||!rail)return;
   const saveNow=()=>{try{typeof save==='function'&&save()}catch{}};const choose=o=>{try{typeof clearSelection==='function'&&clearSelection();typeof setSelection==='function'&&setSelection([o])}catch{}};
   const makeId=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-  // The creation drawer is owned by editor-responsive-contract-v27 (EInviteResponsiveLayout): it
-  // derives `mobile-pane-collapsed` from body[data-editor-drawer] on every sync, so toggling the
-  // class by hand is reverted in the same tick and the handle looked dead. Delegate to the owner
-  // when it is present, and keep the class toggle only as the fallback for hosts without it.
+
+
+
+
   const owner=()=>window.EInviteResponsiveLayout;
   const closePaneOnMobile=()=>{if(owner()?.closeCreation){owner().closeCreation();return}if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
   const openPane=()=>{if(owner()?.openCreation){owner().openCreation();return}document.body.classList.remove('mobile-pane-collapsed')};
@@ -1768,23 +1768,23 @@ function editorFinal(){
 if(page==='dashboard')setTimeout(dashboardFinal,0);
 if(page==='materials')setTimeout(materialsFinal,0);
 if(page==='index')setTimeout(editorFinal,120);
-})();;/*
- * dashboard-empty-state.js — V55 (dispatch Group 2).
- *
- * One job: when the signed-in dashboard has no invitations, render the centred
- * empty state instead of an empty grid. It composes with the `ux-6` empty-state
- * system in modern-ui.css (`.empty-state`, `__icon`, `__title`, `__message`,
- * `__action`) rather than inventing another visual language.
- *
- * Shape follows the dispatch: line-art illustration in the single accent colour,
- * Title medium headline, Body medium explanation, one primary action.
- *
- * Bilingual: every string ships an EN span and a KM span through the platform's
- * `[lang] .i18n-km` mechanism. Strings with no trusted Khmer in
- * docs/i18n/TRANSLATIONS.csv ("fallback" status, as the CSV calls it) reuse the
- * English text and are listed as KH_PENDING in docs/reviews/redesign-report.md —
- * never machine-invented Khmer.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   const grid = document.querySelector('#inviteGrid');
@@ -1798,7 +1798,7 @@ if(page==='index')setTimeout(editorFinal,120);
     return `<span class="i18n i18n-en">${en}</span><span class="${cls}" lang="km">${khmer}</span>`;
   }
 
-  /* Line-art illustration: single accent colour, no gradient, no drop-shadow stack. */
+
   const ART = `<svg viewBox="0 0 96 72" role="img" aria-hidden="true" focusable="false">` +
     `<rect x="10" y="10" width="60" height="44" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>` +
     `<rect x="26" y="20" width="60" height="44" rx="4" fill="var(--app-surface)" stroke="currentColor" stroke-width="2"/>` +
@@ -1809,7 +1809,7 @@ if(page==='index')setTimeout(editorFinal,120);
     const hasCards = grid.querySelector('.invite-card, [data-invite-id], article, .skeleton-card');
     if (hasCards && hasCards.hasAttribute && hasCards.classList.contains('skeleton-card')) return;
     if (grid.children.length && grid.querySelector('.invite-card, [data-invite-id], article')) return;
-    /* An error state outranks the empty state — do not overwrite it. */
+
     if (grid.querySelector('.error-state')) return;
 
     grid.innerHTML =
@@ -1868,40 +1868,40 @@ function init(){
  observeDialogs();new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes){if(node.nodeType!==1)continue;if(node.matches?.('dialog')||node.querySelector?.('dialog'))observeDialogs(node)}}).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
-})();;/**
- * V2-UX-1 (ROADMAP-V2 §3.1) — Host-side management UI for sign-up sheets.
- *
- * Mounts on the dashboard as a per-invitation panel. The host can list,
- * create, edit, and delete sign-up sheets, expand "View claims" to see
- * every claim's name + email (host-only PII), and watch the loading /
- * empty / error states. Bilingual EN + Khmer per ROADMAP-V2 §3 ground
- * rule "every user-facing string must have an EN and KH variant".
- *
- * Reuses the design tokens (`tokens.css`, `modern-ui.css`) and the
- * existing Phase 2a-1 API contract that already powers the guest-side
- * `signup-sheets.js`. No new design system; no framework.
- *
- * API contract (Phase 2a-1, frozen):
- *   GET    /api/invitations/{id}/signup-sheets
- *          → 200 [{id, invitationId, title, type, slots[], deadlineTs, createdAt, archivedAt}]
- *          (host mode includes slot[].claims[] = {id, guestId, name, email, quantity, createdAt})
- *   POST   /api/invitations/{id}/signup-sheets        {title, type, slots[], deadlineTs?}
- *          → 201 {sheet}
- *   PUT    /api/invitations/{id}/signup-sheets/{sid}  {title?, type?, slots?, deadlineTs?}
- *          → 200 {sheet}
- *   DELETE /api/invitations/{id}/signup-sheets/{sid}
- *          → 200 {deleted:true}
- *
- * Surface contract:
- *   window.EInviteHostSignupSheets.mount(root, { invitationId, lang })
- *     - root: HTMLElement where the panel renders
- *     - invitationId: required; the active invitation
- *     - lang: optional 'en' | 'km' | 'both' (default 'both' for the host)
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
-  /** Bilingual strings — every label, button, and message. */
+
   const STRINGS = {
     panelTitle: { en: 'Sign-up sheets', km: 'តារាងចុះឈ្មោះ' },
     panelIntro: {
@@ -1919,7 +1919,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     empty: { en: 'No sign-up sheets yet. Create one to let guests claim items or slots.', km: 'មិនទាន់មានតារាងចុះឈ្មោះនៅឡើយ។ បង្កើតមួយដើម្បីឱ្យភ្ញៀវអាចចុះឈ្មោះធាតុ ឬទីតាំង។' },
     error: { en: 'Could not load sign-up sheets. Please try again.', km: 'មិនអាចផ្ទុកតារាងចុះឈ្មោះបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
     noInvitation: { en: 'Select an invitation first to manage its sign-up sheets.', km: 'សូមជ្រើសការអញ្ជើញជាមុនសិនដើម្បីគ្រប់គ្រងតារាងចុះឈ្មោះរបស់វា។' },
-    // ux-6 structured empty / loading / error states (separate title + message + action)
+
     emptyTitle: { en: 'No sign-up sheets yet', km: 'មិនទាន់មានសន្លឹកចុះឈ្មោះទេ' },
     emptyMessage: { en: 'Create a sheet to let guests claim items or slots.', km: 'បង្កើតសន្លឹកដើម្បីឱ្យភ្ញៀវចុះឈ្មោះធាតុ ឬឈរ។' },
     emptyAction: { en: 'Create sheet', km: 'បង្កើតសន្លឹក' },
@@ -1928,7 +1928,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     errorNetwork: { en: 'Network error. Please check your connection.', km: 'កំហុសបណ្ដាញ។ សូមពិនិត្យការតភ្ជាប់របស់អ្នក។' },
     retry: { en: 'Try again', km: 'ព្យាយាមម្ដងទៀត' },
     skeletonAriaLabel: { en: 'Loading sign-up sheets', km: 'កំពុងផ្ទុកសន្លឹកចុះឈ្មោះ' },
-    // Modal labels
+
     modalTitleCreate: { en: 'Create sign-up sheet', km: 'បង្កើតតារាងចុះឈ្មោះ' },
     modalTitleEdit: { en: 'Edit sign-up sheet', km: 'កែប្រែតារាងចុះឈ្មោះ' },
     titleLabel: { en: 'Title', km: 'ចំណងជើង' },
@@ -1948,7 +1948,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     removeSlot: { en: 'Remove', km: 'យកចេញ' },
     deadlineLabel: { en: 'Sheet-wide deadline (optional)', km: 'កាលបរិច្ឆេទកំណត់សរុប (ស្រេចចិត្ត)' },
     sheetDeadlineHint: { en: 'Closes all slots after this time', km: 'បិទទីតាំងទាំងអស់បន្ទាប់ពីពេលនេះ' },
-    // Validation + result messages
+
     errTitleRequired: { en: 'Please enter a title.', km: 'សូមបញ្ចូលចំណងជើង។' },
     errSlotLabelRequired: { en: 'Every slot needs a label.', km: 'ទីតាំងនីមួយៗត្រូវការស្លាក។' },
     errSave: { en: 'Could not save the sheet. Please try again.', km: 'មិនអាចរក្សាទុកតារាងបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
@@ -1957,7 +1957,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     confirmDelete: { en: 'Delete this sign-up sheet? Existing claims will be hidden from guests.', km: 'លុបតារាងចុះឈ្មោះនេះ? ការចុះឈ្មោះដែលមានស្រាប់នឹងត្រូវលាក់ពីភ្ញៀវ។' },
     saved: { en: 'Saved.', km: 'បានរក្សាទុក។' },
     deleted: { en: 'Sheet deleted.', km: 'តារាងបានលុប។' },
-    // List-view meta
+
     typeBadgeItems: { en: 'Items', km: 'ធាតុ' },
     typeBadgeSlots: { en: 'Slots', km: 'ទីតាំង' },
     slotsCount: { en: 'slots', km: 'ទីតាំង' },
@@ -1981,9 +1981,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   const langText = (key, mode) => {
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
-    // Dashboard/editor surfaces are always switchable: emit dual spans and let
-    // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
-    // re-render, form state preserved).
+
+
+
     return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const formatTs = (ts) => {
@@ -2041,9 +2041,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     refresh();
 
     function renderLoading() {
-      // 3 skeleton rows shaped like the real host-signup-sheet-row so the
-      // user sees the actual layout (title bar + badge + slot count +
-      // actions) instead of generic grey boxes.
+
+
+
       stateEl.setAttribute('aria-busy', 'true');
       const row = () => `
         <div class="skeleton skeleton--row" aria-hidden="true">
@@ -2142,7 +2142,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         </li>`;
     }
 
-    // --- Modal -------------------------------------------------------------
+
 
     function openSheetModal(existing) {
       const isEdit = !!existing;
@@ -2236,7 +2236,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
           if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
           closeOverlay();
           await refresh();
-          // V2-UX-7 (§3.7): success toast for create/edit mutation.
+
           if (window.EInviteToast) {
             EInviteToast.show({
               type: 'success',
@@ -2248,9 +2248,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         } catch (err) {
           statusEl.innerHTML = `<span class="error">${langText('errSave', lang)} <code>${esc(err.message || '')}</code></span>`;
           submit.disabled = false;
-          // V2-UX-7 (§3.7): also surface the failure as a toast so the host
-          // gets feedback even after closing the modal (the inline status is
-          // only visible while the modal is open).
+
+
+
           if (window.EInviteToast) {
             EInviteToast.show({
               type: 'error',
@@ -2263,10 +2263,10 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       });
     }
 
-    // --- Edit / Delete / Claims ------------------------------------------
+
 
     async function onEdit(sheetId) {
-      // Re-fetch the list to get the latest sheet (claims included in host mode).
+
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, {
           headers: { Accept: 'application/json' }, credentials: 'same-origin',
@@ -2289,7 +2289,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         const result = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
         await refresh();
-        // V2-UX-7 (§3.7): success toast for delete mutation.
+
         if (window.EInviteToast) {
           EInviteToast.show({
             type: 'success',
@@ -2299,8 +2299,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
           });
         }
       } catch (err) {
-        // V2-UX-7 (§3.7): replace the previous alert() with a bilingual
-        // error toast; auto-dismiss after 6s (longer than success).
+
+
         if (window.EInviteToast) {
           EInviteToast.show({
             type: 'error',
@@ -2328,8 +2328,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       btn.textContent = STRINGS.hideClaims.en;
       region.hidden = false;
       region.innerHTML = `<p class="muted">${langText('loading', lang)}</p>`;
-      // Claims are already returned as part of the host-mode list response
-      // (see _signup_sheet_view include_claims=True). Re-fetch to be safe.
+
+
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, {
           headers: { Accept: 'application/json' }, credentials: 'same-origin',
@@ -2376,7 +2376,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
 
     function cssEsc(id) {
-      // Escape for querySelector — only [a-zA-Z0-9_-] are safe unquoted.
+
       return String(id || '').replace(/[^a-zA-Z0-9_-]/g, (c) => `\\${c}`);
     }
   }
@@ -2385,15 +2385,15 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
 })();
 
 
-/* Mounted here instead of in a page-level inline <script>: the server sends
-   `script-src 'self'` with no nonce or hash list, so the sign-up sheets mount block was refused
-   outright and logged a CSP violation on every dashboard load. This module is already part
-   of bundle-dashboard.js, so moving the mount into it adds no request and no script tag.
-   The block below is byte-for-byte the inline block it replaces. */
-// Mount host signup-sheets panel for the active invitation (V2-UX-1, ROADMAP-V2 §3.1).
-// Coordinates with ux-2 (host-polls) — this panel is placed before the polls panel
-// in the event-section flow. Picks the invitation id from window.EINVITE_INVITATION_ID,
-// then the URL ?invitation=, then EInviteContext.getInvitationId() (localStorage).
+
+
+
+
+
+
+
+
+
 (function () {
   function resolveInvitationId() {
     if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
@@ -2412,16 +2412,16 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     var mountEl = document.getElementById('signup-sheets-mount');
     if (!mountEl) return;
     var panel = document.getElementById('signup-sheets-panel');
-    // Static mode (no application server): this panel's only data source is
-    // /api/invitations/{id}/signup-sheets, so every request can only 404.
-    // Keep the section hidden and skip the mount entirely.
+
+
+
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { if (panel) panel.hidden = true; return; }
     if (panel) panel.hidden = false;
     if (!window.EInviteHostSignupSheets || typeof window.EInviteHostSignupSheets.mount !== 'function') return;
     var invitationId = resolveInvitationId();
     if (!invitationId) {
-      // Show the empty-state ("Select an invitation first"). Still mount so the
-      // panel renders its bilingual heading + placeholder.
+
+
       mountEl.innerHTML = '<p class="muted"><span class="i18n i18n-en">Select an invitation first to manage its sign-up sheets.</span><span class="i18n i18n-km khmer-text" lang="km">Select an invitation first to manage its sign-up sheets.</span></p>';
       return;
     }
@@ -2431,51 +2431,51 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountPanel, { once: true });
   } else { mountPanel(); }
-})();;/**
- * V2-UX-2 (ROADMAP-V2 §3.2) — Host-side management UI for polls.
- *
- * Mounts on the dashboard as a per-invitation panel placed immediately
- * after the §3.1 sign-up-sheets panel (see dashboard.html). The host can
- * list, create, edit, delete, and "close now" polls, and expand a per-poll
- * "View results" region that draws a CSS bar chart plus the host-only voter
- * email list. Bilingual EN + Khmer per ROADMAP-V2 §3 ground rule
- * "every user-facing string must have an EN and KH variant".
- *
- * Reuses the design tokens (`tokens.css`, `modern-ui.css`) and the existing
- * Phase 2a-1 API contract that already powers the guest-side `polls.js`.
- * No new design system; no framework. Mirrors `host-signup-sheets.js` (§3.1)
- * for IIFE shape, STRINGS pattern, modal pattern, and empty/loading/error
- * states so the two panels feel like siblings.
- *
- * API contract (Phase 2a-1, frozen):
- *   GET    /api/invitations/{id}/polls
- *          → 200 [{id, invitationId, question, options[{id,label,description,votes}],
- *                  visibility, multiSelect, deadlineTs, createdAt, archivedAt,
- *                  closed, totalVotes, votes[{id,optionId,guestId,name,email,createdAt}]}]
- *          (host mode includes options[].votes counts + votes[] voter PII)
- *   POST   /api/invitations/{id}/polls          {question, options[{label,description?,id?}],
- *                                                visibility, multiSelect, deadlineTs?}
- *          → 201 {poll}
- *   PUT    /api/invitations/{id}/polls/{pid}   {question?, options?, visibility?,
- *                                                multiSelect?, deadlineTs?}
- *          → 200 {poll}
- *   DELETE /api/invitations/{id}/polls/{pid}   → 200 {deleted:true}
- *   GET    /api/invitations/{id}/polls/{pid}/results → 200 {poll with show_results=true}
- *
- * "Close now" sets `deadlineTs = now - 1000` (just in the past) via PUT so
- * the server's `closed = deadline_ts < now` check flips true on the next
- * list refresh — the existing endpoint has no dedicated "close" verb.
- *
- * Surface contract:
- *   window.EInviteHostPolls.mount(root, { invitationId, lang })
- *     - root: HTMLElement where the panel renders
- *     - invitationId: required; the active invitation
- *     - lang: optional 'en' | 'km' | 'both' (default 'both' for the host)
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
-  /** Bilingual strings — every label, button, and message. */
+
   const STRINGS = {
     panelTitle: { en: 'Polls', km: 'ការស្ទង់មតិ' },
     panelIntro: {
@@ -2494,7 +2494,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     empty: { en: 'No polls yet. Create one to let guests vote.', km: 'មិនទាន់មានការស្ទង់មតិនៅឡើយ។ បង្កើតមួយដើម្បីឱ្យភ្ញៀវអាចបោះឆ្នោត។' },
     error: { en: 'Could not load polls. Please try again.', km: 'មិនអាចផ្ទុកការស្ទង់មតិបានទេ។ សូមព្យាយាមម្ដងទៀត។' },
     noInvitation: { en: 'Select an invitation first to manage its polls.', km: 'សូមជ្រើសការអញ្ជើញជាមុនសិនដើម្បីគ្រប់គ្រងការស្ទង់មតិរបស់វា។' },
-    // ux-6 structured empty / loading / error states (separate title + message + action)
+
     emptyTitle: { en: 'No polls yet', km: 'មិនទាន់មានការស្ទង់មតិទេ' },
     emptyMessage: { en: 'Create a poll to gather guest preferences.', km: 'បង្កើតការស្ទង់មតិដើម្បីប្រមូលចំណូលចិត្តភ្ញៀវ។' },
     emptyAction: { en: 'Create poll', km: 'បង្កើតការស្ទង់មតិ' },
@@ -2503,7 +2503,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     errorNetwork: { en: 'Network error. Please check your connection.', km: 'កំហុសបណ្ដាញ។ សូមពិនិត្យការតភ្ជាប់របស់អ្នក។' },
     retry: { en: 'Try again', km: 'ព្យាយាមម្ដងទៀត' },
     skeletonAriaLabel: { en: 'Loading polls', km: 'កំពុងផ្ទុកការស្ទង់មតិ' },
-    // Modal labels
+
     modalTitleCreate: { en: 'Create poll', km: 'បង្កើតការស្ទង់មតិ' },
     modalTitleEdit: { en: 'Edit poll', km: 'កែប្រែការស្ទង់មតិ' },
     questionLabel: { en: 'Question', km: 'សំណួរ' },
@@ -2521,7 +2521,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     visibilityHidden: { en: 'Hidden — reveal only after the poll closes', km: 'លាក់ — បង្ហាញតែពេលការស្ទង់មតិបិទ' },
     deadlineLabel: { en: 'Deadline (optional)', km: 'កាលបរិច្ឆេទកំណត់ (ស្រេចចិត្ត)' },
     deadlineHint: { en: 'Closes the poll after this time', km: 'បិទការស្ទង់មតិបន្ទាប់ពីពេលនេះ' },
-    // Validation + result messages
+
     errQuestionRequired: { en: 'Please enter a question.', km: 'សូមបញ្ចូលសំណួរ។' },
     errOptionsRange: { en: 'A poll needs 2 to 20 options.', km: 'ការស្ទង់មតិត្រូវការជម្រើស ២ ដល់ ២០។' },
     errOptionLabelRequired: { en: 'Every option needs a label.', km: 'ជម្រើសនីមួយៗត្រូវការស្លាក។' },
@@ -2531,11 +2531,11 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     errResults: { en: 'Could not load results for this poll.', km: 'មិនអាចផ្ទុកលទ្ធផលសម្រាប់ការស្ទង់មតិនេះបានទេ។' },
     confirmDelete: { en: 'Delete this poll? Existing votes will be hidden from guests.', km: 'លុបការស្ទង់មតិនេះ? ការបោះឆ្នោតដែលមានស្រាប់នឹងត្រូវលាក់ពីភ្ញៀវ។' },
     confirmClose: { en: 'Close this poll now? Guests will no longer be able to vote.', km: 'បិទការស្ទង់មតិនេះឥឡូវនេះ? ភ្ញៀវនឹងមិនអាចបោះឆ្នោតបានទៀតទេ។' },
-    // V2-UX-7 (§3.7): success toasts.
+
     saved: { en: 'Poll saved.', km: 'បានរក្សាទុកការស្ទង់មតិ។' },
     deleted: { en: 'Poll deleted.', km: 'ការស្ទង់មតិបានលុប។' },
     closed: { en: 'Poll closed.', km: 'ការស្ទង់មតិបានបិទ។' },
-    // List-view meta
+
     statusOpen: { en: 'Open', km: 'បើក' },
     statusClosed: { en: 'Closed', km: 'បិតហើយ' },
     visibilityBadgeLive: { en: 'Live', km: 'ផ្ទាល់' },
@@ -2566,9 +2566,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   const langText = (key, mode) => {
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
-    // Dashboard/editor surfaces are always switchable: emit dual spans and let
-    // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
-    // re-render, form state preserved).
+
+
+
     return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const formatTs = (ts) => {
@@ -2627,9 +2627,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     refresh();
 
     function renderLoading() {
-      // 3 skeleton rows shaped like the real host-poll-row so the user
-      // sees the actual layout (question + status badges + meta +
-      // actions) instead of generic grey boxes.
+
+
+
       stateEl.setAttribute('aria-busy', 'true');
       const row = () => `
         <div class="skeleton skeleton--row" aria-hidden="true">
@@ -2749,7 +2749,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         </li>`;
     }
 
-    // --- Modal -------------------------------------------------------------
+
 
     function openPollModal(existing) {
       const isEdit = !!existing;
@@ -2812,7 +2812,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
           <button type="button" class="host-polls-remove-option danger" title="${esc(STRINGS.removeOption.en)}">×</button>
         `;
         li.querySelector('.host-polls-remove-option').addEventListener('click', () => {
-          // Keep at least 2 option rows so the 2–20 constraint is always visible.
+
           if (optionRows.children.length > 2) li.remove();
           else { li.querySelector('input[name=optionLabel]').value = ''; }
         });
@@ -2876,7 +2876,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
           if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
           closeOverlay();
           await refresh();
-          // V2-UX-7 (§3.7): success toast for create/edit mutation.
+
           if (window.EInviteToast) {
             EInviteToast.show({
               type: 'success',
@@ -2888,8 +2888,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         } catch (err) {
           statusEl.innerHTML = `<span class="error">${langText('errSave', lang)} <code>${esc(err.message || '')}</code></span>`;
           submit.disabled = false;
-          // V2-UX-7 (§3.7): also surface the failure as a toast so the host
-          // gets feedback even after closing the modal.
+
+
           if (window.EInviteToast) {
             EInviteToast.show({
               type: 'error',
@@ -2902,10 +2902,10 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       });
     }
 
-    // --- Edit / Delete / Close / Results --------------------------------
+
 
     async function onEdit(pollId) {
-      // Re-fetch the list to get the latest poll (votes included in host mode).
+
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls`, {
           headers: { Accept: 'application/json' }, credentials: 'same-origin',
@@ -2928,7 +2928,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         const result = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
         await refresh();
-        // V2-UX-7 (§3.7): success toast for delete mutation.
+
         if (window.EInviteToast) {
           EInviteToast.show({
             type: 'success',
@@ -2938,8 +2938,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
           });
         }
       } catch (err) {
-        // V2-UX-7 (§3.7): replace the previous alert() with a bilingual
-        // error toast; auto-dismiss after 6s (longer than success).
+
+
         if (window.EInviteToast) {
           EInviteToast.show({
             type: 'error',
@@ -2954,8 +2954,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     async function onCloseNow(pollId) {
       if (!confirm(STRINGS.confirmClose.en + '\n' + STRINGS.confirmClose.km)) return;
       try {
-        // Set deadline to 1s in the past so the server's `deadline_ts < now`
-        // check flips `closed=true` on the next list refresh.
+
+
         const past = Date.now() - 1000;
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls/${encodeURIComponent(pollId)}`, {
           method: 'PUT',
@@ -2966,7 +2966,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         const result = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(result.error || 'HTTP ' + res.status);
         await refresh();
-        // V2-UX-7 (§3.7): success toast for close-now mutation.
+
         if (window.EInviteToast) {
           EInviteToast.show({
             type: 'success',
@@ -2976,8 +2976,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
           });
         }
       } catch (err) {
-        // V2-UX-7 (§3.7): replace the previous alert() with a bilingual
-        // error toast; auto-dismiss after 6s (longer than success).
+
+
         if (window.EInviteToast) {
           EInviteToast.show({
             type: 'error',
@@ -2998,7 +2998,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         region.hidden = true;
         region.innerHTML = '';
         btn.setAttribute('aria-expanded', 'false');
-        // Match the host-signup-sheets sibling: restore the EN label on collapse.
+
         btn.textContent = STRINGS.viewResults.en;
         return;
       }
@@ -3037,7 +3037,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
             <span class="host-poll-result-count">${votes}</span>
           </li>`;
       }).join('');
-      // Voter list — host-only PII (full emails per §3.2 acceptance).
+
       const voters = Array.isArray(poll.votes) ? poll.votes : [];
       const optionLabelMap = {};
       options.forEach((o) => { optionLabelMap[String(o.id)] = o.label || ''; });
@@ -3075,14 +3075,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
 })();
 
 
-/* Mounted here instead of in a page-level inline <script>: the server sends
-   `script-src 'self'` with no nonce or hash list, so the guest polls mount block was refused
-   outright and logged a CSP violation on every dashboard load. This module is already part
-   of bundle-dashboard.js, so moving the mount into it adds no request and no script tag.
-   The block below is byte-for-byte the inline block it replaces. */
-// Mount host polls panel for the active invitation (V2-UX-2, ROADMAP-V2 §3.2).
-// Placed AFTER the signup-sheets panel inside <main>. Shares the same
-// invitation-id resolver chain so both panels see the same active invitation.
+
+
+
+
+
+
+
+
 (function () {
   function resolveInvitationId() {
     if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
@@ -3101,16 +3101,16 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     var mountEl = document.getElementById('polls-mount');
     if (!mountEl) return;
     var panel = document.getElementById('polls-panel');
-    // Static mode (no application server): this panel's only data source is
-    // /api/invitations/{id}/polls, so every request can only 404.
-    // Keep the section hidden and skip the mount entirely.
+
+
+
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { if (panel) panel.hidden = true; return; }
     if (panel) panel.hidden = false;
     if (!window.EInviteHostPolls || typeof window.EInviteHostPolls.mount !== 'function') return;
     var invitationId = resolveInvitationId();
     if (!invitationId) {
-      // Show the empty-state ("Select an invitation first"). Still mount so the
-      // panel renders its bilingual heading + placeholder.
+
+
       mountEl.innerHTML = '<p class="muted"><span class="i18n i18n-en">Select an invitation first to manage its polls.</span><span class="i18n i18n-km khmer-text" lang="km">Select an invitation first to manage its polls.</span></p>';
       return;
     }
@@ -3120,45 +3120,45 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountPanel, { once: true });
   } else { mountPanel(); }
-})();;/**
- * V2-UX-7 (ROADMAP-V2 §3.7) — Toast notification system.
- *
- * A tiny, dependency-free toast stack. Exposes a single global:
- *
- *     window.EInviteToast.show({ type, message_en, message_km, duration })
- *
- *   - type:        'success' | 'error' | 'info' | 'warning' (default 'info')
- *   - message_en:  required English text
- *   - message_km:  required Khmer text
- *   - duration:    ms before auto-dismiss (default 4000; pass 6000 for errors)
- *
- * Layout: top-right fixed `#toast-stack` container (auto-created if missing).
- * Stack semantics: newest at the top; max 5 visible; oldest is dismissed
- * when a 6th would arrive.
- *
- * Accessibility:
- *   - The container carries `aria-live="polite"` + `aria-atomic="false"` so
- *     screen readers announce each new toast without stealing focus.
- *   - Each toast is `role="status"`.
- *   - The close button is a real `<button>` with a bilingual `aria-label`.
- *   - Hover/focus pauses the auto-dismiss timer (a11y nicety).
- *   - `@media (prefers-reduced-motion: reduce)` disables the slide-in.
- *
- * Design tokens: reuses `--app-bg`, `--app-surface`, `--app-text`,
- * `--app-muted`, `--app-line`, `--danger`, `--app-good`, `--app-warn`,
- * `--app-accent-2`, `--app-shadow`, `--app-radius`. If ux-9 ever defines a
- * global `--info` token, the `.toast--info` border picks it up automatically;
- * falls back to `--app-accent-2`.
- *
- * IIFE shape mirrors `host-signup-sheets.js` / `host-polls.js`. Idempotent:
- * if the bundle is somehow loaded twice, the second IIFE no-ops.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
   if (window.EInviteToast) return; // idempotent — already defined
 
-  /** Bilingual strings for the toast chrome itself (close button label). */
+
   var STRINGS = {
     close: { en: 'Close', km: 'បិទ' }
   };
@@ -3168,7 +3168,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   var VALID_TYPES = { success: 1, error: 1, info: 1, warning: 1 };
   var LEAVE_TIMEOUT_MS = 280; // matches the --leave transition in toast.css
 
-  /** Pick the active language: explicit window.EInviteLang, then <html lang>. */
+
   function activeLang() {
     if (window.EInviteLang === 'km') return 'km';
     if (window.EInviteLang === 'en') return 'en';
@@ -3177,7 +3177,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     return 'en';
   }
 
-  /** Find or create the top-right `#toast-stack` container. */
+
   function getStack() {
     var stack = document.getElementById('toast-stack');
     if (!stack) {
@@ -3191,13 +3191,13 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     return stack;
   }
 
-  /** Bilingual close-button label. */
+
   function closeLabel() {
     var lang = activeLang();
     return STRINGS.close[lang] || STRINGS.close.en;
   }
 
-  /** Per-type icon glyph (no external icon font — kept inline). */
+
   function iconFor(type) {
     switch (type) {
       case 'success': return '\u2713';        // ✓
@@ -3208,16 +3208,16 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
 
-  /**
-   * Show a toast.
-   *
-   * @param {object} opts
-   * @param {string} opts.type        'success' | 'error' | 'info' | 'warning'
-   * @param {string} opts.message_en  English message (required)
-   * @param {string} opts.message_km  Khmer message (required)
-   * @param {number} [opts.duration]  ms before auto-dismiss (default 4000)
-   * @returns {HTMLElement} the toast element (for testing)
-   */
+
+
+
+
+
+
+
+
+
+
   function show(opts) {
     opts = opts || {};
     var type = VALID_TYPES[opts.type] ? opts.type : 'info';
@@ -3228,7 +3228,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
 
     var stack = getStack();
 
-    // Enforce max-visible: dismiss oldest from the top (stack is newest-first).
+
     while (stack.children.length >= MAX_VISIBLE) {
       var oldest = stack.lastElementChild;
       if (!oldest) break;
@@ -3248,7 +3248,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     var message = document.createElement('span');
     message.className = 'toast__message';
     message.textContent = msg;
-    // Hint the language for screen readers + the :lang(km) rule (ux-5 §3.5).
+
     message.lang = lang;
 
     var close = document.createElement('button');
@@ -3262,20 +3262,20 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     toast.appendChild(message);
     toast.appendChild(close);
 
-    // Insert at top (newest first), then promote to `--visible` on the next
-    // frame so the CSS transition runs (slide-in-from-right + fade).
+
+
     stack.insertBefore(toast, stack.firstChild);
     requestAnimationFrame(function () {
       toast.classList.add('toast--visible');
       toast.classList.remove('toast--enter');
     });
 
-    // Auto-dismiss timer (stored on the element so manual close + hover-pause
-    // can cancel it).
+
+
     toast._einviteToastTimer = setTimeout(function () { dismiss(toast); }, duration);
 
-    // Pause auto-dismiss on hover/focus; resume (with a short grace period)
-    // on leave/blur so keyboard users can read the toast at their own pace.
+
+
     function pause() {
       if (toast._einviteToastTimer) {
         clearTimeout(toast._einviteToastTimer);
@@ -3294,7 +3294,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     return toast;
   }
 
-  /** Animate out + remove a toast (idempotent). */
+
   function dismiss(toast) {
     if (!toast || !toast.parentNode) return;
     if (toast._einviteToastDismissed) return;
@@ -3321,14 +3321,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   }
 
   window.EInviteToast = { show: show };
-})();;/**
- * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
- *
- * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
- * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
- * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
- * still work. Toggles expose aria-expanded; nothing traps focus.
- */
+})();;
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteShell && window.EInviteShell.version >= 55) return;
@@ -3341,7 +3341,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
 
-  /* --- 1. Rail collapse -------------------------------------------------- */
+
   function applyRailCollapsed(collapsed) {
     body.classList.toggle('rail-collapsed', !!collapsed);
     document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
@@ -3349,14 +3349,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
-      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
+
       var glyph = btn.querySelector('[data-rail-glyph]');
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
-  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
-     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
-     return focus to the toggle when the drawer closes under the keyboard. */
+
+
+
   function ensureScrim() {
     var scrim = document.querySelector('.app-drawer-scrim');
     if (!scrim) {
@@ -3382,7 +3382,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
 
-  /* --- 2. Current page --------------------------------------------------- */
+
   function markCurrentPage() {
     var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
     document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
@@ -3391,11 +3391,11 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     });
   }
 
-  /*
-   * Pages that show a signed-out flow (dashboard) hide their rail until the
-   * signed-in view is revealed, so the login card gets the full canvas. The
-   * same flag flips the topbar down to Skeleton B (brand + language + theme).
-   */
+
+
+
+
+
   function syncAutoRail() {
     var autoRail = document.querySelector('.app-rail[data-rail-auto]');
     var signedIn = document.getElementById('dashboardView');
@@ -3410,7 +3410,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  /* --- 3. Appearance ----------------------------------------------------- */
+
   function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
   function applyTheme(next) {
     html.dataset.theme = next;
@@ -3420,12 +3420,12 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      /* Both symbols live in the button; the theme attribute on <html> shows the
-         right one, so nothing is assigned here. */
+
+
     });
   }
 
-  /* --- Wiring ------------------------------------------------------------ */
+
   document.addEventListener('click', function (event) {
     var railToggle = event.target.closest('[data-rail-toggle]');
     if (railToggle) {
@@ -3438,7 +3438,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
     var themeToggle = event.target.closest('[data-theme-toggle]');
     if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
-    /* Outside click closes the mobile drawer but never the desktop rail. */
+
     if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
   });
   document.addEventListener('keydown', function (event) {
@@ -3467,33 +3467,33 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   });
 })();
 
-/*
- * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
- * workspace, appearance, drawer, account and both language pills on one
- * non-wrapping row (740px of content in a 390px bar), so the language switch
- * painted past the viewport.
- *
- * The CSS route is blocked: app-shell.css is inside @layer components, and every
- * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
- * the generated route bundle, which concatenates sources in manifest order. A
- * deterministic shell hook keeps the wrap correct at any width without another
- * !important and without depending on which sheet happens to load last.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (document.body.classList.contains('guest')) return;
-  // The app bar is a direct child of body on the shell routes, but a wrapper
-  // (#app) on some pages; look for it either way and never pick a dialog header.
+
+
   const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
     .find((node) => !node.closest('dialog')) || null;
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
-  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
-  // padding is the only arithmetic that fits without shrinking tap targets.
+
+
   const TIGHT = 400;
-  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
-  // even on two rows. Below 360 the brand text yields its width to them.
+
+
   const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
   const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
@@ -3522,14 +3522,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     header.style.overflow = 'visible';
     header.style.rowGap = tight ? '0' : '4px';
     if (tight) {
-      // The unlayered narrow-header rule wins padding/gap with !important; it
-      // reads these variables, so the hook can compress the bar without adding
-      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+
+
+
       header.style.setProperty('--shell-topbar-pad', '0px 8px');
       header.style.setProperty('--shell-topbar-gap', '0px');
-      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
-      // page cluster. A half-width brand forces exactly that split instead of
-      // a third row on the Khmer templates page.
+
+
+
       if (left) {
         left.style.flex = compact ? '0 0 auto' : '1 1 50%';
         left.style.maxWidth = compact ? '44px' : '50%';
@@ -3537,8 +3537,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         left.style.minWidth = '0';
         left.style.overflow = 'hidden';
       }
-      // An empty right cluster (dashboard hides it) must not claim a flex line:
-      // giving it a height created a blank row between the brand and language rows.
+
+
       if (right && right.getBoundingClientRect().width > 0) {
         right.style.order = compact ? '0' : '20';
         right.style.flex = '0 1 auto';
@@ -3546,8 +3546,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       } else if (right) {
         clear(right, RIGHT_PROPS);
         right.style.order = '0';
-        // An empty cluster still claimed a 44 px flex line; hide it entirely so
-        // the bar is brand row + language row, not three rows.
+
+
         right.style.display = 'none';
       }
     } else {
@@ -3568,9 +3568,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
   sync();
-  // The language switch is injected after this script on some routes (it had no
-  // inline style at all in the first measurement). Re-sync when it lands, not
-  // only on the next window resize.
+
+
+
   new MutationObserver(sync).observe(header, { childList: true });
   window.addEventListener('load', sync, { once: true });
   let timer = 0;

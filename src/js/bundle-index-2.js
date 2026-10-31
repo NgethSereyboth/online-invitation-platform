@@ -1,8 +1,8 @@
-;/* LT-4.3: the editor's native colour inputs get a small popover with recents, an
-   eyedropper where the browser has one, and a contrast hint for text colours.
-   The native input stays the source of truth: every choice is written back to it
-   and both `input` and `change` are dispatched, so the existing editor handlers
-   keep doing the applying. No new colour logic in app.js, no HTML change. */
+;
+
+
+
+
 (() => {
   'use strict';
   const body = document.body;
@@ -26,7 +26,7 @@
     return next;
   }
 
-  // --- contrast -------------------------------------------------------------
+
   function toRgb(color) {
     const value = String(color || '').trim();
     const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
@@ -53,8 +53,8 @@
     const light = Math.max(a, b), dark = Math.min(a, b);
     return (light + 0.05) / (dark + 0.05);
   }
-  // The page surface the text is read on: the document palette, then the stage,
-  // then white. Shapes/text both sit on that surface in this editor.
+
+
   function pageBackground() {
     const palette = window.state?.palette;
     const stage = document.querySelector('#stage');
@@ -73,7 +73,7 @@
     return `Below AA — ${rounded}`;
   }
 
-  // --- popover --------------------------------------------------------------
+
   let host = null;
   let dialog = null;
   let restoreFocus = null;
@@ -94,8 +94,8 @@
   function renderDetails(hex) {
     if (!dialog) return;
     const hint = dialog.querySelector('[data-cp-contrast]');
-    // Only text colours get a contrast verdict; a shape border on a page has no
-    // readable text to judge, and a wrong hint is worse than none.
+
+
     const role = host?.dataset.ctx || host?.id || '';
     const isText = /(^|-)color$|^color$|text|accent|heading/i.test(role) && !/fill|border|shadow|background/i.test(role);
     hint.hidden = !isText;
@@ -128,7 +128,7 @@
     host = null;
   }
 
-  // Editor JS builds no HTML strings (repo rule): the popover is nodes only.
+
   function el(tag, attrs = {}, text = '') {
     const node = document.createElement(tag);
     Object.entries(attrs).forEach(([name, value]) => {
@@ -210,9 +210,9 @@
     dialog.style.top = `${Math.round(top)}px`;
   }
 
-  // Delegated: every colour input in the editor, including ones the panels and
-  // the studio build later. `preventDefault` keeps the OS dialog closed while
-  // the popover owns the interaction; the native input inside is one click away.
+
+
+
   document.addEventListener('click', (event) => {
     const input = event.target.closest?.('input[type="color"]');
     if (!input || !input.closest('#main, #stage, body[data-page="index"]')) return;
@@ -220,8 +220,8 @@
     event.preventDefault();
     open(input);
   }, true);
-  // Window capture: the editor's own Escape handlers sit on document and some stop
-  // immediate propagation there, so the popover listens one level earlier.
+
+
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && dialog) { event.preventDefault(); close({ focus: true }); }
   }, true);
@@ -253,8 +253,8 @@ function applyTheme(mode,announce=false){
   $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
   if(announce){
-    // Two quick toggles used to leave both "Dark appearance" and "Light appearance"
-    // stacked for 2.2s. Replace the previous theme toast instead of stacking.
+
+
     document.querySelectorAll('.ui-toast[data-theme-toast]').forEach(el=>el.remove());
     const el=toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
     if(el)el.dataset.themeToast='1';
@@ -269,10 +269,10 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
-  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
-  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
-  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+
+
+
+
   document.body.append(menu);
   function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
   function openThemeMenu(){
@@ -302,9 +302,9 @@ function installAppLauncher(){
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
-  // there made every click on it navigate (a full reload) before the menu could open.
-  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+
+
+
   const brandAnchor=brand.closest('a');
   (brandAnchor||brand).after(wrap);
   const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
@@ -497,15 +497,15 @@ function closeTour({explore=false}={}){tourOpenGeneration++;persistTourSeen();if
 $('#finalTourDismiss').onclick=()=>closeTour();$('#finalTourExplore').onclick=()=>closeTour({explore:true});tour.addEventListener('cancel',event=>{event.preventDefault();closeTour()});tour.addEventListener('close',()=>{persistTourSeen();const automatic=tourAutomatic,launcher=tourLauncher;tourAutomatic=false;tourLauncher=null;if(automatic)workspaceFocus();else requestAnimationFrame(()=>launcher?.focus?.({preventScroll:true}))});
 const status=$('.studio-statusbar>div:last-child');if(status){const b=document.createElement('button');b.type='button';b.className='final-tour-trigger';b.textContent='✦ Tour';b.onclick=()=>{tourAutomatic=false;tourLauncher=b;tour.showModal()};status.prepend(b)}
 window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,identity=await resolveTourIdentity();tourKey=`einvite-final-tour-seen-v2:${encodeURIComponent(identity)}:${TOUR_VERSION}`;if(localStorage.getItem(LEGACY_TOUR_KEY)==='1'&&!localStorage.getItem(tourKey))localStorage.setItem(tourKey,'1');if(generation!==tourOpenGeneration||tourSessionSeen||localStorage.getItem(tourKey)==='1')return{shown:false,identity};tourAutomatic=true;tourLauncher=null;tour.showModal();await new Promise(resolve=>requestAnimationFrame(resolve));return{shown:true,identity}})();
-})();;/* Generated editor runtime bundle. Edit source modules, then run build_editor_bundle.py. */
+})();;
 
-/* ===== canvas-plus.js ===== */
+
 (()=>{
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-// Preserve the page identity declared by the document. The development
-// server serves index.html at "/", where pathname alone cannot distinguish
-// the editor from the dashboard.
+
+
+
 const page=window.__EINVITE_PAGE||document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''))||'dashboard';
 document.body.dataset.page=page;
 
@@ -883,7 +883,7 @@ function editorEnhancements(){
     elementsPane.append(section);
   }
 
-  // Direct inline text editing: double-click a text object and type on the canvas.
+
   stage.addEventListener('dblclick',e=>{
     const object=e.target.closest('.text-object,.decoration-object');if(!object)return;const content=object.querySelector('.content');if(!content)return;
     e.preventDefault();e.stopPropagation();setSelectionIfNeeded(object);content.contentEditable='true';content.spellcheck=true;content.classList.add('canvas-inline-editing');content.focus();
@@ -907,9 +907,9 @@ function editorEnhancements(){
     }catch{}
   };
 
-  // Keyboard commands are owned by editor-command-system.js.
 
-  // Alt-drag duplicate
+
+
   let dragState=null;
   stage.addEventListener('pointerdown',e=>{
     if(e.button!==0 || !e.altKey) return;
@@ -941,7 +941,7 @@ enhanceMaterialsPage();
 editorEnhancements();
 })();
 
-/* ===== editor-builders.js ===== */
+
 (()=>{
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -1026,10 +1026,10 @@ let lastSnapshot='';const structureTimer=setInterval(()=>{const snapshot=[raw.se
 refreshAll();
 })();
 
-/* ===== editor-pro.js ===== */
+
 (()=>{
 'use strict';
-// Shared motion primitives initialize before the editor-only DOM guard.
+
 const MOTION=Object.freeze({TWEEN_MAX_MS:150,WHEEL_REARM_MS:80,WHEEL_SETTLE_MS:140,ZOOM_COMMIT_MS:200,FLICK_LOCK_MS:250,LONG_PRESS_MS:251,TRANSITION_MAX_MS:400,IDLE_MAX_MS:100,NUDGE_COMMIT_MS:500});
 const motionBatchers=new Set();
 const perfDebug=typeof location!=='undefined'&&new URLSearchParams(location.search).get('_perfdebug')==='1';
@@ -1095,9 +1095,9 @@ function zoomToSlider(z){return(Math.log2(clampZoom(z)+10)-Math.log2(10.1))/(Mat
 function sliderToZoom(p){return 2**(Math.log2(10.1)+Math.max(0,Math.min(40,p))/40*(Math.log2(15)-Math.log2(10.1)))-10}
 function stopTween(){if(tweenFrame)cancelAnimationFrame(tweenFrame);tweenFrame=0}
 function setView(next,{source='editor',animate=false,readout=true}={}){
- // Any non-fit view change cancels an in-flight fit settle loop; otherwise the
- // loop keeps re-centring and swallows the user's pan/zoom (canvas P5: a middle
- // drag moved +25/+15 and the settle pulled it back to the fitted origin).
+
+
+
  if(source!=='fit'){fitSettleToken++;fitActive=false}
  stopTween();const target={x:Number.isFinite(next.x)?next.x:view.x,y:Number.isFinite(next.y)?next.y:view.y,zoom:clampZoom(next.zoom??view.zoom)};
  const duration=animate&&!reducedMotion.matches?MOTION.TWEEN_MAX_MS:0;
@@ -1113,18 +1113,18 @@ function setZoomModel(value,options={}){
  return setView({zoom,x:view.x-world.x*ratio,y:view.y-world.y*ratio},{source:options.source||'editor',animate:options.animate??!['wheel','slider','gesture'].includes(options.source)});
 }
 function fitView(){
- // Fit = scale the artboard into the viewport AND centre it. The transform layer
- // is anchored off #canvasFrame, whose box is zero-width and shifts between the
- // boot layout and the final mobile layout, so the analytic translate is only an
- // approximation: once the tween has finished, measure the rendered stage and
- // correct the residual once (rAF loop, waits out any in-flight tween/relayout).
- // The 0.35 floor left the artboard taller than a 320x568 canvas viewport (fit asked
- // for 0.258 and got 0.35, so 7 px of the stage sat outside the scroller and the
- // FB-38 artboard check failed at 320). Fit may shrink to 0.25; the user-facing zoom
- // control keeps its own clamp.
- // FB-47: phones fit inside the viewport's real content box, whose padding already
- // reserves the toolbar, the palette and the zoom HUD. Wider layouts keep the
- // pre-FB-47 70px mat so the desktop framing does not change.
+
+
+
+
+
+
+
+
+
+
+
+
  const fitFrame=()=>{
   cacheViewGeometry();
   if(!matchMedia('(max-width:700px)').matches)return{left:35,top:35,width:Math.max(0,viewport.clientWidth-70),height:Math.max(0,viewport.clientHeight-70)};
@@ -1153,7 +1153,7 @@ if(transform){
  $('#zoomIn').onclick=()=>setZoomModel(view.zoom*1.25,{source:'button'});$('#zoomOut').onclick=()=>setZoomModel(view.zoom/1.25,{source:'button'});$('#fitCanvas').onclick=fitView;zoomControl.onchange=e=>setZoomModel(e.target.value,{source:'select'});
  const ro=new ResizeObserver(()=>{if(gestureCount)return;if(fitActive&&matchMedia('(max-width:700px)').matches)fitView();else refreshView()});ro.observe(stage);ro.observe(viewport);window.EInviteLifecycle?.add?.(()=>{ro.disconnect();stopTween();sliderBatcher.destroy()});refreshView();
 }
-// Pure world-space snap resolver: providers are additive; no layout access here.
+
 function snapCandidates({page,others=[],guides={x:[],y:[]},grid=0,box}){
  const result=[],add=(axis,value,kind,source)=>result.push({axis,value,kind,source});
  for(const axis of ['x','y']){const extent=axis==='x'?page.width:page.height;[0,extent/2,extent].forEach((value,i)=>add(axis,value,['start','center','end'][i],'page'));
@@ -1168,7 +1168,7 @@ function resolveSnap({box,dx=0,dy=0,page,others=[],guides,grid=0,zoom=1,previous
  for(const axis of ['x','y']){
   const size=axis==='x'?box.w:box.h,anchors=[0,size/2,size];let best=null;
   for(const candidate of candidates.filter(c=>c.axis===axis))for(const anchor of anchors){const distance=candidate.value-(moved[axis]+anchor),sticky=previous[axis]?.source===candidate.source&&previous[axis]?.value===candidate.value&&previous[axis]?.anchor===anchor,limit=tolerance*(sticky?1.5:1);if(Math.abs(distance)<=limit&&(!best||sticky||Math.abs(distance)<Math.abs(best.distance)))best={...candidate,anchor,distance}}
-  // Equal-spacing provider: center the moving box in the nearest enclosing gap.
+
   const before=others.filter(o=>o[axis]+(axis==='x'?o.w:o.h)<=moved[axis]).sort((a,b)=>b[axis]-a[axis])[0],after=others.filter(o=>o[axis]>=moved[axis]+size).sort((a,b)=>a[axis]-b[axis])[0];
   if(before&&after){const start=before[axis]+(axis==='x'?before.w:before.h),target=(start+after[axis]-size)/2,distance=target-moved[axis];if(Math.abs(distance)<=tolerance&&(!best||Math.abs(distance)<Math.abs(best.distance)))best={axis,value:target,anchor:0,distance,source:'spacing',kind:'spacing'}}
   if(best)hits[axis]=best;
@@ -1252,7 +1252,7 @@ if($('#safeMarginToggle'))$('#safeMarginToggle').onclick=()=>mutateMeasurements(
 motionAPI.snap=Object.freeze({candidates:snapCandidates,resolve:resolveSnap});
 motionAPI.measurements=Object.freeze({render:renderMeasurements,show(value){measureState=value;renderMeasurements()},clear(){measureState=null;renderMeasurements()},addGuide,clearGuides(){mutateMeasurements('Clear guides / លុបបន្ទាត់ណែនាំ',model=>{model.guides={x:[],y:[]}})}});
 window.addEventListener('einvite:view-changed',renderMeasurements);window.addEventListener('einvite:state-applied',renderMeasurements);window.addEventListener('einvite:editor-command',renderMeasurements);renderMeasurements();
-// Gesture ownership: native plain wheel remains untouched; only ctrl/cmd zoom is captured.
+
 let wheelActive=false,panSession=null,inertiaFrame=0,inertiaDistance=0;
 function stopInertia(){if(inertiaFrame)cancelAnimationFrame(inertiaFrame);inertiaFrame=0;viewport.classList.remove('motion-inertia');scheduleImageWarmup()}
 const zoomReadoutCommit=debounce(syncZoomReadout,MOTION.ZOOM_COMMIT_MS);
@@ -1306,8 +1306,8 @@ window.addEventListener('keydown',event=>{if(event.key==='Escape'&&panSession){e
 reducedMotion.addEventListener('change',()=>{stopInertia();if(reducedMotion.matches&&tweenFrame){stopTween();applyView('reduced-motion');syncZoomReadout()}});
 document.addEventListener('visibilitychange',()=>{wheelEnd.flush();zoomReadoutCommit.flush();stopInertia();if(panSession)panEnd({pointerId:panSession.id},true)});
 motionAPI.input=Object.freeze({wheel:wheelInput,stopInertia,get panning(){return!!panSession?.started},get inertia(){return!!inertiaFrame},edgePaging:false});
-// Decode current/next-page media off the gesture path. Detached Images retain
-// decoded surfaces directly; no unused ImageBitmap copies or new blob URLs.
+
+
 const DECODE=Object.freeze({MAX_IMAGES:8,MAX_BYTES:24*1024*1024,CONCURRENCY:2,ROOT_MARGIN:'240px'});
 const decodedImages=new Map(),decodeQueue=new Map(),decodeInFlight=new Set();
 let decodeBytes=0,decodeActive=0,decodeIdle=0,decodeTimer=0,decodeFrame=0,decodeDisposed=false;
@@ -1400,7 +1400,7 @@ const selectionObserver=new MutationObserver(()=>renderContext());selectionObser
 
 })();
 
-/* ===== photo-editor.js ===== */
+
 (()=>{
 'use strict';
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];if(!$('#stage'))return;
@@ -1425,7 +1425,7 @@ dialog.addEventListener('click',e=>{const p=e.target.closest('[data-preset]');if
 dialog.querySelector('[data-revert]').onclick=()=>{if(!item||!snapshot)return;Object.keys(item.dataset).forEach(k=>{if(!(k in snapshot))delete item.dataset[k]});Object.entries(snapshot).forEach(([k,v])=>item.dataset[k]=v);const img=item.querySelector('img');if(img)img.src=snapshot.src;apply()};$$('[data-close]',dialog).forEach(b=>b.onclick=()=>dialog.close());
 })();
 
-/* ===== creative-packs.js ===== */
+
 (()=>{'use strict';const $=(s,r=document)=>r.querySelector(s);if(!$('#stage'))return;const pane=document.querySelector('[data-studio-pane="elements"]');if(!pane)return;
 const packs=[
  {name:'Khmer Ceremony',desc:'Gold ceremonial title, dividers and lotus marks.',preview:'✾  ◇  ✾',items:[['text','សិរីមង្គលអាពាហ៍ពិពាហ៍',{font:"noto-serif-khmer",fontSize:34,color:'#a87616',top:12,left:10,width:80}],['decoration','✾',{fontSize:58,color:'#a87616',top:35,left:15,width:18}],['decoration','◇',{fontSize:52,color:'#a87616',top:36,left:41,width:18}],['decoration','✾',{fontSize:58,color:'#a87616',top:35,left:67,width:18}]]},
@@ -1669,11 +1669,11 @@ window.EInviteCollaborationSync={clientId,get knownRevision(){return knownRevisi
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+
+
+
+
+
 function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
@@ -1796,10 +1796,10 @@ function editorFinal(){
   const stage=$('#stage'),host=$('.studio-pane-host'),rail=$('.studio-tool-rail');if(!stage||!host||!rail)return;
   const saveNow=()=>{try{typeof save==='function'&&save()}catch{}};const choose=o=>{try{typeof clearSelection==='function'&&clearSelection();typeof setSelection==='function'&&setSelection([o])}catch{}};
   const makeId=p=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-  // The creation drawer is owned by editor-responsive-contract-v27 (EInviteResponsiveLayout): it
-  // derives `mobile-pane-collapsed` from body[data-editor-drawer] on every sync, so toggling the
-  // class by hand is reverted in the same tick and the handle looked dead. Delegate to the owner
-  // when it is present, and keep the class toggle only as the fallback for hosts without it.
+
+
+
+
   const owner=()=>window.EInviteResponsiveLayout;
   const closePaneOnMobile=()=>{if(owner()?.closeCreation){owner().closeCreation();return}if(innerWidth<=820&&document.body.classList.contains('studio-design-mode'))document.body.classList.add('mobile-pane-collapsed')};
   const openPane=()=>{if(owner()?.openCreation){owner().openCreation();return}document.body.classList.remove('mobile-pane-collapsed')};
@@ -1892,11 +1892,11 @@ function clampPanelWidths(){
 function activeSection(){return $('.studio-pane.active',host)?.dataset.studioPane||'event'}
 function applyLayout(){
   const section=activeSection();
-  // FB-43: the pane host is built with its first tab (Event) active, and the
-  // workflow then activates the real start tab (Design on a fresh session).
-  // Entering content mode in between made <main> switch to position:fixed at
-  // y=126 and back, i.e. the editor's only 'poor' CLS. Until the workflow owns
-  // the section (it publishes EInviteWorkflow), boot in the neutral layout.
+
+
+
+
+
   const content=(section==='event'||section==='blocks')&&!!window.EInviteWorkflow;
   body.classList.toggle('studio-content-mode',content);
   body.classList.toggle('studio-design-mode',!content);
@@ -1907,11 +1907,11 @@ function applyLayout(){
   if(selection)selection.hidden=content;
   if(status)status.hidden=content||innerWidth<=1180;
   $$('.studio-panel-resizer',main).forEach(x=>x.hidden=content||innerWidth<=1180);
-  // P2 fix (DESIGN-FIX-TASK 2026-10-19): never hide the canvas because an
-  // Event/Blocks/content panel is active. The canvas is the product here —
-  // users were losing their poster the moment they opened Event or Blocks.
-  // Content mode now only collapses the inspector; the stage stays visible
-  // at every viewport width (mobile included, where the drawers overlay it).
+
+
+
+
+
   if(stageWrap)stageWrap.hidden=false;
   if(inspector)inspector.hidden=false;
   if(selection)selection.hidden=content;
@@ -1928,11 +1928,11 @@ function applyLayout(){
 }
 clampPanelWidths();
 applyLayout();
-  // Owner decision (CANVA-UI §5, accepted 2026-10-20): poster documents have
-  // no event data — hide the Event/Blocks rail buttons, the RSVP + countdown
-  // left-panel groups ([data-poster-hide] wrappers in index.html) and the
-  // Design-home Event/Blocks cards (workflow-refine flow); auto-open the
-  // Elements pane once; the canvas itself now always stays visible.
+
+
+
+
+
   function posterPanelTreatments(){
     $$('.studio-tool-rail [data-studio-tab="event"],.studio-tool-rail [data-studio-tab="blocks"]').forEach(b=>{b.hidden=true});
     $$('[data-poster-hide]').forEach(node=>{node.hidden=true});
@@ -1943,17 +1943,17 @@ applyLayout();
       document.querySelector('.studio-tool-rail [data-studio-tab="elements"]')?.click();
     }
   }
-  // workflow-refine (Design home) rebuilds/reorders the rail after this script
-  // runs; re-apply the treatments whenever those surfaces change.
+
+
   const posterTreatWatcher=new MutationObserver(()=>{
     if(body.dataset.posterPaneApplied)posterPanelTreatments();
   });
   for(const target of [rail,host]){
     if(target)posterTreatWatcher.observe(target,{childList:true,subtree:target!==rail});
   }
-  // Public hook: app.js (connectServer) re-migrates `state` from the fetched
-  // server document and calls this; it re-drives posterAutoPane without assuming
-  // load order beyond app.js loading later in the bundle.
+
+
+
   window.EInvitePosterTreat=()=>{try{window.__posterPaneWaitDone=false;applyLayout();posterAutoPane()}catch{}};
   function posterAutoPane(){
   const st=window.EInviteEditorBridge?.getState?.();
@@ -1961,8 +1961,8 @@ applyLayout();
   body.dataset.posterPaneApplied='1';
   posterPanelTreatments();
   if(activeSection()==='event'){
-    // Route the switch through the public tab button (click) — direct class
-    // toggles get re-applied back by the pane watchers.
+
+
     document.querySelector('.studio-tool-rail [data-studio-tab="elements"]')?.click();
   }
 }
@@ -2428,9 +2428,9 @@ function buildToolbar(){
  bold.id='v20ToolbarBold';bold.classList.add('v20-ico-letter');italic.id='v20ToolbarItalic';italic.classList.add('v20-ico-letter');italic.querySelector('i')?.remove();italic.innerHTML='<em>I</em>';
  const alignGroup=el('span',{class:'v20-align-group',role:'group','aria-label':'Text alignment'});const alignButtons={};
  for(const[dir,icon,label]of[['left','⇤','Align left'],['center','↔','Align centre'],['right','⇥','Align right'],['justify','≡','Justify']]){
-  // data-align is reserved by professional-editor.js for object alignment;
-  // using it here made every text-align click align the whole object instead
-  // and then stop propagation before this button's handler ran.
+
+
+
   const b=iconButton(icon,label,()=>setOverride('textAlign',dir,'Set text alignment'),{'aria-pressed':'false','data-text-align':dir});alignButtons[dir]=b;alignGroup.append(b)
  }
  const color=el('input',{id:'v20ToolbarColor',type:'color','aria-label':'Text colour',title:'Text colour'});color.addEventListener('input',()=>setOverride('color',color.value,'Set text color'));
@@ -2503,7 +2503,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const left = document.querySelector('aside.left');
   const right = document.querySelector('aside.right');
   if (!body || !stage || !left || !right) return;
-  // Only add mobile-editor-v14 class at ≤600px where the legacy mobile layout applies
+
   const mq = matchMedia('(max-width: 600px)');
   function applyMobileClass() {
     if (mq.matches) body.classList.add('mobile-editor-v14');
@@ -2723,7 +2723,7 @@ function worldRect(){if(worldRectCache)return worldRectCache;const r=stage.getBo
 function frameOf(el,sr=worldRect()){
 if(!sr.zoom)sr=worldRect();
 const style=el.style;
-// Read the bounding rect (a forced layout after style writes) only when offsets are unusable.
+
 const w=clamp(pxOr(style.width,sr.width,()=>el.offsetWidth||el.getBoundingClientRect().width),MIN_SIZE,sr.width);
 const h=clamp(pxOr(style.height,sr.height,()=>el.offsetHeight||el.getBoundingClientRect().height),MIN_SIZE,sr.height);
 return {
@@ -3149,7 +3149,7 @@ const priorTree=panel.querySelector('.pe-layer-tree'),active=document.activeElem
 const doc=bridge().getState(),map=activeMap(doc),gs=groups(doc),selection=new Set(selectedIds()),query=panel.querySelector('[data-pe-layer-search]')?.value||'';
 const structure=JSON.stringify([Object.entries(map).map(([id,o])=>[id,o.zIndex,o.visible,o.locked,o.type,o.layerName,o.html]),Object.entries(gs).map(([id,g])=>[id,g.name,g.parentId,g.children]),[...expandedGroups].sort(),query,layerAnnouncement]),selectionKey=[...selection].sort().join('|');
 if(panel._peLayerStructure===structure&&panel.querySelector('.pe-layer-tree')){
-// Structure unchanged: a selection-only change just moves the active highlight, so skip the full tree rebuild.
+
 if(panel._peLayerSelection!==selectionKey){panel.querySelectorAll('.pe-layer-row').forEach(row=>{const ids=String(row.dataset.layerIds||'').split(',').filter(Boolean);row.classList.toggle('active',ids.some(id=>selection.has(id)))});panel._peLayerSelection=selectionKey}
 return;
 }
@@ -3168,11 +3168,11 @@ panel._peLayerStructure=structure;panel._peLayerSelection=selectionKey;
 }
 function plainText(html){const el=document.createElement('div');el.innerHTML=html||'';return(el.textContent||'').trim().slice(0,36)}
 function layerTitle(id,o){
-  // Legacy imports stored the placeholder word "Layer" as a real name; treat
-  // generic type words as empty so the live content can supply a useful label.
+
+
   if(o?.layerName&&!/^(layer|object|text|image|shape)$/i.test(String(o.layerName).trim()))return o.layerName
-  // Rich-text objects often store html as a rendered structure; the live
-  // canvas node is the reliable source for a human layer label.
+
+
   const node=document.querySelector(`#stage .object[data-id="${window.CSS?.escape?CSS.escape(id):String(id)}"] .content`)
   const live=(node?.innerText||'').replace(/\s+/g,' ').trim()
   if(live)return live.slice(0,36)
@@ -3229,15 +3229,15 @@ window.addEventListener('resize',()=>scheduleOverlaySync(true),{signal});
 viewport?.addEventListener('scroll',scheduleOverlaySync,{passive:true,signal});
 window.addEventListener('pagehide',event=>{if(!event.persisted)teardownOverlaySync()},{signal});
 if('ResizeObserver'in window){
-// Change detection on the observed boxes. The observer watches #stage and
-// #viewport, and the sync it schedules re-renders the layers panel and the
-// overlay — which resizes the stage. Without this guard the observer re-arms
-// itself on its own output, so the synchronous work runs at frame rate instead of
-// when the canvas actually changes size. Measured: this loop accounts for the
-// 1,359 ms / 13 calls the previous pass attributed to the syncAll rAF, and this is
-// the same self-triggering shape as the mutation-observer defect fixed in
-// src/js/editor/ui-components.js, which went 3,429 ms -> 689 ms by the same means.
-// A genuine resize still notifies: the box key is compared per observed element.
+
+
+
+
+
+
+
+
+
 overlayResizeObserver=new ResizeObserver(entries=>{let boxChanged=false;for(const entry of entries){const box=entry.borderBoxSize&&entry.borderBoxSize[0];const key=box?`${Math.round(box.inlineSize)}x${Math.round(box.blockSize)}`:`${Math.round(entry.contentRect.width)}x${Math.round(entry.contentRect.height)}`;if(overlayObservedSizes.get(entry.target)!==key){overlayObservedSizes.set(entry.target,key);boxChanged=true}}if(boxChanged)scheduleOverlaySync()});overlayResizeObserver.observe(stage);if(viewport)overlayResizeObserver.observe(viewport)}
 }
 function boot(){
@@ -3257,49 +3257,49 @@ if(relevant)requestAnimationFrame(syncAll);
 setTimeout(()=>{const remembered=bridge().getSelectedIds();if(remembered.length)bridge().select(remembered);syncAll()},100);
 }
 boot();
-})();;/**
- * editor-core.js — Canvas core for the EInvite studio editor (v54 refactor).
- *
- * This module consolidates the former `workspace-experience-v24.js` into a
- * readable, fully-documented module. It is responsible for the canvas-level
- * interaction surface that surrounds the design document:
- *
- *   • Canvas zoom HUD (bottom-right cluster) + zoom preset popover.
- *   • A floating "selection card" that reports the active selection's size
- *     and rotation without stealing pointer focus.
- *   • Alt-drag duplication of objects (with live preview ghosts).
- *   • Middle-mouse / middle-pointer canvas panning.
- *   • A hover label that names the object under the pointer.
- *   • The "Essentials / All controls" inspector mode toggle, persisted to
- *     localStorage, so advanced chrome can be progressively disclosed.
- *   • Registration of canvas keyboard shortcuts into the command registry.
- *
- * BUG FIXES introduced here (vs. the old v24 module):
- *
- *   1. No auto-font-scaling on resize — while the user is dragging a resize or
- *      rotate handle the TypographyLayoutService auto-fit pass is suppressed
- *      so the configured font size is preserved (see `AutoFitGuard`).
- *   2. No auto-resize on click/selection — selecting an object no longer
- *      triggers a one-shot refit; auto-fit only runs on explicit user intent
- *      (the "Fit" button / a text change), never on a bare selection event.
- *
- * The module is designed to be loaded once, after the editor bridge, command
- * registry, and canvas view controller are available. It is idempotent: a
- * second load is a no-op (guarded by `window.EInviteEditorCore?.version`).
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
 
-  // Idempotency guard — prevents double-initialisation if the bundle loads
-  // this module more than once.
+
+
   if (window.EInviteEditorCore?.version >= 54) return;
 
-  /** Editor-core API namespace exposed on `window`. */
+
   const api = { version: 54, destroy: null };
 
-  // --- External dependencies -------------------------------------------------
-  // These globals are provided by earlier bundle modules. We capture them once
-  // so the rest of the module reads cleanly.
+
+
+
   const registry = window.EInviteCommandRegistry;
   const bridge = window.EInviteEditorBridge;
   const controller = window.EInviteCanvasViewController;
@@ -3307,42 +3307,42 @@ boot();
   const stage = document.querySelector('#stage');
   const wrap = document.querySelector('.stage-wrap');
 
-  // Bail out silently when the editor chrome is not present on the page (e.g.
-  // the module is bundled into a non-editor route). This keeps the bundle safe
-  // to include globally.
+
+
+
   if (!registry || !bridge || !controller || !viewport || !stage || !wrap) return;
 
-  // --- Tiny DOM helpers ------------------------------------------------------
-  /**
-   * Query a single element, scoped to `root` (document by default).
-   * @param {string} selector CSS selector.
-   * @param {ParentNode} [root=document] Search root.
-   * @returns {Element|null}
-   */
+
+
+
+
+
+
+
   const $ = (selector, root = document) => root.querySelector(selector);
-  /**
-   * Query all matching elements as an array, scoped to `root`.
-   * @param {string} selector CSS selector.
-   * @param {ParentNode} [root=document] Search root.
-   * @returns {Element[]}
-   */
+
+
+
+
+
+
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-  /** Listener cleanup stack — every `on()` registration pushes a remover. */
+
   const cleanup = [];
-  /**
-   * Attach an event listener and remember how to remove it.
-   * @param {EventTarget|null} target Target (null-safe).
-   * @param {string} type Event name.
-   * @param {EventListenerOrEventListenerObject} fn Handler.
-   * @param {AddEventListenerOptions|boolean} [options] Listener options.
-   */
+
+
+
+
+
+
+
   function on(target, type, fn, options) {
     target?.addEventListener?.(type, fn, options);
     cleanup.push(() => target?.removeEventListener?.(type, fn, options));
   }
 
-  /** Module-level mutable state. Kept at the top so the lifecycle is obvious. */
+
   let hud = null;
   let popover = null;
   let selectionCard = null;
@@ -3359,47 +3359,47 @@ boot();
   let raf = 0;
   let destroyed = false;
 
-  /** Remembers the original DOM position of header buttons so they can be
-   *  restored when the viewport grows wide enough to show them inline. */
+
+
   const headerHomes = new Map();
 
-  // --- Small utilities -------------------------------------------------------
-  /** Clamp `v` into `[min,max]`; non-finite values fall back to `min`. */
+
+
   const clamp = (v, min, max) => Math.min(max, Math.max(min, Number(v) || 0));
 
-  /**
-   * Escape a value for safe insertion into HTML text/attribute contexts.
-   * @param {unknown} value
-   * @returns {string}
-   */
+
+
+
+
+
   function esc(value) {
     return String(value ?? '').replace(/[&<>"']/g, c => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
     ));
   }
 
-  /** Deep-clone via the editor schema (falls back to JSON round-trip). */
+
   const clone = value => window.EInviteEditorSchema?.clone?.(value) ?? JSON.parse(JSON.stringify(value));
 
-  /**
-   * Generate a unique identifier with a readable prefix.
-   * @param {string} prefix
-   * @returns {string}
-   */
+
+
+
+
+
   function uid(prefix) {
     return `${prefix}-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
   }
 
-  /**
-   * Resolve the object map for the currently active canvas.
-   *
-   * The editor supports a "hero" canvas plus numbered design pages. This
-   * helper returns the correct `{id: object}` dictionary for whichever
-   * canvas is active so command handlers operate on the right scope.
-   *
-   * @param {object} doc The editor document state.
-   * @returns {Record<string, object>}
-   */
+
+
+
+
+
+
+
+
+
+
   function activeMap(doc) {
     const canvas = bridge.getActiveCanvasId?.() || 'hero';
     if (canvas === 'hero') return doc.objects || (doc.objects = {});
@@ -3408,46 +3408,46 @@ boot();
     return page ? (page.objects || (page.objects = {})) : (doc.objects || (doc.objects = {}));
   }
 
-  /**
-   * Return the DOM elements currently marked as selected on the stage.
-   * @returns {Element[]}
-   */
+
+
+
+
   function selectedElements() {
     const ids = new Set(bridge.getSelectedIds?.() || []);
     return $$('.object', stage).filter(el => ids.has(el.dataset.id));
   }
 
-  /**
-   * Produce a human-readable type label for an object element, derived from
-   * its `layerName` / `objectType` / `type` dataset attributes.
-   * @param {Element} el
-   * @returns {string}
-   */
+
+
+
+
+
+
   function readableType(el) {
     const raw = el?.dataset.layerName || el?.dataset.objectType || el?.dataset.type || 'Object';
     return String(raw).replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
-  /**
-   * Compute the current stage scale (CSS pixels per layout pixel).
-   * Used to convert screen-space selection rects back into canvas units.
-   * @returns {number}
-   */
+
+
+
+
+
   function stageScale() {
-    // The motion viewport already knows the zoom the stage is drawn at. Reading it
-    // avoids a layout flush on every selection update, which the drag path triggers
-    // right after writing the overlay styles.
+
+
+
     const zoom = window.EInviteMotion?.viewport?.view?.zoom;
     if (Number.isFinite(zoom) && zoom > 0) return zoom;
     const rect = stage.getBoundingClientRect();
     return rect.width / Math.max(1, stage.offsetWidth);
   }
 
-  /**
-   * Measure the bounding box of the current selection in canvas units,
-   * together with a short label and (for single selections) rotation.
-   * @returns {{items:Element[],left:number,top:number,right:number,bottom:number,width:number,height:number,label:string,rotation:number}|null}
-   */
+
+
+
+
+
   function selectionMetrics() {
     const items = selectedElements();
     if (!items.length) return null;
@@ -3467,76 +3467,76 @@ boot();
     };
   }
 
-  // =========================================================================
-  // AutoFitGuard — fixes "no auto-font-shrink on resize" & "no auto-resize on
-  // click". The TypographyLayoutService refits text whenever it observes a
-  // geometry change or a selection change. During an active resize drag and
-  // for a single tick after a selection event we suppress that refit so the
-  // user's configured font size is honoured.
-  // =========================================================================
+
+
+
+
+
+
+
   const AutoFitGuard = (() => {
-    /** When true, the patched scheduler must skip refit work. */
+
     let suppressed = false;
-    /** Pending release timer (we keep suppression briefly after a drag ends
-     *  so the final commit does not immediately re-trigger a refit). */
+
+
     let releaseTimer = 0;
-    /** Original schedule/refit references, captured when we patch the service. */
+
     let originalSchedule = null;
     let originalRefit = null;
     let patched = false;
 
-    /**
-     * Toggle suppression and reflect it on the body so CSS can react.
-     * @param {boolean} value
-     * @param {string} [reason] Debug label.
-     */
+
+
+
+
+
     function set(value, reason) {
       suppressed = !!value;
       document.body.classList.toggle('ei-suppress-autofit', suppressed);
-      // Always sync --ei-font-size from each element's data-font-size attribute
-      // (runs whether or not AutoFitGuard is suppressing): the CSS rule that
-      // reads --ei-font-size is gated on body.ei-suppress-autofit, so setting the
-      // var unconditionally is a no-op when not suppressing and guarantees the
-      // var(--ei-font-size, inherit) backstop never falls through to the parent size.
+
+
+
+
+
       document.querySelectorAll('[data-font-size]').forEach(function(el) {
         el.style.setProperty('--ei-font-size', el.getAttribute('data-font-size') + 'px');
       });
       if (reason && window.__EINVITE_DEBUG_AUTOFIT) {
-        // eslint-disable-next-line no-console
+
         console.debug('[AutoFitGuard]', reason, suppressed ? 'suppressed' : 'released');
       }
     }
 
-    /**
-     * Suppress for `ms` milliseconds, then auto-release.
-     * @param {number} ms
-     */
+
+
+
+
     function suppressFor(ms) {
       clearTimeout(releaseTimer);
       set(true);
       releaseTimer = setTimeout(() => set(false), ms);
     }
 
-    /**
-     * Patch the global TypographyLayoutService AND the responsive controller
-     * so their `schedule` and `refit` methods become no-ops while suppression
-     * is active. Safe to call before they exist (retries on later events).
-     *
-     * Note: the service object (window.TypographyLayoutService) exposes
-     * `installResponsive` but NOT `schedule`/`refit` directly — those live on
-     * the controller returned by `installResponsive`, which app.js exposes on
-     * `window.typographyLayoutController`. We patch both shapes defensively.
-     *
-     * This is retryable: if the controller appears later (app.js creates it
-     * after editor-core installs), a subsequent patch() call will patch it.
-     * The `patched` flag only guards the service-level fit patch.
-     */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     function patch() {
       const svc = window.TypographyLayoutService;
       if (!svc) return;
-      // Always attempt to patch the controller — it may appear after install.
+
       patchController(window.typographyLayoutController);
-      // Patch the service-level fit methods once.
+
       if (patched) return;
       patched = true;
       if (typeof svc.fit === 'function' && !svc.__v54FitPatched) {
@@ -3561,11 +3561,11 @@ boot();
       }
     }
 
-    /**
-     * Patch a responsive controller's `schedule` and `refit` methods.
-     * Idempotent per controller (guarded by `__v54Patched`).
-     * @param {object|null} ctrl
-     */
+
+
+
+
+
     function patchController(ctrl) {
       if (!ctrl) return;
       if (typeof ctrl.schedule === 'function' && !ctrl.__v54Patched) {
@@ -3595,26 +3595,26 @@ boot();
     }
 
     return {
-      /** Begin suppressing auto-fit (called on resize-handle pointerdown). */
+
       begin() { clearTimeout(releaseTimer); set(true, 'resize-begin'); },
-      /** End suppression, holding it briefly so the commit settles first. */
+
       end(ms = 320) { suppressFor(ms); },
-      /** Suppress for a single tick (called on selection-changed). */
+
       pulse(ms = 220) { suppressFor(ms); },
-      /** Is suppression currently active? */
+
       get active() { return suppressed; },
-      /** Try to patch the global service (idempotent). */
+
       patch
     };
   })();
 
-  // =========================================================================
-  // Canvas HUD (zoom cluster)
-  // =========================================================================
-  /**
-   * Lazily build the bottom-right zoom HUD and wire its buttons.
-   * @returns {HTMLDivElement}
-   */
+
+
+
+
+
+
+
   function ensureHud() {
     if (hud) return hud;
     hud = document.createElement('div');
@@ -3643,10 +3643,10 @@ boot();
     return hud;
   }
 
-  /**
-   * Lazily build the zoom-preset popover.
-   * @returns {HTMLDivElement}
-   */
+
+
+
+
   function ensureZoomMenu() {
     if (popover) return popover;
     popover = document.createElement('div');
@@ -3674,10 +3674,10 @@ boot();
     return popover;
   }
 
-  /**
-   * Toggle the zoom popover open/closed, anchored to a button.
-   * @param {Element} anchor
-   */
+
+
+
+
   function toggleZoomMenu(anchor) {
     const menu = ensureZoomMenu();
     if (!menu.hidden) return closeZoomMenu();
@@ -3688,28 +3688,28 @@ boot();
     menu.querySelector('button')?.focus();
   }
 
-  /** Hide the zoom popover. */
+
   function closeZoomMenu() { if (popover) popover.hidden = true; }
 
-  // =========================================================================
-  // Selection card (floating size/rotation read-out)
-  // =========================================================================
-  /**
-   * Lazily build the selection card and prepend it to the viewport.
-   * @returns {HTMLDivElement}
-   */
+
+
+
+
+
+
+
   function ensureSelectionCard() {
     if (selectionCard) return selectionCard;
     selectionCard = document.createElement('div');
     selectionCard.id = 'v54SelectionCard';
     selectionCard.className = 'v54-selection-card';
     selectionCard.hidden = true;
-    // Canva-style context card: a compact action row above a size read-out.
+
     selectionCard.innerHTML = '<div class="v54-selection-actions" role="toolbar" aria-label="Selection actions">' +
       '<button type="button" data-v54-action="text" title="Edit text" aria-label="Edit text"><span aria-hidden="true">T</span></button>' +
       '<button type="button" data-v54-action="crop" title="Crop" aria-label="Crop"><span aria-hidden="true">\u25A3</span></button>' +
-      // Duplicate/Delete stay in the canvas action bar; repeating them in this
-      // card made three copies of the same destructive command on one screen.
+
+
       '<button type="button" data-v54-action="more" title="More actions" aria-label="More actions"><span aria-hidden="true">\u22EF</span></button>' +
       '</div>' +
       '<div class="v54-selection-readout"><small data-v54-page></small><strong data-v54-label></strong><span data-v54-metrics></span></div>';
@@ -3719,14 +3719,14 @@ boot();
     return selectionCard;
   }
 
-  /**
-   * Handle the floating selection card's action row.
-   *
-   * Every action resolves to an existing editor capability — no new state is
-   * invented here: text/crop move focus into the inspector control that owns
-   * the edit, while duplicate/delete run the registered editor commands.
-   * @param {MouseEvent} event
-   */
+
+
+
+
+
+
+
+
   function onSelectionCardAction(event) {
     const button = event.target.closest?.('[data-v54-action]');
     if (!button || button.disabled) return;
@@ -3750,25 +3750,25 @@ boot();
     if (action === 'more') { registry.openUI?.(); return; }
   }
 
-  /** Required vertical gap between the selected object's box and the card. */
+
   const SELECTION_CARD_GAP = 8;
 
-  /**
-   * Anchor the selection card to the primary selected element's bounding box:
-   * 8px above it, flipped below when that would clip the viewport (dispatch §3-G4).
-   *
-   * Positioning is done by measuring the card where it actually is and moving it
-   * by the delta to where it must be — never by offsetTop/offsetLeft arithmetic.
-   * Those are resolved against the containing block's *padding* box, so any
-   * border on the offset parent is silently added to every measurement:
-   * `#canvasViewport` carries clientTop 1 / clientLeft 11, which turned the
-   * required 8px gap into 5px and pushed the horizontal centre 11px off. A
-   * getBoundingClientRect() delta reports real viewport geometry, so it stays
-   * exact whatever the offset parent's border, padding, scroll or a transformed
-   * ancestor does (G4/G7).
-   * @param {HTMLElement} card
-   * @param {boolean} hasSelection
-   */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   function positionSelectionCard(card, hasSelection) {
     if (!hasSelection) { if (card.style.transform) card.style.transform = ''; return; }
     const ids = bridge.getSelectedIds?.() || [];
@@ -3776,7 +3776,7 @@ boot();
     if (!target) return;
     const box = target.getBoundingClientRect();
     if (!box.width && !box.height) return;
-    // Measure the card untransformed, then translate it by the exact delta.
+
     if (card.style.transform !== 'none') card.style.transform = 'none';
     const cardRect = card.getBoundingClientRect();
     if (!cardRect.width && !cardRect.height) return;
@@ -3789,11 +3789,11 @@ boot();
     card.classList.toggle('is-below', flip);
   }
 
-  /**
-   * On narrow viewports the right inspector is a drawer; selecting an object
-   * opens it so the tap has a visible result (dispatch §3-G6).
-   * @param {boolean} hasSelection
-   */
+
+
+
+
+
   function syncInspectorDrawer(hasSelection) {
     if (typeof innerWidth === 'number' && innerWidth > 768) {
       document.body.classList.remove('right-open');
@@ -3801,10 +3801,10 @@ boot();
     }
     const layout = window.EInviteResponsiveLayout;
     const narrow = !layout || typeof layout.mode !== 'function' || layout.mode() !== 'desktop';
-    // `editor-responsive-contract.js` owns the narrow-viewport drawer and
-    // reveals the pane from its own transform rules. Its API takes a boolean
-    // (`openInspector: o => set('inspector', o)`) — calling it with no argument
-    // is a no-op that leaves the panel translated off-screen (G6), so pass it.
+
+
+
+
     if (!hasSelection) {
       document.body.classList.remove('right-open');
       if (narrow) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
@@ -3814,10 +3814,10 @@ boot();
     if (narrow) { try { layout?.openInspector?.(true); } catch { /* ignore */ } }
   }
 
-  /**
-   * Refresh the selection card contents from the current selection. Hidden
-   * when nothing is selected.
-   */
+
+
+
+
   function updateSelectionCard() {
     if (destroyed) return;
     const card = ensureSelectionCard();
@@ -3833,7 +3833,7 @@ boot();
     const rotation = Math.abs(metrics.rotation) > 0.05 ? ` · ${Math.round(metrics.rotation * 10) / 10}°` : '';
     setCardText('[data-v54-metrics]', `${Math.round(metrics.width)} × ${Math.round(metrics.height)}${rotation}`);
     card.classList.toggle('is-multi', metrics.items.length > 1);
-    // Crop only applies to image objects; a disabled control always says why.
+
     const crop = $('[data-v54-action="crop"]', card);
     if (crop) {
       const first = metrics.items?.[0] || null;
@@ -3841,25 +3841,25 @@ boot();
       crop.disabled = !isImage;
       crop.title = isImage ? 'Crop' : 'Crop applies to image objects only';
     }
-    // Re-measure on the next frame. Selecting an object settles its box (and the
-    // narrow-viewport inspector drawer) in the same tick, so a card placed against
-    // the pre-layout rect sits a few pixels into the selection instead of 8px above
-    // it. The guard keeps this a no-op once the card is hidden again.
+
+
+
+
     requestAnimationFrame(() => { if (!destroyed && !card.hidden) positionSelectionCard(card, true); });
   }
 
-  /**
-   * Re-position the card whenever anything that can move the selected object
-   * moves.
-   *
-   * Selecting an object settles its layout over more than one frame: the
-   * inspector's controls appear (which re-centres the stage) and `.canvas-frame`
-   * runs a 0.3s `transform` transition whose hover state is `translateY(-2px)`.
-   * Both land *after* the card has been placed, which left the gap at 6px
-   * instead of the required 8px (G4/G7). Mirroring every event that can move the
-   * canvas keeps the card glued to the object, instead of widening the nominal
-   * gap to hide the error.
-   */
+
+
+
+
+
+
+
+
+
+
+
+
   function trackSelectionCardGeometry() {
     if (cardGeometryTracked) return;
     cardGeometryTracked = true;
@@ -3868,18 +3868,18 @@ boot();
       positionSelectionCard(selectionCard, true);
     };
     viewport.addEventListener('scroll', reposition, { passive: true });
-    // `transitionend` bubbles, so a capture listener sees `.canvas-frame`'s
-    // transform transition — and any other transition inside the canvas.
+
+
     viewport.addEventListener('transitionend', reposition, true);
     window.addEventListener('resize', reposition, { passive: true });
     document.addEventListener('einvite:workspace-resized', reposition);
     document.addEventListener('einvite:layout-stable', reposition);
   }
 
-  /**
-   * Toggle body classes that drive inspector empty-state visibility and
-   * update the empty-state copy.
-   */
+
+
+
+
   function updateSelectionState() {
     const selected = selectedElements();
     const hasSelection = selected.length > 0;
@@ -3891,22 +3891,22 @@ boot();
     }
   }
 
-  /**
-   * renderContextPanel (B2/B4) — "click first, edit second".
-   *
-   * Dispatches on the selected element's type and shows only the relevant
-   * property controls in the right context panel.  When nothing is selected,
-   * the empty-state placeholder is shown and all type-specific sections are
-   * hidden.
-   *
-   * Type dispatch:
-   *   text-object     → text content + typography controls + animation
-   *   image-object    → image controls + appearance
-   *   rectangle|circle|line → shape controls + appearance
-   *   (unknown)       → appearance only
-   *
-   * @param {{elements: Element[], type: string|null}} selection
-   */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   function renderContextPanel(selection) {
     const pane = document.querySelector('[data-inspector-pane="object"]');
     if (!pane) return;
@@ -3917,21 +3917,21 @@ boot();
     const selected = selection.elements || [];
     const hasSelection = selected.length > 0;
 
-    // Show/hide the "no selection" placeholder.
+
     const placeholder = pane.querySelector('.v54-inspector-placeholder');
     const placeholderDisplay = hasSelection ? 'none' : 'grid';
     if (placeholder && placeholder.style.display !== placeholderDisplay) placeholder.style.display = placeholderDisplay;
 
     if (!hasSelection) {
-      // Hide all type-specific control groups.  No !important: none of these
-      // sections carry a competing !important display rule in the CSS, so a
-      // plain inline style reliably beats the author declaration.
+
+
+
       ['#typographyControls', '#shapeControls', '#imageControls',
        '#alignment-grid', '#textContentLabel'].forEach(sel => {
         const el = pane.querySelector(sel);
         if (el) el.style.display = 'none';
       });
-      // Hide Appearance / Fine position sub-headings.
+
       pane.querySelectorAll('h2').forEach(h => {
         const txt = (h.textContent || '').toLowerCase();
         if ((txt.includes('appearance') || txt.includes('fine position')) && h.style.display !== 'none') h.style.display = 'none';
@@ -3939,22 +3939,22 @@ boot();
       return;
     }
 
-    // Determine the primary type from the first selected element.
+
     const first = selected[0];
     const type = first?.dataset?.objectType || first?.className || '';
 
-    // Helper: show a section, hide another.  No !important is needed: the
-    // `#typographyControls` rule in ux-refine.css no longer carries !important,
-    // so a plain inline `display:none` (reinforced by el.hidden + the UA
-    // `[hidden]` rule) reliably overrides the author `display:grid`.
+
+
+
+
     const show = (sel) => { const el = pane.querySelector(sel); if (el && (el.hidden || el.style.display)) { el.hidden = false; el.style.removeProperty('display'); } };
     const hide = (sel) => { const el = pane.querySelector(sel); if (el && (!el.hidden || el.style.display !== 'none')) { el.hidden = true; el.style.display = 'none'; } };
 
-    // Selection summary is always visible when something is selected.
+
     const summary = pane.querySelector('.selection-summary');
     if (summary && (summary.hidden || summary.style.display)) { summary.hidden = false; summary.style.removeProperty('display'); }
 
-    // Dispatch by type.
+
     let isText = false, isImage = false, isShape = false;
 
     if (type.includes('text')) {
@@ -3964,7 +3964,7 @@ boot();
     } else if (type.includes('rectangle') || type.includes('circle') || type.includes('line') || type.includes('shape')) {
       isShape = true;
     } else {
-      // Unknown — show appearance only.
+
       isText = isImage = isShape = false;
     }
 
@@ -3985,26 +3985,26 @@ boot();
       hide('#typographyControls');
       hide('#imageControls');
     } else {
-      // Generic — show appearance controls only.
+
       hide('#textContentLabel');
       hide('#typographyControls');
       hide('#shapeControls');
       hide('#imageControls');
     }
 
-    // Alignment grid always available for movable objects.
+
     if (type.includes('text') || type.includes('image') || type.includes('rectangle') || type.includes('circle') || type.includes('line')) {
       show('#alignment-grid');
       show('h2[align-group="position"]');  // alignment is always shown
     }
 
-    // Appearance / Fine position sections are shown for all selectable objects.
+
     pane.querySelectorAll('h2').forEach(h => {
       const txt = (h.textContent || '').toLowerCase();
       if ((txt.includes('appearance') || txt.includes('fine position')) && h.style.display) h.style.removeProperty('display');
     });
 
-    // Dispatch event so other modules can react.
+
     const evt = new window.CustomEvent('einvite:context-panel-rendered', {
       detail: { type, elementCount: selected.length },
       bubbles: true,
@@ -4012,9 +4012,9 @@ boot();
     if (evt) pane.dispatchEvent(evt);
   }
 
-  /**
-   * Build the current selection descriptor and delegate to renderContextPanel.
-   */
+
+
+
   function refreshContextPanel() {
     const selected = selectedElements();
     renderContextPanel({
@@ -4024,10 +4024,10 @@ boot();
   }
 
 
-  /**
-   * Coalesce update work into a single macrotask so rapid selection/mutation
-   * bursts do not thrash layout.
-   */
+
+
+
+
   function scheduleUpdate() {
     if (raf) return;
     raf = requestAnimationFrame(() => {
@@ -4036,28 +4036,28 @@ boot();
       updateSelectionState();
       refreshContextPanel();
       updateZoomLabel();
-      // NOTE: layoutContextToolbar / header / footer organisation deliberately
-      // NOT called here — running them on every selection change is what made
-      // the toolbar "jump". They run on install + resize only (see ui-layout).
+
+
+
     });
   }
 
-  /** Sync the zoom HUD's numeric label + selection button disabled state. */
+
   function updateZoomLabel() {
     const value = $('.v54-zoom-value', ensureHud());
     if (value) value.textContent = `${Math.round(controller.zoom * 100)}%`;
     ensureHud().querySelector('[data-v54-zoom="selection"]').disabled = !(bridge.getSelectedIds?.() || []).length;
   }
 
-  /**
-   * Ctrl/Cmd + wheel zooms the canvas at the pointer location.
-   * @param {WheelEvent} event
-   */
+
+
+
+
   const motion = window.EInviteMotion;
   const wheelBatcher = motion.createFrameBatcher(
     (a, b) => ({ delta: a.delta + b.delta, clientX: b.clientX, clientY: b.clientY }),
     value => {
-      // Preserve the old per-event wheel response in P1; P5 adopts the new clamp.
+
       controller.setZoom(controller.zoom * Math.exp(-value.delta * 0.0024), {
         clientX: value.clientX, clientY: value.clientY, source: 'wheel'
       });
@@ -4075,18 +4075,18 @@ boot();
     settleWheel();
   }
 
-  // =========================================================================
-  // Alt-drag duplication (with live preview ghosts)
-  // =========================================================================
+
+
+
   let duplicateDrag = null;
   let middlePan = null;
 
-  /**
-   * Begin an alt-drag duplication gesture. Only the primary button while Alt
-   * is held (and no other modifiers) qualifies. Clicking on resize/rotate
-   * handles, editable text, or form controls is ignored.
-   * @param {PointerEvent} event
-   */
+
+
+
+
+
+
   function beginDuplicateDrag(event) {
     if (event.button !== 0 || !event.altKey || event.shiftKey || event.ctrlKey || event.metaKey || duplicateDrag || middlePan) return;
     if (event.target.closest?.('[data-pe-handle],.pe-handle,.pe-rotate,.resize-handle,.rotate-handle,[contenteditable=true],button,input,select,textarea')) return;
@@ -4101,12 +4101,12 @@ boot();
 
     const sr = stage.getBoundingClientRect();
     const scale = Math.max(0.001, stageScale());
-    // Capture each element's starting frame in canvas units once.
+
     const frames = elements.map(el => {
       const rect = el.getBoundingClientRect();
       return { id: el.dataset.id, x: (rect.left - sr.left) / scale, y: (rect.top - sr.top) / scale, w: rect.width / scale, h: rect.height / scale };
     });
-    // Clone each element as a translucent preview ghost.
+
     const previews = elements.map((el, index) => {
       const preview = el.cloneNode(true);
       preview.dataset.v54DuplicatePreview = '1';
@@ -4126,11 +4126,11 @@ boot();
     event.stopImmediatePropagation();
   }
 
-  /**
-   * Move the duplicate-drag preview ghosts. A small dead-zone avoids
-   * accidentally duplicating on a plain click.
-   * @param {PointerEvent} event
-   */
+
+
+
+
+
   const duplicateBatcher = motion.createFrameBatcher((a, b) => b, applyDuplicateDrag);
   cleanup.push(() => duplicateBatcher.destroy());
   function moveDuplicateDrag(event) {
@@ -4153,13 +4153,13 @@ boot();
     drag.previews.forEach(preview => { preview.style.translate = `${drag.dx}px ${drag.dy}px`; });
   }
 
-  /**
-   * Walk the group ancestry of each duplicated object so nested groups are
-   * cloned alongside their members.
-   * @param {object} doc Editor document.
-   * @param {string[]} ids Object ids being duplicated.
-   * @returns {{all:object,wanted:Set<string>}}
-   */
+
+
+
+
+
+
+
   function sourceGroups(doc, ids) {
     const all = doc.sceneGraph?.groups || {};
     const wanted = new Set();
@@ -4174,12 +4174,12 @@ boot();
     return { all, wanted };
   }
 
-  /**
-   * Commit the duplicate-drag gesture as a single transaction, re-clamping
-   * positions to the stage and remapping group ids.
-   * @param {object} drag The active duplicate-drag state.
-   * @returns {string[]} The new object ids.
-   */
+
+
+
+
+
+
   function commitDuplicateDrag(drag) {
     const newIds = [];
     const stageWidth = Math.max(1, stage.offsetWidth);
@@ -4232,11 +4232,11 @@ boot();
     return newIds;
   }
 
-  /**
-   * End the duplicate-drag gesture, committing unless `cancel` is set.
-   * @param {PointerEvent} event
-   * @param {boolean} [cancel=false]
-   */
+
+
+
+
+
   function endDuplicateDrag(event, cancel = false) {
     duplicateBatcher.flush();
     const drag = duplicateDrag;
@@ -4250,13 +4250,13 @@ boot();
     scheduleUpdate();
   }
 
-  // =========================================================================
-  // Middle-button panning
-  // =========================================================================
-  /**
-   * Begin a middle-button canvas pan gesture.
-   * @param {PointerEvent} event
-   */
+
+
+
+
+
+
+
   function startMiddlePan(event) {
     if (window.EInviteMotion?.input) return;
     if (event.button !== 1) return;
@@ -4267,7 +4267,7 @@ boot();
     viewport.setPointerCapture?.(event.pointerId);
   }
 
-  /** Move the canvas viewport according to the active middle-pan gesture. */
+
   const middlePanBatcher = motion.createFrameBatcher((a, b) => b, event => {
     if (!middlePan || event.pointerId !== middlePan.pointerId) return;
     viewport.scrollLeft = middlePan.left - (event.clientX - middlePan.x);
@@ -4280,7 +4280,7 @@ boot();
     middlePanBatcher.accumulate(event);
   }
 
-  /** Release the middle-pan gesture. */
+
   function endMiddlePan(event) {
     if (!middlePan || event.pointerId !== middlePan.pointerId) return;
     middlePanBatcher.flush();
@@ -4288,13 +4288,13 @@ boot();
     viewport.classList.remove('v54-middle-panning');
   }
 
-  // =========================================================================
-  // Hover label
-  // =========================================================================
-  /**
-   * Lazily build the hover label element.
-   * @returns {HTMLDivElement}
-   */
+
+
+
+
+
+
+
   function ensureHoverBox() {
     if (hoverBox) return hoverBox;
     hoverBox = document.createElement('div');
@@ -4305,12 +4305,12 @@ boot();
     return hoverBox;
   }
 
-  /**
-   * Track the object under the pointer and show its type label. Skipped for
-   * touch pointers, active pans, transforms, and already-selected/locked
-   * objects.
-   * @param {PointerEvent} event
-   */
+
+
+
+
+
+
   function hoverMove(event) {
     if (event.pointerType === 'touch' || middlePan || document.body.classList.contains('v23-transform-active')) return hideHover();
     const object = event.target.closest?.('#stage .object');
@@ -4325,22 +4325,22 @@ boot();
     if (hoverSpan && hoverSpan.textContent !== hoverText) hoverSpan.textContent = hoverText;
   }
 
-  /** Hide the hover label. */
+
   function hideHover() { if (hoverBox) hoverBox.hidden = true; }
 
-  // =========================================================================
-  // Inspector mode (Essentials / All controls)
-  // =========================================================================
-  /**
-   * Build the inspector-mode toggle and tag advanced controls so they can be
-   * hidden in "Essentials" mode. The choice is persisted to localStorage.
-   */
+
+
+
+
+
+
+
   function ensureInspectorMode() {
     const right = $('.right');
     if (!right || inspectorToggle) return;
 
-    // OD-23: the bar ships in index.html so the inspector column is its final
-    // height at first paint; reuse it instead of inserting a new one.
+
+
     inspectorToggle = $(':scope > .v54-inspector-mode', right) || document.createElement('div');
     if (!inspectorToggle.parentElement) {
       inspectorToggle.className = 'v54-inspector-mode';
@@ -4348,7 +4348,7 @@ boot();
       right.insertBefore(inspectorToggle, right.children[1] || null);
     }
 
-    // Selectors for controls considered "advanced" — hidden in Essentials.
+
     const advanced = [
       '#advancedTextLayout', '#peLayoutAssistance', '#borderWidth', '#borderColor', '#borderRadius',
       '#shadowBlur', '#shadowColor', '#imagePositionX', '#imagePositionY', '#showInGallery', '#showInHero',
@@ -4362,7 +4362,7 @@ boot();
       $$('.final-advanced-inspector', objectPane).forEach(node => {
         if (!['canvasPlusTransform', 'canvasPlusTextBox', 'canvasPlusTextPlacement'].includes(node.id)) node.classList.add('v54-advanced-control');
       });
-      // Empty state shown when nothing is selected — offers quick-add actions.
+
       inspectorEmpty = document.createElement('section');
       inspectorEmpty.className = 'v54-inspector-empty';
       inspectorEmpty.innerHTML = '<span aria-hidden="true">↖</span><strong>Choose something to edit</strong><p data-v54-empty-label>Select an object to edit its position, style, image, text, and animation.</p><div><button type="button" data-v54-open="text">Add text</button><button type="button" data-v54-open="elements">Browse elements</button><button type="button" data-v54-open="media">Add media</button></div>';
@@ -4376,16 +4376,16 @@ boot();
       });
     }
 
-    // Restore the user's last choice (default: essentials for a calmer UI).
+
     const saved = localStorage.getItem('einvite-v54-inspector-mode') || 'essential';
     setInspectorMode(saved === 'all' ? 'all' : 'essential');
     inspectorToggle.querySelector('button').onclick = () => setInspectorMode(document.body.classList.contains('v54-inspector-essential') ? 'all' : 'essential');
   }
 
-  /**
-   * Switch between "essential" (advanced controls hidden) and "all" modes.
-   * @param {'essential'|'all'} mode
-   */
+
+
+
+
   function setInspectorMode(mode) {
     const essential = mode !== 'all';
     document.body.classList.toggle('v54-inspector-essential', essential);
@@ -4398,14 +4398,14 @@ boot();
     }
   }
 
-  // =========================================================================
-  // Header & footer progressive disclosure (run on install + resize only)
-  // =========================================================================
-  /**
-   * Remember the original DOM location of a header node via a comment marker
-   * so it can be restored when the viewport is wide enough.
-   * @param {Element} node
-   */
+
+
+
+
+
+
+
+
   function rememberHeaderHome(node) {
     if (!node?.id || headerHomes.has(node.id)) return;
     const marker = document.createComment(`v54-home-${node.id}`);
@@ -4413,20 +4413,20 @@ boot();
     headerHomes.set(node.id, marker);
   }
 
-  /**
-   * Move a header node back to its remembered home, if any.
-   * @param {Element} node
-   */
+
+
+
+
   function restoreHeaderNode(node) {
     const marker = headerHomes.get(node?.id);
     if (marker?.parentNode && marker.nextSibling !== node) marker.after(node);
   }
 
-  /**
-   * Reorganise the studio top bar into a compact "more" menu on narrow
-   * viewports. Runs on install + resize only (NOT on every selection) so the
-   * toolbar stays stable.
-   */
+
+
+
+
+
   function organizeHeader() {
     const header = $('.studio-topbar');
     const more = $('.canvas-header-more');
@@ -4479,31 +4479,31 @@ boot();
     menu.classList.toggle('v54-has-actions', actions.querySelector('button') != null);
     actions.hidden = !actions.querySelector('button');
 
-    // A menu is closed until the user opens it. The mobile canvas header mounts
-    // this popup absolutely over the artboard, so leaving it open hides the
-    // selection (and blocks the tap that is supposed to open the inspector
-    // drawer). Close it here; the trigger and click-outside still drive it.
+
+
+
+
     menu.hidden = true;
     const moreTrigger = $('.canvas-header-more-trigger', more);
     moreTrigger?.setAttribute('aria-expanded', 'false');
-    // Wire the trigger exactly once: organizeHeader re-runs on every resize, and
-    // a fresh listener per run would stack up on document. Escape is handled by the
-    // command system's `ui.escape` (window capture, `ownsGlobalKeyboard`), which closes
-    // this menu through closeTopLayer(); the document listener below is the fallback for
-    // any route that loads the studio without command-system-v23.
+
+
+
+
+
     if (moreTrigger && !more.dataset.moreTriggerWired) {
       more.dataset.moreTriggerWired = '1';
       moreTrigger.onclick = () => {
         menu.hidden = !menu.hidden;
         moreTrigger.setAttribute('aria-expanded', String(!menu.hidden));
       };
-      // Capture phase, deliberately. `#stage` owns a capture-phase `pointerdown` handler that ends in
-      // `stopImmediatePropagation()` when the pointer lands on an object (professional-editor.js,
-      // the object-drag start), so a bubble-phase listener here never sees a click on the canvas.
-      // Measured at 1280: a click on a canvas object at (640, 648) left the menu open
-      // (`hidden:false`, `aria-expanded="true"`) while a click on empty chrome closed it.
-      // Focus is deliberately not moved on a pointer dismissal — the user just clicked elsewhere, and
-      // the canvas owns selection rather than focus. The keyboard path below returns focus.
+
+
+
+
+
+
+
       document.addEventListener('pointerdown', event => {
         if (!more.contains(event.target)) {
           menu.hidden = true;
@@ -4520,17 +4520,17 @@ boot();
 
   }
 
-  /**
-   * Build the footer "Tools" overflow trigger + menu.
-   * @returns {HTMLDivElement|null}
-   */
+
+
+
+
   function ensureFooterTools() {
     const footer = $('.studio-statusbar');
     const host = footer?.lastElementChild;
     if (!footer || !host) return null;
     if (footerTools?.isConnected) return footerTools;
-    // OD-23: the trigger ships in index.html; only its menu contents and wiring
-    // are built here, so the status bar is already 44 px tall at first paint.
+
+
     footerTools = $('.v54-footer-tools', host) || document.createElement('div');
     if (!footerTools.parentElement) {
       footerTools.className = 'v54-footer-tools';
@@ -4554,10 +4554,10 @@ boot();
     return footerTools;
   }
 
-  /**
-   * Move stray footer buttons into the footer Tools menu. Runs on install +
-   * resize only.
-   */
+
+
+
+
   function organizeFooter() {
     const tools = ensureFooterTools();
     const footer = $('.studio-statusbar');
@@ -4571,12 +4571,12 @@ boot();
     watchFooter(host);
   }
 
-  /**
-   * Launchers are added by later modules (templates, brand, quality, team,
-   * history, photo styles...). They prepend straight into the status bar's last
-   * cell, after `organizeFooter()` has already run, so they sprawl past the
-   * viewport until the next resize. Re-organise whenever that cell changes.
-   */
+
+
+
+
+
+
   let footerObserverHost = null;
   function watchFooter(host) {
     if (footerObserverHost === host) return;
@@ -4589,12 +4589,12 @@ boot();
     }).observe(host, { childList: true });
   }
 
-  // =========================================================================
-  // Command registration
-  // =========================================================================
-  /**
-   * Register canvas-related keyboard shortcuts into the command registry.
-   */
+
+
+
+
+
+
   function registerCommands() {
     registry.registerMany?.([
       {
@@ -4619,14 +4619,14 @@ boot();
     ]);
   }
 
-  // =========================================================================
-  // Auto-fit suppression wiring (bugs #1 & #2)
-  // =========================================================================
-  /**
-   * Detect the start of a resize/rotate drag via pointerdown on a handle and
-   * engage AutoFitGuard so font size is locked for the duration of the drag.
-   * @param {PointerEvent} event
-   */
+
+
+
+
+
+
+
+
   function onHandlePointerDown(event) {
     const handle = event.target.closest?.(
       '.resize-handle,.rotate-handle,.pe-handle,.pe-rotate,[data-pe-handle],.object .handle'
@@ -4635,15 +4635,15 @@ boot();
     AutoFitGuard.begin();
   }
 
-  /** Release AutoFitGuard shortly after the drag ends. */
+
   function onHandlePointerUp() {
     if (AutoFitGuard.active) AutoFitGuard.end();
   }
 
-  /**
-   * Pulse AutoFitGuard for a single tick after a selection change so that
-   * selecting an object does NOT trigger an automatic box refit (bug #2).
-   */
+
+
+
+
   function onSelectionChanged() {
     AutoFitGuard.patch();   // re-attempt controller patch (may appear after install)
     AutoFitGuard.pulse();
@@ -4651,10 +4651,10 @@ boot();
     scheduleUpdate();
   }
 
-  /**
-   * Wire the mobile inspector drawer toggle (topbar button in index.html).
-   * Toggling is idempotent and safe on desktop, where the drawer CSS is inert.
-   */
+
+
+
+
   function wireInspectorDrawer() {
     const toggle = $('#v54InspectorDrawer');
     if (!toggle) return;
@@ -4671,14 +4671,14 @@ boot();
     sync();
   }
 
-  // =========================================================================
-  // Install / destroy
-  // =========================================================================
-  /**
-   * Install the module: build chrome, wire events, register commands, and
-   * observe the DOM. Called once on DOMContentLoaded (or immediately if the
-   * DOM is already ready).
-   */
+
+
+
+
+
+
+
+
   function install() {
     document.body.classList.add('workspace-experience-v54');
     ensureHud();
@@ -4692,12 +4692,12 @@ boot();
     updateZoomLabel();
     scheduleUpdate();
 
-    // Fit the canvas on first paint for small screens (better first impression).
+
     if (matchMedia('(max-width:600px)').matches) {
       requestAnimationFrame(() => requestAnimationFrame(() => controller.fit()));
     }
 
-    // Canvas input handlers.
+
     on(viewport, 'wheel', wheelZoom, { capture: true, passive: false });
     on(document, 'pointerdown', beginDuplicateDrag, true);
     on(window, 'pointermove', moveDuplicateDrag, true);
@@ -4710,15 +4710,15 @@ boot();
     on(stage, 'pointermove', hoverMove, { passive: true });
     on(stage, 'pointerleave', hideHover);
 
-    // Auto-fit guard wiring — fixes "font shrinks on resize" & "box resizes on click".
+
     on(stage, 'pointerdown', onHandlePointerDown, true);
     on(window, 'pointerup', onHandlePointerUp, true);
     on(document, 'einvite:selection-changed', onSelectionChanged);
-    // Also try to patch the typography service once it's available.
+
     on(window, 'einvite:editor-ready', () => { AutoFitGuard.patch(); organizeHeader(); organizeFooter(); });
 
-    // Keyboard parity for the same popovers: a role="menu" must close on Escape,
-    // and focus has to land back on the control that opened it.
+
+
     on(document, 'keydown', event => {
       if (event.key !== 'Escape') return;
       if (popover && !popover.hidden) { closeZoomMenu(); $('.v54-zoom-value')?.focus(); }
@@ -4730,7 +4730,7 @@ boot();
       }
     });
 
-    // Close popovers on outside interaction.
+
     on(document, 'pointerdown', event => {
       if (!event.target.closest?.('#v54ZoomMenu,.v54-zoom-value')) closeZoomMenu();
       if (!event.target.closest?.('.v54-footer-tools')) {
@@ -4747,9 +4747,9 @@ boot();
     on(window, 'einvite:editor-state-replaced', scheduleUpdate);
     on(window, 'resize', () => { AutoFitGuard.patch(); organizeHeader(); organizeFooter(); scheduleUpdate(); });
 
-    // Observe DOM mutations so the selection card / empty state stay in sync.
-    // NOTE: we deliberately do NOT re-run organiseHeader/Footer here — doing
-    // so on every mutation is what previously caused the toolbar to "jump".
+
+
+
     contextObserver = new MutationObserver(records => {
       if (records.some(record => {
         const target = record.target;
@@ -4767,13 +4767,13 @@ boot();
     resizeObserver.observe(wrap);
     resizeObserver.observe(viewport);
 
-    // Expose the public API under BOTH the new (EInviteEditorCore) and the
-    // legacy (EInviteWorkspaceExperience) namespaces. Claiming the legacy
-    // namespace means any late-loading copy of the old
-    // `workspace-experience-v24.js` (which guards on
-    // `window.EInviteWorkspaceExperience?.version >= 24`) will detect v>=24
-    // and no-op, preventing duplicate canvas chrome. This lets us supersede
-    // the old module safely even if a deferred loader still references it.
+
+
+
+
+
+
+
     window.EInviteWorkspaceExperience = Object.freeze({
       version: 24,
       refresh: scheduleUpdate,
@@ -4791,10 +4791,10 @@ boot();
     });
   }
 
-  /**
-   * Tear down everything: remove listeners, observers, and DOM. Used by the
-   * editor lifecycle so the module can be safely re-initialised.
-   */
+
+
+
+
   function destroy() {
     destroyed = true;
     if (raf) cancelAnimationFrame(raf);
@@ -4820,96 +4820,96 @@ boot();
   }
   api.destroy = destroy;
 
-  // Register teardown with the editor lifecycle if present.
+
   window.EInviteLifecycle?.add?.(destroy);
 
-  // Boot.
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
-})();;/**
- * ui-layout.js — Editor layout chrome (v54 refactor).
- *
- * Consolidates the former `windows-ui-v16.js` into a documented, stable
- * module responsible for the studio editor's surrounding layout:
- *
- *   • Stage column ordering (toolbar → context row → viewport → page dock).
- *   • The toolbar "More" overflow menu (secondary canvas/studio controls).
- *   • Keeping the active page chip and active tool visible (scroll-into-view).
- *
- * BUG FIXES vs. the old v16 module:
- *
- *   3. Stable toolbar — the old module ran `moveSecondaryControls()` and
- *      `layoutContextToolbar()` on EVERY DOM mutation (via a MutationObserver
- *      on `childList` + `class` + `aria-pressed`), which physically moved
- *      toolbar buttons into/out of the "More" panel and toggled the context
- *      row between `display:block` and `display:none`. That is what made the
- *      shortcut-bar icons "jump". This module instead:
- *        - Populates the "More" panel ONCE on install, then only re-checks on
- *          viewport resize (debounced). Buttons keep their DOM position.
- *        - Gives the context row a stable, reserved height so showing/hiding
- *          it never shifts surrounding chrome.
- *   4. Full sidebar labels — adds a "collapse to icons" toggle so long
- *      category titles (Elements, Uploads, …) can be shown in full, with an
- *      icon-only mode available when space is tight.
- *
- * Idempotent: a second load is a no-op.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
 
-  // Idempotency guard.
+
   if (window.EInviteUiLayout?.version >= 54) return;
   window.EInviteUiLayout = { version: 54 };
 
-  // Claim the legacy v16 namespace too, so any stray late-loading copy of the
-  // old `windows-ui-v16.js` (guarded by `window.__einviteWindowsUiV16`) will
-  // no-op rather than double-process the toolbar chrome.
+
+
+
   window.__einviteWindowsUiV16 = true;
 
-  /** @type {(selector:string, root?:ParentNode)=>Element|null} */
+
   const $ = (selector, root = document) => root.querySelector(selector);
-  /** @type {(selector:string, root?:ParentNode)=>Element[]} */
+
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
   const body = document.body;
-  // Bail when the editor stage is not present (non-editor routes).
+
   if (!body || !$('#stage')) return;
 
   body.classList.add('windows-ui-v54');
 
-  // --- Module state ----------------------------------------------------------
-  /** The lazily-built "More" details element + its panel. */
+
+
   let toolbarMore = null;
   let morePanel = null;
-  /** Set of controls already moved into the More panel (avoids double-move). */
+
   const moved = new Set();
-  /** Debounce handle for resize-driven re-checks. */
+
   let resizeRaf = 0;
 
-  /**
-   * Selectors for secondary controls that belong in the toolbar "More" menu.
-   * These are the long-tail of canvas/studio toggles that would otherwise
-   * crowd the primary toolbar.
-   */
+
+
+
+
+
   const secondarySelectors = [
     '#gridToggle', '#rulersToggle', '#safeMarginToggle', '#copyObjects', '#pasteObjects',
     '#workflowV5Focus', '#workflowV6FlowBtn', '#eiFocusToggle', '.ei-experience-launch', '#eiTimelineLaunch', '#v13OperationsBtn'
   ];
 
-  /**
-   * Resolve the primary canvas toolbar element.
-   * @returns {Element|null}
-   */
+
+
+
+
   function toolbar() {
     return $('.stage-wrap > .studio-canvas-toolbar, .stage-wrap > .toolbar');
   }
 
-  /**
-   * Lazily build the "More" details menu inside the toolbar and wire its
-   * outside-click / Escape dismissal. The menu is appended near the active
-   * canvas label so it sits at the end of the primary toolbar group.
-   * @returns {HTMLDetailsElement|null}
-   */
+
+
+
+
+
+
   function ensureToolbarMore() {
     const bar = toolbar();
     if (!bar) return null;
@@ -4925,15 +4925,15 @@ boot();
       if (label) bar.insertBefore(toolbarMore, label);
       else bar.append(toolbarMore);
 
-      // Reflect open state onto aria-expanded for assistive tech.
+
       toolbarMore.addEventListener('toggle', () => {
         toolbarMore.querySelector('summary')?.setAttribute('aria-expanded', String(toolbarMore.open));
       });
-      // Close on outside pointerdown.
+
       document.addEventListener('pointerdown', event => {
         if (toolbarMore?.open && !event.target.closest('#v54ToolbarMore')) toolbarMore.open = false;
       }, true);
-      // Close on Escape and return focus to the summary.
+
       document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && toolbarMore?.open) {
           event.preventDefault();
@@ -4945,11 +4945,11 @@ boot();
     return toolbarMore;
   }
 
-  /**
-   * Move each secondary control into the "More" panel. Runs ONCE on install
-   * (and again only if new controls appear after a resize), so the toolbar
-   * layout is stable and icons do not jump on every selection/mutation.
-   */
+
+
+
+
+
   function populateToolbarMore() {
     ensureToolbarMore();
     if (!morePanel) return;
@@ -4958,26 +4958,26 @@ boot();
       if (!element || moved.has(element) || element.closest('#v54ToolbarMore')) return;
       moved.add(element);
       element.classList.add('v54-toolbar-secondary');
-      // Clear any inline positioning that the old module left behind so the
-      // control lays out naturally inside the panel.
+
+
       ['left', 'right', 'top', 'bottom', 'transform'].forEach(prop => element.style.removeProperty(prop));
       morePanel.append(element);
     });
   }
 
-  /**
-   * Close the "More" menu after a panel button is activated.
-   * @param {Event} event
-   */
+
+
+
+
   function closeMoreAfterAction(event) {
     if (!toolbarMore?.open || !event.target.closest('.v54-toolbar-more-panel button')) return;
     requestAnimationFrame(() => { if (toolbarMore) toolbarMore.open = false; });
   }
 
-  /**
-   * Scroll the active page chip into view within the page dock track. Called
-   * after navigation clicks and on resize.
-   */
+
+
+
+
   function keepActivePageVisible() {
     const track = $('.workflow-page-dock-track');
     const active = $('.workflow-page-chip.active', track || document);
@@ -4986,10 +4986,10 @@ boot();
     if (Math.abs(track.scrollLeft - target) > 1) track.scrollTo({ left: target, behavior: 'auto' });
   }
 
-  /**
-   * Scroll the active tool button into view within its tool rail.
-   * @param {ParentNode} [root=document]
-   */
+
+
+
+
   function keepActiveToolVisible(root = document) {
     $$('.ei-tool-rail', root).forEach(rail => {
       const active = $('.active,[aria-pressed="true"]', rail);
@@ -5003,13 +5003,13 @@ boot();
     });
   }
 
-  /**
-   * Promote the context toolbar to a stable, reserved row above the viewport.
-   *
-   * Unlike the old module, this NEVER toggles `display:none` (which caused
-   * layout shift). Instead it reserves a stable min-height row and only
-   * flips a `visible` class so the surrounding chrome never moves.
-   */
+
+
+
+
+
+
+
   function ensureContextRow() {
     const wrap = $('.stage-wrap');
     const context = $('.ei-context-toolbar');
@@ -5022,16 +5022,16 @@ boot();
       else wrap.append(context);
     }
 
-    // Decide whether the context row has content worth showing. We check
-    // children length and an explicit hide flag, but we never set
-    // display:none — the reserved row keeps surrounding layout stable.
+
+
+
     const hasContent = context.children.length > 0 && context.style.display !== 'none';
     context.classList.toggle('visible', hasContent);
   }
 
-  /**
-   * Mark the page dock row as reserved so it keeps its slot in the column.
-   */
+
+
+
   function ensureDockOrder() {
     const wrap = $('.stage-wrap');
     const dock = $('#workflowPageDock');
@@ -5041,11 +5041,11 @@ boot();
     }
   }
 
-  /**
-   * Debounced resize re-check: re-populate the More panel (in case new
-   * controls appeared) and re-run the stability passes. Toolbar buttons keep
-   * their positions; only overflow discovery runs.
-   */
+
+
+
+
+
   function onResize() {
     if (resizeRaf) return;
     resizeRaf = requestAnimationFrame(() => {
@@ -5058,25 +5058,25 @@ boot();
     });
   }
 
-  // =========================================================================
-  // Sidebar labels — full text + collapse-to-icons toggle (bug #4)
-  // =========================================================================
-  /** localStorage key for the sidebar collapse preference. */
+
+
+
+
   const SIDEBAR_KEY = 'einvite-v54-sidebar-collapsed';
 
-  /**
-   * Read the persisted sidebar collapse preference.
-   * @returns {boolean}
-   */
+
+
+
+
   function sidebarCollapsed() {
     try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch { return false; }
   }
 
-  /**
-   * Apply (or clear) the sidebar collapsed state. Collapsed shows icons only;
-   * expanded shows full category labels so "Elements"/"Uploads" are readable.
-   * @param {boolean} collapsed
-   */
+
+
+
+
+
   function setSidebarCollapsed(collapsed) {
     body.classList.toggle('sidebar-collapsed', collapsed);
     try { localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0'); } catch { /* ignore */ }
@@ -5089,20 +5089,20 @@ boot();
     }
   }
 
-  /**
-   * Inject a collapse toggle button into the tool rail header so the user can
-   * switch between "full labels" and "icon-only" modes. Idempotent.
-   * If the button already exists in the HTML (pre-rendered for first paint),
-   * just wire up its click handler and sync its state.
-   */
-  /**
-   * What the sidebar toggle means at the current width.
-   *
-   * Above 820px it switches the rail between full labels and icon-only. At or below 820px the rail
-   * column is translated off-canvas on purpose, so that toggle has no visible effect — but the
-   * compact layout still owns a real "sidebar": the creation drawer in
-   * editor-responsive-contract-v27. Drive that instead of doing nothing.
-   */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   function toggleSidebar() {
     const owner = window.EInviteResponsiveLayout;
     if (innerWidth <= 820 && owner && typeof owner.openCreation === 'function' && owner.mode && owner.mode() !== 'desktop') {
@@ -5116,7 +5116,7 @@ boot();
   function ensureSidebarCollapseButton() {
     const existing = $('#v54SidebarCollapse');
     if (existing) {
-      // Wire up the click handler on the pre-rendered button.
+
       existing.onclick = toggleSidebar;
       setSidebarCollapsed(sidebarCollapsed());  // sync aria/title
       return;
@@ -5131,18 +5131,18 @@ boot();
     button.title = sidebarCollapsed() ? 'Show labels' : 'Show icons only';
     button.innerHTML = '<span class="v54-collapse-label" aria-hidden="true">‹</span><span class="sr-only">Toggle sidebar labels</span>';
     button.addEventListener('click', toggleSidebar);
-    // Place at the top of the rail so it is always reachable.
+
     rail.prepend(button);
   }
 
-  // =========================================================================
-  // Wiring
-  // =========================================================================
-  /**
-   * One-shot install: build chrome once, then attach only lightweight
-   * scroll-into-view listeners. Crucially, we do NOT observe every DOM
-   * mutation — that was the source of the "jumping" toolbar.
-   */
+
+
+
+
+
+
+
+
   function install() {
     populateToolbarMore();
     ensureContextRow();
@@ -5153,26 +5153,26 @@ boot();
     keepActiveToolVisible();
 
     document.addEventListener('click', closeMoreAfterAction, true);
-    // Keep the active page/tool scrolled into view after navigation clicks —
-    // this is cheap and does not move toolbar chrome.
+
+
     document.addEventListener('click', event => {
       if (event.target.closest('.workflow-page-chip,.workflow-page-add,#workflowV7DockFlow')) requestAnimationFrame(keepActivePageVisible);
-      // The callback is wrapped: requestAnimationFrame invokes it with a DOMHighResTimeStamp,
-      // which used to land in keepActiveToolVisible's `root` parameter and throw
-      // "root.querySelectorAll is not a function" on every tool click.
+
+
+
       if (event.target.closest('.ei-tool-rail button')) requestAnimationFrame(() => keepActiveToolVisible());
     }, true);
 
-    // Re-check overflow only on resize, not on every state change.
+
     window.addEventListener('resize', onResize, { passive: true });
 
-    // Re-run the stability passes once the editor is ready / state applied —
-    // but throttled and NOT on every selection (which would re-introduce
-    // jumping). The context-row class is cheap to re-assert.
+
+
+
     window.addEventListener('einvite:state-applied', () => setTimeout(() => { ensureContextRow(); keepActivePageVisible(); }, 80));
     document.addEventListener('einvite:editor-ready', () => setTimeout(() => { ensureContextRow(); ensureDockOrder(); }, 80));
 
-    // Expose API for other modules / debugging.
+
     window.EInviteUiLayout = Object.freeze({
       version: 54,
       refresh: () => { populateToolbarMore(); ensureContextRow(); ensureDockOrder(); keepActivePageVisible(); keepActiveToolVisible(); },
@@ -5183,142 +5183,142 @@ boot();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
-})();;/**
- * ui-components.js — Editor workspace components (v54 refactor).
- *
- * A small, focused module that fixes text-overflow defects in the workspace
- * navigation chrome (bug #5: "Navigation Overflow — workspace navigation
- * cards/bubbles must expand or wrap text to fully contain long words").
- *
- * The root cause: many navigation surfaces use `white-space:nowrap` or omit an
- * `overflow-wrap` rule, so a single long word (a long invitation title, a
- * guest name, a venue, a template name) spills outside its card and overlaps
- * neighbours. CSS alone can fix the wrapping; this module additionally:
- *
- *   • Classifies workspace navigation surfaces so the CSS in
- *     `editor-styles.css` has stable hooks to target.
- *   • Provides a tiny progressive-enhancement that measures whether a card's
- *     text still overflows after wrapping and, if so, expands the card's
- *     min-height so the text is never clipped.
- *   • Adds a "long-word" guard to user-generated bubbles (page chips,
- *     layer rows, invite/material cards) so the layout stays predictable.
- *
- * Idempotent: a second load is a no-op.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (window.EInviteUiComponents?.version >= 54) return;
 
-  /** @type {(selector:string, root?:ParentNode)=>Element[]} */
+
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-  /**
-   * CSS selectors for the workspace navigation surfaces whose text must never
-   * spill. Shared between the tagging pass and the overflow-measurement pass.
-   */
+
+
+
+
   const NAV_SURFACE_SELECTORS = [
-    // Studio rail + pane cards
+
     '.studio-rail-button',
     '.studio-quick-grid button',
     '.studio-tip-card',
     '.page-nav-card',
-    // Workflow chips/bubbles
+
     '.workflow-page-chip',
     '.workflow-page-chip strong',
     '.workflow-recent-grid button',
     '.workflow-search-results button',
-    // Library / material / invite cards
+
     '.invite-card .invite-body h2',
     '.invite-card .actions button',
     '.material-card-page',
     '.studio-card',
     '.template-choice',
     '.template-live-thumb',
-    // Layer rows + command palette rows
+
     '.layer-row',
     '.v23-command-row',
-    // Dashboard overview + filter tabs
+
     '.dashboard-overview-cards article',
     '.dashboard-filter-tabs button',
-    // Inspector headings / labels
+
     '.studio-inspector-heading strong',
     '.studio-pane-heading h1'
   ];
   const NAV_SURFACE_QUERY = NAV_SURFACE_SELECTORS.join(',');
 
-  /**
-   * Tag every matching surface with a stable hook class so the CSS rules in
-   * `editor-styles.css` can apply wrapping without fragile selector chains.
-   * Idempotent (the class is only added once).
-   */
+
+
+
+
+
   function tagNavSurfaces(root = document) {
-    // Scan the given root for the whole selector list in one pass. Callers
-    // reacting to specific inserted subtrees pass that subtree, so a burst of
-    // unrelated DOM churn does not re-scan the whole document.
+
+
+
     const nodes = [...(root.matches?.(NAV_SURFACE_QUERY) ? [root] : []), ...$$(NAV_SURFACE_QUERY, root)];
     nodes.forEach(node => {
       if (!node.classList.contains('v54-nav-text')) node.classList.add('v54-nav-text');
     });
   }
 
-  /**
-   * Progressive enhancement: after the browser applies the CSS wrapping
-   * rules, some cards may still be too short for their (now-wrapped) text and
-   * would clip it. Measure scrollHeight vs. clientHeight and expand the
-   * min-height so the full text is visible.
-   *
-   * This runs on a ResizeObserver of the stage + on editor events, throttled.
-   */
+
+
+
+
+
+
+
+
   let expandRaf = 0;
-  /**
-   * Expand any nav card whose wrapped text is taller than its box.
-   */
+
+
+
   function expandOverflowingCards() {
     if (expandRaf) return;
     expandRaf = requestAnimationFrame(() => {
       expandRaf = 0;
       const nodes = $$('.v54-nav-text');
-      // Read every box FIRST, write every box SECOND.
-      //
-      // The previous version read and wrote inside one loop. Writing
-      // `style.minHeight` dirties style, so each following `node.scrollHeight`
-      // read forced a fresh document style recalculation + layout — up to one
-      // full recalculation per matched node, on every mutation, on every resize,
-      // and on every font load. Measured on index.html before this change:
-      // 3,429 ms of Recalculate Style across 24 invocations (max 358 ms,
-      // 143 ms per invocation for 30 nodes). Reading first costs one forced
-      // recalculation for the whole batch instead.
+
+
+
+
+
+
+
+
+
+
       const overflowed = [];
       for (const node of nodes) {
-        // Only measure leaf text containers (skip wrappers without their own
-        // text height).
+
+
         const height = node.scrollHeight;
         if (height - node.clientHeight > 2) overflowed.push([node, `${Math.ceil(height)}px`]);
       }
       for (const [node, next] of overflowed) {
-        // Assigning the value it already has still invalidates style, so skip it.
+
         if (node.style.minHeight !== next) node.style.minHeight = next;
       }
     });
   }
 
-  /**
-   * Observe the stage + panes for content changes that may introduce new nav
-   * surfaces (e.g. switching tabs renders a new list of cards), then re-tag
-   * and re-measure. Throttled via rAF so bursts are cheap.
-   */
+
+
+
+
+
   function observeSurfaces() {
     const target = document.querySelector('#stage, .studio-pane-host, .studio-inspector-host');
     if (typeof MutationObserver === 'undefined') return;
     const observer = new MutationObserver(mutations => {
-      // Only element insertions can introduce a nav surface. Attribute-only and
-      // character-data batches cannot, and skipping them keeps a re-render that
-      // only toggles classes from scheduling a measurement pass.
+
+
+
       const added = [];
       for (const m of mutations) for (const node of m.addedNodes || []) if (node.nodeType === 1) added.push(node);
       if (!added.length) return;
-      // Tag only the inserted subtrees; a batch that cannot contain a nav
-      // surface (the common case during canvas gestures) skips the pass whole.
+
+
       let relevant = false;
       for (const node of added) {
         if (node.matches(NAV_SURFACE_QUERY) || node.querySelector(NAV_SURFACE_QUERY)) { relevant = true; break; }
@@ -5327,22 +5327,22 @@ boot();
       for (const node of added) tagNavSurfaces(node);
       expandOverflowingCards();
     });
-    // `target` is kept as the deliberate observation root: it is where the
-    // surfaces this module tags are rendered. document.body is the fallback when
-    // the editor shell is not on the page at all (module is loaded site-wide).
+
+
+
     observer.observe(target || document.body, { childList: true, subtree: true });
-    // Re-measure on resize as font metrics / widths change.
+
     window.addEventListener('resize', () => { tagNavSurfaces(); expandOverflowingCards(); }, { passive: true });
   }
 
-  /**
-   * Install the module.
-   */
+
+
+
   function install() {
     tagNavSurfaces();
     expandOverflowingCards();
     observeSurfaces();
-    // Defer a second pass so fonts have loaded and metrics are final.
+
     if (document.fonts?.ready?.then) {
       document.fonts.ready.then(() => { tagNavSurfaces(); expandOverflowingCards(); });
     }
@@ -5354,22 +5354,22 @@ boot();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
-})();;/*
- * Inspector reorganisation (2026-10-30).
- *
- * The Edit pane had grown into ~5,600 px of stacked panels: a transform card,
- * six typography cards, duplicate alignment grids, motion tools, V13 panels,
- * and the orphaned Design pane. This module keeps the existing DOM nodes (and
- * therefore every id, listener and save path) but files them into a short
- * icon-led toolbar plus one accordion group per job:
- *
- *   Position · Text · Style · Arrange · Motion · Page · More
- *
- * Position opens by default so size/position stay immediate. Text, Style and
- * Arrange hold the essentials the owner asked to keep in the pane; the rest is
- * one click away. The old Design tab is retired here: its palette, template and
- * background controls move into the always-available Page group.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
 
@@ -5442,8 +5442,8 @@ boot();
     const hostProps = props();
     if (!hostPane || !hostProps || hostPane.querySelector('.ix-toolbox')) return false;
 
-    // Keep the shell that app.js hides/shows, but move its contents into the
-    // groups. The summary stays at the top of the pane for quick selection info.
+
+
     const summary = hostProps.querySelector('.selection-summary');
     const toolbox = make('div', 'ix-toolbox');
     toolbox.setAttribute('role', 'toolbar');
@@ -5500,8 +5500,8 @@ boot();
     root.querySelectorAll(':scope > .v20-typography-shell > .v20-inspector-group, :scope > .v20-inspector-group').forEach((section) => {
       if (section.closest('.ix-sub')) return;
       const title = (section.querySelector('h3')?.textContent || 'Text').trim();
-      // The parent tool is already called Text; a child sub-panel with the
-      // same label read as a second, redundant section.
+
+
       const label = /^text$/i.test(title) ? 'Style & type' : title;
       const sub = make('details', 'ix-sub');
       sub.dataset.title = title;
@@ -5514,15 +5514,15 @@ boot();
     });
   }
 
-  // Page and More collect several unrelated cards. Fold each card into a
-  // compact sub-accordion so opening the tool never drops a 1,300–1,800px wall
-  // of controls into the pane.
+
+
+
   function foldSections(name) {
     const body = slot(name);
     if (!body) return;
-    // Only fold direct children that are still loose. Late modules (responsive
-    // constraints, shared styles) append cards after the first pass, so an
-    // all-or-nothing guard left them as an unfolded wall at the bottom.
+
+
+
     const children = [...body.children].filter((node) => !node.classList.contains('ix-sub-fold'));
     const headingOf = (node) => {
       if (node.matches('h2, h3')) return (node.textContent || '').trim();
@@ -5543,9 +5543,9 @@ boot();
       const sub = make('details', 'ix-sub ix-sub-fold');
       const summary = make('summary');
       const label = make('span');
-      // More holds an advanced transform card whose heading matched the
-      // Position tool exactly. Rename the duplicate so the two read as
-      // different jobs.
+
+
+
       label.textContent = name === 'more' && /^position\s*&\s*size$/i.test(unit.title) ? 'Advanced transform' : unit.title;
       const chevron = make('span', 'ix-chevron', '⌄');
       chevron.setAttribute('aria-hidden', 'true');
@@ -5582,23 +5582,23 @@ boot();
       if (!built) built = build();
       if (!hostPane.querySelector('.ix-groups')) return;
 
-      // Selection summary lives above the toolbar and is hidden with #properties.
+
       const summary = hostProps.querySelector('.selection-summary');
       if (summary) summary.hidden = false;
 
-      // Position — keep the precise transform card open at rest.
+
       const position = hostPane.querySelector('#peTransformPanel');
       if (position && !position.closest('.ix-groups')) move(position, 'position');
 
-      // Text — the text field plus the six typography cards, each collapsible.
+
       const textArea = hostProps.querySelector('#textContentLabel');
       if (textArea && !textArea.closest('.ix-groups')) move(textArea, 'text');
       compactTypography();
       const textBox = hostPane.querySelector('#canvasPlusTextBox');
       if (textBox && !textBox.closest('.ix-groups') && slot('text')) {
-        // Vertical alignment / box padding are a second block inside Text.
-        // Fold them so opening Text shows the content field and a short list of
-        // headings, not a fully expanded form below it.
+
+
+
         const sub = make('details', 'ix-sub');
         sub.dataset.title = 'Text box';
         sub.innerHTML = `<summary><span>Text box</span><span class="ix-chevron" aria-hidden="true">⌄</span></summary>`;
@@ -5608,8 +5608,8 @@ boot();
         slot('text').append(sub);
       }
 
-      // Style — object appearance and the photo tools. The typography V19 style
-      // recipes stay nearby because they restyle the selected object.
+
+
       const style = slot('style');
       if (style) {
         hostPane.querySelectorAll('h2').forEach((heading) => {
@@ -5624,12 +5624,12 @@ boot();
         if (photo && !photo.closest('.ix-groups')) move(photo, 'style');
       }
 
-      // Arrange — one alignment grid only, order, grouping, lock and delete.
+
       const arrange = slot('arrange');
       if (arrange) {
         const headings = [...hostPane.querySelectorAll('h2')].filter((h) => !h.closest('.ix-groups'));
-        // Both headings said the same thing above one grid. Keep the grid and
-        // let the Arrange group summary provide the label.
+
+
         headings.filter((h) => /^(alignment|align selected)$/i.test(h.textContent.trim())).forEach(hide);
         const mainGrid = hostPane.querySelector('#alignment-grid');
         if (mainGrid && !mainGrid.closest('.ix-groups')) move(mainGrid, 'arrange');
@@ -5642,15 +5642,15 @@ boot();
         move(hostPane.querySelector('#groupObjects')?.closest('div.actions'), 'arrange');
         moveLabel('#showInHero', 'arrange');
         moveLabel('#objectLocked', 'arrange');
-        // Duplicate and Delete are in the always-visible canvas action bar;
-        // repeating them at the bottom of this group made the same command
-        // appear three times on one screen. Keep the legacy buttons in the DOM
-        // (toolbar handlers still click them) but out of the visible stack.
+
+
+
+
         hide(hostPane.querySelector('#duplicate'));
         hide(hostPane.querySelector('#deleteBtn'));
       }
 
-      // Motion — animation picker, effects card, precision tools and timeline.
+
       const motion = slot('motion');
       if (motion) {
         move(hostPane.querySelector('#animationControls'), 'motion');
@@ -5663,7 +5663,7 @@ boot();
         hostPane.querySelectorAll('.final-timeline').forEach((node) => move(node, 'motion'));
       }
 
-      // Page — the retired Design tab, now always reachable.
+
       const pagePane = document.querySelector('[data-inspector-pane="theme"]');
       if (pagePane) {
         if (pagePane.classList.contains('active')) document.querySelector('[data-inspector-tab="object"]')?.click();
@@ -5679,7 +5679,7 @@ boot();
       }
       foldSections('page');
 
-      // More — advanced duplicates, responsive constraints and fine nudging.
+
       const more = slot('more');
       if (more) {
         move(hostPane.querySelector('#canvasPlusTransform'), 'more');
@@ -5695,8 +5695,8 @@ boot();
         });
       }
 
-      // Any late standalone card that belongs to none of the above is safer in
-      // More than left as a 5,000 px wall below the groups.
+
+
       hostPane.querySelectorAll(':scope > .final-advanced-inspector, :scope > section[id]').forEach((section) => {
         if (section.closest('.ix-groups') || !section.id) return;
         if (['canvasPlusTransform', 'canvasPlusTextBox', 'canvasPlusTextPlacement', 'canvasPlusAiTools'].includes(section.id)) return;
@@ -5721,9 +5721,9 @@ boot();
     const selected = hasSelection();
     hostPane.classList.toggle('ix-has-selection', selected);
     hostPane.classList.toggle('ix-no-selection', !selected);
-    // PW-2: the Transform panel is dimmed + hinted until something is selected.
-    // canvas-plus owns the same class on its own refresh; keep both in step here
-    // so a single click clears it and clearing the selection restores it.
+
+
+
     const transformPanel = hostPane.querySelector('#canvasPlusTransform') || document.querySelector('#canvasPlusTransform');
     if (transformPanel) transformPanel.classList.toggle('is-disabled', !selected);
     hostPane.querySelectorAll('.ix-tool').forEach((button) => {
@@ -5791,20 +5791,20 @@ boot();
     [slug, access, password, save, state].filter(Boolean).forEach((node) => accessBody.append(node));
     const manage = shell.querySelector('.share-manage');
     [history, unpublish, rsvp, wishes].filter(Boolean).forEach((node) => manage.append(node));
-    // The hero already states draft/published; the legacy #publishInfo line is
-    // kept in the DOM (app.js still updates it) but not shown, so it cannot
-    // contradict the state with a stale local-snapshot message.
-    // Collaboration and other modules append their own cards to this pane.
-    // Keep them instead of discarding their DOM (and their event bindings).
+
+
+
+
+
     const moved = new Set([slug, access, password, save, state, info, history, unpublish, rsvp, wishes].filter(Boolean));
     const extras = [...publish.children].filter((node) => !moved.has(node)
       && node.id !== 'publishingSettings'
       && !node.classList.contains('studio-inspector-heading')
       && !(node.tagName === 'H2' && /^publishing$/i.test(node.textContent.trim())));
     extras.forEach((node) => shell.append(node));
-    // app.js still writes #publishInfo on every publish/refresh. It must stay in
-    // the document (hidden) or refreshPublish() throws inside apply() and every
-    // subsequent edit — font size included — is rolled back.
+
+
+
     if (info) {
       info.hidden = true;
       shell.append(info);
@@ -5901,14 +5901,14 @@ boot();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(install, 90), { once: true });
   else setTimeout(install, 90);
-})();;/**
- * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
- *
- * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
- * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
- * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
- * still work. Toggles expose aria-expanded; nothing traps focus.
- */
+})();;
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteShell && window.EInviteShell.version >= 55) return;
@@ -5921,7 +5921,7 @@ boot();
   function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
 
-  /* --- 1. Rail collapse -------------------------------------------------- */
+
   function applyRailCollapsed(collapsed) {
     body.classList.toggle('rail-collapsed', !!collapsed);
     document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
@@ -5929,14 +5929,14 @@ boot();
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
-      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
+
       var glyph = btn.querySelector('[data-rail-glyph]');
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
-  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
-     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
-     return focus to the toggle when the drawer closes under the keyboard. */
+
+
+
   function ensureScrim() {
     var scrim = document.querySelector('.app-drawer-scrim');
     if (!scrim) {
@@ -5962,7 +5962,7 @@ boot();
     }
   }
 
-  /* --- 2. Current page --------------------------------------------------- */
+
   function markCurrentPage() {
     var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
     document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
@@ -5971,11 +5971,11 @@ boot();
     });
   }
 
-  /*
-   * Pages that show a signed-out flow (dashboard) hide their rail until the
-   * signed-in view is revealed, so the login card gets the full canvas. The
-   * same flag flips the topbar down to Skeleton B (brand + language + theme).
-   */
+
+
+
+
+
   function syncAutoRail() {
     var autoRail = document.querySelector('.app-rail[data-rail-auto]');
     var signedIn = document.getElementById('dashboardView');
@@ -5990,7 +5990,7 @@ boot();
     new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  /* --- 3. Appearance ----------------------------------------------------- */
+
   function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
   function applyTheme(next) {
     html.dataset.theme = next;
@@ -6000,12 +6000,12 @@ boot();
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      /* Both symbols live in the button; the theme attribute on <html> shows the
-         right one, so nothing is assigned here. */
+
+
     });
   }
 
-  /* --- Wiring ------------------------------------------------------------ */
+
   document.addEventListener('click', function (event) {
     var railToggle = event.target.closest('[data-rail-toggle]');
     if (railToggle) {
@@ -6018,7 +6018,7 @@ boot();
     if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
     var themeToggle = event.target.closest('[data-theme-toggle]');
     if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
-    /* Outside click closes the mobile drawer but never the desktop rail. */
+
     if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
   });
   document.addEventListener('keydown', function (event) {
@@ -6047,33 +6047,33 @@ boot();
   });
 })();
 
-/*
- * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
- * workspace, appearance, drawer, account and both language pills on one
- * non-wrapping row (740px of content in a 390px bar), so the language switch
- * painted past the viewport.
- *
- * The CSS route is blocked: app-shell.css is inside @layer components, and every
- * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
- * the generated route bundle, which concatenates sources in manifest order. A
- * deterministic shell hook keeps the wrap correct at any width without another
- * !important and without depending on which sheet happens to load last.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (document.body.classList.contains('guest')) return;
-  // The app bar is a direct child of body on the shell routes, but a wrapper
-  // (#app) on some pages; look for it either way and never pick a dialog header.
+
+
   const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
     .find((node) => !node.closest('dialog')) || null;
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
-  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
-  // padding is the only arithmetic that fits without shrinking tap targets.
+
+
   const TIGHT = 400;
-  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
-  // even on two rows. Below 360 the brand text yields its width to them.
+
+
   const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
   const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
@@ -6102,14 +6102,14 @@ boot();
     header.style.overflow = 'visible';
     header.style.rowGap = tight ? '0' : '4px';
     if (tight) {
-      // The unlayered narrow-header rule wins padding/gap with !important; it
-      // reads these variables, so the hook can compress the bar without adding
-      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+
+
+
       header.style.setProperty('--shell-topbar-pad', '0px 8px');
       header.style.setProperty('--shell-topbar-gap', '0px');
-      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
-      // page cluster. A half-width brand forces exactly that split instead of
-      // a third row on the Khmer templates page.
+
+
+
       if (left) {
         left.style.flex = compact ? '0 0 auto' : '1 1 50%';
         left.style.maxWidth = compact ? '44px' : '50%';
@@ -6117,8 +6117,8 @@ boot();
         left.style.minWidth = '0';
         left.style.overflow = 'hidden';
       }
-      // An empty right cluster (dashboard hides it) must not claim a flex line:
-      // giving it a height created a blank row between the brand and language rows.
+
+
       if (right && right.getBoundingClientRect().width > 0) {
         right.style.order = compact ? '0' : '20';
         right.style.flex = '0 1 auto';
@@ -6126,8 +6126,8 @@ boot();
       } else if (right) {
         clear(right, RIGHT_PROPS);
         right.style.order = '0';
-        // An empty cluster still claimed a 44 px flex line; hide it entirely so
-        // the bar is brand row + language row, not three rows.
+
+
         right.style.display = 'none';
       }
     } else {
@@ -6148,9 +6148,9 @@ boot();
     }
   }
   sync();
-  // The language switch is injected after this script on some routes (it had no
-  // inline style at all in the first measurement). Re-sync when it lands, not
-  // only on the next window resize.
+
+
+
   new MutationObserver(sync).observe(header, { childList: true });
   window.addEventListener('load', sync, { once: true });
   let timer = 0;
@@ -6158,28 +6158,28 @@ boot();
     clearTimeout(timer);
     timer = setTimeout(sync, 120);
   });
-})();;(()=>{'use strict';if(window.EInviteResponsiveLayout?.version>=27)return;const M=820,C=1180,q=(s,r=document)=>r.querySelector(s),b=document.body,m=q('body.studio-experience>main'),l=q('aside.left'),r=q('aside.right'),h=q('.studio-pane-host',l),a=q('.studio-tool-rail',l),s=q('.stage-wrap'),w=q('#stage');if(!b?.classList.contains('studio-experience')||!m||!l||!r||!h||!a||!s)return;w?.setAttribute('tabindex','-1');let y=0,i=0,p=0;const mode=()=>innerWidth<=M?'mobile':innerWidth<=C?'compact':'desktop',state=(n,o)=>{n?.setAttribute('aria-hidden',`${!o}`);if(n&&'inert'in n)n.inert=!o;n?.classList.toggle('einvite-drawer-closed',!o)},focus=()=>{w?.focus({preventScroll:true});b.dataset.keyboardOwner='canvas'};function sync(){if(y)return;y=1;const x=mode(),d=b.dataset.editorDrawer;b.classList.toggle('einvite-layout-mobile',x==='mobile');b.classList.toggle('einvite-layout-compact',x==='compact');b.classList.toggle('einvite-layout-desktop',x==='desktop');b.dataset.editorLayout=x;if(x==='desktop'){b.dataset.editorDrawer='desktop';b.classList.remove('mobile-creation-open','mobile-inspector-open','inspector-open','mobile-pane-collapsed');state(l,1);state(h,1);state(r,1);a.inert=false;a.removeAttribute('aria-hidden')}else{if(!i||!['canvas','creation','inspector'].includes(d))b.dataset.editorDrawer='canvas';const v=b.dataset.editorDrawer,c=v==='creation',n=v==='inspector';b.classList.toggle('mobile-creation-open',c);b.classList.toggle('mobile-inspector-open',n);b.classList.toggle('inspector-open',n);b.classList.toggle('mobile-pane-collapsed',!c);if(x==='mobile'){state(l,c);a.inert=!c}else{state(l,1);a.inert=false}a.removeAttribute('aria-hidden');state(h,c);state(r,n)}i=1;requestAnimationFrame(()=>dispatchEvent(new CustomEvent('einvite:workspace-resized',{detail:{layout:mode(),drawer:b.dataset.editorDrawer}})));y=0}function set(d,o={}){b.dataset.editorDrawer=d||'canvas';sync();if(o.focus){const z=d==='creation'?h.querySelector('.studio-pane.active input,.studio-pane.active button,.studio-pane.active select,.studio-pane.active textarea'):d==='inspector'?r.querySelector('.studio-inspector-pane.active input,.studio-inspector-pane.active button,.studio-inspector-tab'):w;z?.focus({preventScroll:true})}}const api={version:27,MOBILE_MAX:M,COMPACT_MAX:C,mode,sync,setDrawer:set,openCreation:o=>set('creation',o),closeCreation:o=>set('canvas',o),openInspector:o=>set('inspector',o),closeInspector:o=>set('canvas',o),focusCanvas(){set('canvas');focus()}};document.addEventListener('click',e=>{if(mode()==='desktop')return;if(e.target.closest('.studio-tool-rail [data-studio-tab]'))b.dataset.editorDrawer='creation';else if(e.target.closest('[data-inspector-tab]'))b.dataset.editorDrawer='inspector';else{const z=e.target.closest('[data-mobile-mode]');if(!z)return;b.dataset.editorDrawer=z.dataset.mobileMode==='tools'?'creation':z.dataset.mobileMode==='quick'?'inspector':'canvas'}queueMicrotask(sync)},true);new MutationObserver(()=>{if(!y&&mode()!=='desktop'){if(b.classList.contains('mobile-inspector-open')||b.classList.contains('inspector-open'))b.dataset.editorDrawer='inspector';else if(b.classList.contains('mobile-creation-open')&&!b.classList.contains('mobile-pane-collapsed'))b.dataset.editorDrawer='creation';sync()}}).observe(b,{attributes:true,attributeFilter:['class']});const typing=n=>!!n&&(n.matches?.('input,textarea,select,[contenteditable="true"]')||n.isContentEditable),control=n=>typing(n)||!!n?.matches?.('button,a[href],[role="button"],[role="menuitem"],[role="tab"]');document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('#stage .object,#stage,#canvasViewport,.stage-wrap')||control(e.target)||e.target.closest?.('.content[contenteditable="true"],.studio-canvas-toolbar,#v20TypographyToolbar')){p=0;return}p=1;b.dataset.keyboardOwner='canvas';queueMicrotask(focus)},true);document.addEventListener('pointerup',()=>{if(p){p=0;b.dataset.keyboardOwner='canvas';focus()}},true);document.addEventListener('pointercancel',()=>p=0,true);for(const n of['einvite:marquee-complete','einvite:resize-complete','einvite:rotation-complete','einvite:drag-complete','einvite:professional-command-committed'])document.addEventListener(n,e=>{if(e.detail?.source!=='keyboard'){b.dataset.keyboardOwner='canvas';focus()}});document.addEventListener('focusin',e=>{const t=e.target;b.dataset.keyboardOwner=t===w||t?.id==='canvasViewport'?'canvas':control(t)||t?.closest?.('aside.left,aside.right,.studio-topbar,.mobile-editor-v14-bar,.studio-canvas-toolbar,#v20TypographyToolbar')?'control':t?.closest?.('#stage,#canvasViewport,.stage-wrap')?'canvas':b.dataset.keyboardOwner},true);const back=new WeakMap,show=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(...x){const a=document.activeElement;back.set(this,{a,c:b.dataset.keyboardOwner==='canvas'&&(a===w||a?.id==='canvasViewport')});return show.apply(this,x)};document.addEventListener('close',e=>{if(!(e.target instanceof HTMLDialogElement))return;const x=back.get(e.target);back.delete(e.target);requestAnimationFrame(()=>requestAnimationFrame(()=>x?.c?(focus(),b.dataset.keyboardOwner='canvas'):x?.a?.isConnected&&x.a.focus?.({preventScroll:true})))},true);addEventListener('resize',sync,{passive:true});document.addEventListener('einvite:editor-ready',sync);requestAnimationFrame(sync);window.EInviteResponsiveLayout=Object.freeze(api)})();;// first-selection-prewarm — pays the one-time cost of the first selection-chrome
-// paint at boot, where nothing is being measured, instead of on the user's first
-// selection gesture.
-//
-// Why: on a fresh browser profile, the first selection in the editor shows three
-// composited chrome elements (selection card / toolbar / box) for the first time.
-// That first present pays GPU pipeline + lazy-compile costs that can stall a
-// single frame by ~100 ms on a cold browser (measured: canvas-motion perf gate
-// snap gesture, run 1 of 3 only). Warming the same path at editor-ready moves
-// the cost off the first interaction; subsequent selections are unchanged.
-//
-// Safety:
-// - Runs once per page load, only after the editor reports ready and the stage
-//   has a laid-out object.
-// - Skipped entirely if the user interacts first (their selection pays it).
-// - Selection is cleared afterwards; no document/undo state is touched.
-// - LT-1.9: the typography strip is hidden during the warm hold. It is in
-//   normal flow above the canvas, so letting it paint for 140ms pushed the
-//   toolbar and canvas down twice (CLS 0.38). The selection card and bounds
-//   still warm; only the strip's first layout is left to the first real
-//   selection. Inline display (not a class) because typography-system.css is
-//   unlayered and outranks every layered rule.
+})();;(()=>{'use strict';if(window.EInviteResponsiveLayout?.version>=27)return;const M=820,C=1180,q=(s,r=document)=>r.querySelector(s),b=document.body,m=q('body.studio-experience>main'),l=q('aside.left'),r=q('aside.right'),h=q('.studio-pane-host',l),a=q('.studio-tool-rail',l),s=q('.stage-wrap'),w=q('#stage');if(!b?.classList.contains('studio-experience')||!m||!l||!r||!h||!a||!s)return;w?.setAttribute('tabindex','-1');let y=0,i=0,p=0;const mode=()=>innerWidth<=M?'mobile':innerWidth<=C?'compact':'desktop',state=(n,o)=>{n?.setAttribute('aria-hidden',`${!o}`);if(n&&'inert'in n)n.inert=!o;n?.classList.toggle('einvite-drawer-closed',!o)},focus=()=>{w?.focus({preventScroll:true});b.dataset.keyboardOwner='canvas'};function sync(){if(y)return;y=1;const x=mode(),d=b.dataset.editorDrawer;b.classList.toggle('einvite-layout-mobile',x==='mobile');b.classList.toggle('einvite-layout-compact',x==='compact');b.classList.toggle('einvite-layout-desktop',x==='desktop');b.dataset.editorLayout=x;if(x==='desktop'){b.dataset.editorDrawer='desktop';b.classList.remove('mobile-creation-open','mobile-inspector-open','inspector-open','mobile-pane-collapsed');state(l,1);state(h,1);state(r,1);a.inert=false;a.removeAttribute('aria-hidden')}else{if(!i||!['canvas','creation','inspector'].includes(d))b.dataset.editorDrawer='canvas';const v=b.dataset.editorDrawer,c=v==='creation',n=v==='inspector';b.classList.toggle('mobile-creation-open',c);b.classList.toggle('mobile-inspector-open',n);b.classList.toggle('inspector-open',n);b.classList.toggle('mobile-pane-collapsed',!c);if(x==='mobile'){state(l,c);a.inert=!c}else{state(l,1);a.inert=false}a.removeAttribute('aria-hidden');state(h,c);state(r,n)}i=1;requestAnimationFrame(()=>dispatchEvent(new CustomEvent('einvite:workspace-resized',{detail:{layout:mode(),drawer:b.dataset.editorDrawer}})));y=0}function set(d,o={}){b.dataset.editorDrawer=d||'canvas';sync();if(o.focus){const z=d==='creation'?h.querySelector('.studio-pane.active input,.studio-pane.active button,.studio-pane.active select,.studio-pane.active textarea'):d==='inspector'?r.querySelector('.studio-inspector-pane.active input,.studio-inspector-pane.active button,.studio-inspector-tab'):w;z?.focus({preventScroll:true})}}const api={version:27,MOBILE_MAX:M,COMPACT_MAX:C,mode,sync,setDrawer:set,openCreation:o=>set('creation',o),closeCreation:o=>set('canvas',o),openInspector:o=>set('inspector',o),closeInspector:o=>set('canvas',o),focusCanvas(){set('canvas');focus()}};document.addEventListener('click',e=>{if(mode()==='desktop')return;if(e.target.closest('.studio-tool-rail [data-studio-tab]'))b.dataset.editorDrawer='creation';else if(e.target.closest('[data-inspector-tab]'))b.dataset.editorDrawer='inspector';else{const z=e.target.closest('[data-mobile-mode]');if(!z)return;b.dataset.editorDrawer=z.dataset.mobileMode==='tools'?'creation':z.dataset.mobileMode==='quick'?'inspector':'canvas'}queueMicrotask(sync)},true);new MutationObserver(()=>{if(!y&&mode()!=='desktop'){if(b.classList.contains('mobile-inspector-open')||b.classList.contains('inspector-open'))b.dataset.editorDrawer='inspector';else if(b.classList.contains('mobile-creation-open')&&!b.classList.contains('mobile-pane-collapsed'))b.dataset.editorDrawer='creation';sync()}}).observe(b,{attributes:true,attributeFilter:['class']});const typing=n=>!!n&&(n.matches?.('input,textarea,select,[contenteditable="true"]')||n.isContentEditable),control=n=>typing(n)||!!n?.matches?.('button,a[href],[role="button"],[role="menuitem"],[role="tab"]');document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('#stage .object,#stage,#canvasViewport,.stage-wrap')||control(e.target)||e.target.closest?.('.content[contenteditable="true"],.studio-canvas-toolbar,#v20TypographyToolbar')){p=0;return}p=1;b.dataset.keyboardOwner='canvas';queueMicrotask(focus)},true);document.addEventListener('pointerup',()=>{if(p){p=0;b.dataset.keyboardOwner='canvas';focus()}},true);document.addEventListener('pointercancel',()=>p=0,true);for(const n of['einvite:marquee-complete','einvite:resize-complete','einvite:rotation-complete','einvite:drag-complete','einvite:professional-command-committed'])document.addEventListener(n,e=>{if(e.detail?.source!=='keyboard'){b.dataset.keyboardOwner='canvas';focus()}});document.addEventListener('focusin',e=>{const t=e.target;b.dataset.keyboardOwner=t===w||t?.id==='canvasViewport'?'canvas':control(t)||t?.closest?.('aside.left,aside.right,.studio-topbar,.mobile-editor-v14-bar,.studio-canvas-toolbar,#v20TypographyToolbar')?'control':t?.closest?.('#stage,#canvasViewport,.stage-wrap')?'canvas':b.dataset.keyboardOwner},true);const back=new WeakMap,show=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(...x){const a=document.activeElement;back.set(this,{a,c:b.dataset.keyboardOwner==='canvas'&&(a===w||a?.id==='canvasViewport')});return show.apply(this,x)};document.addEventListener('close',e=>{if(!(e.target instanceof HTMLDialogElement))return;const x=back.get(e.target);back.delete(e.target);requestAnimationFrame(()=>requestAnimationFrame(()=>x?.c?(focus(),b.dataset.keyboardOwner='canvas'):x?.a?.isConnected&&x.a.focus?.({preventScroll:true})))},true);addEventListener('resize',sync,{passive:true});document.addEventListener('einvite:editor-ready',sync);requestAnimationFrame(sync);window.EInviteResponsiveLayout=Object.freeze(api)})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteFirstSelectionPrewarm) return;
@@ -6224,11 +6224,11 @@ boot();
   }
 
   function finish(ok) {
-    // Typography queues one more refresh from the synthetic selection after
-    // the bridge has cleared it; restoring now let that stale pass paint the
-    // strip for ~40ms with nothing selected (and shift the canvas). Give the
-    // queue time to drain while the strip is still display:none, then hand it
-    // back. A real pointer/key selection restores it immediately below.
+
+
+
+
+
     if (ok) setTimeout(restoreStrip, 700); else restoreStrip();
     api.state = 'done';
     api.ok = !!ok;

@@ -33,7 +33,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src" / "python" / "build"))
+from build_route_bundles import css_bundle, js_bundle, strip_js_comments  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 JS_DIR = ROOT / "src" / "js"
@@ -90,7 +94,13 @@ def build_map(page: str, kind: str) -> dict[int, list[tuple[str, int]]]:
 
 
 def exact_bundle_text(page: str, kind: str) -> str:
-    return "".join((";" if kind == "scripts" else "") + "\n".join(src) for _, src in chunks_for(page, kind))
+    """Replay the generator's transforms, not just its concatenation order."""
+    entry = json.loads(SOURCES.read_text(encoding="utf-8"))["pages"][page]
+    if kind == "scripts":
+        scripts = entry["scripts"]
+        split = int(entry.get("scriptSplitAt") or 0)
+        return js_bundle(scripts[:split] if split else scripts)
+    return css_bundle(entry["styles"])
 
 
 def main() -> int:
@@ -107,6 +117,20 @@ def main() -> int:
     bundle = (JS_DIR if kind == "scripts" else CSS_DIR) / f"bundle-{Path(args.page).stem}{suffix}"
 
     if args.verify:
+        entry = json.loads(SOURCES.read_text(encoding="utf-8"))["pages"][args.page]
+        split = int(entry.get("scriptSplitAt") or 0) if kind == "scripts" else 0
+        if split:
+            # Split routes ship two bundles. Mapping line numbers across the cut
+            # is ambiguous, so verify each part byte-for-byte and report that.
+            scripts = entry["scripts"]
+            second = (JS_DIR / f"bundle-{Path(args.page).stem}-2.js").read_text(encoding="utf-8")
+            first_ok = js_bundle(scripts[:split]) == bundle.read_text(encoding="utf-8")
+            second_ok = js_bundle(scripts[split:]) == second
+            print(
+                f"BUNDLE_LINE_MAP_VERIFY page={args.page} kind={kind} "
+                f"split_parts_identical={first_ok and second_ok} parts=2"
+            )
+            return 0 if first_ok and second_ok else 1
         derived = exact_bundle_text(args.page, kind)
         on_disk = bundle.read_text(encoding="utf-8")
         identical = derived == on_disk
@@ -125,12 +149,21 @@ def main() -> int:
             # text, so it has two mappings and both are checked.
             for path, src_line in hits:
                 if path not in source_cache:
-                    source_cache[path] = (ROOT / path).read_text(encoding="utf-8").rstrip().split("\n")
+                    raw = (ROOT / path).read_text(encoding="utf-8")
+                    if kind == "scripts":
+                        raw = strip_js_comments(raw)
+                    source_cache[path] = raw.rstrip().split("\n")
                 src_lines = source_cache[path]
                 if src_line - 1 >= len(src_lines):
                     continue
                 needle = src_lines[src_line - 1].strip()
                 if not needle:
+                    continue
+                # CSS bundles are whitespace-tightened and pruned; the byte-identity
+                # check above proves the mapping replay, but a source line's exact
+                # text is not a substring of the minified bundle line. JS keeps one
+                # line per source line, so its text check is still meaningful.
+                if kind == "styles":
                     continue
                 checked += 1
                 if needle not in bundle_line:

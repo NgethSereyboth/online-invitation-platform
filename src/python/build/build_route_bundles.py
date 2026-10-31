@@ -89,6 +89,70 @@ def read_css(path: str) -> str:
     return resolve_css_source(path).read_text(encoding="utf-8")
 
 
+def strip_js_comments(text: str) -> str:
+    """Drop whole-line JS comments while preserving the line count exactly.
+
+    Bundles keep the source line structure so ``tools/bundle-line-map.py`` keeps
+    working: one input line always yields one output line. A comment that starts
+    a line is blanked, but a block comment's closing line keeps any code that
+    follows ``*/``. Quoted strings and template literals are copied verbatim, so
+    a ``//`` or ``/*`` inside content is never mistaken for a comment.
+    """
+    out: list[str] = []
+    in_block = False
+    in_template = False
+    for line in text.splitlines(keepends=True):
+        body = line.rstrip("\r\n")
+        newline = line[len(body):]
+        if in_block:
+            end = body.find("*/")
+            if end == -1:
+                out.append(newline)
+                continue
+            in_block = False
+            rest = body[end + 2:]
+            out.append((rest if rest.strip() else "") + newline)
+            continue
+        stripped = body.lstrip()
+        if not in_template and stripped.startswith("//"):
+            out.append(newline)
+            continue
+        if not in_template and stripped.startswith("/*"):
+            end = body.find("*/", body.find("/*") + 2)
+            if end == -1:
+                in_block = True
+                out.append(newline)
+                continue
+            rest = body[end + 2:]
+            out.append((rest if rest.strip() else "") + newline)
+            continue
+        i = 0
+        while i < len(body):
+            c = body[i]
+            if in_template:
+                if c == "\\":
+                    i += 2
+                    continue
+                if c == "`":
+                    in_template = False
+            else:
+                if c == "`":
+                    in_template = True
+                elif c in "'\"":
+                    quote = c
+                    i += 1
+                    while i < len(body):
+                        if body[i] == "\\":
+                            i += 2
+                            continue
+                        if body[i] == quote:
+                            break
+                        i += 1
+            i += 1
+        out.append(line)
+    return "".join(out)
+
+
 def js_bundle(paths: list[str]) -> str:
     """Concatenate JS sources into a single bundle.
 
@@ -98,7 +162,7 @@ def js_bundle(paths: list[str]) -> str:
     """
     chunks: list[str] = []
     for path in paths:
-        chunks.append(f";{read_js(path).rstrip()}")
+        chunks.append(f";{strip_js_comments(read_js(path)).rstrip()}")
     return "".join(chunks)
 
 
@@ -172,6 +236,75 @@ def css_compact_whitespace(text: str) -> str:
     return "".join(out)
 
 
+def css_tighten(text: str) -> str:
+    """Remove optional spaces around CSS punctuation without touching payloads.
+
+    Only `` \t`` runs are dropped, never newlines, so the bundle keeps one line
+    per source line for the line map. Strings and ``url(...)`` payloads are
+    copied verbatim. A colon only loses its trailing space inside a declaration
+    block or an at-rule prelude, so descendant selectors such as ``a :hover``
+    are untouched. The final ``;`` before ``}`` is optional in CSS and is
+    dropped too.
+    """
+    out: list[str] = []
+    i, n = 0, len(text)
+    depth = 0
+    parens = 0
+    while i < n:
+        c = text[i]
+        if c in "\"'":
+            quote = c
+            j = i + 1
+            while j < n:
+                if text[j] == "\\":
+                    j += 2
+                    continue
+                if text[j] == quote:
+                    j += 1
+                    break
+                j += 1
+            out.append(text[i:j])
+            i = j
+            continue
+        if text[i:i + 4].lower() == "url(":
+            j = text.find(")", i)
+            j = n if j == -1 else j + 1
+            out.append(text[i:j])
+            i = j
+            continue
+        if c in "{};,":
+            while out and out[-1] in " \t":
+                out.pop()
+            if c == "}":
+                k = len(out) - 1
+                while k >= 0 and out[k] in " \t\n":
+                    k -= 1
+                if k >= 0 and out[k] == ";":
+                    del out[k]
+            out.append(c)
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth = max(0, depth - 1)
+            i += 1
+            while i < n and text[i] in " \t":
+                i += 1
+            continue
+        if c == "(":
+            parens += 1
+        elif c == ")":
+            parens = max(0, parens - 1)
+        if c == ":" and (depth > 0 or parens > 0):
+            out.append(c)
+            i += 1
+            while i < n and text[i] in " \t":
+                i += 1
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def css_bundle(paths: list[str]) -> str:
     """Concatenate CSS sources into a single bundle.
 
@@ -190,7 +323,7 @@ def css_bundle(paths: list[str]) -> str:
                 flags=re.I,
             )
         )
-        chunks.append(markers + css_compact_whitespace(re.sub(r"/\*.*?\*/", "", source, flags=re.S).rstrip()))
+        chunks.append(markers + css_tighten(css_compact_whitespace(re.sub(r"/\*.*?\*/", "", source, flags=re.S).rstrip())))
     return "".join(chunks)
 
 

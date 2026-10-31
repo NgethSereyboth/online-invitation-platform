@@ -1,39 +1,39 @@
-;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
- * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
- *
- * Responsibilities:
- *   - Source of truth for UI language = <html lang>.
- *   - Persisted to localStorage key `einvite-lang` ('en'|'km').
- *   - First-visit default: navigator.language starts with `km` -> Khmer, else English.
- *   - Exposes EInviteI18n.get()/set()/t()/langText()/subscribe().
- *   - Backwards-compatible alias EInviteI18N.getLocale() (the 23 page modules already
- *     call window.EInviteI18N?.getLocale?.(); this makes them resolve through the
- *     single resolver instead of falling back to <html lang>).
- *   - Dispatches a synchronous `einvite:lang-changed` CustomEvent on <html> so any
- *     bilingual surface can re-render, and notifies subscribers.
- *   - Injects a bilingual language switch into every <header> (shared header + the
- *     editor app-bar). The switch itself is the one place both languages coexist.
- *   - Walks [data-en][data-km] form fields and sets placeholder/aria-label to the
- *     active language (text labels are handled by the .i18n-en/.i18n-km CSS hiding
- *     convention, no JS needed there).
- *
- * This file is designed to be the FIRST script in every page bundle (it is listed
- * first in earlyScripts and as the first entry of each page's `scripts`). It runs
- * synchronously in <head> (bundles are loaded blocking in <head>) so <html lang> is
- * correct before first paint -> no FOIL flash of both languages. Every public
- * method is guarded so a missing DOM / storage / navigator never throws.
- */
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   "use strict";
-  // Guard against double-injection (earlyScripts + per-page scripts, or a future
-  // head <script src>).
+
+
   if (global.EInviteI18n && global.EInviteI18N && global.EInviteI18N.version) return;
   if (global.EInviteI18n && global.EInviteI18n.version >= 1) return;
 
   var doc = global.document;
   var STORAGE_KEY = "einvite-lang";
 
-  // --- Language detection ----------------------------------------------------
+
   function navigatorLang() {
     try {
       var nav = global.navigator && global.navigator.language;
@@ -67,13 +67,13 @@
     } catch (e) { /* noop */ }
   }
   function get() {
-    // Persisted user choice wins; otherwise the live <html lang> wins (set by the
-    // public page observer, the head inline, or the previous switch click); finally
-    // the navigator default.
+
+
+
     return persistedLang() || htmlLang();
   }
 
-  // --- Persistence + notification -------------------------------------------
+
   var subscribers = [];
   function persist(lang) {
     try { global.localStorage && global.localStorage.setItem(STORAGE_KEY, lang); }
@@ -90,19 +90,19 @@
     for (var i = 0; i < subscribers.length; i++) {
       try { subscribers[i](lang, get); } catch (e) { /* keep other subscribers alive */ }
     }
-    // Re-sync every injected language switch after a real language change.
-    // The `einvite:lang-changed` event re-runs boot()->injectSwitches(), but
-    // injectSwitches() skips any <header> that already holds a switch, so
-    // without this refresh the buttons' aria-pressed / active class stay frozen
-    // at the pre-click value and read as inverted on the now-inactive button.
-    // syncSwitch(null, lang) covers all switches across all <header> elements.
+
+
+
+
+
+
     syncSwitch(null, lang);
   }
 
-  // --- Form-field helper (placeholder/aria-label for [data-en][data-km]) ----
-  // Text labels (label/span/button/h2/th) are NOT touched here: the
-  // `.i18n-en`/`.i18n-km` CSS convention hides the inactive span, so no JS is
-  // needed for them and they re-render live on toggle via CSS.
+
+
+
+
   function applyFormFields(root) {
     var scope = root || doc;
     if (!scope.querySelectorAll) return;
@@ -121,16 +121,16 @@
     }
   }
 
-  // --- Language switch injection (into every <header>) ----------------------
+
   function escHTML(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
-  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
-  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
-  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
-  // the delegated click handler and `syncSwitch` use.
+
+
+
+
   var switchCount = 0;
   function makeSwitch() {
     var first = switchCount === 0;
@@ -157,12 +157,12 @@
       b.classList.toggle("active", on);
     }
   }
-  // One delegated listener instead of one per injected switch. The editor rebuilds its header
-  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
-  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
-  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
-  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
-  // survives re-renders and duplicate mounts.
+
+
+
+
+
+
   var delegated = false;
   function onLanguageClick(e) {
     var target = e.target;
@@ -178,9 +178,9 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
-      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
-      // check, command palette) is a layout heading, not the app bar, and the injected switch
-      // landed in the middle of those panels. Clean up any copy injected before this guard.
+
+
+
       if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
         var stray = h.querySelector(".language-switch");
         if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
@@ -198,10 +198,10 @@
     try { injectSwitches(); } catch (e) { /* keep going */ }
     applyOptions();
   }
-  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+
   function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
-  // --- Public resolver -------------------------------------------------------
+
   var EInviteI18n = {
     version: "1.0",
     STORAGE_KEY: STORAGE_KEY,
@@ -209,24 +209,24 @@
     getLocale: get, // backward-compat: EInviteI18N?.getLocale()
     set: function (lang) {
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
-      // If the language isn't actually changing, just (re)sync the DOM attribute
-      // and form fields so a forced re-render is idempotent.
+
+
       if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
       applyOptions();
       return lang;
     },
-    // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
-    // Optional {token:value} params are substituted as {token} -> value.
+
+
     t: function (key, strings, params) {
       var lang = get();
       var dict = (strings && (strings[lang] || strings.en)) || {};
       var s = dict[key];
       if ((s === undefined || s === null) && strings && strings.en) s = strings.en[key];
       if (s === undefined || s === null) s = key;
-      // Function-valued entries (pageLabel(n), pinLabel(n)) are invoked with the
-      // caller args; their own template fills the positional values.
+
+
       if (typeof s === "function") { try { return s(params); } catch (e) { return key; } }
       s = String(s);
       if (params && typeof params === "object" && !Array.isArray(params)) {
@@ -237,10 +237,10 @@
       }
       return s;
     },
-    // Backward-compatible langText('en','km',mode) inline shape.
-    // 'en'/'km' force a language; anything else (both/guest/host/undefined)
-    // renders both spans — the live <html lang> / [data-language] CSS hides the
-    // inactive one, so the switch updates the page instantly without re-render.
+
+
+
+
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
@@ -248,11 +248,11 @@
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
-    // convention (the HTML parser strips elements inside <option>), so their
-    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
-    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
-    // The guarded calls above resolve to it only on routes that include it.
+
+
+
+
+
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -263,8 +263,8 @@
   };
 
   global.EInviteI18n = EInviteI18n;
-  // Alias the uppercase name that 15 pre-existing modules already call via
-  // `window.EInviteI18N?.getLocale?.()` so they resolve through this resolver.
+
+
   global.EInviteI18N = {
     version: "1.0",
     getLocale: get,
@@ -272,21 +272,21 @@
     t: EInviteI18n.t,
   };
 
-  // Listen for external language changes (e.g. the public page's per-invitation
-  // observer writing <html lang> from root[data-language]) so the switch and
-  // form fields stay in sync.
+
+
+
   try {
     doc.addEventListener("einvite:lang-changed", boot);
   } catch (e) { /* noop */ }
 
-  // --- Synchronous init (runs in <head> before first paint) ------------------
+
   var initLang = persistedLang() || navigatorLang();
   applyHtmlLang(initLang);
   applyFormFields();
   if (doc && doc.addEventListener) {
     doc.addEventListener("DOMContentLoaded", boot);
-    // If the bundle is injected after parse, DOMContentLoaded may have already
-    // fired; boot immediately as a safety net.
+
+
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
@@ -306,8 +306,8 @@ function buildDialog({title='Please confirm',message='',icon='✦',input=false,v
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  // A short "Poster title:" style prompt is the field's label, not a second
-  // heading above a generic "Value" label. Long instructions stay as help text.
+
+
   const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
   const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
   let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
@@ -318,19 +318,19 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
-// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
-// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
-// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
-// custom canvas-size prompt (app.js) and the Template Studio custom poster
-// size prompt (templates.js); lives here because both route bundles already
-// load ui-dialogs.js before their consumer modules.
+
+
+
+
+
+
 window.EInvitePosterUnits=Object.freeze({
  PX_PER:{in:96,cm:96/2.54,ft:1152},
  parse(value){
   const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
   const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
   if(!m)return null;
-  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+
   return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
  },
  toPx(number,unit){
@@ -381,10 +381,10 @@ async function load(){
 async function favorite(t){if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return window.EInviteBackend.message($('#studioGrid'));try{const updated=await api(`/api/templates/${t.id}`,{method:'PUT',body:JSON.stringify({favorite:!t.favorite})});templates[templates.findIndex(x=>x.id===t.id)]=updated;render()}catch(error){alert(error.message)}}
 async function actions(action,t){if(action==='preview')return preview(t);if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return window.EInviteBackend.message($('#studioGrid'));if(action==='use')return useTemplate(t,false);if(action==='edit-design')return useTemplate(t,true);if(action==='meta')return editMeta(t);if(action==='versions')return versions(t);if(action==='visibility'){const makePublic=t.visibility!=='public',message=makePublic?_txt('Publish this template to the shared marketplace? Anyone using this server will be able to create invitations from it.','ផ្សាយពុម្ពនេះទៅទីផ្សារទិវចនាទូទៅ? អ្នកប្រើម៉ាស៊ីនបម្រើនេះទាំងអស់នឹងអាចបង្កើតការអញ្ជើញពីពុម្ពនេះ។'):_txt('Remove this template from the shared marketplace? Existing invitations created from it will not be affected.','ដកពុម្ពនេះចេញពីទីផ្សារទិវចនាទូទៅ? ការអញ្ជើញដែលបង្កើតពីពុម្ពនេះនឹងមិនរងផលប៉ះពាល់ទេ។');if(!(await uiConfirm(message,{title:makePublic?_txt('Publish template','ផ្សាយពុម្ព'):_txt('Remove from marketplace','ដកចេញពីទីផ្សារ'),confirmText:makePublic?_txt('Publish','ផ្សាយ'):_txt('Remove','ដកចេញ')})))return;try{const updated=await api(`/api/templates/${t.id}`,{method:'PUT',body:JSON.stringify({visibility:makePublic?'public':'private'})});templates[templates.findIndex(x=>x.id===t.id)]=updated;render()}catch(error){alert(error.message)}return}if(action==='duplicate'){try{const copy=await api(`/api/templates/${t.id}/duplicate`,{method:'POST',body:'{}'});templates.unshift(copy);render()}catch(error){alert(error.message)}return}if(action==='delete'){if(!(await uiConfirm(`Delete template “${t.name}” and its version history?`,{title:_txt('Delete template','លុបពុម្ព'),danger:true,confirmText:_txt('Delete permanently','លុបជាអចិន្ត្រៃ៍')})))return;try{await api(`/api/templates/${t.id}`,{method:'DELETE'});templates=templates.filter(x=>x.id!==t.id);render()}catch(error){alert(error.message)}}}
 async function useTemplate(t,editDesign){if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return window.EInviteBackend.message($('#studioGrid'));const name=await uiPrompt(editDesign?_txt('Name the temporary invitation used to edit this template:','ដាក់ឈ្មោះការអញ្ជើញបណ្ដោះអាសន្ន ដើម្បីកែពុម្ពនេះ៖'):_txt('Choose a name for the new invitation:','ជ្រើសឈ្មោះសម្រាប់ការអញ្ជើញថ្មី៖'),editDesign?`${t.name} — Template Edit`:'New Invitation',{title:editDesign?_txt('Edit template design','កែសម្រួលរចនាពុម្ព'):_txt('Create from template','បង្កើតពីពុម្ព'),confirmText:_txt('Continue','បន្ត')});if(!name)return;try{const doc=clone(t.document);doc.fields={...(doc.fields||{}),names:name};const item=await api('/api/invitations',{method:'POST',body:JSON.stringify({slug:name,document:doc})});localStorage.setItem('sovan-active-invite',item.id);location.href=`/invitations/${encodeURIComponent(item.id)}/editor${editDesign?`?templateEdit=${encodeURIComponent(t.id)}`:''}`}catch(error){alert(error.message)}}
-// DESIGN-FIX P0: user-facing poster creation flow (works even though the
-// dashboard create dialog is currently emptied — see dashboard.html WIP note).
-// Offers the poster size presets; persists posterCanvas in the document so the
-// studio (applyPosterCanvasSize in app.js) renders the real pixel canvas.
+
+
+
+
 async function newPoster(){if(window.EInviteBackend&&!window.EInviteBackend.isAvailable())return window.EInviteBackend.message($('#studioGrid'));
  const POSTER_PRESETS=[
   {label:_txt('Instagram Post · 1080×1080','Instagram Post · 1080×1080'),w:1080,h:1080},
@@ -405,9 +405,9 @@ async function newPoster(){if(window.EInviteBackend&&!window.EInviteBackend.isAv
  if(sizeIndex==null||!POSTER_PRESETS[sizeIndex])return;
  let preset={...POSTER_PRESETS[sizeIndex]};
  if(preset.custom){
-  // Custom-units support (owner decision, CANVA-UI §5, accepted 2026-10-20):
-  // px default, plus in/cm via 96 px per CSS inch. Shares the editor's
-  // EInvitePosterUnits engine (app.js) — same parse + conversion semantics.
+
+
+
   const units=window.EInvitePosterUnits;
   if(!units)return alert(_txt('Custom sizes load with the editor bundle — pick a preset instead.','ទំហំផ្ទាល់ខ្លួនផ្ទុកជាមួយកញ្ចប់កម្មវិធីនិពន្ធ — ជ្រើសរើសទំហំកំណត់ជំនួស។'));
   const resp=await uiPrompt(_txt('Canvas size — width × height with an optional unit: px, in, or cm (e.g. 1080x1350, 24x36 in, 21x29.7 cm)','ទំហំក្រណាត់ — ទទឹង × កំពស់ជាមួយឯកកា (px, in, ឬ cm ជាឧទាហរណ៍ 1080x1350, 24x36 in, 21x29.7 cm)'),'1080x1080',{title:_txt('Custom canvas size','ទំហំក្រណាត់ផ្ទាល់ខ្លួន'),confirmText:_txt('Create poster','បង្កើតពុម្ព')});
@@ -428,10 +428,10 @@ function editMeta(t){$('#studioDialogBody').innerHTML=`<h1>${b("Edit template de
 async function versions(t){try{const items=await api(`/api/templates/${t.id}/versions`);$('#studioDialogBody').innerHTML=`<h1>${b("Version history — ","ប្រវត្តិជំនាន់ — ")}${esc(t.name)}</h1><p>${b("Restoring an older version creates a new current version, so history remains intact.","ស្តារជំនាន់ចាស់បង្កើតជំនាន់បច្ចុប្បន្នថ្មី ដូច្នេះប្រវត្តិនៅដដែល។")}</p><div>${items.map(v=>`<div class="version-row"><strong>Version ${v.version}</strong><span>${new Date(v.createdAt).toLocaleString()}</span>${v.version===(t.currentVersion||1)?`<span class="version-badge">${b('Current','បច្ចុប្បន្ន')}</span>`:`<button data-version="${v.version}">${b("Restore","ស្តារ")}</button>`}</div>`).join('')}</div>`;$('#studioDialogBody').querySelectorAll('[data-version]').forEach(b=>b.onclick=async()=>{if(!(await uiConfirm(`Restore version ${b.dataset.version} as a new current version?`,{title:_txt('Restore template version','ស្តារជំនាន់ពុម្ព'),confirmText:_txt('Restore','ស្តារ')})))return;try{const updated=await api(`/api/templates/${t.id}/restore`,{method:'POST',body:JSON.stringify({version:Number(b.dataset.version)})});templates[templates.findIndex(x=>x.id===t.id)]=updated;$('#studioDialog').close();render()}catch(error){alert(error.message)}});$('#studioDialog').showModal()}catch(error){alert(error.message)}}
 $('#studioClose').onclick=()=>$('#studioDialog').close();$('#refreshBtn').onclick=load;$('#newPosterBtn')&&($('#newPosterBtn').onclick=newPoster);$('#studioSearch').oninput=()=>{render();syncPackFilter()};$('#studioCategory').onchange=()=>{render();syncPackFilter()};$('#studioSource').onchange=render;$('#studioFavorites').onchange=render;load();
 if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.EInviteI18n.subscribe(render)}
-// TP-1.4: the 36-design Khmer events pack is a separate, lazily loaded gallery.
-// It fetches its catalogue and one built document on demand (never bundled), and
-// hands a chosen design to the same "create an invitation from a document" path
-// the studio uses for its own templates.
+
+
+
+
 function loadPackGallery(){if(document.querySelector('script[data-pack-gallery-module]'))return;const script=document.createElement('script');script.src='template-pack-gallery.js';script.dataset.packGalleryModule='1';script.onerror=()=>{};document.head.append(script)}
 window.addEventListener('einvite:pack-template',event=>{const built=event.detail?.built;if(!built?.document)return;useTemplate({id:built.id,name:built.name?.en||'Khmer event template',document:built.document},false)});
 loadPackGallery();;(function(){
@@ -448,8 +448,8 @@ function applyTheme(mode,announce=false){
   $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
   if(announce){
-    // Two quick toggles used to leave both "Dark appearance" and "Light appearance"
-    // stacked for 2.2s. Replace the previous theme toast instead of stacking.
+
+
     document.querySelectorAll('.ui-toast[data-theme-toast]').forEach(el=>el.remove());
     const el=toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
     if(el)el.dataset.themeToast='1';
@@ -464,10 +464,10 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
-  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
-  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
-  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+
+
+
+
   document.body.append(menu);
   function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
   function openThemeMenu(){
@@ -497,9 +497,9 @@ function installAppLauncher(){
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
-  // there made every click on it navigate (a full reload) before the menu could open.
-  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+
+
+
   const brandAnchor=brand.closest('a');
   (brandAnchor||brand).after(wrap);
   const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
@@ -697,11 +697,11 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+
+
+
+
+
 function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
@@ -776,14 +776,14 @@ function init(){
  observeDialogs();new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes){if(node.nodeType!==1)continue;if(node.matches?.('dialog')||node.querySelector?.('dialog'))observeDialogs(node)}}).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
-})();;/**
- * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
- *
- * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
- * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
- * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
- * still work. Toggles expose aria-expanded; nothing traps focus.
- */
+})();;
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteShell && window.EInviteShell.version >= 55) return;
@@ -796,7 +796,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
 
-  /* --- 1. Rail collapse -------------------------------------------------- */
+
   function applyRailCollapsed(collapsed) {
     body.classList.toggle('rail-collapsed', !!collapsed);
     document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
@@ -804,14 +804,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
-      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
+
       var glyph = btn.querySelector('[data-rail-glyph]');
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
-  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
-     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
-     return focus to the toggle when the drawer closes under the keyboard. */
+
+
+
   function ensureScrim() {
     var scrim = document.querySelector('.app-drawer-scrim');
     if (!scrim) {
@@ -837,7 +837,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
 
-  /* --- 2. Current page --------------------------------------------------- */
+
   function markCurrentPage() {
     var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
     document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
@@ -846,11 +846,11 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     });
   }
 
-  /*
-   * Pages that show a signed-out flow (dashboard) hide their rail until the
-   * signed-in view is revealed, so the login card gets the full canvas. The
-   * same flag flips the topbar down to Skeleton B (brand + language + theme).
-   */
+
+
+
+
+
   function syncAutoRail() {
     var autoRail = document.querySelector('.app-rail[data-rail-auto]');
     var signedIn = document.getElementById('dashboardView');
@@ -865,7 +865,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  /* --- 3. Appearance ----------------------------------------------------- */
+
   function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
   function applyTheme(next) {
     html.dataset.theme = next;
@@ -875,12 +875,12 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      /* Both symbols live in the button; the theme attribute on <html> shows the
-         right one, so nothing is assigned here. */
+
+
     });
   }
 
-  /* --- Wiring ------------------------------------------------------------ */
+
   document.addEventListener('click', function (event) {
     var railToggle = event.target.closest('[data-rail-toggle]');
     if (railToggle) {
@@ -893,7 +893,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
     var themeToggle = event.target.closest('[data-theme-toggle]');
     if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
-    /* Outside click closes the mobile drawer but never the desktop rail. */
+
     if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
   });
   document.addEventListener('keydown', function (event) {
@@ -922,33 +922,33 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   });
 })();
 
-/*
- * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
- * workspace, appearance, drawer, account and both language pills on one
- * non-wrapping row (740px of content in a 390px bar), so the language switch
- * painted past the viewport.
- *
- * The CSS route is blocked: app-shell.css is inside @layer components, and every
- * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
- * the generated route bundle, which concatenates sources in manifest order. A
- * deterministic shell hook keeps the wrap correct at any width without another
- * !important and without depending on which sheet happens to load last.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (document.body.classList.contains('guest')) return;
-  // The app bar is a direct child of body on the shell routes, but a wrapper
-  // (#app) on some pages; look for it either way and never pick a dialog header.
+
+
   const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
     .find((node) => !node.closest('dialog')) || null;
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
-  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
-  // padding is the only arithmetic that fits without shrinking tap targets.
+
+
   const TIGHT = 400;
-  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
-  // even on two rows. Below 360 the brand text yields its width to them.
+
+
   const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
   const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
@@ -977,14 +977,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     header.style.overflow = 'visible';
     header.style.rowGap = tight ? '0' : '4px';
     if (tight) {
-      // The unlayered narrow-header rule wins padding/gap with !important; it
-      // reads these variables, so the hook can compress the bar without adding
-      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+
+
+
       header.style.setProperty('--shell-topbar-pad', '0px 8px');
       header.style.setProperty('--shell-topbar-gap', '0px');
-      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
-      // page cluster. A half-width brand forces exactly that split instead of
-      // a third row on the Khmer templates page.
+
+
+
       if (left) {
         left.style.flex = compact ? '0 0 auto' : '1 1 50%';
         left.style.maxWidth = compact ? '44px' : '50%';
@@ -992,8 +992,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         left.style.minWidth = '0';
         left.style.overflow = 'hidden';
       }
-      // An empty right cluster (dashboard hides it) must not claim a flex line:
-      // giving it a height created a blank row between the brand and language rows.
+
+
       if (right && right.getBoundingClientRect().width > 0) {
         right.style.order = compact ? '0' : '20';
         right.style.flex = '0 1 auto';
@@ -1001,8 +1001,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       } else if (right) {
         clear(right, RIGHT_PROPS);
         right.style.order = '0';
-        // An empty cluster still claimed a 44 px flex line; hide it entirely so
-        // the bar is brand row + language row, not three rows.
+
+
         right.style.display = 'none';
       }
     } else {
@@ -1023,9 +1023,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
   sync();
-  // The language switch is injected after this script on some routes (it had no
-  // inline style at all in the first measurement). Re-sync when it lands, not
-  // only on the next window resize.
+
+
+
   new MutationObserver(sync).observe(header, { childList: true });
   window.addEventListener('load', sync, { once: true });
   let timer = 0;

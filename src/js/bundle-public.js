@@ -13,23 +13,23 @@ window.addEventListener('beforeunload',cleanup,{once:true});
 window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get closed(){return closed}};
 })();;(() => {
   'use strict';
-  // route-deferred-loader — injects the per-route deferred chunk after
-  // first paint. Bundled at the head of each route bundle, it derives the
-  // deferred bundle name from its own <script> URL (bundle-<page>.js →
-  // bundle-<page>-deferred.{js,css}) so no HTML/inline script is needed
-  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
-  // on the first user interaction, whichever comes first, so on-demand
-  // modules never delay first paint or the route-weight budget.
+
+
+
+
+
+
+
   if (window.EInviteDeferredRouteLoaderV15) return;
-  // `ready` resolves once the deferred chunk has been evaluated (or failed to
-  // load), so consumers that lazily mount a deferred module can retry on it.
+
+
   let resolveReady;
   const ready = new Promise((res) => { resolveReady = res; });
   window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
   const current = document.currentScript;
   const src = (current && current.src) || '';
-  // The lazy stem plus the optional `-deferred` suffix means the deferred
-  // chunk's own URL cannot be mistaken for a route bundle's.
+
+
   const match = /bundle-([A-Za-z0-9_-]+?)(?:-deferred)?\.js/.exec(src);
   if (!match) { resolveReady(); return; }
   const prefix = src.slice(0, src.lastIndexOf('/') + 1);
@@ -53,42 +53,42 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
   for (const type of ['pointerdown', 'keydown', 'touchstart']) {
     window.addEventListener(type, start, { once: true, passive: true, capture: true });
   }
-})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
- * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
- *
- * Responsibilities:
- *   - Source of truth for UI language = <html lang>.
- *   - Persisted to localStorage key `einvite-lang` ('en'|'km').
- *   - First-visit default: navigator.language starts with `km` -> Khmer, else English.
- *   - Exposes EInviteI18n.get()/set()/t()/langText()/subscribe().
- *   - Backwards-compatible alias EInviteI18N.getLocale() (the 23 page modules already
- *     call window.EInviteI18N?.getLocale?.(); this makes them resolve through the
- *     single resolver instead of falling back to <html lang>).
- *   - Dispatches a synchronous `einvite:lang-changed` CustomEvent on <html> so any
- *     bilingual surface can re-render, and notifies subscribers.
- *   - Injects a bilingual language switch into every <header> (shared header + the
- *     editor app-bar). The switch itself is the one place both languages coexist.
- *   - Walks [data-en][data-km] form fields and sets placeholder/aria-label to the
- *     active language (text labels are handled by the .i18n-en/.i18n-km CSS hiding
- *     convention, no JS needed there).
- *
- * This file is designed to be the FIRST script in every page bundle (it is listed
- * first in earlyScripts and as the first entry of each page's `scripts`). It runs
- * synchronously in <head> (bundles are loaded blocking in <head>) so <html lang> is
- * correct before first paint -> no FOIL flash of both languages. Every public
- * method is guarded so a missing DOM / storage / navigator never throws.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   "use strict";
-  // Guard against double-injection (earlyScripts + per-page scripts, or a future
-  // head <script src>).
+
+
   if (global.EInviteI18n && global.EInviteI18N && global.EInviteI18N.version) return;
   if (global.EInviteI18n && global.EInviteI18n.version >= 1) return;
 
   var doc = global.document;
   var STORAGE_KEY = "einvite-lang";
 
-  // --- Language detection ----------------------------------------------------
+
   function navigatorLang() {
     try {
       var nav = global.navigator && global.navigator.language;
@@ -122,13 +122,13 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     } catch (e) { /* noop */ }
   }
   function get() {
-    // Persisted user choice wins; otherwise the live <html lang> wins (set by the
-    // public page observer, the head inline, or the previous switch click); finally
-    // the navigator default.
+
+
+
     return persistedLang() || htmlLang();
   }
 
-  // --- Persistence + notification -------------------------------------------
+
   var subscribers = [];
   function persist(lang) {
     try { global.localStorage && global.localStorage.setItem(STORAGE_KEY, lang); }
@@ -145,19 +145,19 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     for (var i = 0; i < subscribers.length; i++) {
       try { subscribers[i](lang, get); } catch (e) { /* keep other subscribers alive */ }
     }
-    // Re-sync every injected language switch after a real language change.
-    // The `einvite:lang-changed` event re-runs boot()->injectSwitches(), but
-    // injectSwitches() skips any <header> that already holds a switch, so
-    // without this refresh the buttons' aria-pressed / active class stay frozen
-    // at the pre-click value and read as inverted on the now-inactive button.
-    // syncSwitch(null, lang) covers all switches across all <header> elements.
+
+
+
+
+
+
     syncSwitch(null, lang);
   }
 
-  // --- Form-field helper (placeholder/aria-label for [data-en][data-km]) ----
-  // Text labels (label/span/button/h2/th) are NOT touched here: the
-  // `.i18n-en`/`.i18n-km` CSS convention hides the inactive span, so no JS is
-  // needed for them and they re-render live on toggle via CSS.
+
+
+
+
   function applyFormFields(root) {
     var scope = root || doc;
     if (!scope.querySelectorAll) return;
@@ -176,16 +176,16 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     }
   }
 
-  // --- Language switch injection (into every <header>) ----------------------
+
   function escHTML(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
-  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
-  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
-  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
-  // the delegated click handler and `syncSwitch` use.
+
+
+
+
   var switchCount = 0;
   function makeSwitch() {
     var first = switchCount === 0;
@@ -212,12 +212,12 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       b.classList.toggle("active", on);
     }
   }
-  // One delegated listener instead of one per injected switch. The editor rebuilds its header
-  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
-  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
-  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
-  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
-  // survives re-renders and duplicate mounts.
+
+
+
+
+
+
   var delegated = false;
   function onLanguageClick(e) {
     var target = e.target;
@@ -233,9 +233,9 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
-      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
-      // check, command palette) is a layout heading, not the app bar, and the injected switch
-      // landed in the middle of those panels. Clean up any copy injected before this guard.
+
+
+
       if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
         var stray = h.querySelector(".language-switch");
         if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
@@ -253,10 +253,10 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     try { injectSwitches(); } catch (e) { /* keep going */ }
     applyOptions();
   }
-  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+
   function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
-  // --- Public resolver -------------------------------------------------------
+
   var EInviteI18n = {
     version: "1.0",
     STORAGE_KEY: STORAGE_KEY,
@@ -264,24 +264,24 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     getLocale: get, // backward-compat: EInviteI18N?.getLocale()
     set: function (lang) {
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
-      // If the language isn't actually changing, just (re)sync the DOM attribute
-      // and form fields so a forced re-render is idempotent.
+
+
       if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
       applyOptions();
       return lang;
     },
-    // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
-    // Optional {token:value} params are substituted as {token} -> value.
+
+
     t: function (key, strings, params) {
       var lang = get();
       var dict = (strings && (strings[lang] || strings.en)) || {};
       var s = dict[key];
       if ((s === undefined || s === null) && strings && strings.en) s = strings.en[key];
       if (s === undefined || s === null) s = key;
-      // Function-valued entries (pageLabel(n), pinLabel(n)) are invoked with the
-      // caller args; their own template fills the positional values.
+
+
       if (typeof s === "function") { try { return s(params); } catch (e) { return key; } }
       s = String(s);
       if (params && typeof params === "object" && !Array.isArray(params)) {
@@ -292,10 +292,10 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       }
       return s;
     },
-    // Backward-compatible langText('en','km',mode) inline shape.
-    // 'en'/'km' force a language; anything else (both/guest/host/undefined)
-    // renders both spans — the live <html lang> / [data-language] CSS hides the
-    // inactive one, so the switch updates the page instantly without re-render.
+
+
+
+
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
@@ -303,11 +303,11 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
-    // convention (the HTML parser strips elements inside <option>), so their
-    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
-    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
-    // The guarded calls above resolve to it only on routes that include it.
+
+
+
+
+
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -318,8 +318,8 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
   };
 
   global.EInviteI18n = EInviteI18n;
-  // Alias the uppercase name that 15 pre-existing modules already call via
-  // `window.EInviteI18N?.getLocale?.()` so they resolve through this resolver.
+
+
   global.EInviteI18N = {
     version: "1.0",
     getLocale: get,
@@ -327,42 +327,42 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     t: EInviteI18n.t,
   };
 
-  // Listen for external language changes (e.g. the public page's per-invitation
-  // observer writing <html lang> from root[data-language]) so the switch and
-  // form fields stay in sync.
+
+
+
   try {
     doc.addEventListener("einvite:lang-changed", boot);
   } catch (e) { /* noop */ }
 
-  // --- Synchronous init (runs in <head> before first paint) ------------------
+
   var initLang = persistedLang() || navigatorLang();
   applyHtmlLang(initLang);
   applyFormFields();
   if (doc && doc.addEventListener) {
     doc.addEventListener("DOMContentLoaded", boot);
-    // If the bundle is injected after parse, DOMContentLoaded may have already
-    // fired; boot immediately as a safety net.
+
+
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
   }
-})(typeof window !== "undefined" ? window : this);;/*! core/khmer-format.js — Khmer numerals and locale-safe date/number formatting
- * LT-2.2 (OD-29), 2026-10-25.
- *
- * Pure, dependency-free helpers used by the guest page and the editor:
- *   - toKhmerDigits / toLatinDigits: digit conversion from Unicode code points.
- *     Khmer digits are generated with String.fromCodePoint(0x17E0 + n); no Khmer
- *     character is written into this file.
- *   - formatDate: Intl.DateTimeFormat with an explicit locale, optional Khmer
- *     digits (`nu-khmr`) and optional Buddhist Era calendar (`ca-buddhist`).
- *     A build without Khmer ICU data falls back to English month names, then
- *     converts the digits itself so the numeral setting still holds.
- *   - formatTime / formatNumber: the same numeral choice for clock labels and
- *     countdown values.
- *
- * The module never mutates stored invitation text. The editor command calls
- * toKhmerDigits() on the selected text only when the user runs it.
- */
+})(typeof window !== "undefined" ? window : this);;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   'use strict';
 
@@ -414,8 +414,8 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     }
     const text = String(value == null ? '' : value).trim();
     if (!text) return null;
-    // Date-only values are calendar dates; parse them in local time so the
-    // displayed day never shifts with the server's timezone.
+
+
     const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
     if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
     const parsed = new Date(text);
@@ -641,21 +641,21 @@ function fit(outer,model={},options={}){
  if(!outer)return null;ensureFlow(outer);applyToElement(outer,model);
  if(model.textAutoFit!=='fit'){delete outer.dataset.textComputedFontSize;return measurement(outer)}
  const available=availableSpace(outer);if(available.width<2||available.height<2)return measurement(outer);
- // Autofit is a 16-step search, and every step writes font-size and then reads
- // layout, i.e. one forced document style recalculation per step. The search is
- // a pure function of (available box, model), so when neither has changed it
- // would return exactly the value it returned last time: reuse that value and
- // pay one measurement instead of sixteen. The key includes the whole model, so
- // any edit that could move the result still recomputes.
+
+
+
+
+
+
  const fitKey=`${Math.round(available.width)}x${Math.round(available.height)}|${options.set===false?'probe':'apply'}|${JSON.stringify(model)}`;
  const fitCached=outer.__typographyFitCache;
  if(fitCached&&fitCached.key===fitKey){
-  // A hit still has to leave the DOM in the fitted state. applyToElement runs
-  // on every pass (modelFor in the editor), which resets the inline font-size
-  // to the auto-fit maximum; skipping the rewrite here left the element at max
-  // size with the fitted value only in the dataset, and the final state became
-  // dependent on whether a cache miss happened to come last (FB-29 race: the
-  // title rendered at 88px on some loads, 41.6px on others, same seed).
+
+
+
+
+
+
   outer.style.fontSize=`${fitCached.result.computedSize}px`;
   outer.dataset.textComputedFontSize=String(fitCached.result.computedSize);
   return{...fitCached.result};
@@ -684,27 +684,27 @@ function assertRenderedClusterIntegrity(outer,locale='km'){const result=rendered
 function installResponsive(root=document,options={}){
  const scope=root||document,selector=options.selector||'[data-text-auto-fit="fit"],[data-typography-model-version]',targetFor=options.targetFor||((source)=>source),modelFor=options.modelFor||((target)=>target?.__typographyModel||null),onResult=options.onResult||(()=>{}),delay=Math.max(0,Number(options.delay??48)),events=options.events||[],sources=new Set(),timers=new Map();
  const boxKey=node=>{const rect=node.getBoundingClientRect();return `${Math.round(rect.width)}x${Math.round(rect.height)}`};
- // `run` writes typography sizing onto the element it measures, so the element's
- // own box changes as a result of being fitted. Recording the box the fit left
- // behind is what lets the ResizeObserver below tell "the fit moved this box"
- // (already handled) from "something outside resized it" (must re-fit).
+
+
+
+
  const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);source.__typographyFitBox=boxKey(source);onResult(result,target,source,model);return result};
  const schedule=source=>{if(!source)return;clearTimeout(timers.get(source));timers.set(source,setTimeout(()=>{timers.delete(source);run(source)},delay))};
- // An unconditional re-schedule here is a self-triggered loop: the fit changes
- // the measured box, the observer reports that change, the fit runs again.
- // Measured on index.html before this change, the loop produced 74 refits worth
- // 457 ms of style recalculation plus 37 re-installations of the controller.
- // A box this element has already been fitted at is not new information, so it
- // is skipped; a genuine resize or a font swap still changes the box and still
- // re-fits. The convergence is at most one extra pass.
+
+
+
+
+
+
+
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>{const source=entry.target;const rect=entry.contentRect;const key=`${Math.round(rect.width)}x${Math.round(rect.height)}`;if(source.__typographyFitBox===key)return;source.__typographyFitBox=key;schedule(source)})):null;
  const observe=(source,model)=>{if(!source)return source;sources.add(source);const target=targetFor(source);if(model&&target)target.__typographyModel=model;observer?.observe(source);return source};
- // `observe`'s second parameter is the caller's model, not a callback payload: passing it to
- // `forEach` directly handed it the array INDEX, so every element after the first cached a
- // number as its typography model. `modelFor` returns that cache first, so the fit pass then
- // applied a blank model (font-size 32, textAutoFit none) and text stopped being fitted at all
- // — the guest page rendered 33 of 34 pack text objects unfitted and clipped. Call it without
- // the extra arguments; nothing else about discovery changes.
+
+
+
+
+
+
  const discover=()=>{scope.querySelectorAll?.(selector).forEach(source=>observe(source));return sources};
  discover();sources.forEach(run);
  const fontDone=()=>sources.forEach(schedule);document.fonts?.ready?.then(fontDone).catch(()=>{});document.fonts?.addEventListener?.('loadingdone',fontDone);
@@ -978,18 +978,18 @@ function enhance(root,documentData){
  refreshLanguage();update();
 }
 window.EInviteGuestJourney={enhance};
-})();;/**
- * Phase 2a (V54.1) — Sign-up sheets guest UI.
- *
- * Loaded on the public invitation page (bundle-public.js). Renders a
- * <section> per sheet showing slots, claim counts, and a claim form. Vanilla
- * JS — no chart library, no framework. Bilingual EN + KH strings per
- * ROADMAP ground rule 5.
- *
- * Surface contract (frozen for Phase 2a):
- *   window.EInviteSignupSheets.enhance(root, { invitationId, mode, guestToken, accessToken })
- *     mode is "host" or "guest" (passed by the host dashboard / public page).
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
@@ -1017,9 +1017,9 @@ window.EInviteGuestJourney={enhance};
   };
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // V2-UX-5 (P1-B, WCAG 3.1.2): emit lang="km" / lang="en" on every text fragment
-  // so screen readers pick the correct pronunciation engine. The Khmer span keeps
-  // the existing `khmer-text` class for CSS targeting via :lang(km) / [lang="km"].
+
+
+
   const langText = (key, mode) => {
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
@@ -1142,9 +1142,9 @@ window.EInviteGuestJourney={enhance};
     async function onCancelClaim(event) {
       const btn = event.currentTarget;
       const sheetId = btn.getAttribute('data-sheet');
-      // Find the claim id for this slot — server returns it in the next refresh,
-      // but for cancellation we look it up via the list response's claim.self.
-      // Simpler: re-fetch and DELETE the matching claim.
+
+
+
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, { headers });
         const sheets = await res.json();
@@ -1165,15 +1165,15 @@ window.EInviteGuestJourney={enhance};
   }
 
   window.EInviteSignupSheets = { enhance };
-})();;/**
- * Phase 2a (V54.1) — Polls guest UI.
- *
- * Loaded on the public invitation page. Renders each poll with vote buttons
- * (or live results when visibility=live). Vanilla JS, bilingual EN+KH.
- *
- * Surface contract:
- *   window.EInvitePolls.enhance(root, { invitationId, mode, guestToken, accessToken })
- */
+})();;
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
@@ -1194,9 +1194,9 @@ window.EInviteGuestJourney={enhance};
   };
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // V2-UX-5 (P1-B, WCAG 3.1.2): emit lang="km" / lang="en" on every text fragment
-  // so screen readers pick the correct pronunciation engine. The Khmer span keeps
-  // the existing `khmer-text` class for CSS targeting via :lang(km) / [lang="km"].
+
+
+
   const langText = (key, mode) => {
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
@@ -1306,24 +1306,24 @@ window.EInviteGuestJourney={enhance};
   }
 
   window.EInvitePolls = { enhance };
-})();;/**
- * Phase 2a (V54.1) — Shared photo album guest UI.
- *
- * Loaded on the public invitation page. Lets guests upload photos (post-event)
- * and browse approved photos. Photos flow through the V54 malware scanner
- * before they are stored. Vanilla JS, bilingual EN + KH.
- *
- * V54.18 (ROADMAP-V2 §3.4): the upload path now uses XMLHttpRequest instead of
- * fetch so we can surface a live upload-progress bar, a "Processing…" state
- * while the server-side malware scan runs, an explicit Cancel button (calls
- * `xhr.abort()`), and a Retry button on failure. The MIME allow-list, the
- * FormData construction, the endpoint, and the success → reload-grid contract
- * are preserved exactly. The malware-scan 422 path surfaces a distinct
- * "Upload rejected: malware detected." message.
- *
- * Surface contract:
- *   window.EInviteAlbum.enhance(root, { invitationId, mode, guestToken, accessToken })
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
@@ -1348,7 +1348,7 @@ window.EInviteGuestJourney={enhance};
     approve: { en: 'Approve', km: 'អនុម័ត' },
     hide: { en: 'Hide', km: 'លាក់' },
     loadMore: { en: 'Load more', km: 'ផ្ទុកថែម' },
-    // V54.18 (§3.4) — upload progress UI strings (bilingual EN + KH).
+
     uploading: { en: 'Uploading…', km: 'កំពុងផ្ទុកឡើង…' },
     processing: { en: 'Processing…', km: 'កំពុងដំណើរការ…' },
     uploadFailed: { en: 'Upload failed. Please try again.', km: 'ការផ្ទុកឡើងបរាជ័យ។ សូមព្យាយាមម្ដងទៀត។' },
@@ -1367,8 +1367,8 @@ window.EInviteGuestJourney={enhance};
     return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
   };
 
-  // V54.18 (§3.4) — upload-progress CSS injected once per document from JS (the task
-  // scope forbade .css edits); idempotent, existing tokens with hard-coded fallbacks.
+
+
   const PROGRESS_STYLE_ID = 'einvite-album-progress-style-v54-18';
   if (!document.getElementById(PROGRESS_STYLE_ID)) {
     const styleEl = document.createElement('style');
@@ -1433,9 +1433,9 @@ window.EInviteGuestJourney={enhance};
     const form = section.querySelector('.album-upload');
     const grid = section.querySelector('.album-grid');
     const loadMoreBtn = section.querySelector('.load-more');
-    // V54.18 — upload-progress DOM handles. Cached once at mount so the
-    // progress UI can be shown/hidden/reset without re-querying on every
-    // upload attempt.
+
+
+
     const progressEl = section.querySelector('.album-upload-progress');
     const progressFill = progressEl.querySelector('.album-upload-progress-fill');
     const progressBar = progressEl.querySelector('.album-upload-progress-bar');
@@ -1466,7 +1466,7 @@ window.EInviteGuestJourney={enhance};
         } else {
           loadMoreBtn.hidden = true;
         }
-        // Wire up delete/moderate buttons.
+
         grid.querySelectorAll('button[data-delete-photo]').forEach((b) => b.addEventListener('click', onDelete));
         grid.querySelectorAll('button[data-moderate-photo]').forEach((b) => b.addEventListener('click', onModerate));
       } catch (err) {
@@ -1491,25 +1491,25 @@ window.EInviteGuestJourney={enhance};
         </figure>`;
     }
 
-    // V54.18 (§3.4) — form submit handler. Reads the current file + caption
-    // from the form, then delegates to startUpload() which owns the XHR +
-    // progress UI lifecycle. startUpload() is also the Retry entry point
-    // (it re-reads the form so the user can swap the file between attempts).
+
+
+
+
     function onUpload(event) {
       event.preventDefault();
       startUpload();
     }
 
-    // V54.18 (§3.4) — XHR only for the album upload path (endpoint, FormData, MIME
-    // allow-list and success contract unchanged) so progress / processing / abort /
-    // error / retry states exist.
+
+
+
     function startUpload() {
       const file = form.querySelector('input[name=file]').files[0];
       const caption = form.querySelector('input[name=caption]').value;
       const button = form.querySelector('button[type=submit]');
       if (!file) return;
 
-      // Reset the progress UI to the "Uploading…" state.
+
       progressEl.hidden = false;
       retryBtn.hidden = true;
       cancelBtn.hidden = false;
@@ -1520,29 +1520,29 @@ window.EInviteGuestJourney={enhance};
       progressBar.setAttribute('aria-label', STRINGS.uploading.en);
       if (button) button.disabled = true;
 
-      // FormData construction is identical to the previous fetch path —
-      // same fields, same order, same multipart encoding.
+
+
       const fd = new FormData();
       fd.append('file', file);
       fd.append('caption', caption);
 
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `/api/invitations/${encodeURIComponent(invitationId)}/album`);
-      // Auth headers mirror the prior fetch() call. (Don't set
-      // Content-Type — the browser sets multipart/form-data with the
-      // correct boundary automatically.)
+
+
+
       if (guestToken) xhr.setRequestHeader('X-Invitation-Guest', guestToken);
       if (accessToken) xhr.setRequestHeader('X-Invitation-Access', accessToken);
-      // Use responseType='text' + manual JSON.parse so we can still read
-      // the body when the server returns a non-JSON error page (e.g. a
-      // 502 from a reverse proxy). responseType='json' would null out
-      // the body in that case.
+
+
+
+
       xhr.responseType = 'text';
 
-      // Upload progress — fired periodically while the request body is
-      // being sent. lengthComputable is false for chunked/unknown-length
-      // streams; in that case we leave the bar at 0% and rely on the
-      // upload 'load' event to jump to 100%.
+
+
+
+
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable && e.total > 0) {
           const pct = Math.min(100, Math.max(0, Math.round((e.loaded / e.total) * 100)));
@@ -1551,11 +1551,11 @@ window.EInviteGuestJourney={enhance};
         }
       });
 
-      // Upload body fully sent — the server is now running the malware
-      // scan (ClamAV/Defender) which may take a few seconds. Switch the
-      // text to "Processing…" and pin the bar at 100%. The bar stays
-      // visible until the response arrives (xhr 'load') or the user
-      // cancels (xhr 'abort').
+
+
+
+
+
       xhr.upload.addEventListener('load', () => {
         progressFill.style.width = '100%';
         progressBar.setAttribute('aria-valuenow', '100');
@@ -1582,22 +1582,22 @@ window.EInviteGuestJourney={enhance};
         progressText.innerHTML = msgHtml;
         progressFill.style.width = '0%';
         progressBar.setAttribute('aria-valuenow', '0');
-        // Hide Cancel (the xhr is done) and surface Retry so the user can
-        // re-attempt with the same file (still in the input).
+
+
         cancelBtn.hidden = true;
         retryBtn.hidden = false;
         if (button) button.disabled = false;
       }
 
-      // Cancel — the user clicked "Cancel" during upload or during the
-      // server-side processing window. xhr.abort() fires the 'abort'
-      // event synchronously (or in a microtask), which runs the cleanup
-      // below. The file is NOT cleared from the input so the user can
-      // hit Upload again if they change their mind.
+
+
+
+
+
       xhr.addEventListener('abort', () => {
-        // Show the cancelled state briefly so the user gets feedback,
-        // then hide the bar after ~2.5s. The submit button is re-enabled
-        // immediately so the user can retry without waiting.
+
+
+
         progressText.classList.remove('processing', 'error', 'success');
         progressText.classList.add('cancelled');
         progressText.innerHTML = langText('cancelled', mode);
@@ -1606,10 +1606,10 @@ window.EInviteGuestJourney={enhance};
         cancelBtn.hidden = true;
         retryBtn.hidden = true;
         if (button) button.disabled = false;
-        // Auto-hide the progress bar after a short delay.
+
         window.setTimeout(() => {
-          // Only hide if the user hasn't already started a new upload
-          // (in which case progressText would no longer say "cancelled").
+
+
           if (progressText.classList.contains('cancelled')) {
             progressEl.hidden = true;
             progressText.classList.remove('cancelled');
@@ -1618,17 +1618,17 @@ window.EInviteGuestJourney={enhance};
         }, 2500);
       });
 
-      // Network-level error (no response reached the client). This fires
-      // for CORS errors, DNS failures, dropped connections mid-upload,
-      // and timeouts. Show the generic "Upload failed" message + Retry.
+
+
+
       xhr.addEventListener('error', () => {
         showError(langText('uploadFailed', mode));
       });
 
-      // Response received — classify by status code. 2xx = success,
-      // 422 + malware code = the distinct malware message, everything
-      // else = the generic "Upload failed" message. Either way the bar
-      // is hidden (success) or swapped to the error + Retry state.
+
+
+
+
       xhr.addEventListener('load', () => {
         const status = xhr.status || 0;
         let result = {};
@@ -1640,9 +1640,9 @@ window.EInviteGuestJourney={enhance};
         }
 
         if (status >= 200 && status < 300) {
-          // Success — hide the progress bar, reset the form (clears the
-          // file input), reload the grid, and surface the same bilingual
-          // success alert the previous fetch() path used.
+
+
+
           resetProgressUI();
           form.reset();
           alert(STRINGS.success.en);
@@ -1651,31 +1651,31 @@ window.EInviteGuestJourney={enhance};
         }
 
         if (status === 422 && (result.code === 'malware_detected' || /malware/i.test(result.error || ''))) {
-          // V54.18 §3.4 — distinct malware-rejection message. The
-          // server returns HTTP 422 with {"code": "malware_detected"}
-          // (server.py L8314-8315, L8325-8326) when the ClamAV/Defender
-          // scan rejects the bytes.
+
+
+
+
           showError(langText('malwareDetected', mode));
           return;
         }
 
-        // Any other non-2xx status — generic upload-failed message.
+
         showError(langText('uploadFailed', mode));
       });
 
-      // Cancel button — abort the in-flight xhr. The abort event
-      // handler above does the UI cleanup, so this handler is a one-
-      // liner. The try/catch guards against calling abort() on an
-      // already-completed xhr (some browsers throw in that case).
+
+
+
+
       cancelBtn.onclick = () => {
         try { xhr.abort(); } catch (_) { /* already done */ }
       };
 
-      // Retry button — re-enter startUpload() which re-reads the form.
-      // The file remains in the input after a failed upload, so retry
-      // re-attempts with the same file. If the user has swapped the
-      // file in the meantime, the new file is used (startUpload reads
-      // the input fresh on every call).
+
+
+
+
+
       retryBtn.onclick = () => {
         startUpload();
       };
@@ -1717,30 +1717,30 @@ window.EInviteGuestJourney={enhance};
 
   window.EInviteAlbum = { enhance };
 })();;const slug=(document.querySelector('meta[name="einvite-invitation-slug"]')?.content||'').trim(),root=document.querySelector('#publicRoot'),life=window.EInviteLifecycle;
-// The server substitutes the real slug into the meta tag when it serves a published invitation. If
-// the page is opened straight from disk or from the static build, the tag still holds the template
-// placeholder ("__INVITATION_SLUG__"): treat that as "no server invitation" instead of requesting
-// /api/public/__INVITATION_SLUG__, which only produced a 404 in the console on every load.
+
+
+
+
 const slugUsable=!!slug&&!/^__.+__$/.test(slug);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-/* LT-3.2 (8): ?guest= is display-only — NFC, strip control/format/markup, one line, 40 chars. */
+
 function sanitizeGreetingName(v){let n=String(v==null?'':v);n=n.normalize?n.normalize('NFC'):n;return[...n.replace(/[\p{Cc}\p{Cf}<>"'`\\]/gu,'').replace(/\s+/g,' ').trim()].slice(0,40).join('')}
 const khmerFor=(date,time='00:00')=>{try{if(!window.momentkh||!date)return'';let[y,m,d]=date.split('-').map(Number),[h,min]=time.split(':').map(Number);return momentkh.format(momentkh.fromGregorian(y,m,d,h||0,min||0))}catch{return''}};
-// LT-1.3: the Gregorian date follows the language the guest chose on this page, not the
-// document's languageMode ('both' used to reach this function and always produced en-US).
-// An ICU without Khmer data still falls back to en-US explicitly, never to the root pattern.
-// LT-2.2 (OD-29): dates, times and counts go through core/khmer-format.js. The
-// per-invitation `settings.khmerNumerals` switch (default off) chooses digits;
-// the guest's chosen language chooses month names. Without the module (older
-// cached bundle) the previous locale-only path still renders a valid date.
+
+
+
+
+
+
+
 const numeralsFor=documentModel=>documentModel?.settings?.khmerNumerals===true?'khmr':'latn';
 const localeDate=(iso,lang,documentModel)=>{if(window.EInviteKhmerFormat)return EInviteKhmerFormat.formatDate(iso,{lang,numerals:numeralsFor(documentModel)});const dt=new Date((iso||'')+'T00:00:00');if(isNaN(dt))return iso||'';const wanted=lang==='km'?'km-KH':'en-US',locale=Intl.DateTimeFormat.supportedLocalesOf([wanted]).length?wanted:'en-US';return new Intl.DateTimeFormat(locale,{dateStyle:'long'}).format(dt)};
 const localeTime=(value,documentModel)=>window.EInviteKhmerFormat?EInviteKhmerFormat.formatTime(value,{numerals:numeralsFor(documentModel)}):String(value||'');
 const animationName=preset=>{const map={'fade-up':'fadeUp','soft-zoom':'softZoom','slide-left':'slideLeft','blur-in':'blurIn','bounce-in':'bounceIn','flip-in':'flipIn',float:'float',none:''};return Object.prototype.hasOwnProperty.call(map,preset)?map[preset]:'fadeUp'};
 const langText=(en,km,mode)=>mode==='km'?`<span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km||en)}</span>`:mode==='en'?`<span class="i18n i18n-en">${esc(en)}</span>`:`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km||en)}</span>`;
-/* QA 2026-10-30 (UI-9): <option> cannot contain markup. langText() emits two
-   i18n spans in bilingual mode, so the browser concatenated both languages
-   into one word ("Select an optionសូមជ្រើសរើស"). Options need plain text. */
+
+
+
 const langOption=(en,km,mode)=>mode==='km'?(km||en):en;
 const languageSwitcher=mode=>mode==='both'?'<div class="language-switch" role="group" aria-label="Invitation language"><button type="button" data-guest-lang="en" aria-label="Show invitation in English" aria-pressed="true" class="active">English</button><button type="button" data-guest-lang="km" lang="km" aria-label="បង្ហាញការអញ្ជើញជាភាសាខ្មែរ" aria-pressed="false">ខ្មែរ</button></div>':'';
 const guestLanguageKey=()=>`einvite-guest-language:${slug}`;
@@ -1781,7 +1781,7 @@ function artisticHeroMarkup(d,mode,lang){
 function designPageObjectMarkup(objects,pageHeight=844,documentModel={}){let entries=Object.entries(objects||{}).filter(([,o])=>o.visible!==false).sort(([,a],[,b])=>Number(a.zIndex||0)-Number(b.zIndex||0));return window.EInviteRenderer?.renderObject?entries.map(([id,o])=>EInviteRenderer.renderObject(o,{id,pageHeight,content:EInviteRenderer.sanitizeRichText(o.html||''),document:documentModel})).join(''):''}
 function designPageMarkup(d,token){if(!String(token||'').startsWith('page:'))return'';let id=String(token).slice(5),page=(d.designPages||[]).find(item=>item.id===id);if(!page||page.enabled===false)return'';let master=d.masterPageStyle||{},source=page.useMasterBackground&&master.enabled?master:page,image=safeSectionImageUrl(source.backgroundImage),overlay=Math.max(0,Math.min(80,Number(source.backgroundOverlay||0)))/100,bg=/^#[0-9a-f]{6}$/i.test(source.background||'')?source.background:'#fffaf6',imageRules=image?`background-image:linear-gradient(rgba(0,0,0,${overlay}),rgba(0,0,0,${overlay})),url(&quot;${esc(image)}&quot;);background-size:${source.backgroundSize==='contain'?'contain':'cover'};background-position:center;background-repeat:no-repeat;`:'',animation=animationName(page.animation?.preset||'fade-up'),duration=Math.max(300,Math.min(3000,Number(page.animation?.duration||900))),motion=animation?`animation-name:${animation};animation-duration:${duration}ms`:'animation:none',transition=['none','soft','overlap','sweep'].includes(page.transition?.preset)?page.transition.preset:'soft',transitionDuration=Math.max(200,Math.min(2000,Number(page.transition?.duration||600)));return`<section class="design-page-section reveal page-transition-${transition}" style="--page-transition-duration:${transitionDuration}ms;background:${bg};${imageRules}${motion}"><div class="published-artboard published-page-artboard">${designPageObjectMarkup(page.objects||{},844,d)}</div></section>`}
 function eventJourneyMarkup(d,mode){const events=(d.events||[]).filter(event=>event&&event.enabled!==false&&event.name);if(!events.length)return'';const timezone=String(d.timezone||'').trim();return`<section class="event-journey reveal" style="${combinedSectionStyle(d,'events')}"><h2>${langText('Events & ceremonies','កម្មវិធី និងពិធី',mode)}</h2>${timezone?`<p class="event-timezone">${langText('Timezone','តំបន់ពេលវេលា',mode)}: ${esc(timezone)}</p>`:''}<div class="event-journey-list">${events.map(event=>{const dateText=event.date?`${localeDate(event.date,mode,d)}${event.time?` · ${localeTime(event.time,d)}`:''}`:'',map=/^https?:\/\//i.test(event.mapUrl||'')?`<a href="${esc(event.mapUrl)}" target="_blank" rel="noopener">${langText('Directions','ទិសដៅ',mode)}</a>`:'',calendar=event.date?`<button type="button" data-event-calendar="${esc(event.id||'')}">${langText('Add event to calendar','បន្ថែមកម្មវិធីទៅប្រតិទិន',mode)}</button>`:'';return`<article class="event-journey-card"><span class="event-type">${esc(event.type||'event')}</span><h3>${esc(event.name)}</h3>${dateText?`<p><strong>${esc(dateText)}</strong></p>`:''}${event.venue?`<p>${esc(event.venue)}</p>`:''}<div class="event-actions">${map}${calendar}</div></article>`}).join('')}</div></section>`}
-/* LT-3.2 item (8): display-only gift QR — owner toggle + one raster image, never a payment control. */
+
 function giftQrMarkup(info){
   const image=info.giftQrEnabled===true?safeSectionImageUrl(info.giftQrImage):'';
   if(!image)return'';
@@ -1795,12 +1795,12 @@ function galleryMarkup(d){if(d.settings?.galleryEnabled===false)return'';if(d.ga
 function normalizedTelegram(value){let raw=String(value||'').trim();if(!raw)return'';if(/^https:\/\/t\.me\/[A-Za-z0-9_]{5,}$/i.test(raw))return raw;let username=raw.replace(/^@/,'');return/^[A-Za-z0-9_]{5,}$/.test(username)?`https://t.me/${username}`:''}
 function contactMarkup(d,mode){if(d.settings?.contactEnabled===false)return'';let phone=String(d.contactPhone||'').trim(),telegram=normalizedTelegram(d.contactTelegram),phoneHref=/^[+0-9() .-]{5,30}$/.test(phone)?`tel:${phone.replace(/[^+0-9]/g,'')}`:'';if(!phoneHref&&!telegram)return'';return`<section class="contact-section reveal" style="${combinedSectionStyle(d,'contact')}"><h2>${langText('Contact the hosts','ទំនាក់ទំនងម្ចាស់កម្មវិធី',mode)}</h2><div class="contact-actions">${phoneHref?`<a href="${esc(phoneHref)}">☎ ${langText('Call','ទូរស័ព្ទ',mode)}</a>`:''}${telegram?`<a href="${esc(telegram)}" target="_blank" rel="noopener">✈ Telegram</a>`:''}</div></section>`}
 function bindLanguageSwitch(mode,documentModel={}){const key=guestLanguageKey(),guest=root.querySelector('.guest')||root,projectTypography=async lang=>{const fields=documentModel.fields||{},gregorian=localeDate(fields.date,lang,documentModel);for(const [id,object] of Object.entries(documentModel.objects||{})){const node=root.querySelector(`.published-text[data-object-id="${CSS.escape(id)}"]`);if(!node)continue;let content=object.html||'';if(id==='title')content=lang==='km'?(fields.namesKm||fields.names||''):(fields.names||'');else if(id==='subtitle')content=lang==='km'?(fields.messageKm||fields.message||''):(fields.message||'');else if(id==='details')content=`${esc(gregorian)}${fields.time?` · ${esc(localeTime(fields.time,documentModel))}`:''}<br>${esc(lang==='km'?(fields.venueKm||fields.venue||''):(fields.venue||''))}`;const flow=node.querySelector('.typography-flow');if(flow)flow.innerHTML=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.renderObject(object,documentModel,{locale:lang}):EInviteRenderer.sanitizeRichText(content);const renderedText=object.richText&&globalThis.RichTextRenderer?RichTextRenderer.text(object.richText):EInviteRenderer.plainText(content);const model=TypographyDocumentModel.resolveObjectTypography(documentModel,object,{text:renderedText,locale:lang});TypographyLayoutService.applyToElement(node,model);await EInviteFontRegistry?.ensureReady?.([model.font]);TypographyLayoutService.fitAndDiagnose(node,model)}} ,setLanguage=async lang=>{lang=lang==='km'?'km':'en';document.documentElement.lang=lang;guest.dataset.language=lang;root.dataset.language=lang;root.classList.toggle('guest-language-km',lang==='km');document.querySelectorAll('[data-follow-guest-language]').forEach(node=>node.dataset.language=lang);root.querySelectorAll('[data-guest-lang]').forEach(button=>{const active=button.dataset.guestLang===lang;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});root.querySelectorAll('option[data-en]').forEach(option=>option.textContent=option.dataset[lang]||option.dataset.en);
-/* QA 2026-10-30 (UI-10): the splash sits outside #publicRoot and kept its
-   original language after the switch. Cover copy carries both languages. */
+
+
 document.querySelectorAll('[data-cover-en]').forEach(node=>{const text=lang==='km'?node.dataset.coverKm:node.dataset.coverEn;if(text)node.textContent=text});root.querySelectorAll('[data-guest-gregorian]').forEach(node=>node.textContent=localeDate((documentModel.fields||{}).date,lang,documentModel));await projectTypography(lang);if(mode==='both')try{localStorage.setItem(key,lang)}catch{}};if(mode==='both'){root.querySelectorAll('[data-guest-lang]').forEach(button=>button.onclick=()=>setLanguage(button.dataset.guestLang));
-  /* One source of truth for the initial language: the per-invitation choice first, then the
-     app-wide `einvite-lang` preference, then English. The date and the visible text both read
-     this value so the toggle cannot disagree with the rendered content. */
+
+
+
   setLanguage(guestPreferredLanguage('both'))}else setLanguage(mode==='km'?'km':'en')}
 let countdownTimer=0;function startCountdown(){if(countdownTimer){clearInterval(countdownTimer);countdownTimer=0}let box=root?.querySelector('.countdown');if(!box)return;let target=new Date(box.dataset.target).getTime(),numerals=box.dataset.numerals==='khmr'?'khmr':'latn',tick=()=>{let left=Math.max(0,target-Date.now()),values={days:Math.floor(left/864e5),hours:Math.floor(left/36e5)%24,minutes:Math.floor(left/6e4)%60,seconds:Math.floor(left/1e3)%60};Object.entries(values).forEach(([unit,value])=>{let el=box.querySelector(`[data-unit="${unit}"]`);if(el){let text=String(value).padStart(2,'0');el.textContent=window.EInviteKhmerFormat&&numerals==='khmr'?EInviteKhmerFormat.toKhmerDigits(text):text}});if(left<=0&&countdownTimer){clearInterval(countdownTimer);countdownTimer=0}};tick();if(target>Date.now()){countdownTimer=(life?.interval||setInterval)(tick,1000);life?.add?.(()=>{countdownTimer=0})}}
 const palettePresets={rose:{background:'#fff6f3',surface:'#fffdfc',text:'#3d292f',heading:'#9d4555'},gold:{background:'#fff9eb',surface:'#fffdf7',text:'#4b3716',heading:'#a87616'},emerald:{background:'#eef8f1',surface:'#ffffff',text:'#29443a',heading:'#1f7158'},midnight:{background:'#100e19',surface:'#211b2d',text:'#f4efff',heading:'#c8b5ff'},'ivory-navy':{background:'#f7f2e8',surface:'#fffdf8',text:'#263248',heading:'#1f365d'}};
@@ -1840,9 +1840,9 @@ try{const response=await fetch('/api/public/'+encodeURIComponent(slug)+'/gallery
 try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/rsvps',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation-Access':publicAccessToken}:{}),...(guestToken?{'X-Invitation-Guest':guestToken}:{})},body:JSON.stringify(data)}),payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||'We could not save your response. Please try again.');form.innerHTML=`<h2>${langText(payload.updated?'Response updated':'Thank you!',payload.updated?'បានកែប្រែការឆ្លើយតប':'សូមអរគុណ!',mode)}</h2><p>${langText(payload.updated?'Your latest response replaced the previous one.':'Your response was received.',payload.updated?'ការឆ្លើយតបថ្មីរបស់អ្នកបានជំនួសការឆ្លើយតបមុន។':'យើងបានទទួលការឆ្លើយតបរបស់អ្នកហើយ។',mode)}</p>`}catch(error){formStatus(form,error.message||'We could not save your response. Please try again.',true);if(button)button.disabled=false}};
   const wishForm=document.querySelector('#guestWish');if(wishForm)wishForm.onsubmit=async e=>{e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type=submit],button'),data=Object.fromEntries(new FormData(form));if(button?.disabled)return;if(button)button.disabled=true;formStatus(form,'');if(!apiAvailable()){formStatus(form,OFFLINE_SAVE_NOTICE,true);if(button)button.disabled=false;return}
 try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{method:'POST',headers:{'Content-Type':'application/json',...(publicAccessToken?{'X-Invitation-Access':publicAccessToken}:{})},body:JSON.stringify(data)}),payload=await r.json().catch(()=>({}));if(!r.ok)throw Error(payload.error||'We could not send your wishes. Please try again.');form.innerHTML=`<h2>${langText('Thank you!','សូមអរគុណ!',mode)}</h2><p>${langText('Your wishes were sent privately to the hosts.','ពាក្យជូនពររបស់អ្នកត្រូវបានផ្ញើជូនម្ចាស់កម្មវិធីជាឯកជនហើយ។',mode)}</p>`}catch(error){formStatus(form,error.message||'We could not send your wishes. Please try again.',true);if(button)button.disabled=false}};
-  // Phase 2a (V54.1/V54.4) — mount the independent guest-feature modules (sheets, polls,
-  // album) and the "edited after sending" badge; the server-backed three only when the page
-  // is bound to a published invitation (the static seed used to produce three 404s).
+
+
+
   if(p.invitationId&&slugUsable&&apiAvailable()){
     const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||''};
     try{window.EInviteSignupSheets?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('signup-sheets enhance failed',err)}
@@ -1853,9 +1853,9 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
 }).catch(()=>root.innerHTML='<h1>Invitation unavailable</h1><p>This invitation has not been published.</p>');
 
 
-/* Guest language sync, moved out of a page-level inline <script> for the same reason as the
-   dashboard mounts: `script-src 'self'` refuses inline blocks, so this correction never ran and
-   logged a CSP violation on every guest-page load. It is part of bundle-public.js already. */
+
+
+
 (function () {
     var root = document.getElementById('publicRoot');
     if (!root) return;
@@ -1865,10 +1865,10 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
         document.documentElement.lang = lang;
       }
     };
-    /* The guest topbar is outside #publicRoot — the only place public-page.js
-       looks for [data-guest-lang] buttons — so the topbar delegates to the
-       renderer's own switch instead of duplicating the language logic or moving
-       the brand inside the invitation. */
+
+
+
+
     var syncTopbar = function (lang) {
       var buttons = document.querySelectorAll('[data-guest-lang-proxy]');
       for (var i = 0; i < buttons.length; i++) {
@@ -1878,7 +1878,7 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
       }
     };
     if (root.dataset && root.dataset.language) { applyLang(root.dataset.language); syncTopbar(root.dataset.language); }
-    /* LT-4.1: every language control delegates to the renderer's switch. */
+
     var clickGuestLanguage = function (value) {
       var lang = value === 'km' ? 'km' : 'en';
       var real = root.querySelector('.language-switch [data-guest-lang="' + lang + '"]');
@@ -1890,14 +1890,14 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
         clickGuestLanguage(button.getAttribute('data-guest-lang-proxy'));
       });
     });
-    /* LT-4.1: the visible switch is the `.language-switch` core/i18n.js injects into
-       the topbar (the other two are display:none) — mirror it into the renderer. */
+
+
     var mirroringI18n = false;
     document.addEventListener('einvite:lang-changed', function (event) {
       if (mirroringI18n) return;
       clickGuestLanguage(event && event.lang);
     });
-    /* LT-4.1: keep the visible switch on the renderer's language (guarded). */
+
     var mirrorI18n = function (lang) {
       if (!window.EInviteI18n || !window.EInviteI18n.get || window.EInviteI18n.get() === lang) return;
       mirroringI18n = true;
@@ -1916,9 +1916,9 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
         }
       }).observe(root, { attributes: true, attributeFilter: ['data-language'] });
     }
-    /* The renderer creates its language switch asynchronously, so reflect its
-       state once it lands (and keep the topbar in sync afterwards). The visible
-       i18n switch is aligned by the observer above. */
+
+
+
     window.addEventListener('load', function () {
       syncTopbar(root.dataset.language === 'km' ? 'km' : 'en');
     });
@@ -1927,11 +1927,11 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+
+
+
+
+
 function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
@@ -1989,14 +1989,14 @@ function editor(){
 if(page==='dashboard')dashboard();
 if(page==='materials')materials();
 if(page==='index')setTimeout(editor,0);
-})();;/**
- * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
- *
- * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
- * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
- * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
- * still work. Toggles expose aria-expanded; nothing traps focus.
- */
+})();;
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteShell && window.EInviteShell.version >= 55) return;
@@ -2009,7 +2009,7 @@ if(page==='index')setTimeout(editor,0);
   function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
 
-  /* --- 1. Rail collapse -------------------------------------------------- */
+
   function applyRailCollapsed(collapsed) {
     body.classList.toggle('rail-collapsed', !!collapsed);
     document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
@@ -2017,14 +2017,14 @@ if(page==='index')setTimeout(editor,0);
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
-      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
+
       var glyph = btn.querySelector('[data-rail-glyph]');
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
-  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
-     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
-     return focus to the toggle when the drawer closes under the keyboard. */
+
+
+
   function ensureScrim() {
     var scrim = document.querySelector('.app-drawer-scrim');
     if (!scrim) {
@@ -2050,7 +2050,7 @@ if(page==='index')setTimeout(editor,0);
     }
   }
 
-  /* --- 2. Current page --------------------------------------------------- */
+
   function markCurrentPage() {
     var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
     document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
@@ -2059,11 +2059,11 @@ if(page==='index')setTimeout(editor,0);
     });
   }
 
-  /*
-   * Pages that show a signed-out flow (dashboard) hide their rail until the
-   * signed-in view is revealed, so the login card gets the full canvas. The
-   * same flag flips the topbar down to Skeleton B (brand + language + theme).
-   */
+
+
+
+
+
   function syncAutoRail() {
     var autoRail = document.querySelector('.app-rail[data-rail-auto]');
     var signedIn = document.getElementById('dashboardView');
@@ -2078,7 +2078,7 @@ if(page==='index')setTimeout(editor,0);
     new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  /* --- 3. Appearance ----------------------------------------------------- */
+
   function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
   function applyTheme(next) {
     html.dataset.theme = next;
@@ -2088,12 +2088,12 @@ if(page==='index')setTimeout(editor,0);
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      /* Both symbols live in the button; the theme attribute on <html> shows the
-         right one, so nothing is assigned here. */
+
+
     });
   }
 
-  /* --- Wiring ------------------------------------------------------------ */
+
   document.addEventListener('click', function (event) {
     var railToggle = event.target.closest('[data-rail-toggle]');
     if (railToggle) {
@@ -2106,7 +2106,7 @@ if(page==='index')setTimeout(editor,0);
     if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
     var themeToggle = event.target.closest('[data-theme-toggle]');
     if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
-    /* Outside click closes the mobile drawer but never the desktop rail. */
+
     if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
   });
   document.addEventListener('keydown', function (event) {
@@ -2135,33 +2135,33 @@ if(page==='index')setTimeout(editor,0);
   });
 })();
 
-/*
- * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
- * workspace, appearance, drawer, account and both language pills on one
- * non-wrapping row (740px of content in a 390px bar), so the language switch
- * painted past the viewport.
- *
- * The CSS route is blocked: app-shell.css is inside @layer components, and every
- * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
- * the generated route bundle, which concatenates sources in manifest order. A
- * deterministic shell hook keeps the wrap correct at any width without another
- * !important and without depending on which sheet happens to load last.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (document.body.classList.contains('guest')) return;
-  // The app bar is a direct child of body on the shell routes, but a wrapper
-  // (#app) on some pages; look for it either way and never pick a dialog header.
+
+
   const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
     .find((node) => !node.closest('dialog')) || null;
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
-  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
-  // padding is the only arithmetic that fits without shrinking tap targets.
+
+
   const TIGHT = 400;
-  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
-  // even on two rows. Below 360 the brand text yields its width to them.
+
+
   const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
   const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
@@ -2190,14 +2190,14 @@ if(page==='index')setTimeout(editor,0);
     header.style.overflow = 'visible';
     header.style.rowGap = tight ? '0' : '4px';
     if (tight) {
-      // The unlayered narrow-header rule wins padding/gap with !important; it
-      // reads these variables, so the hook can compress the bar without adding
-      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+
+
+
       header.style.setProperty('--shell-topbar-pad', '0px 8px');
       header.style.setProperty('--shell-topbar-gap', '0px');
-      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
-      // page cluster. A half-width brand forces exactly that split instead of
-      // a third row on the Khmer templates page.
+
+
+
       if (left) {
         left.style.flex = compact ? '0 0 auto' : '1 1 50%';
         left.style.maxWidth = compact ? '44px' : '50%';
@@ -2205,8 +2205,8 @@ if(page==='index')setTimeout(editor,0);
         left.style.minWidth = '0';
         left.style.overflow = 'hidden';
       }
-      // An empty right cluster (dashboard hides it) must not claim a flex line:
-      // giving it a height created a blank row between the brand and language rows.
+
+
       if (right && right.getBoundingClientRect().width > 0) {
         right.style.order = compact ? '0' : '20';
         right.style.flex = '0 1 auto';
@@ -2214,8 +2214,8 @@ if(page==='index')setTimeout(editor,0);
       } else if (right) {
         clear(right, RIGHT_PROPS);
         right.style.order = '0';
-        // An empty cluster still claimed a 44 px flex line; hide it entirely so
-        // the bar is brand row + language row, not three rows.
+
+
         right.style.display = 'none';
       }
     } else {
@@ -2236,9 +2236,9 @@ if(page==='index')setTimeout(editor,0);
     }
   }
   sync();
-  // The language switch is injected after this script on some routes (it had no
-  // inline style at all in the first measurement). Re-sync when it lands, not
-  // only on the next window resize.
+
+
+
   new MutationObserver(sync).observe(header, { childList: true });
   window.addEventListener('load', sync, { once: true });
   let timer = 0;

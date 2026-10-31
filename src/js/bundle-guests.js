@@ -1,39 +1,39 @@
-;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
- * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
- *
- * Responsibilities:
- *   - Source of truth for UI language = <html lang>.
- *   - Persisted to localStorage key `einvite-lang` ('en'|'km').
- *   - First-visit default: navigator.language starts with `km` -> Khmer, else English.
- *   - Exposes EInviteI18n.get()/set()/t()/langText()/subscribe().
- *   - Backwards-compatible alias EInviteI18N.getLocale() (the 23 page modules already
- *     call window.EInviteI18N?.getLocale?.(); this makes them resolve through the
- *     single resolver instead of falling back to <html lang>).
- *   - Dispatches a synchronous `einvite:lang-changed` CustomEvent on <html> so any
- *     bilingual surface can re-render, and notifies subscribers.
- *   - Injects a bilingual language switch into every <header> (shared header + the
- *     editor app-bar). The switch itself is the one place both languages coexist.
- *   - Walks [data-en][data-km] form fields and sets placeholder/aria-label to the
- *     active language (text labels are handled by the .i18n-en/.i18n-km CSS hiding
- *     convention, no JS needed there).
- *
- * This file is designed to be the FIRST script in every page bundle (it is listed
- * first in earlyScripts and as the first entry of each page's `scripts`). It runs
- * synchronously in <head> (bundles are loaded blocking in <head>) so <html lang> is
- * correct before first paint -> no FOIL flash of both languages. Every public
- * method is guarded so a missing DOM / storage / navigator never throws.
- */
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   "use strict";
-  // Guard against double-injection (earlyScripts + per-page scripts, or a future
-  // head <script src>).
+
+
   if (global.EInviteI18n && global.EInviteI18N && global.EInviteI18N.version) return;
   if (global.EInviteI18n && global.EInviteI18n.version >= 1) return;
 
   var doc = global.document;
   var STORAGE_KEY = "einvite-lang";
 
-  // --- Language detection ----------------------------------------------------
+
   function navigatorLang() {
     try {
       var nav = global.navigator && global.navigator.language;
@@ -67,13 +67,13 @@
     } catch (e) { /* noop */ }
   }
   function get() {
-    // Persisted user choice wins; otherwise the live <html lang> wins (set by the
-    // public page observer, the head inline, or the previous switch click); finally
-    // the navigator default.
+
+
+
     return persistedLang() || htmlLang();
   }
 
-  // --- Persistence + notification -------------------------------------------
+
   var subscribers = [];
   function persist(lang) {
     try { global.localStorage && global.localStorage.setItem(STORAGE_KEY, lang); }
@@ -90,19 +90,19 @@
     for (var i = 0; i < subscribers.length; i++) {
       try { subscribers[i](lang, get); } catch (e) { /* keep other subscribers alive */ }
     }
-    // Re-sync every injected language switch after a real language change.
-    // The `einvite:lang-changed` event re-runs boot()->injectSwitches(), but
-    // injectSwitches() skips any <header> that already holds a switch, so
-    // without this refresh the buttons' aria-pressed / active class stay frozen
-    // at the pre-click value and read as inverted on the now-inactive button.
-    // syncSwitch(null, lang) covers all switches across all <header> elements.
+
+
+
+
+
+
     syncSwitch(null, lang);
   }
 
-  // --- Form-field helper (placeholder/aria-label for [data-en][data-km]) ----
-  // Text labels (label/span/button/h2/th) are NOT touched here: the
-  // `.i18n-en`/`.i18n-km` CSS convention hides the inactive span, so no JS is
-  // needed for them and they re-render live on toggle via CSS.
+
+
+
+
   function applyFormFields(root) {
     var scope = root || doc;
     if (!scope.querySelectorAll) return;
@@ -121,16 +121,16 @@
     }
   }
 
-  // --- Language switch injection (into every <header>) ----------------------
+
   function escHTML(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
-  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
-  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
-  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
-  // the delegated click handler and `syncSwitch` use.
+
+
+
+
   var switchCount = 0;
   function makeSwitch() {
     var first = switchCount === 0;
@@ -157,12 +157,12 @@
       b.classList.toggle("active", on);
     }
   }
-  // One delegated listener instead of one per injected switch. The editor rebuilds its header
-  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
-  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
-  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
-  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
-  // survives re-renders and duplicate mounts.
+
+
+
+
+
+
   var delegated = false;
   function onLanguageClick(e) {
     var target = e.target;
@@ -178,9 +178,9 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
-      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
-      // check, command palette) is a layout heading, not the app bar, and the injected switch
-      // landed in the middle of those panels. Clean up any copy injected before this guard.
+
+
+
       if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
         var stray = h.querySelector(".language-switch");
         if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
@@ -198,10 +198,10 @@
     try { injectSwitches(); } catch (e) { /* keep going */ }
     applyOptions();
   }
-  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+
   function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
-  // --- Public resolver -------------------------------------------------------
+
   var EInviteI18n = {
     version: "1.0",
     STORAGE_KEY: STORAGE_KEY,
@@ -209,24 +209,24 @@
     getLocale: get, // backward-compat: EInviteI18N?.getLocale()
     set: function (lang) {
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
-      // If the language isn't actually changing, just (re)sync the DOM attribute
-      // and form fields so a forced re-render is idempotent.
+
+
       if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
       applyOptions();
       return lang;
     },
-    // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
-    // Optional {token:value} params are substituted as {token} -> value.
+
+
     t: function (key, strings, params) {
       var lang = get();
       var dict = (strings && (strings[lang] || strings.en)) || {};
       var s = dict[key];
       if ((s === undefined || s === null) && strings && strings.en) s = strings.en[key];
       if (s === undefined || s === null) s = key;
-      // Function-valued entries (pageLabel(n), pinLabel(n)) are invoked with the
-      // caller args; their own template fills the positional values.
+
+
       if (typeof s === "function") { try { return s(params); } catch (e) { return key; } }
       s = String(s);
       if (params && typeof params === "object" && !Array.isArray(params)) {
@@ -237,10 +237,10 @@
       }
       return s;
     },
-    // Backward-compatible langText('en','km',mode) inline shape.
-    // 'en'/'km' force a language; anything else (both/guest/host/undefined)
-    // renders both spans — the live <html lang> / [data-language] CSS hides the
-    // inactive one, so the switch updates the page instantly without re-render.
+
+
+
+
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
@@ -248,11 +248,11 @@
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
-    // convention (the HTML parser strips elements inside <option>), so their
-    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
-    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
-    // The guarded calls above resolve to it only on routes that include it.
+
+
+
+
+
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -263,8 +263,8 @@
   };
 
   global.EInviteI18n = EInviteI18n;
-  // Alias the uppercase name that 15 pre-existing modules already call via
-  // `window.EInviteI18N?.getLocale?.()` so they resolve through this resolver.
+
+
   global.EInviteI18N = {
     version: "1.0",
     getLocale: get,
@@ -272,21 +272,21 @@
     t: EInviteI18n.t,
   };
 
-  // Listen for external language changes (e.g. the public page's per-invitation
-  // observer writing <html lang> from root[data-language]) so the switch and
-  // form fields stay in sync.
+
+
+
   try {
     doc.addEventListener("einvite:lang-changed", boot);
   } catch (e) { /* noop */ }
 
-  // --- Synchronous init (runs in <head> before first paint) ------------------
+
   var initLang = persistedLang() || navigatorLang();
   applyHtmlLang(initLang);
   applyFormFields();
   if (doc && doc.addEventListener) {
     doc.addEventListener("DOMContentLoaded", boot);
-    // If the bundle is injected after parse, DOMContentLoaded may have already
-    // fired; boot immediately as a safety net.
+
+
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
@@ -306,8 +306,8 @@ function buildDialog({title='Please confirm',message='',icon='✦',input=false,v
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  // A short "Poster title:" style prompt is the field's label, not a second
-  // heading above a generic "Value" label. Long instructions stay as help text.
+
+
   const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
   const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
   let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
@@ -318,19 +318,19 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
-// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
-// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
-// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
-// custom canvas-size prompt (app.js) and the Template Studio custom poster
-// size prompt (templates.js); lives here because both route bundles already
-// load ui-dialogs.js before their consumer modules.
+
+
+
+
+
+
 window.EInvitePosterUnits=Object.freeze({
  PX_PER:{in:96,cm:96/2.54,ft:1152},
  parse(value){
   const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
   const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
   if(!m)return null;
-  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+
   return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
  },
  toPx(number,unit){
@@ -347,11 +347,11 @@ window.EInvitePosterUnits=Object.freeze({
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
- // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
- // resolve it as if it were a real invitation: the signed-in editor asked the server for
- // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
- // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+
+
+
+
+
  const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
  function getInvitationId(options={}){
    const direct=safe(explicitId);if(direct)return direct;
@@ -374,23 +374,23 @@ window.EInvitePosterUnits=Object.freeze({
  async function rewriteInvitationLinks(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;const id=getInvitationId({allowRemembered:false});if(!id)return;const map={'index.html':'editor','guests.html':'guests','responses.html':'responses','analytics.html':'analytics','materials.html':'materials','checkin.html':'checkin'};document.querySelectorAll('a[href]').forEach(anchor=>{const raw=anchor.getAttribute('href')||'';const base=raw.split('?')[0].split('#')[0].replace(/^\.\//,'');const target=map[base];if(target)anchor.setAttribute('href',route(id,target))})}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rewriteInvitationLinks,{once:true});else rewriteInvitationLinks();
  window.EInviteContext={getInvitationId,remember,route,navigate,section,explicitId,rewriteInvitationLinks};
-})();;/**
- * guests.js — Guest list management (ROADMAP §5.6).
- * Renders the guest table, summary metrics, per-guest action buttons (edit,
- * personal-link, QR, check-in, remove), CSV import/export, and inline editing.
- * All user-facing strings go through EInviteI18n.langText() (dual .i18n-en/.i18n-km
- * spans, CSS-driven toggle) or a plain-text helper for DOM APIs (alert/confirm/
- * textContent) that reads EInviteI18n.get() at call time. No STRINGS table so
- * check-bilingual-consistency.py (which only scans top-level src/js/*.js) is
- * not polluted with EN-FALLBACK placeholders — see §8 of LANGUAGE-GAP-REPORT.
- */
+})();;
+
+
+
+
+
+
+
+
+
 const $=s=>document.querySelector(s),inviteId=window.EInviteContext?.getInvitationId()||'demo-wedding',localKey=`sovan-guests:${inviteId}`;let guests=[],server=false,slug='invitation',invitation=null,rsvpEnabled=true;
-/* Goal 6b (§5.5): the batch-share selection. Declared here, with the other
-   module-level state, because the wiring that reads it runs before the
-   spreadsheet/link-code sections below — a const declared further down is in
-   the temporal dead zone at that point (measured: bundle-guests.js threw
-   "Cannot access 'pickedGuests' before initialization" and the list never
-   rendered). */
+
+
+
+
+
+
 const pickedGuests=new Set();
 const _isKm=()=>(window.EInviteI18n&&window.EInviteI18n.get?window.EInviteI18n.get():(document.documentElement.lang||'').toLowerCase()).startsWith('km');
 const _html=(en,km)=>{if(window.EInviteI18n)return window.EInviteI18n.langText(en,km);const e=_isKm()?(km!=null?km:en):en;return`<span class="i18n i18n-en">${esc(en)}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km!=null?km:en)}</span>`};
@@ -399,27 +399,27 @@ async function request(path,options={}){let r=await fetch(path,{...options,crede
 async function load(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){server=false;guests=JSON.parse(localStorage.getItem(localKey)||'[]');window.EInviteBackend.message($('#guestList'),_txt('Guest management, personal links, QR codes, and check-in require the full application server.','ការគ្រប់គ្រងភ្ញៀវ តំណផ្ទាល់ខ្លួន កូដ QR និងការឆែកចូល ត្រូវការម៉ាស៊ីនបម្រើកម្មវិធីពេញលេញ។'));render();return}try{await request('/api/health');server=true;invitation=await request(`/api/invitations/${encodeURIComponent(inviteId)}`);slug=invitation?.slug||slug;rsvpEnabled=invitation?.document?.settings?.rsvpEnabled!==false;guests=await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests`)}catch(error){server=false;guests=JSON.parse(localStorage.getItem(localKey)||'[]');if(error.status===404)window.EInviteBackend?.message($('#guestList'),_txt('This invitation is not available in the current server context.','ការអញ្ជើញនេះមិនអាចប្រើនៅក្នុងបរិបទម៉ាស៊ីនបម្រើបច្ចុប្បន្នទេ។'))}render()}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function guestUrl(g){if(!g?.token)return'';const code=String(g.slug||'').trim();return server?`${location.origin}/i/${encodeURIComponent(slug)}${code?`/${encodeURIComponent(code)}`:''}?g=${encodeURIComponent(g.token)}`:`${location.origin}${location.pathname.replace(/guests(?:\.html)?$/,'public.html')}?g=${encodeURIComponent(g.token)}`}
-/* Goal 6a/6b (§5.1, §5.5): the shareable form of a guest link is the readable
-   one — project slug plus the guest's frozen code, no ?g= token. The code is a
-   mnemonic, not the capability (§4.1), so this is what a designer pastes into a
-   group chat; the token stays in guestUrl() for the private per-guest link. A
-   guest whose code has not been generated yet falls back to the bare project
-   link, which still opens the invitation. */
+
+
+
+
+
+
 function guestShareUrl(g){const code=String(g?.slug||'').trim();return server?`${location.origin}/i/${encodeURIComponent(slug)}${code?`/${encodeURIComponent(code)}`:''}`:''}
 function coupleName(){return String(invitation?.document?.fields?.names||'').trim()}
-/* The three channel links are the same shapes the public share panel builds
-   (src/js/public-share-panel.js: t.me/share/url, wa.me/?text=,
-   sharer.php?u=) — that builder is page-local and not exported, so the formats
-   are mirrored here rather than loaded onto the guests route for three URLs. */
+
+
+
+
 function shareChannelLinks(row){const url=guestShareUrl(row);if(!url)return'';const message=_txt(`You are invited to ${coupleName()||'our celebration'}. ${url}`,'');return`<a target="_blank" rel="noopener noreferrer" href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(message)}">Telegram</a><a target="_blank" rel="noopener noreferrer" href="https://wa.me/?text=${encodeURIComponent(message)}">WhatsApp</a><a target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}">Facebook</a>`}
 function filtered(){let q=$('#search').value.trim().toLowerCase(),filter=$('#statusFilter').value;return guests.filter(g=>{let text=`${g.name} ${g.phone||''} ${g.email||''} ${g.group_name||''} ${g.household_id||''} ${g.table_name||''} ${(g.tags||[]).join(' ')}`.toLowerCase(),status=g.rsvp_status||'';if(!text.includes(q))return false;if(!rsvpEnabled)return filter==='all'||filter==='checked'&&g.checked_in;return filter==='all'||filter==='yes'&&status.startsWith('Yes')||filter==='no'&&status.startsWith('Unable')||filter==='pending'&&!status||filter==='checked'&&g.checked_in})}
 function render(){let yes=guests.filter(g=>g.rsvp_status?.startsWith('Yes')).length,no=guests.filter(g=>g.rsvp_status?.startsWith('Unable')).length,pending=guests.length-yes-no,checked=guests.filter(g=>g.checked_in).length;$('#summary').innerHTML=rsvpEnabled?`<div class="metric"><strong>${guests.length}</strong>${_html('Invited','បានអញ្ជើញ')}</div><div class="metric"><strong>${yes}</strong>${_html('Attending','នឹងចូលរួម')}</div><div class="metric"><strong>${no}</strong>${_html('Declined','បានច្រានចោល')}</div><div class="metric"><strong>${pending}</strong>${_html('Pending','កំពុងរង់ចាំ')}</div><div class="metric"><strong>${checked}</strong>${_html('Checked in','បានឆែកចូល')}</div>`:`<div class="metric"><strong>${guests.length}</strong>${_html('Invited','បានអញ្ជើញ')}</div><div class="metric"><strong>${checked}</strong>${_html('Checked in','បានឆែកចូល')}</div><div class="metric"><strong>${_html('Off','បិទ')}</strong>${_html('RSVP disabled','RSVP បានបិទ')}</div>`;const filter=$('#statusFilter');if(filter){[...filter.options].forEach(o=>{if(['yes','no','pending'].includes(o.value))o.hidden=!rsvpEnabled});if(!rsvpEnabled&&['yes','no','pending'].includes(filter.value))filter.value='all'}
 $('#guestList').innerHTML=filtered().map(g=>{const status=rsvpEnabled?esc(g.rsvp_status||_txt('Awaiting reply','កំពុងរង់ចាំការឆ្លើយតប')):(_txt(g.token_revoked_at?'Personal link revoked':(g.personalLinkAvailable?'Personal invitation ready':'Personal link needs rotation'),g.token_revoked_at?'Personal link revoked':(g.personalLinkAvailable?'Personal invitation ready':'Personal link needs rotation')));return`<div class="guest-row ${g.checked_in?'checked':''}"><label class="guest-pick"><input type="checkbox" data-pick="${g.id}" ${pickedGuests.has(g.id)?'checked':''} aria-label="${esc(_txt('Select this guest for the link list','ជ្រើរើសភ្ញៀវនេះសម្រាប់បញ្ជីតំណ'))}"></label><div class="guest-main"><div class="guest-head"><strong>${esc(g.name)}</strong><span class="guest-status">${status}</span></div><div class="guest-sub"><small>${esc([g.phone,g.email,g.group_name&&`${_txt('Group:','ក្រុម៖')} ${g.group_name}`,g.household_id&&`${_txt('Household:','គ្រួសារ៖')} ${g.household_id}`,g.table_name&&`${_txt('Table:','តុ៖')} ${g.table_name}`,g.seat_label&&`${_txt('Seat:','អាសនៈ៖')} ${g.seat_label}`].filter(Boolean).join(' · '))}</small>${(g.tags||[]).length?`<span class="tags">${(g.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join('')}</span>`:''}
 <span class="guest-meta">${g.checked_in?`${_html('Checked in','បានឆែកចូល')}${g.check_in_at?` ${_html('at','នៅ')} ${esc(new Date(g.check_in_at).toLocaleString())}`:''}`:''}${g.rsvp_status&&rsvpEnabled?`${_html('RSVP','RSVP')}: ${esc(g.rsvp_status)}`:''}${g.delivery_status?` · ${esc(g.delivery_status)}`:''}${g.opened_at?` · ${_html('Opened','បានបើក')}`:''}</span></div></div><div class="guest-actions"><button data-edit="${g.id}">${_html('Edit','កែសម្រួល')}</button><button data-link="${g.id}">${g.personalLinkAvailable?_html('Link','តំណ'):_html('Rotate link','បង្វិលតំណ')}</button><button data-qr="${g.id}" ${g.personalLinkAvailable?'':'disabled'}>${_html('QR','QR')}</button><button data-check="${g.id}">${g.checked_in?_html('Undo check-in','ធ្វើវិញការឆែកចូល'):_html('Check in','ឆែកចូល')}</button><button class="danger" data-delete="${g.id}">${_html('Remove','ដកចេញ')}</button></div></div>`}).join('')||`<p class="empty">${_html('No guests match this filter.','គ្មានភ្ញៀវណាមួយត្រូវនឹងតម្រងនេះទេ។')}</p>`}
 ;
-/* Goal 6b (§5.5): the selection drives "Copy all links". Checked guests are
-   copied; with none checked the whole filtered list is, which is what a designer
-   who has just imported a sheet wants. */
+
+
+
 document.querySelectorAll('[data-pick]').forEach(box=>{box.onchange=()=>{box.checked?pickedGuests.add(box.dataset.pick):pickedGuests.delete(box.dataset.pick);render()}});
 const selectAllBox=$('#selectAllGuests');if(selectAllBox){selectAllBox.checked=guests.length>0&&pickedGuests.size===guests.length;selectAllBox.indeterminate=pickedGuests.size>0&&pickedGuests.size<guests.length}
 $('#search').oninput=render;$('#statusFilter').onchange=render;
@@ -435,25 +435,25 @@ $('.close').onclick=()=>$('#qrModal').close();
 function parseCsv(text){let rows=[],row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){let c=text[i];if(c==='"'&&quoted&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')quoted=!quoted;else if(c===','&&!quoted){row.push(cell.trim());cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell.trim());if(row.some(Boolean))rows.push(row);return rows}
 $('#importFile').onchange=e=>{const file=e.target.files?.[0];if(file)openImport(file)};
 $('#exportBtn').onclick=()=>{let rows=[[_txt('Name','ឈ្មោះ'),_txt('Phone','ទូរស័ព្ទ'),_txt('Email','អ៊ីមែល'),_txt('Group','ក្រុម'),_txt('Household','គ្រួសារ'),_txt('Table','តុ'),_txt('Seat','អាសនៈ'),_txt('Tags','ស្លាក'),rsvpEnabled?_txt('RSVP status','ស្ថានភាព RSVP'):_txt('Invitation mode','របៀបអញ្ជើញ'),_txt('Checked in','បានឆែកចូល'),_txt('Delivery','ការផ្ញើ'),_txt('Opened','បានបើក'),_txt('Personal link','តំណផ្ទាល់ខ្លួន')],...guests.map(g=>[g.name,g.phone||'',g.email||'',g.group_name||'',g.household_id||'',g.table_name||'',g.seat_label||'',(g.tags||[]).join('|'),rsvpEnabled?(g.rsvp_status||_txt('Pending','កំពុងរង់ចាំ')):_txt('RSVP disabled','RSVP បានបិទ'),g.checked_in?_txt('Yes','ចាស'):_txt('No','ទេ'),g.delivery_status||'',g.opened_at?new Date(g.opened_at).toISOString():'',guestUrl(g)])],csv=rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\r\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='guest-list.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-/* ────────────────────────────────────────────────────────────────────────────
-   Bulk guest import — the research pass's phase A (§5.7 of
-   docs/reviews/bulk-guest-import-research.md).
 
-   Why Excel is the primary path: a spreadsheet has no charset. Excel on Windows
-   writes CSV as UTF-16LE-with-BOM or in a legacy codepage, and reading that as
-   UTF-8 either throws or silently imports mojibake Khmer names (research risk
-   2). CSV is still accepted, with the BOM sniffed; a byte stream that no
-   supported encoding decodes is refused with a message that names the fix,
-   never imported as garbage.
 
-   SheetJS is loaded lazily from the vendored build only when a spreadsheet is
-   actually chosen, so the guests route keeps its 3-script / 440,000-byte page
-   budget (docs/route-bundle-sources.json, src/python/build/build_page_manifests.py).
 
-   Khmer below comes from docs/i18n/TRANSLATIONS.csv where an approved string
-   exists; every string passed with an EMPTY Khmer slot is listed as KH_PENDING
-   in docs/reviews/bulk-guest-import-implementation.md — none is invented.
-   ──────────────────────────────────────────────────────────────────────────── */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const SHEETJS_URL='/vendor/sheetjs/xlsx.mini.min.js';let sheetJsPromise=null;
 function loadSheetJs(){if(window.XLSX)return Promise.resolve(window.XLSX);if(!sheetJsPromise)sheetJsPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=SHEETJS_URL;script.onload=()=>window.XLSX?resolve(window.XLSX):reject(Error('Spreadsheet library did not initialise'));script.onerror=()=>reject(Error('Spreadsheet library could not be loaded'));document.head.append(script)});return sheetJsPromise}
 function decodeImportText(buffer){const bytes=new Uint8Array(buffer),decode=(encoding,offset)=>new TextDecoder(encoding).decode(bytes.subarray(offset));if(bytes.length>=3&&bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF)return{text:decode('utf-8',3),encoding:'UTF-8 with BOM'};if(bytes.length>=2&&bytes[0]===0xFF&&bytes[1]===0xFE)return{text:decode('utf-16le',2),encoding:'UTF-16LE with BOM'};if(bytes.length>=2&&bytes[0]===0xFE&&bytes[1]===0xFF)return{text:decode('utf-16be',2),encoding:'UTF-16BE with BOM'};try{return{text:new TextDecoder('utf-8',{fatal:true}).decode(bytes),encoding:'UTF-8'}}catch(error){return{text:'',encoding:'',failed:true}}}
@@ -490,10 +490,10 @@ function renderImportDialog(){
   const shown=entries.length>7?[...entries.slice(0,5),null,...entries.slice(-2)]:entries;
   const preview=shown.map(entry=>entry===null?`<div class="guest-row"><div><strong>…</strong></div></div>`:`<div class="guest-row"><div><strong>${esc(entry.name||_txt('(empty name)','(គ្មានឈ្មោះ)'))}</strong>${entry.phone?`<br><small>${esc(entry.phone)}</small>`:''}</div></div>`).join('');
   const emptyWarning=blank.length?`<p class="hint">${esc(`${blank.length} row(s) have no name, so nothing was imported yet (rows ${blank.slice(0,8).join(', ')}${blank.length>8?'…':''})`)}</p>`:'';
-  // Re-import key (research §5.2): a sheet has no key of its own, so a row is
-  // matched on lower(name) within this invitation. A match is updated and keeps
-  // its frozen link; anything else is added. Nothing is merged or duplicated
-  // silently — the counts are stated before the write.
+
+
+
+
   const existingByName=existingGuestIndex(),willUpdate=importable.filter(entry=>existingByName.has(entry.name.trim().toLowerCase())).length;
   const updateWarning=importable.length?`<p class="hint">${esc(`${willUpdate} row(s) match a guest already in this list and will be updated with their links kept; ${importable.length-willUpdate} will be added.`)}</p>`:'';
   const duplicateWarning=duplicates.length?`<p class="hint">${esc(`${duplicates.length} duplicate name(s) in this file: ${duplicates.slice(0,5).join(', ')}${duplicates.length>5?'…':''}`)}</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-skip-duplicates ${state.skipDuplicates?'checked':''}> ${_html('Skip later duplicates (the default keeps both)','រំលងឈ្មោះស្ទួនពេលក្រោយ (ការកំណត់លំនាំដើមរក្សាទាំងពីរ)')}</label>`:'';
@@ -520,8 +520,8 @@ async function runImport(entries){
       const match=server?existing.get(entry.name.trim().toLowerCase()):null;
       try{
         if(match){
-          // The frozen code is deliberately absent from this payload, so
-          // update_guest_details' COALESCE(?,slug) leaves it untouched.
+
+
           await request(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(match.id)}`,{method:'PUT',body:JSON.stringify({name:match.name,phone:entry.phone||match.phone||'',email:match.email||'',groupName:match.group_name||'',householdId:match.household_id||'',tableName:match.table_name||'',seatLabel:match.seat_label||'',tags:match.tags||[]})});updated++;touched.push(match.id)
         }else{const created=await addGuest({name:entry.name,phone:entry.phone},false);added++;if(created?.id)touched.push(created.id)}
       }catch(error){failed++}
@@ -535,14 +535,14 @@ async function runImport(entries){
   $('#importFile').value='';
   openLinkEditor(guests.filter(guest=>touched.includes(guest.id)));
 }
-/* ── Phase C: per-guest link codes, the mapping screen and the freeze ──
-   The code is a mnemonic, not the capability (research §4.1: OSWP's own source
-   says the same of its household code and excludes 0 1 i l o so it can be read
-   aloud). The 32-character ?g= token stays the capability and is unchanged.
 
-   `slugify`/`randomCode` mirror server-side clean_slug/short_code for the live
-   preview only. The server re-validates every submitted code and is
-   authoritative; nothing here decides what a guest's link is. */
+
+
+
+
+
+
+
 const SLUG_ALPHABET='23456789abcdefghjkmnpqrstuvwxyz';
 async function copyGuestLinks(){const list=pickedGuests.size?guests.filter(g=>pickedGuests.has(g.id)):guests,urls=list.map(guestShareUrl).filter(Boolean);if(!urls.length){alert(_txt('There are no guest links to copy yet.','មិនទាន់មានតំណភ្ញៀវសម្រាប់ចម្លងទេ។'));return}await navigator.clipboard.writeText(urls.join('\n'));const summary=`${urls.length} ${_txt('link(s) copied','តំណបានចម្លង')}`;if(window.EInviteFeedback?.toast)window.EInviteFeedback.toast(summary);else alert(summary)}
 function existingGuestIndex(){const index=new Map();for(const guest of guests){const key=String(guest.name||'').trim().toLowerCase();if(key&&!index.has(key))index.set(key,guest)}return index}
@@ -604,8 +604,8 @@ function applyTheme(mode,announce=false){
   $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
   if(announce){
-    // Two quick toggles used to leave both "Dark appearance" and "Light appearance"
-    // stacked for 2.2s. Replace the previous theme toast instead of stacking.
+
+
     document.querySelectorAll('.ui-toast[data-theme-toast]').forEach(el=>el.remove());
     const el=toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
     if(el)el.dataset.themeToast='1';
@@ -620,10 +620,10 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
-  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
-  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
-  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+
+
+
+
   document.body.append(menu);
   function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
   function openThemeMenu(){
@@ -653,9 +653,9 @@ function installAppLauncher(){
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
-  // there made every click on it navigate (a full reload) before the menu could open.
-  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+
+
+
   const brandAnchor=brand.closest('a');
   (brandAnchor||brand).after(wrap);
   const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
@@ -853,11 +853,11 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+
+
+
+
+
 function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
@@ -932,14 +932,14 @@ function init(){
  observeDialogs();new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes){if(node.nodeType!==1)continue;if(node.matches?.('dialog')||node.querySelector?.('dialog'))observeDialogs(node)}}).observe(document.body,{childList:true,subtree:true});
 }
 window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
-})();;/**
- * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
- *
- * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
- * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
- * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
- * still work. Toggles expose aria-expanded; nothing traps focus.
- */
+})();;
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteShell && window.EInviteShell.version >= 55) return;
@@ -952,7 +952,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
 
-  /* --- 1. Rail collapse -------------------------------------------------- */
+
   function applyRailCollapsed(collapsed) {
     body.classList.toggle('rail-collapsed', !!collapsed);
     document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
@@ -960,14 +960,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
-      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
+
       var glyph = btn.querySelector('[data-rail-glyph]');
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
-  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
-     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
-     return focus to the toggle when the drawer closes under the keyboard. */
+
+
+
   function ensureScrim() {
     var scrim = document.querySelector('.app-drawer-scrim');
     if (!scrim) {
@@ -993,7 +993,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
 
-  /* --- 2. Current page --------------------------------------------------- */
+
   function markCurrentPage() {
     var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
     document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
@@ -1002,11 +1002,11 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     });
   }
 
-  /*
-   * Pages that show a signed-out flow (dashboard) hide their rail until the
-   * signed-in view is revealed, so the login card gets the full canvas. The
-   * same flag flips the topbar down to Skeleton B (brand + language + theme).
-   */
+
+
+
+
+
   function syncAutoRail() {
     var autoRail = document.querySelector('.app-rail[data-rail-auto]');
     var signedIn = document.getElementById('dashboardView');
@@ -1021,7 +1021,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  /* --- 3. Appearance ----------------------------------------------------- */
+
   function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
   function applyTheme(next) {
     html.dataset.theme = next;
@@ -1031,12 +1031,12 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      /* Both symbols live in the button; the theme attribute on <html> shows the
-         right one, so nothing is assigned here. */
+
+
     });
   }
 
-  /* --- Wiring ------------------------------------------------------------ */
+
   document.addEventListener('click', function (event) {
     var railToggle = event.target.closest('[data-rail-toggle]');
     if (railToggle) {
@@ -1049,7 +1049,7 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
     var themeToggle = event.target.closest('[data-theme-toggle]');
     if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
-    /* Outside click closes the mobile drawer but never the desktop rail. */
+
     if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
   });
   document.addEventListener('keydown', function (event) {
@@ -1078,33 +1078,33 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   });
 })();
 
-/*
- * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
- * workspace, appearance, drawer, account and both language pills on one
- * non-wrapping row (740px of content in a 390px bar), so the language switch
- * painted past the viewport.
- *
- * The CSS route is blocked: app-shell.css is inside @layer components, and every
- * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
- * the generated route bundle, which concatenates sources in manifest order. A
- * deterministic shell hook keeps the wrap correct at any width without another
- * !important and without depending on which sheet happens to load last.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (document.body.classList.contains('guest')) return;
-  // The app bar is a direct child of body on the shell routes, but a wrapper
-  // (#app) on some pages; look for it either way and never pick a dialog header.
+
+
   const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
     .find((node) => !node.closest('dialog')) || null;
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
-  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
-  // padding is the only arithmetic that fits without shrinking tap targets.
+
+
   const TIGHT = 400;
-  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
-  // even on two rows. Below 360 the brand text yields its width to them.
+
+
   const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
   const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
@@ -1133,14 +1133,14 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     header.style.overflow = 'visible';
     header.style.rowGap = tight ? '0' : '4px';
     if (tight) {
-      // The unlayered narrow-header rule wins padding/gap with !important; it
-      // reads these variables, so the hook can compress the bar without adding
-      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+
+
+
       header.style.setProperty('--shell-topbar-pad', '0px 8px');
       header.style.setProperty('--shell-topbar-gap', '0px');
-      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
-      // page cluster. A half-width brand forces exactly that split instead of
-      // a third row on the Khmer templates page.
+
+
+
       if (left) {
         left.style.flex = compact ? '0 0 auto' : '1 1 50%';
         left.style.maxWidth = compact ? '44px' : '50%';
@@ -1148,8 +1148,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
         left.style.minWidth = '0';
         left.style.overflow = 'hidden';
       }
-      // An empty right cluster (dashboard hides it) must not claim a flex line:
-      // giving it a height created a blank row between the brand and language rows.
+
+
       if (right && right.getBoundingClientRect().width > 0) {
         right.style.order = compact ? '0' : '20';
         right.style.flex = '0 1 auto';
@@ -1157,8 +1157,8 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       } else if (right) {
         clear(right, RIGHT_PROPS);
         right.style.order = '0';
-        // An empty cluster still claimed a 44 px flex line; hide it entirely so
-        // the bar is brand row + language row, not three rows.
+
+
         right.style.display = 'none';
       }
     } else {
@@ -1179,9 +1179,9 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
     }
   }
   sync();
-  // The language switch is injected after this script on some routes (it had no
-  // inline style at all in the first measurement). Re-sync when it lands, not
-  // only on the next window resize.
+
+
+
   new MutationObserver(sync).observe(header, { childList: true });
   window.addEventListener('load', sync, { once: true });
   let timer = 0;

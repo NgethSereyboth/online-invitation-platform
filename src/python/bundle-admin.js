@@ -1,22 +1,22 @@
 ;(() => {
   'use strict';
-  // route-deferred-loader — injects the per-route deferred chunk after
-  // first paint. Bundled at the head of each route bundle, it derives the
-  // deferred bundle name from its own <script> URL (bundle-<page>.js →
-  // bundle-<page>-deferred.{js,css}) so no HTML/inline script is needed
-  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
-  // on the first user interaction, whichever comes first, so on-demand
-  // modules never delay first paint or the route-weight budget.
+
+
+
+
+
+
+
   if (window.EInviteDeferredRouteLoaderV15) return;
-  // `ready` resolves once the deferred chunk has been evaluated (or failed to
-  // load), so consumers that lazily mount a deferred module can retry on it.
+
+
   let resolveReady;
   const ready = new Promise((res) => { resolveReady = res; });
   window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
   const current = document.currentScript;
   const src = (current && current.src) || '';
-  // The lazy stem plus the optional `-deferred` suffix means the deferred
-  // chunk's own URL cannot be mistaken for a route bundle's.
+
+
   const match = /bundle-([A-Za-z0-9_-]+?)(?:-deferred)?\.js/.exec(src);
   if (!match) { resolveReady(); return; }
   const prefix = src.slice(0, src.lastIndexOf('/') + 1);
@@ -40,42 +40,42 @@
   for (const type of ['pointerdown', 'keydown', 'touchstart']) {
     window.addEventListener(type, start, { once: true, passive: true, capture: true });
   }
-})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
- * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
- *
- * Responsibilities:
- *   - Source of truth for UI language = <html lang>.
- *   - Persisted to localStorage key `einvite-lang` ('en'|'km').
- *   - First-visit default: navigator.language starts with `km` -> Khmer, else English.
- *   - Exposes EInviteI18n.get()/set()/t()/langText()/subscribe().
- *   - Backwards-compatible alias EInviteI18N.getLocale() (the 23 page modules already
- *     call window.EInviteI18N?.getLocale?.(); this makes them resolve through the
- *     single resolver instead of falling back to <html lang>).
- *   - Dispatches a synchronous `einvite:lang-changed` CustomEvent on <html> so any
- *     bilingual surface can re-render, and notifies subscribers.
- *   - Injects a bilingual language switch into every <header> (shared header + the
- *     editor app-bar). The switch itself is the one place both languages coexist.
- *   - Walks [data-en][data-km] form fields and sets placeholder/aria-label to the
- *     active language (text labels are handled by the .i18n-en/.i18n-km CSS hiding
- *     convention, no JS needed there).
- *
- * This file is designed to be the FIRST script in every page bundle (it is listed
- * first in earlyScripts and as the first entry of each page's `scripts`). It runs
- * synchronously in <head> (bundles are loaded blocking in <head>) so <html lang> is
- * correct before first paint -> no FOIL flash of both languages. Every public
- * method is guarded so a missing DOM / storage / navigator never throws.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   "use strict";
-  // Guard against double-injection (earlyScripts + per-page scripts, or a future
-  // head <script src>).
+
+
   if (global.EInviteI18n && global.EInviteI18N && global.EInviteI18N.version) return;
   if (global.EInviteI18n && global.EInviteI18n.version >= 1) return;
 
   var doc = global.document;
   var STORAGE_KEY = "einvite-lang";
 
-  // --- Language detection ----------------------------------------------------
+
   function navigatorLang() {
     try {
       var nav = global.navigator && global.navigator.language;
@@ -109,13 +109,13 @@
     } catch (e) { /* noop */ }
   }
   function get() {
-    // Persisted user choice wins; otherwise the live <html lang> wins (set by the
-    // public page observer, the head inline, or the previous switch click); finally
-    // the navigator default.
+
+
+
     return persistedLang() || htmlLang();
   }
 
-  // --- Persistence + notification -------------------------------------------
+
   var subscribers = [];
   function persist(lang) {
     try { global.localStorage && global.localStorage.setItem(STORAGE_KEY, lang); }
@@ -132,19 +132,19 @@
     for (var i = 0; i < subscribers.length; i++) {
       try { subscribers[i](lang, get); } catch (e) { /* keep other subscribers alive */ }
     }
-    // Re-sync every injected language switch after a real language change.
-    // The `einvite:lang-changed` event re-runs boot()->injectSwitches(), but
-    // injectSwitches() skips any <header> that already holds a switch, so
-    // without this refresh the buttons' aria-pressed / active class stay frozen
-    // at the pre-click value and read as inverted on the now-inactive button.
-    // syncSwitch(null, lang) covers all switches across all <header> elements.
+
+
+
+
+
+
     syncSwitch(null, lang);
   }
 
-  // --- Form-field helper (placeholder/aria-label for [data-en][data-km]) ----
-  // Text labels (label/span/button/h2/th) are NOT touched here: the
-  // `.i18n-en`/`.i18n-km` CSS convention hides the inactive span, so no JS is
-  // needed for them and they re-render live on toggle via CSS.
+
+
+
+
   function applyFormFields(root) {
     var scope = root || doc;
     if (!scope.querySelectorAll) return;
@@ -163,16 +163,16 @@
     }
   }
 
-  // --- Language switch injection (into every <header>) ----------------------
+
   function escHTML(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
-  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
-  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
-  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
-  // the delegated click handler and `syncSwitch` use.
+
+
+
+
   var switchCount = 0;
   function makeSwitch() {
     var first = switchCount === 0;
@@ -199,12 +199,12 @@
       b.classList.toggle("active", on);
     }
   }
-  // One delegated listener instead of one per injected switch. The editor rebuilds its header
-  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
-  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
-  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
-  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
-  // survives re-renders and duplicate mounts.
+
+
+
+
+
+
   var delegated = false;
   function onLanguageClick(e) {
     var target = e.target;
@@ -220,9 +220,9 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
-      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
-      // check, command palette) is a layout heading, not the app bar, and the injected switch
-      // landed in the middle of those panels. Clean up any copy injected before this guard.
+
+
+
       if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
         var stray = h.querySelector(".language-switch");
         if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
@@ -240,10 +240,10 @@
     try { injectSwitches(); } catch (e) { /* keep going */ }
     applyOptions();
   }
-  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+
   function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
-  // --- Public resolver -------------------------------------------------------
+
   var EInviteI18n = {
     version: "1.0",
     STORAGE_KEY: STORAGE_KEY,
@@ -251,24 +251,24 @@
     getLocale: get, // backward-compat: EInviteI18N?.getLocale()
     set: function (lang) {
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
-      // If the language isn't actually changing, just (re)sync the DOM attribute
-      // and form fields so a forced re-render is idempotent.
+
+
       if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
       applyOptions();
       return lang;
     },
-    // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
-    // Optional {token:value} params are substituted as {token} -> value.
+
+
     t: function (key, strings, params) {
       var lang = get();
       var dict = (strings && (strings[lang] || strings.en)) || {};
       var s = dict[key];
       if ((s === undefined || s === null) && strings && strings.en) s = strings.en[key];
       if (s === undefined || s === null) s = key;
-      // Function-valued entries (pageLabel(n), pinLabel(n)) are invoked with the
-      // caller args; their own template fills the positional values.
+
+
       if (typeof s === "function") { try { return s(params); } catch (e) { return key; } }
       s = String(s);
       if (params && typeof params === "object" && !Array.isArray(params)) {
@@ -279,10 +279,10 @@
       }
       return s;
     },
-    // Backward-compatible langText('en','km',mode) inline shape.
-    // 'en'/'km' force a language; anything else (both/guest/host/undefined)
-    // renders both spans — the live <html lang> / [data-language] CSS hides the
-    // inactive one, so the switch updates the page instantly without re-render.
+
+
+
+
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
@@ -290,11 +290,11 @@
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
-    // convention (the HTML parser strips elements inside <option>), so their
-    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
-    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
-    // The guarded calls above resolve to it only on routes that include it.
+
+
+
+
+
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -305,8 +305,8 @@
   };
 
   global.EInviteI18n = EInviteI18n;
-  // Alias the uppercase name that 15 pre-existing modules already call via
-  // `window.EInviteI18N?.getLocale?.()` so they resolve through this resolver.
+
+
   global.EInviteI18N = {
     version: "1.0",
     getLocale: get,
@@ -314,21 +314,21 @@
     t: EInviteI18n.t,
   };
 
-  // Listen for external language changes (e.g. the public page's per-invitation
-  // observer writing <html lang> from root[data-language]) so the switch and
-  // form fields stay in sync.
+
+
+
   try {
     doc.addEventListener("einvite:lang-changed", boot);
   } catch (e) { /* noop */ }
 
-  // --- Synchronous init (runs in <head> before first paint) ------------------
+
   var initLang = persistedLang() || navigatorLang();
   applyHtmlLang(initLang);
   applyFormFields();
   if (doc && doc.addEventListener) {
     doc.addEventListener("DOMContentLoaded", boot);
-    // If the bundle is injected after parse, DOMContentLoaded may have already
-    // fired; boot immediately as a safety net.
+
+
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
@@ -348,8 +348,8 @@ function buildDialog({title='Please confirm',message='',icon='✦',input=false,v
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  // A short "Poster title:" style prompt is the field's label, not a second
-  // heading above a generic "Value" label. Long instructions stay as help text.
+
+
   const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
   const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
   let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
@@ -360,19 +360,19 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
-// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
-// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
-// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
-// custom canvas-size prompt (app.js) and the Template Studio custom poster
-// size prompt (templates.js); lives here because both route bundles already
-// load ui-dialogs.js before their consumer modules.
+
+
+
+
+
+
 window.EInvitePosterUnits=Object.freeze({
  PX_PER:{in:96,cm:96/2.54,ft:1152},
  parse(value){
   const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
   const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
   if(!m)return null;
-  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+
   return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
  },
  toPx(number,unit){
@@ -380,45 +380,45 @@ window.EInvitePosterUnits=Object.freeze({
   return per?number*per:number // bare numbers stay px
  }
 });
-})();;/**
- * V2-UX-7 (ROADMAP-V2 §3.7) — Toast notification system.
- *
- * A tiny, dependency-free toast stack. Exposes a single global:
- *
- *     window.EInviteToast.show({ type, message_en, message_km, duration })
- *
- *   - type:        'success' | 'error' | 'info' | 'warning' (default 'info')
- *   - message_en:  required English text
- *   - message_km:  required Khmer text
- *   - duration:    ms before auto-dismiss (default 4000; pass 6000 for errors)
- *
- * Layout: top-right fixed `#toast-stack` container (auto-created if missing).
- * Stack semantics: newest at the top; max 5 visible; oldest is dismissed
- * when a 6th would arrive.
- *
- * Accessibility:
- *   - The container carries `aria-live="polite"` + `aria-atomic="false"` so
- *     screen readers announce each new toast without stealing focus.
- *   - Each toast is `role="status"`.
- *   - The close button is a real `<button>` with a bilingual `aria-label`.
- *   - Hover/focus pauses the auto-dismiss timer (a11y nicety).
- *   - `@media (prefers-reduced-motion: reduce)` disables the slide-in.
- *
- * Design tokens: reuses `--app-bg`, `--app-surface`, `--app-text`,
- * `--app-muted`, `--app-line`, `--danger`, `--app-good`, `--app-warn`,
- * `--app-accent-2`, `--app-shadow`, `--app-radius`. If ux-9 ever defines a
- * global `--info` token, the `.toast--info` border picks it up automatically;
- * falls back to `--app-accent-2`.
- *
- * IIFE shape mirrors `host-signup-sheets.js` / `host-polls.js`. Idempotent:
- * if the bundle is somehow loaded twice, the second IIFE no-ops.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
   if (window.EInviteToast) return; // idempotent — already defined
 
-  /** Bilingual strings for the toast chrome itself (close button label). */
+
   var STRINGS = {
     close: { en: 'Close', km: 'បិទ' }
   };
@@ -428,7 +428,7 @@ window.EInvitePosterUnits=Object.freeze({
   var VALID_TYPES = { success: 1, error: 1, info: 1, warning: 1 };
   var LEAVE_TIMEOUT_MS = 280; // matches the --leave transition in toast.css
 
-  /** Pick the active language: explicit window.EInviteLang, then <html lang>. */
+
   function activeLang() {
     if (window.EInviteLang === 'km') return 'km';
     if (window.EInviteLang === 'en') return 'en';
@@ -437,7 +437,7 @@ window.EInvitePosterUnits=Object.freeze({
     return 'en';
   }
 
-  /** Find or create the top-right `#toast-stack` container. */
+
   function getStack() {
     var stack = document.getElementById('toast-stack');
     if (!stack) {
@@ -451,13 +451,13 @@ window.EInvitePosterUnits=Object.freeze({
     return stack;
   }
 
-  /** Bilingual close-button label. */
+
   function closeLabel() {
     var lang = activeLang();
     return STRINGS.close[lang] || STRINGS.close.en;
   }
 
-  /** Per-type icon glyph (no external icon font — kept inline). */
+
   function iconFor(type) {
     switch (type) {
       case 'success': return '\u2713';        // ✓
@@ -468,16 +468,16 @@ window.EInvitePosterUnits=Object.freeze({
     }
   }
 
-  /**
-   * Show a toast.
-   *
-   * @param {object} opts
-   * @param {string} opts.type        'success' | 'error' | 'info' | 'warning'
-   * @param {string} opts.message_en  English message (required)
-   * @param {string} opts.message_km  Khmer message (required)
-   * @param {number} [opts.duration]  ms before auto-dismiss (default 4000)
-   * @returns {HTMLElement} the toast element (for testing)
-   */
+
+
+
+
+
+
+
+
+
+
   function show(opts) {
     opts = opts || {};
     var type = VALID_TYPES[opts.type] ? opts.type : 'info';
@@ -488,7 +488,7 @@ window.EInvitePosterUnits=Object.freeze({
 
     var stack = getStack();
 
-    // Enforce max-visible: dismiss oldest from the top (stack is newest-first).
+
     while (stack.children.length >= MAX_VISIBLE) {
       var oldest = stack.lastElementChild;
       if (!oldest) break;
@@ -508,7 +508,7 @@ window.EInvitePosterUnits=Object.freeze({
     var message = document.createElement('span');
     message.className = 'toast__message';
     message.textContent = msg;
-    // Hint the language for screen readers + the :lang(km) rule (ux-5 §3.5).
+
     message.lang = lang;
 
     var close = document.createElement('button');
@@ -522,20 +522,20 @@ window.EInvitePosterUnits=Object.freeze({
     toast.appendChild(message);
     toast.appendChild(close);
 
-    // Insert at top (newest first), then promote to `--visible` on the next
-    // frame so the CSS transition runs (slide-in-from-right + fade).
+
+
     stack.insertBefore(toast, stack.firstChild);
     requestAnimationFrame(function () {
       toast.classList.add('toast--visible');
       toast.classList.remove('toast--enter');
     });
 
-    // Auto-dismiss timer (stored on the element so manual close + hover-pause
-    // can cancel it).
+
+
     toast._einviteToastTimer = setTimeout(function () { dismiss(toast); }, duration);
 
-    // Pause auto-dismiss on hover/focus; resume (with a short grace period)
-    // on leave/blur so keyboard users can read the toast at their own pace.
+
+
     function pause() {
       if (toast._einviteToastTimer) {
         clearTimeout(toast._einviteToastTimer);
@@ -554,7 +554,7 @@ window.EInvitePosterUnits=Object.freeze({
     return toast;
   }
 
-  /** Animate out + remove a toast (idempotent). */
+
   function dismiss(toast) {
     if (!toast || !toast.parentNode) return;
     if (toast._einviteToastDismissed) return;
@@ -581,20 +581,20 @@ window.EInvitePosterUnits=Object.freeze({
   }
 
   window.EInviteToast = { show: show };
-})();;/* v0.69.0 — admin step-up prompt (ROADMAP §4.2 / §5.9, LT-7.2).
- *
- * Destructive admin routes answer 403 {code:'step_up_required'} until the admin
- * re-verifies with their password (plus a TOTP code when MFA is enabled). This
- * module owns the prompt and an **in-memory** cache of the 30-minute server
- * grant (D-7: no browser-storage persistence, so a reload re-prompts),
- * and `pages/admin/admin.js` retries through it, so every admin page gets the
- * flow without changing each call site.
- *
- * No HTML strings are built except the dialog's own fixed skeleton; user text is
- * set with textContent. Khmer rows do not exist yet (OWNER-QUEUE), so the `km`
- * bank carries the accepted English fallback — the bilingual checker reports
- * those pairs as fallback/PLACEHOLDER rather than a missing counterpart.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminStepUp && window.EInviteAdminStepUp.version >= 70) return;
@@ -614,7 +614,7 @@ window.EInvitePosterUnits=Object.freeze({
       failed: 'Step-up verification failed',
       fallback: 'Your session cannot request a step-up right now.'
     },
-    // English fallback until a Khmer map row exists (never hand-written Khmer).
+
     km: {
       title: 'Confirm it is you',
       message: 'Destructive admin actions need a fresh sign-in check.',
@@ -712,8 +712,8 @@ window.EInvitePosterUnits=Object.freeze({
         if (done) return;
         done = true;
         dialog.remove();
-        // WCAG 2.4.3: focus goes back to whatever opened the prompt, so a
-        // keyboard user is not dropped at the top of the document.
+
+
         if (opener && opener.isConnected && typeof opener.focus === 'function') {
           try { opener.focus({ preventScroll: true }); } catch (e) { opener.focus(); }
         }
@@ -780,7 +780,7 @@ window.EInvitePosterUnits=Object.freeze({
     forget: forget,
     granted: granted
   });
-})();;/* v0.64.0 — admin shell: stat cards, system status, 9 module tabs, 30s polls. */
+})();;
 (function(){
   'use strict';
   if (window.EInviteAdminShell && window.EInviteAdminShell.version >= 64) return;
@@ -863,8 +863,8 @@ window.EInvitePosterUnits=Object.freeze({
       let data;
       try { data = await r.json(); } catch(e){ data = {}; }
       if (!r.ok) {
-        // Destructive admin routes demand a live step-up grant (ROADMAP §4.2,
-        // §5.9). Ask once, then replay the exact request.
+
+
         const stepUp = window.EInviteAdminStepUp;
         if (r.status === 403 && data && data.code === 'step_up_required' && stepUp && !_retried) {
           stepUp.forget();
@@ -906,7 +906,7 @@ window.EInvitePosterUnits=Object.freeze({
   }
 
   function showImpersonationBanner(){
-    // HttpOnly impersonation cookie — surfaced through /api/auth/me's `impersonating`.
+
     const banner = document.getElementById('impersonationBanner');
     if (!banner) return;
     api.get('/api/auth/me').then(me => {
@@ -923,10 +923,10 @@ window.EInvitePosterUnits=Object.freeze({
 
   let pollTimer = null;
   let lastMetrics = null, lastStatus = null;
-  // PW-10: an open admin tab used to fire two requests every 30 s for as long as
-  // it stayed open, including through 429s - about 240 requests/hour against a
-  // 10,000/day hosting allowance. Poll only while visible, back off on repeated
-  // failure, and stop with a visible retry instead of hammering a suspended host.
+
+
+
+
   let pollFailures = 0, pollPaused = false;
   async function pollOnce(){
     if (document.visibilityState === 'hidden' || pollPaused) return;
@@ -939,7 +939,7 @@ window.EInvitePosterUnits=Object.freeze({
     } catch(e) {
       pollFailures += 1;
       if (pollFailures >= 3) { pausePolling(e); return; }
-      // One quiet message on the first failure; no repeating error cards.
+
       const host = document.getElementById('statCardsGrid');
       if (host && pollFailures === 1) host.innerHTML = `<p class="ei-error">${esc(e.message || t('error'))}</p>`;
     }
@@ -980,7 +980,7 @@ window.EInvitePosterUnits=Object.freeze({
                                               : tab === 'bulk-ops' ? 'bulkOps'
                                               : tab}Panel`);
         if (panel) panel.classList.add('active');
-        // Lazy-mount each module on first show.
+
         mountModule(tab);
       });
     });
@@ -1008,8 +1008,8 @@ window.EInvitePosterUnits=Object.freeze({
       try { mod.mount(); } catch(e) { console.warn('[admin] module mount failed', tab, e); }
       return;
     }
-    // Interaction-only panels ship in the deferred route chunk (V15). If the
-    // chunk has not evaluated yet, retry once the loader signals it is ready.
+
+
     const loader = window.EInviteDeferredRouteLoaderV15;
     if (!mod && !retriedTabs.has(tab) && loader && loader.ready && typeof loader.ready.then === 'function') {
       retriedTabs.add(tab);
@@ -1018,7 +1018,7 @@ window.EInvitePosterUnits=Object.freeze({
   }
 
   async function init(){
-    // Static mode: the console is server-backed; gate it on the backend probe (G8).
+
     if (window.EInviteBackend?.ready) { try { await window.EInviteBackend.ready; } catch (e) { /* ignore */ } }
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) {
       window.EInviteBackend.message(
@@ -1026,11 +1026,11 @@ window.EInvitePosterUnits=Object.freeze({
         '<span class="i18n i18n-en">The administration console requires the full application server.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">The administration console requires the full application server.</span>');
       return;
     }
-    // FB-39: every admin route 403s for a non-admin, so gate before polling.
+
     let u=null;try{u=(await api.get('/api/auth/me')).user}catch{}
     if(!u||u.role!=='admin'){
-      // LT-1.8: a signed-in non-admin gets the shared empty/error card (icon,
-      // one sentence, primary + secondary action) instead of a bare h1 + link.
+
+
       const h=document.querySelector('.admin-page')||document.body;
       h.innerHTML='<section class="empty-state error-state admin-access-state" role="status">'
         +'<span class="empty-state__icon" aria-hidden="true">🔒</span>'
@@ -1044,9 +1044,9 @@ window.EInvitePosterUnits=Object.freeze({
     showImpersonationBanner();
     await pollOnce();
     startPolling();
-    // Lazy-mount the default tab (users).
+
     mountModule('users');
-    // Re-render cached cards on language switch.
+
     if (window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
       window.EInviteI18n.subscribe(function () {
         if (lastMetrics) renderStatCards(lastMetrics);
@@ -1072,9 +1072,9 @@ window.EInvitePosterUnits=Object.freeze({
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
-})();;/* v0.64.1 — users management (ROADMAP §5.2)
- * Browse, search, suspend/unsuspend, reset password, force MFA, impersonate.
- */
+})();;
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminUsers && window.EInviteAdminUsers.version >= 65) return;
@@ -1094,8 +1094,8 @@ window.EInvitePosterUnits=Object.freeze({
 
   async function load(){
     const api = shell().api;
-    // The server serves the unversioned list as a bare array (see docs/reviews/A2-2026-10-13.md).
-    // It has no search or paging, so both are applied here.
+
+
     try {
       const rows = await api.get('/api/admin/users');
       const q = (state.q || '').trim().toLowerCase();
@@ -1113,8 +1113,8 @@ window.EInvitePosterUnits=Object.freeze({
     const host = document.getElementById('usersPanel');
     if (!host) return;
     const rows = state.items.map(u => {
-      // The list endpoint reports `suspended` as an additive field, so the badge
-      // follows the server state (B-5). Unknown values still render as a dash.
+
+
       const status = typeof u.suspended !== 'boolean' ? '—' : u.suspended ? `<span class="ei-tag ei-tag-warn">${t('suspended')}</span>` : `<span class="ei-tag ei-tag-ok">${t('active')}</span>`;
       const date = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—';
       const last = u.lastSeenAt ? new Date(u.lastSeenAt).toLocaleDateString() : '—';
@@ -1194,16 +1194,16 @@ window.EInvitePosterUnits=Object.freeze({
   async function mount(){
     try { await load(); } catch(e) { /* not authorized */ }
     render();
-    // Re-render on language switch (cached data, no refetch).
+
     if (!_langUnsub && window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
       _langUnsub = window.EInviteI18n.subscribe(render);
     }
   }
 
   window.EInviteAdminUsers = Object.freeze({ version: 65, mount, render, load });
-})();;/* v0.64.2 — invitations management (ROADMAP §5.3)
- * Browse, search, unpublish, flag, transfer ownership.
- */
+})();;
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminInvitations && window.EInviteAdminInvitations.version >= 64) return;
@@ -1300,9 +1300,9 @@ window.EInvitePosterUnits=Object.freeze({
 
   async function mount(){ try { await load(); } catch(e) {} render(); }
   window.EInviteAdminInvitations = Object.freeze({ version: 64, mount, render, load });
-})();;/* v0.65.0 — audit log explorer (ROADMAP §5.5)
- * Read-only search + filters + CSV export. Audit table is immutable.
- */
+})();;
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminAuditLog && window.EInviteAdminAuditLog.version >= 65) return;
@@ -1381,9 +1381,9 @@ window.EInvitePosterUnits=Object.freeze({
 
   async function mount(){ try { await load(); } catch(e) {} render(); }
   window.EInviteAdminAuditLog = Object.freeze({ version: 65, mount, render, load });
-})();;/* v0.65.1 — system health & diagnostics (ROADMAP §5.6)
- * Per-subsystem status with "how to fix" hints. 60s server cache.
- */
+})();;
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminSystemHealth && window.EInviteAdminSystemHealth.version >= 65) return;
@@ -1440,11 +1440,11 @@ window.EInvitePosterUnits=Object.freeze({
 
   async function mount(){ try { await load(); } catch(e) {} render(); }
   window.EInviteAdminSystemHealth = Object.freeze({ version: 65, mount, render, load });
-})();;/* v0.65.2 — bulk operations (ROADMAP §5.7)
- * Super-admin bulk email / bulk suspend / bulk export / bulk prune.
- * All run as background jobs via the existing JobQueue. Confirmation modal
- * requires typing CONFIRM. Bulk email rate-limited to 100/min.
- */
+})();;
+
+
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminBulkOps && window.EInviteAdminBulkOps.version >= 65) return;
@@ -1570,9 +1570,9 @@ window.EInvitePosterUnits=Object.freeze({
 
   async function mount(){ render(); }
   window.EInviteAdminBulkOps = Object.freeze({ version: 65, mount, render, trackJob });
-})();;/* v0.66.0 — reports queue (ROADMAP §5.9)
- * Users can report abusive invitations/users. Admins see a queue and resolve.
- */
+})();;
+
+
 (function(){
   'use strict';
   if (window.EInviteAdminReports && window.EInviteAdminReports.version >= 66) return;
@@ -1667,8 +1667,8 @@ function applyTheme(mode,announce=false){
   $$('.ui-theme-menu button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
   const icon=$('.ui-theme-icon');if(icon)icon.textContent=resolved==='dark'?'☾':'☀';
   if(announce){
-    // Two quick toggles used to leave both "Dark appearance" and "Light appearance"
-    // stacked for 2.2s. Replace the previous theme toast instead of stacking.
+
+
     document.querySelectorAll('.ui-toast[data-theme-toast]').forEach(el=>el.remove());
     const el=toast(`${resolved[0].toUpperCase()+resolved.slice(1)} appearance`,'◐');
     if(el)el.dataset.themeToast='1';
@@ -1683,10 +1683,10 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
-  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
-  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
-  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+
+
+
+
   document.body.append(menu);
   function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
   function openThemeMenu(){
@@ -1716,9 +1716,9 @@ function installAppLauncher(){
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
-  // there made every click on it navigate (a full reload) before the menu could open.
-  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+
+
+
   const brandAnchor=brand.closest('a');
   (brandAnchor||brand).after(wrap);
   const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
@@ -1911,14 +1911,14 @@ function closeTour({explore=false}={}){tourOpenGeneration++;persistTourSeen();if
 $('#finalTourDismiss').onclick=()=>closeTour();$('#finalTourExplore').onclick=()=>closeTour({explore:true});tour.addEventListener('cancel',event=>{event.preventDefault();closeTour()});tour.addEventListener('close',()=>{persistTourSeen();const automatic=tourAutomatic,launcher=tourLauncher;tourAutomatic=false;tourLauncher=null;if(automatic)workspaceFocus();else requestAnimationFrame(()=>launcher?.focus?.({preventScroll:true}))});
 const status=$('.studio-statusbar>div:last-child');if(status){const b=document.createElement('button');b.type='button';b.className='final-tour-trigger';b.textContent='✦ Tour';b.onclick=()=>{tourAutomatic=false;tourLauncher=b;tour.showModal()};status.prepend(b)}
 window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,identity=await resolveTourIdentity();tourKey=`einvite-final-tour-seen-v2:${encodeURIComponent(identity)}:${TOUR_VERSION}`;if(localStorage.getItem(LEGACY_TOUR_KEY)==='1'&&!localStorage.getItem(tourKey))localStorage.setItem(tourKey,'1');if(generation!==tourOpenGeneration||tourSessionSeen||localStorage.getItem(tourKey)==='1')return{shown:false,identity};tourAutomatic=true;tourLauncher=null;tour.showModal();await new Promise(resolve=>requestAnimationFrame(resolve));return{shown:true,identity}})();
-})();;/**
- * monitoring.js — System tab + system-health metrics (ROADMAP §5.9).
- * Dynamically injects a "System" admin tab, renders /api/health + /api/admin/metrics
- * cards into that panel, and re-renders on language switch via subscribe().
- * All user-facing strings go through EInviteI18n.langText() (dual spans, CSS-driven
- * toggle) or a plain-text helper (_txt) for DOM APIs — no STRINGS table so the
- * check-bilingual-consistency.py scan is not polluted with EN-FALLBACK placeholders.
- */
+})();;
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (!document.querySelector('.admin-tabs')) return;
@@ -1937,7 +1937,7 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
     if (!r.ok) throw Error(d.error || 'Request failed');
     return d;
   }
-  // Dynamically create the "System" admin tab + panel (absent from static HTML).
+
   const tabs = $('.admin-tabs');
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -1987,7 +1987,7 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
     panel.classList.add('active');
     setTimeout(load, 0);
   });
-  // Re-render on language switch (cached payload, no refetch).
+
   if (window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
     window.EInviteI18n.subscribe(function () {
       btn.innerHTML = _html('System', 'ប្រព័ន្ធ');
@@ -1999,11 +1999,11 @@ window.EInviteOnboardingReady=(async()=>{const generation=++tourOpenGeneration,i
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const page=document.body?.dataset.page||((location.pathname.split('/').pop()||'dashboard.html').replace(/\.html$/,''));
 if(document.body&&!document.body.dataset.page)document.body.dataset.page=page;
-/* V55 (dispatch Group 2): the previous dashboard-home layer is retired. It injected a
-   fixed 76px rail, a marketing hero ("What will you create today?"), a second search
-   field and an English-only quick-create row, and it hid the real .dash-head. The shell
-   now owns the welcome row, the filter row and the card grid; dashboard-polish.js owns
-   the loading / empty / error states. See docs/reviews/redesign-report.md. */
+
+
+
+
+
 function dashboard(){ /* retired in v55 */ }
 function materials(){
   const head=$('.library-head'),upload=$('.upload-box');if(!head||!upload)return;
@@ -2061,14 +2061,14 @@ function editor(){
 if(page==='dashboard')dashboard();
 if(page==='materials')materials();
 if(page==='index')setTimeout(editor,0);
-})();;/**
- * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
- *
- * Collapse persists in localStorage['einvite-rail-collapsed']; the drawer
- * (≤768px) closes on Escape, outside click and hashchange; the theme toggle
- * uses core/theme.js's `einvite-theme-mode`, so pages without modern-ui.js
- * still work. Toggles expose aria-expanded; nothing traps focus.
- */
+})();;
+
+
+
+
+
+
+
 (function () {
   'use strict';
   if (window.EInviteShell && window.EInviteShell.version >= 55) return;
@@ -2081,7 +2081,7 @@ if(page==='index')setTimeout(editor,0);
   function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function write(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* private mode */ } }
 
-  /* --- 1. Rail collapse -------------------------------------------------- */
+
   function applyRailCollapsed(collapsed) {
     body.classList.toggle('rail-collapsed', !!collapsed);
     document.querySelectorAll('[data-rail-toggle]').forEach(function (btn) {
@@ -2089,14 +2089,14 @@ if(page==='index')setTimeout(editor,0);
       var label = collapsed ? 'Expand navigation' : 'Collapse navigation';
       btn.setAttribute('aria-label', label);
       btn.setAttribute('title', label);
-      /* Converted pages rotate an SVG; the editor still uses the text glyph. */
+
       var glyph = btn.querySelector('[data-rail-glyph]');
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
-  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
-     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
-     return focus to the toggle when the drawer closes under the keyboard. */
+
+
+
   function ensureScrim() {
     var scrim = document.querySelector('.app-drawer-scrim');
     if (!scrim) {
@@ -2122,7 +2122,7 @@ if(page==='index')setTimeout(editor,0);
     }
   }
 
-  /* --- 2. Current page --------------------------------------------------- */
+
   function markCurrentPage() {
     var here = (location.pathname.split('/').pop() || 'dashboard.html').toLowerCase();
     document.querySelectorAll('.app-rail a[href]').forEach(function (link) {
@@ -2131,11 +2131,11 @@ if(page==='index')setTimeout(editor,0);
     });
   }
 
-  /*
-   * Pages that show a signed-out flow (dashboard) hide their rail until the
-   * signed-in view is revealed, so the login card gets the full canvas. The
-   * same flag flips the topbar down to Skeleton B (brand + language + theme).
-   */
+
+
+
+
+
   function syncAutoRail() {
     var autoRail = document.querySelector('.app-rail[data-rail-auto]');
     var signedIn = document.getElementById('dashboardView');
@@ -2150,7 +2150,7 @@ if(page==='index')setTimeout(editor,0);
     new MutationObserver(syncAutoRail).observe(signedIn, { attributes: true, attributeFilter: ['hidden'] });
   }
 
-  /* --- 3. Appearance ----------------------------------------------------- */
+
   function resolvedTheme() { return html.dataset.theme === 'dark' ? 'dark' : 'light'; }
   function applyTheme(next) {
     html.dataset.theme = next;
@@ -2160,12 +2160,12 @@ if(page==='index')setTimeout(editor,0);
     document.querySelectorAll('[data-theme-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-pressed', String(next === 'dark'));
       btn.setAttribute('title', next === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance');
-      /* Both symbols live in the button; the theme attribute on <html> shows the
-         right one, so nothing is assigned here. */
+
+
     });
   }
 
-  /* --- Wiring ------------------------------------------------------------ */
+
   document.addEventListener('click', function (event) {
     var railToggle = event.target.closest('[data-rail-toggle]');
     if (railToggle) {
@@ -2178,7 +2178,7 @@ if(page==='index')setTimeout(editor,0);
     if (drawerToggle) { applyRailOpen(!body.classList.contains('rail-open')); return; }
     var themeToggle = event.target.closest('[data-theme-toggle]');
     if (themeToggle) { applyTheme(resolvedTheme() === 'dark' ? 'light' : 'dark'); return; }
-    /* Outside click closes the mobile drawer but never the desktop rail. */
+
     if (body.classList.contains('rail-open') && !event.target.closest('.app-rail')) applyRailOpen(false);
   });
   document.addEventListener('keydown', function (event) {
@@ -2207,33 +2207,33 @@ if(page==='index')setTimeout(editor,0);
   });
 })();
 
-/*
- * PW-13 / UI-3: at ≤600 the topbar carried brand, launcher, Admin, Designer
- * workspace, appearance, drawer, account and both language pills on one
- * non-wrapping row (740px of content in a 390px bar), so the language switch
- * painted past the viewport.
- *
- * The CSS route is blocked: app-shell.css is inside @layer components, and every
- * unlayered sheet that repeats `body:not(.guest) > header` beats it — including
- * the generated route bundle, which concatenates sources in manifest order. A
- * deterministic shell hook keeps the wrap correct at any width without another
- * !important and without depending on which sheet happens to load last.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
   'use strict';
   if (document.body.classList.contains('guest')) return;
-  // The app bar is a direct child of body on the shell routes, but a wrapper
-  // (#app) on some pages; look for it either way and never pick a dialog header.
+
+
   const header = [...document.querySelectorAll('body > header, body > #app > header, body > .app > header')]
     .find((node) => !node.closest('dialog')) || null;
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
-  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
-  // padding is the only arithmetic that fits without shrinking tap targets.
+
+
   const TIGHT = 400;
-  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
-  // even on two rows. Below 360 the brand text yields its width to them.
+
+
   const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
   const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
@@ -2262,14 +2262,14 @@ if(page==='index')setTimeout(editor,0);
     header.style.overflow = 'visible';
     header.style.rowGap = tight ? '0' : '4px';
     if (tight) {
-      // The unlayered narrow-header rule wins padding/gap with !important; it
-      // reads these variables, so the hook can compress the bar without adding
-      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+
+
+
       header.style.setProperty('--shell-topbar-pad', '0px 8px');
       header.style.setProperty('--shell-topbar-gap', '0px');
-      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
-      // page cluster. A half-width brand forces exactly that split instead of
-      // a third row on the Khmer templates page.
+
+
+
       if (left) {
         left.style.flex = compact ? '0 0 auto' : '1 1 50%';
         left.style.maxWidth = compact ? '44px' : '50%';
@@ -2277,8 +2277,8 @@ if(page==='index')setTimeout(editor,0);
         left.style.minWidth = '0';
         left.style.overflow = 'hidden';
       }
-      // An empty right cluster (dashboard hides it) must not claim a flex line:
-      // giving it a height created a blank row between the brand and language rows.
+
+
       if (right && right.getBoundingClientRect().width > 0) {
         right.style.order = compact ? '0' : '20';
         right.style.flex = '0 1 auto';
@@ -2286,8 +2286,8 @@ if(page==='index')setTimeout(editor,0);
       } else if (right) {
         clear(right, RIGHT_PROPS);
         right.style.order = '0';
-        // An empty cluster still claimed a 44 px flex line; hide it entirely so
-        // the bar is brand row + language row, not three rows.
+
+
         right.style.display = 'none';
       }
     } else {
@@ -2308,9 +2308,9 @@ if(page==='index')setTimeout(editor,0);
     }
   }
   sync();
-  // The language switch is injected after this script on some routes (it had no
-  // inline style at all in the first measurement). Re-sync when it lands, not
-  // only on the next window resize.
+
+
+
   new MutationObserver(sync).observe(header, { childList: true });
   window.addEventListener('load', sync, { once: true });
   let timer = 0;

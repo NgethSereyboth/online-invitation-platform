@@ -1,14 +1,14 @@
-;/**
- * Phase 2a (V54.1) — Multi-channel delivery host dialog.
- *
- * Loaded on the dashboard / host pages. Lets the host pick channels (email
- * default, SMS / WhatsApp / Telegram when env-configured), select recipients
- * from the guest list, and dispatch the invitation. Vanilla JS, bilingual
- * EN + KH.
- *
- * Surface contract:
- *   window.EInviteDeliveryDialog.open({ invitationId, document })
- */
+;
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
@@ -36,9 +36,9 @@
   const langText = (key, mode) => {
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
-    // Dashboard/editor surfaces are always switchable: emit dual spans and let
-    // the [lang]/[data-language] CSS hide the inactive one (live toggle, no
-    // re-render, form state preserved).
+
+
+
     return `<span class="i18n i18n-en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km">${esc(km)}</span>`;
   };
   const detectLang = () => (document.documentElement.lang === 'km' ? 'km' : 'en');
@@ -81,7 +81,7 @@
     const selectAll = overlay.querySelector('[data-select-all]');
     const form = overlay.querySelector('form');
 
-    // Load channels + recipients in parallel.
+
     Promise.all([
       fetch(`/api/invitations/${encodeURIComponent(invitationId)}/delivery-channels`).then((r) => r.json()),
       fetch(`/api/invitations/${encodeURIComponent(invitationId)}/guests`).then((r) => r.json()),
@@ -156,28 +156,28 @@
   }
 
   window.EInviteDeliveryDialog = { open };
-})();;/**
- * Phase 2a (V54.4) — Post-send editing badge + edit-history view.
- *
- * Two surfaces:
- *
- *   1. Public "Edited after sending" badge — mounted on the public
- *      invitation page when the host has edited the invitation after
- *      delivering it. The badge shows the timestamp of the first
- *      post-send edit and is the wedge feature against Paperless Post
- *      and Evite, both of which lock the invitation after send.
- *
- *   2. Host edit-history view — mounted on the dashboard, shows the
- *      full diff history (added/changed/removed field paths) for every
- *      post-send edit, plus a "Resend update notification" button that
- *      triggers an "invitation updated" email to already-viewed guests.
- *
- * Bilingual EN + Khmer (KH) per ROADMAP ground rule 5.
- *
- * Surface contract:
- *   window.EInviteEditHistory.mountBadge(root, { invitationId, mode, sentAt, editedAfterSendAt })
- *   window.EInviteEditHistory.mountHistoryView(root, { invitationId, mode })
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   'use strict';
 
@@ -209,9 +209,9 @@
   };
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // V2-UX-5 (P1-B, WCAG 3.1.2): emit lang="km" / lang="en" on every text fragment
-  // so screen readers pick the correct pronunciation engine. The Khmer span keeps
-  // the existing `khmer-text` class for CSS targeting via :lang(km) / [lang="km"].
+
+
+
   const langText = (key, mode) => {
     const en = (STRINGS[key] && STRINGS[key].en) || key;
     const km = (STRINGS[key] && STRINGS[key].km) || en;
@@ -228,14 +228,14 @@
     } catch { return ''; }
   };
 
-  /**
-   * Mount the "Edited after sending" badge on the public invitation page.
-   *
-   * The badge is rendered above the main invitation content. Clicking it
-   * scrolls to a small dialog explaining that the host updated the
-   * invitation after sending it. The badge is only rendered when
-   * ``editedAfterSendAt`` is set (i.e., the host has actually edited).
-   */
+
+
+
+
+
+
+
+
   function mountBadge(root, opts) {
     if (!root || !opts || !opts.invitationId) return;
     if (!opts.editedAfterSendAt) return;  // No post-send edits → no badge.
@@ -250,17 +250,17 @@
       <span class="edit-badge-icon" aria-hidden="true">✎</span>
       <span class="edit-badge-text">${langText('badgeLabel', mode)}${when ? ` · ${esc(when)}` : ''}</span>
     `;
-    // Insert as the first child of the root, above the cover/hero.
+
     root.insertBefore(badge, root.firstChild);
   }
 
-  /**
-   * Mount the host's full edit-history view (dashboard side).
-   *
-   * Fetches ``GET /api/invitations/{id}/edit-history`` and renders a
-   * chronological list of edits with the diff (added/changed/removed
-   * field paths) plus a "Resend update notification" button.
-   */
+
+
+
+
+
+
+
   function mountHistoryView(root, opts) {
     if (!root || !opts || !opts.invitationId) return;
     const invitationId = opts.invitationId;
@@ -290,7 +290,7 @@
       } else {
         list.innerHTML = entries.map(renderEntry).join('');
       }
-      // Enable the resend button only when there is at least one post-send edit.
+
       const canResend = !!(data && data.sentAt && entries.length);
       resendBtn.disabled = !canResend;
     }).catch(() => {
@@ -351,23 +351,23 @@
 })();
 
 
-/* Mounted here instead of in a page-level inline <script>: the server sends
-   `script-src 'self'` with no nonce or hash list, so the edit history mount block was refused
-   outright and logged a CSP violation on every dashboard load. This module is already part
-   of bundle-dashboard.js, so moving the mount into it adds no request and no script tag.
-   The block below is byte-for-byte the inline block it replaces. */
-// Mount edit-history view for the active invitation (V2-UX-3, ROADMAP-V2 §3.3).
-// Placed AFTER the editor area (the dashboardView + create dialogs) and BEFORE
-// the signup-sheets + polls panels inside <main>, so the host sees the diff
-// history between the editor and the guest-feature panels. Shares the same
-// invitation-id resolver chain as ux-1/ux-2 so all panels see the same active
-// invitation. Wires window.EInviteEditHistory.mountHistoryView (which renders
-// its own <section> with header + intro + resend button + diff list) plus
-// mountBadge (which renders the "Edited after sending · <timestamp>" badge
-// above the mount when the host has actually edited after sending). The
-// editedAfterSendAt timestamp is fetched once from the edit-history endpoint
-// (the same endpoint the history view itself uses) and surfaced via the
-// badge + the #edit-history-meta line at the top of the panel.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function () {
   function resolveInvitationId() {
     if (window.EINVITE_INVITATION_ID) return String(window.EINVITE_INVITATION_ID);
@@ -422,8 +422,8 @@
     var badgeEl = document.getElementById('edited-after-send-badge');
     var metaEl = document.getElementById('edit-history-meta');
     if (!mountEl || !badgeEl) return;
-    // Static mode (no application server): both the history view and the badge
-    // read /api/invitations/{id}/edit-history, so skip both fetches.
+
+
     if (window.EInviteBackend && !window.EInviteBackend.isAvailable()) { panel.hidden = true; return; }
     if (!window.EInviteEditHistory || typeof window.EInviteEditHistory.mountHistoryView !== 'function') {
       console.warn('EInviteEditHistory not available — edit-history panel will not mount.');
@@ -437,14 +437,14 @@
     }
     panel.hidden = false;
     var mode = detectMode();
-    // (1) Mount the history view — it renders its own <section> with header +
-    // intro + resend-notification button + diff list inside #edit-history-mount.
+
+
     try {
       window.EInviteEditHistory.mountHistoryView(mountEl, { invitationId: invitationId, mode: mode });
     } catch (e) { console.warn('edit-history mount failed', e); }
-    // (2) Fetch the same endpoint to get sentAt + editedAfterSendAt so we can
-    // render the badge + the meta line at the top of the panel. The history
-    // view does its own fetch for the diff list; this one is for the badge.
+
+
+
     try {
       fetch('/api/invitations/' + encodeURIComponent(invitationId) + '/edit-history', {
         headers: { Accept: 'application/json' }

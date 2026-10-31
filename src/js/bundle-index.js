@@ -22,8 +22,8 @@ function message(target,text='This feature requires the full application server.
  if(host)host.replaceChildren(box);else document.body.append(box);return box
 }
 function disable(root=document){root.querySelectorAll('[data-server-only],button.server-only,a.server-only').forEach(el=>{el.setAttribute('aria-disabled','true');if('disabled'in el)el.disabled=true;el.title='This feature requires the full application server.'})}
-/* Session probe — one cached /api/auth/me per load (inventory A1); lets modules tell
-   "nobody signed in" from "server down" without a 401 (signed-out always 200 {"user":null}). */
+
+
 let sessionPromise=null;
 function session(){
  if(!sessionPromise){sessionPromise=ready.then(()=>{if(!isAvailable())return null;
@@ -33,9 +33,9 @@ function session(){
 function hasSession(){return session().then(Boolean)}
 window.EInviteBackend={state,ready,isAvailable,staticUrl,message,disable,session,hasSession,onChange(fn){listeners.add(fn);return()=>listeners.delete(fn)}};
 
-/* Signed-out request guard (inventory A1): the allowlist is measured (artifacts/probe_api_calls.mjs) —
-   only /api/health and /api/auth/me answer 200 signed out; guest-reachable writes and /api/auth/* stay
-   open. Offline never blocks, and login/logout invalidates the cached probe. */
+
+
+
 var SIGNED_OUT_ALLOWED=[
  /^\/api\/health$/,
  /^\/api\/auth\//,
@@ -45,9 +45,9 @@ var SIGNED_OUT_ALLOWED=[
 ];
 var SESSION_CHANGES=/^\/api\/auth\/(login|logout|logout-all|register|verify|reset|reset-confirm|password)$/;
 
-/* demo-wedding / local-.* ids have no server counterpart (app.js, dashboard.js, guests.js,
-   responses.js, navigation-history.js); the shell answers them 404 locally instead of 8 console
-   errors per load. */
+
+
+
 var LOCAL_ID=/^(demo-|local-)/;
 function refsLocalId(url){
  var m=/^\/api\/invitations\/([^/]+)/.exec(url.pathname);
@@ -78,8 +78,8 @@ if(nativeFetch){
 }
 })();
 
-/* Pre-paint language bootstrap (same block core/theme.js runs on the other routes; public.html
-   does not load theme.js — measured in the km topbar-active review). Idempotent. */
+
+
 (function(){try{var el=document.documentElement,lang=localStorage.getItem('einvite-lang');
 if(!lang){var nav=navigator.language||(navigator.languages&&navigator.languages[0])||'';lang=nav.toLowerCase().indexOf('km')===0?'km':'en'}
 el.lang=lang}catch(e){}})();;(()=>{'use strict';
@@ -97,23 +97,23 @@ window.addEventListener('beforeunload',cleanup,{once:true});
 window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get closed(){return closed}};
 })();;(() => {
   'use strict';
-  // route-deferred-loader — injects the per-route deferred chunk after
-  // first paint. Bundled at the head of each route bundle, it derives the
-  // deferred bundle name from its own <script> URL (bundle-<page>.js →
-  // bundle-<page>-deferred.{js,css}) so no HTML/inline script is needed
-  // (CSP: script-src 'self'). The deferred chunk is loaded on browser idle or
-  // on the first user interaction, whichever comes first, so on-demand
-  // modules never delay first paint or the route-weight budget.
+
+
+
+
+
+
+
   if (window.EInviteDeferredRouteLoaderV15) return;
-  // `ready` resolves once the deferred chunk has been evaluated (or failed to
-  // load), so consumers that lazily mount a deferred module can retry on it.
+
+
   let resolveReady;
   const ready = new Promise((res) => { resolveReady = res; });
   window.EInviteDeferredRouteLoaderV15 = { version: '15', ready };
   const current = document.currentScript;
   const src = (current && current.src) || '';
-  // The lazy stem plus the optional `-deferred` suffix means the deferred
-  // chunk's own URL cannot be mistaken for a route bundle's.
+
+
   const match = /bundle-([A-Za-z0-9_-]+?)(?:-deferred)?\.js/.exec(src);
   if (!match) { resolveReady(); return; }
   const prefix = src.slice(0, src.lastIndexOf('/') + 1);
@@ -137,42 +137,42 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
   for (const type of ['pointerdown', 'keydown', 'touchstart']) {
     window.addEventListener(type, start, { once: true, passive: true, capture: true });
   }
-})();;/*! core/i18n.js — EInvite global i18n resolver (FOIL-safe, synchronous)
- * v0.68.3 (ROADMAP-v0.54-to-v1.0 §4.1)
- *
- * Responsibilities:
- *   - Source of truth for UI language = <html lang>.
- *   - Persisted to localStorage key `einvite-lang` ('en'|'km').
- *   - First-visit default: navigator.language starts with `km` -> Khmer, else English.
- *   - Exposes EInviteI18n.get()/set()/t()/langText()/subscribe().
- *   - Backwards-compatible alias EInviteI18N.getLocale() (the 23 page modules already
- *     call window.EInviteI18N?.getLocale?.(); this makes them resolve through the
- *     single resolver instead of falling back to <html lang>).
- *   - Dispatches a synchronous `einvite:lang-changed` CustomEvent on <html> so any
- *     bilingual surface can re-render, and notifies subscribers.
- *   - Injects a bilingual language switch into every <header> (shared header + the
- *     editor app-bar). The switch itself is the one place both languages coexist.
- *   - Walks [data-en][data-km] form fields and sets placeholder/aria-label to the
- *     active language (text labels are handled by the .i18n-en/.i18n-km CSS hiding
- *     convention, no JS needed there).
- *
- * This file is designed to be the FIRST script in every page bundle (it is listed
- * first in earlyScripts and as the first entry of each page's `scripts`). It runs
- * synchronously in <head> (bundles are loaded blocking in <head>) so <html lang> is
- * correct before first paint -> no FOIL flash of both languages. Every public
- * method is guarded so a missing DOM / storage / navigator never throws.
- */
+})();;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   "use strict";
-  // Guard against double-injection (earlyScripts + per-page scripts, or a future
-  // head <script src>).
+
+
   if (global.EInviteI18n && global.EInviteI18N && global.EInviteI18N.version) return;
   if (global.EInviteI18n && global.EInviteI18n.version >= 1) return;
 
   var doc = global.document;
   var STORAGE_KEY = "einvite-lang";
 
-  // --- Language detection ----------------------------------------------------
+
   function navigatorLang() {
     try {
       var nav = global.navigator && global.navigator.language;
@@ -206,13 +206,13 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     } catch (e) { /* noop */ }
   }
   function get() {
-    // Persisted user choice wins; otherwise the live <html lang> wins (set by the
-    // public page observer, the head inline, or the previous switch click); finally
-    // the navigator default.
+
+
+
     return persistedLang() || htmlLang();
   }
 
-  // --- Persistence + notification -------------------------------------------
+
   var subscribers = [];
   function persist(lang) {
     try { global.localStorage && global.localStorage.setItem(STORAGE_KEY, lang); }
@@ -229,19 +229,19 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     for (var i = 0; i < subscribers.length; i++) {
       try { subscribers[i](lang, get); } catch (e) { /* keep other subscribers alive */ }
     }
-    // Re-sync every injected language switch after a real language change.
-    // The `einvite:lang-changed` event re-runs boot()->injectSwitches(), but
-    // injectSwitches() skips any <header> that already holds a switch, so
-    // without this refresh the buttons' aria-pressed / active class stay frozen
-    // at the pre-click value and read as inverted on the now-inactive button.
-    // syncSwitch(null, lang) covers all switches across all <header> elements.
+
+
+
+
+
+
     syncSwitch(null, lang);
   }
 
-  // --- Form-field helper (placeholder/aria-label for [data-en][data-km]) ----
-  // Text labels (label/span/button/h2/th) are NOT touched here: the
-  // `.i18n-en`/`.i18n-km` CSS convention hides the inactive span, so no JS is
-  // needed for them and they re-render live on toggle via CSS.
+
+
+
+
   function applyFormFields(root) {
     var scope = root || doc;
     if (!scope.querySelectorAll) return;
@@ -260,16 +260,16 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     }
   }
 
-  // --- Language switch injection (into every <header>) ----------------------
+
   function escHTML(v) {
     return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
       return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
     });
   }
-  // Ids must be unique in a document, and this switch is injected into every <header> — the editor
-  // route has six of them (measured: six #lang-km / #lang-en pairs, two of them visible) and
-  // dashboard two. Only the first copy claims the ids; every copy carries `data-lang`, which is what
-  // the delegated click handler and `syncSwitch` use.
+
+
+
+
   var switchCount = 0;
   function makeSwitch() {
     var first = switchCount === 0;
@@ -296,12 +296,12 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       b.classList.toggle("active", on);
     }
   }
-  // One delegated listener instead of one per injected switch. The editor rebuilds its header
-  // (studio topbar, organizeHeader()) after load, so a per-node listener could end up on a node
-  // nobody sees while the visible copy — a re-rendered clone of the same markup — had none: clicking
-  // ខ្មែរ on index.html changed nothing at all (measured: no state change, no navigation, no visible
-  // Khmer copy, while the same button switched languages on the other 15 routes). Delegation
-  // survives re-renders and duplicate mounts.
+
+
+
+
+
+
   var delegated = false;
   function onLanguageClick(e) {
     var target = e.target;
@@ -317,9 +317,9 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
-      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
-      // check, command palette) is a layout heading, not the app bar, and the injected switch
-      // landed in the middle of those panels. Clean up any copy injected before this guard.
+
+
+
       if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
         var stray = h.querySelector(".language-switch");
         if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
@@ -337,10 +337,10 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     try { injectSwitches(); } catch (e) { /* keep going */ }
     applyOptions();
   }
-  // <option> label rewrite: core/i18n-options.js (route-scoped, FB-03).
+
   function applyOptions() { try { EInviteI18n.applyOptionLabels(); } catch (e) { /* keep going */ } }
 
-  // --- Public resolver -------------------------------------------------------
+
   var EInviteI18n = {
     version: "1.0",
     STORAGE_KEY: STORAGE_KEY,
@@ -348,24 +348,24 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     getLocale: get, // backward-compat: EInviteI18N?.getLocale()
     set: function (lang) {
       lang = lang === "km" ? "km" : lang === "en" ? "en" : navigatorLang();
-      // If the language isn't actually changing, just (re)sync the DOM attribute
-      // and form fields so a forced re-render is idempotent.
+
+
       if (get() === lang) { applyHtmlLang(lang); applyFormFields(); applyOptions(); return lang; }
       emit(lang);
       applyFormFields();
       applyOptions();
       return lang;
     },
-    // t(key, STRINGS, params?) — STRINGS is a {en:{...},km:{...}} (per-locale) table.
-    // Optional {token:value} params are substituted as {token} -> value.
+
+
     t: function (key, strings, params) {
       var lang = get();
       var dict = (strings && (strings[lang] || strings.en)) || {};
       var s = dict[key];
       if ((s === undefined || s === null) && strings && strings.en) s = strings.en[key];
       if (s === undefined || s === null) s = key;
-      // Function-valued entries (pageLabel(n), pinLabel(n)) are invoked with the
-      // caller args; their own template fills the positional values.
+
+
       if (typeof s === "function") { try { return s(params); } catch (e) { return key; } }
       s = String(s);
       if (params && typeof params === "object" && !Array.isArray(params)) {
@@ -376,10 +376,10 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       }
       return s;
     },
-    // Backward-compatible langText('en','km',mode) inline shape.
-    // 'en'/'km' force a language; anything else (both/guest/host/undefined)
-    // renders both spans — the live <html lang> / [data-language] CSS hides the
-    // inactive one, so the switch updates the page instantly without re-render.
+
+
+
+
     langText: function (en, km, mode) {
       var kmv = km != null ? km : en;
       if (mode === "en") return '<span class="i18n i18n-en">' + escHTML(en) + '</span>';
@@ -387,11 +387,11 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
       return '<span class="i18n i18n-en">' + escHTML(en) + '</span>' +
              '<span class="i18n i18n-km khmer-text" lang="km" lang="km">' + escHTML(kmv) + '</span>';
     },
-    // NW-4.1 note: <option> elements cannot hold the .i18n-en/.i18n-km span
-    // convention (the HTML parser strips elements inside <option>), so their
-    // bilingual labels ride on data-i18n-en / data-i18n-km attributes rewritten
-    // by applyOptionLabels — now route-scoped in core/i18n-options.js (FB-03).
-    // The guarded calls above resolve to it only on routes that include it.
+
+
+
+
+
     subscribe: function (fn) {
       if (typeof fn === "function" && subscribers.indexOf(fn) === -1) subscribers.push(fn);
       return function () {
@@ -402,8 +402,8 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
   };
 
   global.EInviteI18n = EInviteI18n;
-  // Alias the uppercase name that 15 pre-existing modules already call via
-  // `window.EInviteI18N?.getLocale?.()` so they resolve through this resolver.
+
+
   global.EInviteI18N = {
     version: "1.0",
     getLocale: get,
@@ -411,42 +411,42 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     t: EInviteI18n.t,
   };
 
-  // Listen for external language changes (e.g. the public page's per-invitation
-  // observer writing <html lang> from root[data-language]) so the switch and
-  // form fields stay in sync.
+
+
+
   try {
     doc.addEventListener("einvite:lang-changed", boot);
   } catch (e) { /* noop */ }
 
-  // --- Synchronous init (runs in <head> before first paint) ------------------
+
   var initLang = persistedLang() || navigatorLang();
   applyHtmlLang(initLang);
   applyFormFields();
   if (doc && doc.addEventListener) {
     doc.addEventListener("DOMContentLoaded", boot);
-    // If the bundle is injected after parse, DOMContentLoaded may have already
-    // fired; boot immediately as a safety net.
+
+
     if (doc.readyState === "interactive" || doc.readyState === "complete") {
       boot();
     }
   }
-})(typeof window !== "undefined" ? window : this);;/*! core/khmer-format.js — Khmer numerals and locale-safe date/number formatting
- * LT-2.2 (OD-29), 2026-10-25.
- *
- * Pure, dependency-free helpers used by the guest page and the editor:
- *   - toKhmerDigits / toLatinDigits: digit conversion from Unicode code points.
- *     Khmer digits are generated with String.fromCodePoint(0x17E0 + n); no Khmer
- *     character is written into this file.
- *   - formatDate: Intl.DateTimeFormat with an explicit locale, optional Khmer
- *     digits (`nu-khmr`) and optional Buddhist Era calendar (`ca-buddhist`).
- *     A build without Khmer ICU data falls back to English month names, then
- *     converts the digits itself so the numeral setting still holds.
- *   - formatTime / formatNumber: the same numeral choice for clock labels and
- *     countdown values.
- *
- * The module never mutates stored invitation text. The editor command calls
- * toKhmerDigits() on the selected text only when the user runs it.
- */
+})(typeof window !== "undefined" ? window : this);;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (function (global) {
   'use strict';
 
@@ -498,8 +498,8 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     }
     const text = String(value == null ? '' : value).trim();
     if (!text) return null;
-    // Date-only values are calendar dates; parse them in local time so the
-    // displayed day never shifts with the server's timezone.
+
+
     const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
     if (dateOnly) return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
     const parsed = new Date(text);
@@ -558,25 +558,20 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     numerals: numeralsChoice
   });
 })(typeof window !== 'undefined' ? window : globalThis);;(()=>{let p,a='performance-observability.js,interaction-scheduler.js,incremental-scene-renderer.js,render-worker-bridge.js,professional-workflow.js,navigation-history.js,style-history.js,asset-workflow.js,photo-workflow.js,photo-style-library.js,review.js,direct-manipulation.js,content-browser.js,smart-layout.js,brand-components.js,collaboration-v24.js,export-quality.js,adaptive-templates.js,studio-governance.js,print-readiness.js,template-bindings.js,studio-operations.js,studio-automation.js'.split(',');
-/* Preload the whole chain before the first script is appended.
-   Measured, the serial chain used to spend more wall clock waiting than
-   transferring: `tools/module-loading-strategy.mjs` measured a 3174 ms chain
-   span against 1346 ms of transfer, i.e. 1828 ms spent waiting for the previous
-   script to finish before the next fetch even started. Declaring each fetch as
-   `<link rel=preload as=script>` starts the transfers as soon as the loader runs
-   and costs no extra bytes — these are the same 23 URLs, fetched the same number
-   of times, only earlier. Execution is still strictly one script at a time and in
-   this order, because the chain below is unchanged: each script is appended only
-   after the previous `onload`.
-   The declaration is skipped on a connection that asks to save data, where 23
-   overlapping fetches would compete with the critical path for no benefit. */
+
+
+
+
+
+
+
+
+
+
+
+
 try{if(!navigator.connection||!navigator.connection.saveData){for(const n of a){const l=document.createElement('link');l.rel='preload';l.as='script';l.href=n;document.head.append(l)}}}catch(e){}
-EInvitePerformanceReady=()=>p??=a.reduce((p,n)=>p.then(()=>new Promise((r,j)=>{let s=document.createElement('script');s.src=n;s.onload=r;s.onerror=j;document.head.append(s)})),Promise.resolve()).catch(()=>0);EInvitePerformanceReady()})();
-/* v54 refactor: `workspace-experience-v24.js` was removed from this deferred
-   list because its functionality now ships in the main index bundle as
-   `editor/editor-core.js` (a documented, consolidated port). The bundled
-   editor-core.js also claims `window.EInviteWorkspaceExperience` so any stray
-   late copy no-ops, preventing duplicate canvas chrome. */;(()=>{
+EInvitePerformanceReady=()=>p??=a.reduce((p,n)=>p.then(()=>new Promise((r,j)=>{let s=document.createElement('script');s.src=n;s.onload=r;s.onerror=j;document.head.append(s)})),Promise.resolve()).catch(()=>0);EInvitePerformanceReady()})();;(()=>{
 'use strict';
 if(window.EInviteCommandRegistry)return;
 const PROFILE_KEY='einvite-shortcut-profile-v23';
@@ -634,9 +629,9 @@ function adjustZoom(delta){return setZoom(Math.max(.1,Math.min(5,(window.EInvite
 function activateTool(tool){if(window.EInviteToolController?.setTool)return window.EInviteToolController.setTool(tool);return clickNative(`[data-tool="${CSS.escape(tool)}"]`)}
 function toggleSelectedFlag(key){const ids=selected();if(!ids.length)return false;const state=window.EInviteEditorBridge?.getState?.(),canvasId=window.EInviteEditorBridge?.getActiveCanvasId?.()||'hero';let map=state?.objects||{};if(canvasId!=='hero'){const page=(state?.designPages||[]).find(p=>`page:${p.id}`===canvasId);map=page?.objects||{}}const all=ids.every(id=>key==='visible'?map[id]?.visible!==false:map[id]?.[key]===true);return pro('setObjectFlag',ids,key,!all)}
 function closeTopLayer(){
-// The design-check modal is a div[role=dialog] owned by studio-experience, so it is not covered by
-// the dialog[open] branch below and was ranked after the selection branch: Esc cleared the canvas
-// selection first and left the open modal untouched. Ask its owner before anything else closes.
+
+
+
 if(window.EInviteDesignCheck?.isOpen?.()){window.EInviteDesignCheck.close();return true}
 if(window.EInviteProfessionalEditor?.commands?.cancelInteraction?.())return true;
 if(window.EInviteProfessionalWorkflow?.transform?.active){window.EInviteProfessionalWorkflow.transform.cancel();return true}
@@ -648,18 +643,18 @@ const context=$('.ui-context-menu:not([hidden]),.ei-context-menu:not([hidden]),#
 const flow=$('#workflowV6Flow.open');if(flow){flow.classList.remove('open');return true}
 const position=$('#workflowV6Position.open');if(position){position.classList.remove('open');return true}
 const moreMenu=$('.canvas-header-more-menu:not([hidden])');if(moreMenu){moreMenu.hidden=true;const moreTrigger=$('.canvas-header-more-trigger');moreTrigger?.setAttribute('aria-expanded','false');if(moreMenu.contains(document.activeElement)||document.activeElement===moreTrigger)moreTrigger?.focus();return true}
-// An active drawing tool is a mode the editor owns, so the ladder has to own it too: without this
-// branch Escape was consumed while the tool stayed active (measured: the rect tool was still
-// `rect` after the key, and nothing else had closed), which reads as a broken key. Ranked above the
-// inspector and the selection because a mode is the most transient thing on screen.
+
+
+
+
 const drawTool=window.EInviteToolController?.activeTool;if(drawTool&&drawTool!=='select'&&drawTool!=='hand'){activateTool('select');return true}
-// Close through the responsive layout when it owns the drawer: its observer reads `inspector-open` as the
-// drawer state and re-adds the class on the next sync, so a bare class removal reopened the inspector.
+
+
 if(document.body.classList.contains('inspector-open')){if(window.EInviteResponsiveLayout?.closeInspector)window.EInviteResponsiveLayout.closeInspector();else document.body.classList.remove('inspector-open');return true}
-// The creation drawer is the left pane on the mobile layout (<=820px). Its open state is the same kind of
-// transient drawer as the inspector, and the only way to close it was the sidebar toggle. Measured at 700px:
-// the drawer stayed open after Escape. Only on the mobile layout, where the drawer really is a drawer; at
-// compact widths the pane is always visible, so consuming the key there would hide nothing.
+
+
+
+
 if(window.EInviteResponsiveLayout?.mode?.()==='mobile'&&document.body.dataset.editorDrawer==='creation'&&window.EInviteResponsiveLayout.closeCreation){window.EInviteResponsiveLayout.closeCreation();return true}
 if(selected().length){window.EInviteEditorBridge?.select?.([]);return true}
 return false;
@@ -729,12 +724,12 @@ const command=commands.get(id);if(!command)return;if((id==='canvas.panHold'||id.
 const typing=isTypingTarget(event.target);if(typing&&!command.allowWhileTyping)return;
 if(event.repeat&&!command.repeatable)return;
 const state=commandState(command,context(event));if(!state.enabled)return;
-// `ui.escape` is the dismiss ladder and the only command registered with `consumeOnlyWhenHandled`.
-// A ladder that consumed Escape even when it had nothing of its own to close made every other
-// Escape owner in the app unreachable, because this listener is capture-phase on `window` and sits
-// above all of them: measured — the toolbar's `<details>` popover stayed open, and no listener
-// downstream of here ever saw the key (`saw: []`). So the ladder runs first and the event is only
-// consumed when it actually closed something.
+
+
+
+
+
+
 if(command.consumeOnlyWhenHandled){
 let handled=false;try{handled=command.run(context(event))!==false}catch(error){console.error('[V23 command]',id,error)}
 notify('executed',{commandId:id,result:handled});
@@ -925,21 +920,21 @@ function fit(outer,model={},options={}){
  if(!outer)return null;ensureFlow(outer);applyToElement(outer,model);
  if(model.textAutoFit!=='fit'){delete outer.dataset.textComputedFontSize;return measurement(outer)}
  const available=availableSpace(outer);if(available.width<2||available.height<2)return measurement(outer);
- // Autofit is a 16-step search, and every step writes font-size and then reads
- // layout, i.e. one forced document style recalculation per step. The search is
- // a pure function of (available box, model), so when neither has changed it
- // would return exactly the value it returned last time: reuse that value and
- // pay one measurement instead of sixteen. The key includes the whole model, so
- // any edit that could move the result still recomputes.
+
+
+
+
+
+
  const fitKey=`${Math.round(available.width)}x${Math.round(available.height)}|${options.set===false?'probe':'apply'}|${JSON.stringify(model)}`;
  const fitCached=outer.__typographyFitCache;
  if(fitCached&&fitCached.key===fitKey){
-  // A hit still has to leave the DOM in the fitted state. applyToElement runs
-  // on every pass (modelFor in the editor), which resets the inline font-size
-  // to the auto-fit maximum; skipping the rewrite here left the element at max
-  // size with the fitted value only in the dataset, and the final state became
-  // dependent on whether a cache miss happened to come last (FB-29 race: the
-  // title rendered at 88px on some loads, 41.6px on others, same seed).
+
+
+
+
+
+
   outer.style.fontSize=`${fitCached.result.computedSize}px`;
   outer.dataset.textComputedFontSize=String(fitCached.result.computedSize);
   return{...fitCached.result};
@@ -968,27 +963,27 @@ function assertRenderedClusterIntegrity(outer,locale='km'){const result=rendered
 function installResponsive(root=document,options={}){
  const scope=root||document,selector=options.selector||'[data-text-auto-fit="fit"],[data-typography-model-version]',targetFor=options.targetFor||((source)=>source),modelFor=options.modelFor||((target)=>target?.__typographyModel||null),onResult=options.onResult||(()=>{}),delay=Math.max(0,Number(options.delay??48)),events=options.events||[],sources=new Set(),timers=new Map();
  const boxKey=node=>{const rect=node.getBoundingClientRect();return `${Math.round(rect.width)}x${Math.round(rect.height)}`};
- // `run` writes typography sizing onto the element it measures, so the element's
- // own box changes as a result of being fitted. Recording the box the fit left
- // behind is what lets the ResizeObserver below tell "the fit moved this box"
- // (already handled) from "something outside resized it" (must re-fit).
+
+
+
+
  const run=source=>{if(!source?.isConnected)return null;const target=targetFor(source);if(!target)return null;const model=modelFor(target,source);if(!model)return null;target.__typographyModel=model;const result=fitAndDiagnose(target,model);source.__typographyFitBox=boxKey(source);onResult(result,target,source,model);return result};
  const schedule=source=>{if(!source)return;clearTimeout(timers.get(source));timers.set(source,setTimeout(()=>{timers.delete(source);run(source)},delay))};
- // An unconditional re-schedule here is a self-triggered loop: the fit changes
- // the measured box, the observer reports that change, the fit runs again.
- // Measured on index.html before this change, the loop produced 74 refits worth
- // 457 ms of style recalculation plus 37 re-installations of the controller.
- // A box this element has already been fitted at is not new information, so it
- // is skipped; a genuine resize or a font swap still changes the box and still
- // re-fits. The convergence is at most one extra pass.
+
+
+
+
+
+
+
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(entries=>entries.forEach(entry=>{const source=entry.target;const rect=entry.contentRect;const key=`${Math.round(rect.width)}x${Math.round(rect.height)}`;if(source.__typographyFitBox===key)return;source.__typographyFitBox=key;schedule(source)})):null;
  const observe=(source,model)=>{if(!source)return source;sources.add(source);const target=targetFor(source);if(model&&target)target.__typographyModel=model;observer?.observe(source);return source};
- // `observe`'s second parameter is the caller's model, not a callback payload: passing it to
- // `forEach` directly handed it the array INDEX, so every element after the first cached a
- // number as its typography model. `modelFor` returns that cache first, so the fit pass then
- // applied a blank model (font-size 32, textAutoFit none) and text stopped being fitted at all
- // — the guest page rendered 33 of 34 pack text objects unfitted and clipped. Call it without
- // the extra arguments; nothing else about discovery changes.
+
+
+
+
+
+
  const discover=()=>{scope.querySelectorAll?.(selector).forEach(source=>observe(source));return sources};
  discover();sources.forEach(run);
  const fontDone=()=>sources.forEach(schedule);document.fonts?.ready?.then(fontDone).catch(()=>{});document.fonts?.addEventListener?.('loadingdone',fontDone);
@@ -2279,8 +2274,8 @@ function buildDialog({title='Please confirm',message='',icon='✦',input=false,v
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
   dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
   dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  // A short "Poster title:" style prompt is the field's label, not a second
-  // heading above a generic "Value" label. Long instructions stay as help text.
+
+
   const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
   const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
   let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
@@ -2291,19 +2286,19 @@ function uiPrompt(message,defaultValue='',options={}){return new Promise(resolve
 function uiAlert(message,options={}){toast(message,{...options,type:options.type||(/error|failed|invalid|could not|unable/i.test(String(message))?'error':options.type)});return Promise.resolve()}
 window.uiToast=window.uiToast||toast;window.uiAlert=uiAlert;window.uiConfirm=uiConfirm;window.uiPrompt=uiPrompt;
 window.alert=(message)=>{uiAlert(message)};
-// Custom-units engine (owner decision, CANVA-UI §5, accepted 2026-10-20): the
-// poster size prompts accept px (default), in, cm — plus inch/inches and ft —
-// converting at 96 px per CSS inch (cm via 96/2.54). Shared by the editor
-// custom canvas-size prompt (app.js) and the Template Studio custom poster
-// size prompt (templates.js); lives here because both route bundles already
-// load ui-dialogs.js before their consumer modules.
+
+
+
+
+
+
 window.EInvitePosterUnits=Object.freeze({
  PX_PER:{in:96,cm:96/2.54,ft:1152},
  parse(value){
   const s=String(value||'').toLowerCase().replace(/×|,|\]/g,'x');
   const m=/(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?\s*x\s*(\d+(?:\.\d+)?)\s*(in|inch|inches|"|cm|centimeters?|ft|feet|')?/.exec(s);
   if(!m)return null;
-  // "24 x 36 in" — one trailing unit applies to BOTH sides; two units stay per-side.
+
   return {w:m[1],wu:m[2]||m[4],h:m[3],hu:m[4]||m[2]};
  },
  toPx(number,unit){
@@ -2493,11 +2488,11 @@ window.EInvitePosterUnits=Object.freeze({
  const explicitId=routeId||queryId||'';
  const section=routeMatch?.[2]?.toLowerCase()||'';
  const safe=id=>String(id||'').trim();
- // Local/demo ids (`demo-wedding` is the app's "nothing selected" fallback, `local-draft` the
- // unsaved editor draft) have no server counterpart. Remembering one used to make every later page
- // resolve it as if it were a real invitation: the signed-in editor asked the server for
- // /api/invitations/demo-wedding plus its comments/approvals/review-context/studio-release and the
- // four /api/studio/* routes — eight 404s per load. The remembered value is now ignored and purged.
+
+
+
+
+
  const isLocalId=id=>/^(demo-|local-)/i.test(safe(id));
  function getInvitationId(options={}){
    const direct=safe(explicitId);if(direct)return direct;
@@ -2580,10 +2575,10 @@ function scheduleTextFit(items=$$('.object[data-text-auto-fit="fit"]')){const li
 function initializeV19Typography(){
 typographyLayoutController?.disconnect?.();
 typographyLayoutController=TypographyLayoutService.installResponsive($('#stage')||document,{selector:'.object[data-text-auto-fit="fit"],.object[data-typography-model-version]',targetFor:object=>object?.querySelector?.('.content'),modelFor:(content,object)=>applyTypographyLayout(object,content),onResult:(result,content,object,model)=>{const changed=syncTypographyLayoutResult(result,content,object,model);if(changed&&$('#typographyV19State'))$('#typographyV19State').textContent='Text refitted for the current layout and loaded fonts.'},events:['einvite:professional-command-committed','einvite:state-applied'],observeMutations:true});
-// v54: expose the responsive controller so AutoFitGuard (editor-core.js) can
-// patch its schedule/refit methods to suppress auto-fit during resize/rotate
-// drags and on selection (bugs #1 & #2). Without this, the controller is a
-// module-local variable and the guard cannot reach it.
+
+
+
+
 window.typographyLayoutController=typographyLayoutController;
 requestAnimationFrame(()=>typographyLayoutController.refresh())
 }
@@ -2824,15 +2819,15 @@ return''
 function gregorianNumerals(){const control=$('#khmerNumerals');return (control?control.checked===true:state.settings?.khmerNumerals===true)?'khmr':'latn'}
 function localizedTime(value){return window.EInviteKhmerFormat?EInviteKhmerFormat.formatTime(value,{numerals:gregorianNumerals()}):value}
 function gregorianLabel(fields){
-// LT-2.2 (OD-29): core/khmer-format.js owns the numeral and era choice. Its
-// English fallback keeps month names readable on a build without Khmer ICU data.
+
+
 if(window.EInviteKhmerFormat)return EInviteKhmerFormat.formatDate(fields.date,{lang:document.documentElement.lang==='km'?'km':'en',numerals:gregorianNumerals()});
 let date=new Date(fields.date+'T00:00:00');
 if(isNaN(date))return fields.date;
-// LT-1.4 (V2): `undefined`/`km-KH` on a build with filtered ICU data returns the
-// raw pattern ("2026 M12 27"). Ask for the page's language explicitly and fall
-// back to English when this build cannot format it; the browser supplies the
-// month names (no hand-written Khmer here).
+
+
+
+
 let wanted=document.documentElement.lang==='km'?'km-KH':'en-US',locale=wanted;
 try{if(!Intl.DateTimeFormat.supportedLocalesOf([wanted]).length)locale='en-US'}catch{}
 return date.toLocaleDateString(locale,{
@@ -2843,8 +2838,8 @@ function clampPosterSize(width,height){
  const w=Math.max(200,Math.min(4000,Math.round(Number(width)||390))),h=Math.max(200,Math.min(4000,Math.round(Number(height)||844)));
  return {width:w,height:h}
 }
-// Poster docs (docs with a posterCanvas {width,height}) size the #stage in px.
-// Percent-positioned objects keep working: they resolve against the stage box.
+
+
 function normalizePosterDocument(doc){
  if(!doc||typeof doc.posterCanvas!=='object'||!doc.posterCanvas)return doc;
  const size=clampPosterSize(doc.posterCanvas.width,doc.posterCanvas.height);
@@ -2932,9 +2927,9 @@ return normalizePosterDocument(doc)
 }
 let pendingCoalescedCommand=null,activeUndoTransaction=null;
 function settleGestureHistory(before){
-// The stack top may be an older snapshot of this same pre-gesture document, e.g. the
-// open-time baseline taken before the first render normalised the document. Replace it
-// with the exact pre-gesture snapshot so one gesture costs exactly one history entry.
+
+
+
 const top=undoStack.at(-1);
 if(!top)undoStack.push(before);
 else if(historyDocumentFingerprint(top)!==historyDocumentFingerprint(before))undoStack[undoStack.length-1]=before;
@@ -2950,15 +2945,15 @@ function beginUndoTransaction(label){
 }
 function flushCoalescedCommand(){const pending=pendingCoalescedCommand;if(!pending)return false;clearTimeout(pending.timer);pendingCoalescedCommand=null;save({history:false,capture:pending.capture!==false});pushHistory(state);window.dispatchEvent(new CustomEvent('einvite:editor-command',{detail:{label:pending.label,before:pending.before,after:clone(state),coalesced:true}}));return true}
 function scheduleCoalescedFlush(delay=450){if(!pendingCoalescedCommand)return;clearTimeout(pendingCoalescedCommand.timer);pendingCoalescedCommand.timer=setTimeout(flushCoalescedCommand,Math.max(80,Number(delay)||450))}
-// Server document boot-choice fixes (poster-flow bug, owner decision implemented
-// 2026-10-20): with a cached sovan-server-invite:* and no local draft, the editor
-// used to boot on the Wedding `initial` default and never adopt the stored server
-// document — eventType/posterCanvas were lost and poster detection never fired.
+
+
+
+
 function serverDocumentToAdopt(){
  const cached=serverInvite&&serverInvite.document&&typeof serverInvite.document==='object'?clone(serverInvite.document):null;
  const draft=inviteStore.read(draftKey,null);
- // Adopt the cached server document only when there is no local draft (the draft
- // is always more recent than the cache) — keeps offline work intact.
+
+
  return draft?null:cached
 }
 let state=migrateDocument(serverDocumentToAdopt()||inviteStore.read(draftKey,inviteStore.read('sovan-invite-draft-v3',initial)));
@@ -3049,8 +3044,8 @@ function historyDocumentFingerprint(snapshot){
 const memo=snapshot&&typeof snapshot==='object'?historyFingerprintMemo.get(snapshot):undefined;if(memo!==undefined)return memo;
 const comparable={...(snapshot||{})};
 if(comparable.editorModel){comparable.editorModel={...comparable.editorModel};delete comparable.editorModel.selectionIds}
-// Scene projections are compatibility caches. Their volatile generation timestamps
-// must not create empty history entries, while all semantic graph data remains compared.
+
+
 if(comparable.sceneGraph&&typeof comparable.sceneGraph==='object'){comparable.sceneGraph={...comparable.sceneGraph};delete comparable.sceneGraph.updatedAt}
 if(comparable.sceneTree&&typeof comparable.sceneTree==='object'){comparable.sceneTree={...comparable.sceneTree};delete comparable.sceneTree.updatedAt}
 const fp=JSON.stringify(comparable);if(snapshot&&typeof snapshot==='object')historyFingerprintMemo.set(snapshot,fp);return fp
@@ -3364,10 +3359,10 @@ if(previousObject?.richTextModelVersion===RichTextDocumentModel.MODEL_VERSION&&(
 captured.richTextModelVersion=previousObject.richTextModelVersion;captured.richText=clone(previousObject.richText);captured.html=previousHtml;captured.text=RichTextDocumentModel.exportPlainText(previousObject.richText);
 }else Object.assign(captured,RichTextDocumentModel.normalizeObject(o.dataset.id,captured,state,{strict:false}));
 }
-// FB-96: the rich-text modules load lazily, so the first capture of a page can run
-// before `RichTextDocumentModel` exists. The DOM is plain text at that point and the
-// block above cannot run, which used to drop `richText` entirely; the lazy loader then
-// rebuilt a flat one-run model from the legacy html. Keep the stored model instead.
+
+
+
+
 if(!window.RichTextDocumentModel&&['text','decoration'].includes(state.objects[o.dataset.id]?.type)){
 const captured=state.objects[o.dataset.id],contentNode=o.querySelector('.content');
 if(previousObject?.richText&&previousObject.richTextModelVersion!=null&&contentNode?.dataset.richTextDirty!=='true'){
@@ -3388,9 +3383,9 @@ state.galleryOrder=heroGalleryOrderBeforePageCapture||[];
 if(window.EInviteEditorSchema?.syncLegacy)window.EInviteEditorSchema.syncLegacy(state);
 return state
 }
-/* LT-4.2: a scheduled write is not in the draft for ~220 ms; the guard mirrors the
-   visible "Saving…" state so a close/reload inside that window asks first.
-   `data-save-pending` is the machine-readable form (tests read it). */
+
+
+
 let pendingWrite=false;
 function setPendingWrite(value){
 pendingWrite=!!value;document.documentElement.dataset.savePending=pendingWrite?'true':'false'}
@@ -3496,11 +3491,11 @@ o.dataset.typographyResolvedSnapshot=JSON.stringify(d.typographyResolvedSnapshot
 o.dataset.colorToken=typography.colorToken||d.colorToken||'text';
 o.dataset.color=typography.color||d.color||'';
 o.dataset.objectType=d.type||(o.classList.contains('image-object')?'image':'text');
-// V25 adaptive/guest bindings are document data, not DOM data: without this the
-// state→DOM→state round-trip (apply() here and capture()) dropped
-// contentBinding, so a binding never survived a page load and the guest.*
-// binding written by template-bindings.js could not be published (research
-// §5.3, Goal 3d).
+
+
+
+
+
 o.dataset.contentBinding=d.contentBinding||'';
 o.dataset.bindingDetached=d.bindingDetached===true?'true':'false';
 o.dataset.bindingLastSyncedAt=String(d.bindingLastSyncedAt||0);
@@ -4450,10 +4445,10 @@ surface.style.borderRadius=kind==='circle'?'999px':'inherit';
 surface.className=`shape-surface shape-${kind}`
 }
 }
-// UX-7: an image object that still carries the built-in placeholder bitmap is
-// an empty photo slot. Mark it (editor-only CSS draws the dashed slot and the
-// "Add photo" chip); never change the document value, so export, guest output
-// and dashboard thumbnails keep rendering exactly what is stored.
+
+
+
+
 function isBuiltinImagePlaceholder(src){
 const value=String(src||'').trim();
 if(!value||!/^data:image\/svg\+xml/i.test(value))return false;
@@ -4492,8 +4487,8 @@ if(!items.length||!stage){
 bounds?.remove();
 return
 }
-// A single ungrouped object hides the bounds box, so skip the stage/item layout
-// reads and style writes entirely in that (common) case.
+
+
 if(items.length===1&&!items[0].dataset.groupId){
 if(bounds)bounds.hidden=true;
 return
@@ -5025,8 +5020,8 @@ $('#fontItalic').setAttribute('aria-pressed',active?'false':'true');
 applyTextStyleToSelection('fontStyle',value)
 };
 $('#convertDigits').onclick=()=>{
-// LT-2.2 (OD-29): an explicit, one-way command. Typed and pasted text is never
-// rewritten by the setting itself; only this click edits the selected objects.
+
+
 if(!window.EInviteKhmerFormat)return;
 const items=currentSelection().filter(item=>item.querySelector('.content'));
 if(!items.length)return;
@@ -5349,7 +5344,7 @@ const posterSizeSelect=$('#posterSizes'); if(posterSizeSelect){
  const chosen=posterSizeSelect.value;
  if(!chosen)return;
  if(chosen==='custom'){
- // DESIGN-FIX continuation: free-form canvas size — px, in and cm accepted.
+
  (async()=>{
  const resp=window.uiPrompt?await window.uiPrompt('Canvas size — width × height with an optional unit: px, in, or cm (e.g. 1080x1350, 24x36 in, 21x29.7 cm)','1080x1080',{title:'Custom canvas size',confirmText:'Resize canvas'}):null;
  if(!resp)return;
@@ -5666,9 +5661,9 @@ if(!events.length)return'';
 const timezone=String(d.timezone||'').trim();
 return`<section class="event-journey reveal" style="${combinedSectionStyle(d,'events')}"><h2>${languageText('Events & ceremonies','កម្មវិធី និងពិធី',mode)}</h2>${timezone?`<p class="event-timezone">${languageText('Timezone','តំបន់ពេលវេលា',mode)}: ${safeHtml(timezone)}</p>`:''}<div class="event-journey-list">${events.map(event=>{const date=event.date?new Date(`${event.date}T${event.time||'00:00'}:00`):null,dateText=date&&!Number.isNaN(date.getTime())?date.toLocaleString(undefined,{dateStyle:'medium',timeStyle:event.time?'short':undefined}):[event.date,event.time].filter(Boolean).join(' '),map=/^https?:\/\//i.test(event.mapUrl||'')?`<a href="${safeHtml(event.mapUrl)}" target="_blank" rel="noopener">${languageText('Directions','ទិសដៅ',mode)}</a>`:'';return `<article class="event-journey-card"><span class="event-type">${safeHtml(event.type||'event')}</span><h3>${safeHtml(event.name)}</h3>${dateText?`<p><strong>${safeHtml(dateText)}</strong></p>`:''}${event.venue?`<p>${safeHtml(event.venue)}</p>`:''}${map}</article>`}).join('')}</div></section>`
 }
-/* LT-3.2 item (8): the display-only gift QR — the same block the guest page renders, so the
-   editor preview cannot drift from the public route. The image allowlist matches
-   public-page.js: platform media, HTTPS, or an inline raster data URL. */
+
+
+
 function safeGiftQrImageUrl(value){
 const raw=String(value||'').trim();
 if(/^https?:\/\//i.test(raw)||raw.startsWith('/uploads/')||raw.startsWith('/api/media/')||raw.startsWith('/api/image/')||raw.startsWith('/data/uploads/')||/^data:image\/(?:jpeg|png|webp|gif);base64,/i.test(raw))return raw;
@@ -6131,10 +6126,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     event: '◈', pages: '▤', media: '▧', blocks: '▦', elements: '✦',
     object: '◌', layers: '≡', sections: '▥', theme: '◐', publish: '↗'
   };
-  /* P2-1: bilingual nodes ship one span per language (`.i18n-en` / `.i18n-km`,
-     hidden by `[lang="en"] .i18n-km{display:none}`). textContent concatenated
-     both, so the statusbar read "Saved locallyបានរក្សាទុក". Read the active
-     span only and fall back to the old behaviour for plain nodes. */
+
+
+
+
   function activeLang() {
     if (window.EInviteLang === 'km' || window.EInviteLang === 'en') return window.EInviteLang;
     return /^km/i.test(document.documentElement.lang || '') ? 'km' : 'en';
@@ -6161,11 +6156,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if (brand) {
       brand.innerHTML = '<span class="studio-brand-mark">O</span><span class="studio-brand-copy"><b>OKID</b><small>Design Studio</small></span>';
     }
-    // The v54 top bar nests #saveState/#previewBtn inside .studio-topbar-right, so
-    // insertBefore must target the anchor's own parent — calling header.insertBefore
-    // with a nested reference throws NotFoundError on every editor load (v54 regression).
-    // The v54 header also carries its own live document title (#documentTitle); only
-    // legacy pages without it get the generated title element.
+
+
+
+
+
     if (!$('#documentTitle')) {
       const titleWrap = document.createElement('div');
       titleWrap.className = 'studio-document-title';
@@ -6267,8 +6262,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     className: 'studio-left-panel', navClass: 'studio-tool-rail', hostClass: 'studio-pane-host',
     buttonClass: 'studio-rail-button', paneClass: 'studio-pane', label: 'Creation tools', eyebrow: 'Create', activate: activateLeft
   });
-  // The left Design home pane is retired; Pages is the default rail item. A
-  // stored tab that no longer exists must not leave every pane inactive.
+
+
   const savedLeftTab = localStorage.getItem('einvite-editor-left-tab');
   activateLeft($(`[data-studio-tab="${savedLeftTab}"]`, leftTabs.nav) ? savedLeftTab : 'pages');
   const leftSearch = document.createElement('div');
@@ -6282,9 +6277,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if (!pane) return;
     [...pane.children].forEach(node => {
       if (node.classList.contains('studio-pane-heading')) return;
-      // LT-1.7: this is the panel's only search box now. On the Design home it
-      // also filters the individual action/theme tiles, not just whole
-      // sections, so removing the pane's inline duplicate loses no behaviour.
+
+
+
       const tiles = [...node.querySelectorAll('[data-flow-open], [data-flow-theme], .flow-list-actions button')];
       const matches = !q || text(node).toLowerCase().includes(q) || tiles.some(el => el.textContent.toLowerCase().includes(q));
       node.classList.toggle('studio-search-hidden', !matches);
@@ -6294,8 +6289,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   $$('[data-studio-tab]', leftTabs.nav).forEach(b => b.addEventListener('click', () => {
     leftSearchInput.value = '';
     $$('.studio-search-hidden', leftTabs.host).forEach(x => x.classList.remove('studio-search-hidden'));
-    // LT-1.7: clearing the field on a tab switch does not fire `input`, so the
-    // flow tiles hidden by the last query have to be restored here.
+
+
     $$('[data-flow-open][hidden], [data-flow-theme][hidden], .flow-list-actions button[hidden]', leftTabs.host).forEach(x => { x.hidden = false; });
   }));
   const right = $('.right');
@@ -6311,14 +6306,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   let rightTabs;
   const activateRight = id => {
     if (!rightTabs) return;
-    // The Design tab was retired into the Edit pane's Page group. A stored
-    // preference from before that change must not leave every pane inactive.
+
+
     if (!rightTabs.nav.querySelector(`[data-inspector-tab="${id}"]`)) id = 'object';
     $$('[data-inspector-tab]', rightTabs.nav).forEach(b => b.classList.toggle('active', b.dataset.inspectorTab === id));
     $$('[data-inspector-pane]', rightTabs.host).forEach(p => p.classList.toggle('active', p.dataset.inspectorPane === id));
-    // Canvas formatting overlays belong to the Edit tab. Styles drive off this
-    // attribute so Layers/Sections/Share stop floating a text toolbar over the
-    // invitation the user is trying to manage.
+
+
+
     document.body.dataset.inspectorTab = id;
     localStorage.setItem('einvite-editor-right-tab', id);
   };
@@ -6329,9 +6324,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       { id: 'sections', label: 'Sections', icon: icon.sections },
       { id: 'publish', label: 'Share', icon: icon.publish }
     ];
-    // OD-23: the shell (tab row + host + one pane per tab) ships in index.html,
-    // so it exists at first paint and the canvas is never pushed 62 px up when
-    // this ran at ~1.8 s. Only the buttons and any missing pane are created here.
+
+
+
     const shell = right.querySelector(':scope > .studio-inspector-tabs');
     const shellHost = right.querySelector(':scope > .studio-inspector-host');
     if (shell && shellHost) {
@@ -6356,7 +6351,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       });
       return { nav: shell, host: shellHost };
     }
-    // Legacy path: pages (or older markup) without the shipped shell.
+
     const original = [...right.children];
     const groups = new Map(tabs.map(t => [t.id, []]));
     let current = 'object';
@@ -6563,9 +6558,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const viewport = $('#canvasViewport');
   const floating = document.createElement('div');
   floating.className = 'studio-selection-toolbar'; floating.hidden = true;
-  // Duplicate/Delete deliberately live only in the canvas action bar. The
-  // floating bar used to repeat both, so a selected object showed the same
-  // destructive action twice a few hundred pixels apart.
+
+
+
   floating.innerHTML = `
     <button type="button" data-float-action="copyStyle" title="Copy appearance">Copy style</button>
     <button type="button" data-float-action="pasteStyle" title="Paste appearance">Paste style</button>
@@ -6625,7 +6620,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if (statusStage) statusObserver.observe(statusStage, { subtree: true, attributes: true, attributeFilter: ['class'] });
   document.addEventListener('pointerup', () => setTimeout(updateStatusbar, 0), true);
   updateStatusbar();
-  // P2-1: a language switch must re-render the statusbar from the newly active span.
+
   document.addEventListener('einvite:lang-changed', () => setTimeout(updateStatusbar, 0));
   try { window.EInviteI18n?.subscribe?.(() => setTimeout(updateStatusbar, 0)); } catch (_) { /* i18n optional */ }
   const designCheck = document.createElement('div');
@@ -6644,8 +6639,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   $$('[data-close-check]',designCheck).forEach(b=>b.onclick=closeDesignCheck);
   $('.studio-command-backdrop',designCheck).onclick=closeDesignCheck;
   $('#studioPreviewFromCheck').onclick=()=>{ closeDesignCheck(); $('#previewBtn')?.click(); };
-  // Fallback for routes without the command system. The editor's own dismiss ladder owns
-  // Escape there; see the EInviteDesignCheck hook below and `closeTopLayer`.
+
+
   document.addEventListener('keydown', event=>{
     if (event.key !== 'Escape' || designCheck.hidden || event.defaultPrevented) return;
     closeDesignCheck();
@@ -6682,18 +6677,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const total=checks.reduce((s,c)=>s+c.weight,0),earned=checks.reduce((s,c)=>s+(c.ok?c.weight:0),0),score=Math.round(earned/Math.max(1,total)*100);
     $('#studioCheckScore').textContent=score;
     $('#studioCheckSummary').textContent=score>=90?'Ready to impress your guests':score>=75?'Almost ready to publish':score>=55?'A few important details remain':'Keep building your invitation';
-    // Return focus to the control that opened the dialog, not to whatever the canvas had
-    // focused before (clicking the button can leave the stage as activeElement).
+
+
     designCheckReturnFocus = $('#studioCheckBtn') || document.activeElement;
     const list=$('#studioCheckList');list.innerHTML='';
     checks.forEach(c=>{const row=document.createElement('article');row.className=`studio-check-item ${c.ok?'pass':'warn'}`;row.innerHTML=`<span>${c.ok?'✓':'!'}</span><div><strong>${c.title}</strong><p>${c.detail}</p></div>${c.ok?'':'<button type="button">Fix</button>'}`;const fix=row.querySelector('button');if(fix)fix.onclick=()=>{closeDesignCheck();c.action?.()};list.append(row)});
     designCheck.hidden=false;
-    // Deferred: the click that opened the dialog also hands focus back to the canvas.
+
     requestAnimationFrame(()=>{ if(!designCheck.hidden) $('.studio-check-dialog [data-close-check]',designCheck)?.focus({preventScroll:true}); });
   }
   $('#studioCheckBtn')?.addEventListener('click',openDesignCheck);
-  // The dialog is a div[role=dialog], so the command system's Escape ladder could not see it:
-  // with a canvas object selected, Escape only cleared that selection and the modal stayed open.
+
+
   window.EInviteDesignCheck=Object.freeze({open:openDesignCheck,close:closeDesignCheck,isOpen:()=>!designCheck.hidden});
   function makeDraggableAssets(){
     $$('#assets img').forEach(img=>{if(img.dataset.studioDraggable)return;img.dataset.studioDraggable='true';img.draggable=true;img.addEventListener('dragstart',e=>{

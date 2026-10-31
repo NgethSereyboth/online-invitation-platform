@@ -446,11 +446,9 @@
     "ui/app-shell.js"
    ],
    "styles": [
-    "typography-fonts.css",
-    "styles.css",
-    "modern-ui.css",
-    "compact-theme.css",
-    "privacy.css",
+    "typography-fonts.css",          "styles.css",
+          "compact-theme.css",
+          "privacy.css",
     "zoom-layout-pages.css",
     "tokens.css",
     "app-shell.css"
