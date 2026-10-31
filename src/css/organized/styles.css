@@ -64,8 +64,11 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
     flex-wrap: nowrap;
     height:var(--app-topbar-h,56px);
     min-height:var(--app-topbar-h,56px);
-    padding:8px 12px!important;
-    gap:8px!important;
+    /* The shell hook compresses the bar at ≤400 by setting these two custom
+       properties on the element; custom properties beat the var() fallback
+       even under !important, so the pinned padding/gap stay a single pin. */
+    padding:var(--shell-topbar-pad,8px 12px)!important;
+    gap:var(--shell-topbar-gap,8px)!important;
     overflow-x:auto;
     -webkit-overflow-scrolling:touch
   }
@@ -158,7 +161,7 @@ a.button-link:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35
 @media (max-width: 380px){
   header strong{font-size:16px!important}
   body{font-size:15px!important}
-  header{padding:8px 12px!important}
+  header{padding:var(--shell-topbar-pad,8px 12px)!important}
 }
 
 /* S9: native date/time pickers must not overflow in narrow Khmer layouts. */

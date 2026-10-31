@@ -941,24 +941,74 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
   if (!header) return;
   header.dataset.appShellWrap = '1';
   const NARROW = 600;
+  // UX-1 keeps the bar ≤96px at ≤400. Two comfortable 44px rows plus 6px of
+  // padding is the only arithmetic that fits without shrinking tap targets.
+  const TIGHT = 400;
+  // At 320 the Khmer brand + page cluster + language pills cannot share 304px
+  // even on two rows. Below 360 the brand text yields its width to them.
+  const COMPACT = 360;
   const HEADER_PROPS = ['flexWrap', 'height', 'minHeight', 'overflow', 'rowGap'];
-  const SWITCH_PROPS = ['flex', 'order', 'justifyContent', 'margin', 'background', 'border', 'boxShadow', 'padding'];
+  const LEFT_PROPS = ['flex', 'maxWidth', 'maxHeight', 'minWidth', 'overflow'];
+  const RIGHT_PROPS = ['order', 'flex', 'minWidth', 'height', 'maxHeight', 'alignItems', 'overflow'];
+  const SWITCH_PROPS = ['flex', 'order', 'justifyContent', 'margin', 'background', 'border', 'boxShadow', 'padding', 'height', 'alignItems'];
   const clear = (node, props) => props.forEach((key) => { node.style[key] = ''; });
   function sync() {
     const narrow = window.innerWidth <= NARROW;
+    const tight = window.innerWidth <= TIGHT;
+    const compact = window.innerWidth <= COMPACT;
     const langSwitch = header.querySelector(':scope > .language-switch');
+    const left = header.querySelector(':scope > .app-topbar-left');
+    const right = header.querySelector(':scope > .app-topbar-right');
     if (!narrow) {
       clear(header, HEADER_PROPS);
+      if (left) clear(left, LEFT_PROPS);
+      if (right) clear(right, RIGHT_PROPS);
       if (langSwitch) clear(langSwitch, SWITCH_PROPS);
+      header.style.removeProperty('--shell-topbar-pad');
+      header.style.removeProperty('--shell-topbar-gap');
       return;
     }
     header.style.flexWrap = 'wrap';
     header.style.height = 'auto';
     header.style.minHeight = '56px';
     header.style.overflow = 'visible';
-    header.style.rowGap = '4px';
+    header.style.rowGap = tight ? '0' : '4px';
+    if (tight) {
+      // The unlayered narrow-header rule wins padding/gap with !important; it
+      // reads these variables, so the hook can compress the bar without adding
+      // a second !important. Two rows of 44–48 plus the 1px border stay ≤95.
+      header.style.setProperty('--shell-topbar-pad', '0px 8px');
+      header.style.setProperty('--shell-topbar-gap', '0px');
+      // Row 1: rail toggle + brand + theme + drawer. Row 2: language + the
+      // page cluster. A half-width brand forces exactly that split instead of
+      // a third row on the Khmer templates page.
+      if (left) {
+        left.style.flex = compact ? '0 0 auto' : '1 1 50%';
+        left.style.maxWidth = compact ? '44px' : '50%';
+        left.style.maxHeight = '44px';
+        left.style.minWidth = '0';
+        left.style.overflow = 'hidden';
+      }
+      // An empty right cluster (dashboard hides it) must not claim a flex line:
+      // giving it a height created a blank row between the brand and language rows.
+      if (right && right.getBoundingClientRect().width > 0) {
+        right.style.order = compact ? '0' : '20';
+        right.style.flex = '0 1 auto';
+        right.style.minWidth = '0';
+      } else if (right) {
+        clear(right, RIGHT_PROPS);
+        right.style.order = '0';
+        // An empty cluster still claimed a 44 px flex line; hide it entirely so
+        // the bar is brand row + language row, not three rows.
+        right.style.display = 'none';
+      }
+    } else {
+      header.style.removeProperty('--shell-topbar-pad');
+      header.style.removeProperty('--shell-topbar-gap');
+      if (left) clear(left, LEFT_PROPS);
+      if (right) { clear(right, RIGHT_PROPS); right.style.order = '0'; right.style.display = ''; }
+    }
     if (langSwitch) {
-      langSwitch.style.flex = '1 0 100%';
       langSwitch.style.order = '20';
       langSwitch.style.justifyContent = 'flex-end';
       langSwitch.style.margin = '0';
@@ -966,9 +1016,15 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       langSwitch.style.background = 'transparent';
       langSwitch.style.border = '0';
       langSwitch.style.boxShadow = 'none';
+      langSwitch.style.flex = tight && !compact ? '0 0 auto' : '1 0 100%';
     }
   }
   sync();
+  // The language switch is injected after this script on some routes (it had no
+  // inline style at all in the first measurement). Re-sync when it lands, not
+  // only on the next window resize.
+  new MutationObserver(sync).observe(header, { childList: true });
+  window.addEventListener('load', sync, { once: true });
   let timer = 0;
   window.addEventListener('resize', () => {
     clearTimeout(timer);

@@ -32,8 +32,8 @@ header{
 flex-wrap: nowrap;
 height:var(--app-topbar-h,56px);
 min-height:var(--app-topbar-h,56px);
-padding:8px 12px!important;
-gap:8px!important;
+padding:var(--shell-topbar-pad,8px 12px)!important;
+gap:var(--shell-topbar-gap,8px)!important;
 overflow-x:auto;
 -webkit-overflow-scrolling:touch
 }
@@ -107,7 +107,7 @@ body[data-page="index"]>header #serverState{font-size:11px;max-width:120px;overf
 @media (max-width: 380px){
 header strong{font-size:16px!important}
 body{font-size:15px!important}
-header{padding:8px 12px!important}
+header{padding:var(--shell-topbar-pad,8px 12px)!important}
 }
 input[type="date"],input[type="time"]{max-width:100%;box-sizing:border-box}
 }@layer components {
