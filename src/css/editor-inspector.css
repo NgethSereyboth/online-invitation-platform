@@ -1,0 +1,556 @@
+@layer components {
+/* ------------------------------------------------------------------ toolbar
+   A Canva-style, icon-first text strip. It floats above the canvas instead of
+   stretching a labelled form across the top, so every value fits and the bar
+   never covers the inspector. */
+body[data-page="index"] .stage-wrap { position: relative; }
+
+body[data-page="index"] #v20TypographyToolbar {
+  position: absolute;
+  z-index: 96;
+  /* Sit below the 106px canvas header (which starts 40px into .stage-wrap);
+     at top:54px the strip covered Add / size / zoom / the workflow actions. */
+  top: 152px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: max-content;
+  max-width: min(720px, calc(100% - 24px));
+  min-height: 44px;
+  height: auto;
+  padding: 5px 6px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--app-surface, #fff) 94%, transparent);
+  box-shadow: 0 14px 40px #24182024, 0 2px 6px #24182014;
+  backdrop-filter: blur(18px) saturate(140%);
+  overflow: visible;
+}
+body[data-page="index"] #v20TypographyToolbar[hidden] { display: none !important; }
+body[data-page="index"] #v20TypographyToolbar.collapsed { gap: 0; padding: 4px; }
+body[data-page="index"] #v20TypographyToolbar.collapsed > :not(#v20ToolbarToggle) { display: none !important; }
+
+body[data-page="index"] #v20TypographyToolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-text, #2b2a2f);
+  font: 650 13px/1 Inter, system-ui, sans-serif;
+  box-shadow: none;
+}
+body[data-page="index"] #v20TypographyToolbar button:hover { background: var(--app-surface-3, #f1eff3); }
+body[data-page="index"] #v20TypographyToolbar .v20-toolbar-toggle {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  white-space: nowrap;
+}
+body[data-page="index"] #v20TypographyToolbar .v20-color-wrap:hover { background: var(--app-surface-3, #f1eff3); }
+body[data-page="index"] #v20TypographyToolbar button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--app-accent, #8b465b) 14%, transparent);
+  color: var(--app-accent, #8b465b);
+}
+body[data-page="index"] #v20TypographyToolbar .v20-ico-letter { font-size: 14px; }
+body[data-page="index"] #v20TypographyToolbar .v20-ico-letter em { font-family: Georgia, serif; }
+
+body[data-page="index"] #v20TypographyToolbar .v20-compact-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  min-width: 0 !important;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 4px 0 6px;
+  border-radius: 9px;
+  background: var(--app-surface-2, #f7f6f8);
+}
+body[data-page="index"] #v20TypographyToolbar .v20-compact-select:hover { background: var(--app-surface-3, #f1eff3); }
+body[data-page="index"] #v20TypographyToolbar .v20-select-icon {
+  flex: 0 0 auto;
+  font: 600 10px/1 Inter, system-ui, sans-serif;
+  letter-spacing: .02em;
+  color: var(--app-muted, #6f6b73);
+}
+body[data-page="index"] #v20TypographyToolbar select {
+  width: 82px;
+  min-width: 0;
+  min-height: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0 12px 0 3px;
+  border: 0 !important;
+  border-radius: 6px;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--app-text, #2b2a2f);
+  font: 500 11px/1 Inter, system-ui, sans-serif;
+  text-overflow: ellipsis;
+}
+body[data-page="index"] #v20TypographyToolbar #v20ToolbarStyle { width: 92px; }
+body[data-page="index"] #v20TypographyToolbar #v20VisibleFont { width: 126px; }
+body[data-page="index"] #v20TypographyToolbar .rt-toolbar-tools,
+body[data-page="index"] #v20TypographyToolbar .ei-rich-toolbar,
+body[data-page="index"] #v20TypographyToolbar [data-rt-toolbar] { display: none !important; }
+body[data-page="index"] #v20TypographyToolbar select:focus-visible { box-shadow: 0 0 0 2px var(--app-accent, #8b465b) inset !important; }
+
+body[data-page="index"] #v20TypographyToolbar .v20-size-group {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--app-surface-2, #f7f6f8);
+}
+body[data-page="index"] #v20TypographyToolbar .v20-size-group button {
+  width: 24px;
+  min-width: 24px;
+  height: 30px;
+  min-height: 30px;
+  border-radius: 7px;
+  color: var(--app-muted, #6f6b73);
+  font-size: 15px;
+}
+body[data-page="index"] #v20TypographyToolbar .v20-size-group input {
+  width: 34px;
+  min-width: 34px;
+  height: 28px;
+  min-height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--app-text, #2b2a2f);
+  text-align: center;
+  font: 700 12px/1 Inter, system-ui, sans-serif;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+body[data-page="index"] #v20TypographyToolbar .v20-size-group input::-webkit-outer-spin-button,
+body[data-page="index"] #v20TypographyToolbar .v20-size-group input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+body[data-page="index"] #v20TypographyToolbar .v20-rule {
+  width: 1px;
+  height: 20px;
+  margin: 0 3px;
+  background: var(--app-line, #e4e4e9);
+}
+body[data-page="index"] #v20TypographyToolbar .v20-align-group { display: inline-flex; align-items: center; gap: 1px; }
+body[data-page="index"] #v20TypographyToolbar .v20-align-group button { width: 28px; min-width: 28px; }
+body[data-page="index"] #v20TypographyToolbar .v20-color-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px !important;
+  height: 32px;
+  max-width: 32px;
+  border-radius: 9px;
+  background: var(--app-surface-2, #f7f6f8);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+body[data-page="index"] #v20TypographyToolbar .v20-color-wrap:focus-within { box-shadow: 0 0 0 2px var(--app-accent, #8b465b); }
+body[data-page="index"] #v20TypographyToolbar .v20-color-icon { font-size: 14px; pointer-events: none; }
+body[data-page="index"] #v20TypographyToolbar .v20-color-wrap input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+body[data-page="index"] #v20TypographyToolbar .v20-fit-pill {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--app-muted, #6f6b73);
+  font: 600 9px/1 Inter, system-ui, sans-serif;
+  letter-spacing: .02em;
+}
+body[data-page="index"] #v20TypographyToolbar #v20ResponsivePreview {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  font-size: 0;
+  overflow: hidden;
+}
+body[data-page="index"] #v20TypographyToolbar #v20ResponsivePreview::before { content: "▭"; font-size: 15px; }
+
+/* ------------------------------------------------------------------ inspector */
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] { padding-top: 13px; }
+body[data-page="index"] .studio-inspector-pane > .studio-inspector-heading {
+  display: none;
+}
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > .studio-inspector-heading {
+  margin: 0 0 10px;
+  padding: 0 2px;
+}
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > .studio-inspector-heading strong {
+  font-size: 15px;
+  letter-spacing: -.01em;
+}
+
+.ix-toolbox {
+  position: sticky;
+  top: 0;
+  z-index: 24;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 10px;
+  padding: 4px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 13px;
+  background: var(--app-surface-2, #f7f6f8);
+}
+.ix-tool {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-muted, #6f6b73);
+  box-shadow: none;
+  font: 600 15px/1 Inter, system-ui, sans-serif;
+}
+.ix-tool svg { display: block; }
+.ix-tool:disabled { opacity: .32; cursor: not-allowed; }
+.ix-tool:disabled:hover { background: transparent; color: var(--app-muted, #6f6b73); }
+.ix-tool:hover { background: var(--app-surface, #fff); color: var(--app-text, #2b2a2f); }
+.ix-tool.active {
+  background: var(--app-surface, #fff);
+  color: var(--app-accent, #8b465b);
+  box-shadow: 0 2px 8px #24182014;
+}
+.ix-tool:focus-visible { outline: 2px solid var(--app-accent, #8b465b); outline-offset: 1px; }
+.ix-tool-tip {
+  position: absolute;
+  z-index: 80;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translate(-50%, -3px);
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #16151a;
+  color: #fff;
+  font: 500 10px/1.1 Inter, system-ui, sans-serif;
+  box-shadow: 0 6px 18px #16151a2e;
+  font-style: normal;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.ix-tool:hover .ix-tool-tip,
+.ix-tool:focus-visible .ix-tool-tip { opacity: 1; transform: translate(-50%, 0); }
+
+.ix-groups { display: grid; gap: 7px; margin-top: 2px; padding-bottom: 26px; }
+.ix-groups .ix-group { scroll-margin-top: 58px; }
+body[data-page="index"] #v54CanvasHud { display: none !important; }
+/* The text toolbar and the floating selection card occupied the same strip
+   above a text object. The toolbar is the richer control, so the card stands
+   down while it is open (it still serves shapes and images). */
+body[data-page="index"]:has(#v20TypographyToolbar:not([hidden])) #v54SelectionCard { display: none !important; }
+body[data-page="index"] .studio-inspector-pane input[type="range"] { accent-color: var(--app-accent, #8b465b); }
+/* The floating selection strip sat across the lower third of the invitation
+   and repeated Copy style / Paste style / Lock / Group / Tidy, which already
+   live in the Style, Arrange and More groups plus the object context menu.
+   It also swallowed clicks on the artwork. Keep the command paths, drop the
+   duplicate overlay. */
+body[data-page="index"] .studio-selection-toolbar { display: none !important; }
+/* Text formatting belongs to the canvas while the Edit tab is open. On
+   Layers, Sections and Share it floated above the panel the user was reading
+   and covered the invitation; hide it there. */
+body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v20TypographyToolbar { display: none !important; }
+body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) .v54-selection-card { display: none !important; }
+/* The contextual Styles/Position/Duplicate/Delete strip is the Edit tab's
+   quick-action row. On Layers its commands duplicate the row menu, and on
+   Sections/Share they act on an object the user is not editing. */
+body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v23ContextToolbar { display: none !important; }
+/* A pointer selection focuses #stage (so the keyboard can nudge objects), which
+   made the generic [tabindex]:focus-visible ring paint a second blue border
+   around the whole invitation. The object outline is the selection signal. */
+body.studio-experience #stage:focus,
+body.studio-experience #stage:focus-visible { outline: none !important; }
+/* editor-styles.css hides every direct child of the Edit pane without a
+   selection. The Page group must stay reachable then, so keep the group stack
+   visible (the object groups inside are hidden by their own [hidden]). The
+   seven object-only tool buttons are all disabled in this state, so showing
+   them only added a grey icon strip above the empty-state message. */
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-toolbox { display: none !important; }
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-groups { display: grid !important; }
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > h2.studio-inspector-heading { display: none; }
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] > #noSelection { margin: 2px 0 12px; }
+/* The selection count already appears in the canvas action row and the
+   status bar. Repeating it above every inspector group cost 33px and made the
+   tooltip for the first icon collide with a third copy of the same sentence. */
+body[data-page="index"] [data-inspector-pane="object"] #properties > .selection-summary { display: none !important; }
+.ix-group {
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 12px;
+  background: var(--app-surface, #fff);
+  overflow: hidden;
+}
+.ix-group > summary {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto 14px;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 10px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ix-group > summary::-webkit-details-marker { display: none; }
+.ix-group > summary:hover { background: var(--app-surface-2, #f7f6f8); }
+.ix-group[open] > summary { border-bottom: 1px solid var(--app-line, #e4e4e9); background: var(--app-surface-2, #f7f6f8); }
+.ix-group-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--app-accent, #8b465b) 10%, transparent);
+  color: var(--app-accent, #8b465b);
+  font: 600 12px/1 Inter, system-ui, sans-serif;
+}
+.ix-group-name { font: 650 11px/1.2 Inter, system-ui, sans-serif; color: var(--app-text, #2b2a2f); }
+.ix-group-hint {
+  max-width: 112px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--app-muted, #6f6b73);
+  font-size: 8px;
+}
+.ix-chevron { color: var(--app-muted, #6f6b73); font-size: 11px; transition: transform 160ms ease; }
+.ix-group[open] .ix-chevron { transform: rotate(180deg); }
+.ix-body { display: grid; gap: 10px; padding: 11px 12px 14px; }
+/* Label display rules in the editor intentionally outrank the [hidden]
+   attribute. Without this, a multi-selection still showed an empty Text
+   content field that looked editable but wrote to only one object. */
+.ix-body [hidden] { display: none !important; }
+.ix-body > :first-child { margin-top: 0 !important; }
+.ix-body > h2:first-child { border-top: 0 !important; padding-top: 0 !important; }
+.ix-group[data-ix-group="style"] .ix-body > h2:first-child { display: none; }
+.ix-body .final-advanced-inspector,
+.ix-body .pe-transform-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.ix-body .final-panel-title { margin-bottom: 4px; }
+.ix-body .final-panel-title h2 { font-size: 13px; }
+.ix-body .final-panel-title small { display: none; }
+.ix-body .studio-style-recipes { margin: 0; padding: 0; border: 0; }
+.ix-body .studio-section-title { margin: 0 0 4px; }
+.ix-body .actions { grid-template-columns: 1fr 1fr; }
+.ix-body label { margin-bottom: 8px; }
+.ix-body input, .ix-body select, .ix-body textarea { width: 100%; }
+.ix-body .alignment-grid { grid-template-columns: repeat(4, 1fr); }
+.ix-body #canvasPlusTransform .final-panel-title { display: none; }
+.ix-body #canvasPlusTextPlacement .final-panel-title,
+.ix-body #canvasPlusTextBox .final-panel-title { display: none; }
+.ix-group[data-ix-group="page"] .studio-inspector-heading { display: none; }
+.ix-group[data-ix-group="page"] h2:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.ix-group[data-ix-group="more"] { opacity: .94; }
+.ix-group[data-ix-group="more"] .ix-group-name { color: var(--app-muted, #6f6b73); }
+.ix-group[hidden] { display: none; }
+
+.ix-sub { border: 1px solid var(--app-line, #e4e4e9); border-radius: 10px; background: var(--app-surface-2, #f7f6f8); overflow: hidden; }
+.ix-sub > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 9px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--app-text, #2b2a2f);
+  font: 600 10px/1.2 Inter, system-ui, sans-serif;
+}
+.ix-sub > summary::-webkit-details-marker { display: none; }
+.ix-sub > summary:hover { background: var(--app-surface, #fff); }
+.ix-sub[open] > summary { border-bottom: 1px solid var(--app-line, #e4e4e9); background: var(--app-surface, #fff); }
+.ix-sub-body { padding: 9px; }
+.ix-sub-body > .v20-inspector-group.ix-flat { padding: 0; border: 0; background: transparent; gap: 8px; }
+.ix-sub-body > .v20-inspector-group.ix-flat > h3 { display: none; }
+.ix-sub .ix-chevron { font-size: 10px; }
+.ix-sub[open] .ix-chevron { transform: rotate(180deg); }
+
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] #properties { padding-bottom: 22px; }
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] #v20MobileSelectionSummary { display: none; }
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="object"] .selection-summary { margin-bottom: 8px; }
+/* The Layers tab already names the pane; the duplicate in-pane title above
+   the search field was the third "Layers" label on one screen. */
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="layers"] > .studio-inspector-heading { display: none; }
+
+/* --------------------------------------------------------------- share panel */
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="publish"] { padding: 14px 14px 28px; }
+.share-shell { display: grid; gap: 10px; }
+.share-hero {
+  padding: 14px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 16px;
+  background:
+    radial-gradient(130% 100% at 0% 0%, color-mix(in srgb, var(--app-accent, #8b465b) 10%, transparent), transparent 62%),
+    var(--app-surface, #fff);
+}
+.share-state { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+.share-state-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--app-muted, #9b96a0);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--app-muted, #9b96a0) 14%, transparent);
+}
+.share-hero[data-published="true"] .share-state-dot {
+  background: #2f9e60;
+  box-shadow: 0 0 0 4px #2f9e6021;
+}
+.share-state strong { display: block; font: 650 13px/1.2 Inter, system-ui, sans-serif; color: var(--app-text, #2b2a2f); }
+.share-state small { display: block; margin-top: 2px; color: var(--app-muted, #6f6b73); font-size: 9px; line-height: 1.35; }
+.share-link { display: flex; align-items: center; gap: 4px; margin-bottom: 9px; }
+.share-link input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 33px;
+  min-height: 33px;
+  padding: 0 9px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 8px;
+  background: var(--app-surface-2, #f7f6f8) !important;
+  color: var(--app-text, #2b2a2f) !important;
+  font: 500 10px/1 Inter, system-ui, sans-serif;
+  text-overflow: ellipsis;
+}
+.share-link button:disabled { opacity: .42; cursor: not-allowed; }
+.share-link button {
+  flex: 0 0 auto;
+  height: 33px;
+  min-height: 33px;
+  padding: 0 10px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 8px;
+  background: var(--app-surface, #fff);
+  font-size: 10px;
+}
+.share-main-actions { display: grid; grid-template-columns: 1.3fr 1fr; gap: 6px; }
+.share-main-actions button {
+  min-height: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 11px;
+}
+.share-main-actions .primary {
+  border: 0;
+  background: var(--app-accent, #8b465b);
+  color: #fff;
+}
+.share-section {
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 12px;
+  background: var(--app-surface, #fff);
+  overflow: hidden;
+}
+.share-section > summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.share-section > summary::after {
+  content: '⌄';
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--app-muted, #6f6b73);
+  font-size: 13px;
+  line-height: 1;
+  transition: transform .16s ease;
+}
+.share-section[open] > summary::after { transform: rotate(180deg); }
+.share-section > summary::-webkit-details-marker { display: none; }
+.share-section > summary > span { grid-column: 1; grid-row: 1; font: 650 11px/1.2 Inter, system-ui, sans-serif; color: var(--app-text, #2b2a2f); }
+.share-section > summary > small { grid-column: 1; grid-row: 2; color: var(--app-muted, #6f6b73); font-size: 9px; }
+.share-section[open] > summary { border-bottom: 1px solid var(--app-line, #e4e4e9); }
+.share-section-body { display: grid; gap: 9px; padding: 11px 12px 13px; }
+.share-section-body label { margin: 0; }
+.share-section-body input, .share-section-body select { width: 100%; }
+.share-section-body #savePublishingSettings { min-height: 34px; height: 34px; font-size: 10px; }
+.share-manage { grid-template-columns: 1fr 1fr; }
+.share-manage button {
+  min-height: 35px;
+  height: 35px;
+  margin: 0;
+  padding: 0 8px;
+  font-size: 10px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  background: var(--app-surface-2, #f7f6f8);
+}
+.share-manage #unpublishBtn { color: #b23a4b; }
+.share-shell #publishInfo {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--app-line, #e4e4e9);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--app-muted, #6f6b73);
+  font-size: 9px;
+  line-height: 1.45;
+}
+.share-shell #publishInfo:empty { display: none; }
+.share-shell > .ei-collab-card,
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="publish"] > .ei-collab-card {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 12px;
+  background: var(--app-surface, #fff);
+}
+.share-shell .ei-collab-card h2,
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="publish"] > .ei-collab-card h2 { margin: 2px 0 6px; font-size: 12px; }
+.share-shell .ei-collab-form,
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="publish"] > .ei-collab-card .ei-collab-form { display: grid; gap: 6px; margin-top: 8px; }
+body[data-page="index"] .studio-inspector-pane[data-inspector-pane="publish"] > .ei-collab-card { margin-top: 10px; }
+
+@media (max-width: 1180px) {
+  body[data-page="index"] #v20TypographyToolbar { left: 12px; right: 12px; transform: none; width: auto; max-width: none; overflow-x: auto; scrollbar-width: none; }
+  body[data-page="index"] #v20TypographyToolbar::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 820px) {
+  body[data-page="index"] #v20TypographyToolbar { top: 48px; max-height: 46px; }
+}
+}
