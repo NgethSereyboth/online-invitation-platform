@@ -10,17 +10,17 @@ const stage=$('#stage');
 const viewport=$('#canvasViewport');
 const inspector=$('.right');
 if(!main||!rail||!host||!stage)return;
-const VALID=['design','elements','text','media','pages','event','blocks'];
+const VALID=['pages','elements','text','media','event','blocks'];
 const CONTENT=new Set(['event','blocks']);
 const COMPACT=()=>innerWidth<=1180;
 const scrollMemory=new Map();
 const history=[];
 // FB-43: start from the tab the session will actually open (requested → saved →
-// Design), not from the pane host's synthetic first tab. Reading the DOM default
+// Pages), not from the pane host's synthetic first tab. Reading the DOM default
 // here made boot enter content mode and then leave it, which moved <main> twice.
 const bootTab=sessionStorage.getItem('einvite-open-editor-tab')||localStorage.getItem('einvite-editor-left-tab');
-let current=($(`.studio-pane[data-studio-pane="${bootTab}"]`,host)||$('.studio-pane.active',host))?.dataset.studioPane||'design';
-let lastDesign=CONTENT.has(current)?'design':current;
+let current=($(`.studio-pane[data-studio-pane="${bootTab}"]`,host)||$('.studio-pane.active',host))?.dataset.studioPane||'pages';
+let lastDesign=CONTENT.has(current)?'pages':current;
 let selectedSignature='';
 let lastAutoInspected='';
 let navigating=false;
@@ -39,7 +39,7 @@ function setInspector(id){if(COMPACT()&&window.EInviteProfessionalEditor?.ownsPo
 function refreshCanvasSoon(delay=90){clearTimeout(refreshCanvasSoon.t);refreshCanvasSoon.t=setTimeout(()=>{try{typeof updateCanvasView==='function'&&updateCanvasView()}catch{};try{typeof updateSelectionBounds==='function'&&updateSelectionBounds()}catch{};dispatchEvent(new CustomEvent('einvite:workspace-resized'))},delay)}
 function clearPanelSearch(){const input=$('.studio-panel-search input',host);if(input&&input.value){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}))}}
 function markRecent(id){
-  if(!VALID.includes(id)||id==='design')return;
+  if(!VALID.includes(id))return;
   lastUsed=[id,...lastUsed.filter(x=>x!==id)].slice(0,4);
   localStorage.setItem('einvite-workflow-recent-tools-v1',JSON.stringify(lastUsed));
   renderRecent();
@@ -82,7 +82,7 @@ function navigate(id,{push=true,focus=true,collapse=false,source='workflow'}={})
 }
 function goBack(){
   while(history.length){const id=history.pop();if(validSection(id)&&id!==current){navigate(id,{push:false,source:'back'});return}}
-  navigate('design',{push:false,source:'back'});
+  navigate('pages',{push:false,source:'back'});
 }
 function panelIsCollapsed(){return body.classList.contains('mobile-pane-collapsed')||body.classList.contains('workflow-panel-hidden')}
 function setPanelCollapsed(value){
@@ -105,9 +105,7 @@ function ensureChrome(){
   $$('.studio-pane',host).forEach(p=>{
     const heading=$('.studio-pane-heading',p);if(!heading||heading.querySelector('.workflow-pane-actions'))return;
     const actions=document.createElement('div');actions.className='workflow-pane-actions';
-    if(p.dataset.studioPane!=='design'){
-      const back=document.createElement('button');back.type='button';back.className='workflow-pane-back';back.innerHTML='‹ <span>Back</span>';back.onclick=goBack;actions.append(back);
-    }
+    const back=document.createElement('button');back.type='button';back.className='workflow-pane-back';back.innerHTML='‹ <span>Back</span>';back.onclick=goBack;actions.append(back);
     const close=document.createElement('button');close.type='button';close.className='workflow-pane-close';close.textContent='×';close.title='Hide panel';close.onclick=()=>setPanelCollapsed(true);actions.append(close);
     heading.append(actions);
   });
@@ -115,18 +113,19 @@ function ensureChrome(){
 function updateChrome(){
   const toggle=$('#workflowPanelToggle');if(toggle){const closed=panelIsCollapsed();toggle.innerHTML=closed?'›':'‹';toggle.title=closed?'Open creation panel':'Hide creation panel';toggle.setAttribute('aria-expanded',String(!closed))}
   const trail=$('#workflowTrail');if(trail){
-    const labels={design:'Design',elements:'Elements',text:'Text',media:'Uploads',pages:'Pages',event:'Event details',blocks:'Content blocks'};
+    const labels={elements:'Elements',text:'Text',media:'Uploads',pages:'Pages',event:'Event details',blocks:'Content blocks'};
     trail.querySelector('strong').textContent=labels[current]||current;
-    trail.hidden=current==='design';
+    trail.hidden=false;
   }
 }
 function renderRecent(){
-  const design=pane('design');if(!design)return;
-  let section=$('.workflow-recent',design);
+  const home=pane('pages');if(!home)return;
+  let section=$('.workflow-recent',home);
   if(!section){
     section=document.createElement('section');section.className='flow-section workflow-recent';
     section.innerHTML='<div class="flow-section-head"><h3>Recent tools</h3></div><div class="workflow-recent-grid"></div>';
-    const first=$('.flow-section',design);first?.after(section);
+    const first=$('.flow-section',home);
+    if(first)first.after(section);else $('.studio-pane-heading',home)?.after(section);
   }
   const grid=$('.workflow-recent-grid',section);
   const labels={elements:['✦','Elements','Graphics & ornaments'],text:['T','Text','Fonts & typography'],media:['⇧','Uploads','Photos, video & audio'],pages:['▣','Pages','Page structure'],event:['◫','Event','Event information'],blocks:['▦','Blocks','Content sections']};
@@ -136,7 +135,10 @@ function renderRecent(){
   items.forEach(id=>{const [icon,name,desc]=labels[id];const b=document.createElement('button');b.type='button';b.dataset.workflowRecent=id;b.innerHTML=`<span>${icon}</span><div><b>${name}</b><small>${desc}</small></div>`;b.onclick=()=>navigate(id,{source:'recent'});grid.append(b)});
 }
 function improveDesignSearch(){
-  const design=pane('design');const input=$('.flow-design-search input',design);if(!input||$('#workflowSearchResults'))return;
+  // The Design home pane is retired; its inline search went with it and the
+  // panel search in studio-experience.js is the only one left.
+  const design=pane('design');if(!design)return;
+  const input=$('.flow-design-search input',design);if(!input||$('#workflowSearchResults'))return;
   const results=document.createElement('div');results.id='workflowSearchResults';results.className='workflow-search-results';results.hidden=true;input.closest('.flow-design-search').after(results);
   const items=[
     ['elements','Elements','graphics ornaments shapes decorations'],['text','Text','fonts typography heading body'],['media','Uploads','photos images video audio music'],['pages','Pages','layouts structure page builder'],['event','Event details','date venue rsvp schedule guest'],['blocks','Content blocks','story dress code notes quote'],
@@ -215,7 +217,7 @@ function pageFlow(){
 function keyboardFlow(){}
 function guardLayout(){
   const sync=()=>{
-    if(!validSection(current))current='design';
+    if(!validSection(current))current='pages';
     const p=pane(current);if(p&&!p.classList.contains('active')){
       $$('.studio-pane',host).forEach(x=>x.classList.toggle('active',x===p));
       $$('[data-studio-tab]',rail).forEach(x=>x.classList.toggle('active',x.dataset.studioTab===current));
@@ -232,7 +234,7 @@ function init(){
   const requested=sessionStorage.getItem('einvite-open-editor-tab');
   const saved=localStorage.getItem('einvite-editor-left-tab');
   const sessionActive=sessionStorage.getItem('einvite-editor-session-active')==='1';
-  const start=validSection(requested)?requested:(sessionActive&&validSection(saved)?saved:(validSection(current)?current:'design'));
+  const start=validSection(requested)?requested:(sessionActive&&validSection(saved)?saved:(validSection(current)?current:'pages'));
   if(requested)sessionStorage.removeItem('einvite-open-editor-tab');
   navigate(start,{push:false,focus:false,source:'init'});
   sessionStorage.setItem('einvite-editor-session-active','1');

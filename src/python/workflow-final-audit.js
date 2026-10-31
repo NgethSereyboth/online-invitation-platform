@@ -7,10 +7,10 @@ const stage=$('#stage');
 const viewport=$('#canvasViewport');
 const frame=$('#canvasFrame');
 const host=$('.studio-pane-host');
-const DESIGN_SECTIONS=new Set(['design','elements','text','media','pages']);
+const DESIGN_SECTIONS=new Set(['elements','text','media','pages']);
 const CONTENT_SECTIONS=new Set(['event','blocks']);
 const VERSION='2026-07-22-final-workflow-audit-v7';
-let lastDesignSection='design';
+let lastDesignSection='pages';
 let lastCanvasView=null;
 let pendingChromeView=null;
 let restoreTimer=0;
@@ -187,7 +187,7 @@ function ensureBackToCanvas(){
     const pane=$(`[data-studio-pane="${id}"]`,host);const heading=$('.studio-pane-heading',pane);if(!heading||$('.workflow-v7-back-canvas',heading))continue;
     const actions=$('.workflow-pane-actions',heading)||heading;
     const b=document.createElement('button');b.type='button';b.className='workflow-v7-back-canvas';b.innerHTML='← <span>Back to canvas</span>';
-    b.onclick=()=>window.EInviteWorkflow.navigate(DESIGN_SECTIONS.has(lastDesignSection)?lastDesignSection:'design',{source:'back-to-canvas'});
+    b.onclick=()=>window.EInviteWorkflow.navigate(DESIGN_SECTIONS.has(lastDesignSection)?lastDesignSection:'pages',{source:'back-to-canvas'});
     actions.prepend(b);
   }
 }

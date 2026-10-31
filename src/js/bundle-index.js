@@ -704,7 +704,7 @@ function addDefaults(){registerMany([
 ...[['select','V'],['text','T'],['frame','Shift+B'],['rect','R'],['ellipse','O'],['line','L'],['hand','H'],['zoom','Z']].map(([tool,key])=>({id:`tool.${tool}`,title:`${tool[0].toUpperCase()+tool.slice(1)} tool`,category:'Tools',bindings:{standard:[key],canva:[key],photoshop:[key]},run:()=>activateTool(tool)})),
 {id:'page.addBlank',title:'Add blank design page',category:'Pages',bindings:{standard:['Mod+Enter'],canva:['Mod+Enter'],photoshop:['Mod+Enter']},run:()=>window.EInvitePageExperience?.addPage?.({mode:'free-design'})},
 {id:'workspace.quickAdd',title:'Open Quick Add',category:'Insert',bindings:{standard:['Mod+/'],canva:['Mod+/'],photoshop:['Mod+Alt+/']},run:()=>window.EInviteWorkflowV4?.openQuickAdd?.()},
-...[['design','1'],['elements','2','Shift+E'],['text','3','Shift+T'],['media','4','Shift+U'],['pages','5'],['event','6'],['blocks','7']].map(([section,key,legacy])=>({id:`workspace.${section}`,title:`Open ${section} panel`,category:'Navigate',allowFromControls:true,bindings:{standard:[`Alt+${key}`,legacy].filter(Boolean),canva:[`Alt+${key}`,legacy].filter(Boolean),photoshop:[`Alt+${key}`,legacy].filter(Boolean)},run:()=>window.EInviteWorkflow?.navigate?.(section,{source:'command'})})),
+...[['elements','2','Shift+E'],['text','3','Shift+T'],['media','4','Shift+U'],['pages','5'],['event','6'],['blocks','7']].map(([section,key,legacy])=>({id:`workspace.${section}`,title:`Open ${section} panel`,category:'Navigate',allowFromControls:true,bindings:{standard:[`Alt+${key}`,legacy].filter(Boolean),canva:[`Alt+${key}`,legacy].filter(Boolean),photoshop:[`Alt+${key}`,legacy].filter(Boolean)},run:()=>window.EInviteWorkflow?.navigate?.(section,{source:'command'})})),
 {id:'workspace.toggleInspector',title:'Toggle inspector',category:'Workspace',bindings:{standard:['Alt+I'],canva:['Alt+I'],photoshop:['Alt+I']},run:()=>clickNative('.studio-panel-toggle[aria-label="Toggle inspector"]')},
 {id:'workspace.toggleCreation',title:'Toggle creation panel',category:'Workspace',bindings:{standard:['Alt+['],canva:['Alt+['],photoshop:['Alt+[']},run:()=>clickNative('.studio-panel-toggle[aria-label="Toggle creation panel"]')},
 {id:'workspace.position',title:'Open Position and Arrange',category:'Arrange',bindings:{standard:['P'],canva:['P'],photoshop:['P']},run:()=>clickNative('#workflowV6PositionBtn')},
@@ -6267,7 +6267,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     className: 'studio-left-panel', navClass: 'studio-tool-rail', hostClass: 'studio-pane-host',
     buttonClass: 'studio-rail-button', paneClass: 'studio-pane', label: 'Creation tools', eyebrow: 'Create', activate: activateLeft
   });
-  activateLeft(localStorage.getItem('einvite-editor-left-tab') || 'event');
+  // The left Design home pane is retired; Pages is the default rail item. A
+  // stored tab that no longer exists must not leave every pane inactive.
+  const savedLeftTab = localStorage.getItem('einvite-editor-left-tab');
+  activateLeft($(`[data-studio-tab="${savedLeftTab}"]`, leftTabs.nav) ? savedLeftTab : 'pages');
   const leftSearch = document.createElement('div');
   leftSearch.className = 'studio-panel-search';
   leftSearch.innerHTML = '<span>⌕</span><input type="search" placeholder="Search tools and settings…" aria-label="Search creation tools">';

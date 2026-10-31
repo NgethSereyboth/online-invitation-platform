@@ -11,7 +11,6 @@ let activeId='';
 let switching=false;
 function iconSvg(kind){
   const icons={
-    design:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/><path d="M7 8h10M7 12h6M7 16h8"/></svg>',
     elements:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 5.2L19 10l-4.8 1.8L12 17l-2.2-5.2L5 10l4.8-1.8z"/><circle cx="18" cy="18" r="2"/></svg>',
     text:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v12M8.5 18h7"/></svg>',
     media:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m6.5 17 4.5-4 3 2.5 2.5-2 2 3.5"/></svg>',
@@ -19,52 +18,21 @@ function iconSvg(kind){
     event:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 13h3M13 13h3M8 17h3"/></svg>',
     blocks:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>'
   };
-  return icons[kind]||icons.design;
+  return icons[kind]||icons.pages;
 }
-function ensureDesignHome(){
-  let button=$('[data-studio-tab="design"]',rail);
-  let pane=$('[data-studio-pane="design"]',host);
-  if(!button){
-    button=document.createElement('button');
-    button.type='button';button.className='studio-rail-button flow-design-tab';button.dataset.studioTab='design';button.title='Design home';
-    button.innerHTML=`<span class="studio-nav-icon flow-icon">${iconSvg('design')}</span><span>Design</span>`;
-    rail.prepend(button);
-  }
-  if(!pane){
-    pane=document.createElement('section');pane.className='studio-pane flow-design-pane';pane.dataset.studioPane='design';
-    pane.innerHTML=`
-      <div class="studio-pane-heading flow-pane-heading"><div><small>Create</small><h1>Design</h1></div></div>
-
-      <!-- The tool rail already exposes Elements, Text, Uploads, Pages and
-           Event. Duplicating them as four cards made the same navigation
-           appear twice in one panel, so the quick-start grid is retired. -->
-      <section class="flow-section"><div class="flow-section-head"><h3>Invitation styles</h3><button type="button" data-flow-inspector="theme">View all</button></div>
-        <div class="flow-style-grid">
-          <button type="button" data-flow-theme="rose"><i class="rose"></i><b>Royal Rose</b></button>
-          <button type="button" data-flow-theme="gold"><i class="gold"></i><b>Khmer Gold</b></button>
-          <button type="button" data-flow-theme="emerald"><i class="emerald"></i><b>Emerald</b></button>
-          <button type="button" data-flow-theme="midnight"><i class="midnight"></i><b>Midnight</b></button>
-        </div>
-      </section>
-      <section class="flow-section"><div class="flow-section-head"><h3>Project setup</h3></div>
-        <div class="flow-list-actions">
-          <button type="button" data-flow-open="event"><span>${iconSvg('event')}</span><div><b>Event details</b><small>Names, date, venue and RSVP</small></div><em>›</em></button>
-          <button type="button" data-flow-open="blocks"><span>${iconSvg('blocks')}</span><div><b>Content blocks</b><small>Story, dress code and notes</small></div><em>›</em></button>
-        </div>
-      </section>`;
-    host.append(pane);
-  }
-  return {button,pane};
-}
+/* The left "Design" home pane was retired on the owner's instruction. The tool
+   rail's own tabs are the navigation, and the pane's remaining content already
+   exists elsewhere: invitation styles and the palette live in the inspector's
+   Page group, Event details / Content blocks are rail tabs, and canvas
+   background controls mount into the same Page group. Pages is the default
+   rail item; no home pane is created. */
 function reorderRail(){
-  const order=['design','elements','text','media','pages','event','blocks'];
+  const order=['pages','elements','text','media','event','blocks'];
   order.forEach(id=>{const b=$(`[data-studio-tab="${id}"]`,rail);if(b)rail.append(b)});
   $$('[data-studio-tab]',rail).forEach(b=>{
     const id=b.dataset.studioTab;
     const ico=$('.studio-nav-icon',b);
-    if(ico&&['design','elements','text','media','pages','event','blocks'].includes(id)){
-      ico.classList.add('flow-icon');ico.innerHTML=iconSvg(id);
-    }
+    if(ico&&order.includes(id)){ico.classList.add('flow-icon');ico.innerHTML=iconSvg(id)}
     const label=b.querySelector('span:last-child');
     if(label&&id==='media')label.textContent='Uploads';
   });
@@ -120,34 +88,6 @@ function wireRail(){
     requestAnimationFrame(()=>activate(id,{focus:true}));
   },true);
 }
-function wireDesignHome(){
-  const pane=$('[data-studio-pane="design"]',host);if(!pane)return;
-  pane.addEventListener('click',e=>{
-    const open=e.target.closest('[data-flow-open]');if(open){activate(open.dataset.flowOpen);return}
-    const inspector=e.target.closest('[data-flow-inspector]');if(inspector){setInspector(inspector.dataset.flowInspector);return}
-    const theme=e.target.closest('[data-flow-theme]');if(theme){
-      const select=$('#designTheme');if(select){select.value=theme.dataset.flowTheme;select.dispatchEvent(new Event('change',{bubbles:true}));window.uiToast?.(`${theme.textContent.trim()} applied`,'✓')}
-      return;
-    }
-  });
-  // LT-1.7: the pane's inline search duplicated the panel search above it and
-  // filtered the same cards. The panel search (studio-experience.js) now
-  // filters these action tiles individually, so there is one search box.
-  const refresh=()=>{
-    const name=($('#names')?.value||'').trim()||'Untitled invitation';
-    const n=$('#flowProjectName');if(n)n.textContent=name;
-    const type=window.state?.eventType||'Invitation';
-    const meta=$('#flowProjectMeta');if(meta)meta.textContent=`${type} · interactive invitation website`;
-  };
-  $('#names')?.addEventListener('input',refresh);window.addEventListener('einvite:state-applied',refresh);refresh();
-}
-function addPaneBackButtons(){
-  $$('.studio-pane',host).forEach(pane=>{
-    if(pane.dataset.studioPane==='design'||pane.querySelector('.flow-back-design'))return;
-    const heading=$('.studio-pane-heading',pane);if(!heading)return;
-    const b=document.createElement('button');b.type='button';b.className='flow-back-design';b.innerHTML='<span>‹</span> Design';b.onclick=()=>activate('design');heading.append(b);
-  });
-}
 function wireObjectFlow(){
 }
 function wireInsertFlow(){
@@ -177,9 +117,9 @@ function normalizeInitialFlow(){
   if(requested)sessionStorage.removeItem('einvite-open-editor-tab');
   const saved=localStorage.getItem('einvite-editor-left-tab');
   const valid=id=>!!$(`[data-studio-pane="${id}"]`,host);
-  const first=valid(requested)?requested:valid(saved)?saved:'design';
+  const first=valid(requested)?requested:valid(saved)?saved:'pages';
   const sessionActive=sessionStorage.getItem('einvite-editor-session-active')==='1';
-  activate(sessionActive?first:'design',{focus:false});
+  activate(sessionActive?first:'pages',{focus:false});
   sessionStorage.setItem('einvite-editor-session-active','1');
 }
 function decorateTopbar(){
@@ -190,17 +130,14 @@ function decorateTopbar(){
 }
 function safetyPass(){
   const p=activePane();
-  if(!p||!p.isConnected){activate('design',{focus:false});return}
-  applyMode(p.dataset.studioPane||'design');
+  if(!p||!p.isConnected){activate('pages',{focus:false});return}
+  applyMode(p.dataset.studioPane||'pages');
   p.style.removeProperty('height');
   if(['event','blocks'].includes(p.dataset.studioPane)){
     body.classList.remove('inspector-open','mobile-pane-collapsed');
   }
 }
-ensureDesignHome();
 reorderRail();
-addPaneBackButtons();
-wireDesignHome();
 decorateTopbar();
 normalizeInitialFlow();
 /* Interaction routing is intentionally centralized in workflow-continuity.js.

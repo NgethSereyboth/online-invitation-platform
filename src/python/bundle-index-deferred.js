@@ -11,7 +11,6 @@ let activeId='';
 let switching=false;
 function iconSvg(kind){
   const icons={
-    design:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/><path d="M7 8h10M7 12h6M7 16h8"/></svg>',
     elements:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.2 5.2L19 10l-4.8 1.8L12 17l-2.2-5.2L5 10l4.8-1.8z"/><circle cx="18" cy="18" r="2"/></svg>',
     text:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v12M8.5 18h7"/></svg>',
     media:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m6.5 17 4.5-4 3 2.5 2.5-2 2 3.5"/></svg>',
@@ -19,52 +18,21 @@ function iconSvg(kind){
     event:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 13h3M13 13h3M8 17h3"/></svg>',
     blocks:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>'
   };
-  return icons[kind]||icons.design;
+  return icons[kind]||icons.pages;
 }
-function ensureDesignHome(){
-  let button=$('[data-studio-tab="design"]',rail);
-  let pane=$('[data-studio-pane="design"]',host);
-  if(!button){
-    button=document.createElement('button');
-    button.type='button';button.className='studio-rail-button flow-design-tab';button.dataset.studioTab='design';button.title='Design home';
-    button.innerHTML=`<span class="studio-nav-icon flow-icon">${iconSvg('design')}</span><span>Design</span>`;
-    rail.prepend(button);
-  }
-  if(!pane){
-    pane=document.createElement('section');pane.className='studio-pane flow-design-pane';pane.dataset.studioPane='design';
-    pane.innerHTML=`
-      <div class="studio-pane-heading flow-pane-heading"><div><small>Create</small><h1>Design</h1></div></div>
-
-      <!-- The tool rail already exposes Elements, Text, Uploads, Pages and
-           Event. Duplicating them as four cards made the same navigation
-           appear twice in one panel, so the quick-start grid is retired. -->
-      <section class="flow-section"><div class="flow-section-head"><h3>Invitation styles</h3><button type="button" data-flow-inspector="theme">View all</button></div>
-        <div class="flow-style-grid">
-          <button type="button" data-flow-theme="rose"><i class="rose"></i><b>Royal Rose</b></button>
-          <button type="button" data-flow-theme="gold"><i class="gold"></i><b>Khmer Gold</b></button>
-          <button type="button" data-flow-theme="emerald"><i class="emerald"></i><b>Emerald</b></button>
-          <button type="button" data-flow-theme="midnight"><i class="midnight"></i><b>Midnight</b></button>
-        </div>
-      </section>
-      <section class="flow-section"><div class="flow-section-head"><h3>Project setup</h3></div>
-        <div class="flow-list-actions">
-          <button type="button" data-flow-open="event"><span>${iconSvg('event')}</span><div><b>Event details</b><small>Names, date, venue and RSVP</small></div><em>›</em></button>
-          <button type="button" data-flow-open="blocks"><span>${iconSvg('blocks')}</span><div><b>Content blocks</b><small>Story, dress code and notes</small></div><em>›</em></button>
-        </div>
-      </section>`;
-    host.append(pane);
-  }
-  return {button,pane};
-}
+/* The left "Design" home pane was retired on the owner's instruction. The tool
+   rail's own tabs are the navigation, and the pane's remaining content already
+   exists elsewhere: invitation styles and the palette live in the inspector's
+   Page group, Event details / Content blocks are rail tabs, and canvas
+   background controls mount into the same Page group. Pages is the default
+   rail item; no home pane is created. */
 function reorderRail(){
-  const order=['design','elements','text','media','pages','event','blocks'];
+  const order=['pages','elements','text','media','event','blocks'];
   order.forEach(id=>{const b=$(`[data-studio-tab="${id}"]`,rail);if(b)rail.append(b)});
   $$('[data-studio-tab]',rail).forEach(b=>{
     const id=b.dataset.studioTab;
     const ico=$('.studio-nav-icon',b);
-    if(ico&&['design','elements','text','media','pages','event','blocks'].includes(id)){
-      ico.classList.add('flow-icon');ico.innerHTML=iconSvg(id);
-    }
+    if(ico&&order.includes(id)){ico.classList.add('flow-icon');ico.innerHTML=iconSvg(id)}
     const label=b.querySelector('span:last-child');
     if(label&&id==='media')label.textContent='Uploads';
   });
@@ -120,34 +88,6 @@ function wireRail(){
     requestAnimationFrame(()=>activate(id,{focus:true}));
   },true);
 }
-function wireDesignHome(){
-  const pane=$('[data-studio-pane="design"]',host);if(!pane)return;
-  pane.addEventListener('click',e=>{
-    const open=e.target.closest('[data-flow-open]');if(open){activate(open.dataset.flowOpen);return}
-    const inspector=e.target.closest('[data-flow-inspector]');if(inspector){setInspector(inspector.dataset.flowInspector);return}
-    const theme=e.target.closest('[data-flow-theme]');if(theme){
-      const select=$('#designTheme');if(select){select.value=theme.dataset.flowTheme;select.dispatchEvent(new Event('change',{bubbles:true}));window.uiToast?.(`${theme.textContent.trim()} applied`,'✓')}
-      return;
-    }
-  });
-  // LT-1.7: the pane's inline search duplicated the panel search above it and
-  // filtered the same cards. The panel search (studio-experience.js) now
-  // filters these action tiles individually, so there is one search box.
-  const refresh=()=>{
-    const name=($('#names')?.value||'').trim()||'Untitled invitation';
-    const n=$('#flowProjectName');if(n)n.textContent=name;
-    const type=window.state?.eventType||'Invitation';
-    const meta=$('#flowProjectMeta');if(meta)meta.textContent=`${type} · interactive invitation website`;
-  };
-  $('#names')?.addEventListener('input',refresh);window.addEventListener('einvite:state-applied',refresh);refresh();
-}
-function addPaneBackButtons(){
-  $$('.studio-pane',host).forEach(pane=>{
-    if(pane.dataset.studioPane==='design'||pane.querySelector('.flow-back-design'))return;
-    const heading=$('.studio-pane-heading',pane);if(!heading)return;
-    const b=document.createElement('button');b.type='button';b.className='flow-back-design';b.innerHTML='<span>‹</span> Design';b.onclick=()=>activate('design');heading.append(b);
-  });
-}
 function wireObjectFlow(){
 }
 function wireInsertFlow(){
@@ -177,9 +117,9 @@ function normalizeInitialFlow(){
   if(requested)sessionStorage.removeItem('einvite-open-editor-tab');
   const saved=localStorage.getItem('einvite-editor-left-tab');
   const valid=id=>!!$(`[data-studio-pane="${id}"]`,host);
-  const first=valid(requested)?requested:valid(saved)?saved:'design';
+  const first=valid(requested)?requested:valid(saved)?saved:'pages';
   const sessionActive=sessionStorage.getItem('einvite-editor-session-active')==='1';
-  activate(sessionActive?first:'design',{focus:false});
+  activate(sessionActive?first:'pages',{focus:false});
   sessionStorage.setItem('einvite-editor-session-active','1');
 }
 function decorateTopbar(){
@@ -190,17 +130,14 @@ function decorateTopbar(){
 }
 function safetyPass(){
   const p=activePane();
-  if(!p||!p.isConnected){activate('design',{focus:false});return}
-  applyMode(p.dataset.studioPane||'design');
+  if(!p||!p.isConnected){activate('pages',{focus:false});return}
+  applyMode(p.dataset.studioPane||'pages');
   p.style.removeProperty('height');
   if(['event','blocks'].includes(p.dataset.studioPane)){
     body.classList.remove('inspector-open','mobile-pane-collapsed');
   }
 }
-ensureDesignHome();
 reorderRail();
-addPaneBackButtons();
-wireDesignHome();
 decorateTopbar();
 normalizeInitialFlow();
 /* Interaction routing is intentionally centralized in workflow-continuity.js.
@@ -220,17 +157,17 @@ const stage=$('#stage');
 const viewport=$('#canvasViewport');
 const inspector=$('.right');
 if(!main||!rail||!host||!stage)return;
-const VALID=['design','elements','text','media','pages','event','blocks'];
+const VALID=['pages','elements','text','media','event','blocks'];
 const CONTENT=new Set(['event','blocks']);
 const COMPACT=()=>innerWidth<=1180;
 const scrollMemory=new Map();
 const history=[];
 // FB-43: start from the tab the session will actually open (requested → saved →
-// Design), not from the pane host's synthetic first tab. Reading the DOM default
+// Pages), not from the pane host's synthetic first tab. Reading the DOM default
 // here made boot enter content mode and then leave it, which moved <main> twice.
 const bootTab=sessionStorage.getItem('einvite-open-editor-tab')||localStorage.getItem('einvite-editor-left-tab');
-let current=($(`.studio-pane[data-studio-pane="${bootTab}"]`,host)||$('.studio-pane.active',host))?.dataset.studioPane||'design';
-let lastDesign=CONTENT.has(current)?'design':current;
+let current=($(`.studio-pane[data-studio-pane="${bootTab}"]`,host)||$('.studio-pane.active',host))?.dataset.studioPane||'pages';
+let lastDesign=CONTENT.has(current)?'pages':current;
 let selectedSignature='';
 let lastAutoInspected='';
 let navigating=false;
@@ -249,7 +186,7 @@ function setInspector(id){if(COMPACT()&&window.EInviteProfessionalEditor?.ownsPo
 function refreshCanvasSoon(delay=90){clearTimeout(refreshCanvasSoon.t);refreshCanvasSoon.t=setTimeout(()=>{try{typeof updateCanvasView==='function'&&updateCanvasView()}catch{};try{typeof updateSelectionBounds==='function'&&updateSelectionBounds()}catch{};dispatchEvent(new CustomEvent('einvite:workspace-resized'))},delay)}
 function clearPanelSearch(){const input=$('.studio-panel-search input',host);if(input&&input.value){input.value='';input.dispatchEvent(new Event('input',{bubbles:true}))}}
 function markRecent(id){
-  if(!VALID.includes(id)||id==='design')return;
+  if(!VALID.includes(id))return;
   lastUsed=[id,...lastUsed.filter(x=>x!==id)].slice(0,4);
   localStorage.setItem('einvite-workflow-recent-tools-v1',JSON.stringify(lastUsed));
   renderRecent();
@@ -292,7 +229,7 @@ function navigate(id,{push=true,focus=true,collapse=false,source='workflow'}={})
 }
 function goBack(){
   while(history.length){const id=history.pop();if(validSection(id)&&id!==current){navigate(id,{push:false,source:'back'});return}}
-  navigate('design',{push:false,source:'back'});
+  navigate('pages',{push:false,source:'back'});
 }
 function panelIsCollapsed(){return body.classList.contains('mobile-pane-collapsed')||body.classList.contains('workflow-panel-hidden')}
 function setPanelCollapsed(value){
@@ -315,9 +252,7 @@ function ensureChrome(){
   $$('.studio-pane',host).forEach(p=>{
     const heading=$('.studio-pane-heading',p);if(!heading||heading.querySelector('.workflow-pane-actions'))return;
     const actions=document.createElement('div');actions.className='workflow-pane-actions';
-    if(p.dataset.studioPane!=='design'){
-      const back=document.createElement('button');back.type='button';back.className='workflow-pane-back';back.innerHTML='‹ <span>Back</span>';back.onclick=goBack;actions.append(back);
-    }
+    const back=document.createElement('button');back.type='button';back.className='workflow-pane-back';back.innerHTML='‹ <span>Back</span>';back.onclick=goBack;actions.append(back);
     const close=document.createElement('button');close.type='button';close.className='workflow-pane-close';close.textContent='×';close.title='Hide panel';close.onclick=()=>setPanelCollapsed(true);actions.append(close);
     heading.append(actions);
   });
@@ -325,18 +260,19 @@ function ensureChrome(){
 function updateChrome(){
   const toggle=$('#workflowPanelToggle');if(toggle){const closed=panelIsCollapsed();toggle.innerHTML=closed?'›':'‹';toggle.title=closed?'Open creation panel':'Hide creation panel';toggle.setAttribute('aria-expanded',String(!closed))}
   const trail=$('#workflowTrail');if(trail){
-    const labels={design:'Design',elements:'Elements',text:'Text',media:'Uploads',pages:'Pages',event:'Event details',blocks:'Content blocks'};
+    const labels={elements:'Elements',text:'Text',media:'Uploads',pages:'Pages',event:'Event details',blocks:'Content blocks'};
     trail.querySelector('strong').textContent=labels[current]||current;
-    trail.hidden=current==='design';
+    trail.hidden=false;
   }
 }
 function renderRecent(){
-  const design=pane('design');if(!design)return;
-  let section=$('.workflow-recent',design);
+  const home=pane('pages');if(!home)return;
+  let section=$('.workflow-recent',home);
   if(!section){
     section=document.createElement('section');section.className='flow-section workflow-recent';
     section.innerHTML='<div class="flow-section-head"><h3>Recent tools</h3></div><div class="workflow-recent-grid"></div>';
-    const first=$('.flow-section',design);first?.after(section);
+    const first=$('.flow-section',home);
+    if(first)first.after(section);else $('.studio-pane-heading',home)?.after(section);
   }
   const grid=$('.workflow-recent-grid',section);
   const labels={elements:['✦','Elements','Graphics & ornaments'],text:['T','Text','Fonts & typography'],media:['⇧','Uploads','Photos, video & audio'],pages:['▣','Pages','Page structure'],event:['◫','Event','Event information'],blocks:['▦','Blocks','Content sections']};
@@ -346,7 +282,10 @@ function renderRecent(){
   items.forEach(id=>{const [icon,name,desc]=labels[id];const b=document.createElement('button');b.type='button';b.dataset.workflowRecent=id;b.innerHTML=`<span>${icon}</span><div><b>${name}</b><small>${desc}</small></div>`;b.onclick=()=>navigate(id,{source:'recent'});grid.append(b)});
 }
 function improveDesignSearch(){
-  const design=pane('design');const input=$('.flow-design-search input',design);if(!input||$('#workflowSearchResults'))return;
+  // The Design home pane is retired; its inline search went with it and the
+  // panel search in studio-experience.js is the only one left.
+  const design=pane('design');if(!design)return;
+  const input=$('.flow-design-search input',design);if(!input||$('#workflowSearchResults'))return;
   const results=document.createElement('div');results.id='workflowSearchResults';results.className='workflow-search-results';results.hidden=true;input.closest('.flow-design-search').after(results);
   const items=[
     ['elements','Elements','graphics ornaments shapes decorations'],['text','Text','fonts typography heading body'],['media','Uploads','photos images video audio music'],['pages','Pages','layouts structure page builder'],['event','Event details','date venue rsvp schedule guest'],['blocks','Content blocks','story dress code notes quote'],
@@ -425,7 +364,7 @@ function pageFlow(){
 function keyboardFlow(){}
 function guardLayout(){
   const sync=()=>{
-    if(!validSection(current))current='design';
+    if(!validSection(current))current='pages';
     const p=pane(current);if(p&&!p.classList.contains('active')){
       $$('.studio-pane',host).forEach(x=>x.classList.toggle('active',x===p));
       $$('[data-studio-tab]',rail).forEach(x=>x.classList.toggle('active',x.dataset.studioTab===current));
@@ -442,7 +381,7 @@ function init(){
   const requested=sessionStorage.getItem('einvite-open-editor-tab');
   const saved=localStorage.getItem('einvite-editor-left-tab');
   const sessionActive=sessionStorage.getItem('einvite-editor-session-active')==='1';
-  const start=validSection(requested)?requested:(sessionActive&&validSection(saved)?saved:(validSection(current)?current:'design'));
+  const start=validSection(requested)?requested:(sessionActive&&validSection(saved)?saved:(validSection(current)?current:'pages'));
   if(requested)sessionStorage.removeItem('einvite-open-editor-tab');
   navigate(start,{push:false,focus:false,source:'init'});
   sessionStorage.setItem('einvite-editor-session-active','1');
@@ -768,10 +707,10 @@ const stage=$('#stage');
 const viewport=$('#canvasViewport');
 const frame=$('#canvasFrame');
 const host=$('.studio-pane-host');
-const DESIGN_SECTIONS=new Set(['design','elements','text','media','pages']);
+const DESIGN_SECTIONS=new Set(['elements','text','media','pages']);
 const CONTENT_SECTIONS=new Set(['event','blocks']);
 const VERSION='2026-07-22-final-workflow-audit-v7';
-let lastDesignSection='design';
+let lastDesignSection='pages';
 let lastCanvasView=null;
 let pendingChromeView=null;
 let restoreTimer=0;
@@ -948,7 +887,7 @@ function ensureBackToCanvas(){
     const pane=$(`[data-studio-pane="${id}"]`,host);const heading=$('.studio-pane-heading',pane);if(!heading||$('.workflow-v7-back-canvas',heading))continue;
     const actions=$('.workflow-pane-actions',heading)||heading;
     const b=document.createElement('button');b.type='button';b.className='workflow-v7-back-canvas';b.innerHTML='← <span>Back to canvas</span>';
-    b.onclick=()=>window.EInviteWorkflow.navigate(DESIGN_SECTIONS.has(lastDesignSection)?lastDesignSection:'design',{source:'back-to-canvas'});
+    b.onclick=()=>window.EInviteWorkflow.navigate(DESIGN_SECTIONS.has(lastDesignSection)?lastDesignSection:'pages',{source:'back-to-canvas'});
     actions.prepend(b);
   }
 }

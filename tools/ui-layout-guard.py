@@ -126,6 +126,13 @@ MEASURE_JS = r"""
   const visible = (el) => {
     const s = getComputedStyle(el);
     if (s.display === 'none' || s.visibility === 'hidden' || s.opacity === '0') return false;
+    // Chromium still reports a non-zero rect for a control inside a closed
+    // <details> (or a content-visibility subtree) even though it is not
+    // rendered — innerText is empty and checkVisibility() is false. Counting
+    // those as visible made the Page group's folded cards read as empty
+    // buttons. Ask the engine whether the element is actually rendered.
+    if (typeof el.checkVisibility === 'function'
+        && !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0;
   };

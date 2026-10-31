@@ -145,7 +145,10 @@
     className: 'studio-left-panel', navClass: 'studio-tool-rail', hostClass: 'studio-pane-host',
     buttonClass: 'studio-rail-button', paneClass: 'studio-pane', label: 'Creation tools', eyebrow: 'Create', activate: activateLeft
   });
-  activateLeft(localStorage.getItem('einvite-editor-left-tab') || 'event');
+  // The left Design home pane is retired; Pages is the default rail item. A
+  // stored tab that no longer exists must not leave every pane inactive.
+  const savedLeftTab = localStorage.getItem('einvite-editor-left-tab');
+  activateLeft($(`[data-studio-tab="${savedLeftTab}"]`, leftTabs.nav) ? savedLeftTab : 'pages');
   const leftSearch = document.createElement('div');
   leftSearch.className = 'studio-panel-search';
   leftSearch.innerHTML = '<span>⌕</span><input type="search" placeholder="Search tools and settings…" aria-label="Search creation tools">';

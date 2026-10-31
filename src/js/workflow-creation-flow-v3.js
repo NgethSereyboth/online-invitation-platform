@@ -129,7 +129,7 @@ window.addEventListener('einvite:workflow-navigation',e=>{
   const to=e.detail?.to;
   if(to==='pages')setTimeout(renderPageDock,80);
   if(['elements','text','media'].includes(to)&&compact())body.classList.remove('inspector-open');
-  if(to==='design')renderQuickStrip();
+  if(to==='pages')renderQuickStrip();
 });
 window.addEventListener('einvite:state-applied',()=>setTimeout(()=>{renderPageDock();renderQuickStrip();updateCanvasWelcome()},120));
 body.classList.add('workflow-creation-flow-v3');

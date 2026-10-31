@@ -213,8 +213,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-dashboard.js",
-      "scriptBytes": 351687,
-      "scriptSha256": "d8a326045c9de7f9cd9a5b4d6dcd63581844fbe5b8908fee7cff4f2b59144f98",
+      "scriptBytes": 351686,
+      "scriptSha256": "29890f929434e8f414414222100823d1f26c394e2d4a1ab8c68dc7e3e3e522e9",
       "sources": {
         "deferredScripts": [
           "delivery-dialog.js",
@@ -355,8 +355,8 @@
     },
     "index.html": {
       "deferredJavascript": "bundle-index-deferred.js",
-      "deferredJavascriptBytes": 149267,
-      "deferredJavascriptSha256": "7b156a1886fdb8b15ba06938c2418fe278d5377a0fbfa1810666f72bc35e5603",
+      "deferredJavascriptBytes": 145482,
+      "deferredJavascriptSha256": "df4702ddf7efff5dd4967bc005dda0814cf6583c976d8143ee03e8229f224dee",
       "deferredStylesheet": "bundle-index-deferred.css",
       "deferredStylesheetBytes": 51286,
       "deferredStylesheetSha256": "e72539220a16edcdb1e54bce5fe92dd90ff6c33021a82afa0b05bab0cec71e9a",
@@ -364,8 +364,8 @@
       "javascript2": "bundle-index-2.js",
       "javascript2Bytes": 599171,
       "javascript2Sha256": "5297f7f37f508a311df4ce4ec980b90ca0ebab1dcc52b96c58b513d1cfcf852a",
-      "scriptBytes": 543043,
-      "scriptSha256": "bfb6ea0a7a15dec2a82b027f26e0e187b4dfe1e2f5d19e8c14bf67a5313c3035",
+      "scriptBytes": 543272,
+      "scriptSha256": "2d16d35a998e7dd3b4b24408cd3c6d231db390b3d7ab2fcd1f5723510d0a7e51",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [
@@ -484,8 +484,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 477323,
-      "styleSha256": "c55b6ba186ad0552e5c361bd794709122cf004ae9127f3e14abcfe0c2c4a4074",
+      "styleBytes": 477521,
+      "styleSha256": "4a3cccb0cdc52360241d545a758f0c725752cc9c12441acbaa58d4561451ae14",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {

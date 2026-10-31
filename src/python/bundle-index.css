@@ -1439,7 +1439,7 @@ body.workspace-experience-v54 .studio-inspector-tab small { max-width: 100%; ove
 .v54-inspector-empty > p { max-width: 230px; margin: 0; color: var(--app-muted, #8a8085); font-size: 10px; line-height: 1.55; }
 .v54-inspector-empty > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
 .v54-inspector-empty button { min-height: 44px; padding: 8px 9px; border-radius: 9px; font-size: 9px; }
-body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty) { display: none; }
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.ix-groups) { display: none; }
 body.workspace-experience-v54.v54-inspector-essential.v54-has-selection [data-inspector-pane="object"] > .v54-advanced-control { display: none; }
 body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] h2.studio-inspector-heading { display: none; }
 body.v54-inspector-essential .right > .ei-graphics-diagnostics { display: none; }
@@ -1707,7 +1707,7 @@ body[data-page="index"].studio-experience.v54-has-selection > aside.right > :not
 display: block;
 margin-top: 16px;
 }
-body[data-page="index"].studio-experience:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder) {
+body[data-page="index"].studio-experience:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder):not(.ix-groups) {
 display: none;
 }
 body[data-page="index"].studio-experience.v54-has-selection .v54-inspector-placeholder,
@@ -1834,7 +1834,8 @@ font-size: 11px;
 body[data-page="index"].studio-experience .mobile-desktop-hint {
 display: none;
 }
-body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder) { display: none; }
+body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > :not([data-inspector-pane]):not(.studio-inspector-heading):not(.v54-inspector-empty):not(.v54-inspector-placeholder):not(.ix-groups) { display: none; }
+body.studio-experience:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-groups > .ix-group:not([data-ix-group="page"]) { display: none; }
 body.studio-experience #noSelection.v54-inspector-placeholder,
 .v54-inspector-placeholder {
 display: grid;
