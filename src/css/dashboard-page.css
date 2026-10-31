@@ -16,7 +16,7 @@
 .dash{padding:32px}.dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}.dash-head h1{font-size:32px;font-family:Georgia,serif;margin:0;color:var(--accent,#9d4555)}.dash-head h1 span{color:#766;font-weight:400}.dash-quickstart{display:flex;gap:12px;overflow-x:auto;padding:4px 0;margin-bottom:8px}.dash-quickstart button{min-height:90px;padding:12px;border-radius:12px;border:1px solid var(--line,#e8dfdc);background:var(--panel,#fff);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12px;cursor:pointer;box-shadow:0 4px 12px #0000000a}.dash-quickstart button:hover{border-color:var(--accent,#9d4555);box-shadow:0 6px 20px #00000014}
 .invite-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:12px}.invite-card{background:var(--panel,#fff);border:1px solid var(--line,#e8dfdc);border-radius:12px;overflow:hidden;box-shadow:0 4px 16px #0000000a;transition:box-shadow .15s ease,transform .15s ease}.invite-card:hover{box-shadow:0 8px 24px #00000014}.invite-card:disabled{opacity:.4}.invite-cover{height:140px;background:linear-gradient(135deg,#f8e8df,var(--accent,#9d4555));display:grid;place-items:center;color:#fff;font-family:Georgia,serif;font-size:28px;border:0;cursor:pointer}.invite-body{padding:12px}
 .invite-body h2{font-size:16px;font-family:Georgia,serif;margin:0 0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.invite-status-pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase}
+.invite-status-pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase}
 .stats{display:flex;gap:12px;color:#766;font-size:11px;margin:6px 0}.stats span{display:inline-flex;align-items:center;gap:2px}
 .invite-overflow{position:relative;display:inline-block}.invite-overflow__toggle{width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:#766;font-size:16px;line-height:1;cursor:pointer;padding:2px;display:flex;align-items:center;justify-content:center}.invite-overflow__toggle:hover{background:rgba(0,0,0,0.04)}.invite-overflow__toggle:focus-visible{outline:2px solid var(--accent,#9d4555);outline-offset:1px}
 .invite-overflow__menu{position:absolute;top:100%;right:0;z-index:10;margin:0;padding:6px 4px;background:var(--panel,#fff);border:1px solid var(--line,#e8dfdc);border-radius:8px;box-shadow:0 12px 32px #0000001a;min-width:140px;display:flex;flex-direction:column;list-style:none}
@@ -31,7 +31,7 @@
 .login label{display:block;margin-bottom:14px;font-size:12px}.login input{padding:8px 10px;border:1px solid var(--line,#e8dfdc);border-radius:8px;width:100%;font-size:13px}
 .login .canvas-auth-actions{margin-top:18px}.login button.primary{width:100%;padding:10px;border-radius:8px;font-size:13px}
 .login .canvas-auth-links{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-size:11px}
-.login .canvas-auth-note{color:#766;font-size:10px;margin-top:8px}
+.login .canvas-auth-note{color:#766;font-size:11px;margin-top:8px}
 
 /* ============================================================================
    V55 dashboard — auth card (Skeleton B inside the A shell) + signed-in grid.
@@ -144,3 +144,9 @@ body[data-page="dashboard"] .dashboard-empty-preview strong { font-size: var(--f
    the override here, next to that rule. */
 .invite-card:has(.invite-overflow__menu:not([hidden])) { overflow: visible; position: relative; z-index: 5; }
 .invite-overflow__menu{max-height:min(70vh,420px);overflow-y:auto}
+/* PW dashboard polish — desktop keeps the 32px rows, but coarse pointers get
+   a comfortable 44px target on the card overflow and its menu actions. */
+@media (pointer: coarse) {
+  .invite-overflow__toggle,
+  .invite-overflow__menu button { min-width: 44px; min-height: 44px; }
+}

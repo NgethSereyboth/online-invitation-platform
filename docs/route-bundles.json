@@ -270,8 +270,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 316761,
-      "styleSha256": "151a772d419ee863e255d3e8277ccf634c4bc57805decc4f7b615272250f6ef3",
+      "styleBytes": 316876,
+      "styleSha256": "75451b08335caf536ae146c00b2ddf0380c5e2a4996a00a70304af5084031a69",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -485,7 +485,7 @@
         ]
       },
       "styleBytes": 467314,
-      "styleSha256": "7c8b417ab25a12a387c3b9cce34dd4b64159c3a25082300aff5cd829e714e7ba",
+      "styleSha256": "579a9ef21f3cadedde236e820ec93effe8dd3246e840687445523b8b7e54dc7e",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {
