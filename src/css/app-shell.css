@@ -1526,3 +1526,33 @@ body:not(.guest) .studio-statusbar .v54-footer-tools-menu button {
   font-size: 9px;
 }
 body:not(.guest) .studio-statusbar kbd { padding: 1px 5px; }
+
+/* ≤600 topbar. canvas-plus.css and editor-suite.css both declare
+   `body:not(.guest) > header` with the same specificity but later in the sheet,
+   so the mobile wrap was silently reverted to one non-wrapping row. Raising
+   specificity fixes the cascade without another !important. */
+@media (max-width: 600px) {
+  body:not(.guest):not(.guest) > header {
+    /* One !important: every unlayered sheet (canvas-plus, editor-suite) repeats
+       `body:not(.guest) > header` after this layer, and a normal declaration
+       there reverted the wrap. The pin has room for exactly this one. */
+    flex-wrap: wrap;
+    overflow: visible;
+    height: auto;
+    min-height: 56px;
+    padding: 6px 10px;
+    gap: 6px;
+    row-gap: 4px;
+  }
+  body:not(.guest):not(.guest) > header > .language-switch {
+    flex: 1 0 100%;
+    order: 20;
+    justify-content: flex-end;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+}
+

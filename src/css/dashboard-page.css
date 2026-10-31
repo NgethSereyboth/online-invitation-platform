@@ -138,3 +138,8 @@ body[data-page="dashboard"] .dashboard-empty-preview strong { font-size: var(--f
 .poster-size-input { min-width: 5rem; width: 5rem; }
 
 }
+
+/* The open ⋮ menu is 450px tall inside a 347px card. app-shell.css is layered,
+   so its :has() override lost to the unlayered .invite-card rule above; keep
+   the override here, next to that rule. */
+.invite-card:has(.invite-overflow__menu:not([hidden])) { overflow: visible; position: relative; z-index: 5; }
