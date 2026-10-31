@@ -2099,27 +2099,6 @@ background: transparent;
 border: 0;
 box-shadow: none;
 }
-}
-@media (max-width: 600px) {
-body:not(.guest):not(.guest):not(.guest) > header {
-flex-wrap: wrap;
-height: auto;
-min-height: 56px;
-overflow: visible;
-padding: 6px 10px;
-gap: 6px;
-row-gap: 4px;
-}
-body:not(.guest):not(.guest):not(.guest) > header > .language-switch {
-flex: 1 0 100%;
-order: 20;
-justify-content: flex-end;
-margin: 0;
-padding: 0;
-background: transparent;
-border: 0;
-box-shadow: none;
-}
 }@layer components {
 .ui-stagger > * { animation: cuStagger var(--motion) var(--smooth) both; }
 .ui-stagger > *:nth-child(2) { animation-delay: 40ms; }
