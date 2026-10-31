@@ -47,7 +47,28 @@ HTML_REF = re.compile(r'''(?:src|href|poster|data-src)\s*=\s*["']([^"'#?]+)''', 
 CSS_URL = re.compile(r'''url\(\s*["']?([^"')#?]+)''', re.I)
 JS_STRING = re.compile(r'''["'`]([^"'`;()]+)["'`]''')
 # Loaders pack several module names into one comma-separated string.
-ROUTE_BUNDLE = re.compile(r'^bundle-([A-Za-z0-9_]+)-v15\.js$')
+# A route bundle is ``bundle-<route>.js``; its lazy chunk is
+# ``bundle-<route>-deferred.js`` (and the historical ``-deferred-v15.js``).
+ROUTE_BUNDLE = re.compile(r'^bundle-([A-Za-z0-9_]+)\.js$')
+
+# server.py injects this into every page it serves (see its ``marker`` constant).
+# backend-mode.js treats a page without it as statically hosted and skips the
+# /api/health probe entirely, which puts the whole UI into "Static preview
+# mode". The Sites Worker reverse-proxies /api/* to a real Python backend, so
+# every bundled page must carry the marker; if that backend is down the probe
+# fails on its own and the UI still degrades gracefully.
+BACKEND_MARKER = '<meta name="einvite-backend" content="full">'
+HEAD_TAG = re.compile(r'<head\b[^>]*>', re.I)
+
+
+def with_backend_marker(html: str) -> str:
+    """Declare that a full API is reachable at /api/* (idempotent)."""
+    if 'name="einvite-backend"' in html:
+        return html
+    match = HEAD_TAG.search(html)
+    if match is None:
+        return html
+    return html[: match.end()] + BACKEND_MARKER + html[match.end():]
 
 
 def refs_in(path: Path, text: str):
@@ -103,17 +124,27 @@ def main() -> int:
             continue
         route = ROUTE_BUNDLE.match(src.name)
         if route:
-            # Deferred chunk for this route, injected by route-deferred-loader-v15.js.
-            for ext in (".js", ".css"):
-                deferred = src.with_name(f"bundle-{route.group(1)}-deferred-v15{ext}")
-                if deferred.is_file():
-                    queue.append(deferred)
+            # Deferred chunk for this route, requested at runtime by
+            # bundle-<route>.js (``${prefix}bundle-${stem}-deferred.js``) and by
+            # route-deferred-loader*.js. Both the plain and the -v15 spelling
+            # are queued; whichever does not exist is skipped.
+            stem = route.group(1)
+            for name in (f"bundle-{stem}-deferred", f"bundle-{stem}-deferred-v15"):
+                for ext in (".js", ".css"):
+                    deferred = src.with_name(name + ext)
+                    if deferred.is_file():
+                        queue.append(deferred)
         if src.suffix.lower() in (".html", ".css", ".js", ".mjs"):
             text = src.read_text(encoding="utf-8", errors="replace")
             for ref in refs_in(src, text):
                 if not ref.lower().endswith(ASSET_EXT):
-                    # Bare module name: the loader appends a version suffix at runtime.
+                    # Bare module name: a loader appends ``.js`` at runtime.
+                    # Some are versioned (``core/theme-v15.js``), others are
+                    # literal (``gpu-loader.js`` builds ``gpu-texture-cache.js``).
                     if re.fullmatch(r"[a-z][a-z0-9-]*", ref):
+                        exact = ROOT / f"{ref}.js"
+                        if exact.is_file():
+                            queue.append(exact)
                         for match in ROOT.glob(f"{ref}-v*.js"):
                             queue.append(match)
                     continue
@@ -140,7 +171,13 @@ def main() -> int:
             text = src.read_text(encoding="utf-8")
             for token, value in PUBLIC_SHELL_DEFAULTS.items():
                 text = text.replace(token, value)
-            dest.write_text(text, encoding="utf-8")
+            dest.write_text(with_backend_marker(text), encoding="utf-8")
+            continue
+        if src.suffix.lower() == ".html":
+            dest.write_text(
+                with_backend_marker(src.read_text(encoding="utf-8", errors="replace")),
+                encoding="utf-8",
+            )
             continue
         shutil.copy2(src, dest)
 

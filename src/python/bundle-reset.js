@@ -178,6 +178,14 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
+      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
+      // check, command palette) is a layout heading, not the app bar, and the injected switch
+      // landed in the middle of those panels. Clean up any copy injected before this guard.
+      if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
+        var stray = h.querySelector(".language-switch");
+        if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
+        continue;
+      }
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
       h.appendChild(sw);
@@ -296,9 +304,13 @@ function toast(message,options={}){
 }
 function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
-  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
-  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
+  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
+  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
+  // A short "Poster title:" style prompt is the field's label, not a second
+  // heading above a generic "Value" label. Long instructions stay as help text.
+  const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
+  const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
@@ -359,9 +371,24 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
-  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);menu.hidden=true;trigger.setAttribute('aria-expanded','false')});
-  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
+  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
+  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
+  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
+  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+  document.body.append(menu);
+  function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
+  function openThemeMenu(){
+    menu.hidden=false;
+    const r=trigger.getBoundingClientRect(),w=menu.offsetWidth||188,h=menu.offsetHeight||104;
+    menu.style.position='fixed';menu.style.right='auto';menu.style.zIndex='13000';
+    menu.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';
+    menu.style.top=Math.max(8,Math.min(innerHeight-h-8,r.bottom+8))+'px';
+    trigger.setAttribute('aria-expanded','true');
+  }
+  trigger.onclick=e=>{e.stopPropagation();if(menu.hidden)openThemeMenu();else closeThemeMenu()};
+  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);closeThemeMenu();trigger.focus()});
+  document.addEventListener('click',e=>{if(!wrap.contains(e.target)&&!menu.contains(e.target))closeThemeMenu()});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||menu.hidden)return;closeThemeMenu();trigger.focus()});
   applyTheme(currentMode());
 }
 installThemeControl();
@@ -370,16 +397,22 @@ function installAppLauncher(){
   const header=$('body:not(:has(.guest))>header');if(!header||$('.ui-app-launcher',header))return;
   const brand=header.querySelector('strong');if(!brand)return;
   const wrap=document.createElement('div');wrap.className='ui-app-launcher';
-  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><header><strong>Workspace</strong></header><div class="ui-app-grid">
+  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><div class="ui-app-menu-head"><strong>Workspace</strong></div><div class="ui-app-grid">
   <a href="dashboard.html"><span>⌂</span><div><b>Dashboard</b><small>Your invitations</small></div></a>
   <a href="templates.html"><span>✦</span><div><b>Templates</b><small>Reusable designs</small></div></a>
   <a href="materials.html"><span>▣</span><div><b>Materials</b><small>Photos, audio & video</small></div></a>
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  brand.after(wrap);const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
+  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
+  // there made every click on it navigate (a full reload) before the menu could open.
+  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+  const brandAnchor=brand.closest('a');
+  (brandAnchor||brand).after(wrap);
+  const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
+  trigger.onclick=e=>{e.preventDefault();e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
   document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||menu.hidden)return;menu.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.focus()});
 }
 installAppLauncher();
 const page=location.pathname.split('/').pop()||'dashboard.html';$$('body:not(:has(.guest))>header a').forEach(a=>{const href=(a.getAttribute('href')||'').split('?')[0].split('#')[0];if(href===page)a.classList.add('ui-current')});
@@ -666,11 +699,32 @@ if(page==='index')setTimeout(editor,0);
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
+  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
+     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
+     return focus to the toggle when the drawer closes under the keyboard. */
+  function ensureScrim() {
+    var scrim = document.querySelector('.app-drawer-scrim');
+    if (!scrim) {
+      scrim = document.createElement('div');
+      scrim.className = 'app-drawer-scrim';
+      scrim.setAttribute('aria-hidden', 'true');
+      document.body.append(scrim);
+    }
+    return scrim;
+  }
   function applyRailOpen(open) {
+    var wasOpen = body.classList.contains('rail-open');
+    var rail = document.querySelector('.app-rail');
     body.classList.toggle('rail-open', !!open);
+    ensureScrim();
+    if (rail) rail.inert = window.matchMedia('(max-width: 768px)').matches && !open;
     document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-expanded', String(!!open));
     });
+    if (!open && wasOpen && rail && rail.contains(document.activeElement)) {
+      var toggle = document.querySelector('[data-drawer-toggle]');
+      if (toggle) toggle.focus();
+    }
   }
 
   /* --- 2. Current page --------------------------------------------------- */

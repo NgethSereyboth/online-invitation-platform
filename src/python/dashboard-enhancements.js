@@ -7,7 +7,9 @@ function readBuiltInFavorites(){
 function writeBuiltInFavorites(set){localStorage.setItem(builtInFavoriteKey,JSON.stringify([...set]))}
 function templateDoc(item){
   if(item.kind==='user'||item.kind==='market') return item.document||{};
-  try{return builtInDocument('Your Event',item.category==='Business'?'Business':item.category||'Wedding',item.id)}catch{return {fields:{names:item.name},palette:{background:'#fff7f3',text:'#342c26',heading:'#9d4555'},designPages:[],objects:{}}}
+  // Preview the design with its own name. The old placeholder ("Your Event")
+  // leaked into the thumbnail, the preview cover and every page caption.
+  try{return builtInDocument(item.name,item.category==='Business'?'Business':item.category||'Wedding',item.id)}catch{return {fields:{names:item.name},palette:{background:'#fff7f3',text:'#342c26',heading:'#9d4555'},designPages:[],objects:{}}}
 }
 function stripMarkup(value){const div=document.createElement('div');div.innerHTML=String(value||'');return div.textContent||div.innerText||''}
 function templatePalette(doc,item){
@@ -66,7 +68,7 @@ renderTemplateChoices = function(){
   const grid=$('#templateChoices');grid.innerHTML='';if(!items.length)grid.innerHTML='<div class="template-empty">No templates match this filter.</div>';
   items.forEach(t=>{
     const card=document.createElement('article');card.className=`template-choice${selected===t.id?' active':''}`;card.dataset.templateChoice=t.id;card.dataset.tone=t.tone||'custom';
-    card.innerHTML=`<button type="button" class="template-select-action" aria-pressed="${selected===t.id}">${liveThumbnail(t)}<div class="template-meta"><strong>${escapeHtml(t.name)}</strong><small>${escapeHtml(t.description||'Reusable invitation design')}</small></div></button><div class="template-choice-actions"><button type="button" class="favorite${t.favorite?' active':''}" title="${t.favorite?'Remove from favorites':'Add to favorites'}">★</button><button type="button" class="preview-card-btn">Preview</button></div>`;
+    card.innerHTML=`<button type="button" class="template-select-action" aria-pressed="${selected===t.id}">${liveThumbnail(t)}<div class="template-meta"><strong>${escapeHtml(t.name)}</strong><small>${escapeHtml(t.description||'Reusable invitation design')}</small></div></button><div class="template-choice-actions"><button type="button" class="favorite${t.favorite?' active':''}" title="${t.favorite?'Remove from favorites':'Add to favorites'}" aria-label="${t.favorite?'Remove from favorites':'Add to favorites'}">★</button></div><button type="button" class="preview-card-btn">Preview</button>`;
     card.querySelector('.favorite').onclick=async e=>{e.stopPropagation();try{await toggleTemplateFavorite(t)}catch(error){alert(error.message)}};
     card.querySelector('.preview-card-btn').onclick=e=>{e.stopPropagation();openTemplatePreview(t)};
     if(t.kind==='user'){
@@ -99,12 +101,27 @@ function previewPageMarkup(page,master){
   return `<div class="template-preview-page" style="--page-bg:${escapeHtml(bg?.background||'#fff')};${image}"><div><strong>${escapeHtml(title)}</strong><small style="display:block;margin-top:6px;opacity:.7">${Object.keys(page.objects||{}).length} design objects</small></div></div>`
 }
 function openTemplatePreview(item){
-  previewTemplateItem=item;const doc=templateDoc(item),p=templatePalette(doc,item),pages=doc.designPages||[],title=templateTitle(doc,item),heroObjects=Object.values(doc.objects||{}).slice(0,24).map(previewObjectMarkup).join('');
-  $('#templatePreviewBody').innerHTML=`<div class="template-preview-shell"><div class="template-preview-phone"><div class="template-preview-screen" style="--p-bg:${p.background};--p-text:${p.text};--p-heading:${p.heading}"><section class="template-preview-hero"><h2>${escapeHtml(title)}</h2>${heroObjects}</section><div class="template-preview-pages">${pages.map(page=>previewPageMarkup(page,doc.masterPageStyle)).join('')}<div class="template-preview-page"><div><strong>Event sections</strong><small style="display:block;margin-top:6px;opacity:.7">${(doc.sectionOrder||[]).filter(x=>!String(x).startsWith('page:')).join(' · ')||'Flexible sections'}</small></div></div></div></div></div><div class="template-preview-info"><p class="invite-kicker">${escapeHtml(item.category||'Invitation')} template</p><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.description||'Reusable invitation design')}</p><div class="template-preview-tags">${(item.tags||[]).map(tag=>`<span>${escapeHtml(tag)}</span>`).join('')}</div><div class="template-preview-features"><div class="template-preview-feature"><strong>${pages.length}</strong><br><small>Visual pages</small></div><div class="template-preview-feature"><strong>${Object.keys(doc.objects||{}).length}</strong><br><small>Hero objects</small></div><div class="template-preview-feature"><strong>${item.kind==='user'||item.kind==='market'?'Version '+(item.currentVersion||1):'Curated'}</strong><br><small>${item.kind==='user'?'Your template':item.kind==='market'?'Shared template':'Built-in design'}</small></div><div class="template-preview-feature"><strong>${doc.languageMode==='both'?'Bilingual ready':'Flexible'}</strong><br><small>Content system</small></div></div><div class="preview-page-list">${pages.map((page,i)=>`<div><span>${i+1}. ${escapeHtml(page.name||'Visual page')}</span><small>${escapeHtml(page.preset||'custom')}</small></div>`).join('')}</div></div></div>`;
+  previewTemplateItem=item;const doc=templateDoc(item),p=templatePalette(doc,item),pages=doc.designPages||[],title=item.name;
+  const pageCount=`${pages.length} visual page${pages.length===1?'':'s'}`;
+  const sectionList=(doc.sectionOrder||[]).filter(x=>!String(x).startsWith('page:')).join(' · ')||'Flexible sections';
+  // One cover, one message. The old preview stacked the heading on top of every
+  // absolutely-positioned hero object, so "Your Event" printed over the copy.
+  $('#templatePreviewBody').innerHTML=`<div class="template-preview-shell"><div class="template-preview-phone"><div class="template-preview-screen" style="--p-bg:${p.background};--p-text:${p.text};--p-heading:${p.heading}"><section class="template-preview-hero"><span class="template-preview-eyebrow">${escapeHtml(item.category||'Invitation')} design</span><h2>${escapeHtml(title)}</h2><p>${escapeHtml(item.description||'Reusable invitation design')}</p><span class="template-preview-count">${pageCount}</span></section><div class="template-preview-pages">${pages.map(page=>previewPageMarkup(page,doc.masterPageStyle)).join('')}<div class="template-preview-page"><div><strong>Event sections</strong><small style="display:block;margin-top:6px;opacity:.7">${escapeHtml(sectionList)}</small></div></div></div></div></div><div class="template-preview-info"><p class="invite-kicker">${escapeHtml(item.category||'Invitation')} template</p><h2>${escapeHtml(item.name)}</h2><p>${escapeHtml(item.description||'Reusable invitation design')}</p><div class="template-preview-tags">${(item.tags||[]).map(tag=>`<span>${escapeHtml(tag)}</span>`).join('')}</div><div class="template-preview-features"><div class="template-preview-feature"><strong>${pages.length}</strong><br><small>Visual pages</small></div><div class="template-preview-feature"><strong>${Object.keys(doc.objects||{}).length}</strong><br><small>Hero elements</small></div><div class="template-preview-feature"><strong>${item.kind==='user'||item.kind==='market'?'Version '+(item.currentVersion||1):'Curated'}</strong><br><small>${item.kind==='user'?'Your template':item.kind==='market'?'Shared template':'Built-in design'}</small></div><div class="template-preview-feature"><strong>${doc.languageMode==='both'?'Bilingual ready':'Flexible'}</strong><br><small>Content system</small></div></div><div class="preview-page-list">${pages.map((page,i)=>`<div><span>${i+1}. ${escapeHtml(page.name||'Visual page')}</span><small>${escapeHtml(page.preset||'custom')}</small></div>`).join('')}</div></div></div>`;
   $('#templatePreviewDialog').showModal()
 }
 
 if($('#closeTemplatePreview'))$('#closeTemplatePreview').onclick=()=>$('#templatePreviewDialog').close();
-if($('#usePreviewTemplate'))$('#usePreviewTemplate').onclick=()=>{if(!previewTemplateItem)return;$('#newTemplate').value=previewTemplateItem.id;updateTemplateSummary(previewTemplateItem);renderTemplateChoices();$('#templatePreviewDialog').close()};
+if($('#usePreviewTemplate'))$('#usePreviewTemplate').onclick=()=>{
+  if(!previewTemplateItem)return;
+  const chosen=previewTemplateItem;
+  // "Use this template" is the commit action, not a second selection state.
+  // It used to only highlight a card behind the two dialogs, so the button
+  // looked dead; from a preview the only sensible next step is creation.
+  $('#newTemplate').value=chosen.id;
+  if($('#newType'))$('#newType').value=chosen.category==='Birthday'?'Birthday':chosen.category==='Business'?'Business':'Wedding';
+  if($('#newTitle')&&!$('#newTitle').value.trim())$('#newTitle').value=chosen.name;
+  $('#templatePreviewDialog').close();
+  if($('#createForm'))$('#createForm').requestSubmit();
+};
 if($('#templateSearch'))$('#templateSearch').oninput=renderTemplateChoices;
 document.querySelectorAll('[data-template-filter]').forEach(b=>b.onclick=()=>{templateFilter=b.dataset.templateFilter;document.querySelectorAll('[data-template-filter]').forEach(x=>x.classList.toggle('active',x===b));renderTemplateChoices()});

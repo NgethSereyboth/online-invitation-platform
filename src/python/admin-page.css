@@ -25,7 +25,13 @@ body[data-page="admin"] .admin-tabs button[aria-selected="true"] { color: var(--
 body[data-page="admin"] .admin-search { display: block; width: 240px; margin-bottom: var(--space-5); }
 body[data-page="admin"] .admin-panel { display: none; }
 body[data-page="admin"] .admin-panel.active { display: block; }
-body[data-page="admin"] .admin-panel table { border: 1px solid var(--app-line); border-radius: var(--radius-md); overflow: hidden; }
+/* QA 2026-10-30: `overflow: hidden` here made the table its own sticky
+   scrollport. `thead th { top: var(--app-topbar-h) }` then offset the header by
+   56px at rest (blank band above it, first row visually detached) instead of
+   sticking under the app topbar while scrolling. Keep the radius, drop the
+   clipping: measured at 1440×900 the band is gone and the header sticks exactly
+   at the topbar edge (y=56) once the page scrolls. */
+body[data-page="admin"] .admin-panel table { border: 1px solid var(--app-line); border-radius: var(--radius-md); overflow: visible; }
 body[data-page="admin"] .admin-panel table thead th { background: var(--app-surface-2); position: sticky; top: var(--app-topbar-h); }
 body[data-page="admin"] .admin-panel tbody tr:hover { background: var(--app-surface-2); }
 

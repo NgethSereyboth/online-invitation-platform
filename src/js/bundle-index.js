@@ -317,6 +317,14 @@ window.EInviteLifecycle={add,interval,timeout,observer,controller,cleanup,get cl
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
+      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
+      // check, command palette) is a layout heading, not the app bar, and the injected switch
+      // landed in the middle of those panels. Clean up any copy injected before this guard.
+      if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
+        var stray = h.querySelector(".language-switch");
+        if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
+        continue;
+      }
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
       h.appendChild(sw);
@@ -626,6 +634,10 @@ function adjustZoom(delta){return setZoom(Math.max(.1,Math.min(5,(window.EInvite
 function activateTool(tool){if(window.EInviteToolController?.setTool)return window.EInviteToolController.setTool(tool);return clickNative(`[data-tool="${CSS.escape(tool)}"]`)}
 function toggleSelectedFlag(key){const ids=selected();if(!ids.length)return false;const state=window.EInviteEditorBridge?.getState?.(),canvasId=window.EInviteEditorBridge?.getActiveCanvasId?.()||'hero';let map=state?.objects||{};if(canvasId!=='hero'){const page=(state?.designPages||[]).find(p=>`page:${p.id}`===canvasId);map=page?.objects||{}}const all=ids.every(id=>key==='visible'?map[id]?.visible!==false:map[id]?.[key]===true);return pro('setObjectFlag',ids,key,!all)}
 function closeTopLayer(){
+// The design-check modal is a div[role=dialog] owned by studio-experience, so it is not covered by
+// the dialog[open] branch below and was ranked after the selection branch: Esc cleared the canvas
+// selection first and left the open modal untouched. Ask its owner before anything else closes.
+if(window.EInviteDesignCheck?.isOpen?.()){window.EInviteDesignCheck.close();return true}
 if(window.EInviteProfessionalEditor?.commands?.cancelInteraction?.())return true;
 if(window.EInviteProfessionalWorkflow?.transform?.active){window.EInviteProfessionalWorkflow.transform.cancel();return true}
 const dialog=$$('dialog[open]').at(-1);if(dialog){dialog.close?.();return true}
@@ -2265,9 +2277,13 @@ function toast(message,options={}){
 }
 function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
-  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
-  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
+  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
+  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
+  // A short "Poster title:" style prompt is the field's label, not a second
+  // heading above a generic "Value" label. Long instructions stay as help text.
+  const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
+  const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
@@ -4654,7 +4670,9 @@ const content=selected.querySelector('.content');
 const textItems=items.filter(item=>item.querySelector('.content'));
 $('#selectionCount').textContent=`${items.length} selected`;
 $('#textContentLabel').hidden=!content||items.length>1;
-$('#textContent').value=content?.textContent||'';
+$('#textContent').value=(content?.innerText||'').replace(/\n+$/,'');
+$('#textContent').style.height='auto';
+$('#textContent').style.height=Math.min(168,Math.max(38,$('#textContent').scrollHeight+2))+'px';
 $('#font').disabled=!textItems.length;
 $('#color').disabled=!textItems.length;
 $('#fontSize').disabled=!textItems.length;
@@ -4843,7 +4861,9 @@ $('#textContent').oninput=e=>{
 if(!selected)return;
 const content=selected.querySelector('.content');
 if(!content)return;
-content.textContent=e.target.value;
+content.innerHTML=safeHtml(e.target.value).replace(/\n/g,'<br>');
+e.target.style.height='auto';
+e.target.style.height=Math.min(168,Math.max(38,e.target.scrollHeight+2))+'px';
 if(selected.dataset.id==='title'){
 const field=$('#languageMode').value==='km'?$('#namesKm'):$('#names');
 field.value=e.target.value
@@ -5578,11 +5598,12 @@ publishedAt:new Date().toISOString(),
 document:structuredClone(documentSnapshot)
 }
 }
-$('#unpublishBtn')?.addEventListener('click',async()=>{if(!serverInvite)return alert('Unpublish is available when the backend is connected.');if(!(await uiConfirm('Take this invitation offline? Published version history will be preserved.',{title:'Unpublish invitation',danger:true,confirmText:'Unpublish'})))return;try{await api(`/api/invitations/${serverInvite.id}/unpublish`,{method:'POST',body:'{}'});serverInvite.published=false;$('#publishInfo').innerHTML='<strong>Unpublished</strong><br>The public link is currently offline. Version history is preserved.';alert('Invitation unpublished.')}catch(error){alert(error.message)}});
-$('#publishBtn').onclick=async()=>{const button=$('#publishBtn');if(button?.disabled)return;if(button){button.disabled=true;button.setAttribute('aria-busy','true')}try{let publishDocument;if(serverInvite){await reconcileAssetRefs(state);publishDocument=await settleServerWritesBeforePublish()}const snap=snapshot(publishDocument);let message='Published locally. Guest preview now uses an immutable snapshot.';if(serverInvite){const result=await api('/api/invitations/'+serverInvite.id+'/publish',{method:'POST',body:JSON.stringify({document:snap.document,expectedRevision:serverInvite.updatedAt??null})});serverInvite.updatedAt=result.updatedAt;serverSaveBlockedByConflict=false;message=`Published! Public URL: ${location.origin+result.url}`;$('#publishInfo').dataset.publicUrl=result.url}inviteStore.write(draftKey,snap.document);inviteStore.write(publishKey,snap);inviteStore.append(historyKey,snap);refreshPublish();alert(message)}catch(error){const blocked=error?.code==='review_gate_blocked',studioBlocked=error?.code==='studio_governance_blocked';if(error?.status===409&&error?.code==='revision_conflict')markServerRevisionConflict(error);else if(serverInvite&&publishDocument&&!pendingServerDocument)pendingServerDocument=publishDocument;window.__einviteLastPublishError={message:error?.message||String(error),status:error?.status||0,code:error?.code||''};if(blocked)window.EInviteReviewWorkflow?.showPublishReadiness?.(error.payload?.readiness);if(studioBlocked)window.EInviteStudioGovernance?.open?.();alert(blocked?'Publishing is blocked by review requirements.':studioBlocked?'Publishing is blocked by studio design requirements. Open Studio and Print readiness to resolve the listed requirements.':`The invitation could not be published: ${error?.message||'Unknown error'}`)}finally{if(serverInvite)releasePublishWriteBarrier();if(button){button.disabled=false;button.removeAttribute('aria-busy')}}};
+$('#unpublishBtn')?.addEventListener('click',async()=>{if(!serverInvite)return alert('Unpublish is available when the backend is connected.');if(!(await uiConfirm('Take this invitation offline? Published version history will be preserved.',{title:'Unpublish invitation',danger:true,confirmText:'Unpublish'})))return;try{await api(`/api/invitations/${serverInvite.id}/unpublish`,{method:'POST',body:'{}'});serverInvite.published=false;const publishInfo=$('#publishInfo');if(publishInfo)publishInfo.innerHTML='<strong>Unpublished</strong><br>The public link is currently offline. Version history is preserved.';alert('Invitation unpublished.')}catch(error){alert(error.message)}});
+$('#publishBtn').onclick=async()=>{const button=$('#publishBtn');if(button?.disabled)return;if(button){button.disabled=true;button.setAttribute('aria-busy','true')}try{let publishDocument;if(serverInvite){await reconcileAssetRefs(state);publishDocument=await settleServerWritesBeforePublish()}const snap=snapshot(publishDocument);let message='Published locally. Guest preview now uses an immutable snapshot.';if(serverInvite){const result=await api('/api/invitations/'+serverInvite.id+'/publish',{method:'POST',body:JSON.stringify({document:snap.document,expectedRevision:serverInvite.updatedAt??null})});serverInvite.updatedAt=result.updatedAt;serverSaveBlockedByConflict=false;message=`Published! Public URL: ${location.origin+result.url}`;const publishInfo=$('#publishInfo');if(publishInfo)publishInfo.dataset.publicUrl=result.url}inviteStore.write(draftKey,snap.document);inviteStore.write(publishKey,snap);inviteStore.append(historyKey,snap);refreshPublish();alert(message)}catch(error){const blocked=error?.code==='review_gate_blocked',studioBlocked=error?.code==='studio_governance_blocked';if(error?.status===409&&error?.code==='revision_conflict')markServerRevisionConflict(error);else if(serverInvite&&publishDocument&&!pendingServerDocument)pendingServerDocument=publishDocument;window.__einviteLastPublishError={message:error?.message||String(error),status:error?.status||0,code:error?.code||''};if(blocked)window.EInviteReviewWorkflow?.showPublishReadiness?.(error.payload?.readiness);if(studioBlocked)window.EInviteStudioGovernance?.open?.();alert(blocked?'Publishing is blocked by review requirements.':studioBlocked?'Publishing is blocked by studio design requirements. Open Studio and Print readiness to resolve the listed requirements.':`The invitation could not be published: ${error?.message||'Unknown error'}`)}finally{if(serverInvite)releasePublishWriteBarrier();if(button){button.disabled=false;button.removeAttribute('aria-busy')}}};
 function refreshPublish(){
 let p=inviteStore.read(publishKey);
-$('#publishInfo').innerHTML=p?`<strong>Published</strong><br>${new Date(p.publishedAt).toLocaleString()}<br>Snapshot ${String(p.version).slice(-6)}`:'No snapshot published yet.'
+const info=$('#publishInfo');
+if(info)info.innerHTML=p?`<strong>Published</strong><br>${new Date(p.publishedAt).toLocaleString()}<br>Snapshot ${String(p.version).slice(-6)}`:'No snapshot published yet.'
 }
 function safeHtml(v){
 return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
@@ -5838,7 +5859,7 @@ const animation=animationName(page.animation?.preset||'fade-up'),duration=Math.m
 const transition=['none','soft','overlap','sweep'].includes(page.transition?.preset)?page.transition.preset:'soft',transitionDuration=Math.max(200,Math.min(2000,Number(page.transition?.duration||600)));
 return`<section class="design-page-section reveal page-transition-${transition}" style="--page-transition-duration:${transitionDuration}ms;background:${bg};${imageRules}${motion}"><div class="published-artboard published-page-artboard">${designPageObjectMarkup(page.objects||{},844,d)}</div></section>`
 }
-function previewRsvpCustomFields(d,mode){return(d.rsvpFields||[]).map(field=>{const name=`custom_${String(field.id||'').replace(/[^A-Za-z0-9_-]/g,'')}`,label=languageText(field.label||'Question',field.labelKm||field.label||'Question',mode),required=field.required?' required':'',type=field.type||'text';if(type==='textarea')return`<label>${label}<textarea name="${safeHtml(name)}" maxlength="2000"${required}></textarea></label>`;if(type==='select')return`<label>${label}<select name="${safeHtml(name)}"${required}><option value="">${languageText('Select an option','សូមជ្រើសរើស',mode)}</option>${(field.options||[]).map(option=>`<option value="${safeHtml(option)}">${safeHtml(option)}</option>`).join('')}</select></label>`;if(type==='number')return`<label>${label}<input name="${safeHtml(name)}" type="number"${required}></label>`;return`<label>${label}<input name="${safeHtml(name)}" maxlength="2000"${required}></label>`}).join('')}
+function previewRsvpCustomFields(d,mode){return(d.rsvpFields||[]).map(field=>{const name=`custom_${String(field.id||'').replace(/[^A-Za-z0-9_-]/g,'')}`,label=languageText(field.label||'Question',field.labelKm||field.label||'Question',mode),required=field.required?' required':'',type=field.type||'text';if(type==='textarea')return`<label>${label}<textarea name="${safeHtml(name)}" maxlength="2000"${required}></textarea></label>`;if(type==='select')return`<label>${label}<select name="${safeHtml(name)}"${required}><option value="">${safeHtml(mode==='km'?'សូមជ្រើសរើស':'Select an option')}</option>${(field.options||[]).map(option=>`<option value="${safeHtml(option)}">${safeHtml(option)}</option>`).join('')}</select></label>`;if(type==='number')return`<label>${label}<input name="${safeHtml(name)}" type="number"${required}></label>`;return`<label>${label}<input name="${safeHtml(name)}" maxlength="2000"${required}></label>`}).join('')}
 function guestHTML(snap){
 let d=snap.document,
 f=d.fields||{},
@@ -5899,8 +5920,8 @@ const audio=hasAudio?`<audio id="guestMusic" src="${safeHtml(musicUrl)}"${d.sett
 const player=youtube&&youtubeDisplay==='background'?`<iframe id="youtubePlayer" class="youtube-player" data-video-id="${safeHtml(d.youtubeId)}" title="Invitation music" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`:'';
 const soundcloudPlayer=soundcloud?`<iframe id="soundcloudPlayer" class="youtube-player" data-soundcloud-url="${safeHtml(soundcloud)}" title="SoundCloud invitation music" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin"></iframe>`:'';
 const toggle=musicOn&&d.settings?.showMusicControl!==false?'<button id="musicToggle" class="music-toggle" aria-label="Play music">♪</button>':'';
-const coverName=d.languageMode==='km'?(d.fields?.namesKm||d.fields?.names||'Open invitation'):(d.fields?.names||'Open invitation');
-const cover=opening?`<button id="openCover" class="open-cover opening-${safeHtml(d.openingStyle||'soft')}"><span>${d.languageMode==='km'?'សូមគោរពអញ្ជើញ':'YOU ARE INVITED'}</span><strong>${safeHtml(coverName)}</strong><em>${d.languageMode==='km'?'ចុចដើម្បីបើក':'Tap to open'}</em></button>`:'';
+const coverName=d.languageMode==='km'?(d.fields?.namesKm||d.fields?.names||'Open invitation'):(d.fields?.names||'Open invitation'),coverNameKm=d.fields?.namesKm||d.fields?.names||'Open invitation';
+const cover=opening?`<button id="openCover" class="open-cover opening-${safeHtml(d.openingStyle||'soft')}"><span data-cover-en="YOU ARE INVITED" data-cover-km="សូមគោរពអញ្ជើញ">${d.languageMode==='km'?'សូមគោរពអញ្ជើញ':'YOU ARE INVITED'}</span><strong data-cover-en="${safeHtml(coverName)}" data-cover-km="${safeHtml(coverNameKm)}">${safeHtml(coverName)}</strong><em data-cover-en="Tap to open" data-cover-km="ចុចដើម្បីបើក">${d.languageMode==='km'?'ចុចដើម្បីបើក':'Tap to open'}</em></button>`:'';
 return`${cover}${audio}${player}${soundcloudPlayer}${toggle}${guestHTML(snap)}`
 }
 function safeSoundCloudEditorUrl(value){try{const url=new URL(String(value||''));return['soundcloud.com','www.soundcloud.com','m.soundcloud.com'].includes(url.hostname.toLowerCase())?url.href:''}catch{return''}}
@@ -6287,8 +6308,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   let rightTabs;
   const activateRight = id => {
     if (!rightTabs) return;
+    // The Design tab was retired into the Edit pane's Page group. A stored
+    // preference from before that change must not leave every pane inactive.
+    if (!rightTabs.nav.querySelector(`[data-inspector-tab="${id}"]`)) id = 'object';
     $$('[data-inspector-tab]', rightTabs.nav).forEach(b => b.classList.toggle('active', b.dataset.inspectorTab === id));
     $$('[data-inspector-pane]', rightTabs.host).forEach(p => p.classList.toggle('active', p.dataset.inspectorPane === id));
+    // Canvas formatting overlays belong to the Edit tab. Styles drive off this
+    // attribute so Layers/Sections/Share stop floating a text toolbar over the
+    // invitation the user is trying to manage.
+    document.body.dataset.inspectorTab = id;
     localStorage.setItem('einvite-editor-right-tab', id);
   };
   function buildInspector() {
@@ -6296,7 +6324,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       { id: 'object', label: 'Edit', icon: icon.object },
       { id: 'layers', label: 'Layers', icon: icon.layers },
       { id: 'sections', label: 'Sections', icon: icon.sections },
-      { id: 'theme', label: 'Design', icon: icon.theme },
       { id: 'publish', label: 'Share', icon: icon.publish }
     ];
     // OD-23: the shell (tab row + host + one pane per tab) ships in index.html,
@@ -6533,16 +6560,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const viewport = $('#canvasViewport');
   const floating = document.createElement('div');
   floating.className = 'studio-selection-toolbar'; floating.hidden = true;
+  // Duplicate/Delete deliberately live only in the canvas action bar. The
+  // floating bar used to repeat both, so a selected object showed the same
+  // destructive action twice a few hundred pixels apart.
   floating.innerHTML = `
-    <button type="button" data-float-action="duplicate" title="Duplicate (Ctrl/Cmd+D)">Duplicate</button>
     <button type="button" data-float-action="copyStyle" title="Copy appearance">Copy style</button>
     <button type="button" data-float-action="pasteStyle" title="Paste appearance">Paste style</button>
     <button type="button" data-float-action="forward" title="Bring forward">Forward</button>
     <button type="button" data-float-action="lock" title="Lock or unlock">Lock</button>
     <button type="button" data-float-action="group" title="Group selected">Group</button>
-    <button type="button" data-float-action="tidy" title="Tidy selected objects">Tidy</button>
-    <span></span>
-    <button type="button" data-float-action="delete" class="danger" title="Delete">Delete</button>`;
+    <button type="button" data-float-action="tidy" title="Tidy selected objects">Tidy</button>`;
   $('.stage-wrap')?.append(floating);
   const styleClipboardKey='einvite-object-style-clipboard-v1';
   const styleKeys=['font','color','fontSize','textAlign','fontWeight','fontStyle','letterSpacing','lineHeight','fillColor','shapeKind','opacity','borderWidth','borderColor','borderRadius','shadowBlur','shadowColor','animation','duration','imageFit','imageMask','imageFrame','imageBrightness','imageContrast','imageSaturation','imageGrayscale','imageSepia','imageBlur'];
@@ -6609,10 +6636,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <footer><button type="button" data-close-check>Close</button><button type="button" class="primary" id="studioPreviewFromCheck">Preview as guest</button></footer>
     </section>`;
   body.append(designCheck);
-  function closeDesignCheck(){ designCheck.hidden = true; }
+  let designCheckReturnFocus = null;
+  function closeDesignCheck(){ if (designCheck.hidden) return; designCheck.hidden = true; designCheckReturnFocus?.focus?.(); designCheckReturnFocus = null; }
   $$('[data-close-check]',designCheck).forEach(b=>b.onclick=closeDesignCheck);
   $('.studio-command-backdrop',designCheck).onclick=closeDesignCheck;
   $('#studioPreviewFromCheck').onclick=()=>{ closeDesignCheck(); $('#previewBtn')?.click(); };
+  // Fallback for routes without the command system. The editor's own dismiss ladder owns
+  // Escape there; see the EInviteDesignCheck hook below and `closeTopLayer`.
+  document.addEventListener('keydown', event=>{
+    if (event.key !== 'Escape' || designCheck.hidden || event.defaultPrevented) return;
+    closeDesignCheck();
+  });
   function hexRgb(hex){ const value=String(hex||'').replace('#',''); if(!/^[0-9a-f]{6}$/i.test(value))return null; return [0,2,4].map(i=>parseInt(value.slice(i,i+2),16)); }
   function luminance(hex){ const rgb=hexRgb(hex); if(!rgb)return null; const c=rgb.map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*c[0]+.7152*c[1]+.0722*c[2]; }
   function contrast(a,b){ const la=luminance(a),lb=luminance(b);if(la==null||lb==null)return null;return (Math.max(la,lb)+.05)/(Math.min(la,lb)+.05); }
@@ -6645,11 +6679,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const total=checks.reduce((s,c)=>s+c.weight,0),earned=checks.reduce((s,c)=>s+(c.ok?c.weight:0),0),score=Math.round(earned/Math.max(1,total)*100);
     $('#studioCheckScore').textContent=score;
     $('#studioCheckSummary').textContent=score>=90?'Ready to impress your guests':score>=75?'Almost ready to publish':score>=55?'A few important details remain':'Keep building your invitation';
+    // Return focus to the control that opened the dialog, not to whatever the canvas had
+    // focused before (clicking the button can leave the stage as activeElement).
+    designCheckReturnFocus = $('#studioCheckBtn') || document.activeElement;
     const list=$('#studioCheckList');list.innerHTML='';
     checks.forEach(c=>{const row=document.createElement('article');row.className=`studio-check-item ${c.ok?'pass':'warn'}`;row.innerHTML=`<span>${c.ok?'✓':'!'}</span><div><strong>${c.title}</strong><p>${c.detail}</p></div>${c.ok?'':'<button type="button">Fix</button>'}`;const fix=row.querySelector('button');if(fix)fix.onclick=()=>{closeDesignCheck();c.action?.()};list.append(row)});
     designCheck.hidden=false;
+    // Deferred: the click that opened the dialog also hands focus back to the canvas.
+    requestAnimationFrame(()=>{ if(!designCheck.hidden) $('.studio-check-dialog [data-close-check]',designCheck)?.focus({preventScroll:true}); });
   }
   $('#studioCheckBtn')?.addEventListener('click',openDesignCheck);
+  // The dialog is a div[role=dialog], so the command system's Escape ladder could not see it:
+  // with a canvas object selected, Escape only cleared that selection and the modal stayed open.
+  window.EInviteDesignCheck=Object.freeze({open:openDesignCheck,close:closeDesignCheck,isOpen:()=>!designCheck.hidden});
   function makeDraggableAssets(){
     $$('#assets img').forEach(img=>{if(img.dataset.studioDraggable)return;img.dataset.studioDraggable='true';img.draggable=true;img.addEventListener('dragstart',e=>{
       e.dataTransfer.setData('application/x-einvite-upload-asset',JSON.stringify({id:img.dataset.assetId||'',src:img.src,name:img.dataset.assetName||img.alt||''}));

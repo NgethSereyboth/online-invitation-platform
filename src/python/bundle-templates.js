@@ -178,6 +178,14 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
+      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
+      // check, command palette) is a layout heading, not the app bar, and the injected switch
+      // landed in the middle of those panels. Clean up any copy injected before this guard.
+      if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
+        var stray = h.querySelector(".language-switch");
+        if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
+        continue;
+      }
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
       h.appendChild(sw);
@@ -296,9 +304,13 @@ function toast(message,options={}){
 }
 function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
-  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
-  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
+  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
+  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
+  // A short "Poster title:" style prompt is the field's label, not a second
+  // heading above a generic "Value" label. Long instructions stay as help text.
+  const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
+  const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
@@ -348,8 +360,9 @@ function palette(doc){const p=doc?.palette||{};return{background:p.background||'
 function strip(value){const d=document.createElement('div');d.innerHTML=String(value||'');return d.textContent||''}
 function titleOf(t){return strip(t.document?.objects?.title?.html||t.document?.fields?.names||t.name).slice(0,55)}
 function thumb(t){const p=palette(t.document),pages=t.document?.designPages||[];return `<div class="studio-thumb" style="--thumb-bg:${p.background};--thumb-heading:${p.heading}"><strong>${esc(titleOf(t))}</strong><span class="page-stack">${pages.slice(0,5).map(()=>'<i></i>').join('')}</span></div>`}
-function filtered(){const q=$('#studioSearch').value.trim().toLowerCase(),category=$('#studioCategory').value,source=$('#studioSource')?.value||'all',favorites=$('#studioFavorites').checked;return templates.filter(t=>(source==='all'||source==='builtin'&&t.source==='builtin'||source==='mine'&&t.source==='mine'||source==='marketplace'&&t.source==='marketplace')&&(category==='all'||t.category===category)&&(!favorites||t.favorite)&&(!q||`${t.name} ${t.description||''} ${(t.tags||[]).join(' ')}`.toLowerCase().includes(q)))}
-function render(){const grid=$('#studioGrid'),items=filtered();grid.innerHTML=items.length?'':`<div class="empty"><h2>${b("No templates match these filters","គ្មានគំរូត្រូវនឹងតម្រងទាំងនេះទេ")}</h2><p>${b("Try another category or template source.","សូមសាកល្បងប្រភេទផ្សេង ឬប្រភពពុម្ព។")}</p></div>`;items.forEach(t=>{const readOnly=t.source!=='mine';const card=document.createElement('article');card.className='studio-card';card.innerHTML=`${thumb(t)}<div class="studio-body"><div class="studio-title"><div><h2>${esc(t.name)}</h2><span class="meta">${esc(t.category)} · ${t.source==='builtin'?_txt('Built-in','បានភ្ជាប់មកជាមួយ'):t.source==='marketplace'?_txt('Marketplace','ទីផ្សារ'):_txt('Your template','ពុម្ពរបស់អ្នក')}</span></div>${readOnly?'':`<button class="star${t.favorite?' active':''}" title="Favorite" aria-label="Toggle favorite">★</button>`}</div><p>${esc(t.description||_txt('Reusable invitation design','រចនាបថអញ្ជើញប្រើឡើងវិញបាន'))}</p><div class="tags">${(t.tags||[]).map(x=>`<span>${esc(x)}</span>`).join('')}<span class="version-badge">${t.source==='builtin'?'Built-in':t.source==='marketplace'?`${esc(t.licenseType||'personal')} license`:t.marketplaceStatus==='pending'?'Pending review':t.marketplaceStatus==='rejected'?'Review rejected':`v${t.currentVersion||1}`}</span></div><div class="studio-actions"><button data-action="preview">${b("Preview","មើលជាមុន")}</button><button data-action="use" class="primary">${b("Use","ប្រើ")}</button>${readOnly?'':`<button data-action="edit-design">${b("Edit design","កែសម្រួលរចនា")}</button><button data-action="meta">${b("Details","ព័ត៌មានលម្អិត")}</button><button data-action="versions">${b("Versions","ជំនាន់")}</button><button data-action="visibility">${t.visibility==='public'?_txt('Remove from marketplace','ដកចេញពីទីផ្សារ'):_txt('Publish to marketplace','ផ្សាយទៅទីផ្សារ')}</button><button data-action="duplicate">${b("Duplicate","ចម្លងដូច")}</button><button data-action="delete" class="danger">${b("Delete","លុប")}</button>`}</div></div>`;card.querySelector('.star')?.addEventListener('click',()=>favorite(t));card.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>actions(b.dataset.action,t));grid.append(card)});setTemplateState(items.length?'loaded':'empty')}
+function filtered(){const q=$('#studioSearch').value.trim().toLowerCase(),category=($('#studioCategory').value||'all').toLowerCase(),source=$('#studioSource')?.value||'all',favorites=$('#studioFavorites').checked;return templates.filter(t=>(source==='all'||source==='builtin'&&t.source==='builtin'||source==='mine'&&t.source==='mine'||source==='marketplace'&&t.source==='marketplace')&&(category==='all'||String(t.category||'').toLowerCase()===category)&&(!favorites||t.favorite)&&(!q||`${t.name} ${t.description||''} ${(t.tags||[]).join(' ')}`.toLowerCase().includes(q)))}
+function syncPackFilter(){window.dispatchEvent(new CustomEvent('einvite:studio-filter',{detail:{query:$('#studioSearch').value.trim().toLowerCase(),category:$('#studioCategory').value||'all'}}))}
+function render(){const grid=$('#studioGrid'),items=filtered();const hasPack=!!document.querySelector('#templatePackGallery');grid.innerHTML=items.length||hasPack?'':`<div class="empty"><h2>${b("No templates match these filters","គ្មានគំរូត្រូវនឹងតម្រងទាំងនេះទេ")}</h2><p>${b("Try another category or template source.","សូមសាកល្បងប្រភេទផ្សេង ឬប្រភពពុម្ព។")}</p></div>`;items.forEach(t=>{const readOnly=t.source!=='mine';const card=document.createElement('article');card.className='studio-card';card.innerHTML=`${thumb(t)}<div class="studio-body"><div class="studio-title"><div><h2>${esc(t.name)}</h2><span class="meta">${esc(t.category)} · ${t.source==='builtin'?_txt('Built-in','បានភ្ជាប់មកជាមួយ'):t.source==='marketplace'?_txt('Marketplace','ទីផ្សារ'):_txt('Your template','ពុម្ពរបស់អ្នក')}</span></div>${readOnly?'':`<button class="star${t.favorite?' active':''}" title="Favorite" aria-label="Toggle favorite">★</button>`}</div><p>${esc(t.description||_txt('Reusable invitation design','រចនាបថអញ្ជើញប្រើឡើងវិញបាន'))}</p><div class="tags">${(t.tags||[]).map(x=>`<span>${esc(x)}</span>`).join('')}<span class="version-badge">${t.source==='builtin'?'Built-in':t.source==='marketplace'?`${esc(t.licenseType||'personal')} license`:t.marketplaceStatus==='pending'?'Pending review':t.marketplaceStatus==='rejected'?'Review rejected':`v${t.currentVersion||1}`}</span></div><div class="studio-actions"><button data-action="preview">${b("Preview","មើលជាមុន")}</button><button data-action="use" class="primary">${b("Use","ប្រើ")}</button>${readOnly?'':`<button data-action="edit-design">${b("Edit design","កែសម្រួលរចនា")}</button><button data-action="meta">${b("Details","ព័ត៌មានលម្អិត")}</button><button data-action="versions">${b("Versions","ជំនាន់")}</button><button data-action="visibility">${t.visibility==='public'?_txt('Remove from marketplace','ដកចេញពីទីផ្សារ'):_txt('Publish to marketplace','ផ្សាយទៅទីផ្សារ')}</button><button data-action="duplicate">${b("Duplicate","ចម្លងដូច")}</button><button data-action="delete" class="danger">${b("Delete","លុប")}</button>`}</div></div>`;card.querySelector('.star')?.addEventListener('click',()=>favorite(t));card.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>actions(b.dataset.action,t));grid.append(card)});setTemplateState(items.length?'loaded':'empty')}
 async function load(){
  setTemplateState('loading');
  const grid=$('#studioGrid');if(grid)grid.innerHTML=`<div class="empty template-loading"><h2>${b('Loading templates…','កំពុងផ្ទុកគំរូ…')}</h2></div>`;
@@ -413,7 +426,7 @@ function previewPage(page,master){const bg=page.useMasterBackground&&master?.ena
 function preview(t){const p=palette(t.document),pages=t.document?.designPages||[];$('#studioDialogBody').innerHTML=`<div class="studio-preview"><div class="preview-phone"><div class="preview-screen" style="--p-bg:${p.background};--p-text:${p.text};--p-heading:${p.heading}"><div class="preview-hero"><h2>${esc(titleOf(t))}</h2></div>${pages.map(x=>previewPage(x,t.document.masterPageStyle)).join('')}</div></div><div><p class="invite-kicker">${esc(t.category)}</p><h1>${esc(t.name)}</h1><p>${esc(t.description||'')}</p><p><strong>${b("Current version:","ជំនាន់បច្ចុប្បន្ន៖")}</strong> ${t.currentVersion||1}</p><p><strong>${b("Visual pages:","ទំព័ររូបភាព៖")}</strong> ${pages.length}</p><p><strong>${b("Sections:","ផ្នែក៖")}</strong> ${(t.document?.sectionOrder||[]).filter(x=>!String(x).startsWith('page:')).join(', ')}</p><div class="tags">${(t.tags||[]).map(x=>`<span>${esc(x)}</span>`).join('')}</div><button id="previewUse" class="primary">${b("Create invitation from this template","បង្កើតការអញ្ជើញពីពុម្ពនេះ")}</button></div></div>`;$('#previewUse').onclick=()=>{$('#studioDialog').close();useTemplate(t,false)};$('#studioDialog').showModal()}
 function editMeta(t){$('#studioDialogBody').innerHTML=`<h1>${b("Edit template details","កែព័ត៌មានលម្អិតពុម្ព")}</h1><form id="metaForm" class="form-grid"><label>${b("Name","ឈ្មោះ")}<input id="metaName" value="${esc(t.name)}" required maxlength="120"></label><label>${b("Category","ប្រភេទ")}<select id="metaCategory"><option>${b("Wedding","អាពាហ៍ពិពាហ៍")}</option><option>${b("Birthday","ថ្ងៃកំណើត")}</option><option>${b("Business","អាជីវកម្ម")}</option><option>${b("Other","ផ្សេងៗ")}</option></select></label><label class="wide">${b("Description","ការពិពណ៌នា")}<textarea id="metaDescription" maxlength="500">${esc(t.description||'')}</textarea></label><label class="wide">${b("Tags — comma separated","ស្លាក — បំបែកដោយក្បៀស")}<input id="metaTags" value="${esc((t.tags||[]).join(', '))}"></label><label>${b("Marketplace license","អាជ្ញាបណ្ណទីផ្សារ")}<select id="metaLicense"><option value="personal">${b("Personal use","ការប្រើផ្ទាល់ខ្លួន")}</option><option value="commercial">${b("Commercial use","ការប្រើពាណិជ្ជកម្ម")}</option><option value="extended">${b("Extended studio use","ការប្រើស្ទូឌីយោពង្រីក")}</option></select></label><div class="wide dialog-actions"><button class="primary">${b("Save details","រក្សាទុកព័ត៌មានលម្អិត")}</button></div></form>`;$('#metaCategory').value=['Wedding','Birthday','Business','Other'].includes(t.category)?t.category:'Other';$('#metaLicense').value=['personal','commercial','extended'].includes(t.licenseType)?t.licenseType:'personal';$('#metaForm').onsubmit=async e=>{e.preventDefault();try{const updated=await api(`/api/templates/${t.id}`,{method:'PUT',body:JSON.stringify({name:$('#metaName').value.trim(),category:$('#metaCategory').value,description:$('#metaDescription').value.trim(),tags:$('#metaTags').value.split(',').map(x=>x.trim()).filter(Boolean),licenseType:$('#metaLicense').value})});templates[templates.findIndex(x=>x.id===t.id)]=updated;$('#studioDialog').close();render()}catch(error){alert(error.message)}};$('#studioDialog').showModal()}
 async function versions(t){try{const items=await api(`/api/templates/${t.id}/versions`);$('#studioDialogBody').innerHTML=`<h1>${b("Version history — ","ប្រវត្តិជំនាន់ — ")}${esc(t.name)}</h1><p>${b("Restoring an older version creates a new current version, so history remains intact.","ស្តារជំនាន់ចាស់បង្កើតជំនាន់បច្ចុប្បន្នថ្មី ដូច្នេះប្រវត្តិនៅដដែល។")}</p><div>${items.map(v=>`<div class="version-row"><strong>Version ${v.version}</strong><span>${new Date(v.createdAt).toLocaleString()}</span>${v.version===(t.currentVersion||1)?`<span class="version-badge">${b('Current','បច្ចុប្បន្ន')}</span>`:`<button data-version="${v.version}">${b("Restore","ស្តារ")}</button>`}</div>`).join('')}</div>`;$('#studioDialogBody').querySelectorAll('[data-version]').forEach(b=>b.onclick=async()=>{if(!(await uiConfirm(`Restore version ${b.dataset.version} as a new current version?`,{title:_txt('Restore template version','ស្តារជំនាន់ពុម្ព'),confirmText:_txt('Restore','ស្តារ')})))return;try{const updated=await api(`/api/templates/${t.id}/restore`,{method:'POST',body:JSON.stringify({version:Number(b.dataset.version)})});templates[templates.findIndex(x=>x.id===t.id)]=updated;$('#studioDialog').close();render()}catch(error){alert(error.message)}});$('#studioDialog').showModal()}catch(error){alert(error.message)}}
-$('#studioClose').onclick=()=>$('#studioDialog').close();$('#refreshBtn').onclick=load;$('#newPosterBtn')&&($('#newPosterBtn').onclick=newPoster);$('#studioSearch').oninput=render;$('#studioCategory').onchange=render;$('#studioSource').onchange=render;$('#studioFavorites').onchange=render;load();
+$('#studioClose').onclick=()=>$('#studioDialog').close();$('#refreshBtn').onclick=load;$('#newPosterBtn')&&($('#newPosterBtn').onclick=newPoster);$('#studioSearch').oninput=()=>{render();syncPackFilter()};$('#studioCategory').onchange=()=>{render();syncPackFilter()};$('#studioSource').onchange=render;$('#studioFavorites').onchange=render;load();
 if(window.EInviteI18n&&typeof window.EInviteI18n.subscribe==='function'){window.EInviteI18n.subscribe(render)}
 // TP-1.4: the 36-design Khmer events pack is a separate, lazily loaded gallery.
 // It fetches its catalogue and one built document on demand (never bundled), and
@@ -445,9 +458,24 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
-  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);menu.hidden=true;trigger.setAttribute('aria-expanded','false')});
-  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
+  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
+  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
+  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
+  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+  document.body.append(menu);
+  function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
+  function openThemeMenu(){
+    menu.hidden=false;
+    const r=trigger.getBoundingClientRect(),w=menu.offsetWidth||188,h=menu.offsetHeight||104;
+    menu.style.position='fixed';menu.style.right='auto';menu.style.zIndex='13000';
+    menu.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';
+    menu.style.top=Math.max(8,Math.min(innerHeight-h-8,r.bottom+8))+'px';
+    trigger.setAttribute('aria-expanded','true');
+  }
+  trigger.onclick=e=>{e.stopPropagation();if(menu.hidden)openThemeMenu();else closeThemeMenu()};
+  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);closeThemeMenu();trigger.focus()});
+  document.addEventListener('click',e=>{if(!wrap.contains(e.target)&&!menu.contains(e.target))closeThemeMenu()});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||menu.hidden)return;closeThemeMenu();trigger.focus()});
   applyTheme(currentMode());
 }
 installThemeControl();
@@ -456,16 +484,22 @@ function installAppLauncher(){
   const header=$('body:not(:has(.guest))>header');if(!header||$('.ui-app-launcher',header))return;
   const brand=header.querySelector('strong');if(!brand)return;
   const wrap=document.createElement('div');wrap.className='ui-app-launcher';
-  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><header><strong>Workspace</strong></header><div class="ui-app-grid">
+  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><div class="ui-app-menu-head"><strong>Workspace</strong></div><div class="ui-app-grid">
   <a href="dashboard.html"><span>⌂</span><div><b>Dashboard</b><small>Your invitations</small></div></a>
   <a href="templates.html"><span>✦</span><div><b>Templates</b><small>Reusable designs</small></div></a>
   <a href="materials.html"><span>▣</span><div><b>Materials</b><small>Photos, audio & video</small></div></a>
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  brand.after(wrap);const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
+  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
+  // there made every click on it navigate (a full reload) before the menu could open.
+  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+  const brandAnchor=brand.closest('a');
+  (brandAnchor||brand).after(wrap);
+  const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
+  trigger.onclick=e=>{e.preventDefault();e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
   document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||menu.hidden)return;menu.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.focus()});
 }
 installAppLauncher();
 const page=location.pathname.split('/').pop()||'dashboard.html';$$('body:not(:has(.guest))>header a').forEach(a=>{const href=(a.getAttribute('href')||'').split('?')[0].split('#')[0];if(href===page)a.classList.add('ui-current')});
@@ -769,11 +803,32 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
+  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
+     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
+     return focus to the toggle when the drawer closes under the keyboard. */
+  function ensureScrim() {
+    var scrim = document.querySelector('.app-drawer-scrim');
+    if (!scrim) {
+      scrim = document.createElement('div');
+      scrim.className = 'app-drawer-scrim';
+      scrim.setAttribute('aria-hidden', 'true');
+      document.body.append(scrim);
+    }
+    return scrim;
+  }
   function applyRailOpen(open) {
+    var wasOpen = body.classList.contains('rail-open');
+    var rail = document.querySelector('.app-rail');
     body.classList.toggle('rail-open', !!open);
+    ensureScrim();
+    if (rail) rail.inert = window.matchMedia('(max-width: 768px)').matches && !open;
     document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-expanded', String(!!open));
     });
+    if (!open && wasOpen && rail && rail.contains(document.activeElement)) {
+      var toggle = document.querySelector('[data-drawer-toggle]');
+      if (toggle) toggle.focus();
+    }
   }
 
   /* --- 2. Current page --------------------------------------------------- */

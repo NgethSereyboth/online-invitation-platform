@@ -178,6 +178,14 @@
     var lang = get();
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i];
+      // Only page chrome gets a switch. A popover or dialog header (workspace launcher, design
+      // check, command palette) is a layout heading, not the app bar, and the injected switch
+      // landed in the middle of those panels. Clean up any copy injected before this guard.
+      if (h.closest("dialog, [role='dialog'], .studio-design-check, .ui-app-launcher-menu, .canvas-header-more-menu, .studio-command-dialog")) {
+        var stray = h.querySelector(".language-switch");
+        if (stray && stray.parentNode) stray.parentNode.removeChild(stray);
+        continue;
+      }
       if (h.querySelector(".language-switch")) continue;
       var sw = makeSwitch();
       h.appendChild(sw);
@@ -296,9 +304,13 @@ function toast(message,options={}){
 }
 function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){
   const dialog=document.createElement('dialog');dialog.className='ei-dialog';
-  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label>Value</label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
-  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('.ei-dialog-message').textContent=message;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
-  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input');host.hidden=false;if(selectOptions&&selectOptions.length){const wrap=document.createElement('label');wrap.textContent='Type';field=document.createElement('select');selectOptions.forEach(({value:v,label})=>{const o=document.createElement('option');o.value=v;o.textContent=label;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';host.append(field)}}
+  dialog.innerHTML=`<form method="dialog" class="ei-dialog-card"><div class="ei-dialog-head"><span class="ei-dialog-icon"></span><div><h2></h2><p class="ei-dialog-message"></p></div></div><div class="ei-dialog-input" hidden><label></label></div><div class="ei-dialog-actions"><button type="button" data-cancel></button><button type="submit" value="confirm" data-confirm></button></div></form>`;
+  dialog.querySelector('.ei-dialog-icon').textContent=icon;dialog.querySelector('h2').textContent=title;dialog.querySelector('[data-cancel]').textContent=cancelText;const confirm=dialog.querySelector('[data-confirm]');confirm.textContent=confirmText;confirm.classList.add(danger?'ei-danger':'ei-primary');
+  // A short "Poster title:" style prompt is the field's label, not a second
+  // heading above a generic "Value" label. Long instructions stay as help text.
+  const shortLabel=input&&message&&message.length<=80&&/:\s*$/.test(message)?message.replace(/:\s*$/,''):input?(selectOptions&&selectOptions.length?'Choose one':''):'';
+  const messageNode=dialog.querySelector('.ei-dialog-message');messageNode.textContent=shortLabel?'':message;
+  let field=null;if(input){const host=dialog.querySelector('.ei-dialog-input'),label=host.querySelector('label');host.hidden=false;const fieldLabel=shortLabel||(selectOptions&&selectOptions.length?'Choose one':'Value');label.textContent=fieldLabel;if(selectOptions&&selectOptions.length){field=document.createElement('select');selectOptions.forEach(({value:v,label:l})=>{const o=document.createElement('option');o.value=v;o.textContent=l;field.append(o)});field.value=value;host.append(field)}else{field=document.createElement(multiline?'textarea':'input');field.value=value??'';field.autocomplete='off';field.setAttribute('aria-label',fieldLabel);host.append(field)}}
   document.body.append(dialog);return{dialog,field}
 }
 function uiConfirm(message,options={}){return new Promise(resolve=>{const{dialog}=buildDialog({title:options.title||'Confirm action',message,icon:options.icon||'?',confirmText:options.confirmText||'Confirm',cancelText:options.cancelText||'Cancel',danger:options.danger===true});let done=false;const finish=value=>{if(done)return;done=true;resolve(value);dialog.remove()};dialog.querySelector('[data-cancel]').onclick=()=>{dialog.close();finish(false)};dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();finish(false)});dialog.addEventListener('close',()=>finish(dialog.returnValue==='confirm'));dialog.showModal();setTimeout(()=>dialog.querySelector('[data-confirm]')?.focus(),0)})}
@@ -374,7 +386,7 @@ function setNetwork(){const online=navigator.onLine;$('#networkState').textConte
 function renderQueue(){const q=queue(),el=$('#pendingQueue');el.hidden=!q.length;const en=`${q.length} ${q.length===1?'check-in change':'check-in changes'} waiting to sync when the connection returns.`;el.innerHTML=q.length?`<span class="i18n i18n-en">${en}</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">${en}</span>`:''}
 function render(){const q=$('#guestSearch').value.trim().toLowerCase(),filtered=guests.filter(g=>`${g.name} ${g.phone||''} ${g.group_name||''} ${g.table_name||''}`.toLowerCase().includes(q)),checked=guests.filter(g=>g.checked_in).length;$('#checkinSummary').innerHTML=`${checked} of ${guests.length} <span class="i18n i18n-en">guests checked in</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">guests checked in</span>`;$('#checkinStats').innerHTML=`<span class="checkin-stat"><strong>${checked}</strong> <span class="i18n i18n-en">in</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">in</span></span><span class="checkin-stat"><strong>${guests.length-checked}</strong> <span class="i18n i18n-en">remaining</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">remaining</span></span>`;$('#checkinList').innerHTML=filtered.map(g=>`<article class="checkin-person ${g.checked_in?'checked':''}" data-guest-id="${esc(g.id)}"><div><strong>${esc(g.name)}</strong><small>${[g.group_name,g.table_name&&`${_txt('Table','តុ')} ${g.table_name}`,g.seat_label&&`${_txt('Seat','អាសនៈ')} ${g.seat_label}`,g.phone].filter(Boolean).map(esc).join(' · ')}</small></div><button data-check-id="${esc(g.id)}" class="${g.checked_in?'':'primary'}">${g.checked_in?_txt('Undo check-in','ធ្វើវិញការឆែកចូល'):_txt('Check in','ឆែកចូល')}</button></article>`).join('')||'<p class="empty-state"><span class="i18n i18n-en">No matching guests.</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">No matching guests.</span></p>';document.querySelectorAll('[data-check-id]').forEach(b=>b.onclick=()=>toggle(b.dataset.checkId))}
 function seedGuests(){const rows=[['Sokha Chann','012 345 678','Family','Table 1',true],['Dara Meas','098 765 432','Family','Table 1',false],['Bopha Sok','011 222 333','Friends','Table 2',false],['Vibol Pen','016 888 999','Friends','Table 2',false],['Chenda Long','070 444 555','Colleagues','Table 3',false],['Rithy Nou','081 777 111','Colleagues','Table 3',false]];return rows.map((r,i)=>({id:`demo-guest-${i+1}`,name:r[0],phone:r[1],group_name:r[2],table_name:r[3],checked_in:r[4],checked_in_at:null,token:'demo'}))}
-async function load(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){invitation={document:{fields:{names:'Sokha & Dara — Wedding'}}};guests=seedGuests();$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document.fields.names)+'</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">'+(invitation.document.fields.names)+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();$('#scanQrBtn').disabled=true;return}try{invitation=await api(`/api/invitations/${encodeURIComponent(inviteId)}`);guests=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document?.fields?.names||'Guest check-in')+'</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">'+(invitation.document?.fields?.names||'Guest check-in')+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();await flushQueue()}catch(e){$('#checkinList').innerHTML=`<p><span class="i18n i18n-en">Could not load this guest list: </span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Could not load this guest list: </span>${esc(e.message)}</p>`}}
+async function load(){if(window.EInviteBackend?.ready)await window.EInviteBackend.ready;if(window.EInviteBackend&&!window.EInviteBackend.isAvailable()){invitation={document:{fields:{names:'Sokha & Dara — Wedding'}}};guests=seedGuests();$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document.fields.names)+'</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">'+(invitation.document.fields.names)+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();$('#scanQrBtn').disabled=true;return}if(!inviteId){$('#eventName').textContent='Guest check-in';$('#checkinSummary').textContent='No invitation selected';$('#checkinList').innerHTML='<p class="empty-state">Open an invitation\'s guest list to check guests in.</p>';$('#backToGuests').href='dashboard.html';$('#scanQrBtn').disabled=true;return}try{invitation=await api(`/api/invitations/${encodeURIComponent(inviteId)}`);guests=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);$('#eventName').innerHTML='<span class="i18n i18n-en">'+(invitation.document?.fields?.names||'Guest check-in')+'</span><span class="i18n i18n-km khmer-text" lang="km" lang="km">'+(invitation.document?.fields?.names||'Guest check-in')+'</span>';$('#backToGuests').href=window.EInviteContext.route(inviteId,'guests');render();await flushQueue()}catch(e){$('#checkinList').innerHTML=`<p><span class="i18n i18n-en">Could not load this guest list: </span><span class="i18n i18n-km khmer-text" lang="km" lang="km">Could not load this guest list: </span>${esc(e.message)}</p>`}}
 async function toggle(id,explicit){const g=guests.find(x=>x.id===id);if(!g)return;const checked=explicit??!g.checked_in;g.checked_in=checked;g.checked_in_at=checked?Date.now():null;render();if(!navigator.onLine){const q=queue().filter(x=>x.guestId!==id);q.push({guestId:id,checkedIn:checked,createdAt:Date.now()});saveQueue(q);renderQueue();return}try{const result=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(id)}/check-in`,{method:'PUT',body:JSON.stringify({checkedIn:checked})});if(result.alreadyCheckedIn){const notice=$('#checkinNotice');notice.textContent=`${g.name} ${_txt('was already checked in.','បានឆែកចូលរួចរាល់ហើយ។')}`;setTimeout(()=>{if(notice.textContent.includes(g.name))notice.textContent=''},3500)}}catch(e){const q=queue().filter(x=>x.guestId!==id);q.push({guestId:id,checkedIn:checked,createdAt:Date.now()});saveQueue(q);renderQueue()}}
 async function flushQueue(){if(!navigator.onLine)return;let q=queue(),remaining=[];for(const item of q){try{await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests/${encodeURIComponent(item.guestId)}/check-in`,{method:'PUT',body:JSON.stringify({checkedIn:item.checkedIn})})}catch{remaining.push(item)}}saveQueue(remaining);renderQueue();if(q.length&&!remaining.length){guests=await api(`/api/invitations/${encodeURIComponent(inviteId)}/guests`);render()}}
 function guestFromScanned(value){let text=String(value||'');try{const u=new URL(text,location.origin),token=u.searchParams.get('g')||u.searchParams.get('guest');if(token)return guests.find(g=>g.token===token)}catch{}return guests.find(g=>g.id===text)}
@@ -432,11 +444,32 @@ window.EInviteAccessibility={syncPanel};document.readyState==='loading'?document
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
+  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
+     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
+     return focus to the toggle when the drawer closes under the keyboard. */
+  function ensureScrim() {
+    var scrim = document.querySelector('.app-drawer-scrim');
+    if (!scrim) {
+      scrim = document.createElement('div');
+      scrim.className = 'app-drawer-scrim';
+      scrim.setAttribute('aria-hidden', 'true');
+      document.body.append(scrim);
+    }
+    return scrim;
+  }
   function applyRailOpen(open) {
+    var wasOpen = body.classList.contains('rail-open');
+    var rail = document.querySelector('.app-rail');
     body.classList.toggle('rail-open', !!open);
+    ensureScrim();
+    if (rail) rail.inert = window.matchMedia('(max-width: 768px)').matches && !open;
     document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-expanded', String(!!open));
     });
+    if (!open && wasOpen && rail && rail.contains(document.activeElement)) {
+      var toggle = document.querySelector('[data-drawer-toggle]');
+      if (toggle) toggle.focus();
+    }
   }
 
   /* --- 2. Current page --------------------------------------------------- */

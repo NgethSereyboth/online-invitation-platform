@@ -105,6 +105,15 @@ body:not(.guest) > header {
   overflow: hidden;
   backdrop-filter: none;
 }
+/* QA 2026-10-30: the appearance and workspace-launcher popovers live inside the
+   sticky header, whose `overflow: hidden` (above) clipped them to a ~10px sliver
+   at 1440×900 — the theme menu was effectively unusable. Stop clipping the bar
+   only while one of those popovers is open, so their absolute positioning keeps
+   anchoring to the trigger. */
+body:not(.guest) > header:has(.ui-theme-menu:not([hidden])),
+body:not(.guest) > header:has(.ui-app-launcher-menu:not([hidden])) {
+  overflow: visible;
+}
 body:not(.guest) > header strong {
   font-family: var(--font-display);
   font-size: var(--fs-title-sm);
@@ -590,6 +599,204 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
   html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
 }
 
+/* --- 11b. QA fixes 2026-10-30 ------------------------------------------- */
+/* The collaboration presence stack is fixed at the top-right (z 70) and covered
+   the inspector's Action control at 1440×900. Park it over the canvas, left of
+   the open inspector, and restore the corner when the inspector is collapsed. */
+body.studio-experience .ei-presence-stack {
+  right: calc(var(--studio-right-width, 330px) + 18px);
+}
+body.studio-experience.studio-right-collapsed .ei-presence-stack { right: 18px; }
+
+/* Canvas toolbar: the context row (Assets/Text/Shape/Quick Actions/Review) is
+   wider than the 640px the stage gives it, so it ran past `stage-wrap` and was
+   clipped mid-button (audit UI-1). Let it wrap onto a second line instead. */
+@media (min-width: 761px) {
+  body.studio-experience .studio-canvas-toolbar {
+    flex-wrap: wrap !important;
+    height: auto !important;
+    /* zoom-layout.css pins max-height:54px + overflow-y:hidden (0,2,1 with
+       !important), which clipped the wrapped second row entirely. */
+    max-height: none !important;
+    overflow: visible !important;
+    row-gap: 6px;
+  }
+  body.studio-experience .studio-canvas-toolbar .v23-context-toolbar {
+    margin-left: auto !important;
+    max-width: 100%;
+  }
+}
+
+/* The ≤540 topbar is a horizontal scroller (see §13); give it a visible edge
+   fade so the off-screen account, theme and language controls are discoverable. */
+@media (max-width: 540px) {
+  body:not(.guest):not([data-page="index"]) > header {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent 100%);
+  }
+}
+
+/* --- 11c. QA fixes 2026-10-30 (mobile shell, drawer, admin, public) ----- */
+/* UI-3: at ≤600 the topbar held the brand, launcher, Admin, Designer
+   workspace, appearance, drawer, account and both language pills on one
+   non-wrapping row (740 px of content in a 390 px bar). The header scrolled
+   sideways, so appearance/drawer/account sat off-screen and any scripted or
+   keyboard focus that reached them scrolled the brand away. Keep the launcher
+   out (the drawer is the navigation), drop the three header shortcuts that
+   already exist in the drawer and the account menu, and give the language
+   switch its own full-width second row. */
+@media (max-width: 600px) {
+  body:not(.guest) > header {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 56px;
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    row-gap: 4px !important;
+  }
+  body:not(.guest) > header .app-topbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 6px;
+  }
+  body:not(.guest) > header .app-topbar-left .ui-app-launcher-button,
+  body:not(.guest) > header .app-topbar-right a.button-link,
+  body:not(.guest) > header .app-crumbs { display: none !important; }
+  body:not(.guest) > header .app-brand { min-width: 0; overflow: hidden; }
+  body:not(.guest) > header .app-brand strong {
+    display: block;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  body:not(.guest) > header .app-brand .brand-full { display: none; }
+  body:not(.guest) > header .app-brand .brand-short { display: inline !important; }
+  body:not(.guest) > header .ui-theme,
+  body:not(.guest) > header .app-topbar-right,
+  body:not(.guest) > header .app-drawer-toggle,
+  body:not(.guest) > header .fp-profile-button { flex: 0 0 auto; }
+  body:not(.guest) > header > .language-switch {
+    flex: 1 0 100%;
+    order: 20;
+    justify-content: flex-end;
+    margin: 0 !important;
+    /* The switch is normally a pill container; on its own full-width row that
+       painted a long empty bar beside the two buttons. */
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  body:not(.guest) > header > .language-switch button {
+    min-height: 30px !important;
+    padding: 3px 10px !important;
+    font-size: 11px !important;
+  }
+  /* Khmer sits on a much smaller x-height than Latin: at the shared 11px step
+     the "ខ្មែរ" label measured 14px wide and read as a smudge. Keep the Latin
+     label at 11px and give the Khmer one a step of its own. */
+  body:not(.guest) > header > .language-switch button[lang="km"] {
+    font-size: 15px !important;
+    padding: 2px 9px !important;
+    /* Inactive labels are transparent pills; against the header the Khmer
+       label read as loose text. A hairline ring keeps it a control. */
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+  }
+}
+
+/* UI-4: the mobile drawer opened with no scrim and its closed links stayed
+   focusable. The scrim is created by app-shell.js; the rail rides above it. */
+.app-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(12, 10, 14, .38);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+body.rail-open .app-drawer-scrim { opacity: 1; pointer-events: auto; }
+body.rail-open .app-rail { z-index: 90 !important; }
+
+/* UI-5: the sticky header was offset by the topbar height (56 px) inside a
+   panel that scrolls only horizontally, which painted a blank band above the
+   header and pushed the first row under it. The actions cell also stacked six
+   controls into a 213 px row (checkbox above its label, buttons on four
+   lines). Pin the header to the panel edge and keep row actions on one
+   line; the panel already scrolls horizontally. */
+body[data-page="admin"] .admin-panel table thead th {
+  top: 0 !important;
+  z-index: 3 !important;
+}
+body[data-page="admin"] .admin-panel table { min-width: 0; width: 100%; }
+body[data-page="admin"] .admin-panel tbody td {
+  padding: 8px 10px !important;
+  vertical-align: middle !important;
+}
+body[data-page="admin"] .admin-panel td.ei-row-actions {
+  white-space: normal;
+  min-width: 330px;
+  max-width: 430px;
+}
+body[data-page="admin"] .admin-panel td.ei-row-actions > button,
+body[data-page="admin"] .admin-panel td.ei-row-actions > .admin-upload-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  width: auto !important;
+  min-height: 30px !important;
+  padding: 4px 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  font-size: 11px !important;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  body[data-page="admin"] .admin-panel table { min-width: 760px; }
+}
+
+/* Dark-mode surfaces that shipped a hard-coded white fill: the symbols
+   disclosure and the library search glyph rendered white-on-white. */
+html[data-theme="dark"] .fp-simple-symbols,
+html[data-theme="dark"] .fp-simple-symbols summary,
+html[data-theme="dark"] .final-library-search {
+  background: var(--app-surface-2) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-line) !important;
+}
+
+/* UI-10: the public splash (#openCover, z 9999) covered the language switch
+   that lives in the z-40 guest topbar. Raise only the switch's stacking
+   context while the cover is up; Reply/Share stay behind it by design. */
+body[data-page="public"]:has(#openCover) .guest-topbar { z-index: 10001 !important; }
+body[data-page="public"]:has(#openCover) .guest-topbar > *:not(.language-switch) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+body[data-page="public"]:has(#openCover) .language-switch {
+  position: fixed !important;
+  top: 12px;
+  right: 12px;
+  padding: 3px;
+  border: 1px solid var(--app-line, #e4e4e9);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--app-surface, #fff) 92%, transparent);
+  box-shadow: var(--app-shadow-sm, 0 2px 8px rgba(0, 0, 0, .12));
+  backdrop-filter: blur(10px);
+}
+
+/* UI-2: the mobile canvas toolbar is a 658 px strip in a 360 px stage. It
+   scrolls (studio-experience.css) but gave no hint; fade its right edge so
+   the off-screen controls are discoverable. */
+@media (max-width: 760px) {
+  body.studio-experience .studio-canvas-toolbar {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent 100%);
+  }
+}
+
 /* --- 12. Motion preferences -------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -772,7 +979,7 @@ body[data-page="dashboard"] .dash-head h1 {
 }
 /* FB-48: three quick-start tiles were flex items with intrinsic widths, so 375 px
    painted 2 + 1 with the third at half width. One equal-width row, equal heights. */
-body[data-page="dashboard"] .dash-quickstart { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: var(--space-2); margin: 0 0 var(--space-5); }
+body[data-page="dashboard"] .dash-quickstart { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: var(--space-2); margin: 0 0 var(--space-5); }
 body[data-page="dashboard"] .dash-quickstart button { width: 100%; height: 100%; min-height: 88px; padding: 10px 6px; font-size: var(--fs-body-sm); line-height: 1.3; }
 body[data-page="dashboard"] .dash-quickstart button .i18n { max-width: 100%; overflow-wrap: break-word; text-align: center; }
 body[data-page="dashboard"] .dash-quickstart button {
@@ -861,6 +1068,12 @@ body[data-page="dashboard"] #inviteGrid .invite-quick {
 }
 body[data-page="dashboard"] #inviteGrid .invite-card:hover .invite-quick,
 body[data-page="dashboard"] #inviteGrid .invite-card:focus-within .invite-quick { opacity: 1; }
+/* QA 2026-10-30: touch devices never fire :hover, so Edit / Guests / Analytics
+   stayed transparent but tappable on phones (audit UI-6). Reveal them wherever
+   hover is unavailable and on every narrow layout. */
+@media (hover: none), (max-width: 768px) {
+  body[data-page="dashboard"] #inviteGrid .invite-quick { opacity: 1; }
+}
 .app-iconbtn {
   display: inline-flex; align-items: center; gap: var(--space-1);
   min-height: 32px; padding: 0 var(--space-2);
@@ -920,6 +1133,13 @@ body[data-page="dashboard"] #inviteGrid .error-state { grid-column: 1 / -1; }
 /* The shell already pads <main>; the legacy .dash wrapper must not pad again. */
 body[data-page="dashboard"] #dashboardView { max-width: none; margin: 0; padding: 0; }
 body[data-page="dashboard"] #inviteGrid .invite-overflow { position: absolute; top: var(--space-2); right: var(--space-2); z-index: 2; }
+/* A card clips to its rounded cover. While its ⋮ menu is open that cut the last rows
+   (Duplicate/Archive/Delete): measured a 450px menu inside a 347px card. */
+body[data-page="dashboard"] #inviteGrid .invite-card:has(.invite-overflow__menu:not([hidden])) {
+  overflow: visible !important;
+  position: relative;
+  z-index: 5;
+}
 body[data-page="dashboard"] #inviteGrid .invite-overflow__toggle {
   background: color-mix(in srgb, var(--app-surface) 88%, transparent);
   border: 1px solid var(--app-line);
@@ -1274,3 +1494,37 @@ html[data-theme="dark"] body[data-page="checkin"] .checkin-hero .eyebrow {
 
 
 }
+
+/* QA 2026-10-30 — the fixed 30px studio status bar inherited the 44px global
+   control minimum, so its workspace-tool strip hung 14px below the viewport
+   and painted over the status text. Keep footer controls inside the bar. */
+body:not(.guest) .studio-statusbar > div {
+  min-height: 0;
+  align-items: center;
+}
+body:not(.guest) .studio-statusbar button,
+/* Editor chrome paints above page modals by default: the professional selection box sits at
+   12000, the timeline launcher at 6200 and the studio topbar at 2000, so the design-check
+   dialog (1001) had handles and a floating "Timeline" chip drawn over its own backdrop. */
+body.studio-experience .studio-design-check { z-index: 14000; }
+
+/* The status bar (and its right-hand scroll strip) hides overflow, which clipped the
+   Tools popover it owns: the menu had a rect above the bar but no pixels or hit area. */
+body:not(.guest) .studio-statusbar:has(.v54-footer-tools-menu:not([hidden])),
+body:not(.guest) .studio-statusbar:has(.v54-footer-tools-menu:not([hidden])) > div:last-child {
+  overflow: visible;
+}
+body:not(.guest) .studio-statusbar .v54-footer-tools-trigger {
+  min-height: 22px !important;
+  height: 22px !important;
+  padding: 1px 7px !important;
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+}
+body:not(.guest) .studio-statusbar .v54-footer-tools-menu button {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 5px 8px !important;
+  font-size: 9px !important;
+}
+body:not(.guest) .studio-statusbar kbd { padding: 1px 5px; }

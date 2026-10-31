@@ -186,8 +186,15 @@
   let rightTabs;
   const activateRight = id => {
     if (!rightTabs) return;
+    // The Design tab was retired into the Edit pane's Page group. A stored
+    // preference from before that change must not leave every pane inactive.
+    if (!rightTabs.nav.querySelector(`[data-inspector-tab="${id}"]`)) id = 'object';
     $$('[data-inspector-tab]', rightTabs.nav).forEach(b => b.classList.toggle('active', b.dataset.inspectorTab === id));
     $$('[data-inspector-pane]', rightTabs.host).forEach(p => p.classList.toggle('active', p.dataset.inspectorPane === id));
+    // Canvas formatting overlays belong to the Edit tab. Styles drive off this
+    // attribute so Layers/Sections/Share stop floating a text toolbar over the
+    // invitation the user is trying to manage.
+    document.body.dataset.inspectorTab = id;
     localStorage.setItem('einvite-editor-right-tab', id);
   };
   function buildInspector() {
@@ -195,7 +202,6 @@
       { id: 'object', label: 'Edit', icon: icon.object },
       { id: 'layers', label: 'Layers', icon: icon.layers },
       { id: 'sections', label: 'Sections', icon: icon.sections },
-      { id: 'theme', label: 'Design', icon: icon.theme },
       { id: 'publish', label: 'Share', icon: icon.publish }
     ];
     // OD-23: the shell (tab row + host + one pane per tab) ships in index.html,
@@ -432,16 +438,16 @@
   const viewport = $('#canvasViewport');
   const floating = document.createElement('div');
   floating.className = 'studio-selection-toolbar'; floating.hidden = true;
+  // Duplicate/Delete deliberately live only in the canvas action bar. The
+  // floating bar used to repeat both, so a selected object showed the same
+  // destructive action twice a few hundred pixels apart.
   floating.innerHTML = `
-    <button type="button" data-float-action="duplicate" title="Duplicate (Ctrl/Cmd+D)">Duplicate</button>
     <button type="button" data-float-action="copyStyle" title="Copy appearance">Copy style</button>
     <button type="button" data-float-action="pasteStyle" title="Paste appearance">Paste style</button>
     <button type="button" data-float-action="forward" title="Bring forward">Forward</button>
     <button type="button" data-float-action="lock" title="Lock or unlock">Lock</button>
     <button type="button" data-float-action="group" title="Group selected">Group</button>
-    <button type="button" data-float-action="tidy" title="Tidy selected objects">Tidy</button>
-    <span></span>
-    <button type="button" data-float-action="delete" class="danger" title="Delete">Delete</button>`;
+    <button type="button" data-float-action="tidy" title="Tidy selected objects">Tidy</button>`;
   $('.stage-wrap')?.append(floating);
   const styleClipboardKey='einvite-object-style-clipboard-v1';
   const styleKeys=['font','color','fontSize','textAlign','fontWeight','fontStyle','letterSpacing','lineHeight','fillColor','shapeKind','opacity','borderWidth','borderColor','borderRadius','shadowBlur','shadowColor','animation','duration','imageFit','imageMask','imageFrame','imageBrightness','imageContrast','imageSaturation','imageGrayscale','imageSepia','imageBlur'];
@@ -508,10 +514,17 @@
       <footer><button type="button" data-close-check>Close</button><button type="button" class="primary" id="studioPreviewFromCheck">Preview as guest</button></footer>
     </section>`;
   body.append(designCheck);
-  function closeDesignCheck(){ designCheck.hidden = true; }
+  let designCheckReturnFocus = null;
+  function closeDesignCheck(){ if (designCheck.hidden) return; designCheck.hidden = true; designCheckReturnFocus?.focus?.(); designCheckReturnFocus = null; }
   $$('[data-close-check]',designCheck).forEach(b=>b.onclick=closeDesignCheck);
   $('.studio-command-backdrop',designCheck).onclick=closeDesignCheck;
   $('#studioPreviewFromCheck').onclick=()=>{ closeDesignCheck(); $('#previewBtn')?.click(); };
+  // Fallback for routes without the command system. The editor's own dismiss ladder owns
+  // Escape there; see the EInviteDesignCheck hook below and `closeTopLayer`.
+  document.addEventListener('keydown', event=>{
+    if (event.key !== 'Escape' || designCheck.hidden || event.defaultPrevented) return;
+    closeDesignCheck();
+  });
   function hexRgb(hex){ const value=String(hex||'').replace('#',''); if(!/^[0-9a-f]{6}$/i.test(value))return null; return [0,2,4].map(i=>parseInt(value.slice(i,i+2),16)); }
   function luminance(hex){ const rgb=hexRgb(hex); if(!rgb)return null; const c=rgb.map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4});return .2126*c[0]+.7152*c[1]+.0722*c[2]; }
   function contrast(a,b){ const la=luminance(a),lb=luminance(b);if(la==null||lb==null)return null;return (Math.max(la,lb)+.05)/(Math.min(la,lb)+.05); }
@@ -544,11 +557,19 @@
     const total=checks.reduce((s,c)=>s+c.weight,0),earned=checks.reduce((s,c)=>s+(c.ok?c.weight:0),0),score=Math.round(earned/Math.max(1,total)*100);
     $('#studioCheckScore').textContent=score;
     $('#studioCheckSummary').textContent=score>=90?'Ready to impress your guests':score>=75?'Almost ready to publish':score>=55?'A few important details remain':'Keep building your invitation';
+    // Return focus to the control that opened the dialog, not to whatever the canvas had
+    // focused before (clicking the button can leave the stage as activeElement).
+    designCheckReturnFocus = $('#studioCheckBtn') || document.activeElement;
     const list=$('#studioCheckList');list.innerHTML='';
     checks.forEach(c=>{const row=document.createElement('article');row.className=`studio-check-item ${c.ok?'pass':'warn'}`;row.innerHTML=`<span>${c.ok?'✓':'!'}</span><div><strong>${c.title}</strong><p>${c.detail}</p></div>${c.ok?'':'<button type="button">Fix</button>'}`;const fix=row.querySelector('button');if(fix)fix.onclick=()=>{closeDesignCheck();c.action?.()};list.append(row)});
     designCheck.hidden=false;
+    // Deferred: the click that opened the dialog also hands focus back to the canvas.
+    requestAnimationFrame(()=>{ if(!designCheck.hidden) $('.studio-check-dialog [data-close-check]',designCheck)?.focus({preventScroll:true}); });
   }
   $('#studioCheckBtn')?.addEventListener('click',openDesignCheck);
+  // The dialog is a div[role=dialog], so the command system's Escape ladder could not see it:
+  // with a canvas object selected, Escape only cleared that selection and the modal stayed open.
+  window.EInviteDesignCheck=Object.freeze({open:openDesignCheck,close:closeDesignCheck,isOpen:()=>!designCheck.hidden});
   function makeDraggableAssets(){
     $$('#assets img').forEach(img=>{if(img.dataset.studioDraggable)return;img.dataset.studioDraggable='true';img.draggable=true;img.addEventListener('dragstart',e=>{
       e.dataTransfer.setData('application/x-einvite-upload-asset',JSON.stringify({id:img.dataset.assetId||'',src:img.src,name:img.dataset.assetName||img.alt||''}));

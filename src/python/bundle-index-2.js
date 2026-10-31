@@ -263,9 +263,24 @@ function installThemeControl(){
   <button type="button" data-mode="dark"><span>☾</span><b>Dark</b><span class="check">✓</span></button></div>`;
   if(header){const logout=$('#logoutBtn',header); if(logout)header.insertBefore(wrap,logout); else header.append(wrap)}else document.body.append(wrap);
   const trigger=$('.ui-theme-button',wrap),menu=$('.ui-theme-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
-  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);menu.hidden=true;trigger.setAttribute('aria-expanded','false')});
-  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
+  // The menu used to live inside the sticky header. That bar is overflow:hidden and a
+  // stacking context, so the popover was clipped to a sliver at 1440 and covered by the
+  // mobile language row at 390 (elementFromPoint hit the dashboard, not the buttons).
+  // Anchor it to <body> with fixed coordinates so it paints above page content everywhere.
+  document.body.append(menu);
+  function closeThemeMenu(){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}
+  function openThemeMenu(){
+    menu.hidden=false;
+    const r=trigger.getBoundingClientRect(),w=menu.offsetWidth||188,h=menu.offsetHeight||104;
+    menu.style.position='fixed';menu.style.right='auto';menu.style.zIndex='13000';
+    menu.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';
+    menu.style.top=Math.max(8,Math.min(innerHeight-h-8,r.bottom+8))+'px';
+    trigger.setAttribute('aria-expanded','true');
+  }
+  trigger.onclick=e=>{e.stopPropagation();if(menu.hidden)openThemeMenu();else closeThemeMenu()};
+  $$('[data-mode]',menu).forEach(b=>b.onclick=()=>{applyTheme(b.dataset.mode,true);closeThemeMenu();trigger.focus()});
+  document.addEventListener('click',e=>{if(!wrap.contains(e.target)&&!menu.contains(e.target))closeThemeMenu()});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||menu.hidden)return;closeThemeMenu();trigger.focus()});
   applyTheme(currentMode());
 }
 installThemeControl();
@@ -274,16 +289,22 @@ function installAppLauncher(){
   const header=$('body:not(:has(.guest))>header');if(!header||$('.ui-app-launcher',header))return;
   const brand=header.querySelector('strong');if(!brand)return;
   const wrap=document.createElement('div');wrap.className='ui-app-launcher';
-  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><header><strong>Workspace</strong></header><div class="ui-app-grid">
+  wrap.innerHTML=`<button type="button" class="ui-app-launcher-button" aria-label="Open workspace navigation" aria-expanded="false" data-ui-tooltip="Workspace navigation"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></button><div class="ui-app-launcher-menu" hidden><div class="ui-app-menu-head"><strong>Workspace</strong></div><div class="ui-app-grid">
   <a href="dashboard.html"><span>⌂</span><div><b>Dashboard</b><small>Your invitations</small></div></a>
   <a href="templates.html"><span>✦</span><div><b>Templates</b><small>Reusable designs</small></div></a>
   <a href="materials.html"><span>▣</span><div><b>Materials</b><small>Photos, audio & video</small></div></a>
   <a href="designer.html"><span>◇</span><div><b>Designer</b><small>Professional workspace</small></div></a>
   <a href="billing.html"><span>◎</span><div><b>Plans</b><small>Usage & limits</small></div></a>
   <a href="account.html"><span>◉</span><div><b>Account</b><small>Profile & security</small></div></a></div></div>`;
-  brand.after(wrap);const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
-  trigger.onclick=e=>{e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
+  // The brand <strong> sits inside the header's dashboard link, so inserting the launcher
+  // there made every click on it navigate (a full reload) before the menu could open.
+  // Place it beside the anchor and cancel the default action as a belt-and-braces guard.
+  const brandAnchor=brand.closest('a');
+  (brandAnchor||brand).after(wrap);
+  const trigger=$('.ui-app-launcher-button',wrap),menu=$('.ui-app-launcher-menu',wrap);
+  trigger.onclick=e=>{e.preventDefault();e.stopPropagation();const open=menu.hidden;menu.hidden=!open;trigger.setAttribute('aria-expanded',String(open))};
   document.addEventListener('click',e=>{if(!wrap.contains(e.target)){menu.hidden=true;trigger.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||menu.hidden)return;menu.hidden=true;trigger.setAttribute('aria-expanded','false');trigger.focus()});
 }
 installAppLauncher();
 const page=location.pathname.split('/').pop()||'dashboard.html';$$('body:not(:has(.guest))>header a').forEach(a=>{const href=(a.getAttribute('href')||'').split('?')[0].split('#')[0];if(href===page)a.classList.add('ui-current')});
@@ -2192,7 +2213,7 @@ function safeColor(value,fallback='#fff8f2'){const v=String(value||'').trim();re
 function safeImage(value){const v=String(value||'').trim();if(!v)return'';if(/^https?:\/\//i.test(v)||/^\/uploads\//.test(v)||/^\/api\/image\//.test(v)||/^data:image\/(?:png|jpe?g|webp|avif|gif);base64,/i.test(v))return v;return'';}
 function duration(value){const n=Number(value);return Number.isFinite(n)?Math.max(0,Math.min(MAX_DURATION,n)):1100;}
 function cssUrl(value){return String(value).replace(/["'()\\\n\r]/g,c=>`\\${c}`);}
-function coverMarkup(d,mode,esc){const o=d.openingScene||{},names=mode==='km'?(d.fields?.namesKm||d.fields?.names):(d.fields?.names||'Open invitation'),subtitle=mode==='km'?(o.subtitleKm||o.subtitle||'សូមគោរពអញ្ជើញ'):(o.subtitle||'You are warmly invited'),enter=mode==='km'?(o.enterTextKm||'បើកការអញ្ជើញ'):(o.enterText||'Open invitation'),color=safeColor(o.backgroundColor),image=safeImage(o.backgroundImage),shade=o.textVariant==='light'?'#0005':'#fff3',bg=image?`background-image:linear-gradient(${shade},${shade}),url(&quot;${esc(cssUrl(image))}&quot;);background-color:${color}`:`background-color:${color}`;return `<button id="openCover" type="button" class="open-cover opening-scene-${esc(o.id||'soft-monogram')}" data-monogram="${esc(o.monogram||'')}" style="${bg};--opening-duration:${duration(o.duration)}ms"><span>${esc(subtitle)}</span>${o.monogram?`<b class="opening-monogram">${esc(o.monogram)}</b>`:''}<strong>${esc(names||'Invitation')}</strong><em>${esc(enter)}</em></button>`;}
+function coverMarkup(d,mode,esc){const o=d.openingScene||{},namesEn=d.fields?.names||'Open invitation',namesKm=d.fields?.namesKm||namesEn,subtitleEn=o.subtitle||'You are warmly invited',subtitleKm=o.subtitleKm||subtitleEn,enterEn=o.enterText||'Open invitation',enterKm=o.enterTextKm||'សូមបើកការអញ្ជើញ',names=mode==='km'?namesKm:namesEn,subtitle=mode==='km'?subtitleKm:subtitleEn,enter=mode==='km'?enterKm:enterEn,color=safeColor(o.backgroundColor),image=safeImage(o.backgroundImage),shade=o.textVariant==='light'?'#0005':'#fff3',bg=image?`background-image:linear-gradient(${shade},${shade}),url(&quot;${esc(cssUrl(image))}&quot;);background-color:${color}`:`background-color:${color}`;return `<button id="openCover" type="button" class="open-cover opening-scene-${esc(o.id||'soft-monogram')}" data-monogram="${esc(o.monogram||'')}" style="${bg};--opening-duration:${duration(o.duration)}ms"><span data-cover-en="${esc(subtitleEn)}" data-cover-km="${esc(subtitleKm)}">${esc(subtitle)}</span>${o.monogram?`<b class="opening-monogram">${esc(o.monogram)}</b>`:''}<strong data-cover-en="${esc(namesEn)}" data-cover-km="${esc(namesKm)}">${esc(names||'Invitation')}</strong><em data-cover-en="${esc(enterEn)}" data-cover-km="${esc(enterKm)}">${esc(enter)}</em></button>`;}
 function enhance(root,d){const cover=root.querySelector('#openCover');if(!cover)return;const ms=duration(d.openingScene?.duration);cover.style.transitionDuration=`${ms}ms`;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduced){cover.dataset.reducedMotion='true';cover.style.transition='none';}cover.addEventListener('keydown',e=>{if(e.key==='Escape'&&d.openingScene?.skipAllowed!==false){e.preventDefault();cover.click();}});cover.addEventListener('click',()=>{const hide=()=>{cover.setAttribute('aria-hidden','true');cover.hidden=true;};if(reduced||ms===0)setTimeout(hide,0);else setTimeout(hide,Math.min(ms+120,MAX_DURATION+120));},{once:true});}
 window.EInviteOpeningScenes={coverMarkup,enhance,safeImage,safeColor};
 })();;(()=>{'use strict';
@@ -2381,20 +2402,42 @@ function buildInspector(){const root=$('#typographyControls');if(!root)return;co
  const runGroup=inspectorGroup('Selected text (run)',[labeled('Font pairing',runFont),labeled('Size',runSize),runActions,runStatus]);
  const toggleRow=takeControl('fontBold');const digitCommand=$('#convertDigits'),digitActions=digitCommand?el('div',{class:'v20-one-click-actions'}):null;if(digitActions)digitActions.append(digitCommand);const groups=[inspectorGroup('Text',[labeled('Semantic style',styleSelect),styleActions,linkActions,takeControl('font'),takeControl('color'),takeControl('fontSize'),toggleRow,...(digitActions?[digitActions]:[])]),inspectorGroup('Paragraph',[takeControl('textAlign'),takeControl('letterSpacing'),takeControl('lineHeight'),takeControl('textWrap')]),inspectorGroup('Auto-fit and overflow',[takeControl('textAutoFit'),takeControl('textMinFontSize'),takeControl('fitTextNow'),status,oneClick,warnings,takeControl('typographyV19State')]),inspectorGroup('Columns',[takeControl('textColumns'),takeControl('textColumnGap')]),inspectorGroup('Advanced appearance',[labeled('Vertical alignment',vertical),labeled('Text box padding',padding)]),runGroup];const shell=el('details',{id:'advancedTextLayout',class:'typography-v19-controls v20-typography-shell',open:true});shell.append(el('summary',{class:'v20-shell-summary'},'Typography controls'),...groups);root.replaceChildren(shell);root._v20Advanced={vertical,padding};liveRegion=el('div',{class:'sr-only',role:'status','aria-live':'polite'});shell.append(liveRegion)}
 function proxySelect(sourceId,label,handler){const source=$('#'+sourceId),control=source?.cloneNode(true);if(!control)return null;control.removeAttribute('id');control.dataset.v20Proxy=sourceId;control.setAttribute('aria-label',label);control.addEventListener('change',()=>{if(control.value!=='__mixed__')handler(control.value,source)});return control}
+function iconButton(icon,label,handler,attrs={}){
+ const b=el('button',{type:'button',class:'v20-ico',title:label,'aria-label':label,...attrs},icon);
+ b.addEventListener('click',handler);return b
+}
 function buildToolbar(){
  const host=$('.stage-wrap > .toolbar');if(!host)return;
  const bar=el('div',{id:'v20TypographyToolbar',class:'v20-context-toolbar',role:'toolbar','aria-label':'Text formatting',hidden:true});
- const style=el('select',{id:'v20ToolbarStyle','aria-label':'Text style'});style.addEventListener('change',()=>setStyle(style.value));
- const font=proxySelect('font','Font for selected text',value=>window.EInviteEditorState?.applyTextProperty?.('font',value));if(font){font.id='v20VisibleFont';font.prepend(el('option',{value:'__mixed__',disabled:true,hidden:true},'Mixed fonts'))}
- const size=el('input',{type:'number',min:8,max:200,step:1,'aria-label':'Configured font size',class:'v20-size-input'});size.addEventListener('change',()=>setOverride(firstSelected()?.textAutoFit==='fit'?'textAutoFitMax':'fontSize',Number(size.value),'Set text size'));
- const bold=button('B','v20ToolbarBold',()=>{const doc=bridge().getState(),object=firstSelected(doc),model=object&&MODEL().resolveObjectTypography(doc,object);if(model)setOverride('fontWeight',model.fontWeight==='700'?'400':'700','Toggle bold')},{'aria-label':'Bold','aria-pressed':'false'}),italic=button('I','v20ToolbarItalic',()=>{const doc=bridge().getState(),object=firstSelected(doc),model=object&&MODEL().resolveObjectTypography(doc,object);if(model)setOverride('fontStyle',model.fontStyle==='italic'?'normal':'italic','Toggle italic')},{'aria-label':'Italic','aria-pressed':'false'});
- const align=proxySelect('textAlign','Text alignment',(value,source)=>{source.value=value;source.dispatchEvent(new Event('change',{bubbles:true}))});
- const color=el('input',{type:'color','aria-label':'Text color'});color.addEventListener('input',()=>setOverride('color',color.value,'Set text color'));
- const fit=el('span',{class:'v20-fit-pill','aria-live':'polite'},'Auto-fit —');
- const toggle=button('Text controls','v20ToolbarToggle',()=>setCollapsed(!bar.classList.contains('collapsed')),{'aria-expanded':'false','aria-controls':'v20TypographyToolbar'});toggle.className='v20-toolbar-toggle';
- const setCollapsed=collapsed=>{bar.classList.toggle('collapsed',collapsed);toggle.setAttribute('aria-expanded',String(!collapsed));toggle.textContent=collapsed?'Text controls ▾':'Hide controls ▴';localStorage.setItem('einvite-typography-toolbar-collapsed',collapsed?'1':'0')};
- bar.append(toggle,labeled('Style',style),labeled('Font',font),labeled('Size',size),bold,italic,labeled('Align',align),labeled('Color',color),fit);
- setCollapsed(localStorage.getItem('einvite-typography-toolbar-collapsed')==='1');host.insertAdjacentElement('afterend',bar);bar._refs={style,font,size,bold,italic,align,color,fit,toggle};
+ const style=el('select',{id:'v20ToolbarStyle','aria-label':'Text style',title:'Text style'});style.addEventListener('change',()=>setStyle(style.value));
+ const font=proxySelect('font','Font for selected text',value=>window.EInviteEditorState?.applyTextProperty?.('font',value));if(font){font.id='v20VisibleFont';font.title='Font';font.prepend(el('option',{value:'__mixed__',disabled:true,hidden:true},'Mixed fonts'))}
+ const size=el('input',{id:'v20ToolbarSize',type:'number',min:8,max:200,step:1,inputmode:'numeric','aria-label':'Font size',title:'Font size (px)',class:'v20-size-input'});
+ const applySize=value=>{const n=Math.round(Number(value));if(!Number.isFinite(n))return;const clamp=Math.max(8,Math.min(200,n)),object=firstSelected();if(!object)return;size.value=String(clamp);setOverride(object.textAutoFit==='fit'?'textAutoFitMax':'fontSize',clamp,'Set text size')};
+ let sizeTimer=0;
+ size.addEventListener('input',()=>{clearTimeout(sizeTimer);sizeTimer=setTimeout(()=>applySize(size.value),240)});
+ size.addEventListener('change',()=>{clearTimeout(sizeTimer);applySize(size.value)});
+ size.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();clearTimeout(sizeTimer);applySize(size.value);size.blur()}});
+ const smaller=iconButton('−','Decrease font size',()=>applySize(Number(size.value)-1)),larger=iconButton('+','Increase font size',()=>applySize(Number(size.value)+1));
+ const bold=iconButton('B','Bold',()=>{const doc=bridge().getState(),object=firstSelected(doc),model=object&&MODEL().resolveObjectTypography(doc,object);if(model)setOverride('fontWeight',model.fontWeight==='700'?'400':'700','Toggle bold')},{'aria-pressed':'false'}),italic=iconButton('I','Italic',()=>{const doc=bridge().getState(),object=firstSelected(doc),model=object&&MODEL().resolveObjectTypography(doc,object);if(model)setOverride('fontStyle',model.fontStyle==='italic'?'normal':'italic','Toggle italic')},{'aria-pressed':'false'});
+ bold.id='v20ToolbarBold';bold.classList.add('v20-ico-letter');italic.id='v20ToolbarItalic';italic.classList.add('v20-ico-letter');italic.querySelector('i')?.remove();italic.innerHTML='<em>I</em>';
+ const alignGroup=el('span',{class:'v20-align-group',role:'group','aria-label':'Text alignment'});const alignButtons={};
+ for(const[dir,icon,label]of[['left','⇤','Align left'],['center','↔','Align centre'],['right','⇥','Align right'],['justify','≡','Justify']]){
+  // data-align is reserved by professional-editor.js for object alignment;
+  // using it here made every text-align click align the whole object instead
+  // and then stop propagation before this button's handler ran.
+  const b=iconButton(icon,label,()=>setOverride('textAlign',dir,'Set text alignment'),{'aria-pressed':'false','data-text-align':dir});alignButtons[dir]=b;alignGroup.append(b)
+ }
+ const color=el('input',{id:'v20ToolbarColor',type:'color','aria-label':'Text colour',title:'Text colour'});color.addEventListener('input',()=>setOverride('color',color.value,'Set text color'));
+ const colorWrap=el('label',{class:'v20-color-wrap',title:'Text colour'});colorWrap.append(el('span',{class:'v20-color-icon','aria-hidden':'true'},'◐'),color);
+ const fit=el('span',{class:'v20-fit-pill','aria-live':'polite',title:'Auto-fit state'},'Auto-fit —');
+ const toggle=iconButton('⌃','Hide text controls',()=>setCollapsed(!bar.classList.contains('collapsed')),{'aria-expanded':'false','aria-controls':'v20TypographyToolbar'});toggle.id='v20ToolbarToggle';toggle.classList.add('v20-toolbar-toggle');
+ const setCollapsed=collapsed=>{bar.classList.toggle('collapsed',collapsed);toggle.setAttribute('aria-expanded',String(!collapsed));toggle.title=collapsed?'Show text controls':'Hide text controls';toggle.textContent=collapsed?'Aa':'⌃';localStorage.setItem('einvite-typography-toolbar-collapsed',collapsed?'1':'0')};
+ const divider=()=>el('span',{class:'v20-rule','aria-hidden':'true'});
+ const styleWrap=el('label',{class:'v20-compact-select',title:'Text style'});styleWrap.append(el('span',{class:'v20-select-icon','aria-hidden':'true'},'Aa'),style);
+ const fontWrap=el('label',{class:'v20-compact-select',title:'Font'});fontWrap.append(el('span',{class:'v20-select-icon','aria-hidden':'true'},'Ag'),font);
+ const sizeWrap=el('span',{class:'v20-size-group'});sizeWrap.append(smaller,size,larger);
+ bar.append(styleWrap,fontWrap,sizeWrap,divider(),bold,italic,alignGroup,colorWrap,fit,toggle);
+ setCollapsed(localStorage.getItem('einvite-typography-toolbar-collapsed')==='1');host.insertAdjacentElement('afterend',bar);bar._refs={style,font,size,bold,italic,align:alignButtons,color,fit,toggle};
 }
 function buildPreview(){const toolbar=$('#v20TypographyToolbar');if(!toolbar)return;const trigger=button('Responsive preview','v20ResponsivePreview',openPreview,{'aria-haspopup':'dialog','aria-label':'Open responsive typography preview'});trigger.className='v20-responsive-preview-trigger';toolbar.append(trigger)}
 function preparePreviewObject(node,doc,object,id,width,mode){
@@ -2418,7 +2461,7 @@ function syncInactiveSurfaces(){document.querySelectorAll('dialog').forEach(node
 let v20InertTimer=0;function scheduleInactiveSync(){if(v20InertTimer)return;v20InertTimer=setTimeout(()=>{v20InertTimer=0;if(window.EInviteProfessionalEditor?.activeInteraction)return;syncInactiveSurfaces()},220)}
 let v20LimitControlCache=null;const v20LimitControls=()=>{if(v20LimitControlCache&&v20LimitControlCache.length&&v20LimitControlCache[0].isConnected)return v20LimitControlCache;v20LimitControlCache=[...document.querySelectorAll('[data-style-limit-action]')];return v20LimitControlCache};
 function diagnosticsForSelected(){const node=document.querySelector('.object.selected .content')||document.querySelector('.object .content'),objectNode=node?.closest('.object'),doc=bridge()?.getState?.(),object=firstSelected(doc);if(!node||!object||!doc)return null;const model=MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''});node.__typographyModel=model;return{model,result:LAYOUT()?.fitAndDiagnose(node,model),objectNode}}
-function refresh(){const doc=bridge()?.getState?.();if(!doc||!MODEL())return;const entries=selectedEntries(doc),selected=entries[0]?.[1]||null,textSelected=!!selected,selectionSignature=entries.map(([id])=>id).sort().join('|');const atStyleLimit=Object.keys(doc.typography?.styles||{}).length>=MODEL().MAX_TEXT_STYLES;v20LimitControls().forEach(control=>{control.disabled=atStyleLimit;control.setAttribute('aria-disabled',String(atStyleLimit));control.title=atStyleLimit?`Maximum ${MODEL().MAX_TEXT_STYLES} text styles reached`:''});const inspector=$('#v20TextStyle'),toolbar=$('#v20TypographyToolbar');if(inspector){styleOptions(inspector);inspector.disabled=!textSelected;const adv=$('#typographyControls')?._v20Advanced;if(adv&&textSelected){const m=MODEL().resolveObjectTypography(doc,selected);adv.vertical.value=m.textVerticalAlign;adv.padding.value=String(m.textPadding)}}if(toolbar){toolbar.hidden=!textSelected;toolbar.setAttribute('aria-hidden',String(!textSelected));if(textSelected){const r=toolbar._refs,models=entries.map(([,object])=>MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''})),model=models[0],fonts=[...new Set(models.map(m=>m.font))];styleOptions(r.style);const mixed=fonts.length>1,mixedOption=r.font?.querySelector('option[value="__mixed__"]');if(mixedOption){mixedOption.hidden=!mixed;mixedOption.disabled=!mixed}if(r.font){r.font.value=mixed?'__mixed__':model.font;r.font.dataset.mixed=String(mixed);r.font.setAttribute('aria-label',mixed?'Font for selected text, mixed values':'Font for selected text')}r.size.value=model.textAutoFit==='fit'?model.textAutoFitMax:model.fontSize;r.bold.setAttribute('aria-pressed',String(model.fontWeight==='700'));r.italic.setAttribute('aria-pressed',String(model.fontStyle==='italic'));r.align.value=model.textAlign;r.color.value=/^#[0-9a-f]{6}$/i.test(model.color)?model.color:'#000000';r.fit.textContent=model.textAutoFit==='fit'?`Auto-fit ${model.textMinFontSize}–${model.textAutoFitMax}px`:'Auto-fit off';if(selectionSignature&&selectionSignature!==lastTextSelectionSignature){const activeInspector=document.querySelector('[data-inspector-tab].active')?.dataset.inspectorTab||'';const preserveLayerWorkflow=activeInspector==='layers'&&document.body.dataset.keyboardOwner!=='canvas';if(!preserveLayerWorkflow){const responsive=window.EInviteResponsiveLayout,layout=responsive?.mode?.()||'desktop',tab=document.querySelector('[data-inspector-tab="object"]');if(layout==='desktop')tab?.click();else{document.querySelectorAll('[data-inspector-tab]').forEach(node=>node.classList.toggle('active',node===tab));document.querySelectorAll('[data-inspector-pane]').forEach(node=>node.classList.toggle('active',node.dataset.inspectorPane==='object'));localStorage.setItem('einvite-editor-right-tab','object')}}}}}lastTextSelectionSignature=selectionSignature;const d=textSelected?diagnosticsForSelected():null,model=d?.model,diag=d?.result?.diagnostics;const set=(selector,value)=>{const n=$(selector);if(n&&n.textContent!==value)n.textContent=value};set('[data-v20-max]',model?`${model.textAutoFitMax}px`:'—');set('[data-v20-live]',diag?`${diag.computedSize.toFixed(1)}px`:'—');set('[data-v20-min]',model?`${model.textMinFontSize}px`:'—');set('[data-v20-overflow]',diag?(diag.overflow?'Clipped':'Clear'):'—');const warnings=$('#v20TypographyWarnings');const wSig=diag?(diag.overflow?'1':'0')+'|'+(diag.warnings||[]).map(w=>w.severity+':'+w.message).join('|'):'';if(warnings&&warnings.dataset.v20WarnSig!==wSig){warnings.dataset.v20WarnSig=wSig;warnings.replaceChildren(...(diag?.warnings||[]).map(w=>el('p',{class:`v20-warning v20-${w.severity}`},w.message)));if(!diag?.warnings?.length)warnings.append(el('p',{class:'v20-ok'},'No typography accessibility warnings.'))}const run=window.RichTextEditing?.runSelection?.(),runFont=$('#v20RunFont'),runSize=$('#v20RunSize'),runApply=$('#v20RunApply'),runStatus=$('#v20RunStatus');if(runApply){runApply.disabled=!run;runApply.setAttribute('aria-disabled',String(!run))}if(run&&runFont&&run.marks?.fontPairing)runFont.value=run.marks.fontPairing;if(run&&runSize&&run.marks?.fontSize)runSize.value=String(run.marks.fontSize);if(runStatus)runStatus.textContent=run?`${run.locale==='km'?'Khmer':'Latin'} run: ${run.text.slice(0,40)}`:'Select text inside the object to format one run.';
+function refresh(){const doc=bridge()?.getState?.();if(!doc||!MODEL())return;const entries=selectedEntries(doc),selected=entries[0]?.[1]||null,textSelected=!!selected,selectionSignature=entries.map(([id])=>id).sort().join('|');const atStyleLimit=Object.keys(doc.typography?.styles||{}).length>=MODEL().MAX_TEXT_STYLES;v20LimitControls().forEach(control=>{control.disabled=atStyleLimit;control.setAttribute('aria-disabled',String(atStyleLimit));control.title=atStyleLimit?`Maximum ${MODEL().MAX_TEXT_STYLES} text styles reached`:''});const inspector=$('#v20TextStyle'),toolbar=$('#v20TypographyToolbar');if(inspector){styleOptions(inspector);inspector.disabled=!textSelected;const adv=$('#typographyControls')?._v20Advanced;if(adv&&textSelected){const m=MODEL().resolveObjectTypography(doc,selected);adv.vertical.value=m.textVerticalAlign;adv.padding.value=String(m.textPadding)}}if(toolbar){toolbar.hidden=!textSelected;toolbar.setAttribute('aria-hidden',String(!textSelected));if(textSelected){const r=toolbar._refs,models=entries.map(([,object])=>MODEL().resolveObjectTypography(doc,object,{text:EInviteRenderer?.plainText?.(object.html||'')||''})),model=models[0],fonts=[...new Set(models.map(m=>m.font))];styleOptions(r.style);const mixed=fonts.length>1,mixedOption=r.font?.querySelector('option[value="__mixed__"]');if(mixedOption){mixedOption.hidden=!mixed;mixedOption.disabled=!mixed}if(r.font){r.font.value=mixed?'__mixed__':model.font;r.font.dataset.mixed=String(mixed);r.font.setAttribute('aria-label',mixed?'Font for selected text, mixed values':'Font for selected text')}if(document.activeElement!==r.size)r.size.value=model.textAutoFit==='fit'?model.textAutoFitMax:model.fontSize;r.bold.setAttribute('aria-pressed',String(model.fontWeight==='700'));r.italic.setAttribute('aria-pressed',String(model.fontStyle==='italic'));for(const[dir,button]of Object.entries(r.align||{}))button.setAttribute('aria-pressed',String(model.textAlign===dir));r.color.value=/^#[0-9a-f]{6}$/i.test(model.color)?model.color:'#000000';r.fit.textContent=model.textAutoFit==='fit'?`${model.textMinFontSize}–${model.textAutoFitMax}px`:'Auto';r.fit.title=model.textAutoFit==='fit'?`Auto-fit ${model.textMinFontSize}–${model.textAutoFitMax}px`:'Auto-fit off';if(selectionSignature&&selectionSignature!==lastTextSelectionSignature){const activeInspector=document.querySelector('[data-inspector-tab].active')?.dataset.inspectorTab||'';const preserveLayerWorkflow=activeInspector==='layers'&&document.body.dataset.keyboardOwner!=='canvas';if(!preserveLayerWorkflow){const responsive=window.EInviteResponsiveLayout,layout=responsive?.mode?.()||'desktop',tab=document.querySelector('[data-inspector-tab="object"]');if(layout==='desktop')tab?.click();else{document.querySelectorAll('[data-inspector-tab]').forEach(node=>node.classList.toggle('active',node===tab));document.querySelectorAll('[data-inspector-pane]').forEach(node=>node.classList.toggle('active',node.dataset.inspectorPane==='object'));localStorage.setItem('einvite-editor-right-tab','object')}}}}}lastTextSelectionSignature=selectionSignature;const d=textSelected?diagnosticsForSelected():null,model=d?.model,diag=d?.result?.diagnostics;const set=(selector,value)=>{const n=$(selector);if(n&&n.textContent!==value)n.textContent=value};set('[data-v20-max]',model?`${model.textAutoFitMax}px`:'—');set('[data-v20-live]',diag?`${diag.computedSize.toFixed(1)}px`:'—');set('[data-v20-min]',model?`${model.textMinFontSize}px`:'—');set('[data-v20-overflow]',diag?(diag.overflow?'Clipped':'Clear'):'—');const warnings=$('#v20TypographyWarnings');const wSig=diag?(diag.overflow?'1':'0')+'|'+(diag.warnings||[]).map(w=>w.severity+':'+w.message).join('|'):'';if(warnings&&warnings.dataset.v20WarnSig!==wSig){warnings.dataset.v20WarnSig=wSig;warnings.replaceChildren(...(diag?.warnings||[]).map(w=>el('p',{class:`v20-warning v20-${w.severity}`},w.message)));if(!diag?.warnings?.length)warnings.append(el('p',{class:'v20-ok'},'No typography accessibility warnings.'))}const run=window.RichTextEditing?.runSelection?.(),runFont=$('#v20RunFont'),runSize=$('#v20RunSize'),runApply=$('#v20RunApply'),runStatus=$('#v20RunStatus');if(runApply){runApply.disabled=!run;runApply.setAttribute('aria-disabled',String(!run))}if(run&&runFont&&run.marks?.fontPairing)runFont.value=run.marks.fontPairing;if(run&&runSize&&run.marks?.fontSize)runSize.value=String(run.marks.fontSize);if(runStatus)runStatus.textContent=run?`${run.locale==='km'?'Khmer':'Latin'} run: ${run.text.slice(0,40)}`:'Select text inside the object to format one run.';
 const mobile=$('#v20MobileSelectionSummary');if(mobile)mobile.textContent=textSelected?`${selected.textStyleId||'Body'} · ${model?.fontSize||'—'}px · ${model?.locale==='km'?'Khmer':'English'} · ${diag?.overflow?'Overflow':'Fits'}`:'No text object selected'}
 function install(){if(!MODEL()||!LAYOUT()||!bridge())return;buildInspector();buildToolbar();buildPreview();buildMobileSummary();syncInactiveSurfaces();refresh();document.addEventListener('selectionchange',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:editor-command',()=>requestAnimationFrame(refresh));window.addEventListener('einvite:state-applied',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:typography-selection-diagnostics',()=>requestAnimationFrame(refresh));document.addEventListener('einvite:request-typography-fit',event=>{const object=event.detail?.node,content=object?.querySelector('.content'),doc=bridge().getState(),map=canvasMap(doc),data=map[object?.dataset?.id];if(content&&data){const model=MODEL().resolveObjectTypography(doc,data,{text:content.textContent||''});LAYOUT().fitAndDiagnose(content,model)}});let v20RefreshQueued=false;new MutationObserver(()=>{if(v20RefreshQueued)return;v20RefreshQueued=true;requestAnimationFrame(()=>{v20RefreshQueued=false;refresh()})}).observe($('#stage'),{subtree:true,attributes:true,attributeFilter:['class']});new MutationObserver(()=>scheduleInactiveSync()).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','open']});window.EInviteTypographyV20={refresh,openPreview,command,applyLayout,setStyle,setOverride,resetOverrides}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,0),{once:true});else setTimeout(install,0);
@@ -3108,8 +3151,8 @@ const priorScroll=priorTree?.scrollTop||0;panel.innerHTML=`<div class="pe-layer-
 const search=$('[data-pe-layer-search]',panel);search.value=query;search.addEventListener('focus',clearRememberedLayerFocus);const tree=$('.pe-layer-tree',panel);tree.scrollTop=priorScroll;
 const objectOrder=Object.keys(map).sort((a,b)=>finite(map[b].zIndex)-finite(map[a].zIndex));const objectInGroup=new Set(Object.values(gs).flatMap(g=>g.children||[]).filter(id=>map[id]));const topGroups=Object.keys(gs).filter(id=>!gs[id].parentId);
 const layerRank=id=>map[id]?finite(map[id].zIndex):Math.max(0,...descendantIds(id,gs).map(child=>finite(map[child]?.zIndex)));
-function matches(id,isGroup){const label=(isGroup?gs[id]?.name:map[id]?.layerName||map[id]?.html||id)||'';return !query||String(label).toLowerCase().includes(query.toLowerCase())}
-function objectRow(id,depth){const o=map[id];if(!o||!matches(id,false))return null;const row=document.createElement('div');row.className=`pe-layer-row${selection.has(id)?' active':''}`;row.dataset.layerId=id;row.dataset.layerIds=id;row.style.setProperty('--depth',depth);row.setAttribute('role','treeitem');row.setAttribute('aria-keyshortcuts','F2 Alt+ArrowUp Alt+ArrowDown Alt+Home Alt+End');row.innerHTML=`<span class="pe-layer-indent"></span><button data-layer-visible aria-label="${o.visible===false?'Show':'Hide'} layer">${o.visible===false?'○':'◉'}</button><button class="pe-layer-main"><span>${o.type==='image'?'▧':o.type==='shape'?'□':'T'}</span><strong></strong></button><button data-layer-lock aria-label="${o.locked?'Unlock':'Lock'} layer">${o.locked?'🔒':'◇'}</button><button data-layer-more aria-label="Layer actions">⋯</button><button data-layer-drag aria-label="Reorder layer" title="Drag to reorder">↕</button>`;row.querySelector('strong').textContent=o.layerName||plainText(o.html)||id;wireLayerRow(row,id,false);return row}
+function matches(id,isGroup){const label=(isGroup?gs[id]?.name:layerTitle(id,map[id]))||'';return !query||String(label).toLowerCase().includes(query.toLowerCase())}
+function objectRow(id,depth){const o=map[id];if(!o||!matches(id,false))return null;const row=document.createElement('div');row.className=`pe-layer-row${selection.has(id)?' active':''}`;row.dataset.layerId=id;row.dataset.layerIds=id;row.style.setProperty('--depth',depth);row.setAttribute('role','treeitem');row.setAttribute('aria-keyshortcuts','F2 Alt+ArrowUp Alt+ArrowDown Alt+Home Alt+End');row.innerHTML=`<span class="pe-layer-indent"></span><button data-layer-visible aria-label="${o.visible===false?'Show':'Hide'} layer">${o.visible===false?'○':'◉'}</button><button class="pe-layer-main"><span>${o.type==='image'?'▧':o.type==='shape'?'□':'T'}</span><strong></strong></button><button data-layer-lock aria-label="${o.locked?'Unlock':'Lock'} layer">${o.locked?'🔒':'◇'}</button><button data-layer-more aria-label="Layer actions">⋯</button><button data-layer-drag aria-label="Reorder layer" title="Drag to reorder">↕</button>`;row.querySelector('strong').textContent=layerTitle(id,o);wireLayerRow(row,id,false);return row}
 function groupRow(id,depth){const g=gs[id];if(!g)return null;const ids=descendantsForLayer(id),match=matches(id,true)||ids.some(child=>matches(child,false));if(!match)return null;const wrap=document.createElement('div');wrap.className='pe-layer-group';const row=document.createElement('div');row.className=`pe-layer-row pe-group-row${ids.some(x=>selection.has(x))?' active':''}`;row.dataset.groupId=id;row.dataset.layerIds=ids.join(',');row.style.setProperty('--depth',depth);row.setAttribute('role','treeitem');row.setAttribute('aria-keyshortcuts','F2 Alt+ArrowUp Alt+ArrowDown Alt+Home Alt+End');const open=expandedGroups.has(id);row.innerHTML=`<span class="pe-layer-indent"></span><button data-group-expand aria-label="${open?'Collapse':'Expand'} group">${open?'▾':'▸'}</button><button data-layer-visible aria-label="${ids.every(x=>map[x]?.visible===false)?'Show':'Hide'} group">${ids.every(x=>map[x]?.visible===false)?'○':'◉'}</button><button class="pe-layer-main"><span>◫</span><strong></strong></button><button data-layer-lock aria-label="Toggle group lock">${ids.every(x=>map[x]?.locked)?'🔒':'◇'}</button><button data-layer-more aria-label="Group actions">⋯</button><button data-layer-drag aria-label="Reorder group" title="Drag to reorder">↕</button>`;row.querySelector('strong').textContent=g.name||'Group';wireLayerRow(row,id,true);wrap.append(row);if(open){const childBox=document.createElement('div');childBox.className='pe-layer-children';(g.children||[]).slice().sort((a,b)=>layerRank(b)-layerRank(a)).forEach(child=>{const node=gs[child]?groupRow(child,depth+1):objectRow(child,depth+1);if(node)childBox.append(node)});wrap.append(childBox)}return wrap}
 const topEntries=[...topGroups.map(id=>({id,group:true,rank:layerRank(id)})),...objectOrder.filter(id=>!objectInGroup.has(id)).map(id=>({id,group:false,rank:layerRank(id)}))].sort((a,b)=>b.rank-a.rank);topEntries.forEach(entry=>{const node=entry.group?groupRow(entry.id,0):objectRow(entry.id,0);if(node)tree.append(node)});
 search.addEventListener('input',()=>renderLayers(panel));panel.querySelectorAll('[data-pe-arrange]').forEach(b=>b.onclick=()=>{rememberLayerFocus(layerIdentity(document.activeElement?.closest?.('.pe-layer-row')));reorder(selectedIds(),b.dataset.peArrange);announceLayer(`Selected layers moved ${b.title.toLowerCase()}.`)});$('.pe-layer-live',panel).textContent=layerAnnouncement;
@@ -3118,6 +3161,19 @@ panel._peLayerStructure=structure;panel._peLayerSelection=selectionKey;
 } finally {layersRendering=false}
 }
 function plainText(html){const el=document.createElement('div');el.innerHTML=html||'';return(el.textContent||'').trim().slice(0,36)}
+function layerTitle(id,o){
+  // Legacy imports stored the placeholder word "Layer" as a real name; treat
+  // generic type words as empty so the live content can supply a useful label.
+  if(o?.layerName&&!/^(layer|object|text|image|shape)$/i.test(String(o.layerName).trim()))return o.layerName
+  // Rich-text objects often store html as a rendered structure; the live
+  // canvas node is the reliable source for a human layer label.
+  const node=document.querySelector(`#stage .object[data-id="${window.CSS?.escape?CSS.escape(id):String(id)}"] .content`)
+  const live=(node?.innerText||'').replace(/\s+/g,' ').trim()
+  if(live)return live.slice(0,36)
+  if(o?.type==='image')return 'Image'
+  if(o?.type==='shape')return 'Shape'
+  return plainText(o?.html)||id||'Layer'
+}
 function clearLayerDropIndicator(){document.querySelectorAll('.pe-layer-row.drop-before,.pe-layer-row.drop-after,.pe-layer-row.drop-target').forEach(row=>row.classList.remove('drop-before','drop-after','drop-target'))}
 function layerScroller(row){let node=row?.closest?.('.pe-layer-tree')||row?.closest?.('#layersPanel');while(node&&node!==document.body){const style=getComputedStyle(node);if(/auto|scroll/.test(style.overflowY)&&node.scrollHeight>node.clientHeight+2)return node;node=node.parentElement}return row?.closest?.('#layersPanel')||null}
 function updateLayerDragTarget(event){if(!layerDragState?.active)return;const hit=document.elementFromPoint(event.clientX,event.clientY),row=hit?.closest?.('.pe-layer-row');clearLayerDropIndicator();layerDragState.targetIds=[];layerDragState.position='';if(row&&row!==layerDragState.source){const targetIds=String(row.dataset.layerIds||'').split(',').filter(Boolean);if(targetIds.length&&!targetIds.some(id=>layerDragState.ids.includes(id))){const rr=row.getBoundingClientRect(),position=event.clientY<rr.top+rr.height/2?'before':'after';row.classList.add(position==='before'?'drop-before':'drop-after');layerDragState.targetIds=targetIds;layerDragState.position=position;layerDragState.targetRow=row}}const scroller=layerDragState.scroller,rect=scroller?.getBoundingClientRect?.();if(scroller&&rect){const edge=Math.min(48,rect.height/4);if(event.clientY<rect.top+edge)scroller.scrollTop-=Math.max(8,(rect.top+edge-event.clientY)/2);else if(event.clientY>rect.bottom-edge)scroller.scrollTop+=Math.max(8,(event.clientY-(rect.bottom-edge))/2)}}
@@ -3646,8 +3702,8 @@ boot();
     selectionCard.innerHTML = '<div class="v54-selection-actions" role="toolbar" aria-label="Selection actions">' +
       '<button type="button" data-v54-action="text" title="Edit text" aria-label="Edit text"><span aria-hidden="true">T</span></button>' +
       '<button type="button" data-v54-action="crop" title="Crop" aria-label="Crop"><span aria-hidden="true">\u25A3</span></button>' +
-      '<button type="button" data-v54-action="duplicate" title="Duplicate" aria-label="Duplicate"><span aria-hidden="true">\u29C9</span></button>' +
-      '<button type="button" data-v54-action="delete" title="Delete" aria-label="Delete"><span aria-hidden="true">\u232B</span></button>' +
+      // Duplicate/Delete stay in the canvas action bar; repeating them in this
+      // card made three copies of the same destructive command on one screen.
       '<button type="button" data-v54-action="more" title="More actions" aria-label="More actions"><span aria-hidden="true">\u22EF</span></button>' +
       '</div>' +
       '<div class="v54-selection-readout"><small data-v54-page></small><strong data-v54-label></strong><span data-v54-metrics></span></div>';
@@ -4456,13 +4512,6 @@ boot();
       });
     }
 
-    // Tag device buttons with a single-letter short label for compact toolbars.
-    $$('.studio-canvas-toolbar [data-device]').forEach(button => {
-      button.classList.add('v54-device-button');
-      button.dataset.short = button.textContent.trim().slice(0, 1);
-      button.setAttribute('aria-label', `${button.textContent.trim()} canvas`);
-      button.title = `Preview ${button.textContent.trim().toLowerCase()} canvas`;
-    });
   }
 
   /**
@@ -4642,6 +4691,19 @@ boot();
     on(document, 'einvite:selection-changed', onSelectionChanged);
     // Also try to patch the typography service once it's available.
     on(window, 'einvite:editor-ready', () => { AutoFitGuard.patch(); organizeHeader(); organizeFooter(); });
+
+    // Keyboard parity for the same popovers: a role="menu" must close on Escape,
+    // and focus has to land back on the control that opened it.
+    on(document, 'keydown', event => {
+      if (event.key !== 'Escape') return;
+      if (popover && !popover.hidden) { closeZoomMenu(); $('.v54-zoom-value')?.focus(); }
+      const tools = $('.v54-footer-tools-menu');
+      if (tools && !tools.hidden) {
+        tools.hidden = true;
+        $('.v54-footer-tools-trigger')?.setAttribute('aria-expanded', 'false');
+        $('.v54-footer-tools-trigger')?.focus();
+      }
+    });
 
     // Close popovers on outside interaction.
     on(document, 'pointerdown', event => {
@@ -5267,6 +5329,549 @@ boot();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
   else install();
+})();;/*
+ * Inspector reorganisation (2026-10-30).
+ *
+ * The Edit pane had grown into ~5,600 px of stacked panels: a transform card,
+ * six typography cards, duplicate alignment grids, motion tools, V13 panels,
+ * and the orphaned Design pane. This module keeps the existing DOM nodes (and
+ * therefore every id, listener and save path) but files them into a short
+ * icon-led toolbar plus one accordion group per job:
+ *
+ *   Position · Text · Style · Arrange · Motion · Page · More
+ *
+ * Position opens by default so size/position stay immediate. Text, Style and
+ * Arrange hold the essentials the owner asked to keep in the pane; the rest is
+ * one click away. The old Design tab is retired here: its palette, template and
+ * background controls move into the always-available Page group.
+ */
+(() => {
+  'use strict';
+
+  const pane = () => document.querySelector('[data-inspector-pane="object"]');
+  const props = () => pane()?.querySelector('#properties');
+  const tools = [
+    ['position', 'Position & size', 'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3'],
+    ['text', 'Text', 'M5 6h14M12 6v13M8 19h8'],
+    ['style', 'Appearance', 'M12 3a9 9 0 1 0 0 18zM12 3v18'],
+    ['arrange', 'Arrange', 'M4 7h16M4 12h16M4 17h16'],
+    ['motion', 'Motion', 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM10 9l6 3-6 3z'],
+    ['page', 'Page & palette', 'M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5'],
+    ['more', 'More tools', 'M6 12h.01M12 12h.01M18 12h.01']
+  ];
+  const meta = {
+    position: ['⊹', 'Position', 'X, Y, size and rotation'],
+    text: ['T', 'Text', 'Content, type and fit'],
+    style: ['◐', 'Style', 'Fill, border, shadow and photo'],
+    arrange: ['⇅', 'Arrange', 'Align, order, lock and delete'],
+    motion: ['✦', 'Motion', 'Animation, effects and timing'],
+    page: ['▤', 'Page', 'Palette, background and template'],
+    more: ['⋯', 'More', 'Advanced and responsive tools']
+  };
+  const icon = (path) => `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
+  let built = false;
+  let busy = false;
+  let queued = 0;
+
+  const hasSelection = () => document.body.classList.contains('v54-has-selection')
+    || Boolean(document.querySelector('.object.selected, .object.multi-selected'));
+
+  const make = (tag, cls, html) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (html != null) node.innerHTML = html;
+    return node;
+  };
+
+  function group(name) {
+    const [iconText, label, hint] = meta[name];
+    const details = make('details', 'ix-group');
+    details.dataset.ixGroup = name;
+    details.innerHTML = `<summary><span class="ix-group-icon" aria-hidden="true">${iconText}</span><span class="ix-group-name">${label}</span><small class="ix-group-hint">${hint}</small><span class="ix-chevron" aria-hidden="true">⌄</span></summary><div class="ix-body"></div>`;
+    details.addEventListener('toggle', () => {
+      if (details.open && !busy) closeOthers(details);
+      syncTools();
+    });
+    return details;
+  }
+
+  function closeOthers(current) {
+    const host = current.parentElement;
+    if (!host) return;
+    host.querySelectorAll(':scope > details.ix-group[open]').forEach((other) => {
+      if (other !== current) other.open = false;
+    });
+  }
+
+  function openGroup(name, scroll = true) {
+    const target = pane()?.querySelector(`.ix-group[data-ix-group="${CSS.escape(name)}"]`);
+    if (!target || target.hidden) return;
+    target.open = true;
+    closeOthers(target);
+    if (scroll) target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    syncTools();
+  }
+
+  function build() {
+    const hostPane = pane();
+    const hostProps = props();
+    if (!hostPane || !hostProps || hostPane.querySelector('.ix-toolbox')) return false;
+
+    // Keep the shell that app.js hides/shows, but move its contents into the
+    // groups. The summary stays at the top of the pane for quick selection info.
+    const summary = hostProps.querySelector('.selection-summary');
+    const toolbox = make('div', 'ix-toolbox');
+    toolbox.setAttribute('role', 'toolbar');
+    toolbox.setAttribute('aria-label', 'Edit tools');
+    tools.forEach(([name, label, path]) => {
+      const button = make('button', 'ix-tool');
+      button.type = 'button';
+      button.dataset.ixTool = name;
+      button.setAttribute('aria-label', label);
+      button.title = label;
+      button.innerHTML = `${icon(path)}<em class="ix-tool-tip">${label}</em>`;
+      toolbox.append(button);
+    });
+
+    const groups = make('div', 'ix-groups');
+    Object.keys(meta).forEach((name) => groups.append(group(name)));
+
+    hostPane.insertBefore(toolbox, hostPane.querySelector('#noSelection'));
+    hostPane.append(groups);
+    toolbox.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-ix-tool]');
+      if (!button || button.disabled) return;
+      const name = button.dataset.ixTool;
+      const target = groups.querySelector(`[data-ix-group="${CSS.escape(name)}"]`);
+      if (!target) return;
+      if (target.open) target.open = false;
+      else openGroup(name);
+      syncTools();
+    });
+    return true;
+  }
+
+  function slot(name) {
+    return pane()?.querySelector(`.ix-group[data-ix-group="${CSS.escape(name)}"] .ix-body`);
+  }
+
+  function move(node, name) {
+    const target = slot(name);
+    if (!node || !target || target.contains(node)) return false;
+    target.append(node);
+    return true;
+  }
+
+  function hide(node) {
+    if (node) node.hidden = true;
+  }
+
+  function compactTypography() {
+    const root = pane()?.querySelector('#typographyControls');
+    if (!root) return;
+    root.hidden = true;
+    const textSlot = slot('text');
+    if (!textSlot) return;
+    root.querySelectorAll(':scope > .v20-typography-shell > .v20-inspector-group, :scope > .v20-inspector-group').forEach((section) => {
+      if (section.closest('.ix-sub')) return;
+      const title = (section.querySelector('h3')?.textContent || 'Text').trim();
+      // The parent tool is already called Text; a child sub-panel with the
+      // same label read as a second, redundant section.
+      const label = /^text$/i.test(title) ? 'Style & type' : title;
+      const sub = make('details', 'ix-sub');
+      sub.dataset.title = title;
+      sub.innerHTML = `<summary><span>${label}</span><span class="ix-chevron" aria-hidden="true">⌄</span></summary>`;
+      const body = make('div', 'ix-sub-body');
+      section.classList.add('ix-flat');
+      body.append(section);
+      sub.append(body);
+      textSlot.append(sub);
+    });
+  }
+
+  // Page and More collect several unrelated cards. Fold each card into a
+  // compact sub-accordion so opening the tool never drops a 1,300–1,800px wall
+  // of controls into the pane.
+  function foldSections(name) {
+    const body = slot(name);
+    if (!body) return;
+    // Only fold direct children that are still loose. Late modules (responsive
+    // constraints, shared styles) append cards after the first pass, so an
+    // all-or-nothing guard left them as an unfolded wall at the bottom.
+    const children = [...body.children].filter((node) => !node.classList.contains('ix-sub-fold'));
+    const headingOf = (node) => {
+      if (node.matches('h2, h3')) return (node.textContent || '').trim();
+      return (node.querySelector(':scope > h2, :scope > .final-panel-title h2, :scope > header h2')?.textContent || '').trim();
+    };
+    const units = [];
+    let current = null;
+    children.forEach((node) => {
+      const heading = headingOf(node);
+      if (node.matches('h2, h3') || (heading && !node.matches('label'))) {
+        current = { title: heading || 'Section', nodes: [] };
+        units.push(current);
+      }
+      if (current) current.nodes.push(node);
+    });
+    if (!units.length) return;
+    units.forEach((unit) => {
+      const sub = make('details', 'ix-sub ix-sub-fold');
+      const summary = make('summary');
+      const label = make('span');
+      // More holds an advanced transform card whose heading matched the
+      // Position tool exactly. Rename the duplicate so the two read as
+      // different jobs.
+      label.textContent = name === 'more' && /^position\s*&\s*size$/i.test(unit.title) ? 'Advanced transform' : unit.title;
+      const chevron = make('span', 'ix-chevron', '⌄');
+      chevron.setAttribute('aria-hidden', 'true');
+      summary.append(label, chevron);
+      const inner = make('div', 'ix-sub-body');
+      unit.nodes.forEach((node) => {
+        if (node.matches('h2, h3')) node.hidden = true;
+        else node.querySelectorAll(':scope > h2, :scope > .final-panel-title h2').forEach((heading) => { heading.hidden = true; });
+        inner.append(node);
+      });
+      sub.append(summary, inner);
+      body.append(sub);
+    });
+  }
+
+  function moveLabel(selector, name) {
+    const node = pane()?.querySelector(selector);
+    if (!node || node.closest('.ix-groups')) return;
+    move(node.closest('label,.toggle-row'), name);
+  }
+
+  function moveSection(selector, name) {
+    const node = pane()?.querySelector(selector);
+    if (!node || node.closest('.ix-groups')) return;
+    move(node, name);
+  }
+
+  function classify() {
+    const hostPane = pane();
+    const hostProps = props();
+    if (!hostPane || !hostProps || busy) return;
+    busy = true;
+    try {
+      if (!built) built = build();
+      if (!hostPane.querySelector('.ix-groups')) return;
+
+      // Selection summary lives above the toolbar and is hidden with #properties.
+      const summary = hostProps.querySelector('.selection-summary');
+      if (summary) summary.hidden = false;
+
+      // Position — keep the precise transform card open at rest.
+      const position = hostPane.querySelector('#peTransformPanel');
+      if (position && !position.closest('.ix-groups')) move(position, 'position');
+
+      // Text — the text field plus the six typography cards, each collapsible.
+      const textArea = hostProps.querySelector('#textContentLabel');
+      if (textArea && !textArea.closest('.ix-groups')) move(textArea, 'text');
+      compactTypography();
+      const textBox = hostPane.querySelector('#canvasPlusTextBox');
+      if (textBox && !textBox.closest('.ix-groups') && slot('text')) {
+        // Vertical alignment / box padding are a second block inside Text.
+        // Fold them so opening Text shows the content field and a short list of
+        // headings, not a fully expanded form below it.
+        const sub = make('details', 'ix-sub');
+        sub.dataset.title = 'Text box';
+        sub.innerHTML = `<summary><span>Text box</span><span class="ix-chevron" aria-hidden="true">⌄</span></summary>`;
+        const body = make('div', 'ix-sub-body');
+        body.append(textBox);
+        sub.append(body);
+        slot('text').append(sub);
+      }
+
+      // Style — object appearance and the photo tools. The typography V19 style
+      // recipes stay nearby because they restyle the selected object.
+      const style = slot('style');
+      if (style) {
+        hostPane.querySelectorAll('h2').forEach((heading) => {
+          if (/^appearance$/i.test(heading.textContent.trim()) && !heading.closest('.ix-groups')) move(heading, 'style');
+        });
+        ['objectOpacity', 'borderWidth', 'borderColor', 'borderRadius', 'shadowBlur', 'shadowColor'].forEach((id) => moveLabel(`#${id}`, 'style'));
+        const recipes = hostPane.querySelector('.studio-style-recipes, #studio-style-recipes');
+        if (recipes && !recipes.closest('.ix-groups')) move(recipes, 'style');
+        const image = hostPane.querySelector('#imageControls');
+        if (image && !image.closest('.ix-groups')) move(image, 'style');
+        const photo = hostPane.querySelector('#canvasPlusAiTools');
+        if (photo && !photo.closest('.ix-groups')) move(photo, 'style');
+      }
+
+      // Arrange — one alignment grid only, order, grouping, lock and delete.
+      const arrange = slot('arrange');
+      if (arrange) {
+        const headings = [...hostPane.querySelectorAll('h2')].filter((h) => !h.closest('.ix-groups'));
+        // Both headings said the same thing above one grid. Keep the grid and
+        // let the Arrange group summary provide the label.
+        headings.filter((h) => /^(alignment|align selected)$/i.test(h.textContent.trim())).forEach(hide);
+        const mainGrid = hostPane.querySelector('#alignment-grid');
+        if (mainGrid && !mainGrid.closest('.ix-groups')) move(mainGrid, 'arrange');
+        const grids = [...hostPane.querySelectorAll('.alignment-grid')].filter((g) => !g.closest('.ix-groups'));
+        grids.forEach((grid, index) => {
+          if (index === 0) move(grid, 'arrange');
+          else hide(grid);
+        });
+        move(hostPane.querySelector('#bringForward')?.closest('div.actions'), 'arrange');
+        move(hostPane.querySelector('#groupObjects')?.closest('div.actions'), 'arrange');
+        moveLabel('#showInHero', 'arrange');
+        moveLabel('#objectLocked', 'arrange');
+        // Duplicate and Delete are in the always-visible canvas action bar;
+        // repeating them at the bottom of this group made the same command
+        // appear three times on one screen. Keep the legacy buttons in the DOM
+        // (toolbar handlers still click them) but out of the visible stack.
+        hide(hostPane.querySelector('#duplicate'));
+        hide(hostPane.querySelector('#deleteBtn'));
+      }
+
+      // Motion — animation picker, effects card, precision tools and timeline.
+      const motion = slot('motion');
+      if (motion) {
+        move(hostPane.querySelector('#animationControls'), 'motion');
+        move(hostPane.querySelector('.motion-measurement-settings'), 'motion');
+        hostPane.querySelectorAll('.final-advanced-inspector').forEach((section) => {
+          if (section.closest('.ix-groups') || section.id) return;
+          const text = (section.querySelector('h2')?.textContent || '').trim();
+          if (/effect|motion/i.test(text)) move(section, 'motion');
+        });
+        hostPane.querySelectorAll('.final-timeline').forEach((node) => move(node, 'motion'));
+      }
+
+      // Page — the retired Design tab, now always reachable.
+      const pagePane = document.querySelector('[data-inspector-pane="theme"]');
+      if (pagePane) {
+        if (pagePane.classList.contains('active')) document.querySelector('[data-inspector-tab="object"]')?.click();
+        const page = slot('page');
+        if (page) {
+          [...pagePane.children].forEach((node) => {
+            if (node.classList.contains('studio-inspector-heading')) return;
+            if (!page.contains(node)) page.append(node);
+          });
+        }
+        document.querySelector('[data-inspector-tab="theme"]')?.remove();
+        pagePane.remove();
+      }
+      foldSections('page');
+
+      // More — advanced duplicates, responsive constraints and fine nudging.
+      const more = slot('more');
+      if (more) {
+        move(hostPane.querySelector('#canvasPlusTransform'), 'more');
+        move(hostPane.querySelector('#canvasPlusTextPlacement'), 'more');
+        move(hostPane.querySelector('#eiSharedStylesV13'), 'more');
+        move(hostPane.querySelector('#eiConstraintPanel'), 'more');
+        move(hostPane.querySelector('#shapeControls'), 'more');
+        const fine = [...hostPane.querySelectorAll('h2')].find((h) => /^fine position$/i.test(h.textContent.trim()));
+        if (fine && !fine.closest('.ix-groups')) move(fine, 'more');
+        hostPane.querySelectorAll('.actions').forEach((actions) => {
+          if (actions.closest('.ix-groups')) return;
+          if (actions.querySelector('[data-nudge], [data-size]')) move(actions, 'more');
+        });
+      }
+
+      // Any late standalone card that belongs to none of the above is safer in
+      // More than left as a 5,000 px wall below the groups.
+      hostPane.querySelectorAll(':scope > .final-advanced-inspector, :scope > section[id]').forEach((section) => {
+        if (section.closest('.ix-groups') || !section.id) return;
+        if (['canvasPlusTransform', 'canvasPlusTextBox', 'canvasPlusTextPlacement', 'canvasPlusAiTools'].includes(section.id)) return;
+        move(section, 'more');
+      });
+      foldSections('more');
+
+      hide(hostProps.querySelector(':scope > .final-timeline'));
+      const legacyHeading = hostPane.querySelector(':scope > h2.studio-inspector-heading');
+      if (legacyHeading) hide(legacyHeading);
+      hostPane.querySelectorAll('.final-advanced-inspector.is-disabled').forEach((node) => node.classList.remove('is-disabled'));
+      syncSelection();
+      syncTools();
+    } finally {
+      busy = false;
+    }
+  }
+
+  function syncSelection() {
+    const hostPane = pane();
+    const hostProps = props();
+    if (!hostPane || !hostProps) return;
+    const selected = hasSelection();
+    hostPane.classList.toggle('ix-has-selection', selected);
+    hostPane.classList.toggle('ix-no-selection', !selected);
+    hostPane.querySelectorAll('.ix-tool').forEach((button) => {
+      const objectTool = button.dataset.ixTool !== 'page';
+      button.disabled = objectTool && !selected;
+      button.setAttribute('aria-disabled', String(button.disabled));
+      button.title = button.disabled ? 'Select an object on the canvas to use this tool' : button.getAttribute('aria-label');
+    });
+    hostPane.querySelectorAll('.ix-group').forEach((groupNode) => {
+      const page = groupNode.dataset.ixGroup === 'page';
+      groupNode.hidden = !page && !selected;
+    });
+    if (!selected) {
+      const pageGroup = hostPane.querySelector('.ix-group[data-ix-group="page"]');
+      if (pageGroup && !pageGroup.open) {
+        busy = true;
+        pageGroup.open = true;
+        busy = false;
+      }
+    }
+  }
+
+  function syncTools() {
+    const hostPane = pane();
+    if (!hostPane) return;
+    hostPane.querySelectorAll('.ix-tool').forEach((button) => {
+      const target = hostPane.querySelector(`.ix-group[data-ix-group="${CSS.escape(button.dataset.ixTool)}"]`);
+      const open = Boolean(target?.open);
+      button.classList.toggle('active', open);
+      button.setAttribute('aria-expanded', String(open));
+    });
+  }
+
+  function installShare() {
+    const publish = document.querySelector('[data-inspector-pane="publish"]');
+    if (!publish || publish.dataset.shareModern === 'true') return;
+    const slug = publish.querySelector('#publicSlug')?.closest('label');
+    const access = publish.querySelector('#accessMode')?.closest('label');
+    const password = publish.querySelector('#accessPassword')?.closest('label');
+    const save = publish.querySelector('#savePublishingSettings');
+    const state = publish.querySelector('#publishingSettingsState');
+    const info = publish.querySelector('#publishInfo');
+    const history = publish.querySelector('#historyBtn');
+    const unpublish = publish.querySelector('#unpublishBtn');
+    const rsvp = publish.querySelector('#rsvpBtn');
+    const wishes = publish.querySelector('#wishesBtn');
+    if (!info || !history) return;
+    publish.dataset.shareModern = 'true';
+    const shell = make('div', 'share-shell');
+    shell.innerHTML = `
+      <div class="share-hero">
+        <div class="share-state"><span class="share-state-dot" aria-hidden="true"></span><div><strong data-share-state>Draft</strong><small data-share-hint>Publish to create a shareable link.</small></div></div>
+        <div class="share-link"><input data-share-url type="text" readonly value="" aria-label="Public invitation link"><button type="button" data-share-copy>Copy</button></div>
+        <div class="share-main-actions"><button type="button" class="primary" data-share-publish>Publish</button><button type="button" data-share-preview>Preview</button></div>
+      </div>
+      <details class="share-section" open>
+        <summary><span>Link &amp; access</span><small>Set the public address and who can open it.</small></summary>
+        <div class="share-section-body"></div>
+      </details>
+      <details class="share-section">
+        <summary><span>Manage</span><small>Versions, responses and guest wishes.</small></summary>
+        <div class="share-section-body share-manage"></div>
+      </details>`;
+    const accessBody = shell.querySelector('.share-section-body');
+    [slug, access, password, save, state].filter(Boolean).forEach((node) => accessBody.append(node));
+    const manage = shell.querySelector('.share-manage');
+    [history, unpublish, rsvp, wishes].filter(Boolean).forEach((node) => manage.append(node));
+    // The hero already states draft/published; the legacy #publishInfo line is
+    // kept in the DOM (app.js still updates it) but not shown, so it cannot
+    // contradict the state with a stale local-snapshot message.
+    // Collaboration and other modules append their own cards to this pane.
+    // Keep them instead of discarding their DOM (and their event bindings).
+    const moved = new Set([slug, access, password, save, state, info, history, unpublish, rsvp, wishes].filter(Boolean));
+    const extras = [...publish.children].filter((node) => !moved.has(node)
+      && node.id !== 'publishingSettings'
+      && !node.classList.contains('studio-inspector-heading')
+      && !(node.tagName === 'H2' && /^publishing$/i.test(node.textContent.trim())));
+    extras.forEach((node) => shell.append(node));
+    // app.js still writes #publishInfo on every publish/refresh. It must stay in
+    // the document (hidden) or refreshPublish() throws inside apply() and every
+    // subsequent edit — font size included — is rolled back.
+    if (info) {
+      info.hidden = true;
+      shell.append(info);
+    }
+    publish.replaceChildren(shell);
+    const url = shell.querySelector('[data-share-url]');
+    const copy = shell.querySelector('[data-share-copy]');
+    const copyText = async () => {
+      if (!url.value) return;
+      try {
+        await navigator.clipboard.writeText(url.value);
+      } catch {
+        url.select();
+        document.execCommand?.('copy');
+      }
+      copy.textContent = 'Copied';
+      setTimeout(() => { copy.textContent = 'Copy'; }, 1400);
+    };
+    copy.addEventListener('click', copyText);
+    shell.querySelector('[data-share-publish]').addEventListener('click', () => document.querySelector('#publishBtn')?.click());
+    shell.querySelector('[data-share-preview]').addEventListener('click', () => document.querySelector('#previewBtn')?.click());
+    const sync = () => {
+      const text = (info.textContent || '').replace(/\s+/g, ' ').trim();
+      let serverPublished = null;
+      try {
+        const inviteId = window.EInviteContext?.getInvitationId?.({ allowRemembered: false });
+        const cached = inviteId ? window.inviteStore?.read(`sovan-server-invite:${inviteId}`) : null;
+        if (cached && typeof cached.published === 'boolean') serverPublished = cached.published;
+      } catch { serverPublished = null; }
+      const published = serverPublished ?? !/not published|no snapshot|draft|unpublished|offline/i.test(text);
+      const slugValue = (publish.querySelector('#publicSlug')?.value || '').trim();
+      let link = '';
+      if (info.dataset.publicUrl) {
+        try { link = new URL(info.dataset.publicUrl, location.origin).href; } catch { link = ''; }
+      }
+      if (!link && slugValue) link = `${location.origin}/i/${encodeURIComponent(slugValue)}`;
+      if (url.value !== link) url.value = link;
+      copy.disabled = !link;
+      copy.setAttribute('aria-disabled', String(!link));
+      shell.dataset.published = String(published);
+      shell.querySelector('[data-share-state]').textContent = published ? 'Published' : 'Draft';
+      shell.querySelector('[data-share-hint]').textContent = published ? 'Anyone with the link can open the invitation.' : 'Publish to create a shareable link.';
+      shell.querySelector('[data-share-publish]').textContent = published ? 'Update snapshot' : 'Publish';
+    };
+    sync();
+    new MutationObserver(sync).observe(info, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-public-url'] });
+    publish.addEventListener('input', sync);
+    publish.addEventListener('change', sync);
+  }
+
+  function schedule() {
+    if (queued) return;
+    queued = requestAnimationFrame(() => {
+      queued = 0;
+      classify();
+      syncSelection();
+      installShare();
+    });
+  }
+
+  function install() {
+    if (!pane()) return;
+    classify();
+    installShare();
+    const observer = new MutationObserver((records) => {
+      if (busy) return;
+      if (records.every((record) => record.target.closest?.('.ix-groups') && record.type === 'attributes')) return;
+      schedule();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    const hostProps = props();
+    if (hostProps) {
+      new MutationObserver(syncSelection).observe(hostProps, { attributes: true, attributeFilter: ['hidden'] });
+    }
+    document.addEventListener('einvite:selection-changed', () => {
+      requestAnimationFrame(() => {
+        syncSelection();
+        if (!hasSelection()) openGroup('page', false);
+        else {
+          const active = pane()?.querySelector('.ix-group[open]');
+          if (!active || active.dataset.ixGroup === 'page') {
+            const textObject = document.querySelector('#textContentLabel:not([hidden])');
+            openGroup(textObject ? 'text' : 'position', false);
+          }
+        }
+      });
+    });
+    const selectedText = document.querySelector('#textContentLabel:not([hidden])');
+    if (hasSelection()) openGroup(selectedText ? 'text' : 'position', false);
+    else openGroup('page', false);
+    syncSelection();
+    syncTools();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(install, 90), { once: true });
+  else setTimeout(install, 90);
 })();;/**
  * ui/app-shell.js — V55 shell: rail collapse, rail drawer, appearance.
  *
@@ -5300,11 +5905,32 @@ boot();
       if (glyph && !glyph.firstElementChild) glyph.textContent = collapsed ? '»' : '«';
     });
   }
+  /* QA 2026-10-30 (UI-4): the drawer had no scrim and its off-screen links
+     stayed focusable. Add a scrim, mark the closed rail inert on mobile, and
+     return focus to the toggle when the drawer closes under the keyboard. */
+  function ensureScrim() {
+    var scrim = document.querySelector('.app-drawer-scrim');
+    if (!scrim) {
+      scrim = document.createElement('div');
+      scrim.className = 'app-drawer-scrim';
+      scrim.setAttribute('aria-hidden', 'true');
+      document.body.append(scrim);
+    }
+    return scrim;
+  }
   function applyRailOpen(open) {
+    var wasOpen = body.classList.contains('rail-open');
+    var rail = document.querySelector('.app-rail');
     body.classList.toggle('rail-open', !!open);
+    ensureScrim();
+    if (rail) rail.inert = window.matchMedia('(max-width: 768px)').matches && !open;
     document.querySelectorAll('[data-drawer-toggle]').forEach(function (btn) {
       btn.setAttribute('aria-expanded', String(!!open));
     });
+    if (!open && wasOpen && rail && rail.contains(document.activeElement)) {
+      var toggle = document.querySelector('[data-drawer-toggle]');
+      if (toggle) toggle.focus();
+    }
   }
 
   /* --- 2. Current page --------------------------------------------------- */
@@ -5390,7 +6016,7 @@ boot();
     syncAutoRail: syncAutoRail,
     setTheme: applyTheme
   });
-})();;(()=>{'use strict';if(window.EInviteResponsiveLayout?.version>=27)return;const M=820,C=1180,q=(s,r=document)=>r.querySelector(s),b=document.body,m=q('body.studio-experience>main'),l=q('aside.left'),r=q('aside.right'),h=q('.studio-pane-host',l),a=q('.studio-tool-rail',l),s=q('.stage-wrap'),w=q('#stage');if(!b?.classList.contains('studio-experience')||!m||!l||!r||!h||!a||!s)return;w?.setAttribute('tabindex','-1');let y=0,i=0,p=0;const mode=()=>innerWidth<=M?'mobile':innerWidth<=C?'compact':'desktop',state=(n,o)=>{n?.setAttribute('aria-hidden',`${!o}`);if(n&&'inert'in n)n.inert=!o;n?.classList.toggle('einvite-drawer-closed',!o)},focus=()=>{w?.focus({preventScroll:true});b.dataset.keyboardOwner='canvas'};function sync(){if(y)return;y=1;const x=mode(),d=b.dataset.editorDrawer;b.classList.toggle('einvite-layout-mobile',x==='mobile');b.classList.toggle('einvite-layout-compact',x==='compact');b.classList.toggle('einvite-layout-desktop',x==='desktop');b.dataset.editorLayout=x;if(x==='desktop'){b.dataset.editorDrawer='desktop';b.classList.remove('mobile-creation-open','mobile-inspector-open','inspector-open','mobile-pane-collapsed');state(l,1);state(h,1);state(r,1);a.inert=false;a.removeAttribute('aria-hidden')}else{if(!i||!['canvas','creation','inspector'].includes(d))b.dataset.editorDrawer='canvas';const v=b.dataset.editorDrawer,c=v==='creation',n=v==='inspector';b.classList.toggle('mobile-creation-open',c);b.classList.toggle('mobile-inspector-open',n);b.classList.toggle('inspector-open',n);b.classList.toggle('mobile-pane-collapsed',!c);if(x==='mobile'){state(l,c);a.inert=!c}else{state(l,1);a.inert=false}a.removeAttribute('aria-hidden');state(h,c);state(r,n)}i=1;requestAnimationFrame(()=>dispatchEvent(new CustomEvent('einvite:workspace-resized',{detail:{layout:mode(),drawer:b.dataset.editorDrawer}})));y=0}function set(d,o={}){b.dataset.editorDrawer=d||'canvas';sync();if(o.focus){const z=d==='creation'?h.querySelector('.studio-pane.active input,.studio-pane.active button,.studio-pane.active select,.studio-pane.active textarea'):d==='inspector'?r.querySelector('.studio-inspector-pane.active input,.studio-inspector-pane.active button,.studio-inspector-tab'):w;z?.focus({preventScroll:true})}}const api={version:27,MOBILE_MAX:M,COMPACT_MAX:C,mode,sync,setDrawer:set,openCreation:o=>set('creation',o),closeCreation:o=>set('canvas',o),openInspector:o=>set('inspector',o),closeInspector:o=>set('canvas',o),focusCanvas(){set('canvas');focus()}};document.addEventListener('click',e=>{if(mode()==='desktop')return;if(e.target.closest('.studio-tool-rail [data-studio-tab]'))b.dataset.editorDrawer='creation';else if(e.target.closest('[data-inspector-tab]'))b.dataset.editorDrawer='inspector';else{const z=e.target.closest('[data-mobile-mode]');if(!z)return;b.dataset.editorDrawer=z.dataset.mobileMode==='tools'?'creation':z.dataset.mobileMode==='quick'?'inspector':'canvas'}queueMicrotask(sync)},true);new MutationObserver(()=>{if(!y&&mode()!=='desktop'){if(b.classList.contains('mobile-inspector-open')||b.classList.contains('inspector-open'))b.dataset.editorDrawer='inspector';else if(b.classList.contains('mobile-creation-open')&&!b.classList.contains('mobile-pane-collapsed'))b.dataset.editorDrawer='creation';sync()}}).observe(b,{attributes:true,attributeFilter:['class']});const typing=n=>!!n&&(n.matches?.('input,textarea,select,[contenteditable="true"]')||n.isContentEditable),control=n=>typing(n)||!!n?.matches?.('button,a[href],[role="button"],[role="menuitem"],[role="tab"]');document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('#stage .object,#stage,#canvasViewport,.stage-wrap')||control(e.target)||e.target.closest?.('.content[contenteditable="true"],.studio-canvas-toolbar,#v20TypographyToolbar'))return;p=1;b.dataset.keyboardOwner='canvas';queueMicrotask(focus)},true);document.addEventListener('pointerup',()=>{if(p){p=0;b.dataset.keyboardOwner='canvas';focus()}},true);document.addEventListener('pointercancel',()=>p=0,true);for(const n of['einvite:marquee-complete','einvite:resize-complete','einvite:rotation-complete','einvite:drag-complete','einvite:professional-command-committed'])document.addEventListener(n,e=>{if(e.detail?.source!=='keyboard'){b.dataset.keyboardOwner='canvas';focus()}});document.addEventListener('focusin',e=>{const t=e.target;b.dataset.keyboardOwner=t===w||t?.id==='canvasViewport'?'canvas':control(t)||t?.closest?.('aside.left,aside.right,.studio-topbar,.mobile-editor-v14-bar,.studio-canvas-toolbar,#v20TypographyToolbar')?'control':t?.closest?.('#stage,#canvasViewport,.stage-wrap')?'canvas':b.dataset.keyboardOwner},true);const back=new WeakMap,show=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(...x){const a=document.activeElement;back.set(this,{a,c:b.dataset.keyboardOwner==='canvas'&&(a===w||a?.id==='canvasViewport')});return show.apply(this,x)};document.addEventListener('close',e=>{if(!(e.target instanceof HTMLDialogElement))return;const x=back.get(e.target);back.delete(e.target);requestAnimationFrame(()=>requestAnimationFrame(()=>x?.c?(focus(),b.dataset.keyboardOwner='canvas'):x?.a?.isConnected&&x.a.focus?.({preventScroll:true})))},true);addEventListener('resize',sync,{passive:true});document.addEventListener('einvite:editor-ready',sync);requestAnimationFrame(sync);window.EInviteResponsiveLayout=Object.freeze(api)})();;// first-selection-prewarm — pays the one-time cost of the first selection-chrome
+})();;(()=>{'use strict';if(window.EInviteResponsiveLayout?.version>=27)return;const M=820,C=1180,q=(s,r=document)=>r.querySelector(s),b=document.body,m=q('body.studio-experience>main'),l=q('aside.left'),r=q('aside.right'),h=q('.studio-pane-host',l),a=q('.studio-tool-rail',l),s=q('.stage-wrap'),w=q('#stage');if(!b?.classList.contains('studio-experience')||!m||!l||!r||!h||!a||!s)return;w?.setAttribute('tabindex','-1');let y=0,i=0,p=0;const mode=()=>innerWidth<=M?'mobile':innerWidth<=C?'compact':'desktop',state=(n,o)=>{n?.setAttribute('aria-hidden',`${!o}`);if(n&&'inert'in n)n.inert=!o;n?.classList.toggle('einvite-drawer-closed',!o)},focus=()=>{w?.focus({preventScroll:true});b.dataset.keyboardOwner='canvas'};function sync(){if(y)return;y=1;const x=mode(),d=b.dataset.editorDrawer;b.classList.toggle('einvite-layout-mobile',x==='mobile');b.classList.toggle('einvite-layout-compact',x==='compact');b.classList.toggle('einvite-layout-desktop',x==='desktop');b.dataset.editorLayout=x;if(x==='desktop'){b.dataset.editorDrawer='desktop';b.classList.remove('mobile-creation-open','mobile-inspector-open','inspector-open','mobile-pane-collapsed');state(l,1);state(h,1);state(r,1);a.inert=false;a.removeAttribute('aria-hidden')}else{if(!i||!['canvas','creation','inspector'].includes(d))b.dataset.editorDrawer='canvas';const v=b.dataset.editorDrawer,c=v==='creation',n=v==='inspector';b.classList.toggle('mobile-creation-open',c);b.classList.toggle('mobile-inspector-open',n);b.classList.toggle('inspector-open',n);b.classList.toggle('mobile-pane-collapsed',!c);if(x==='mobile'){state(l,c);a.inert=!c}else{state(l,1);a.inert=false}a.removeAttribute('aria-hidden');state(h,c);state(r,n)}i=1;requestAnimationFrame(()=>dispatchEvent(new CustomEvent('einvite:workspace-resized',{detail:{layout:mode(),drawer:b.dataset.editorDrawer}})));y=0}function set(d,o={}){b.dataset.editorDrawer=d||'canvas';sync();if(o.focus){const z=d==='creation'?h.querySelector('.studio-pane.active input,.studio-pane.active button,.studio-pane.active select,.studio-pane.active textarea'):d==='inspector'?r.querySelector('.studio-inspector-pane.active input,.studio-inspector-pane.active button,.studio-inspector-tab'):w;z?.focus({preventScroll:true})}}const api={version:27,MOBILE_MAX:M,COMPACT_MAX:C,mode,sync,setDrawer:set,openCreation:o=>set('creation',o),closeCreation:o=>set('canvas',o),openInspector:o=>set('inspector',o),closeInspector:o=>set('canvas',o),focusCanvas(){set('canvas');focus()}};document.addEventListener('click',e=>{if(mode()==='desktop')return;if(e.target.closest('.studio-tool-rail [data-studio-tab]'))b.dataset.editorDrawer='creation';else if(e.target.closest('[data-inspector-tab]'))b.dataset.editorDrawer='inspector';else{const z=e.target.closest('[data-mobile-mode]');if(!z)return;b.dataset.editorDrawer=z.dataset.mobileMode==='tools'?'creation':z.dataset.mobileMode==='quick'?'inspector':'canvas'}queueMicrotask(sync)},true);new MutationObserver(()=>{if(!y&&mode()!=='desktop'){if(b.classList.contains('mobile-inspector-open')||b.classList.contains('inspector-open'))b.dataset.editorDrawer='inspector';else if(b.classList.contains('mobile-creation-open')&&!b.classList.contains('mobile-pane-collapsed'))b.dataset.editorDrawer='creation';sync()}}).observe(b,{attributes:true,attributeFilter:['class']});const typing=n=>!!n&&(n.matches?.('input,textarea,select,[contenteditable="true"]')||n.isContentEditable),control=n=>typing(n)||!!n?.matches?.('button,a[href],[role="button"],[role="menuitem"],[role="tab"]');document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('#stage .object,#stage,#canvasViewport,.stage-wrap')||control(e.target)||e.target.closest?.('.content[contenteditable="true"],.studio-canvas-toolbar,#v20TypographyToolbar')){p=0;return}p=1;b.dataset.keyboardOwner='canvas';queueMicrotask(focus)},true);document.addEventListener('pointerup',()=>{if(p){p=0;b.dataset.keyboardOwner='canvas';focus()}},true);document.addEventListener('pointercancel',()=>p=0,true);for(const n of['einvite:marquee-complete','einvite:resize-complete','einvite:rotation-complete','einvite:drag-complete','einvite:professional-command-committed'])document.addEventListener(n,e=>{if(e.detail?.source!=='keyboard'){b.dataset.keyboardOwner='canvas';focus()}});document.addEventListener('focusin',e=>{const t=e.target;b.dataset.keyboardOwner=t===w||t?.id==='canvasViewport'?'canvas':control(t)||t?.closest?.('aside.left,aside.right,.studio-topbar,.mobile-editor-v14-bar,.studio-canvas-toolbar,#v20TypographyToolbar')?'control':t?.closest?.('#stage,#canvasViewport,.stage-wrap')?'canvas':b.dataset.keyboardOwner},true);const back=new WeakMap,show=HTMLDialogElement.prototype.showModal;HTMLDialogElement.prototype.showModal=function(...x){const a=document.activeElement;back.set(this,{a,c:b.dataset.keyboardOwner==='canvas'&&(a===w||a?.id==='canvasViewport')});return show.apply(this,x)};document.addEventListener('close',e=>{if(!(e.target instanceof HTMLDialogElement))return;const x=back.get(e.target);back.delete(e.target);requestAnimationFrame(()=>requestAnimationFrame(()=>x?.c?(focus(),b.dataset.keyboardOwner='canvas'):x?.a?.isConnected&&x.a.focus?.({preventScroll:true})))},true);addEventListener('resize',sync,{passive:true});document.addEventListener('einvite:editor-ready',sync);requestAnimationFrame(sync);window.EInviteResponsiveLayout=Object.freeze(api)})();;// first-selection-prewarm — pays the one-time cost of the first selection-chrome
 // paint at boot, where nothing is being measured, instead of on the user's first
 // selection gesture.
 //

@@ -1,5 +1,12 @@
 @layer components {
-.studio{max-width:1240px;margin:auto;padding:28px}.studio-head{display:flex;align-items:center;gap:12px}.studio-head h1{font:40px Georgia,serif;color:var(--accent);margin-right:auto}.studio-toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0}.studio-toolbar input[type="search"]{flex:1;min-width:min(240px,100%)}
+.studio{max-width:1240px;margin:auto;padding:28px}.studio-head{display:flex;align-items:center;gap:12px}.studio-head h1{font:40px Georgia,serif;color:var(--accent);margin-right:auto}.studio-toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0}/* Keep the search glyphs inside the 46px field. The global input rule adds
+   vertical padding for a 36px control; on this taller field that pushed the
+   text against the border, which read as text spilling out of the box. */
+.studio-toolbar input[type="search"]{flex:1;min-width:min(240px,100%);height:46px;min-height:46px;padding:0 38px 0 14px;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.studio-toolbar input[type="search"]:focus{text-overflow:clip}
+.studio-toolbar input[type="search"]::-webkit-search-cancel-button{margin-right:2px}
+.pack-toolbar input[type="search"]{padding:0 36px 0 14px;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.pack-toolbar input[type="search"]:focus{text-overflow:clip}
 
 /* ui-refinement pass (DIRECTION.md §4/§5, Batch D): the base layer sets
    input/select{display:block;width:100%}, which turned the Template Studio

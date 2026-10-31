@@ -15,8 +15,18 @@
   const SECTION_ID = 'templatePackGallery';
   const LOADER_SRC = 'template-pack-loader.js';
   const STYLE_HREF = 'template-pack-gallery.css';
-  const CATEGORY_ORDER = ['wedding', 'birthday', 'ceremony', 'greeting', 'business'];
   const state = { catalog: null, category: 'all', query: '' };
+  let currentSection = null;
+
+  // The studio toolbar owns search and category. Keeping those controls in one
+  // place avoids a second search field and a duplicate set of category chips on
+  // the same page; this listener forwards their values to the gallery.
+  function applyFilter(detail = {}) {
+    if (typeof detail.query === 'string') state.query = detail.query.trim().toLowerCase();
+    if (typeof detail.category === 'string') state.category = detail.category || 'all';
+    if (currentSection) render(currentSection);
+  }
+  window.addEventListener('einvite:studio-filter', (event) => applyFilter(event.detail || {}));
 
   const esc = (value) =>
     String(value == null ? '' : value).replace(/[&<>"']/g, (character) => ({
@@ -99,9 +109,6 @@
       );
     }
     host.querySelector('[data-pack-empty]').hidden = visible.length > 0;
-    host.querySelectorAll('[data-pack-filter]').forEach((button) => {
-      button.setAttribute('aria-pressed', String(button.dataset.packFilter === state.category));
-    });
   }
 
   function buildSection() {
@@ -109,11 +116,7 @@
     section.id = SECTION_ID;
     section.className = 'pack-gallery';
     section.setAttribute('aria-labelledby', 'packGalleryTitle');
-    const filters = [['all', text('All', 'All')]]
-      .concat(CATEGORY_ORDER.map((key) => [key, key === 'ceremony' ? 'Ceremony' : key === 'greeting' ? 'Greetings' : key.charAt(0).toUpperCase() + key.slice(1)]))
-      .map(([key, label]) => `<button type="button" class="pack-filter" data-pack-filter="${key}" aria-pressed="${key === 'all'}">${esc(label)}</button>`)
-      .join('');
-    section.innerHTML = `<header class="pack-head">
+    section.innerHTML = `<div class="pack-head">
         <div>
           <h2 id="packGalleryTitle">${esc(text('Khmer events', 'Khmer events'))}</h2>
           <p class="pack-hint">${esc(text(
@@ -122,13 +125,6 @@
           ))}</p>
         </div>
         <span class="pack-count" data-pack-count aria-live="polite"></span>
-      </header>
-      <div class="pack-toolbar">
-        <label class="sr-only" for="packSearch">${esc(text('Search Khmer event designs', 'Search Khmer event designs'))}</label>
-        <input id="packSearch" type="search" data-pack-search
-               placeholder="${esc(text('Search these designs…', 'Search these designs…'))}"
-               autocomplete="off">
-        <div class="pack-filters" role="group" aria-label="${esc(text('Filter by event', 'Filter by event'))}">${filters}</div>
       </div>
       <p class="pack-status" data-pack-status role="status"></p>
       <div class="pack-grid" data-pack-grid role="list"></div>
@@ -142,6 +138,12 @@
     ensureStyles();
     const section = buildSection();
     studio.before(section);
+    currentSection = section;
+    // Pick up any filter the shared toolbar set before this module mounted.
+    const toolbarSearch = document.querySelector('#studioSearch');
+    const toolbarCategory = document.querySelector('#studioCategory');
+    if (toolbarSearch) state.query = toolbarSearch.value.trim().toLowerCase();
+    if (toolbarCategory) state.category = toolbarCategory.value || 'all';
     const status = section.querySelector('[data-pack-status]');
     try {
       const pack = await ensureLoader();
@@ -155,12 +157,6 @@
       return section;
     }
     section.addEventListener('click', async (event) => {
-      const filter = event.target.closest('[data-pack-filter]');
-      if (filter) {
-        state.category = filter.dataset.packFilter || 'all';
-        render(section);
-        return;
-      }
       const open = event.target.closest('[data-pack-template]');
       if (!open) return;
       const id = open.dataset.packTemplate;
@@ -175,18 +171,13 @@
         open.removeAttribute('aria-busy');
       }
     });
-    section.addEventListener('input', (event) => {
-      if (!event.target.matches('[data-pack-search]')) return;
-      state.query = event.target.value.trim().toLowerCase();
-      render(section);
-    });
     if (window.EInviteI18n && typeof window.EInviteI18n.subscribe === 'function') {
       window.EInviteI18n.subscribe(() => render(section));
     }
     return section;
   }
 
-  window.EInvitePackGallery = Object.freeze({ mount, get state() { return { ...state }; } });
+  window.EInvitePackGallery = Object.freeze({ mount, setFilter: applyFilter, get state() { return { ...state }; } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once: true });
   else mount();
 })();

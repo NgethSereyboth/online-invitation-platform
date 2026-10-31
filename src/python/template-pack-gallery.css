@@ -3,17 +3,29 @@
 .pack-gallery {
   margin: 0 0 28px;
   padding: 20px;
-  border: 1px solid color-mix(in srgb, var(--text, #2f2a26) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--app-text, #2f2a26) 12%, transparent);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--surface, #ffffff) 92%, var(--accent, #9d4555) 8%);
+  background: color-mix(in srgb, var(--app-surface, #ffffff) 92%, var(--app-accent, #9d4555) 8%);
+  color: var(--app-text, #2f2a26);
 }
 
 .pack-head {
+  /* It is a <header>, and the app shell styles every <header> as the fixed
+     topbar (height, padding, surface). Undo that here or the section heading
+     is painted as a white bar and its hint is clipped. */
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  position: static;
+  color: inherit;
 }
 
 .pack-head h2 {
@@ -27,13 +39,13 @@
   max-width: 62ch;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--muted, #6b615a);
+  color: var(--app-muted, #6b615a);
 }
 
 .pack-count {
   font-size: 0.8125rem;
   line-height: 1.4;
-  color: var(--muted, #6b615a);
+  color: var(--app-muted, #6b615a);
   white-space: nowrap;
 }
 
@@ -50,8 +62,8 @@
   min-height: 44px;
   padding: 0 14px;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--text, #2f2a26) 18%, transparent);
-  background: var(--surface, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--app-text, #2f2a26) 18%, transparent);
+  background: var(--app-surface, #ffffff);
   color: inherit;
   font: inherit;
 }
@@ -66,7 +78,7 @@
   min-height: 44px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--text, #2f2a26) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--app-text, #2f2a26) 18%, transparent);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -74,15 +86,15 @@
 }
 
 .pack-filter[aria-pressed='true'] {
-  background: var(--accent, #9d4555);
-  border-color: var(--accent, #9d4555);
+  background: var(--app-accent, #9d4555);
+  border-color: var(--app-accent, #9d4555);
   color: #ffffff;
 }
 
 .pack-filter:focus-visible,
 .pack-card-open:focus-visible,
 .pack-toolbar input:focus-visible {
-  outline: 2px solid var(--accent, #9d4555);
+  outline: 2px solid var(--app-accent, #9d4555);
   outline-offset: 2px;
 }
 
@@ -91,7 +103,7 @@
   margin: 0 0 12px;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--muted, #6b615a);
+  color: var(--app-muted, #6b615a);
 }
 
 .pack-grid {
@@ -128,8 +140,8 @@
   aspect-ratio: var(--pack-ratio, 5 / 7);
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--text, #2f2a26) 12%, transparent);
-  background: color-mix(in srgb, var(--text, #2f2a26) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--app-text, #2f2a26) 12%, transparent);
+  background: color-mix(in srgb, var(--app-text, #2f2a26) 6%, transparent);
   box-shadow: 0 6px 18px rgba(24, 16, 12, 0.08);
 }
 
@@ -147,13 +159,13 @@
 
 .pack-name-secondary {
   font-size: 0.8125rem;
-  color: var(--muted, #6b615a);
+  color: var(--app-muted, #6b615a);
 }
 
 .pack-meta {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--muted, #6b615a);
+  color: var(--app-muted, #6b615a);
 }
 
 .pack-card-open:hover img {

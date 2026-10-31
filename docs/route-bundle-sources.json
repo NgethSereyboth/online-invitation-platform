@@ -358,6 +358,7 @@
     "editor/editor-core.js",
     "editor/ui-layout.js",
     "editor/ui-components.js",
+    "editor/inspector-reorg.js",
     "ui/app-shell.js",
     "editor-responsive-contract.js",
     "editor/first-selection-prewarm.js"
@@ -391,6 +392,7 @@
     "zoom-layout.css",
     "graphics-runtime.css",
     "editor/editor-styles.css",
+    "editor-inspector.css",
     "app-shell.css",
     "design-fix.css",
     "editor-responsive-contract.css"
