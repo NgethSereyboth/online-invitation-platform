@@ -38,14 +38,9 @@ function ensureDesignHome(){
         <div class="flow-project-art" aria-hidden="true"><span>✦</span></div>
         <div><small>Current invitation</small><strong id="flowProjectName">Invitation</strong><span id="flowProjectMeta">Interactive invitation website</span></div>
       </section>
-      <section class="flow-section"><div class="flow-section-head"><h3>Start creating</h3></div>
-        <div class="flow-action-grid">
-          <button type="button" data-flow-open="elements"><span class="flow-action-icon">${iconSvg('elements')}</span><b>Elements</b><small>Graphics & ornaments</small></button>
-          <button type="button" data-flow-open="text"><span class="flow-action-icon">${iconSvg('text')}</span><b>Text</b><small>Fonts & combinations</small></button>
-          <button type="button" data-flow-open="media"><span class="flow-action-icon">${iconSvg('media')}</span><b>Uploads</b><small>Photos, video & audio</small></button>
-          <button type="button" data-flow-open="pages"><span class="flow-action-icon">${iconSvg('pages')}</span><b>Pages</b><small>Structure & layouts</small></button>
-        </div>
-      </section>
+      <!-- The tool rail already exposes Elements, Text, Uploads, Pages and
+           Event. Duplicating them as four cards made the same navigation
+           appear twice in one panel, so the quick-start grid is retired. -->
       <section class="flow-section"><div class="flow-section-head"><h3>Invitation styles</h3><button type="button" data-flow-inspector="theme">View all</button></div>
         <div class="flow-style-grid">
           <button type="button" data-flow-theme="rose"><i class="rose"></i><b>Royal Rose</b></button>

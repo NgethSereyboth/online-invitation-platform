@@ -56,6 +56,10 @@ function adjustZoom(delta){return setZoom(Math.max(.1,Math.min(5,(window.EInvite
 function activateTool(tool){if(window.EInviteToolController?.setTool)return window.EInviteToolController.setTool(tool);return clickNative(`[data-tool="${CSS.escape(tool)}"]`)}
 function toggleSelectedFlag(key){const ids=selected();if(!ids.length)return false;const state=window.EInviteEditorBridge?.getState?.(),canvasId=window.EInviteEditorBridge?.getActiveCanvasId?.()||'hero';let map=state?.objects||{};if(canvasId!=='hero'){const page=(state?.designPages||[]).find(p=>`page:${p.id}`===canvasId);map=page?.objects||{}}const all=ids.every(id=>key==='visible'?map[id]?.visible!==false:map[id]?.[key]===true);return pro('setObjectFlag',ids,key,!all)}
 function closeTopLayer(){
+// The design-check modal is a div[role=dialog] owned by studio-experience, so it is not covered by
+// the dialog[open] branch below and was ranked after the selection branch: Esc cleared the canvas
+// selection first and left the open modal untouched. Ask its owner before anything else closes.
+if(window.EInviteDesignCheck?.isOpen?.()){window.EInviteDesignCheck.close();return true}
 if(window.EInviteProfessionalEditor?.commands?.cancelInteraction?.())return true;
 if(window.EInviteProfessionalWorkflow?.transform?.active){window.EInviteProfessionalWorkflow.transform.cancel();return true}
 const dialog=$$('dialog[open]').at(-1);if(dialog){dialog.close?.();return true}
