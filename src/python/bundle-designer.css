@@ -1399,10 +1399,6 @@ code { overflow-wrap: anywhere; }
 html body[data-shell="a"] { grid-template-rows: auto minmax(0, 1fr) auto; }
 html body[data-shell="b"], html body[data-page="public"], html body[data-page="checkin"] { grid-template-rows: auto minmax(0, 1fr); }
 }
-body.studio-experience .ei-presence-stack {
-right: calc(var(--studio-right-width, 330px) + 18px);
-}
-body.studio-experience.studio-right-collapsed .ei-presence-stack { right: 18px; }
 @media (min-width: 761px) {
 body.studio-experience .studio-canvas-toolbar {
 flex-wrap: wrap !important;

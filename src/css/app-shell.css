@@ -603,10 +603,8 @@ dialog::backdrop { background: color-mix(in srgb, #101116 46%, transparent); }
 /* The collaboration presence stack is fixed at the top-right (z 70) and covered
    the inspector's Action control at 1440×900. Park it over the canvas, left of
    the open inspector, and restore the corner when the inspector is collapsed. */
-body.studio-experience .ei-presence-stack {
-  right: calc(var(--studio-right-width, 330px) + 18px);
-}
-body.studio-experience.studio-right-collapsed .ei-presence-stack { right: 18px; }
+/* The override lives at the end of editor-suite.css: this file is inside
+   @layer components, so a plain `right` here would lose to that unlayered rule. */
 
 /* Canvas toolbar: the context row (Assets/Text/Shape/Quick Actions/Review) is
    wider than the 640px the stage gives it, so it ran past `stage-wrap` and was

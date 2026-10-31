@@ -1309,6 +1309,25 @@
       .filter(node => node.tagName === 'BUTTON' && !node.classList.contains('v54-footer-tools-trigger'))
       .forEach(button => menu.append(button));
     tools.hidden = !menu.querySelector('button');
+    watchFooter(host);
+  }
+
+  /**
+   * Launchers are added by later modules (templates, brand, quality, team,
+   * history, photo styles...). They prepend straight into the status bar's last
+   * cell, after `organizeFooter()` has already run, so they sprawl past the
+   * viewport until the next resize. Re-organise whenever that cell changes.
+   */
+  let footerObserverHost = null;
+  function watchFooter(host) {
+    if (footerObserverHost === host) return;
+    footerObserverHost = host;
+    let queued = false;
+    new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; organizeFooter(); });
+    }).observe(host, { childList: true });
   }
 
   // =========================================================================

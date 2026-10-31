@@ -141,23 +141,49 @@
 
   let pollTimer = null;
   let lastMetrics = null, lastStatus = null;
+  // PW-10: an open admin tab used to fire two requests every 30 s for as long as
+  // it stayed open, including through 429s - about 240 requests/hour against a
+  // 10,000/day hosting allowance. Poll only while visible, back off on repeated
+  // failure, and stop with a visible retry instead of hammering a suspended host.
+  let pollFailures = 0, pollPaused = false;
   async function pollOnce(){
+    if (document.visibilityState === 'hidden' || pollPaused) return;
     try {
       const [metrics, status] = await Promise.all([api.get('/api/admin/metrics-v2'), api.get('/api/admin/system-status')]);
-       lastMetrics = metrics; lastStatus = status;
+      lastMetrics = metrics; lastStatus = status;
       renderStatCards(metrics);
       renderSystemStatus(status);
+      if (pollFailures) pollFailures = 0;
     } catch(e) {
-      // Don't spam the console on every poll; first failure clears the cards.
+      pollFailures += 1;
+      if (pollFailures >= 3) { pausePolling(e); return; }
+      // One quiet message on the first failure; no repeating error cards.
       const host = document.getElementById('statCardsGrid');
-      if (host) host.innerHTML = `<p class="ei-error">${esc(e.message || t('error'))}</p>`;
+      if (host && pollFailures === 1) host.innerHTML = `<p class="ei-error">${esc(e.message || t('error'))}</p>`;
     }
   }
+  function pausePolling(error){
+    pollPaused = true;
+    stopPolling();
+    const host = document.getElementById('statCardsGrid');
+    if (!host) return;
+    host.innerHTML = `<div class="ei-poll-paused" role="status" data-admin-poll-paused>
+      <p class="ei-error">${esc(t('pollPaused') || 'Live updates paused after three failed requests.')}</p>
+      <button type="button" data-admin-poll-retry>${esc(t('retry') || 'Retry')}</button></div>`;
+    host.querySelector('[data-admin-poll-retry]')?.addEventListener('click', () => {
+      pollFailures = 0; pollPaused = false;
+      pollOnce(); startPolling();
+    }, { once: true });
+  }
   function startPolling(){
-    if (pollTimer) return;
+    if (pollTimer || pollPaused) return;
     pollTimer = setInterval(pollOnce, 30_000);
   }
   function stopPolling(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { stopPolling(); return; }
+    if (!pollPaused) { pollOnce(); startPolling(); }
+  });
 
   function initTabs(){
     const buttons = document.querySelectorAll('[data-admin-tab]');

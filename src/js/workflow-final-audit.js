@@ -248,7 +248,7 @@ function improveDiscoverability(){
   if(design&&!$('#workflowV7ProTip',design)){
     const tip=document.createElement('div');tip.id='workflowV7ProTip';tip.className='workflow-v7-pro-tip';
     tip.innerHTML='<span>⌘</span><div><strong>Professional canvas controls</strong><small>Drag assets onto the artboard, use Position for alignment, Layers for stacking, and Flow to reorder the invitation.</small></div>';
-    $('.flow-project-card',design)?.after(tip);
+    design.querySelector('.studio-pane-heading')?.after(tip);
   }
   const shortcuts=$('.ui-shortcut-grid');
   if(shortcuts&&!$('[data-v7-shortcuts]',shortcuts)){

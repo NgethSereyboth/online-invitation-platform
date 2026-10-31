@@ -351,7 +351,6 @@
       hide(hostProps.querySelector(':scope > .final-timeline'));
       const legacyHeading = hostPane.querySelector(':scope > h2.studio-inspector-heading');
       if (legacyHeading) hide(legacyHeading);
-      hostPane.querySelectorAll('.final-advanced-inspector.is-disabled').forEach((node) => node.classList.remove('is-disabled'));
       syncSelection();
       syncTools();
     } finally {
@@ -366,6 +365,11 @@
     const selected = hasSelection();
     hostPane.classList.toggle('ix-has-selection', selected);
     hostPane.classList.toggle('ix-no-selection', !selected);
+    // PW-2: the Transform panel is dimmed + hinted until something is selected.
+    // canvas-plus owns the same class on its own refresh; keep both in step here
+    // so a single click clears it and clearing the selection restores it.
+    const transformPanel = hostPane.querySelector('#canvasPlusTransform') || document.querySelector('#canvasPlusTransform');
+    if (transformPanel) transformPanel.classList.toggle('is-disabled', !selected);
     hostPane.querySelectorAll('.ix-tool').forEach((button) => {
       const objectTool = button.dataset.ixTool !== 'page';
       button.disabled = objectTool && !selected;

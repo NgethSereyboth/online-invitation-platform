@@ -34,10 +34,7 @@ function ensureDesignHome(){
     pane=document.createElement('section');pane.className='studio-pane flow-design-pane';pane.dataset.studioPane='design';
     pane.innerHTML=`
       <div class="studio-pane-heading flow-pane-heading"><div><small>Create</small><h1>Design</h1></div></div>
-      <section class="flow-project-card">
-        <div class="flow-project-art" aria-hidden="true"><span>✦</span></div>
-        <div><small>Current invitation</small><strong id="flowProjectName">Invitation</strong><span id="flowProjectMeta">Interactive invitation website</span></div>
-      </section>
+
       <!-- The tool rail already exposes Elements, Text, Uploads, Pages and
            Event. Duplicating them as four cards made the same navigation
            appear twice in one panel, so the quick-start grid is retired. -->

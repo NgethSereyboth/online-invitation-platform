@@ -4562,6 +4562,25 @@ boot();
       .filter(node => node.tagName === 'BUTTON' && !node.classList.contains('v54-footer-tools-trigger'))
       .forEach(button => menu.append(button));
     tools.hidden = !menu.querySelector('button');
+    watchFooter(host);
+  }
+
+  /**
+   * Launchers are added by later modules (templates, brand, quality, team,
+   * history, photo styles...). They prepend straight into the status bar's last
+   * cell, after `organizeFooter()` has already run, so they sprawl past the
+   * viewport until the next resize. Re-organise whenever that cell changes.
+   */
+  let footerObserverHost = null;
+  function watchFooter(host) {
+    if (footerObserverHost === host) return;
+    footerObserverHost = host;
+    let queued = false;
+    new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => { queued = false; organizeFooter(); });
+    }).observe(host, { childList: true });
   }
 
   // =========================================================================
@@ -5682,7 +5701,6 @@ boot();
       hide(hostProps.querySelector(':scope > .final-timeline'));
       const legacyHeading = hostPane.querySelector(':scope > h2.studio-inspector-heading');
       if (legacyHeading) hide(legacyHeading);
-      hostPane.querySelectorAll('.final-advanced-inspector.is-disabled').forEach((node) => node.classList.remove('is-disabled'));
       syncSelection();
       syncTools();
     } finally {
@@ -5697,6 +5715,11 @@ boot();
     const selected = hasSelection();
     hostPane.classList.toggle('ix-has-selection', selected);
     hostPane.classList.toggle('ix-no-selection', !selected);
+    // PW-2: the Transform panel is dimmed + hinted until something is selected.
+    // canvas-plus owns the same class on its own refresh; keep both in step here
+    // so a single click clears it and clearing the selection restores it.
+    const transformPanel = hostPane.querySelector('#canvasPlusTransform') || document.querySelector('#canvasPlusTransform');
+    if (transformPanel) transformPanel.classList.toggle('is-disabled', !selected);
     hostPane.querySelectorAll('.ix-tool').forEach((button) => {
       const objectTool = button.dataset.ixTool !== 'page';
       button.disabled = objectTool && !selected;
