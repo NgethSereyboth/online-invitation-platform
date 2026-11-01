@@ -12,6 +12,7 @@ Usage:
 The bundle contains no Python, no data, no secrets and no source maps.
 """
 import argparse
+import json
 import os
 import re
 import shutil
@@ -83,6 +84,14 @@ def refs_in(path: Path, text: str):
         found += [m for m in re.findall(r'@import\s+["\']([^"\']+)', text)]
     elif suffix in (".js", ".mjs"):
         found += [part for s in JS_STRING.findall(text) for part in re.split(r'[,\s]+', s) if part]
+    elif suffix == ".webmanifest":
+        try:
+            manifest = json.loads(text)
+        except ValueError:
+            manifest = {}
+        for icon in manifest.get("icons", []):
+            if isinstance(icon, dict) and icon.get("src"):
+                found.append(str(icon["src"]))
     return found
 
 
@@ -134,7 +143,7 @@ def main() -> int:
                     deferred = src.with_name(name + ext)
                     if deferred.is_file():
                         queue.append(deferred)
-        if src.suffix.lower() in (".html", ".css", ".js", ".mjs"):
+        if src.suffix.lower() in (".html", ".css", ".js", ".mjs", ".webmanifest"):
             text = src.read_text(encoding="utf-8", errors="replace")
             for ref in refs_in(src, text):
                 if not ref.lower().endswith(ASSET_EXT):

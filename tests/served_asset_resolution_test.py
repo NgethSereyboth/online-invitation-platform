@@ -32,6 +32,9 @@ from __future__ import annotations
 import importlib.util
 import json
 import re
+import struct
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -100,6 +103,49 @@ def test_route_bundle_manifest_assets_resolve_in_serve_root() -> None:
             if name and not (SERVE_ROOT / name).is_file():
                 missing.append(f"{page}:{key}={name}")
     assert not missing, f"route-bundles.json names assets not in src/python/: {missing}"
+
+
+def _png_dimensions(path: Path) -> tuple[int, int]:
+    """Read width and height from a PNG IHDR without adding an image dependency."""
+    header = path.read_bytes()[:24]
+    assert header[:8] == b"\x89PNG\r\n\x1a\n", f"{path} is not a PNG"
+    assert header[12:16] == b"IHDR", f"{path} has no PNG IHDR"
+    return struct.unpack(">II", header[16:24])
+
+
+def test_manifest_declares_checkin_install_assets() -> None:
+    """The check-in manifest must be installable and every icon must exist."""
+    manifest = json.loads((SERVE_ROOT / "manifest.webmanifest").read_text(encoding="utf-8"))
+    assert manifest.get("id") == "/checkin.html"
+    assert manifest.get("scope") == "/"
+    assert manifest.get("start_url") == "/checkin.html"
+
+    icons = manifest.get("icons") or []
+    by_size = {icon.get("sizes"): icon for icon in icons}
+    assert {"192x192", "512x512"} <= set(by_size), by_size
+    for size in ("192x192", "512x512"):
+        icon = by_size[size]
+        assert icon.get("type") == "image/png", icon
+        reference = icon.get("src") or ""
+        assert reference, icon
+        path = SERVE_ROOT / reference.lstrip("/")
+        assert path.is_file(), f"missing manifest icon: {path}"
+        width, height = (int(part) for part in size.split("x"))
+        assert _png_dimensions(path) == (width, height), path
+
+
+def test_sites_bundle_includes_manifest_icons(tmp_path: Path) -> None:
+    """The deploy bundle must follow manifest icons, not only HTML references."""
+    out = tmp_path / "sites-public"
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "tools" / "build-sites-bundle.py"), "--out", str(out)],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    for size in (192, 512):
+        assert (out / "assets" / f"icon-{size}.png").is_file()
 
 
 def test_early_and_direct_scripts_resolve_in_serve_root() -> None:

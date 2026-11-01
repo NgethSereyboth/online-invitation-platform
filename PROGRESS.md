@@ -255,6 +255,18 @@
   adjacent set passed `34 passed in 65.63s`. `python3 build.py all` reported
   `MIRROR_CHECK_PASSED`.
 
+### 2026-11-01 — phase-3: installable check-in manifest and local icons
+- `src/html/manifest.webmanifest` now has `id: /checkin.html`, `scope: /`,
+  `start_url: /checkin.html`, and local 192×192/512×512 PNG icons under `/assets/`. The icons
+  are generated from the repository's `assets/favicon.svg` mark (rounded `#8d6e46` square,
+  white sparkle and dot); no third-party image is referenced.
+- `tools/build-sites-bundle.py` now follows `icons[].src` from a `.webmanifest`; without that,
+  the manifest was in the bundle but the icons were not. `tests/served_asset_resolution_test.py`
+  checks the required manifest fields, on-disk PNG dimensions, and the assembled Sites bundle.
+- No offline outbox/queue behavior changed; the manifest metadata only. Targeted adjacent set:
+  `34 passed in 65.63s`. `python3 build.py all` reported `MIRROR_CHECK_PASSED` and the Sites
+  bundle contained both icons.
+
 ## Product decisions (not code)
 - **Invitation visibility:** published invitations are **link-only by default** for this pass.
   That is why phase-2 adds `noindex, nofollow` in both HTML and HTTP, while still serving the
