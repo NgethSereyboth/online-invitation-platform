@@ -2623,9 +2623,15 @@ return;
 }
 try{
 await api('/api/health');
-if(!serverInvite){
+const cachedServerInvite=!!serverInvite;
 try{
+
+
+
+
+
 serverInvite=await api('/api/invitations/'+encodeURIComponent(activeInviteId));
+if(!cachedServerInvite||!inviteStore.read(draftKey,null)){
 state=migrateDocument(serverInvite.document||state);
 applyPosterCanvasSize();
 window.EInvitePosterTreat?.();
@@ -2634,6 +2640,7 @@ recentFieldEdits.clear();
 authoritativeStateApplying=true;
 try{apply();}finally{authoritativeStateApplying=false;}
 pushHistory(capture())
+}
 }catch(error){
 if(error.status!==404)throw error;
 let names=state?.fields?.names||'our invitation';
@@ -2646,7 +2653,6 @@ document:state
 })
 }
 inviteStore.write(`sovan-server-invite:${activeInviteId}`,serverInvite)
-}
 serverSaveBlockedByConflict=false;
 await Promise.allSettled([
 Promise.resolve(renderAssets()),

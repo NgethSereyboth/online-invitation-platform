@@ -106,9 +106,15 @@ return;
 }
 try{
 await api('/api/health');
-if(!serverInvite){
+const cachedServerInvite=!!serverInvite;
 try{
+// Always refresh the server row. A second tab shares the local draft cache but
+// starts with the previous tab's revision; reusing that cached updatedAt makes
+// its first autosave fail with revision_conflict even when the first tab has
+// already finished saving. Keep newer local draft content when one exists, but
+// sync the revision every editor session needs for writes.
 serverInvite=await api('/api/invitations/'+encodeURIComponent(activeInviteId));
+if(!cachedServerInvite||!inviteStore.read(draftKey,null)){
 state=migrateDocument(serverInvite.document||state);
 applyPosterCanvasSize();
 window.EInvitePosterTreat?.();
@@ -117,6 +123,7 @@ recentFieldEdits.clear();
 authoritativeStateApplying=true;
 try{apply();}finally{authoritativeStateApplying=false;}
 pushHistory(capture())
+}
 }catch(error){
 if(error.status!==404)throw error;
 let names=state?.fields?.names||'our invitation';
@@ -129,7 +136,6 @@ document:state
 })
 }
 inviteStore.write(`sovan-server-invite:${activeInviteId}`,serverInvite)
-}
 serverSaveBlockedByConflict=false;
 await Promise.allSettled([
 Promise.resolve(renderAssets()),
