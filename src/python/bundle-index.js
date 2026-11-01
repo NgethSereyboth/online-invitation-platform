@@ -6220,6 +6220,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     let current = config.tabs[0].id;
     for (const node of original) {
       if (node.matches?.('h2') && config.map[text(node)]) current = config.map[text(node)];
+
+
+      if (node.dataset?.studioGroup && groups.has(node.dataset.studioGroup)) current = node.dataset.studioGroup;
       if (!groups.has(current)) groups.set(current, []);
       groups.get(current).push(node);
     }

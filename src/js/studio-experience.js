@@ -97,6 +97,9 @@
     let current = config.tabs[0].id;
     for (const node of original) {
       if (node.matches?.('h2') && config.map[text(node)]) current = config.map[text(node)];
+      // P1: the Pages manager ships before the first Pages <h2> so it is never
+      // moved on boot. Let it name its own group instead of inheriting Event.
+      if (node.dataset?.studioGroup && groups.has(node.dataset.studioGroup)) current = node.dataset.studioGroup;
       if (!groups.has(current)) groups.set(current, []);
       groups.get(current).push(node);
     }

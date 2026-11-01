@@ -29,6 +29,11 @@
       into the bundle in the correct order.
   -->
   <link rel="stylesheet" href="bundle-index.css">
+  <!-- P1 editor first-paint CLS: page-experience.js used to inject this after
+       DOMContentLoaded, so the Pages manager was laid out unstyled and then
+       moved twice. Ship it with the document; installCss() already treats an
+       existing link as authoritative. -->
+  <link rel="stylesheet" href="page-experience.css" data-v22-page-experience>
   
 
 
@@ -156,6 +161,7 @@
       <label><input id="wishesEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Enable private guest wishes</label>
       <p class="hint">Guests can send a separate congratulatory message without submitting RSVP. Wishes are visible only to the invitation owner.</p>
       </div>
+      <div id="designPagesManager" class="design-pages-manager" data-studio-group="pages"></div>
       <h2>Invitation sections</h2>
       <label>Quick preset<select id="invitationPreset"><option value="custom">Custom</option><option value="pure">Pure invitation</option><option value="rsvp">Simple invitation + RSVP</option><option value="full">Full event experience</option></select></label>
       <label>Section order — one per line<textarea id="sectionOrder" placeholder="gallery&#10;video&#10;countdown&#10;schedule&#10;venue&#10;rsvp">gallery
@@ -192,7 +198,6 @@ rsvp</textarea></label>
         <button type="button" data-add-page="thankyou"><span>♡</span><strong>Thank You</strong></button>
       </div>
       <div class="page-builder-actions"><button id="editHeroCanvas" type="button">Edit main hero canvas</button></div>
-      <div id="designPagesManager" class="design-pages-manager"></div>
       <h3>Reusable page templates</h3>
       <div id="savedPageTemplates" class="saved-page-templates"></div>
       <div id="countdownGroup" data-poster-hide="true">

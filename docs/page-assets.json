@@ -105,16 +105,17 @@
       ]
     },
     "index.html": {
-      "bytes": 1542252,
+      "bytes": 1556244,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
         "bundle-index.js",
         "bundle-index-2.js"
       ],
-      "styleCount": 1,
+      "styleCount": 2,
       "styles": [
-        "bundle-index.css"
+        "bundle-index.css",
+        "page-experience.css"
       ]
     },
     "materials.html": {
@@ -273,7 +274,8 @@
         "bundle-index-2.js"
       ],
       "styles": [
-        "bundle-index.css"
+        "bundle-index.css",
+        "page-experience.css"
       ]
     },
     "event-operations": {
