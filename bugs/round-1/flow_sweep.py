@@ -28,9 +28,9 @@ VIEWPORTS = [(360, 800), (390, 844), (768, 900), (1024, 900), (1280, 900), (1440
 DOC = {
     "schemaVersion": 13, "eventType": "Wedding",
     "fields": {
-        "names": "[Groom name] & [Bride name]", "namesKm": "កូនកំលោះ និង កូនក្រមុំ",
-        "date": "2029-12-27", "time": "16:05", "venue": "[Venue]", "venueKm": "រាជធានីភ្នំពេញ",
-        "message": "We would be honoured to celebrate with you.", "messageKm": "សូមអញ្ជើញចូលរួមអបអរសាទរ",
+        "names": "[Groom name] & [Bride name]", "namesKm": "\u1780\u17bc\u1793\u1780\u17c6\u179b\u17c4\u17c7 \u1793\u17b7\u1784 \u1780\u17bc\u1793\u1780\u17d2\u179a\u1798\u17bb\u17c6",
+        "date": "2029-12-27", "time": "16:05", "venue": "[Venue]", "venueKm": "\u179a\u17b6\u1787\u1792\u17b6\u1793\u17b8\u1797\u17d2\u1793\u17c6\u1796\u17c1\u1789",
+        "message": "We would be honoured to celebrate with you.", "messageKm": "\u179f\u17bc\u1798\u17a2\u1789\u17d2\u1787\u17be\u1789\u1785\u17bc\u179b\u179a\u17bd\u1798\u17a2\u1794\u17a2\u179a\u179f\u17b6\u1791\u179a",
     },
     "settings": {
         "rsvpEnabled": True, "wishesEnabled": False, "scheduleEnabled": True, "venueEnabled": True,
@@ -40,7 +40,7 @@ DOC = {
     "languageMode": "both", "dateFormat": "gregorian", "accent": "#9d4555",
     "palette": {"background": "#fff8f2", "surface": "#ffffff", "text": "#342c26", "heading": "#9d4555"},
     "sectionOrder": ["countdown", "schedule", "rsvp"],
-    "schedule": [{"time": "16:05", "title": "Ceremony", "titleKm": "ពិធីសិរីមង្គល"}],
+    "schedule": [{"time": "16:05", "title": "Ceremony", "titleKm": "\u1796\u17b7\u1792\u17b8\u179f\u17b7\u179a\u17b8\u1798\u1784\u17d2\u1782\u179b"}],
     "venues": [], "customBlocks": [], "designPages": [], "objects": {}, "slug": "round-1-flow",
 }
 
@@ -114,7 +114,7 @@ def main() -> int:
                 check(f"public {width}ou hero", lambda: page.locator("#publicRoot .guest-hero").is_visible() or "hero visible", page)
                 check(f"public {width} no overflow", lambda: page.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth"), page)
                 if width in (360, 390, 1440):
-                    check(f"public {width} khmer digits", lambda: bool(page.evaluate("""() => {const t=document.querySelector('[data-guest-gregorian]')?.textContent||'';return /[០-៩]/.test(t)}""")) or "khmer digits", page)
+                    check(f"public {width} khmer digits", lambda: bool(page.evaluate("""() => {const t=document.querySelector('[data-guest-gregorian]')?.textContent||'';return /[\u17e0-\u17e9]/.test(t)}""")) or "khmer digits", page)
 
             # --- RSVP -------------------------------------------------------------
             page.set_viewport_size({"width": 390, "height": 844})
@@ -136,7 +136,7 @@ def main() -> int:
             page.evaluate("() => document.querySelector('#rsvp button.primary').scrollIntoView({block:'center'})")
             page.wait_for_timeout(200)
             page.locator("#rsvp button.primary").click()
-            page.wait_for_function("() => /Thank you|សូមអរគុណ/.test(document.querySelector('#rsvp')?.textContent || '')", timeout=20000)
+            page.wait_for_function("() => /Thank you|\u179f\u17bc\u1798\u17a2\u179a\u1782\u17bb\u178e/.test(document.querySelector('#rsvp')?.textContent || '')", timeout=20000)
             check("rsvp submit", lambda: "thank-you" if page.locator("#rsvp h2").inner_text() else "no h2", page)
 
             # --- template gallery -------------------------------------------------
