@@ -45,6 +45,8 @@ sudo bash deploy/linux/install-einvite-laptop.sh --install-system-packages
 | [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) | Production architecture and operations |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture overview |
 | [SECURITY.md](SECURITY.md) | Security features and hardening |
+| [HISTORY.md](HISTORY.md) | What was fixed, rejected or is still open — the single history file |
+| [NEXT-WORK.md](NEXT-WORK.md) | What to do next — open defects, unfinished phases and owner decisions |
 
 ## ✨ Core Features
 

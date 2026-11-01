@@ -27,6 +27,10 @@
 
 ## 2. Bugs and fixes
 
+> **Still open?** Everything that is not fixed below — plus the unfinished work-order phases, the
+> owner-held decisions and the verification debt — is queued in `docs/NEXT-WORK.md`. This section
+> records what happened; that file records what remains.
+
 ### Fixed
 
 Grouped by area. IDs are the historical ones (audit letters, `FB-nn` items, `PW-n` items) so an old

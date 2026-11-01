@@ -10,8 +10,11 @@ which has no subagent dispatch, no MCP config, and no plugin API.
   work orders, version reports and review passes were removed on 2026-11-01; every path, reason and
   the restore command are in `docs/CLEANUP_MANIFEST.md`
   (`git checkout backup/pre-cleanup -- <path>`).
-- **Open work:** `docs/HISTORY.md` §2 is the queue; owner-held decisions stay in
-  `artifacts/next-work/OWNER-QUEUE.md`. Hosting and operations: `deploy/local/README.md`.
+- **What to do next:** `docs/NEXT-WORK.md` — the single forward-looking queue (open defects,
+  unfinished work-order phases, owner-held decisions, verification debt). Read it after the history
+  file and work the waves in order.
+- **Owner-held decisions:** `artifacts/next-work/OWNER-QUEUE.md` mirrors the owner rows in that file.
+  Hosting and operations: `deploy/local/README.md`.
 - Sessions started outside this repo can reach the same pointer via the global `einvite-project`
   skill (`~/.agents/skills/einvite-project/SKILL.md`).
 
