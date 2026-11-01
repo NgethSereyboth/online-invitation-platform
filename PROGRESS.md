@@ -19,20 +19,69 @@
   removed. PNG export remains valid (39,023 B); findings and evidence are in
   `bugs/round-2/`. Retested live 200/404 contract, signed-out redirect, Khmer digits and all
   six widths.
+- **Round 3 (live sweep, partial — external quota):** 120 live route/viewport records and 120
+  screenshots. **118 records verified** (107 × 200, 11 × deliberate 404); the two 1440 records
+  `/missing-route-round-3` and the signed-out editor returned **429** because the Sites daily
+  request allowance was exhausted, not because of an application response. There was **0
+  horizontal overflow, 0 page errors, 0 unlabelled inputs, 0 unnamed buttons and 0 missing alt
+  text**. Authenticated flow: **44 checks, 0 failed, 0 application console errors**; PNG export
+  40,937 B. Local production-mode 1440 fallback: valid invitation 200, missing slug 404, missing
+  route 404, signed-out editor 200 → dashboard, all with zero overflow. **No new product bugs.**
+  Findings: `bugs/round-3/FINDINGS.md`; plan: `bugs/round-3/FIX_PLAN.md`.
+- **Brotli follow-up (done):** `940a799` raised `docs/requirements-production.txt` and
+  `tools/requirements.txt` from 1.2.0 to **1.2.1**. A temporary venv resolved both requirement
+  sets with `pip check` clean; the runtime `.venv` is now 1.2.1 and `einvite-app` restarted
+  healthy (`/api/health` 200). Build and route-bundle checks pass.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
-- **Live site:** production redeployed 2026-11-01 04:15 UTC at
-  `https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page` and `published: true` (deploy
-  `7265e709-7c1a-4af1-9d20-c60d98b092a5`). Served `bundle-public.js` SHA-256 is
-  `c44ae93b…858899cc` and served `bundle-public.css` is `32c7f20a…4448d87c`; both match
-  `artifacts/sites-public`. `/i/qa-ui-sweep-wedding` returns 200, `/i/<missing>` returns 404 and
-  `/api/health` returns 200 through the Worker. `einvite-app` and `einvite-tunnel` are active;
-  preview remains on its 2026-10-31 build.
+- **Live site:** last successful production deploy is `7265e709-7c1a-4af1-9d20-c60d98b092a5`,
+  published 2026-11-01 04:15 UTC at
+  `https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page`. Served
+  `bundle-public.js` SHA-256 is `c44ae93b…858899cc` and served `bundle-public.css` is
+  `32c7f20a…4448d87c`; both match `artifacts/sites-public`. The round-3 deploy attempt
+  (`8c1d4e2f-…`) was **rejected before a receipt was created**: Sites quota is
+  `state: suspended` because daily requests reached **10,755 / 10,000** (monthly 10,755 /
+  100,000). The site is paused until **2026-11-02T00:00Z**; no new build is being served. The
+  current static build is unchanged from the last deploy, so the 118 accessible live records still
+  describe the current static HEAD. `/i/<missing>` and the signed-out editor are verified at 1440
+  on the local production server. `einvite-app` and `einvite-tunnel` are active; preview remains
+  on its 2026-10-31 build.
 - **Baseline already measured:** build/bundles/smoke green; layout grazed 600 ms once and passed on a
   quiet rerun; pytest profile before the fixes was **5 failed / 218 passed** (15:01). Full log under
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — round 3: no product defect; Sites quota blocks the final live leg
+- Live matrix: 20 routes × 6 widths = **120 records**, **120 screenshots**. 107 × 200, 11 ×
+  deliberate 404, 2 × external 429; **0 horizontal overflow**, 0 page errors, 0 unlabelled inputs,
+  0 unnamed buttons, 0 missing alt. The 35 console errors are all expected 404s, the quota 429s,
+  or the host-injected Cloudflare beacon CSP message.
+- The last 1440 width hit the Sites daily request limit. `sites_inspect` shows
+  `dailyRequests 10,755 / 10,000`, `state: suspended`, reset **2026-11-02T00:00Z**. The two 1440
+  documents interrupted were `/missing-route-round-3` and the signed-out editor; the valid
+  invitation and all other widths loaded. This is an external hosting pause, not an app 429.
+- Local 1440 fallback against the same source: valid invitation 200, missing slug 404, missing
+  route 404, signed-out editor 200 → dashboard, all overflow 0; log
+  `artifacts/verify/round3-local-1440.log`.
+- Authenticated flow: **44 checks, 0 failed, 0 console errors**. Editor add/drag/resize/rotate,
+  multi-select, undo/redo, save/reload and PNG export (40,937 B) passed; gallery form 390/1440
+  passed with no clipping; template filter 36 → 1; Khmer digits present; RSVP submitted.
+- No product source change. The rebuild is byte-identical to the last deployed static build
+  (`bundle-public.js` `c44ae93b…`, CSS `32c7f20a…`). `sites_deploy` was rejected before a receipt
+  because the quota is suspended; no new deployment exists. Findings and triage:
+  `bugs/round-3/FINDINGS.md`; plan: `bugs/round-3/FIX_PLAN.md`.
+- This round is **not fully closed live**: after the reset, redeploy and repeat the two 1440
+  records. The app behaviour at that width is proven locally; the remaining gap is host access.
+
+### 2026-11-01 — Brotli 1.2.1 (commit 940a799)
+- Updated both requirement pins from 1.2.0 to 1.2.1 and committed separately from the sweep.
+- A temporary venv installed production + tools together: module/dist 1.2.1, `pip check` clean.
+  The runtime `.venv` was upgraded to 1.2.1 and `einvite-app` restarted; `/api/health` reached
+  200 after the normal startup interval.
+- Gates: `build.py all --check` → `MIRROR_CHECK_PASSED`; `build.py bundles --check` →
+  `ROUTE_BUNDLE_CHECK_PASSED`. Full pytest was not rerun after this dependency-only change; the
+  previous full suite was 223 passed.
 
 ### 2026-11-01 — Dependabot inventory (docs complete; follow-ups open)
 - Created `docs/security/DEPENDABOT-ALERTS-2026-11-01.md` and committed it as `16fd826`;
@@ -142,6 +191,11 @@
   (15 wedding, 5 ceremony, 36 all, 1 on "maroon") — no assertion removed or weakened.
 
 ## Open questions
+- **Sites quota reset:** round 3's live leg is externally blocked until
+  **2026-11-02T00:00Z** (10,755 / 10,000 daily requests). After the reset, retry the deploy and
+  repeat the two interrupted 1440 live records; no code change is expected. This needs the owner's
+  go-ahead to retry on the new quota, or a plan decision if the allowance is too small for a
+  120-route sweep.
 - **Inspector disclosures:** the 2026-10-30 reorganisation files text controls one disclosure deep.
   Round 1 should judge whether that is acceptable interaction cost for colour/digit conversion, or
   whether the Text group should open its first sub-section by default. No change made in round 0.
