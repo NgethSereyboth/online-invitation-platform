@@ -214,6 +214,9 @@ Summary is each file's own first heading, not an invented description.
 | `docs/superpowers/plans/2026-10-15-eliminate-version-labeling.md` | 14.7 KB | **delete** | completed plan document | Eliminate Version Labeling from UI/Pages/Functions — Plan |
 | `docs/superpowers/plans/2026-10-15-unfix-issues-holistic-fix.md` | 28.4 KB | **delete** | completed plan document | Fix Documented Issues/Bugs — Holistic Remediation Plan |
 | `docs/superpowers/plans/2026-10-16-version-free-source-names.md` | 8.3 KB | **delete** | completed plan document | Version-Free Source Names — Staged Plan |
+| `docs/SESSION-LOG-2026-09-26.md` | 8.4 KB | **delete** | dated agent session log (gitignored, so it was invisible to the tracked scan) | Session log — 2026-09-26 |
+| `docs/UX-AUDIT-2026-09-26.md` | 12 KB | **delete** | dated UX audit (gitignored; superseded by the 2026-10-29/30 audits) | UX audit — 2026-09-26 |
+| `docs/reviews/*.png` | 2.1 MB | **delete** | review captures from completed passes (gitignored; `docs/reviews/*.png` rule) | — |
 
 ## 3. Group B and C — artefacts, caches and test sources
 
@@ -259,7 +262,7 @@ Summary is each file's own first heading, not an invented description.
 | Server boot (fresh data dir, port 8131) | `PYTHONPATH=src/python:. … server.py --port 8131` | `GET /` **200** · `/designer.html` **200** · `/dashboard.html` **200** · `KHMER_FONT_STATUS ok … shaping=True` |
 | Broken links to removed files | markdown-link scan over every tracked `.md` | **0** · three pre-existing hits remain and are unrelated: `docs/plugins/{PLUGIN-SANDBOX,MODERATION-PIPELINE}.md` are `(…)/(args)` parenthetical false positives, and `docs/CANVA-MOTION.md` points at `artifacts/canvas-motion/P6/…`, which was already absent |
 | Tracked deletion mechanism | `git rm` | 155 files, every one restorable from `backup/pre-cleanup` |
-| Untracked deletion mechanism | tar → delete | 21 paths archived to `artifacts/cleanup-backup-2026-11-01.tar.gz` (346.2 MB, gitignored) before removal |
+| Untracked deletion mechanism | tar → delete | 21 paths archived to `artifacts/cleanup-backup-2026-11-01.tar.gz` (346.2 MB, gitignored) and the gitignored leftovers to `artifacts/cleanup-backup-2026-11-01-ignored.tar.gz` before removal |
 | Disk | `du` before/after | ≈ **685 MB** removed: `.lighthouseci/` 668 MB, `screenshots/` 8.3 MB, `.ff_screenshots/` 8.2 MB, `.sec04-tmp/` 485 KB, `deliverables/` 41 KB, plus caches |
 
 **Not run:** the full 223-test suite and the ten-phase gate matrix. Only documentation and review
@@ -274,7 +277,8 @@ checks are green. Run `make test` before merging if you want the whole matrix.
 
 - Scanned: **178** markdown candidates + **18** artefact/test paths.
 - Deleted: **172** document rows — 155 tracked (`git rm`) and 17 untracked (archived first) — plus
-  **6** artefact directories/files.
+  **2** further gitignored session/audit documents, **6** artefact directories/files and the
+  leftover review captures in `docs/reviews/`.
 - Kept with a reason: **11** documents in the table, plus `tests/`, `tools/`, the current product docs
   (§6) and the toolchain.
 - Unsure for the owner: **7** rows in §4.
