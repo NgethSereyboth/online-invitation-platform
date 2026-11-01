@@ -109,6 +109,9 @@ report can still be matched; dates are the fix date, `[unknown]` where the recor
 | FB-150 | Editor a11y | 13 controls under 44 px at 390; outline jumped `h1 → h3` | Sizing + heading structure | 44 px targets (drawer toggles, toolbar, Flow/Position, zoom HUD; 30 px status bar untouched); hidden page `h1`, `h2 Pages`, `h3 Recent tools` | `src/css/*`, `src/html/index.html` | 2026-10-31 |
 | FB-151 | Dashboard | 10 px meta text; card menu targets < 44 px on touch | Type scale | 10 → 11 px; 44 px targets on coarse pointers; 0/155 controls under 44 px at 390 | `src/css/canva-ui.css` | 2026-10-31 |
 
+| UX-9b | Guest page | Three "HTTP 401" blocks rendered on every published invitation | Guest modules fetched host routes with no session | A 401 removes the feature section instead of writing the error | `src/js/{signup-sheets,polls,album}.js` | 2026-11-01 |
+| UX-8b | Guests | Edit / Link / QR / Check-in / Remove buttons did nothing | `[data-edit]` delegation dropped in `92806ad`; container re-rendered on every filter | Delegated click handler on the stable list container | `src/js/guests.js` | 2026-11-01 |
+
 ### Still open
 
 | ID | Area | Problem | Severity | Notes | Source file(s) |

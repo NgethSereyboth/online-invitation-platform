@@ -25,7 +25,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | Since that matrix | UI commits of 2026-10-30/31 (header, budgets, FB-150/151) and the 2026-11-01 clean-up; **the full matrix has not been re-run since** |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **20** open defects · **36** open work-order tasks · **18** owner-held decisions · **11** verification debts |
+| Counts in this file | **18** open defects · **36** open work-order tasks · **18** owner-held decisions · **11** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -36,6 +36,13 @@ release, **P2** = quality/hygiene, **P3** = cosmetic or documentation-level. Not
 material is rated **P0** any more; every P0 from the 2026-10-21 order (Pillow CVEs, LHCI config, budget
 regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 
+### Progress log
+
+| Date | Item | Commit | Verification |
+|---|---|---|---|
+| 2026-11-01 | #2 guest-page `HTTP 401` blocks hidden for anonymous visitors | `bbd3b9d` | bundles rebuilt; `ux9_public_sections_test`, `public_guest_feature_runtime_test`, `bulk_guest_import_test` pass |
+| 2026-11-01 | #3 guest-row actions (Edit/Link/QR/Check-in/Remove) delegated again | `12087a8` | handler present in `bundle-guests.js`; guest tests pass; per-action browser tests still owed |
+
 ---
 
 ## 1. Open defects
@@ -45,8 +52,8 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 | # | Area | Symptom | Pri | Next action | Src |
 |---|---|---|---|---|---|
 | 1 | Editor | First-paint CLS **0.5003** at 1440 px: late `.ei-section-order-builder` mount shifts the page grid 184 px; `page-experience.js` rebuilds the Pages host with `innerHTML` after the builder exists. Nine CSS reservations were measured and refuted. | P1 | Fix the boot order — render the builder before the Pages host is replaced. Do **not** add another reservation. | FB-75 → OD-23 |
-| 2 | Guest page | Every published invitation shows **three `HTTP 401` blocks** (`signup-sheets`, `polls`, `album` fetch host routes anonymously). | P1 | **Owner choice:** public read routes with `/api/public/` access checks, or hide the blocks when unauthenticated. Default if unanswered: hide. | UX-9 / OWNER-QUEUE |
-| 3 | Guests | Row actions **Edit / Link / QR / Check-in / Remove do nothing** — the `[data-edit]` delegation was removed in `92806ad`; the functions and API routes are intact. | P1 | Restore the delegation, add one browser test per action. | UX-8 / OWNER-QUEUE |
+| 2 | Guest page | **Fixed 2026-11-01** (`bbd3b9d`). Every published invitation showed **three `HTTP 401` blocks** (`signup-sheets`, `polls`, `album` fetch host routes anonymously). | fixed | Shipped the documented default: a 401 removes the section. Public read routes with `/api/public/` access checks remain the alternative if guests should read them. | UX-9 / OWNER-QUEUE |
+| 3 | Guests | **Fixed 2026-11-01** (`12087a8`). Row actions **Edit / Link / QR / Check-in / Remove did nothing** — the `[data-edit]` delegation was removed in `92806ad`; the functions and API routes were intact. | fixed | Delegated handler on the stable list container; **still owed:** one browser test per action. | UX-8 / OWNER-QUEUE |
 | 4 | Templates | `templates.html` CLS **0.604**, never fixed. | P2 | Ship the first screen's geometry in markup, as FB-43/44/67/75 did elsewhere. | D-1 |
 | 5 | Guest page | Guest LCP above the 4G target, never fixed. | P2 | Profile with the hero image as the LCP candidate; do not change budgets. | D-2 |
 | 6 | Editor | Second tab on the same invitation renders four objects and **never sets `editorReady`** — likely the draft lock. | P2 | Reproduce on two tabs; make the second tab either take over cleanly or show a read-only state. | D-3 |
