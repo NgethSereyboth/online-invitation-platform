@@ -1,8 +1,9 @@
 # PROGRESS — autonomous mission log
 
 ## Current status
-- **Branch:** `chore/cleanup`; work through `7e22bef` is pushed to `origin/chore/cleanup`.
-  Security report commit `16fd826` is local only; the push decision is under Open questions.
+- **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01; it is
+  **205 commits ahead of `origin/main` and not pushed**. `origin/chore/cleanup` remains at
+  `7e22bef`. The push decision remains open.
 - **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
   work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
@@ -51,6 +52,15 @@
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — merge `chore/cleanup` into `main`
+- `main` was the merge base and had **0** commits not already in `chore/cleanup`; the merge was a
+  conflict-free fast-forward from `50721ef` to **`1b93d57`**. No conflict resolution was needed.
+- Re-ran the merged-tree gates: `build.py all --check` → `MIRROR_CHECK_PASSED`;
+  `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED`; both exit 0.
+- `main` is **205 commits ahead of `origin/main`** and has not been pushed. The feature branch
+  remains at the same commit; the remaining live verification/deploy block from round 3 is
+  unchanged (Sites daily quota resets 2026-11-02T00:00Z).
 
 ### 2026-11-01 — round 3: no product defect; Sites quota blocks the final live leg
 - Live matrix: 20 routes × 6 widths = **120 records**, **120 screenshots**. 107 × 200, 11 ×
