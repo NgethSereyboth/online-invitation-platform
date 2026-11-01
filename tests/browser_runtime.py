@@ -32,13 +32,48 @@ def dismiss_editor_onboarding(page,*,timeout=10000):
   page.wait_for_function("()=>{const d=document.querySelector('.final-tour');return !d||!d.open||d.hidden||getComputedStyle(d).display==='none'}",timeout=timeout)
 
 
+def reveal_inspector_control(page,selector,*,timeout=10000):
+ """Open the inspector disclosures that contain a control.
+
+ The 2026-10-30 reorganisation files the Edit pane into ``details.ix-group``
+ sections and ``details.ix-sub`` sub-sections, and hides the legacy
+ ``#typographyControls`` shell once its controls are filed. A control inside a
+ closed disclosure is reachable exactly as a user reaches it: open the closed
+ ancestors. This does that and then waits for Playwright's visible state; it
+ does not force the control visible, click through it, or relax any wait.
+ """
+ control=page.locator(selector)
+ control.wait_for(state='attached',timeout=timeout)
+ for _ in range(6):
+  opened=page.evaluate("""sel=>{const el=document.querySelector(sel);if(!el)return false;for(let n=el.parentElement;n;n=n.parentElement){if(n.tagName==='DETAILS'&&!n.open){n.open=true;return true}}return false}""",selector)
+  if not opened:break
+ control.wait_for(state='visible',timeout=timeout)
+
+def open_studio_tab(page,tab,*,timeout=10000):
+ """Activate one left-rail studio tab by its data attribute.
+
+ ``studio-experience.js`` rebuilds the rail from the old static markup, so the
+ visible label is presentation: `Event details` became `Event`. The
+ ``data-studio-tab`` value stayed the stable contract across that rename, and
+ clicking it is exactly what a user clicks, so this drives the real control
+ instead of hunting a label that may move again.
+ """
+ button=page.locator(f'[data-studio-tab="{tab}"]:visible').first
+ if not button.count():
+  # Narrow layouts move the rail into the tools drawer; open it first.
+  drawer=page.locator('[data-editor-drawer="left"], [data-drawer-open="left"]').first
+  if drawer.count() and drawer.is_visible():drawer.click()
+ button.wait_for(state='visible',timeout=timeout);button.click()
+ page.locator(f'[data-studio-pane="{tab}"].active').wait_for(state='visible',timeout=timeout)
+
 def open_event_details(page,*,timeout=10000):
  rsvp=page.get_by_role('checkbox',name='Enable RSVP attendance form',exact=True)
  venue=page.get_by_role('textbox',name='Venue — English',exact=True)
  if rsvp.count() and venue.count() and rsvp.is_visible() and venue.is_visible():return rsvp,venue
- launcher=page.locator('[data-flow-open="event"]:visible').first
- if not launcher.count():launcher=page.get_by_role('button',name=re.compile(r'^Event details\b')).first
- launcher.wait_for(state='visible',timeout=timeout);launcher.click()
+ if page.locator('[data-studio-tab="event"]:visible').count():open_studio_tab(page,'event',timeout=timeout)
+ else:
+  launcher=page.locator('[data-flow-open="event"]:visible').first
+  launcher.wait_for(state='visible',timeout=timeout);launcher.click()
  rsvp.wait_for(state='visible',timeout=timeout);venue.wait_for(state='visible',timeout=timeout)
  return rsvp,venue
 

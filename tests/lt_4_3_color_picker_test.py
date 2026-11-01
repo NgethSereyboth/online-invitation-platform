@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from browser_runtime import dismiss_editor_onboarding, launch_chromium
+from browser_runtime import dismiss_editor_onboarding, launch_chromium, reveal_inspector_control
 
 ROOT = Path(__file__).resolve().parents[1]
 SLUG = "lt-4-3-colour"
@@ -144,6 +144,7 @@ def test_colour_picker_extras():
             # A real canvas click is what makes the editor show the object inspector;
             # a bridge-only selection leaves #properties hidden.
             page.locator('#stage .object[data-id="title"]').click(position={"x": 8, "y": 8})
+            reveal_inspector_control(page, '#color')
             swatch = page.locator('#color')
             swatch.wait_for(state="visible", timeout=15000)
             swatch.click()

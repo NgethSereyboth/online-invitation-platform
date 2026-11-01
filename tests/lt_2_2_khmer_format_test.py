@@ -134,7 +134,7 @@ def _document(*, numerals: bool, slug: str) -> dict:
 def test_public_rendering_and_editor_round_trip() -> None:
     sync_playwright = pytest.importorskip('playwright.sync_api')
     sys.path.insert(0, str(ROOT / 'tests'))
-    from browser_runtime import dismiss_editor_onboarding, launch_chromium, open_event_details
+    from browser_runtime import dismiss_editor_onboarding, launch_chromium, open_event_details, reveal_inspector_control
     from v14_test_utils import app_server
 
     with app_server() as (_process, base, _data):
@@ -290,6 +290,7 @@ def test_public_rendering_and_editor_round_trip() -> None:
                     }"""
                 )
                 raise AssertionError(f'title text did not render after fill: {diagnostics}') from exc
+            reveal_inspector_control(page, '#convertDigits')
             page.locator('#convertDigits').click()
             page.wait_for_function(
                 "() => { const node = document.querySelector('[data-id=\"title\"] .content'); return !!node && node.textContent.includes(String.fromCodePoint(0x17E0 + 2)); }",

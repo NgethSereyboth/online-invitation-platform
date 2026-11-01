@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from browser_runtime import dismiss_editor_onboarding, launch_chromium
+from browser_runtime import dismiss_editor_onboarding, launch_chromium, reveal_inspector_control
 
 ROOT = Path(__file__).resolve().parents[1]
 SLUG = "lt-4-4-run-typography"
@@ -216,7 +216,7 @@ def test_run_typography_from_inspector():
             # A real click is what opens the object inspector; the run range is set
             # afterwards so the click cannot collapse it.
             page.locator('#stage .object[data-id="title"]').click(position={"x": 8, "y": 8})
-            page.wait_for_selector("#typographyControls", state="visible", timeout=15000)
+            reveal_inspector_control(page, "#v20RunFont")
             selected = page.evaluate(_SELECT_KHMER)
             assert selected and selected["text"] == _KHMER, selected
             assert selected["length"] == len(_KHMER), selected
