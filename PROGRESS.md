@@ -2,8 +2,8 @@
 
 ## Current status
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01; it is
-  **205 commits ahead of `origin/main` and not pushed**. `origin/chore/cleanup` remains at
-  `7e22bef`. The push decision remains open.
+  **207 commits ahead of `origin/main` after the research docs commits and not pushed**.
+  `origin/chore/cleanup` remains at `7e22bef`. The push decision remains open.
 - **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
   work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
@@ -33,12 +33,16 @@
   `tools/requirements.txt` from 1.2.0 to **1.2.1**. A temporary venv resolved both requirement
   sets with `pip check` clean; the runtime `.venv` is now 1.2.1 and `einvite-app` restarted
   healthy (`/api/health` 200). Build and route-bundle checks pass.
-- **Improvement research (docs only, 2026-11-01):** reviewed current web.dev/Chrome
-  performance guidance, W3C/WAI WCAG 2.2, W3C Khmer resources and Noto/MDN; captured eight
-  source-backed opportunities in `docs/IMPROVEMENT-RESEARCH-2026-11-01.md`. Highest-confidence
-  code anchors: the shared renderer lazy-loads all images, the Khmer hero heading is set to
-  1.05–1.08 line-height, and the editor/target-size work is already tracked by `NEXT-WORK`.
-  No application source changed.
+- **Improvement research (docs only, 2026-11-01):** the first pass reviewed current
+  web.dev/Chrome performance guidance, W3C/WAI WCAG 2.2, W3C Khmer resources and Noto/MDN and
+  captured eight source-backed opportunities. A second pass used the installed performance,
+  accessibility and Web Interface Guidelines skills plus targeted research on invitation
+  metadata/privacy, check-in PWA/offline, album-photo EXIF and multi-tab autosave; it added
+  IMP-9–IMP-12 and a small guideline table. Sharpest new anchors: published invitations are
+  indexable and lack social-image alt text; `manifest.webmanifest` has `icons:[]`; album upload
+  stores raw bytes while only derivatives strip EXIF; the check-in queue is `localStorage`; and
+  D-3 second-tab initialisation remains the highest-risk autosave item. No application source
+  changed.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
 - **Live site:** last successful production deploy is `7265e709-7c1a-4af1-9d20-c60d98b092a5`,
@@ -79,6 +83,21 @@
   2.5.7 non-drag controls, Khmer line-height/stress testing, AVIF/WebP fallbacks, RSVP error
   messaging and service-worker scope. No app source changed; no new tests were required for a
   docs-only change. `git diff --check` is clean.
+
+### 2026-11-01 — second-pass improvement research (docs only)
+- Added IMP-9–IMP-12 to `docs/IMPROVEMENT-RESEARCH-2026-11-01.md`: published-invitation
+  metadata/privacy, check-in installability and offline queue, album-photo EXIF retention, and
+  multi-tab autosave/lock behaviour. The pass used the installed performance, accessibility and
+  Web Interface Guidelines skills and checked the current server/source anchors.
+- Confirmed anchors: `src/html/public.html` omits `og:image:alt`/`twitter:image:alt` and uses a
+  relative canonical; the only `X-Robots-Tag: noindex` in `serve_public` is for missing slugs;
+  `manifest.webmanifest` has an empty icon list and a dashboard/check-in naming mismatch;
+  `server.py` stores raw album bytes while derivatives strip EXIF; `checkin.js` keeps its
+  unsynced queue in `localStorage`; `collaboration-studio.js`/`workflow-continuity.js` keep tab
+  state there too.
+- No app source changed. The new items are research findings; indexability, original-photo
+  retention and offline-PWA scope are owner decisions, not silent product changes. Docs-only
+  verification: `git diff --check` clean; build gates were already green on the unchanged tree.
 
 ### 2026-11-01 — round 3: no product defect; Sites quota blocks the final live leg
 - Live matrix: 20 routes × 6 widths = **120 records**, **120 screenshots**. 107 × 200, 11 ×
@@ -222,6 +241,17 @@
 - **Improvement sequence:** the research note recommends measuring LCP/INP first, then the
   low-risk LCP-image, 24 px hit-area and Khmer line-height fixes; the editor INP split and AVIF
   variants should follow only if measurement justifies them. No implementation was started.
+- **Invitation indexability:** published invitations currently have no robots directive; only
+  missing/unpublished slugs receive `X-Robots-Tag: noindex`. Decide whether a published
+  invitation is public or link-only. If link-only, add `noindex, nofollow` by header and meta
+  (not a `robots.txt` Disallow), plus an absolute canonical and social-image alt text. This is
+  not access control; the token/password remains the privacy boundary.
+- **Photo-original retention:** album upload stores the raw bytes after image validation, while
+  the responsive derivatives strip EXIF. Decide whether originals are retained (print/edit) or
+  scrubbed on ingest; do not promise metadata removal while the original remains fetchable.
+- **Offline check-in scope:** if installable/offline check-in is in scope, populate the manifest
+  icons and add an IndexedDB outbox with idempotency keys; otherwise correct the manifest
+  naming/start target and keep the current narrow worker. Do not cache attendee PII blindly.
 - **Sites quota reset:** round 3's live leg is externally blocked until
   **2026-11-02T00:00Z** (10,755 / 10,000 daily requests). After the reset, retry the deploy and
   repeat the two interrupted 1440 live records; no code change is expected. This needs the owner's

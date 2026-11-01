@@ -8,6 +8,8 @@ check-in service worker, Khmer typography
 This note records current, source-backed opportunities for improving functions the
 platform already has. It is deliberately narrower than a redesign: each item names
 the existing surface, the evidence, the smallest safe experiment, and the trade-off.
+A second pass adds invitation metadata/privacy, check-in PWA/offline, album-photo
+privacy and multi-tab autosave findings (IMP-9–IMP-12).
 
 ## Method
 
@@ -15,7 +17,9 @@ Reviewed the current source first, then compared it with authoritative guidance 
 web.dev/Chrome for Developers, the W3C/WAI WCAG 2.2 material, the W3C Khmer script
 resources, and Noto/MDN. The W3C Khmer documents are Group Note Drafts; line-height
 and specific test strings below are practical recommendations, not W3C-published
-numbers.
+numbers. The second pass used the installed performance, accessibility and Web
+Interface Guidelines skills, then checked the current server/source paths; its four
+items are hypotheses to verify where a code anchor is not conclusive.
 
 ## Findings, ordered by value and risk
 
@@ -44,6 +48,33 @@ numbers.
 4. **Larger performance work:** editor code splitting/INP work and AVIF variants only
    after measurements show they are the bottleneck.
 
+## Second pass — additional opportunities (2026-11-01)
+
+The first pass concentrated on rendering, editor interaction and WCAG 2.2. This pass
+looks at the surfaces around the invitation: how it is shared, how check-in survives a
+bad venue network, what happens to uploaded-photo metadata, and what a second editor
+tab does to unsaved work. None of these is implemented here.
+
+| ID | Existing surface | Finding and first action | Evidence | Risk / trade-off |
+|---|---|---|---|---|
+| IMP-9 | Public invitation sharing / search | The template has OG/Twitter title, description, image, dimensions and a versioned absolute image URL. It lacks `og:image:alt` and `twitter:image:alt`; the canonical is relative (`/i/...`); a published page has no robots directive — the only `X-Robots-Tag: noindex` is for a missing/unpublished slug (`server.py:11101`). Add a generic social-image alt with no guest/venue data, render an absolute self-canonical, and decide whether a published invitation is public or link-only. For link-only, send `noindex, nofollow` by header and meta; do not put `Disallow` in `robots.txt` because crawlers then never see the noindex. Google's Event rich result excludes invitation-only events, so do not add Event JSON-LD just for SEO. | Google: [Event structured data](https://developers.google.com/search/docs/appearance/structured-data/event), [noindex](https://developers.google.com/search/docs/crawling-indexing/block-indexing), [canonical URLs](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls), [shareable pages](https://developers.google.com/search/docs/monitor-debug/prevent-abuse); [ogp.me](https://ogp.me/); [Meta link images](https://developers.facebook.com/documentation/sharing/webmasters/images) | This is an owner policy decision, not a blind SEO change. `noindex` does not make a page private; keep the unguessable token/password and `no-referrer` for that. Social previews are cached by third parties and can expose names or venue data; keep the card generic. |
+| IMP-10 | Check-in PWA / offline | `manifest.webmanifest` has `icons:[]`, no `id`/`scope`, and `start_url` is the dashboard while `short_name` says “OKID Check-in”. Chromium installability needs 192 px and 512 px icons. The worker precaches the check-in shell, but `/api/` data is not cached; `checkin.js` stores unsynced changes in `localStorage` with no mutation id, cross-tab leader, dead-letter state or pre-event readiness check. Add icons, `id`/`scope` and a valid install target first, then an IndexedDB outbox (`clientId` + `mutationId`), a Web Locks leader and a visible pending/failed count. Keep POSTs and attendee PII out of caches. | MDN: [installability](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable), [manifest icons](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/icons), [Background Sync](https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API); web.dev: [web app manifest](https://web.dev/learn/pwa/web-app-manifest), [offline cookbook](https://web.dev/articles/offline-cookbook) | Do not flip the whole app to cache-first. Shell cache-first plus queue replay is safe only after idempotent server mutations and a no-cache path for 401s. `navigator.onLine` is a hint, never a gate; test with real network-off, not just DevTools. |
+| IMP-11 | Album photos / EXIF privacy | Album upload validates the image and stores the **raw** byte stream (`server.py:10736–10754`). The responsive derivative path does transpose and strip metadata (`server.py:2637–2651`, `STRIP_EXIF_DERIVATIVES` default on), so derivatives are safe; the original object keeps GPS/device/thumbnail metadata unless a separate scrub layer exists. Decide whether originals are retained; if not, re-encode or strip them server-side on ingest and verify the stored bytes with `exiftool`. On the client, `createImageBitmap(file, {imageOrientation:'from-image'})` + `OffscreenCanvas` can decode/resize/encode without a full-res DOM canvas, but it must never be the only privacy control. | MDN: [createImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap), [convertToBlob](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob), [image formats](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Image_types) | Re-encoding originals changes quality/colour and costs CPU; an original may be needed for future print. Make retention explicit per album. iOS canvas memory is the hard limit: cap area/concurrency and release canvases; a silent blank preview is worse than a visible per-file error. |
+| IMP-12 | Editor autosave / second tab | The open D-3 defect (second tab renders four objects and never sets `editorReady`) is consistent with a stale draft-lock/init-order failure. Collaboration queue and editor tab state are kept in `localStorage` (`collaboration-studio.js:23`, `workflow-continuity.js`); there is no Web Locks leader. Reproduce with two tabs, then separate “local draft” from “server-confirmed save”, gate initialization on a BroadcastChannel/Yjs sync step, use `navigator.locks` for the single writer, flush on `visibilitychange → hidden`, and use `If-Match`/412 for server saves. | MDN: [Web Locks](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API), [Page Lifecycle](https://developer.chrome.com/docs/web-platform/page-lifecycle-api), [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API), [beforeunload](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event); Yjs: [y-indexeddb](https://docs.yjs.dev/ecosystem/database-provider/y-indexeddb), [UndoManager](https://docs.yjs.dev/api/undo-manager) | This is a substantial correctness change, not a CSS fix. Do not “take over” by discarding the other tab’s draft; do not treat a successful local IDB write as a server save. Keep `beforeunload` as a warning only and remove it once the server confirms. |
+
+### Web Interface Guidelines quick pass
+
+Checked against the current Vercel Web Interface Guidelines (fetched 2026-11-01). This
+is not a full UI audit; it records only findings that map to this pass.
+
+| Finding | File | Action |
+|---|---|---|
+| Social image has no alternative text | `src/html/public.html:14–21` | Add `og:image:alt` and `twitter:image:alt` with a generic “Wedding invitation for [names]” string; keep venue/guest details out. |
+| Canonical URL is relative | `src/html/public.html:22` | Render an absolute self-canonical with `absolute_url()`; keep one canonical method. |
+| Install target and manifest identity are underspecified | `src/html/manifest.webmanifest` | Add 192/512 (and maskable) icons, an explicit `id`, a `scope`, and a `start_url` that matches the check-in workflow or rename the app. |
+| Queue state is browser-storage only and unversioned | `src/js/checkin.js:8` | Move the outbox to IndexedDB with a schema/version, mutation id, retry/dead-letter state, and a visible pending count; keep `localStorage` only for non-critical UI preferences. |
+| RSVP labels and errors already pass the basic guideline check | `src/js/public-page.js` | Do not add `autocomplete` to the guest-name field without deciding whether the submitter is the guest; preserve the existing visible label and error paragraph. |
+
 ## Do not do
 
 - Do not apply `loading="lazy"` to the confirmed hero/LCP image, and do not combine
@@ -56,6 +87,11 @@ numbers.
 - Do not cache RSVP/editor writes or unversioned editor code in a service worker.
 - Do not add `@ts-ignore`, `eslint-disable`, weaken tests or lower thresholds to make
   any of these experiments pass.
+- Do not add `Event` JSON-LD to an invitation-only page or treat `noindex` as access
+  control; decide the public/link-only policy first.
+- Do not promise client-side EXIF removal while uploading raw originals, and do not
+  use `localStorage` as the only durable check-in outbox when offline correctness is
+  required.
 
 ## Sources
 
@@ -86,6 +122,29 @@ numbers.
   [lang](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/lang),
   [dialog](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog)
 
+### Second-pass sources
+
+- Google Search Central: [Event structured data](https://developers.google.com/search/docs/appearance/structured-data/event),
+  [block indexing](https://developers.google.com/search/docs/crawling-indexing/block-indexing),
+  [canonical URLs](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls),
+  [prevent abuse / shareable pages](https://developers.google.com/search/docs/monitor-debug/prevent-abuse);
+  [Schema.org Event](https://schema.org/Event)
+- Open Graph: [ogp.me](https://ogp.me/); [Meta link-image requirements](https://developers.facebook.com/documentation/sharing/webmasters/images)
+- MDN: [PWA installability](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable),
+  [manifest icons](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/icons),
+  [Background Synchronization](https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API),
+  [createImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap),
+  [convertToBlob](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/convertToBlob),
+  [Web Locks](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API),
+  [Page Lifecycle](https://developer.chrome.com/docs/web-platform/page-lifecycle-api),
+  [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API)
+- web.dev: [web app manifest](https://web.dev/learn/pwa/web-app-manifest),
+  [offline cookbook](https://web.dev/articles/offline-cookbook),
+  [IndexedDB app state](https://web.dev/articles/indexeddb-best-practices-app-state)
+- Yjs: [y-indexeddb](https://docs.yjs.dev/ecosystem/database-provider/y-indexeddb),
+  [UndoManager](https://docs.yjs.dev/api/undo-manager)
+- Vercel: [Web Interface Guidelines source](https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md)
+
 ## Repository anchors checked
 
 - `src/js/renderer-core.js` — shared image rendering, responsive attributes, `loading="lazy"`.
@@ -94,4 +153,10 @@ numbers.
 - `src/css/typography-fonts.css` — self-hosted, subset Noto fonts with `font-display:swap`.
 - `src/js/service-worker.js` — check-in-only network-first cache.
 - `tools/a11y-target-size.py` — existing 24 px handle/target measurement.
-- `docs/NEXT-WORK.md` — open CLS, LCP, bundle and WCAG 2.2 items.
+- `src/html/public.html` — OG/Twitter metadata, relative canonical, no image alt tags.
+- `src/html/manifest.webmanifest` — empty icon list and dashboard/check-in naming mismatch.
+- `src/js/checkin.js` — localStorage queue, `navigator.onLine` gate, no cross-tab leader.
+- `src/js/photo-worker.js` — pixel filtering only; no decode/encode or metadata handling.
+- `src/js/collaboration-studio.js`, `src/js/workflow-continuity.js` — localStorage queue and tab state.
+- `src/python/server.py` — noindex only for missing slugs; raw album storage; derivative EXIF strip.
+- `docs/NEXT-WORK.md` — open CLS, LCP, bundle and WCAG 2.2 items, including D-3 second-tab failure.
