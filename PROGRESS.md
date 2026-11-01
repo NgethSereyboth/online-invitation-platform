@@ -33,6 +33,12 @@
   `tools/requirements.txt` from 1.2.0 to **1.2.1**. A temporary venv resolved both requirement
   sets with `pip check` clean; the runtime `.venv` is now 1.2.1 and `einvite-app` restarted
   healthy (`/api/health` 200). Build and route-bundle checks pass.
+- **Improvement research (docs only, 2026-11-01):** reviewed current web.dev/Chrome
+  performance guidance, W3C/WAI WCAG 2.2, W3C Khmer resources and Noto/MDN; captured eight
+  source-backed opportunities in `docs/IMPROVEMENT-RESEARCH-2026-11-01.md`. Highest-confidence
+  code anchors: the shared renderer lazy-loads all images, the Khmer hero heading is set to
+  1.05–1.08 line-height, and the editor/target-size work is already tracked by `NEXT-WORK`.
+  No application source changed.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
 - **Live site:** last successful production deploy is `7265e709-7c1a-4af1-9d20-c60d98b092a5`,
@@ -61,6 +67,18 @@
 - `main` is **205 commits ahead of `origin/main`** and has not been pushed. The feature branch
   remains at the same commit; the remaining live verification/deploy block from round 3 is
   unchanged (Sites daily quota resets 2026-11-02T00:00Z).
+
+### 2026-11-01 — improvement research (docs only)
+- Reviewed generic LCP/INP guidance against the actual source: the shared image renderer in
+  `src/js/renderer-core.js` adds `loading="lazy"` to every image object (used by the public
+  page); `src/css/bundle-public.css` sets hero headings at 1.08/1.05 line-height; the check-in
+  service worker is intentionally narrow and network-first; the editor/target-size work is
+  already in `NEXT-WORK`.
+- Added `docs/IMPROVEMENT-RESEARCH-2026-11-01.md` with eight prioritized opportunities and
+  source links, including LCP eager/priority handling, INP measurement, WCAG 2.5.8 hit areas,
+  2.5.7 non-drag controls, Khmer line-height/stress testing, AVIF/WebP fallbacks, RSVP error
+  messaging and service-worker scope. No app source changed; no new tests were required for a
+  docs-only change. `git diff --check` is clean.
 
 ### 2026-11-01 — round 3: no product defect; Sites quota blocks the final live leg
 - Live matrix: 20 routes × 6 widths = **120 records**, **120 screenshots**. 107 × 200, 11 ×
@@ -201,6 +219,9 @@
   (15 wedding, 5 ceremony, 36 all, 1 on "maroon") — no assertion removed or weakened.
 
 ## Open questions
+- **Improvement sequence:** the research note recommends measuring LCP/INP first, then the
+  low-risk LCP-image, 24 px hit-area and Khmer line-height fixes; the editor INP split and AVIF
+  variants should follow only if measurement justifies them. No implementation was started.
 - **Sites quota reset:** round 3's live leg is externally blocked until
   **2026-11-02T00:00Z** (10,755 / 10,000 daily requests). After the reset, retry the deploy and
   repeat the two interrupted 1440 live records; no code change is expected. This needs the owner's
