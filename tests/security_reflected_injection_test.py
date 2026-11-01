@@ -233,8 +233,8 @@ def run():
         attack_slug = '"><script>alert(1)</script>'
         raw_path = f'/i/{attack_slug}'
         status, body_bytes = raw_http_get(host, port, raw_path)
-        assert status == 200, (
-            f'expected 200 for raw-slug request, got {status}; '
+        assert status == 404, (
+            f'expected 404 for a non-existent raw-slug request, got {status}; '
             f'body (first 500): {body_bytes[:500]!r}')
         slug_page = body_bytes.decode('utf-8', 'replace')
 

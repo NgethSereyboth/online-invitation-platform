@@ -11087,7 +11087,19 @@ class Handler(SimpleHTTPRequestHandler):
         # scheme://host prefix otherwise).
         escaped_slug=html.escape(slug,quote=True)
         page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
-        body=page.encode(); self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8"); self.send_header("Cache-Control","no-cache"); self.send_header("Content-Length",str(len(body))); self.end_headers(); self.wfile.write(body)
+        body=page.encode()
+        # A missing, draft, archived, deleted, expired or unpublished slug has
+        # no public document — get_public() uses the same predicate. Render the
+        # same unavailable shell, but answer 404 so crawlers and link checkers
+        # do not treat a soft 404 as an indexable page. Password-protected
+        # invitations still resolve here and keep their 200; the lock happens
+        # on the public API call.
+        found=row is not None and row["document_json"] is not None
+        self.send_response(200 if found else 404)
+        self.send_header("Content-Type","text/html; charset=utf-8")
+        self.send_header("Cache-Control","no-cache" if found else "no-store")
+        if not found:self.send_header("X-Robots-Tag","noindex")
+        self.send_header("Content-Length",str(len(body))); self.end_headers(); self.wfile.write(body)
 
     # ─── V54.32 (phase-2c — §4.3) Calendar / venue map / gift registry ────────
     def _p2c_resolve_invitation(self, invite_id, allow_guest=False, rate_limit_key=None, rate_limit_max=60):
