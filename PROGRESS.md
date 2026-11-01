@@ -2,9 +2,9 @@
 
 ## Current status
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
-  **207 commits ahead at the start of phase-2/3**; phase-2 makes it 208 and phase-3 makes it
-  **209 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
-  `7e22bef`. The push decision remains open.
+  **207 commits ahead at the start of phase-2/3**; phase-2 makes it 208, phase-3 209, and the
+  verification-docs commit makes it **210 commits ahead of `origin/main`, not pushed**.
+  `origin/chore/cleanup` remains at `7e22bef`. The push decision remains open.
 - **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
   work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
@@ -34,6 +34,12 @@
   `tools/requirements.txt` from 1.2.0 to **1.2.1**. A temporary venv resolved both requirement
   sets with `pip check` clean; the runtime `.venv` is now 1.2.1 and `einvite-app` restarted
   healthy (`/api/health` 200). Build and route-bundle checks pass.
+- **Privacy/metadata close-out (phase-2/3, 2026-11-01):** `e9f2ee5` makes published
+  invitations link-only (`og:image:alt`, `twitter:image:alt`, absolute canonical, meta and
+  header `noindex, nofollow`); missing slugs keep `noindex`. `b58bbaf` makes the check-in
+  manifest installable (`id`, `scope`, `/checkin.html` start, local 192/512 icons) and teaches
+  the Sites bundle walker to include manifest icons. Full suite **226 passed, 2 warnings in
+  1103.27 s (exit 0)**; live deployment remains quota-blocked.
 - **Improvement research (docs only, 2026-11-01):** the first pass reviewed current
   web.dev/Chrome performance guidance, W3C/WAI WCAG 2.2, W3C Khmer resources and Noto/MDN and
   captured eight source-backed opportunities. A second pass used the installed performance,
@@ -251,9 +257,9 @@
   (alt tags, absolute canonical, meta robots, header) and a missing slug (404 + `noindex`).
   `tests/security_reflected_injection_test.py` was updated to require the absolute,
   percent-encoded canonical while preserving its raw-slug/XSS assertions.
-- Old behavior failed as expected; targeted set passed `3 passed in 17.17s`, then the wider
-  adjacent set passed `34 passed in 65.63s`. `python3 build.py all` reported
-  `MIRROR_CHECK_PASSED`.
+- Pre-fix targeted run failed as intended (`3 failed in 17.40s`); after the fix the targeted
+  set passed `3 passed in 17.17s`, then the wider adjacent set passed `34 passed in 65.63s`.
+  `python3 build.py all` reported `MIRROR_CHECK_PASSED`.
 
 ### 2026-11-01 — phase-3: installable check-in manifest and local icons
 - `src/html/manifest.webmanifest` now has `id: /checkin.html`, `scope: /`,
@@ -266,6 +272,17 @@
 - No offline outbox/queue behavior changed; the manifest metadata only. Targeted adjacent set:
   `34 passed in 65.63s`. `python3 build.py all` reported `MIRROR_CHECK_PASSED` and the Sites
   bundle contained both icons.
+
+### 2026-11-01 — phase-2/3 verification
+- Full suite: **226 passed, 2 warnings in 1103.27 s** (`artifacts/verify/pytest-full-phase2-3.log`,
+  exit 0). The two warnings are the known teardown-time `sqlite3.OperationalError` on a worker
+  thread; no test failed.
+- `python3 -m compileall -q src/python tests` clean. This repository configures no ESLint, tsc or
+  ruff; `python3 build.py all --check` is its lint/type-check/build equivalent and reports
+  `MIRROR_CHECK_PASSED` with 533 mirrored artifacts up to date.
+- `python3 tools/build-sites-bundle.py` exit 0; `artifacts/sites-public` contains both icons
+  (`icon-192.png` `bc14072c…`, `icon-512.png` `cf116d95…`). No browser sweep was added for this
+  scoped metadata/manifest change; the prior six-width visual evidence remains the live baseline.
 
 ## Product decisions (not code)
 - **Invitation visibility:** published invitations are **link-only by default** for this pass.
@@ -281,6 +298,23 @@
 - **D-3 (editor second tab/autosave):** untouched; it is the next planned pass, not part of this
   metadata/manifest change.
 
+### 2026-11-01 — deploy gate: still quota-blocked after phase-2/3
+- At **11:05 UTC** the live Sites API reports `state: suspended`; the daily allowance is
+  **10,755 / 10,000** and the exact reset is **2026-11-02T00:00:00.000Z**. Production is marked
+  `published: true`, but serving is paused by the quota. No deployment was attempted.
+- The last successful production deploy remains **`7265e709-7c1a-4af1-9d20-c60d98b092a5`** at
+  **2026-11-01T04:15:09.426Z**. The live site is therefore still the older build; the phase-2
+  metadata and phase-3 manifest/icons are committed locally, not live.
+- Once the quota clears, the deploy path is: `python3 tools/build-sites-bundle.py` (default
+  `artifacts/sites-public`) then the Sites deploy operation
+  **`sites_deploy(siteId=5f0c2a7e-3b1d-4c8e-9a6f-2d7e1b9c4a10, environment="production", manifestPath="deploy/sites/manifest.json")`**.
+  Then restart `einvite-app` so the Python backend loads the new `src/python/public.html` and
+  `src/python/server.py`; fetch a published `/i/<slug>` and assert the alt tags, absolute
+  canonical and `X-Robots-Tag: noindex, nofollow`. There is no standalone shell deploy command
+  in this repository; the Sites operation is the project's deploy method.
+- This is an external quota block, not an application failure. Do not retry in a loop before
+  **2026-11-02T00:00:00.000Z**.
+
 ## Open questions
 - **Improvement sequence:** the research note recommends measuring LCP/INP first, then the
   low-risk LCP-image, 24 px hit-area and Khmer line-height fixes; the editor INP split and AVIF
@@ -293,14 +327,14 @@
   while the responsive derivatives strip EXIF. Decide whether originals are retained (print/edit)
   or scrubbed on ingest; do not promise metadata removal while the original remains fetchable.
   No album storage behavior changed in phase-2/3.
-- **Offline check-in scope:** if installable/offline check-in is in scope, populate the manifest
-  icons and add an IndexedDB outbox with idempotency keys; otherwise correct the manifest
-  naming/start target and keep the current narrow worker. Do not cache attendee PII blindly.
-- **Sites quota reset:** round 3's live leg is externally blocked until
-  **2026-11-02T00:00Z** (10,755 / 10,000 daily requests). After the reset, retry the deploy and
-  repeat the two interrupted 1440 live records; no code change is expected. This needs the owner's
-  go-ahead to retry on the new quota, or a plan decision if the allowance is too small for a
-  120-route sweep.
+- **Offline check-in scope:** the manifest metadata/icons are now complete, but the offline
+  outbox is **not** implemented. If offline check-in is in scope, add an IndexedDB outbox with
+  idempotency keys and a single sync leader; otherwise keep the current narrow worker and do not
+  cache attendee PII blindly. This was deliberately left out of phase-3.
+- **Sites quota reset:** live verification and deployment remain externally blocked until
+  **2026-11-02T00:00:00.000Z** (10,755 / 10,000 daily requests). Use the exact deploy operation
+  and backend restart recorded in the deploy-gate log above; no code change is expected. After
+  the reset, repeat the two interrupted 1440 live records as well as the new metadata checks.
 - **Inspector disclosures:** the 2026-10-30 reorganisation files text controls one disclosure deep.
   Round 1 should judge whether that is acceptable interaction cost for colour/digit conversion, or
   whether the Text group should open its first sub-section by default. No change made in round 0.
