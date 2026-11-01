@@ -93,6 +93,14 @@ Four of the five are Playwright timeouts, and the selector they wait on —
 tests are stale: prove which before editing either side. The fifth failure is a server-side
 `RemoteDisconnected` (`no such table: platform_jobs` seen in a worker thread).
 
+**Root-cause candidates (verified in source, not yet fixed).**
+- **Gallery:** `src/js/templates.js:86` injects `template-pack-gallery.js` with a **relative** `src`
+  and an empty `script.onerror`, so a failed load is completely silent; the module is absent from
+  `docs/route-bundle-sources.json` and `templates.html` ships only `bundle-templates.js`.
+- **Database:** `platform_v32/jobs.py` queries `platform_jobs`, but the only schema that mentions it is
+  `docs/postgres_schema.sql`; the SQLite bootstrap under `src/python` creates no such table — exactly
+  the worker error, and the likely cause of the server disconnect in `ai_resource_scopes_test`.
+
 ---
 
 ## 2. Unfinished work order — `NEXT-WORK-TASK.md` (36 of 38 open)
