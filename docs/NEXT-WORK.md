@@ -222,7 +222,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 | 8 | 226 zero-test files; v55/v14 not in `run-gates` (FB-08) | Coverage looks bigger than it is. |
 | 9 | pytest not in CI; branch-trigger gap (FB-07) | Local-only release makes this survivable, not good. |
 | 10 | Intermittent app-server readiness flake (FB-09) | Causes spurious reds in browser gates. |
-| 11 | Six Dependabot alerts: local chains removed, remote closure **deferred** (FB-10) | Needs a push to close; conflicts with OD-3. |
+| 11 | Dependabot reports **92 default-branch alerts / 49 unique advisories**: 82 Pillow alerts are already fixed on this branch by `13.0.0`; 3 Brotli alerts remain; the 7 old npm alerts are absent from this lockfile. | See `docs/security/DEPENDABOT-ALERTS-2026-11-01.md`; merge/cherry-pick the pins to `main` and upgrade Brotli to 1.2.1. |
 | 12 | Long-task ceiling is being grazed: 606–622 ms under load vs the frozen 600 ms | Do **not** raise the ceiling (OD-6). Re-measure quiet before treating a red as a regression; a genuine fix must cut work on `index.html`. |
 
 ---

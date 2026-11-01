@@ -33,6 +33,16 @@
 
 ## Log
 
+### 2026-11-01 — Dependabot inventory
+- Documented all **92 open alerts** (49 unique advisories; 13/49/29/1 alerts by severity;
+  6/26/16/1 unique) in `docs/security/DEPENDABOT-ALERTS-2026-11-01.md`, including every alert ID,
+  manifest, version, fix and advisory link.
+- The default branch is the source of the count. The current branch already has Pillow 13.0.0
+  (82 alerts fixed once merged); Brotli 1.2.0 remains in three manifests; the seven old npm alerts
+  are no longer in this lockfile. Current `npm audit` separately reports three high dev-only
+  `zod`/`puppeteer-core` chain findings.
+- No dependency pins were changed in this pass.
+
 ### 2026-11-01 — round 2: guest-page P2s fixed, deployed and re-swept
 - Live matrix: 20 routes × 6 widths = **120 records**, screenshots per state; **0 horizontal
   overflow**, no unexpected statuses. Expected 404s account for the 18 non-beacon console errors

@@ -37,6 +37,15 @@ The review build contains production-oriented security foundations, but deployme
 - Keep Windows, browsers, Microsoft Defender or the active endpoint-security product, Python dependencies and router firmware updated.
 - `-AllowUploadsWithoutMalwareScan` is an emergency compatibility override. It weakens the application upload gate and should be used only when another active endpoint-security product is providing equivalent scanning.
 
+## Dependency vulnerability inventory
+
+The open Dependabot snapshot for the default branch is recorded in
+[security/DEPENDABOT-ALERTS-2026-11-01.md](security/DEPENDABOT-ALERTS-2026-11-01.md).
+It lists all 92 alerts, explains why the manifest duplicates inflate the count, and separates
+default-branch findings from the current branch. At this snapshot, the 82 Pillow alerts are
+already fixed on `chore/cleanup` by the Pillow 13.0.0 pin; the remaining unique critical runtime
+advisory on that branch is Brotli CVE-2026-111497, fixed in 1.2.1.
+
 ## Responsible disclosure
 
 For a public launch, publish a dedicated security contact and disclosure policy before accepting real customer/event data.
