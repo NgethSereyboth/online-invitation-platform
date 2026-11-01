@@ -8,8 +8,9 @@
   baseline failures are closed. Remaining Step 1 work is the product backlog in `NEXT-WORK.md`
   (P0/P1/P2), not test triage.
 - **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
-  **0 failed checks**; one P1 fixed (BUG-R1-1), two P2s logged (soft 404, CSP console),
-  one stale manual-runner fixture marked stuck. Findings: `bugs/round-1/FINDINGS.md`.
+  **0 failed checks**; final full suite **223 passed, 2 warnings in 883.42 s (exit 0)**; one P1
+  fixed (BUG-R1-1) and proven live, two P2s logged (soft 404, CSP console), one stale
+  manual-runner fixture marked stuck. Findings: `bugs/round-1/FINDINGS.md`.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
 - **Live site:** production redeployed 2026-11-01 02:27 UTC at
@@ -38,6 +39,14 @@
 - **BUG-R1-4 (tooling, stuck):** `v0_52_free_canvas_drag_test` times out because the inline fixture
   no longer loads the bundle defining `EInviteProfessionalEditor`; real editor boots in the flow.
 - Known defect #6 (second concurrent editor session) reproduced and is not re-scored.
+- First full re-run failed only on the Khmer source guard because the sweep fixture carried Khmer
+  literals; they were escaped to ASCII (rendered data unchanged), the guard passes, and the fixture
+  is committed. The green re-run above is from that tree.
+- **Production proof:** deployment `31aca594` succeeded (`published: true`,
+  `deployed_at 2026-11-01T02:57:05.865Z`). Live signed-out editor with `Accept: text/html` returns
+  **302** to `/dashboard.html?next=…`, with `Accept: application/json` returns **401**, `/api/health`
+  returns 200, and the served `bundle-index-2.js` SHA-256 equals the local build
+  (`2207b4a8…d021fd04`).
 
 ### 2026-11-01 — verification and production deploy
 - Full suite: **223 passed, 2 warnings in 866.15 s** (`artifacts/verify/pytest-full.log`), exit 0.

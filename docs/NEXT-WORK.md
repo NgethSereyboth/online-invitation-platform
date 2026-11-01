@@ -41,6 +41,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 
 | Date | Item | Commit | Verification |
 |---|---|---|---|
+| 2026-11-01 | Round 1 live sweep: 114 records + 31 local checks; P1 signed-out-editor JSON redirect fixed and deployed | `fix-round-1` | full suite **223 passed in 883.42 s**; live 302/401 contract and bundle hash verified; two P2s and one stale manual runner logged |
 | 2026-11-01 | Full pytest phase of the baseline (`--phase pytest`) | `1bd1717` | **5 failed, 218 passed in 901.65 s** — untriaged, listed below |
 | 2026-11-01 | Baseline matrix attempt — build/bundles/smoke green, layout flake, six phases unrun | `—` | `artifacts/next-work/gates/20261101-081428/gates.log`; rerun `…/20261101-082220/gates.log` |
 | 2026-11-01 | #2 guest-page `HTTP 401` blocks hidden for anonymous visitors | `bbd3b9d` | bundles rebuilt; `ux9_public_sections_test`, `public_guest_feature_runtime_test`, `bulk_guest_import_test` pass |
