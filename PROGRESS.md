@@ -1,9 +1,10 @@
 # PROGRESS — autonomous mission log
 
 ## Current status
-- **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01; it is
-  **207 commits ahead of `origin/main` after the research docs commits and not pushed**.
-  `origin/chore/cleanup` remains at `7e22bef`. The push decision remains open.
+- **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
+  **207 commits ahead at the start of phase-2/3**; phase-2 makes it 208 and phase-3 makes it
+  **209 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
+  `7e22bef`. The push decision remains open.
 - **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
   work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
@@ -237,18 +238,49 @@
   cards had rendered. It now drives `#studioCategory` / `#studioSearch` and asserts the same counts
   (15 wedding, 5 ceremony, 36 all, 1 on "maroon") — no assertion removed or weakened.
 
+### 2026-11-01 — phase-2: link-only invitation metadata and robots headers
+- `src/html/public.html` now emits generic `og:image:alt`/`twitter:image:alt`
+  (“Invitation preview”) with no guest, venue or address data, and a
+  `<meta name="robots" content="noindex, nofollow">`. The canonical uses the existing
+  `__INVITATION_PUBLIC_URL__` placeholder, so `serve_public()` renders
+  `absolute_url('/i/<slug>')` rather than a hardcoded or build-time domain.
+- `serve_public()` now sends `X-Robots-Tag: noindex, nofollow` for a published invitation and
+  keeps the existing `noindex` for missing/unpublished slugs. No `robots.txt` Disallow was
+  added, so crawlers can see the directive. No Event JSON-LD was added.
+- Tests: new `tests/public_invitation_metadata_test.py` exercises a real published response
+  (alt tags, absolute canonical, meta robots, header) and a missing slug (404 + `noindex`).
+  `tests/security_reflected_injection_test.py` was updated to require the absolute,
+  percent-encoded canonical while preserving its raw-slug/XSS assertions.
+- Old behavior failed as expected; targeted set passed `3 passed in 17.17s`, then the wider
+  adjacent set passed `34 passed in 65.63s`. `python3 build.py all` reported
+  `MIRROR_CHECK_PASSED`.
+
+## Product decisions (not code)
+- **Invitation visibility:** published invitations are **link-only by default** for this pass.
+  That is why phase-2 adds `noindex, nofollow` in both HTML and HTTP, while still serving the
+  page crawlably. This is a product default, not access control: the unguessable token/password
+  remains the privacy boundary. If the owner wants public search landing pages, reverse the
+  directive; do not add `Disallow` to `robots.txt`. Do not add Event JSON-LD for invite-only
+  events.
+- **Album originals:** **unchanged this turn.** Album upload stores raw bytes after validation;
+  responsive derivatives strip EXIF. The owner must decide whether originals are scrubbed on
+  ingest (privacy) or retained for print/edit. That decision blocks further album privacy work;
+  no storage or upload behavior was changed here.
+- **D-3 (editor second tab/autosave):** untouched; it is the next planned pass, not part of this
+  metadata/manifest change.
+
 ## Open questions
 - **Improvement sequence:** the research note recommends measuring LCP/INP first, then the
   low-risk LCP-image, 24 px hit-area and Khmer line-height fixes; the editor INP split and AVIF
   variants should follow only if measurement justifies them. No implementation was started.
-- **Invitation indexability:** published invitations currently have no robots directive; only
-  missing/unpublished slugs receive `X-Robots-Tag: noindex`. Decide whether a published
-  invitation is public or link-only. If link-only, add `noindex, nofollow` by header and meta
-  (not a `robots.txt` Disallow), plus an absolute canonical and social-image alt text. This is
-  not access control; the token/password remains the privacy boundary.
-- **Photo-original retention:** album upload stores the raw bytes after image validation, while
-  the responsive derivatives strip EXIF. Decide whether originals are retained (print/edit) or
-  scrubbed on ingest; do not promise metadata removal while the original remains fetchable.
+- **Invitation visibility reversal:** phase-2 implements the link-only default (`noindex`,
+  `nofollow` in meta and header). If the product should instead expose published invitations
+  to search, reverse that directive and keep the canonical/alt metadata; do not weaken the
+  token/password boundary. This is now a product decision, not missing code.
+- **Photo-original retention (owner):** album upload stores the raw bytes after image validation,
+  while the responsive derivatives strip EXIF. Decide whether originals are retained (print/edit)
+  or scrubbed on ingest; do not promise metadata removal while the original remains fetchable.
+  No album storage behavior changed in phase-2/3.
 - **Offline check-in scope:** if installable/offline check-in is in scope, populate the manifest
   icons and add an IndexedDB outbox with idempotency keys; otherwise correct the manifest
   naming/start target and keep the current narrow worker. Do not cache attendee PII blindly.

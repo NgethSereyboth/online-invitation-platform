@@ -18,8 +18,8 @@ This test verifies that EVERY user-controlled value substituted into
    ``<meta name="description">``, ``og:description``,
    ``twitter:description``.
 3. ``__INVITATION_SLUG__`` — attacker-controlled (URL path), reflected in
-   ``<meta name="einvite-invitation-slug" content="...">`` and
-   ``<link rel="canonical" href="/i/...">``. The slug arrives straight
+   ``<meta name="einvite-invitation-slug" content="...">`` and the absolute
+   ``<link rel="canonical" href=".../i/...">``. The slug arrives straight
    from ``self.path`` via the dispatcher at ``server.py`` L3237
    (``path.split("/", 2)[2]``) — no URL-decoding, no validation.
 
@@ -55,6 +55,7 @@ import json
 import socket
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from http.cookiejar import CookieJar
 from pathlib import Path
@@ -239,15 +240,12 @@ def run():
         slug_page = body_bytes.decode('utf-8', 'replace')
 
         escaped_slug = html_module.escape(attack_slug, quote=True)
-        # The escaped slug should appear at least twice in the response:
-        # once in <meta name="einvite-invitation-slug" content="..."> and
-        # once in <link rel="canonical" href="/i/...">.
-        occurrences = slug_page.count(escaped_slug)
-        assert occurrences >= 2, (
-            f'expected escaped slug {escaped_slug!r} to appear at least '
-            f'twice in response (meta content + link href), found '
-            f'{occurrences} time(s); first 1200 chars: '
-            f'{slug_page[:1200]!r}')
+        # The escaped slug is still reflected in the meta attribute. The
+        # canonical is a URL, so its copy is percent-encoded rather than
+        # HTML-escaped; it is checked separately below.
+        assert escaped_slug in slug_page, (
+            f'expected escaped slug {escaped_slug!r} in response; '
+            f'first 1200 chars: {slug_page[:1200]!r}')
 
         # The raw attack payload must NOT appear anywhere in the HTML.
         # (public.html has a legitimate <script src="bundle-public.js">
@@ -278,8 +276,10 @@ def run():
             f'meta einvite-invitation-slug content should be {escaped_slug!r}, '
             f'got {meta_value!r}')
 
-        # Same check for <link rel="canonical" href="/i/...">.
-        link_opening = '<link rel="canonical" href="/i/'
+        # The canonical must be an absolute self-reference, with the slug
+        # URL-encoded rather than reflected raw.
+        canonical_expected = f'http://{host}:{port}/i/{urllib.parse.quote(attack_slug)}'
+        link_opening = '<link rel="canonical" href="'
         link_idx = slug_page.find(link_opening)
         assert link_idx != -1, (
             f'could not find <link rel="canonical"> tag in response; '
@@ -289,8 +289,8 @@ def run():
         assert href_end != -1, (
             'could not find closing quote of <link rel="canonical"> href')
         href_value = slug_page[href_start:href_end]
-        assert href_value == escaped_slug, (
-            f'<link rel="canonical"> href should end with {escaped_slug!r}, '
+        assert href_value == canonical_expected, (
+            f'<link rel="canonical"> href should be {canonical_expected!r}, '
             f'got {href_value!r}')
 
         print('SECURITY_REFLECTED_INJECTION_TEST_PASSED')

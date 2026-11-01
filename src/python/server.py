@@ -11078,8 +11078,8 @@ class Handler(SimpleHTTPRequestHandler):
         # href="...") and text contexts. ``slug`` arrives straight from the
         # URL path (server.py L3237 dispatcher: ``path.split("/", 2)[2]``) and
         # is reflected into <meta name="einvite-invitation-slug"
-        # content="__INVITATION_SLUG__"> and <link rel="canonical"
-        # href="/i/__INVITATION_SLUG__">. ``title`` and ``description`` come
+        # content="__INVITATION_SLUG__"> and the absolute <link rel="canonical"
+        # href="__INVITATION_PUBLIC_URL__">. ``title`` and ``description`` come
         # from the invitation document_json (host-controlled). image_path /
         # public_path use urllib.parse.quote(slug) for URL-encoding then
         # absolute_url() for the host prefix; both are still escaped below as
@@ -11098,7 +11098,10 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(200 if found else 404)
         self.send_header("Content-Type","text/html; charset=utf-8")
         self.send_header("Cache-Control","no-cache" if found else "no-store")
-        if not found:self.send_header("X-Robots-Tag","noindex")
+        # The static public shell also carries a robots meta tag. Keep the
+        # header in step for clients that do not parse the document head.
+        if found:self.send_header("X-Robots-Tag","noindex, nofollow")
+        else:self.send_header("X-Robots-Tag","noindex")
         self.send_header("Content-Length",str(len(body))); self.end_headers(); self.wfile.write(body)
 
     # ─── V54.32 (phase-2c — §4.3) Calendar / venue map / gift registry ────────
