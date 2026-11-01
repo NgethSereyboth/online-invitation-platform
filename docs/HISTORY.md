@@ -177,6 +177,20 @@ report can still be matched; dates are the fix date, `[unknown]` where the recor
 
 ## 4. Test history
 
+### 2026-11-01 baseline attempt
+
+`tools/run-gates.py --phase all` at `1bd1717` stopped at layout: three long-task rows (index.html at
+375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms) against the frozen 600 ms ceiling, then
+`UI_LAYOUT_GUARD_PASSED` on a quiet rerun with long-task 0 failed (173 s). Build, bundles and smoke
+passed (16 pages, 0 console errors, 0 non-2xx). The pytest phase, run separately, gave
+**5 failed / 218 passed in 901.65 s**: `ai_resource_scopes_test::test_ai_resource_scopes`,
+`lt_2_2_khmer_format_test::test_public_rendering_and_editor_round_trip`,
+`lt_4_3_color_picker_test::test_colour_picker_extras`,
+`lt_4_4_run_typography_test::test_run_typography_from_inspector` and
+`template_pack_gallery_test::test_pack_gallery_lists_filters_and_opens_a_design`. All five are
+untriaged and recorded in `docs/NEXT-WORK.md` §1. The gate of record (223 passed at `4880fcb`) no
+longer describes HEAD.
+
 ### Coverage that existed (retained — see the manifest's Group C note)
 
 | Area | Type | What it checked | Original path |

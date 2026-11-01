@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **18** open defects · **36** open work-order tasks · **18** owner-held decisions · **11** verification debts |
+| Counts in this file | **18** open defects (+5 untriaged suite failures below) · **36** open work-order tasks · **18** owner-held decisions · **11** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -41,6 +41,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 
 | Date | Item | Commit | Verification |
 |---|---|---|---|
+| 2026-11-01 | Full pytest phase of the baseline (`--phase pytest`) | `1bd1717` | **5 failed, 218 passed in 901.65 s** — untriaged, listed below |
 | 2026-11-01 | Baseline matrix attempt — build/bundles/smoke green, layout flake, six phases unrun | `—` | `artifacts/next-work/gates/20261101-081428/gates.log`; rerun `…/20261101-082220/gates.log` |
 | 2026-11-01 | #2 guest-page `HTTP 401` blocks hidden for anonymous visitors | `bbd3b9d` | bundles rebuilt; `ux9_public_sections_test`, `public_guest_feature_runtime_test`, `bulk_guest_import_test` pass |
 | 2026-11-01 | #3 guest-row actions (Edit/Link/QR/Check-in/Remove) delegated again | `12087a8` | handler present in `bundle-guests.js`; guest tests pass; per-action browser tests still owed |
@@ -73,6 +74,20 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 | 18 | Repo | **15 generated PNGs tracked** under `src/python/data/social-cache/` — runtime state that should never be committed. | P3 | `git rm --cached` in one commit (they stay on disk). Needs a yes. | OWNER-QUEUE |
 | 19 | API | Per-key **1000/h limit wired but not flood-tested**; API-key scope is route-level, not per invitation. | P3 | Owner: accept as documented, or commission the 1 000-request proof / narrower scopes. | LT-7.2 |
 | 20 | Editor | Headless `set_viewport_size` at 375 crashes the GPU process on a heavy canvas page. | P3 | Reproduce on a real device; acceptance already opens a separate 375 page. No product change unless it reproduces outside headless. | OWNER-QUEUE |
+
+### Baseline suite failures (2026-11-01, untriaged)
+
+`tools/run-gates.py --phase pytest` at `1bd1717`: **5 failed, 218 passed in 15:01**. The gate of
+record at `4880fcb` had 223 passed, so the suite is **not green at HEAD**. None of these files is
+one I changed in the guest fixes; each needs triage before anyone claims a green baseline.
+
+| Test | First error | Area |
+|---|---|---|
+| `tests/ai_resource_scopes_test.py::test_ai_resource_scopes` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | AI resource scopes / server |
+| `tests/lt_2_2_khmer_format_test.py::test_public_rendering_and_editor_round_trip` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Khmer formatting round-trip |
+| `tests/lt_4_3_color_picker_test.py::test_colour_picker_extras` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Colour picker (Playwright) |
+| `tests/lt_4_4_run_typography_test.py::test_run_typography_from_inspector` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Run typography (Playwright) |
+| `tests/template_pack_gallery_test.py::test_pack_gallery_lists_filters_and_opens_a_design` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Template-pack gallery (Playwright) |
 
 ---
 
