@@ -3998,8 +3998,18 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(200);self.send_header("Content-Type","text/html; charset=utf-8");self.send_header("Cache-Control","no-cache");self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def serve_management_page(self, invitation_id, section):
-        user=self.require_user()
-        if not user:return
+        user=self.user()
+        if not user:
+            # A browser navigation must not land on the API's JSON 401. Content
+            # negotiation keeps JSON for API clients while sending an
+            # expired-session navigation to the sign-in screen.
+            if "text/html" in (self.headers.get("Accept") or "").lower():
+                self.send_response(302)
+                self.send_header("Location","/dashboard.html?next="+quote(self.path,safe=""))
+                self.send_header("Cache-Control","no-store")
+                self.end_headers()
+                return
+            return self.json(401,{"error":"Authentication required"})
         with connect() as db:
             if not self.can_read_invitation(db,invitation_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
         filename={"editor":"index.html","guests":"guests.html","responses":"responses.html","analytics":"analytics.html","materials":"materials.html","checkin":"checkin.html"}.get(section)
