@@ -76,6 +76,9 @@
       }
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, { headers });
+        /* Anonymous visitor: this is a host route and answers 401. Remove the
+           feature instead of printing "HTTP 401" on a public invitation. */
+        if (res.status === 401) { section.remove(); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const sheets = await res.json();
         render(sheets);

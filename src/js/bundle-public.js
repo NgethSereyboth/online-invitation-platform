@@ -1056,6 +1056,9 @@ window.EInviteGuestJourney={enhance};
       }
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/signup-sheets`, { headers });
+
+
+        if (res.status === 401) { section.remove(); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const sheets = await res.json();
         render(sheets);
@@ -1233,6 +1236,9 @@ window.EInviteGuestJourney={enhance};
       }
       try {
         const res = await fetch(`/api/invitations/${encodeURIComponent(invitationId)}/polls`, { headers });
+
+
+        if (res.status === 401) { section.remove(); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const polls = await res.json();
         render(polls);
@@ -1455,6 +1461,9 @@ window.EInviteGuestJourney={enhance};
       try {
         const url = `/api/invitations/${encodeURIComponent(invitationId)}/album?limit=20` + (cursor ? `&before=${cursor}` : '');
         const res = await fetch(url, { headers });
+
+
+        if (res.status === 401) { section.remove(); return; }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         const html = (data.photos || []).map(renderPhoto).join('');

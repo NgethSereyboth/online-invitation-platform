@@ -147,6 +147,9 @@
       try {
         const url = `/api/invitations/${encodeURIComponent(invitationId)}/album?limit=20` + (cursor ? `&before=${cursor}` : '');
         const res = await fetch(url, { headers });
+        /* Anonymous visitor: this is a host route and answers 401. Remove the
+           feature instead of printing "HTTP 401" on a public invitation. */
+        if (res.status === 401) { section.remove(); return; }
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         const html = (data.photos || []).map(renderPhoto).join('');
