@@ -22,7 +22,8 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 |---|---|
 | Version | **0.70.13**, branch `chore/cleanup` (base `fix/2026-10-22-open-issues`) |
 | Gate of record | `GATES_PASSED` at `4880fcb` (Stage E, 2026-10-29) — ten phases, **223 pytest passed** |
-| Since that matrix | UI commits of 2026-10-30/31 (header, budgets, FB-150/151) and the 2026-11-01 clean-up; **the full matrix has not been re-run since** |
+| Since that matrix | UI commits of 2026-10-30/31 (header, budgets, FB-150/151) and the 2026-11-01 clean-up |
+| **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
 | Counts in this file | **18** open defects · **36** open work-order tasks · **18** owner-held decisions · **11** verification debts |
@@ -40,6 +41,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 
 | Date | Item | Commit | Verification |
 |---|---|---|---|
+| 2026-11-01 | Baseline matrix attempt — build/bundles/smoke green, layout flake, six phases unrun | `—` | `artifacts/next-work/gates/20261101-081428/gates.log`; rerun `…/20261101-082220/gates.log` |
 | 2026-11-01 | #2 guest-page `HTTP 401` blocks hidden for anonymous visitors | `bbd3b9d` | bundles rebuilt; `ux9_public_sections_test`, `public_guest_feature_runtime_test`, `bulk_guest_import_test` pass |
 | 2026-11-01 | #3 guest-row actions (Edit/Link/QR/Check-in/Remove) delegated again | `12087a8` | handler present in `bundle-guests.js`; guest tests pass; per-action browser tests still owed |
 
@@ -193,7 +195,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 
 | # | Debt | Why it matters |
 |---|---|---|
-| 1 | Full ten-phase matrix not run since 2026-10-30/31 UI commits **and** the 2026-11-01 clean-up | The gate of record predates the last UI work. Run `tools/run-gates.py --phase all`. |
+| 1 | Full ten-phase matrix still not green end to end since 2026-10-30/31; the 2026-11-01 attempt stopped at layout | build/bundles/smoke pass; layout grazed 600 ms once (622/613/606) and passed quiet; pytest, budgets, LHCI, CSP, canvas, `!important` unrun — finish the chain phase by phase |
 | 2 | Post-clean-up verification was targeted only (build, bundles, 8 doc tests, server boot) | Proportional to a docs-only diff, but not a substitute for the matrix. |
 | 3 | Canvas **visual** gate not run — frozen baseline lives on the owner's Windows box | The motion gate (22/0/2) is behavioural, not pixel. Record `NOT RUN` rather than invent a baseline. |
 | 4 | Canvas **performance** gate blocked by hardware | Record `environment-blocked`. |
@@ -204,6 +206,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 | 9 | pytest not in CI; branch-trigger gap (FB-07) | Local-only release makes this survivable, not good. |
 | 10 | Intermittent app-server readiness flake (FB-09) | Causes spurious reds in browser gates. |
 | 11 | Six Dependabot alerts: local chains removed, remote closure **deferred** (FB-10) | Needs a push to close; conflicts with OD-3. |
+| 12 | Long-task ceiling is being grazed: 606–622 ms under load vs the frozen 600 ms | Do **not** raise the ceiling (OD-6). Re-measure quiet before treating a red as a regression; a genuine fix must cut work on `index.html`. |
 
 ---
 
