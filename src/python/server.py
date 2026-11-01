@@ -1681,6 +1681,12 @@ _P2A_SCHEMA_STATEMENTS = [
     "CREATE TABLE IF NOT EXISTS agent_grants(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, resource_type TEXT NOT NULL, resource_id TEXT NOT NULL, action TEXT NOT NULL, granted_by TEXT NOT NULL DEFAULT '', granted_at BIGINT NOT NULL, expires_at BIGINT, revoked_at BIGINT, revoked_by TEXT NOT NULL DEFAULT '', revoke_reason TEXT NOT NULL DEFAULT '', reason TEXT NOT NULL DEFAULT '')",
     "CREATE INDEX IF NOT EXISTS idx_agent_grants_user ON agent_grants(user_id,revoked_at,expires_at)",
     "CREATE INDEX IF NOT EXISTS idx_agent_grants_resource ON agent_grants(resource_type,resource_id,action,revoked_at)",
+    # Platform job queue (platform_v32/jobs.py). Missing from the SQLite bootstrap
+    # until 2026-11-01: the worker thread raised "no such table: platform_jobs"
+    # and the request it served died with a RemoteDisconnected.
+    "CREATE TABLE IF NOT EXISTS platform_jobs(id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, invitation_id TEXT NOT NULL DEFAULT '', owner_id TEXT NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', progress REAL NOT NULL DEFAULT 0, payload_json TEXT NOT NULL DEFAULT '{}', result_json TEXT NOT NULL DEFAULT '{}', idempotency_key TEXT NOT NULL DEFAULT '', retry_count INTEGER NOT NULL DEFAULT 0, max_retries INTEGER NOT NULL DEFAULT 3, cancellation_requested INTEGER NOT NULL DEFAULT 0, error_text TEXT NOT NULL DEFAULT '', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL, started_at BIGINT, completed_at BIGINT)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_platform_job_idempotency ON platform_jobs(workspace_id,idempotency_key) WHERE idempotency_key<>''",
+    "CREATE INDEX IF NOT EXISTS idx_platform_jobs_status ON platform_jobs(status,created_at)",
 ]
 
 
