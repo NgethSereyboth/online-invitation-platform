@@ -13,17 +13,17 @@
   {
    "name": "guests empty state",
    "ok": true,
-   "detail": "<Response url='http://127.0.0.1:58109/guests.html' request=<Request url='http://127.0.0.1:58109/guests.html' method='GET'>>"
+   "detail": "<Response url='http://127.0.0.1:48093/guests.html' request=<Request url='http://127.0.0.1:48093/guests.html' method='GET'>>"
   },
   {
    "name": "responses empty state",
    "ok": true,
-   "detail": "<Response url='http://127.0.0.1:58109/responses.html' request=<Request url='http://127.0.0.1:58109/responses.html' method='GET'>>"
+   "detail": "<Response url='http://127.0.0.1:48093/responses.html' request=<Request url='http://127.0.0.1:48093/responses.html' method='GET'>>"
   },
   {
    "name": "analytics empty state",
    "ok": true,
-   "detail": "<Response url='http://127.0.0.1:58109/analytics.html' request=<Request url='http://127.0.0.1:58109/analytics.html' method='GET'>>"
+   "detail": "<Response url='http://127.0.0.1:48093/analytics.html' request=<Request url='http://127.0.0.1:48093/analytics.html' method='GET'>>"
   },
   {
    "name": "public 360ou hero",
@@ -161,7 +161,7 @@
   {
    "name": "signed-out editor redirects",
    "ok": true,
-   "detail": "http://127.0.0.1:58109/dashboard.html?next=%2Finvitations%2Ff9e9ced2-1d8c-4bdf-ae8f-929cd82ca0ec%2Feditor"
+   "detail": "http://127.0.0.1:48093/dashboard.html?next=%2Finvitations%2Fb30db3f1-ebdf-44d7-8ea9-d16c04df016a%2Feditor"
   }
  ],
  "console_errors": [
