@@ -35,13 +35,13 @@ def _document() -> dict:
         "eventType": "Wedding",
         "fields": {
             "names": "[Groom name] & [Bride name]",
-            "namesKm": "គូស្នេហ៍",
+            "namesKm": "\u1782\u17bc\u179f\u17d2\u1793\u17c1\u17a0\u17cd",
             "date": "2029-12-27",
             "time": "16:05",
             "venue": "[Venue]",
-            "venueKm": "រាជធានីភ្នំពេញ",
+            "venueKm": "\u179a\u17b6\u1787\u1792\u17b6\u1793\u17b8\u1797\u17d2\u1793\u17c6\u1796\u17c1\u1789",
             "message": "Welcome",
-            "messageKm": "សូមស្វាគមន៍",
+            "messageKm": "\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd",
         },
         "settings": {
             "rsvpEnabled": True,
