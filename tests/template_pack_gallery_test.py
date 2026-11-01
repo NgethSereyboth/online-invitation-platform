@@ -79,25 +79,28 @@ def test_pack_gallery_lists_filters_and_opens_a_design():
             assert "A5 portrait" in first["meta"] and "2 pages" in first["meta"], first
             assert first["label"].startswith("Use "), first
 
-            # Filters: Wedding is the largest group, Ceremony is five.
-            page.locator('#templatePackGallery [data-pack-filter="wedding"]').click()
-            page.wait_for_timeout(120)
+            # Filters: the studio toolbar owns search and category (PW-7) and the
+            # gallery follows it through `einvite:studio-filter`. Wedding is the
+            # largest group, Ceremony is five; the counts are the same contract the
+            # old per-gallery chips asserted.
+            page.select_option("#studioCategory", "wedding")
+            page.wait_for_timeout(150)
             wedding = page.locator("#templatePackGallery .pack-card").count()
             assert wedding == 15, wedding
-            assert page.locator('#templatePackGallery [data-pack-filter="wedding"]').get_attribute("aria-pressed") == "true"
-            page.locator('#templatePackGallery [data-pack-filter="ceremony"]').click()
-            page.wait_for_timeout(120)
+            assert page.locator("#studioCategory").input_value() == "wedding"
+            page.select_option("#studioCategory", "ceremony")
+            page.wait_for_timeout(150)
             assert page.locator("#templatePackGallery .pack-card").count() == 5
-            page.locator('#templatePackGallery [data-pack-filter="all"]').click()
-            page.wait_for_timeout(120)
+            page.select_option("#studioCategory", "all")
+            page.wait_for_timeout(150)
             assert page.locator("#templatePackGallery .pack-card").count() == 36
 
             # Search narrows the same list.
-            page.locator("#templatePackGallery [data-pack-search]").fill("maroon")
-            page.wait_for_timeout(120)
+            page.fill("#studioSearch", "maroon")
+            page.wait_for_timeout(150)
             assert page.locator("#templatePackGallery .pack-card").count() == 1
-            page.locator("#templatePackGallery [data-pack-search]").fill("")
-            page.wait_for_timeout(120)
+            page.fill("#studioSearch", "")
+            page.wait_for_timeout(150)
 
             # Touch targets at 375 and no horizontal overflow at either width.
             page.set_viewport_size({"width": 375, "height": 812})

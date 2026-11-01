@@ -30,3 +30,9 @@
   mission. If the Sites project is not the intended target, say so; otherwise Step 5 deploys there.
 - **`#templatePackGallery` injection:** module path is relative (`template-pack-gallery.js`) and the
   mirror for the server root is being checked; the four browser failures are diagnosed but not fixed.
+
+### 2026-11-01 — phase-1: gallery test aligned with the shared studio filter
+- PW-7 removed the per-gallery filter chips so one toolbar filters both lists; the gallery follows
+  `einvite:studio-filter`. The test still clicked the removed chips, so it timed out *after* the 36
+  cards had rendered. It now drives `#studioCategory` / `#studioSearch` and asserts the same counts
+  (15 wedding, 5 ceremony, 36 all, 1 on "maroon") — no assertion removed or weakened.
