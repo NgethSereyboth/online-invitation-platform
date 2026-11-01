@@ -5,16 +5,13 @@ which has no subagent dispatch, no MCP config, and no plugin API.
 
 ## Project memory
 
-- Resume state: `artifacts/ui-audit/fixes/STATE.md` — read it before continuing any eInvite work
-  (hard rules, current pass, open items, next move); update its Done / Active / Next Move at the
-  end of a work session.
-- Resume: `artifacts/next-work/HANDOFF.md` (where the run stands, the last gate lines, the exact next
-  command). The long-term plan `FREEBUFF-LONG-TERM-PLAN-2026-10-24.md` and its re-sequenced queue
-  `FREEBUFF-NEXT-STEPS-2026-10-27.md` are **exhausted**: Stages A–F closed 2026-10-29 and §9 records the
-  four deliberately unexecuted D-items. `artifacts/next-work/FINAL-REPORT.md` is the closing record.
-  Open work lives in `FREEBUFF-UI-AUDIT-FIX-ORDER-2026-10-29.md` (UI fixes, not started) and
-  `artifacts/next-work/OWNER-QUEUE.md` (owner-held decisions). STATE.md carries the ledger; read it,
-  HANDOFF and the fix order before editing anything.
+- **Single history file:** `docs/HISTORY.md` — bugs fixed / still open / won't fix, the decision
+  log, the test history and the lessons. Read it before continuing any eInvite work. The superseded
+  work orders, version reports and review passes were removed on 2026-11-01; every path, reason and
+  the restore command are in `docs/CLEANUP_MANIFEST.md`
+  (`git checkout backup/pre-cleanup -- <path>`).
+- **Open work:** `docs/HISTORY.md` §2 is the queue; owner-held decisions stay in
+  `artifacts/next-work/OWNER-QUEUE.md`. Hosting and operations: `deploy/local/README.md`.
 - Sessions started outside this repo can reach the same pointer via the global `einvite-project`
   skill (`~/.agents/skills/einvite-project/SKILL.md`).
 

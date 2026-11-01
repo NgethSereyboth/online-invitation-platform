@@ -327,7 +327,7 @@ superseded by the disposition note above.
    audit remain the authority; several 2.2 criteria would interact with Khmer line-height and
    clipping, and no Khmer-specific measurement was added here.
 5. **No source file was modified by this pass.** Confirmed by the pass report
-   ([next-pass-2026-10-15.md](../reviews/next-pass-2026-10-15.md)), which records that the only
+   ([next-pass-2026-10-15.md](../HISTORY.md)), which records that the only
    files touched were this document, the inventory and a new test.
 
 ---

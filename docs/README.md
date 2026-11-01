@@ -1,7 +1,7 @@
 # E-Invitation Platform — Professional Invitation Design & Event Management
 
-[![Release](https://img.shields.io/badge/release-V28-blue)](V28_ARCHITECTURE.md)
-[![License](https://img.shields.io/badge/license-proprietary-red)](LICENSE)
+[![Release](https://img.shields.io/badge/release-V28-blue)](ARCHITECTURE.md)
+[![License](https://img.shields.io/badge/license-proprietary-red)](../licenses/)
 
 ## 🎨 What It Does
 

@@ -6,6 +6,11 @@ production-certified release.
 > **Legacy history:** the pre-reset version history (V1 → V54.34) is preserved
 > in [`docs/LEGACY-VERSION-HISTORY.md`](docs/LEGACY-VERSION-HISTORY.md).
 
+> **Clean-up note (2026-11-01):** entries below cite work orders, reports and review passes that
+> were consolidated into [`docs/HISTORY.md`](docs/HISTORY.md) and removed from the tree. The
+> citations are kept as provenance; the files themselves are restorable from git ref
+> `backup/pre-cleanup` (see [`docs/CLEANUP_MANIFEST.md`](docs/CLEANUP_MANIFEST.md)).
+
 ---
 
 ## Version numbering scheme

@@ -1,7 +1,7 @@
 # OKID template pack v1 — 36 Khmer-event templates (designed by Claude)
 
 This folder is **design source material**, not app code. Claude planned and designed it; the Freebuff agent integrates it under
-`FREEBUFF-TEMPLATES-WORKORDER-2026-10-25.md`. Everything here is original work (no third-party artwork, no copied templates).
+`docs/HISTORY.md`. Everything here is original work (no third-party artwork, no copied templates).
 
 ```
 template-pack/

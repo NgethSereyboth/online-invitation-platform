@@ -15,7 +15,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 
 ## Dependency notes
 
-- 001's code change does not depend on other plans. Its browser verification needs the Users list endpoint to work: the page calls `/api/admin/users-v2` (`src/js/pages/admin/users.js:27`), but the server routes only `/api/admin/users` (`src/python/server.py:3818`). That defect is tracked in `docs/reviews/A2-2026-10-13.md` and is intentionally not in this batch. Plan 001 may be done before it.
+- 001's code change does not depend on other plans. Its browser verification needs the Users list endpoint to work: the page calls `/api/admin/users-v2` (`src/js/pages/admin/users.js:27`), but the server routes only `/api/admin/users` (`src/python/server.py:3818`). That defect is tracked in `docs/HISTORY.md` §2 and is intentionally not in this batch. Plan 001 may be done before it.
 - 003 may find that `tests/security_tenant_isolation_test.py` is failing; that is plan 002's scope. Run 002 first if you want the cleaner signal.
 - Plans 002 and 003 both touch test files; 003 must not change assertions that 002 relies on.
 - 004 is independent of 001–003. Inside 004: UX-1 and UX-5 may need to delete a superseded `!important` (that is CQ-1 work and lowers `IMPORTANT_PIN`); UX-4 (icons) should land before UX-3's icon touch-ups and UX-7's placeholder icon; CQ-3 should follow CQ-2 and only makes a bundle diet possible, it does not meet the layout ceiling by itself.
@@ -23,7 +23,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 ## Findings considered and rejected
 
 - f-string SQL in `src/python/features/admin_metrics.py`: table and column names are checked against allowlists (`_METRIC_TABLES`, line 36, and the column allowlist used around line 78), so it is by design.
-- B404 / B608 `# nosec` annotations: already tracked and justified in `docs/reviews/security-status.md`.
+- B404 / B608 `# nosec` annotations: already tracked and justified in `docs/HISTORY.md` §2.
 - (004) Splitting the editor bundle by 40 %: the three named deferral candidates are about 5 % of critical JS and no dependency-safe larger boundary is known (`docs/perf/editor-module-inventory-2026-10-24.md`).
 - (004) Raising the 600 ms layout ceiling, the CLS target or any budget: forbidden by OD-6.
 - (004) A bigger artboard at 375 px and editor-internal SVG icons: settled by LT-1.6 / frozen canvas gate; deferred.

@@ -1,6 +1,6 @@
 # Analytics Privacy — v0.68.3+
 
-**Roadmap:** [`ROADMAP-v0.54-to-v1.0.md` §6.8](../../upload/ROADMAP-v0.54-to-v1.0.md)
+**Roadmap:** [`ROADMAP-v0.54-to-v1.0.md` §6.8](../ROADMAP-v0.54-to-v1.0.md)
 
 This document explains what the E-invitation-website platform's
 first-party analytics feature collects, why it collects it, how long it

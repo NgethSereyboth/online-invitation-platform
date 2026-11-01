@@ -1,6 +1,6 @@
 # `tools/` — the measurement harness
 
-Every script that produced a number in `docs/reviews/*.md` used to live in
+Every script that produced a number in `docs/HISTORY.md` used to live in
 `/tmp`. That made the reports reproducible only until the machine restarted, and
 it made an absolute path to one developer's checkout part of the evidence. This
 directory is that harness, in the repository, with no machine-specific paths.

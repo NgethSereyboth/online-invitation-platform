@@ -42,7 +42,7 @@ $ python -c "import sys; sys.path.insert(0,'src/python'); \
 - `design-fix.css` (1,632 B) — the 2026-10-19 DESIGN-FIX polish layer
   (DESIGN-FIX-TASK P4): calmer canvas dot-grid, grouped toolbar, poster-size
   picker and designer recovery cards. Documented in
-  [DESIGN-FIX-REPORT.md](../../DESIGN-FIX-REPORT.md) §5 as "loaded by
+  [DESIGN-FIX-REPORT.md](../HISTORY.md) §5 as "loaded by
   index.html".
 
 The two files share **zero content** (different owner, different scope, and
@@ -84,5 +84,5 @@ OD-6, so it is **not done here**. The duplicate-check always passes:
 - Budget file (single source of truth):
   [docs/perf/lighthouse-budgets.json](lighthouse-budgets.json) — layers 1/3.
 - Optimisation report context:
-  [docs/reviews/optimisation-report.md](../reviews/optimisation-report.md)
+  [docs/reviews/optimisation-report.md](../HISTORY.md)
   (aspirational ceilings rationale, §"three-layer budget").

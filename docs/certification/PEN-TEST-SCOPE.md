@@ -167,5 +167,5 @@ The pen tester delivers a **signed report** with the following sections:
 - [`docs/ai/AISVS-C9-C10-MAPPING.md`](../ai/AISVS-C9-C10-MAPPING.md) — Phase 1a AI agent governance.
 - [`docs/ai/attack-stories/`](../ai/attack-stories/) — 12 high-blast-radius attack stories (grey-box test cases).
 - [`docs/SECURITY.md`](../SECURITY.md) — high-level security overview.
-- [`docs/SECURITY_HARDENING_REPORT_2026-08-10.md`](../SECURITY_HARDENING_REPORT_2026-08-10.md) — V54 hardening report (the "remaining production work" list at the end of this document is the precursor to the Phase 3 pen-test scope).
+- [`docs/SECURITY_HARDENING_REPORT_2026-08-10.md`](../HISTORY.md) — V54 hardening report (the "remaining production work" list at the end of this document is the precursor to the Phase 3 pen-test scope).
 - [`docs/ROADMAP.md`](../ROADMAP.md) §1b + §10 Step 7 — the ASVS research that grounded Phase 1b.

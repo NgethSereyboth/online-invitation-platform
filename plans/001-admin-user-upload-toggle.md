@@ -10,7 +10,7 @@
 - **Priority**: P1
 - **Effort**: S
 - **Risk**: LOW
-- **Depends on**: none for the code change. End-to-end browser verification is blocked until the Users list endpoint works (see "Current state", item 3; tracked in `docs/reviews/A2-2026-10-13.md`).
+- **Depends on**: none for the code change. End-to-end browser verification is blocked until the Users list endpoint works (see "Current state", item 3; tracked in `docs/HISTORY.md` §2).
 - **Category**: bug (UX regression)
 - **Planned at**: commit `39c8ef1`, 2026-10-14
 

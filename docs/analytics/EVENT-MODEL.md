@@ -1,6 +1,6 @@
 # Analytics Event Model — v0.67.0+
 
-**Roadmap:** [`ROADMAP-v0.54-to-v1.0.md` §6](../../upload/ROADMAP-v0.54-to-v1.0.md)
+**Roadmap:** [`ROADMAP-v0.54-to-v1.0.md` §6](../ROADMAP-v0.54-to-v1.0.md)
 **Part 6 — Creator analytics & insights.**
 
 This document is the single source of truth for which events the

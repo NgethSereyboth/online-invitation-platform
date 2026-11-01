@@ -361,7 +361,7 @@ No files outside the sec-7 modification scope were touched:
 ## 13. Security status ledger
 
 The authoritative, consolidated security ledger for SEC-01 through SEC-04
-findings lives in [`docs/reviews/security-status.md`](</reviews/security-status.md>).
+findings lives in [`docs/reviews/security-status.md`](../HISTORY.md).
 This file is the single source of truth for:
 
 - The complete finding catalog (SEC-01…SEC-04) with status, evidence, and

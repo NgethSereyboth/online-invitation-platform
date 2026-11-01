@@ -3,7 +3,7 @@
 **Why this is in the repository.** `image_font(..., khmer=True)` in
 `src/python/server.py` used to resolve a Khmer system font from a list of
 absolute paths and silently fall through to DejaVu when none existed
-(`docs/reviews/bulk-guest-import-research.md` §5.4, risk 1). The production
+(`docs/HISTORY.md` §5.4, risk 1). The production
 manifest (`docs/requirements-production.txt`) installs no font package and the
 repository shipped only `.woff2` subsets under `assets/fonts/`, which Pillow
 cannot load as a system font — so on Render every Khmer guest name would have
