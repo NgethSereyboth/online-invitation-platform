@@ -2,14 +2,32 @@
 
 ## Current status
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
-  **207 commits ahead at the start of phase-2/3**; phase-2 makes it 208, phase-3 209, and the
-  verification-docs commit makes it **210 commits ahead of `origin/main`, not pushed**.
-  `origin/chore/cleanup` remains at `7e22bef`. The push decision remains open.
+  **207 commits ahead at the start of phase-2/3**; phases 2–8 plus this close-out make it
+  **216 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
+  `7e22bef`. The push decision remains open.
 - **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
   work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
   baseline failures are closed. Remaining Step 1 work is the product backlog in `NEXT-WORK.md`
   (P0/P1/P2), not test triage.
+- **Phase 4–6 (2026-11-01, local):** D-3 is fixed: every editor session refreshes the server row
+  and its `updatedAt` while keeping a newer local draft's content, so a second tab no longer
+  autosaves against the previous tab's revision. Regression: `editor_multi_tab_autosave_test`
+  drives two real tabs. Admin suspension now has UI coverage (`admin_users_suspension_test`),
+  and the test environment is isolated (autouse `EINVITE_DATA_DIR` restore +
+  `env_isolation_test`). The inline editor fixture inserts its storage/fetch prelude after
+  `<head>` and includes `professional-editor.js`; the old `theme-init.js` match silently skipped
+  the prelude after the shell changed. Commits: `a9c5e51`, `98d0306`, `e4a81c0`, generated
+  bundle metadata `3d6ff85`, and Khmer-fixture policy fix `f2bfcfe`. Final full suite:
+  **230 passed, 2 warnings in 1125.10 s (exit 0)**. Details are in the log below.
+- **Post-reset deploy queue (live-only):** Sites is paused by the daily request quota until
+  **2026-11-02T00:00:00Z**. Do not retry before then. After the reset: rebuild with
+  `python3 tools/build-sites-bundle.py`; confirm the bundle contains `manifest.webmanifest`,
+  `assets/icon-192.png`, `assets/icon-512.png`, and the `og:image:alt`/`twitter:image:alt` /
+  `noindex, nofollow` metadata; deploy production from `deploy/sites/manifest.json`; restart
+  `einvite-app` if the local origin changed; then repeat the live checks for the new invitation
+  metadata, missing-slug 404, signed-out editor redirect, check-in manifest/icons, and the
+  second-tab autosave flow. Until that deploy succeeds, every phase-2–8 change is local-only.
 - **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
   **0 failed checks**; final full suite **223 passed, 2 warnings in 883.42 s (exit 0)**; one P1
   fixed (BUG-R1-1) and proven live, two P2s logged (soft 404, CSP console), one stale
@@ -69,6 +87,56 @@
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — phase-7/8 close-out: generated metadata, suite green
+- `3d6ff85` (`phase-7`) records the 86-byte editor bundle change and its new SHA-256 in the
+  checked-in page-asset and route-bundle manifests. These are the build's tracked outputs, not
+  hand edits.
+- The first final suite run (`artifacts/verify/pytest-full-phase4-6.log`) was **229 passed, 1
+  failed**: the new D-3 fixture contained Khmer literals, which
+  `test_no_khmer_typed_outside_allowed_files` correctly rejects. `f2bfcfe` (`phase-8`) replaced
+  them with Unicode escapes; no assertion or allow-list changed. The final rerun
+  (`artifacts/verify/pytest-full-final.log`) is **230 passed, 2 warnings in 1125.10 s (exit 0)**.
+  The warnings are unrelated worker-thread SQLite messages (`no such table: platform_jobs`, the
+  idempotent `ALTER TABLE users` race) emitted during browser-test teardown; no test failed.
+- Final gates: `python3 build.py all --check` exited 0 with `MIRROR_CHECK_PASSED
+  (up_to_date=533)` and `BUILD_OK`; `python3 -m compileall -q src/python tests` exited 0;
+  `python3 tools/build-sites-bundle.py` exited 0. The bundle has `manifest.webmanifest` (391 B),
+  `assets/icon-192.png` (8,362 B), `assets/icon-512.png` (20,993 B), and `public.html` contains
+  `og:image:alt`, `twitter:image:alt`, and `noindex, nofollow`.
+- Live-only checks remain queued for the Sites quota reset at **2026-11-02T00:00:00Z**; nothing was
+  deployed.
+
+### 2026-11-01 — phase-4/5/6: D-3, admin coverage, test isolation
+- **D-3 root cause:** a second tab reused the cached `sovan-server-invite:*` row and skipped the
+  server GET, so its `updatedAt` was the revision from before the first tab's save. The first
+  edit sent a stale `expectedRevision` and the server correctly returned `409 revision_conflict`.
+  `src/js/app.js` now refreshes the server row every session and only replaces local content when
+  there is no cached row or no draft. The local draft is preserved; the revision is not.
+- `tests/editor_multi_tab_autosave_test.py` creates an invitation, saves in tab one, forces tab
+  two to start from tab one's stale cached row, edits tab two, and asserts both tabs' fields
+  reach SQLite with no `serverSaveErrorCode` and `Server connected`. Targeted run: **4 passed in
+  31.80 s** together with the two tests below before the runner-fixture fix.
+- **D-12 admin:** the Users page already renders the suspension badge from `users-v2`; no product
+  change. `tests/admin_users_suspension_test.py` pins the actual `tr[data-user-id]` row and the
+  Suspended/Active `.ei-tag` state so the display cannot regress silently.
+- **Test isolation:** an autouse fixture in `tests/conftest.py` snapshots and restores
+  `EINVITE_DATA_DIR` around every test, fixing the five in-process suites that left a deleted
+  temporary path in the environment. `tests/env_isolation_test.py` proves the restore runs between
+  tests rather than merely documenting it.
+- **Inline runner:** `tests/inline_editor_runtime_test.py` now inserts its storage/fetch prelude
+  immediately after `<head>` instead of matching the removed `theme-init.js` tag, and adds
+  `professional-editor.js` to the inlined extras. `v17_professional_editor_test` now boots to
+  version 17 instead of timing out. Its two behavioural assertions and
+  `v0_52_free_canvas_drag_test` were written against the older overlay model and are marked
+  **stuck** in `NEXT-WORK` #23; they are not part of the pytest gate.
+- **Gates:** `python3 build.py all --check` reported `MIRROR_CHECK_PASSED` and `BUILD_OK`;
+  `python3 -m compileall -q src/python tests` exited 0; `tools/build-sites-bundle.py` exited 0 with
+  the manifest, icons, and metadata present. Final full suite: **230 passed, 2 warnings
+  in 1125.10 s (exit 0)**. The first final attempt found one policy failure in the new D-3 test
+  (Khmer literals); `f2bfcfe` replaced them with Unicode escapes and the rerun passed. Live
+  deployment remains blocked by the Sites quota until **2026-11-02T00:00:00Z**; no deploy was
+  attempted.
 
 ### 2026-11-01 — merge `chore/cleanup` into `main`
 - `main` was the merge base and had **0** commits not already in `chore/cleanup`; the merge was a
@@ -295,8 +363,10 @@
   responsive derivatives strip EXIF. The owner must decide whether originals are scrubbed on
   ingest (privacy) or retained for print/edit. That decision blocks further album privacy work;
   no storage or upload behavior was changed here.
-- **D-3 (editor second tab/autosave):** untouched; it is the next planned pass, not part of this
-  metadata/manifest change.
+- **D-3 (editor second tab/autosave):** **fixed in phase-4.** `connectServer()` always GETs the
+  invitation so `serverInvite.updatedAt` is current, but adopts the server document only when
+  there is no cached row or no local draft. Local draft content therefore survives while the
+  next autosave uses the latest revision. Covered by a two-tab browser regression.
 
 ### 2026-11-01 — deploy gate: still quota-blocked after phase-2/3
 - At **11:05 UTC** the live Sites API reports `state: suspended`; the daily allowance is
@@ -338,6 +408,11 @@
 - **Inspector disclosures:** the 2026-10-30 reorganisation files text controls one disclosure deep.
   Round 1 should judge whether that is acceptable interaction cost for colour/digit conversion, or
   whether the Text group should open its first sub-section by default. No change made in round 0.
+- **Canvas manual-runner drift (#23):** the fixture now boots the real professional editor, but
+  `v17_professional_editor_test` compares a rotated object's AABB against an unrotated overlay
+  box and `v0_52_free_canvas_drag_test` expects the selection outline to be hidden during a drag.
+  Both assert the pre-v17 interaction model; changing them would not prove a product fix. They
+  remain manual-only and are marked stuck rather than weakening the assertions.
 - **Push the Dependabot report?** `16fd826` is committed locally but not pushed. Pushing it would
   publish the vulnerability inventory to the public `chore/cleanup` branch; decide whether to push
   it now, after the Brotli/npm follow-ups, or not at all.

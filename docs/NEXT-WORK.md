@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **18** open defects (round-1 P2s fixed in round 2) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
+| Counts in this file | **15** open/owner-blocked defects (7 fixed in rounds 1–3 and phases 4–6; 1 stuck manual runner) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -49,6 +49,10 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 | 2026-11-01 | Baseline matrix attempt — build/bundles/smoke green, layout flake, six phases unrun | `—` | `artifacts/next-work/gates/20261101-081428/gates.log`; rerun `…/20261101-082220/gates.log` |
 | 2026-11-01 | #2 guest-page `HTTP 401` blocks hidden for anonymous visitors | `bbd3b9d` | bundles rebuilt; `ux9_public_sections_test`, `public_guest_feature_runtime_test`, `bulk_guest_import_test` pass |
 | 2026-11-01 | #3 guest-row actions (Edit/Link/QR/Check-in/Remove) delegated again | `12087a8` | handler present in `bundle-guests.js`; guest tests pass; per-action browser tests still owed |
+| 2026-11-01 | #6 D-3 second-tab autosave | `a9c5e51` | `connectServer()` refreshes the server revision while preserving a newer local draft; two-tab regression passes |
+| 2026-11-01 | #12 admin suspension UI coverage | `98d0306` | `users-v2` Suspended/Active badge pinned on the real row; no product change |
+| 2026-11-01 | #14 test data-dir isolation + inline editor runner | `e4a81c0` | autouse `EINVITE_DATA_DIR` restore; `env_isolation_test`; runner boots professional editor v17 |
+| 2026-11-01 | Phase-7/8 close-out: generated manifests, Khmer policy | `3d6ff85`, `f2bfcfe` | full suite **230 passed in 1125.10 s (exit 0)**; final build/compile/bundle checks recorded in `PROGRESS.md` |
 
 ---
 
@@ -63,15 +67,15 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 | 3 | Guests | **Fixed 2026-11-01** (`12087a8`). Row actions **Edit / Link / QR / Check-in / Remove did nothing** — the `[data-edit]` delegation was removed in `92806ad`; the functions and API routes were intact. | fixed | Delegated handler on the stable list container; **still owed:** one browser test per action. | UX-8 / OWNER-QUEUE |
 | 4 | Templates | `templates.html` CLS **0.604**, never fixed. | P2 | Ship the first screen's geometry in markup, as FB-43/44/67/75 did elsewhere. | D-1 |
 | 5 | Guest page | Guest LCP above the 4G target, never fixed. | P2 | Profile with the hero image as the LCP candidate; do not change budgets. | D-2 |
-| 6 | Editor | Second tab on the same invitation renders four objects and **never sets `editorReady`** — likely the draft lock. | P2 | Reproduce on two tabs; make the second tab either take over cleanly or show a read-only state. | D-3 |
+| 6 | Editor | **Fixed 2026-11-01** (`phase-4`). Second tab reused a stale cached revision and its first autosave returned `409 revision_conflict`. | fixed | `connectServer()` refreshes the server row every session; the document is adopted only when no local draft exists. Two-tab regression: `tests/editor_multi_tab_autosave_test.py`. | D-3 |
 | 7 | Shell | Topbar still needs a **swipe at 320/375**; measured budget 487 px with the account chip hidden, two rows exceed the 96 px guard limit. | P2 | Accepted partial. Follow-up option: move theme/language into the workspace launcher menu (markup change). | UX-1 |
 | 8 | Editor | Artboard default fit **251–275 px** at 1440 (target ≥ 300). | P2 | **Blocked:** fit is height-bound; needs +53 px viewport height or a change to `updateCanvasView`, which the work orders forbid. Declare or lift the constraint. | DESIGN-FIX |
 | 9 | Build | Editor route still **1.52 MB** before images. | P2 | Diet arithmetic: ~217 KB must go to reach the 600 ms compile target; deferred candidates total ~148 KB, so the already-shipped split is the working fix. Only a new source split helps. | FB-64/65 |
 | 10 | Editor | Design check has **no Publish menu** to join — `#publishBtn` publishes directly, the check is a standalone topbar button. | P3 | Owner default kept: standalone button. Revisit only if a publish pre-flight is approved. | PW-14.4 |
 | 11 | Editor | PW-14 tier-2 merges 2, 3, 5, 6 (inspector header, invitation styles, recipes, duplicate links) were **not reproduced** or already satisfied when measured 2026-10-31. | P3 | Do not work from the old list; re-measure before touching anything. | PW-14 |
-| 12 | Admin | Users tab **does not show suspension** — reads `/api/admin/users`, which does not select `suspended_at`; `/api/admin/users-v2` carries it. | P3 | Switch the tab to `users-v2` (product change, small). | LT-7.2 |
+| 12 | Admin | **Verified implemented 2026-11-01** (`phase-5`). `pages/admin/users.js` reads `users-v2` and renders the Suspended/Active badge. | fixed | Regression pins the real row and badge: `tests/admin_users_suspension_test.py`; no product change needed. | LT-7.2 |
 | 13 | Ops | A malformed `EINVITE_FIELD_ENCRYPTION_KEY` is a **soft failure** — logs `source=env-invalid` and falls back to the data-dir key, so a typo silently encrypts under a different key. | P3 | Owner choice: refuse to boot in production, or keep the documented fallback. | LT-7.2 |
-| 14 | Tests | Five in-process tests assign `os.environ['EINVITE_DATA_DIR']` without restoring it (`ai_jit_enforcement_test`, `ai_resource_scopes_test`, `security_mfa_recovery_test`, `security_notification_emails_test`, `signed_upload_backend_test`), so a later subprocess can inherit a temp path. | P3 | Save/restore the variable in those five files; no product change. | LT-7.2 |
+| 14 | Tests | **Fixed 2026-11-01** (`phase-6`). An autouse fixture snapshots and restores `EINVITE_DATA_DIR` around every test. | fixed | `tests/env_isolation_test.py` proves the restore; no product change. | LT-7.2 |
 | 15 | Templates | `wd-royal-maroon-gold.json` is **hand-edited** (lead `x/w`, English-name and `&` line-height, groom height) because the generator's 14 TTFs are absent and `build_pack.py` refuses estimated layouts. | P3 | Move the edits into `template-pack/generator/layouts.py` / catalog options, then re-run `tools/build-template-pack.py`. Never hand-edit again. | D-8 |
 | 16 | Print/PDF | `lt_2_6` MAE sits on its **4.5 tolerance** (4.24–4.75 across identical runs; two different rasterizers). | P3 | Owner choice: move the locked tolerance, or compare text boxes only. Do **not** touch it unilaterally. | LT-7.close |
 | 17 | Assets | No icon sprite; 12 display fonts substituted. | P3 | Owner-held: run UX-4 (one inline sprite at `assets/icons.svg` used through `<use>`, 13 pages) and/or buy the 12 OFL families. Budget impact is real. | UX-4 / OWNER-QUEUE |
@@ -80,7 +84,7 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 | 20 | Editor | Headless `set_viewport_size` at 375 crashes the GPU process on a heavy canvas page. | P3 | Reproduce on a real device; acceptance already opens a separate 375 page. No product change unless it reproduces outside headless. | OWNER-QUEUE |
 | 21 | Guest page | **Fixed in round 2** (`122a31a`). A missing `/i/<slug>` returned HTTP **200** while the API returned 404. | fixed | `serve_public` now derives status from the published row and returns 404 with `no-store` + `noindex`; legitimate invitations stay 200. | R1 sweep |
 | 22 | Guest page | **Fixed in round 2** (`82d16a0`). CSP blocked a generated `data:image/svg+xml` fetch on the guest/export path. | fixed | `inlineImages` copies `data:`/`blob:` sources directly instead of fetching them; export produces a valid PNG with no CSP errors. | R1 sweep |
-| 23 | Tests | **Round 1:** `v0_52_free_canvas_drag_test.py` (manual-runner) times out because the inline fixture no longer inlines the bundle that defines `EInviteProfessionalEditor`; the real editor boots. | P2 | Add the defining bundle to `inline_editor_runtime_test` extras; keep the version assertion. | R1 sweep |
+| 23 | Tests | **Fixture fixed 2026-11-01** (`phase-6`); runner now boots `EInviteProfessionalEditor` v17. Remaining manual assertions are **stuck**: the rotation test compares a rotated AABB to an unrotated overlay box, and the canvas-drag test expects the outline hidden during a drag; both assert the pre-v17 model. | stuck | Do not weaken assertions. Re-baseline the visual-contract tests against the current overlay design before making them part of a gate. Not in pytest. | R1 sweep |
 
 ### Baseline suite failures (2026-11-01) — resolved
 
