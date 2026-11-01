@@ -126,7 +126,7 @@
 /* Album */
 .album-upload {
   display: grid;
-  grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 8px;
   margin-bottom: 16px;
   align-items: end;
@@ -140,6 +140,10 @@
 .album-upload input[type=file] {
   width: 100%;
   min-width: 0;
+}
+.album-upload button {
+  grid-column: 1 / -1;
+  width: 100%;
 }
 .album-grid {
   display: grid;
@@ -185,9 +189,6 @@
 @media (max-width: 640px) {
   .album-upload {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .album-upload button {
-    width: 100%;
   }
 }
 
