@@ -79,7 +79,7 @@
 
     function render(polls) {
       if (!polls || !polls.length) {
-        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        section.remove();
         return;
       }
       section.querySelector('.state').innerHTML = polls.map(renderPoll).join('');

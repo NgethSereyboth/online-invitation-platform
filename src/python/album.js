@@ -87,7 +87,7 @@
   }
 
   function enhance(root, opts) {
-    if (!root || !opts || !opts.invitationId) return;
+    if (!root || !opts || !opts.invitationId || opts.albumEnabled === false) return;
     const invitationId = opts.invitationId;
     const guestToken = opts.guestToken || '';
     const accessToken = opts.accessToken || '';

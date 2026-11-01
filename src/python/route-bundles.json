@@ -270,8 +270,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 316876,
-      "styleSha256": "75451b08335caf536ae146c00b2ddf0380c5e2a4996a00a70304af5084031a69",
+      "styleBytes": 317141,
+      "styleSha256": "7ec87eb4b09cd9da9f19760cc9127fdcb64b32df55da516d16021f077a30aa29",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -574,8 +574,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 243276,
-      "scriptSha256": "cbda372c33280706ab67038ec6722ff9affa1d223d8a3d7c9ce7adbe840e69fc",
+      "scriptBytes": 243338,
+      "scriptSha256": "c44ae93b1484cba963849970bf85216866145a955bbce403594eb08c858899cc",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"
@@ -618,8 +618,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 133585,
-      "styleSha256": "bdf87c2ee7b90f2f7a2f6fdee491968a0b70ece3426029a219c33a4482b40bad",
+      "styleBytes": 133850,
+      "styleSha256": "3ca0353026d92f1f856c3a2bd5026657c019781cfa66e6ca7295eaa1eb8210d6",
       "stylesheet": "bundle-public.css"
     },
     "reset.html": {

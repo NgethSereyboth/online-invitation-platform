@@ -1069,7 +1069,7 @@ window.EInviteGuestJourney={enhance};
 
     function render(sheets) {
       if (!sheets || !sheets.length) {
-        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        section.remove();
         return;
       }
       const html = sheets.map(renderSheet).join('');
@@ -1249,7 +1249,7 @@ window.EInviteGuestJourney={enhance};
 
     function render(polls) {
       if (!polls || !polls.length) {
-        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        section.remove();
         return;
       }
       section.querySelector('.state').innerHTML = polls.map(renderPoll).join('');
@@ -1401,7 +1401,7 @@ window.EInviteGuestJourney={enhance};
   }
 
   function enhance(root, opts) {
-    if (!root || !opts || !opts.invitationId) return;
+    if (!root || !opts || !opts.invitationId || opts.albumEnabled === false) return;
     const invitationId = opts.invitationId;
     const guestToken = opts.guestToken || '';
     const accessToken = opts.accessToken || '';
@@ -1853,11 +1853,13 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
 
 
   if(p.invitationId&&slugUsable&&apiAvailable()){
-    const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||''};
+    const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||'',albumEnabled:d.settings?.galleryEnabled!==false};
     try{window.EInviteSignupSheets?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('signup-sheets enhance failed',err)}
     try{window.EInvitePolls?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('polls enhance failed',err)}
     try{window.EInviteAlbum?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('album enhance failed',err)}
     try{window.EInviteEditHistory?.mountBadge(root,{invitationId:p.invitationId,mode,editedAfterSendAt:p.editedAfterSendAt||0})}catch(err){console?.warn?.('edit-history badge failed',err)}
+    const credit=root.querySelector(':scope > .guest-platform-credit, :scope > .guest-studio-brand');
+    if(credit)root.append(credit);
   }
 }).catch(()=>root.innerHTML='<h1>Invitation unavailable</h1><p>This invitation has not been published.</p>');
 

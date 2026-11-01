@@ -89,7 +89,7 @@
 
     function render(sheets) {
       if (!sheets || !sheets.length) {
-        section.querySelector('.state').innerHTML = `<p class="muted">${langText('empty', mode)}</p>`;
+        section.remove();
         return;
       }
       const html = sheets.map(renderSheet).join('');

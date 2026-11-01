@@ -126,11 +126,13 @@ try{const r=await fetch('/api/public/'+encodeURIComponent(slug)+'/wishes',{metho
   // album) and the "edited after sending" badge; the server-backed three only when the page
   // is bound to a published invitation (the static seed used to produce three 404s).
   if(p.invitationId&&slugUsable&&apiAvailable()){
-    const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||''};
+    const guestFeatureOpts={invitationId:p.invitationId,mode,guestToken:guestToken||'',accessToken:publicAccessToken||'',albumEnabled:d.settings?.galleryEnabled!==false};
     try{window.EInviteSignupSheets?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('signup-sheets enhance failed',err)}
     try{window.EInvitePolls?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('polls enhance failed',err)}
     try{window.EInviteAlbum?.enhance(root,guestFeatureOpts)}catch(err){console?.warn?.('album enhance failed',err)}
     try{window.EInviteEditHistory?.mountBadge(root,{invitationId:p.invitationId,mode,editedAfterSendAt:p.editedAfterSendAt||0})}catch(err){console?.warn?.('edit-history badge failed',err)}
+    const credit=root.querySelector(':scope > .guest-platform-credit, :scope > .guest-studio-brand');
+    if(credit)root.append(credit);
   }
 }).catch(()=>root.innerHTML='<h1>Invitation unavailable</h1><p>This invitation has not been published.</p>');
 
