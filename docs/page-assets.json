@@ -66,7 +66,7 @@
       ]
     },
     "dashboard.html": {
-      "bytes": 646448,
+      "bytes": 646465,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -142,7 +142,7 @@
       ]
     },
     "public.html": {
-      "bytes": 382784,
+      "bytes": 382801,
       "scriptCount": 2,
       "scripts": [
         "backend-mode.js",

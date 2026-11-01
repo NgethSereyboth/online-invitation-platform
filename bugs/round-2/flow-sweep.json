@@ -1,0 +1,248 @@
+{
+ "checks": [
+  {
+   "name": "register",
+   "ok": true,
+   "detail": "registered"
+  },
+  {
+   "name": "dashboard empty state",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "guests empty state",
+   "ok": true,
+   "detail": "<Response url='http://127.0.0.1:45825/guests.html' request=<Request url='http://127.0.0.1:45825/guests.html' method='GET'>>"
+  },
+  {
+   "name": "responses empty state",
+   "ok": true,
+   "detail": "<Response url='http://127.0.0.1:45825/responses.html' request=<Request url='http://127.0.0.1:45825/responses.html' method='GET'>>"
+  },
+  {
+   "name": "analytics empty state",
+   "ok": true,
+   "detail": "<Response url='http://127.0.0.1:45825/analytics.html' request=<Request url='http://127.0.0.1:45825/analytics.html' method='GET'>>"
+  },
+  {
+   "name": "published slug 200",
+   "ok": true,
+   "detail": 200
+  },
+  {
+   "name": "missing slug 404",
+   "ok": true,
+   "detail": 404
+  },
+  {
+   "name": "public 360ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 360 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 360 khmer digits",
+   "ok": true,
+   "detail": "khmer digits"
+  },
+  {
+   "name": "public 390ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 390 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 390 khmer digits",
+   "ok": true,
+   "detail": "khmer digits"
+  },
+  {
+   "name": "public 768ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 768 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1024ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 1024 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1280ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 1280 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1440ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 1440 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1440 khmer digits",
+   "ok": true,
+   "detail": "khmer digits"
+  },
+  {
+   "name": "unconfigured guest features hidden",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "single platform credit",
+   "ok": true,
+   "detail": 1
+  },
+  {
+   "name": "rsvp native validation",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "rsvp submit",
+   "ok": true,
+   "detail": "thank-you"
+  },
+  {
+   "name": "template filter narrows",
+   "ok": true,
+   "detail": {
+    "all": 36,
+    "royal": 1
+   }
+  },
+  {
+   "name": "editor pages pane",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "editor objects present",
+   "ok": true,
+   "detail": 4
+  },
+  {
+   "name": "editor drag",
+   "ok": true,
+   "detail": {
+    "before": "8%",
+    "after": "16%"
+   }
+  },
+  {
+   "name": "editor resize",
+   "ok": true,
+   "detail": {
+    "before": {
+     "w": "84%",
+     "h": "13.0332%"
+    },
+    "after": {
+     "w": "91.9883%",
+     "h": "15.3822%"
+    }
+   }
+  },
+  {
+   "name": "editor rotate",
+   "ok": true,
+   "detail": {
+    "before": 0,
+    "after": 90
+   }
+  },
+  {
+   "name": "editor multi-select",
+   "ok": true,
+   "detail": {
+    "selected": 2,
+    "outlined": 2
+   }
+  },
+  {
+   "name": "editor undo/redo",
+   "ok": true,
+   "detail": {
+    "changed": true,
+    "restored": true
+   }
+  },
+  {
+   "name": "editor add text",
+   "ok": true,
+   "detail": {
+    "before": 4,
+    "after": 5
+   }
+  },
+  {
+   "name": "save + reload",
+   "ok": true,
+   "detail": {
+    "objects": 5,
+    "title": "[Groom name] & [Bride name]"
+   }
+  },
+  {
+   "name": "export png",
+   "ok": true,
+   "detail": {
+    "bytes": 40937,
+    "png": true
+   }
+  },
+  {
+   "name": "export console clean",
+   "ok": true,
+   "detail": "clean"
+  },
+  {
+   "name": "editor 390 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "editor 390 toolbar",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "wrong password error",
+   "ok": true,
+   "detail": "Skip to content\nOKID-Online Khmer Invitation Design\n\u2600\nEnglish\n\u1781\u17d2\u1798\u17c2\u179a\n\nOKID-ONLINE KHMER INVITATION DESIGN\n\nDESIGN INVITAT"
+  },
+  {
+   "name": "signed-out editor redirects",
+   "ok": true,
+   "detail": "http://127.0.0.1:45825/dashboard.html?next=%2Finvitations%2F0e0f8bc3-f1d9-4f96-87d1-8305e6717b9c%2Feditor"
+  }
+ ],
+ "console_errors": []
+}

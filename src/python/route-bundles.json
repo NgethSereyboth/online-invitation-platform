@@ -270,8 +270,8 @@
           "icons.css"
         ]
       },
-      "styleBytes": 317141,
-      "styleSha256": "7ec87eb4b09cd9da9f19760cc9127fdcb64b32df55da516d16021f077a30aa29",
+      "styleBytes": 317158,
+      "styleSha256": "b9426ef18a536df3b0a0657cb65f16105a7c14865e6b078835aa32fbd1187213",
       "stylesheet": "bundle-dashboard.css"
     },
     "designer.html": {
@@ -618,8 +618,8 @@
           "app-shell.css"
         ]
       },
-      "styleBytes": 133850,
-      "styleSha256": "3ca0353026d92f1f856c3a2bd5026657c019781cfa66e6ca7295eaa1eb8210d6",
+      "styleBytes": 133867,
+      "styleSha256": "32c7f20aaa38a5ac860ed7546e448572e44ac80288213eeed84af6534448d87c",
       "stylesheet": "bundle-public.css"
     },
     "reset.html": {

@@ -10,19 +10,53 @@
 - **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
   **0 failed checks**; final full suite **223 passed, 2 warnings in 883.42 s (exit 0)**; one P1
   fixed (BUG-R1-1) and proven live, two P2s logged (soft 404, CSP console), one stale
-  manual-runner fixture marked stuck. Findings: `bugs/round-1/FINDINGS.md`.
+  manual-runner fixture marked stuck. Findings: `bugs/round-1/FINDINGS.md`. The two P2s were
+  fixed in round 2.
+- **Round 2 (live sweep):** 120 live route/viewport records + 42 authenticated local checks,
+  **0 failed checks / 0 application console errors**; the three new P2s are fixed and live:
+  empty guest-feature panels removed, album upload row reflowed, duplicate platform credit
+  removed. PNG export remains valid (39,023 B); findings and evidence are in
+  `bugs/round-2/`. Retested live 200/404 contract, signed-out redirect, Khmer digits and all
+  six widths.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
-- **Live site:** production redeployed 2026-11-01 02:27 UTC at
-  `https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page` and `published: true`. The served
-  `bundle-index-2.js` SHA-256 matches the local build (`2207b4a8…d021fd04`), the page returns 200 and
-  `/api/health` returns 200 through the Worker. `einvite-app` and `einvite-tunnel` are active; preview
-  remains on its 2026-10-31 build.
+- **Live site:** production redeployed 2026-11-01 04:15 UTC at
+  `https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page` and `published: true` (deploy
+  `7265e709-7c1a-4af1-9d20-c60d98b092a5`). Served `bundle-public.js` SHA-256 is
+  `c44ae93b…858899cc` and served `bundle-public.css` is `32c7f20a…4448d87c`; both match
+  `artifacts/sites-public`. `/i/qa-ui-sweep-wedding` returns 200, `/i/<missing>` returns 404 and
+  `/api/health` returns 200 through the Worker. `einvite-app` and `einvite-tunnel` are active;
+  preview remains on its 2026-10-31 build.
 - **Baseline already measured:** build/bundles/smoke green; layout grazed 600 ms once and passed on a
   quiet rerun; pytest profile before the fixes was **5 failed / 218 passed** (15:01). Full log under
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — round 2: guest-page P2s fixed, deployed and re-swept
+- Live matrix: 20 routes × 6 widths = **120 records**, screenshots per state; **0 horizontal
+  overflow**, no unexpected statuses. Expected 404s account for the 18 non-beacon console errors
+  (missing-slug document + API, missing route). The host-injected Cloudflare beacon remains the
+  only third-party CSP violation.
+- Authenticated flow: **42 checks, 0 failed, 0 application console errors** — RSVP, Khmer digits,
+  template filter, editor add/drag/resize/rotate/multi-select/undo/redo/save/reload, signed-out
+  redirect, wrong-password error, and a 39,023 B PNG export with the PNG signature.
+- **BUG-R2-1 (P2, fixed `0604f2c`):** every guest page mounted sign-up, poll and album panels
+  before knowing whether the host had data. Empty sheets/polls now remove themselves; the album
+  is gated by the gallery setting; the branded credit is reordered after the mounted panels.
+- **BUG-R2-2 (P2, fixed `ef2f52a` + `33b43eb`):** the album form's fixed grid clipped “Choose
+  photo” and collapsed the caption. Auto-fit columns stack the fields in the narrow card, the
+  button owns a full row, and `Load more[hidden]` is actually hidden. Gallery-enabled fixture
+  proves both fields are usable at 390 and 1440.
+- **BUG-R2-3 (P2, fixed `ef78d67`):** `public.html` shipped a static credit while the renderer
+  appended another. The static duplicate is gone; the live page has exactly one credit.
+- **Not kept:** the apparent blank design pages are deferred reveal animations; scrolling each
+  page into view shows all text at opacity 1. The renderer was left unchanged.
+- Gates: `build.py all --check` → `MIRROR_CHECK_PASSED`; `build.py bundles --check` →
+  `ROUTE_BUNDLE_CHECK_PASSED`; `compileall` exit 0. Production deploy `7265e709` published
+  04:15:09Z; served JS/CSS hashes match the local bundle.
+- Final full suite: **223 passed, 2 warnings in 1033.18 s (exit 0)**. The warnings are the known
+  teardown-time `sqlite3.OperationalError` on a worker thread; no test failed.
 
 ### 2026-11-01 — round 1: live sweep and P1 fix
 - Live production matrix: 19 routes × 6 widths, 114 screenshots, **zero horizontal overflow**,
