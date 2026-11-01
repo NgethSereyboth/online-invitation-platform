@@ -2,26 +2,26 @@
 
 ## Status and scope
 
-The P1–P6 source implementation follows the [engineering brief](CANVA-SMOOTHNESS-BRIEF.md). **Interaction, performance, visual and regression acceptance is deferred at the user's request.** Source implementation is not a verified smoothness or performance claim. No phase commits have been made.
+The P1–P6 source implementation follows the [engineering brief](../HISTORY.md). **Interaction, performance, visual and regression acceptance is deferred at the user's request.** Source implementation is not a verified smoothness or performance claim. No phase commits have been made.
 
-This remains a vanilla JavaScript, DOM/CSS editor. No rendering framework, GPU renderer, worker pool or runtime dependency was added. Public renderer code was not changed. The implementation ledger and historical check results are in [the motion ledger](../artifacts/canvas-motion/ledger.md).
+This remains a vanilla JavaScript, DOM/CSS editor. No rendering framework, GPU renderer, worker pool or runtime dependency was added. Public renderer code was not changed. The implementation ledger and historical check results are in [the motion ledger](../../artifacts/canvas-motion/ledger.md).
 
 ## Mechanisms and ownership
 
 | Mechanism | Source and responsibility |
 |---|---|
-| Frame batching | [`editor-pro.js`](../src/js/editor-pro.js) exposes `EInviteMotion.createFrameBatcher(reduce, commit)`. Wheel deltas sum and retain the latest cursor; pointer/slider batches retain the latest value. `flush()` cancels the scheduled frame before applying the final value. Visibility changes flush pending input. |
-| Viewport | [`index.html`](../src/html/index.html) contains `#canvasViewport > #stageTransform > #stage`. `editor-pro.js` owns `view = {x, y, zoom}` and the outer transform writer. Existing percent-positioned objects remain inside the stage. [`editor-pro.css`](../src/css/editor-pro.css) promotes only the outer moving layer. |
+| Frame batching | [`editor-pro.js`](../../src/js/editor-pro.js) exposes `EInviteMotion.createFrameBatcher(reduce, commit)`. Wheel deltas sum and retain the latest cursor; pointer/slider batches retain the latest value. `flush()` cancels the scheduled frame before applying the final value. Visibility changes flush pending input. |
+| Viewport | [`index.html`](../../src/html/index.html) contains `#canvasViewport > #stageTransform > #stage`. `editor-pro.js` owns `view = {x, y, zoom}` and the outer transform writer. Existing percent-positioned objects remain inside the stage. [`editor-pro.css`](../../src/css/editor-pro.css) promotes only the outer moving layer. |
 | Zoom | `EInviteMotion.viewport` provides `setZoom`, `setView`, `fit`, `clientToWorld`, cached geometry and gesture boundaries. `EInviteCanvasViewController` preserves the existing zoom API. Zoom is clamped to 0.1–5; slider positions 0–40 map through `log2(zoom + 10)`. |
-| Drag and undo | [`professional-editor.js`](../src/js/professional-editor.js) owns selection move/resize/rotate; [`direct-manipulation.js`](../src/js/direct-manipulation.js) owns inline/crop interactions and the reusable pointer helper. A 3-screen-pixel dead zone precedes transform transactions. [`app.js`](../src/js/app.js) supplies begin/commit/cancel undo transactions and 500 ms nudge coalescing. |
+| Drag and undo | [`professional-editor.js`](../../src/js/professional-editor.js) owns selection move/resize/rotate; [`direct-manipulation.js`](../../src/js/direct-manipulation.js) owns inline/crop interactions and the reusable pointer helper. A 3-screen-pixel dead zone precedes transform transactions. [`app.js`](../../src/js/app.js) supplies begin/commit/cancel undo transactions and 500 ms nudge coalescing. |
 | Snapping | `EInviteMotion.snap.resolve` is pure world-coordinate math with page, sibling, grid, guide and equal-spacing candidates. Tolerance is `6 / zoom` world pixels; a previous snap has a 1.5× release threshold. Sibling candidates are capped at 100. Alt temporarily bypasses snapping. |
 | Measurement chrome | `#canvasMeasurements` is a sibling of the moving layer, outside exported stage content. It renders screen-width hairlines, rulers, guides, margin and distance labels. Guide edits and margin settings use document transactions. New precision controls include English and Khmer strings. |
 | Wheel and pan | Ctrl/Cmd-wheel normalizes pixel/line/page units (1/40/800), sums deltas per frame and applies `2 ** (-0.01 * clamp(delta, -25, 25))`. Plain wheel is left to native scrolling. Space/middle/hand-tool pan writes screen-space translation. Touch-background pan can continue with bounded inertia. |
 | Reduced motion | The media query disables programmatic tweens and touch inertia without removing zoom or pan controls. Wheel edge-paging remains **off**. |
 | Decode-ahead | `editor-pro.js` observes stage images and warms current/next enabled design-page images/backgrounds during idle time. Decode work pauses while hidden or gesturing. See the resource limits below. |
-| Collaboration | [`collaboration-studio.js`](../src/js/collaboration-studio.js) owns the existing V31 network lifecycle separately from the editor bundle. Polling is serialized, jittered and backed off; focus/visibility resume drains queued edits before polling. Presence requests are serialized too. |
+| Collaboration | [`collaboration-studio.js`](../../src/js/collaboration-studio.js) owns the existing V31 network lifecycle separately from the editor bundle. Polling is serialized, jittered and backed off; focus/visibility resume drains queued edits before polling. Presence requests are serialized too. |
 
-Other continuous-input integrations remain in [`editor-core.js`](../src/js/editor/editor-core.js), [`canvas-plus.js`](../src/js/canvas-plus.js) and [`photo-editor.js`](../src/js/photo-editor.js). [`editor-command-system.js`](../src/js/editor-command-system.js) routes canonical keyboard commands.
+Other continuous-input integrations remain in [`editor-core.js`](../../src/js/editor/editor-core.js), [`canvas-plus.js`](../../src/js/canvas-plus.js) and [`photo-editor.js`](../../src/js/photo-editor.js). [`editor-command-system.js`](../../src/js/editor-command-system.js) routes canonical keyboard commands.
 
 ## Coordinate convention
 
@@ -97,16 +97,16 @@ python3 build.py all
 
 The final generation run returned exit 0 and the affected source/generated JavaScript passed `node --check`. The served `bundle-index.js`, its CSS, collaboration module and editor HTML match their source artifacts; the running local server returns the updated route. This is generation/syntax/served-byte evidence only, not an interaction test.
 
-**Known pre-existing generator issue:** `build_editor_bundle.py` and `build_page_manifests.py` calculate their server destination as `src/python/build/`, not `src/python/`. After generation the server's standalone `editor-suite.js`/CSS remain stale and its `page-assets.json` is missing. The active editor route uses the correctly generated `bundle-index.js`/CSS; this does not make the other outputs correct. The artifact audit caught this despite the successful build exit. No baseline generator repair was made under the no-unrelated-fixes constraint. Details: [delivery inspection](../artifacts/canvas-motion/P6/delivery-inspection.json).
+**Known pre-existing generator issue:** `build_editor_bundle.py` and `build_page_manifests.py` calculate their server destination as `src/python/build/`, not `src/python/`. After generation the server's standalone `editor-suite.js`/CSS remain stale and its `page-assets.json` is missing. The active editor route uses the correctly generated `bundle-index.js`/CSS; this does not make the other outputs correct. The artifact audit caught this despite the successful build exit. No baseline generator repair was made under the no-unrelated-fixes constraint. Details: [delivery inspection](../../artifacts/canvas-motion/P6/delivery-inspection.json).
 
 When testing resumes, resolve that build-output blocker with authorization, then run the ordered build/static gates from the brief, followed by interaction, performance and visual checks. Compare pytest failures against the recorded initial identities, not an old roadmap total. Do not repair unrelated baseline failures or regenerate visual baselines just to make checks green.
 
 Existing tooling:
 
-- [`canvas_motion_contract_test.py`](../tests/canvas_motion_contract_test.py): initial P1 built-symbol and deterministic batcher checks.
-- [`canvas_motion_playwright.py`](../tests/canvas_motion_playwright.py): initial P1 burst check; it still requires expansion/adaptation for P2–P6.
-- [`canvas-motion-perf.mjs`](../tools/canvas-motion-perf.mjs): three-run wheel/pan/snap/crop harness; audit its stage-transform instrumentation before accepting P2–P6 results.
-- [`canvas-motion-visual.py`](../tools/canvas-motion-visual.py): P1 comparison against initial source; later phase coverage is pending.
-- [`visual_regression.py`](../tests/visual_regression.py): existing application-wide visual runner.
+- [`canvas_motion_contract_test.py`](../../tests/canvas_motion_contract_test.py): initial P1 built-symbol and deterministic batcher checks.
+- [`canvas_motion_playwright.py`](../../tests/canvas_motion_playwright.py): initial P1 burst check; it still requires expansion/adaptation for P2–P6.
+- [`canvas-motion-perf.mjs`](../../tools/canvas-motion-perf.mjs): three-run wheel/pan/snap/crop harness; audit its stage-transform instrumentation before accepting P2–P6 results.
+- [`canvas-motion-visual.py`](../../tools/canvas-motion-visual.py): P1 comparison against initial source; later phase coverage is pending.
+- [`visual_regression.py`](../../tests/visual_regression.py): existing application-wide visual runner.
 
 Still required: cursor invariance ≤1 px; ≤one commit per elapsed frame plus boundary allowance; dead-zone/one-step undo/capture/Escape behavior; zoom-scaled snap tolerance; no gesture layout shifts; keyboard parity; reduced motion; hidden/focus/retry/upload races; decode/cache cleanup; Khmer IME; route/script/byte budgets; three saved representative perf runs and visual evidence. No acceptance result for those checks is asserted here.
