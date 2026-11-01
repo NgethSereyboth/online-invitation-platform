@@ -7,6 +7,9 @@
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
   baseline failures are closed. Remaining Step 1 work is the product backlog in `NEXT-WORK.md`
   (P0/P1/P2), not test triage.
+- **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
+  **0 failed checks**; one P1 fixed (BUG-R1-1), two P2s logged (soft 404, CSP console),
+  one stale manual-runner fixture marked stuck. Findings: `bugs/round-1/FINDINGS.md`.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
 - **Live site:** production redeployed 2026-11-01 02:27 UTC at
@@ -19,6 +22,22 @@
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — round 1: live sweep and P1 fix
+- Live production matrix: 19 routes × 6 widths, 114 screenshots, **zero horizontal overflow**,
+  no unlabelled inputs, no unnamed buttons, no missing alt text. Only the deliberate 404 and the two
+  route-level findings produced console/network errors.
+- Authenticated local flow (same source, production cannot exercise writes): **31 checks, 0 failed** —
+  RSVP, Khmer digits, template filter 36→1, editor Pages pane, save/reload, 1× PNG export (41,042 B),
+  390 editor with no overflow, wrong-password error, signed-out redirect.
+- **BUG-R1-1 (P1, fixed):** signed-out editor navigations showed raw JSON. HTML `Accept` now gets a
+  302 to `/dashboard.html?next=…`; API clients still get 401 (`v12` passes).
+- **BUG-R1-2 (P2, open):** missing slug renders "Invitation unavailable" but returns HTTP 200.
+- **BUG-R1-3 (P2, open):** CSP blocks a generated `data:image/svg+xml` fetch (two console errors;
+  export still valid).
+- **BUG-R1-4 (tooling, stuck):** `v0_52_free_canvas_drag_test` times out because the inline fixture
+  no longer loads the bundle defining `EInviteProfessionalEditor`; real editor boots in the flow.
+- Known defect #6 (second concurrent editor session) reproduced and is not re-scored.
 
 ### 2026-11-01 — verification and production deploy
 - Full suite: **223 passed, 2 warnings in 866.15 s** (`artifacts/verify/pytest-full.log`), exit 0.

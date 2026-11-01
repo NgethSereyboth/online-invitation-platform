@@ -207,3 +207,6 @@ tmp/
 scratch/
 *.bak
 *.orig
+
+# Round 1 raw sweep output (148 regenerable screenshots); key evidence is committed.
+bugs/round-1/shots/

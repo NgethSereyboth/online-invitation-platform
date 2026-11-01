@@ -1,0 +1,171 @@
+{
+ "checks": [
+  {
+   "name": "register",
+   "ok": true,
+   "detail": "registered"
+  },
+  {
+   "name": "dashboard empty state",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "guests empty state",
+   "ok": true,
+   "detail": "<Response url='http://127.0.0.1:58109/guests.html' request=<Request url='http://127.0.0.1:58109/guests.html' method='GET'>>"
+  },
+  {
+   "name": "responses empty state",
+   "ok": true,
+   "detail": "<Response url='http://127.0.0.1:58109/responses.html' request=<Request url='http://127.0.0.1:58109/responses.html' method='GET'>>"
+  },
+  {
+   "name": "analytics empty state",
+   "ok": true,
+   "detail": "<Response url='http://127.0.0.1:58109/analytics.html' request=<Request url='http://127.0.0.1:58109/analytics.html' method='GET'>>"
+  },
+  {
+   "name": "public 360ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 360 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 360 khmer digits",
+   "ok": true,
+   "detail": "khmer digits"
+  },
+  {
+   "name": "public 390ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 390 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 390 khmer digits",
+   "ok": true,
+   "detail": "khmer digits"
+  },
+  {
+   "name": "public 768ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 768 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1024ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 1024 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1280ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 1280 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1440ou hero",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "public 1440 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "public 1440 khmer digits",
+   "ok": true,
+   "detail": "khmer digits"
+  },
+  {
+   "name": "rsvp native validation",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "rsvp submit",
+   "ok": true,
+   "detail": "thank-you"
+  },
+  {
+   "name": "template filter narrows",
+   "ok": true,
+   "detail": {
+    "all": 36,
+    "royal": 1
+   }
+  },
+  {
+   "name": "editor pages pane",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "editor objects present",
+   "ok": true,
+   "detail": 4
+  },
+  {
+   "name": "save + reload",
+   "ok": true,
+   "detail": {
+    "objects": 4,
+    "title": "[Groom name] & [Bride name]"
+   }
+  },
+  {
+   "name": "export png",
+   "ok": true,
+   "detail": {
+    "bytes": 41042
+   }
+  },
+  {
+   "name": "editor 390 no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "editor 390 toolbar",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "wrong password error",
+   "ok": true,
+   "detail": "Skip to content\nOKID-Online Khmer Invitation Design\n\u2600\nEnglish\n\u1781\u17d2\u1798\u17c2\u179a\n\nOKID-ONLINE KHMER INVITATION DESIGN\n\nDESIGN INVITAT"
+  },
+  {
+   "name": "signed-out editor redirects",
+   "ok": true,
+   "detail": "http://127.0.0.1:58109/dashboard.html?next=%2Finvitations%2Ff9e9ced2-1d8c-4bdf-ae8f-929cd82ca0ec%2Feditor"
+  }
+ ],
+ "console_errors": [
+  "CONSOLE:Connecting to 'data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%239d4555'/%3E%3C/svg%3E' violates the following Content Security Policy directive: \"connect-src 'self'\". Th",
+  "CONSOLE:Fetch API cannot load data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%239d4555'/%3E%3C/svg%3E. Refused to connect because it violates the document's Content Security Poli"
+ ]
+}

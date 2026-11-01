@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **18** open defects (suite baseline green: 223 passed, 2026-11-01) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
+| Counts in this file | **20** open defects (suite baseline green: 223 passed, 2026-11-01) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -74,6 +74,9 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 | 18 | Repo | **15 generated PNGs tracked** under `src/python/data/social-cache/` — runtime state that should never be committed. | P3 | `git rm --cached` in one commit (they stay on disk). Needs a yes. | OWNER-QUEUE |
 | 19 | API | Per-key **1000/h limit wired but not flood-tested**; API-key scope is route-level, not per invitation. | P3 | Owner: accept as documented, or commission the 1 000-request proof / narrower scopes. | LT-7.2 |
 | 20 | Editor | Headless `set_viewport_size` at 375 crashes the GPU process on a heavy canvas page. | P3 | Reproduce on a real device; acceptance already opens a separate 375 page. No product change unless it reproduces outside headless. | OWNER-QUEUE |
+| 21 | Guest page | **Round 1:** a missing `/i/<slug>` renders "Invitation unavailable" but returns HTTP **200**; the API 404 is only in the console. | P2 | Return 404 with the same shell from `serve_public`; confirm cache/soft-delete policy first. | R1 sweep |
+| 22 | Guest page | **Round 1:** CSP blocks a generated `data:image/svg+xml` fetch on the guest/export path (two console errors); export output remains valid. | P2 | Pass the Blob/ObjectURL directly instead of fetching the data URI; do not widen `connect-src`. | R1 sweep |
+| 23 | Tests | **Round 1:** `v0_52_free_canvas_drag_test.py` (manual-runner) times out because the inline fixture no longer inlines the bundle that defines `EInviteProfessionalEditor`; the real editor boots. | P2 | Add the defining bundle to `inline_editor_runtime_test` extras; keep the version assertion. | R1 sweep |
 
 ### Baseline suite failures (2026-11-01) — resolved
 

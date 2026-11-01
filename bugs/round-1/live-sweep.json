@@ -1,0 +1,7709 @@
+[
+ {
+  "route": "/",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+  "shot": "shots/live-root-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 800,
+   "rightEdge": [
+    {
+     "el": "#workflowV5Focus",
+     "tag": "BUTTON",
+     "right": 368
+    }
+   ],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": "#editorPageHeading.sr-only",
+     "tag": "H1",
+     "text": "Invitation editor",
+     "scroll": 220,
+     "client": 1
+    },
+    {
+     "el": ".page",
+     "tag": "SPAN",
+     "text": "Main hero canvas",
+     "scroll": 95,
+     "client": 50
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Invitation editor",
+    "Design the invitation. Run the event."
+   ]
+  }
+ },
+ {
+  "route": "/privacy",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/privacy",
+  "shot": "shots/live-privacy-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Privacy \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 4253,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": "",
+     "tag": "STRONG",
+     "text": "OKID-Online Khmer Invitation DesignOKID\u17a2\u17bc\u1781\u17c1\u17a2\u17b6\u1799\u178c\u17b8",
+     "scroll": 43,
+     "client": 36
+    },
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 108,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 44,
+     "h": 22
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 128,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Privacy"
+   ]
+  }
+ },
+ {
+  "route": "/templates",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/templates",
+  "shot": "shots/live-templates-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Template Studio \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 6213,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search templates and designs\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1782\u17c6\u179a\u17bc \u1793\u17b7\u1784\u1780\u17b6\u179a\u179a\u1785\u1793\u17b6",
+     "scroll": 226,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template source\u1794\u17d2\u179a\u1797\u1796\u1782\u17c6\u179a\u17bc",
+     "scroll": 125,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template category\u1794\u17d2\u179a\u1797\u17c1\u1791\u1782\u17c6\u179a\u17bc",
+     "scroll": 141,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 36,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    },
+    {
+     "el": "#studioFavorites",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Template Studio"
+   ]
+  }
+ },
+ {
+  "route": "/public",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/public",
+  "shot": "shots/live-public-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation \u2014 OKID",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 2843,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 108,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": []
+  }
+ },
+ {
+  "route": "/verify",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/verify",
+  "shot": "shots/live-verify-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Verify email \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 115,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Email verification\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u17a2\u17ca\u17b8\u1798\u17c2\u179b"
+   ]
+  }
+ },
+ {
+  "route": "/reset",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/reset",
+  "shot": "shots/live-reset-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Reset password \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 95,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Reset your password\u1780\u17c6\u178e\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17a1\u17be\u1784\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/billing",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/billing",
+  "shot": "shots/live-billing-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Plans & Usage \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Plans unavailable\u1780\u1789\u17d2\u1785\u1794\u17cb\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/admin",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/admin",
+  "shot": "shots/live-admin-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Administration \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Administrator access required\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179f\u17b7\u1791\u17d2\u1792\u17b7\u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784"
+   ]
+  }
+ },
+ {
+  "route": "/dashboard",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/dashboard",
+  "shot": "shots/live-dashboard-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "My Invitations \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 101,
+     "h": 18
+    },
+    {
+     "el": "",
+     "w": 44,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Welcome back\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd\u178f\u17d2\u179a\u17a1\u1794\u17cb\u1798\u1780\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/designer",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/designer",
+  "shot": "shots/live-designer-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Designer Workspace \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Designer Workspace unavailable\u1780\u1793\u17d2\u179b\u17c2\u1784\u1792\u17d2\u179c\u17be\u1780\u17b6\u179a\u17a2\u17d2\u1793\u1780\u179a\u1785\u1793\u17b6\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/guests",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/guests",
+  "shot": "shots/live-guests-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Guest List \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 1632,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Guest name\u1788\u17d2\u1798\u17c4\u17c7\u1797\u17d2\u1789\u17c0\u179c",
+     "scroll": 78,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Phone number\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 95,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Email\u17a2\u17ca\u17b8\u1798\u17c2\u179b",
+     "scroll": 34,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Group\u1780\u17d2\u179a\u17bb\u1798",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Household\u1782\u17d2\u179a\u17bd\u179f\u17b6\u179a",
+     "scroll": 69,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Table\u178f\u17bb",
+     "scroll": 36,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Seat\u17a2\u17b6\u179f\u1793\u17c8",
+     "scroll": 30,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Tags (comma separated)\u179f\u17d2\u179b\u17b6\u1780 (\u1795\u17d2\u178f\u17b6\u1785\u17cb\u178a\u17c4\u1799\u1780\u17d2\u1794\u17c0\u179f)",
+     "scroll": 165,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search name or phone\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1788\u17d2\u1798\u17c4\u17c7\u17ac\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 171,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 90,
+     "client": 1
+    },
+    {
+     "el": ".empty.final-empty-state",
+     "tag": "P",
+     "text": "No guests match this filter.\u1782\u17d2\u1798\u17b6\u1793\u1797\u17d2\u1789\u17c0\u179c\u178e\u17b6\u1798\u17bd\u1799\u178f\u17d2\u179a\u17bc\u179c\u1793\u17b9\u1784\u178f\u1798\u17d2\u179a\u1784\u1793\u17c1\u17c7\u1791",
+     "scroll": 434,
+     "client": 310
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    },
+    {
+     "el": "#selectAllGuests",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Guest list\u1794\u1789\u17d2\u1787\u17b8\u1797\u17d2\u1789\u17c0\u179c"
+   ]
+  }
+ },
+ {
+  "route": "/responses",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/responses",
+  "shot": "shots/live-responses-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Responses \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 988,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search responses\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794",
+     "scroll": 134,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 90,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Responses & wishes"
+   ]
+  }
+ },
+ {
+  "route": "/analytics",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/analytics",
+  "shot": "shots/live-analytics-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation Analytics \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Invitation Analytics\u1780\u17b6\u179a\u179c\u17b7\u1797\u17b6\u1782\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/materials",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/materials",
+  "shot": "shots/live-materials-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Material Library \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 1022,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search materials\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 125,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Material type\u1794\u17d2\u179a\u1797\u17c1\u1791\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 98,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Folder\u1790\u178f",
+     "scroll": 47,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Sort by\u178f\u1798\u17d2\u179a\u17c0\u1794\u178f\u17b6\u1798",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Material Library"
+   ]
+  }
+ },
+ {
+  "route": "/checkin",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/checkin",
+  "shot": "shots/live-checkin-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Event Check-in \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 800,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 108,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Guest check-in"
+   ]
+  }
+ },
+ {
+  "route": "/account",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/account",
+  "shot": "shots/live-account-360.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Account \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 827,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 8,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Account settings\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1782\u178e\u1793\u17b8"
+   ]
+  }
+ },
+ {
+  "route": "/missing-route-round-1",
+  "width": 360,
+  "height": 800,
+  "status": 404,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+  "shot": "shots/live-missing-route-round-1-360.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 800,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/i/missing-slug-round-1",
+  "width": 360,
+  "height": 800,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-1",
+  "shot": "shots/live-i-missing-slug-round-1-360.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
+   },
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [
+   {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "why": "csp"
+   }
+  ],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "Invitation",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 931,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 108,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": [
+    "Invitation unavailable"
+   ]
+  }
+ },
+ {
+  "route": "/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "width": 360,
+  "height": 800,
+  "status": 401,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "shot": "shots/live-invitations-00000000-0000-0000-0000-000000000000-editor-360.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 401 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+    "status": 401
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 360,
+   "clientWidth": 360,
+   "docHeight": 800,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+  "shot": "shots/live-root-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 844,
+   "rightEdge": [
+    {
+     "el": "#workflowV5Focus",
+     "tag": "BUTTON",
+     "right": 428
+    }
+   ],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": "#editorPageHeading.sr-only",
+     "tag": "H1",
+     "text": "Invitation editor",
+     "scroll": 232,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Invitation editor",
+    "Design the invitation. Run the event."
+   ]
+  }
+ },
+ {
+  "route": "/privacy",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/privacy",
+  "shot": "shots/live-privacy-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Privacy \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 3970,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 94,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 128,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Privacy"
+   ]
+  }
+ },
+ {
+  "route": "/templates",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/templates",
+  "shot": "shots/live-templates-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Template Studio \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 6294,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search templates and designs\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1782\u17c6\u179a\u17bc \u1793\u17b7\u1784\u1780\u17b6\u179a\u179a\u1785\u1793\u17b6",
+     "scroll": 226,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template source\u1794\u17d2\u179a\u1797\u1796\u1782\u17c6\u179a\u17bc",
+     "scroll": 125,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template category\u1794\u17d2\u179a\u1797\u17c1\u1791\u1782\u17c6\u179a\u17bc",
+     "scroll": 141,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 36,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    },
+    {
+     "el": "#studioFavorites",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Template Studio"
+   ]
+  }
+ },
+ {
+  "route": "/public",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/public",
+  "shot": "shots/live-public-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation \u2014 OKID",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 2866,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": []
+  }
+ },
+ {
+  "route": "/verify",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/verify",
+  "shot": "shots/live-verify-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Verify email \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 115,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Email verification\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u17a2\u17ca\u17b8\u1798\u17c2\u179b"
+   ]
+  }
+ },
+ {
+  "route": "/reset",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/reset",
+  "shot": "shots/live-reset-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Reset password \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 95,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Reset your password\u1780\u17c6\u178e\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17a1\u17be\u1784\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/billing",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/billing",
+  "shot": "shots/live-billing-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Plans & Usage \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Plans unavailable\u1780\u1789\u17d2\u1785\u1794\u17cb\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/admin",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/admin",
+  "shot": "shots/live-admin-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Administration \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Administrator access required\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179f\u17b7\u1791\u17d2\u1792\u17b7\u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784"
+   ]
+  }
+ },
+ {
+  "route": "/dashboard",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/dashboard",
+  "shot": "shots/live-dashboard-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "My Invitations \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 868,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    },
+    {
+     "el": "",
+     "w": 101,
+     "h": 18
+    },
+    {
+     "el": "",
+     "w": 44,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Welcome back\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd\u178f\u17d2\u179a\u17a1\u1794\u17cb\u1798\u1780\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/designer",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/designer",
+  "shot": "shots/live-designer-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Designer Workspace \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Designer Workspace unavailable\u1780\u1793\u17d2\u179b\u17c2\u1784\u1792\u17d2\u179c\u17be\u1780\u17b6\u179a\u17a2\u17d2\u1793\u1780\u179a\u1785\u1793\u17b6\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/guests",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/guests",
+  "shot": "shots/live-guests-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Guest List \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 1632,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Guest name\u1788\u17d2\u1798\u17c4\u17c7\u1797\u17d2\u1789\u17c0\u179c",
+     "scroll": 78,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Phone number\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 95,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Email\u17a2\u17ca\u17b8\u1798\u17c2\u179b",
+     "scroll": 34,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Group\u1780\u17d2\u179a\u17bb\u1798",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Household\u1782\u17d2\u179a\u17bd\u179f\u17b6\u179a",
+     "scroll": 69,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Table\u178f\u17bb",
+     "scroll": 36,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Seat\u17a2\u17b6\u179f\u1793\u17c8",
+     "scroll": 30,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Tags (comma separated)\u179f\u17d2\u179b\u17b6\u1780 (\u1795\u17d2\u178f\u17b6\u1785\u17cb\u178a\u17c4\u1799\u1780\u17d2\u1794\u17c0\u179f)",
+     "scroll": 165,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search name or phone\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1788\u17d2\u1798\u17c4\u17c7\u17ac\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 171,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 90,
+     "client": 1
+    },
+    {
+     "el": ".empty.final-empty-state",
+     "tag": "P",
+     "text": "No guests match this filter.\u1782\u17d2\u1798\u17b6\u1793\u1797\u17d2\u1789\u17c0\u179c\u178e\u17b6\u1798\u17bd\u1799\u178f\u17d2\u179a\u17bc\u179c\u1793\u17b9\u1784\u178f\u1798\u17d2\u179a\u1784\u1793\u17c1\u17c7\u1791",
+     "scroll": 476,
+     "client": 340
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    },
+    {
+     "el": "#selectAllGuests",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Guest list\u1794\u1789\u17d2\u1787\u17b8\u1797\u17d2\u1789\u17c0\u179c"
+   ]
+  }
+ },
+ {
+  "route": "/responses",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/responses",
+  "shot": "shots/live-responses-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Responses \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 954,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search responses\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794",
+     "scroll": 134,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 90,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Responses & wishes"
+   ]
+  }
+ },
+ {
+  "route": "/analytics",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/analytics",
+  "shot": "shots/live-analytics-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation Analytics \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Invitation Analytics\u1780\u17b6\u179a\u179c\u17b7\u1797\u17b6\u1782\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/materials",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/materials",
+  "shot": "shots/live-materials-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Material Library \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 1015,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search materials\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 125,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Material type\u1794\u17d2\u179a\u1797\u17c1\u1791\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 98,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Folder\u1790\u178f",
+     "scroll": 47,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Sort by\u178f\u1798\u17d2\u179a\u17c0\u1794\u178f\u17b6\u1798",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Material Library"
+   ]
+  }
+ },
+ {
+  "route": "/checkin",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/checkin",
+  "shot": "shots/live-checkin-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Event Check-in \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 844,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Guest check-in"
+   ]
+  }
+ },
+ {
+  "route": "/account",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/account",
+  "shot": "shots/live-account-390.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Account \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 871,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 53,
+     "h": 21
+    }
+   ],
+   "h1": [
+    "Account settings\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1782\u178e\u1793\u17b8"
+   ]
+  }
+ },
+ {
+  "route": "/missing-route-round-1",
+  "width": 390,
+  "height": 844,
+  "status": 404,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+  "shot": "shots/live-missing-route-round-1-390.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 844,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/i/missing-slug-round-1",
+  "width": 390,
+  "height": 844,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-1",
+  "shot": "shots/live-i-missing-slug-round-1-390.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
+   },
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [
+   {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "why": "csp"
+   }
+  ],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "Invitation",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 976,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 114,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": [
+    "Invitation unavailable"
+   ]
+  }
+ },
+ {
+  "route": "/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "width": 390,
+  "height": 844,
+  "status": 401,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "shot": "shots/live-invitations-00000000-0000-0000-0000-000000000000-editor-390.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 401 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+    "status": 401
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 390,
+   "clientWidth": 390,
+   "docHeight": 844,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+  "shot": "shots/live-root-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 928,
+   "rightEdge": [
+    {
+     "el": "",
+     "tag": "BUTTON",
+     "right": 776
+    }
+   ],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": "#documentTitle.studio-document-title",
+     "tag": "SPAN",
+     "text": "Sophea & Dara",
+     "scroll": 101,
+     "client": 94
+    },
+    {
+     "el": "#editorPageHeading.sr-only",
+     "tag": "H1",
+     "text": "Invitation editor",
+     "scroll": 184,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Section order \u2014 one per linegallery\ncountdown\nschedule\ncusto",
+     "scroll": 163,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 English, one item per line4:00 PM | Guest arrival",
+     "scroll": 216,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 Khmer, matching line order4:00 PM | \u1791\u1791\u17bd\u179b\u1797\u17d2\u1789\u17c0\u179c\n5:0",
+     "scroll": 229,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 English, one per line",
+     "scroll": 238,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 Khmer, matching line order",
+     "scroll": 279,
+     "client": 1
+    },
+    {
+     "el": ".ix-group-hint",
+     "tag": "SMALL",
+     "text": "Palette, background and template",
+     "scroll": 178,
+     "client": 112
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "#masterPageEnabled",
+     "w": 16,
+     "h": 42
+    },
+    {
+     "el": "#countdownEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#scheduleEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#venueEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#galleryEnabled",
+     "w": 13,
+     "h": 42
+    }
+   ],
+   "h1": [
+    "Invitation editor",
+    "Design the invitation. Run the event."
+   ]
+  }
+ },
+ {
+  "route": "/privacy",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/privacy",
+  "shot": "shots/live-privacy-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Privacy \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 2283,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 319,
+     "h": 22
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 94,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Privacy"
+   ]
+  }
+ },
+ {
+  "route": "/templates",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/templates",
+  "shot": "shots/live-templates-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Template Studio \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 5455,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": "#refreshBtn",
+     "tag": "BUTTON",
+     "text": "Refresh\u1792\u17d2\u179c\u17be\u1794\u1785\u17d2\u1785\u17bb\u1794\u17d2\u1794\u1793\u17d2\u1793\u1797\u17b6\u1796",
+     "scroll": 66,
+     "client": 53
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search templates and designs\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1782\u17c6\u179a\u17bc \u1793\u17b7\u1784\u1780\u17b6\u179a\u179a\u1785\u1793\u17b6",
+     "scroll": 199,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template source\u1794\u17d2\u179a\u1797\u1796\u1782\u17c6\u179a\u17bc",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template category\u1794\u17d2\u179a\u1797\u17c1\u1791\u1782\u17c6\u179a\u17bc",
+     "scroll": 124,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 36,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#studioFavorites",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Template Studio"
+   ]
+  }
+ },
+ {
+  "route": "/public",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/public",
+  "shot": "shots/live-public-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation \u2014 OKID",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 2787,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": []
+  }
+ },
+ {
+  "route": "/verify",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/verify",
+  "shot": "shots/live-verify-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Verify email \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 115,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Email verification\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u17a2\u17ca\u17b8\u1798\u17c2\u179b"
+   ]
+  }
+ },
+ {
+  "route": "/reset",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/reset",
+  "shot": "shots/live-reset-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Reset password \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 95,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Reset your password\u1780\u17c6\u178e\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17a1\u17be\u1784\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/billing",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/billing",
+  "shot": "shots/live-billing-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Plans & Usage \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Plans unavailable\u1780\u1789\u17d2\u1785\u1794\u17cb\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/admin",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/admin",
+  "shot": "shots/live-admin-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Administration \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Administrator access required\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179f\u17b7\u1791\u17d2\u1792\u17b7\u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784"
+   ]
+  }
+ },
+ {
+  "route": "/dashboard",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/dashboard",
+  "shot": "shots/live-dashboard-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "My Invitations \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 932,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 101,
+     "h": 18
+    },
+    {
+     "el": "",
+     "w": 44,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Welcome back\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd\u178f\u17d2\u179a\u17a1\u1794\u17cb\u1798\u1780\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/designer",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/designer",
+  "shot": "shots/live-designer-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Designer Workspace \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Designer Workspace unavailable\u1780\u1793\u17d2\u179b\u17c2\u1784\u1792\u17d2\u179c\u17be\u1780\u17b6\u179a\u17a2\u17d2\u1793\u1780\u179a\u1785\u1793\u17b6\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/guests",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/guests",
+  "shot": "shots/live-guests-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Guest List \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Guest name\u1788\u17d2\u1798\u17c4\u17c7\u1797\u17d2\u1789\u17c0\u179c",
+     "scroll": 78,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Phone number\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 95,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Email\u17a2\u17ca\u17b8\u1798\u17c2\u179b",
+     "scroll": 34,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Group\u1780\u17d2\u179a\u17bb\u1798",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Household\u1782\u17d2\u179a\u17bd\u179f\u17b6\u179a",
+     "scroll": 69,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Table\u178f\u17bb",
+     "scroll": 36,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Seat\u17a2\u17b6\u179f\u1793\u17c8",
+     "scroll": 30,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Tags (comma separated)\u179f\u17d2\u179b\u17b6\u1780 (\u1795\u17d2\u178f\u17b6\u1785\u17cb\u178a\u17c4\u1799\u1780\u17d2\u1794\u17c0\u179f)",
+     "scroll": 165,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search name or phone\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1788\u17d2\u1798\u17c4\u17c7\u17ac\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 148,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    },
+    {
+     "el": ".empty.final-empty-state",
+     "tag": "P",
+     "text": "No guests match this filter.\u1782\u17d2\u1798\u17b6\u1793\u1797\u17d2\u1789\u17c0\u179c\u178e\u17b6\u1798\u17bd\u1799\u178f\u17d2\u179a\u17bc\u179c\u1793\u17b9\u1784\u178f\u1798\u17d2\u179a\u1784\u1793\u17c1\u17c7\u1791",
+     "scroll": 1005,
+     "client": 718
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#selectAllGuests",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Guest list\u1794\u1789\u17d2\u1787\u17b8\u1797\u17d2\u1789\u17c0\u179c"
+   ]
+  }
+ },
+ {
+  "route": "/responses",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/responses",
+  "shot": "shots/live-responses-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Responses \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search responses\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794",
+     "scroll": 117,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Responses & wishes"
+   ]
+  }
+ },
+ {
+  "route": "/analytics",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/analytics",
+  "shot": "shots/live-analytics-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation Analytics \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": "#refreshAnalytics",
+     "tag": "BUTTON",
+     "text": "Refresh\u1792\u17d2\u179c\u17be\u1794\u1785\u17d2\u1785\u17bb\u1794\u17d2\u1794\u1793\u17d2\u1793\u1797\u17b6\u1796",
+     "scroll": 69,
+     "client": 60
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Invitation Analytics\u1780\u17b6\u179a\u179c\u17b7\u1797\u17b6\u1782\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/materials",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/materials",
+  "shot": "shots/live-materials-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Material Library \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search materials\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Material type\u1794\u17d2\u179a\u1797\u17c1\u1791\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 87,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Folder\u1790\u178f",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Sort by\u178f\u1798\u17d2\u179a\u17c0\u1794\u178f\u17b6\u1798",
+     "scroll": 48,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Material Library"
+   ]
+  }
+ },
+ {
+  "route": "/checkin",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/checkin",
+  "shot": "shots/live-checkin-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Event Check-in \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Guest check-in"
+   ]
+  }
+ },
+ {
+  "route": "/account",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/account",
+  "shot": "shots/live-account-768.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Account \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Account settings\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1782\u178e\u1793\u17b8"
+   ]
+  }
+ },
+ {
+  "route": "/missing-route-round-1",
+  "width": 768,
+  "height": 900,
+  "status": 404,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+  "shot": "shots/live-missing-route-round-1-768.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/i/missing-slug-round-1",
+  "width": 768,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-1",
+  "shot": "shots/live-i-missing-slug-round-1-768.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
+   },
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [
+   {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "why": "csp"
+   }
+  ],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "Invitation",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 1021,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": [
+    "Invitation unavailable"
+   ]
+  }
+ },
+ {
+  "route": "/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "width": 768,
+  "height": 900,
+  "status": 401,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "shot": "shots/live-invitations-00000000-0000-0000-0000-000000000000-editor-768.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 401 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+    "status": 401
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+  "shot": "shots/live-root-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 928,
+   "rightEdge": [
+    {
+     "el": "",
+     "tag": "BUTTON",
+     "right": 1028
+    }
+   ],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": "#documentTitle.studio-document-title",
+     "tag": "SPAN",
+     "text": "Sophea & Dara",
+     "scroll": 101,
+     "client": 89
+    },
+    {
+     "el": "",
+     "tag": "STRONG",
+     "text": "Pages",
+     "scroll": 48,
+     "client": 25
+    },
+    {
+     "el": "#editorPageHeading.sr-only",
+     "tag": "H1",
+     "text": "Invitation editor",
+     "scroll": 184,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Section order \u2014 one per linegallery\ncountdown\nschedule\ncusto",
+     "scroll": 163,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 English, one item per line4:00 PM | Guest arrival",
+     "scroll": 216,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 Khmer, matching line order4:00 PM | \u1791\u1791\u17bd\u179b\u1797\u17d2\u1789\u17c0\u179c\n5:0",
+     "scroll": 229,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 English, one per line",
+     "scroll": 238,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 Khmer, matching line order",
+     "scroll": 279,
+     "client": 1
+    },
+    {
+     "el": ".ix-group-hint",
+     "tag": "SMALL",
+     "text": "Palette, background and template",
+     "scroll": 178,
+     "client": 112
+    },
+    {
+     "el": "",
+     "tag": "BUTTON",
+     "text": "Midnight",
+     "scroll": 72,
+     "client": 54
+    },
+    {
+     "el": "",
+     "tag": "BUTTON",
+     "text": "Garden",
+     "scroll": 63,
+     "client": 54
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "#masterPageEnabled",
+     "w": 16,
+     "h": 42
+    },
+    {
+     "el": "#countdownEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#scheduleEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#venueEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#galleryEnabled",
+     "w": 13,
+     "h": 42
+    }
+   ],
+   "h1": [
+    "Invitation editor",
+    "Design the invitation. Run the event."
+   ]
+  }
+ },
+ {
+  "route": "/privacy",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/privacy",
+  "shot": "shots/live-privacy-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Privacy \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 2309,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 319,
+     "h": 22
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 94,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Privacy"
+   ]
+  }
+ },
+ {
+  "route": "/templates",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/templates",
+  "shot": "shots/live-templates-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Template Studio \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 4073,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search templates and designs\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1782\u17c6\u179a\u17bc \u1793\u17b7\u1784\u1780\u17b6\u179a\u179a\u1785\u1793\u17b6",
+     "scroll": 199,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template source\u1794\u17d2\u179a\u1797\u1796\u1782\u17c6\u179a\u17bc",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template category\u1794\u17d2\u179a\u1797\u17c1\u1791\u1782\u17c6\u179a\u17bc",
+     "scroll": 124,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 36,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#studioFavorites",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Template Studio"
+   ]
+  }
+ },
+ {
+  "route": "/public",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/public",
+  "shot": "shots/live-public-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation \u2014 OKID",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 2787,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": []
+  }
+ },
+ {
+  "route": "/verify",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/verify",
+  "shot": "shots/live-verify-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Verify email \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 115,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Email verification\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u17a2\u17ca\u17b8\u1798\u17c2\u179b"
+   ]
+  }
+ },
+ {
+  "route": "/reset",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/reset",
+  "shot": "shots/live-reset-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Reset password \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 95,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Reset your password\u1780\u17c6\u178e\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17a1\u17be\u1784\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/billing",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/billing",
+  "shot": "shots/live-billing-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Plans & Usage \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Plans unavailable\u1780\u1789\u17d2\u1785\u1794\u17cb\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/admin",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/admin",
+  "shot": "shots/live-admin-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Administration \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Administrator access required\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179f\u17b7\u1791\u17d2\u1792\u17b7\u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784"
+   ]
+  }
+ },
+ {
+  "route": "/dashboard",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/dashboard",
+  "shot": "shots/live-dashboard-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "My Invitations \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 964,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 101,
+     "h": 18
+    },
+    {
+     "el": "",
+     "w": 44,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Welcome back\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd\u178f\u17d2\u179a\u17a1\u1794\u17cb\u1798\u1780\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/designer",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/designer",
+  "shot": "shots/live-designer-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Designer Workspace \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Designer Workspace unavailable\u1780\u1793\u17d2\u179b\u17c2\u1784\u1792\u17d2\u179c\u17be\u1780\u17b6\u179a\u17a2\u17d2\u1793\u1780\u179a\u1785\u1793\u17b6\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/guests",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/guests",
+  "shot": "shots/live-guests-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Guest List \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Guest name\u1788\u17d2\u1798\u17c4\u17c7\u1797\u17d2\u1789\u17c0\u179c",
+     "scroll": 78,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Phone number\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 95,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Email\u17a2\u17ca\u17b8\u1798\u17c2\u179b",
+     "scroll": 34,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#selectAllGuests",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Guest list\u1794\u1789\u17d2\u1787\u17b8\u1797\u17d2\u1789\u17c0\u179c"
+   ]
+  }
+ },
+ {
+  "route": "/responses",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/responses",
+  "shot": "shots/live-responses-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Responses \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search responses\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794",
+     "scroll": 117,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Responses & wishes"
+   ]
+  }
+ },
+ {
+  "route": "/analytics",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/analytics",
+  "shot": "shots/live-analytics-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation Analytics \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Invitation Analytics\u1780\u17b6\u179a\u179c\u17b7\u1797\u17b6\u1782\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/materials",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/materials",
+  "shot": "shots/live-materials-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Material Library \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search materials\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Material type\u1794\u17d2\u179a\u1797\u17c1\u1791\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 87,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Folder\u1790\u178f",
+     "scroll": 40,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Material Library"
+   ]
+  }
+ },
+ {
+  "route": "/checkin",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/checkin",
+  "shot": "shots/live-checkin-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Event Check-in \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Guest check-in"
+   ]
+  }
+ },
+ {
+  "route": "/account",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/account",
+  "shot": "shots/live-account-1024.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Account \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Dashboard",
+     "scroll": 72,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Templates",
+     "scroll": 68,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Materials",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Guest list",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Responses",
+     "scroll": 71,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Analytics",
+     "scroll": 60,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Plans",
+     "scroll": 35,
+     "client": 1
+    },
+    {
+     "el": ".i18n.i18n-en",
+     "tag": "SPAN",
+     "text": "Account",
+     "scroll": 55,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Account settings\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1782\u178e\u1793\u17b8"
+   ]
+  }
+ },
+ {
+  "route": "/missing-route-round-1",
+  "width": 1024,
+  "height": 900,
+  "status": 404,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+  "shot": "shots/live-missing-route-round-1-1024.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/i/missing-slug-round-1",
+  "width": 1024,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-1",
+  "shot": "shots/live-i-missing-slug-round-1-1024.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
+   },
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [
+   {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "why": "csp"
+   }
+  ],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "Invitation",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 1021,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": [
+    "Invitation unavailable"
+   ]
+  }
+ },
+ {
+  "route": "/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "width": 1024,
+  "height": 900,
+  "status": 401,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "shot": "shots/live-invitations-00000000-0000-0000-0000-000000000000-editor-1024.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 401 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+    "status": 401
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 1024,
+   "clientWidth": 1024,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+  "shot": "shots/live-root-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [
+    {
+     "el": "",
+     "tag": "BUTTON",
+     "right": 1332
+    }
+   ],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": "#documentTitle.studio-document-title",
+     "tag": "SPAN",
+     "text": "Sophea & Dara",
+     "scroll": 111,
+     "client": 57
+    },
+    {
+     "el": "#editorPageHeading.sr-only",
+     "tag": "H1",
+     "text": "Invitation editor",
+     "scroll": 184,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Section order \u2014 one per linegallery\ncountdown\nschedule\ncusto",
+     "scroll": 163,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 English, one item per line4:00 PM | Guest arrival",
+     "scroll": 216,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 Khmer, matching line order4:00 PM | \u1791\u1791\u17bd\u179b\u1797\u17d2\u1789\u17c0\u179c\n5:0",
+     "scroll": 229,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 English, one per line",
+     "scroll": 238,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 Khmer, matching line order",
+     "scroll": 279,
+     "client": 1
+    },
+    {
+     "el": ".ix-group-hint",
+     "tag": "SMALL",
+     "text": "Palette, background and template",
+     "scroll": 178,
+     "client": 112
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "#masterPageEnabled",
+     "w": 16,
+     "h": 42
+    },
+    {
+     "el": "#countdownEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#scheduleEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#venueEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#galleryEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": ".v54-footer-tools-trigger",
+     "w": 60,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Invitation editor",
+    "Design the invitation. Run the event."
+   ]
+  }
+ },
+ {
+  "route": "/privacy",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/privacy",
+  "shot": "shots/live-privacy-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Privacy \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 2310,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 319,
+     "h": 22
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 94,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Privacy"
+   ]
+  }
+ },
+ {
+  "route": "/templates",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/templates",
+  "shot": "shots/live-templates-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Template Studio \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 4325,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search templates and designs\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1782\u17c6\u179a\u17bc \u1793\u17b7\u1784\u1780\u17b6\u179a\u179a\u1785\u1793\u17b6",
+     "scroll": 199,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template source\u1794\u17d2\u179a\u1797\u1796\u1782\u17c6\u179a\u17bc",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template category\u1794\u17d2\u179a\u1797\u17c1\u1791\u1782\u17c6\u179a\u17bc",
+     "scroll": 124,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 36,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#studioFavorites",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Template Studio"
+   ]
+  }
+ },
+ {
+  "route": "/public",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/public",
+  "shot": "shots/live-public-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation \u2014 OKID",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 2787,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": []
+  }
+ },
+ {
+  "route": "/verify",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/verify",
+  "shot": "shots/live-verify-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Verify email \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 115,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Email verification\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u17a2\u17ca\u17b8\u1798\u17c2\u179b"
+   ]
+  }
+ },
+ {
+  "route": "/reset",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/reset",
+  "shot": "shots/live-reset-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Reset password \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 95,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Reset your password\u1780\u17c6\u178e\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17a1\u17be\u1784\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/billing",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/billing",
+  "shot": "shots/live-billing-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Plans & Usage \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Plans unavailable\u1780\u1789\u17d2\u1785\u1794\u17cb\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/admin",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/admin",
+  "shot": "shots/live-admin-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Administration \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Administrator access required\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179f\u17b7\u1791\u17d2\u1792\u17b7\u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784"
+   ]
+  }
+ },
+ {
+  "route": "/dashboard",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/dashboard",
+  "shot": "shots/live-dashboard-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "My Invitations \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 964,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 101,
+     "h": 18
+    },
+    {
+     "el": "",
+     "w": 44,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Welcome back\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd\u178f\u17d2\u179a\u17a1\u1794\u17cb\u1798\u1780\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/designer",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/designer",
+  "shot": "shots/live-designer-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Designer Workspace \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Designer Workspace unavailable\u1780\u1793\u17d2\u179b\u17c2\u1784\u1792\u17d2\u179c\u17be\u1780\u17b6\u179a\u17a2\u17d2\u1793\u1780\u179a\u1785\u1793\u17b6\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/guests",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/guests",
+  "shot": "shots/live-guests-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Guest List \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Guest name\u1788\u17d2\u1798\u17c4\u17c7\u1797\u17d2\u1789\u17c0\u179c",
+     "scroll": 78,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Phone number\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 95,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Email\u17a2\u17ca\u17b8\u1798\u17c2\u179b",
+     "scroll": 34,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Group\u1780\u17d2\u179a\u17bb\u1798",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Household\u1782\u17d2\u179a\u17bd\u179f\u17b6\u179a",
+     "scroll": 69,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Table\u178f\u17bb",
+     "scroll": 36,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Seat\u17a2\u17b6\u179f\u1793\u17c8",
+     "scroll": 30,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Tags (comma separated)\u179f\u17d2\u179b\u17b6\u1780 (\u1795\u17d2\u178f\u17b6\u1785\u17cb\u178a\u17c4\u1799\u1780\u17d2\u1794\u17c0\u179f)",
+     "scroll": 165,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search name or phone\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1788\u17d2\u1798\u17c4\u17c7\u17ac\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 148,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    },
+    {
+     "el": ".empty.final-empty-state",
+     "tag": "P",
+     "text": "No guests match this filter.\u1782\u17d2\u1798\u17b6\u1793\u1797\u17d2\u1789\u17c0\u179c\u178e\u17b6\u1798\u17bd\u1799\u178f\u17d2\u179a\u17bc\u179c\u1793\u17b9\u1784\u178f\u1798\u17d2\u179a\u1784\u1793\u17c1\u17c7\u1791",
+     "scroll": 1386,
+     "client": 990
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#selectAllGuests",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Guest list\u1794\u1789\u17d2\u1787\u17b8\u1797\u17d2\u1789\u17c0\u179c"
+   ]
+  }
+ },
+ {
+  "route": "/responses",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/responses",
+  "shot": "shots/live-responses-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Responses \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search responses\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794",
+     "scroll": 117,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Responses & wishes"
+   ]
+  }
+ },
+ {
+  "route": "/analytics",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/analytics",
+  "shot": "shots/live-analytics-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation Analytics \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Invitation Analytics\u1780\u17b6\u179a\u179c\u17b7\u1797\u17b6\u1782\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/materials",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/materials",
+  "shot": "shots/live-materials-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Material Library \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search materials\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Material type\u1794\u17d2\u179a\u1797\u17c1\u1791\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 87,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Folder\u1790\u178f",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Sort by\u178f\u1798\u17d2\u179a\u17c0\u1794\u178f\u17b6\u1798",
+     "scroll": 48,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Material Library"
+   ]
+  }
+ },
+ {
+  "route": "/checkin",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/checkin",
+  "shot": "shots/live-checkin-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Event Check-in \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Guest check-in"
+   ]
+  }
+ },
+ {
+  "route": "/account",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/account",
+  "shot": "shots/live-account-1280.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Account \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Account settings\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1782\u178e\u1793\u17b8"
+   ]
+  }
+ },
+ {
+  "route": "/missing-route-round-1",
+  "width": 1280,
+  "height": 900,
+  "status": 404,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+  "shot": "shots/live-missing-route-round-1-1280.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/i/missing-slug-round-1",
+  "width": 1280,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-1",
+  "shot": "shots/live-i-missing-slug-round-1-1280.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
+   },
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [
+   {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "why": "csp"
+   }
+  ],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "Invitation",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 1021,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": [
+    "Invitation unavailable"
+   ]
+  }
+ },
+ {
+  "route": "/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "width": 1280,
+  "height": 900,
+  "status": 401,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "shot": "shots/live-invitations-00000000-0000-0000-0000-000000000000-editor-1280.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 401 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+    "status": 401
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+  "shot": "shots/live-root-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": "#editorPageHeading.sr-only",
+     "tag": "H1",
+     "text": "Invitation editor",
+     "scroll": 184,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Section order \u2014 one per linegallery\ncountdown\nschedule\ncusto",
+     "scroll": 163,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 English, one item per line4:00 PM | Guest arrival",
+     "scroll": 216,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Schedule \u2014 Khmer, matching line order4:00 PM | \u1791\u1791\u17bd\u179b\u1797\u17d2\u1789\u17c0\u179c\n5:0",
+     "scroll": 229,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 English, one per line",
+     "scroll": 238,
+     "client": 1
+    },
+    {
+     "el": ".ei-raw-field",
+     "tag": "LABEL",
+     "text": "Additional venues \u2014 Khmer, matching line order",
+     "scroll": 279,
+     "client": 1
+    },
+    {
+     "el": ".ix-group-hint",
+     "tag": "SMALL",
+     "text": "Palette, background and template",
+     "scroll": 178,
+     "client": 112
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "#masterPageEnabled",
+     "w": 16,
+     "h": 42
+    },
+    {
+     "el": "#countdownEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#scheduleEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#venueEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": "#galleryEnabled",
+     "w": 13,
+     "h": 42
+    },
+    {
+     "el": ".v54-footer-tools-trigger",
+     "w": 60,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Invitation editor",
+    "Design the invitation. Run the event."
+   ]
+  }
+ },
+ {
+  "route": "/privacy",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/privacy",
+  "shot": "shots/live-privacy-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Privacy \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 2310,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 319,
+     "h": 22
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 94,
+     "h": 20
+    }
+   ],
+   "h1": [
+    "Privacy"
+   ]
+  }
+ },
+ {
+  "route": "/templates",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/templates",
+  "shot": "shots/live-templates-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Template Studio \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 3735,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search templates and designs\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1782\u17c6\u179a\u17bc \u1793\u17b7\u1784\u1780\u17b6\u179a\u179a\u1785\u1793\u17b6",
+     "scroll": 199,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template source\u1794\u17d2\u179a\u1797\u1796\u1782\u17c6\u179a\u17bc",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Template category\u1794\u17d2\u179a\u1797\u17c1\u1791\u1782\u17c6\u179a\u17bc",
+     "scroll": 124,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 36,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#studioFavorites",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Template Studio"
+   ]
+  }
+ },
+ {
+  "route": "/public",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/public",
+  "shot": "shots/live-public-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation \u2014 OKID",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 2787,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": []
+  }
+ },
+ {
+  "route": "/verify",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/verify",
+  "shot": "shots/live-verify-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Verify email \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 115,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Email verification\u1780\u17b6\u179a\u1795\u17d2\u1791\u17c0\u1784\u1795\u17d2\u1791\u17b6\u178f\u17cb\u17a2\u17ca\u17b8\u1798\u17c2\u179b"
+   ]
+  }
+ },
+ {
+  "route": "/reset",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/reset",
+  "shot": "shots/live-reset-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Reset password \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 95,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Reset your password\u1780\u17c6\u178e\u178f\u17cb\u1796\u17b6\u1780\u17d2\u1799\u179f\u1798\u17d2\u1784\u17b6\u178f\u17cb\u17a1\u17be\u1784\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/billing",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/billing",
+  "shot": "shots/live-billing-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Plans & Usage \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Plans unavailable\u1780\u1789\u17d2\u1785\u1794\u17cb\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/admin",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/admin",
+  "shot": "shots/live-admin-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Administration \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Administrator access required\u178f\u17d2\u179a\u17bc\u179c\u1780\u17b6\u179a\u179f\u17b7\u1791\u17d2\u1792\u17b7\u17a2\u17d2\u1793\u1780\u1782\u17d2\u179a\u1794\u17cb\u1782\u17d2\u179a\u1784"
+   ]
+  }
+ },
+ {
+  "route": "/dashboard",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/dashboard",
+  "shot": "shots/live-dashboard-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "My Invitations \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 964,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 101,
+     "h": 18
+    },
+    {
+     "el": "",
+     "w": 44,
+     "h": 18
+    }
+   ],
+   "h1": [
+    "Welcome back\u179f\u17bc\u1798\u179f\u17d2\u179c\u17b6\u1782\u1798\u1793\u17cd\u178f\u17d2\u179a\u17a1\u1794\u17cb\u1798\u1780\u179c\u17b7\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/designer",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/designer",
+  "shot": "shots/live-designer-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Designer Workspace \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Designer Workspace unavailable\u1780\u1793\u17d2\u179b\u17c2\u1784\u1792\u17d2\u179c\u17be\u1780\u17b6\u179a\u17a2\u17d2\u1793\u1780\u179a\u1785\u1793\u17b6\u1798\u17b7\u1793\u17a2\u17b6\u1785\u1794\u17d2\u179a\u17be\u1794\u17b6\u1793"
+   ]
+  }
+ },
+ {
+  "route": "/guests",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/guests",
+  "shot": "shots/live-guests-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Guest List \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Guest name\u1788\u17d2\u1798\u17c4\u17c7\u1797\u17d2\u1789\u17c0\u179c",
+     "scroll": 78,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Phone number\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 95,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Email\u17a2\u17ca\u17b8\u1798\u17c2\u179b",
+     "scroll": 34,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Group\u1780\u17d2\u179a\u17bb\u1798",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Household\u1782\u17d2\u179a\u17bd\u179f\u17b6\u179a",
+     "scroll": 69,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Table\u178f\u17bb",
+     "scroll": 36,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Seat\u17a2\u17b6\u179f\u1793\u17c8",
+     "scroll": 30,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Tags (comma separated)\u179f\u17d2\u179b\u17b6\u1780 (\u1795\u17d2\u178f\u17b6\u1785\u17cb\u178a\u17c4\u1799\u1780\u17d2\u1794\u17c0\u179f)",
+     "scroll": 165,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search name or phone\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1788\u17d2\u1798\u17c4\u17c7\u17ac\u179b\u17c1\u1781\u1791\u17bc\u179a\u179f\u17d0\u1796\u17d2\u1791",
+     "scroll": 148,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    },
+    {
+     "el": ".empty.final-empty-state",
+     "tag": "P",
+     "text": "No guests match this filter.\u1782\u17d2\u1798\u17b6\u1793\u1797\u17d2\u1789\u17c0\u179c\u178e\u17b6\u1798\u17bd\u1799\u178f\u17d2\u179a\u17bc\u179c\u1793\u17b9\u1784\u178f\u1798\u17d2\u179a\u1784\u1793\u17c1\u17c7\u1791",
+     "scroll": 1610,
+     "client": 1150
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    },
+    {
+     "el": "#selectAllGuests",
+     "w": 16,
+     "h": 36
+    }
+   ],
+   "h1": [
+    "Guest list\u1794\u1789\u17d2\u1787\u17b8\u1797\u17d2\u1789\u17c0\u179c"
+   ]
+  }
+ },
+ {
+  "route": "/responses",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/responses",
+  "shot": "shots/live-responses-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Responses \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search responses\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794",
+     "scroll": 117,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "RSVP status\u179f\u17d2\u1790\u17b6\u1793\u1797\u17b6\u1796 RSVP",
+     "scroll": 81,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Responses & wishes"
+   ]
+  }
+ },
+ {
+  "route": "/analytics",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/analytics",
+  "shot": "shots/live-analytics-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Invitation Analytics \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Invitation Analytics\u1780\u17b6\u179a\u179c\u17b7\u1797\u17b6\u1782\u1780\u17b6\u179a\u17a2\u1789\u17d2\u1787\u17be\u1789"
+   ]
+  }
+ },
+ {
+  "route": "/materials",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/materials",
+  "shot": "shots/live-materials-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Material Library \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Search materials\u179f\u17d2\u179c\u17c2\u1784\u179a\u1780\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 109,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Material type\u1794\u17d2\u179a\u1797\u17c1\u1791\u179f\u1798\u17d2\u1797\u17b6\u179a\u17c8",
+     "scroll": 87,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Folder\u1790\u178f",
+     "scroll": 40,
+     "client": 1
+    },
+    {
+     "el": ".sr-only",
+     "tag": "LABEL",
+     "text": "Sort by\u178f\u1798\u17d2\u179a\u17c0\u1794\u178f\u17b6\u1798",
+     "scroll": 48,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Material Library"
+   ]
+  }
+ },
+ {
+  "route": "/checkin",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/checkin",
+  "shot": "shots/live-checkin-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Event Check-in \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "h1": [
+    "Guest check-in"
+   ]
+  }
+ },
+ {
+  "route": "/account",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/account",
+  "shot": "shots/live-account-1440.png",
+  "console_errors": [],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [],
+  "audit": {
+   "title": "Account \u2014 OKID-Online Khmer Invitation Design",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": ".app-brand",
+     "w": 301,
+     "h": 20
+    },
+    {
+     "el": "",
+     "w": 72,
+     "h": 22
+    }
+   ],
+   "h1": [
+    "Account settings\u1780\u17b6\u179a\u1780\u17c6\u178e\u178f\u17cb\u1782\u178e\u1793\u17b8"
+   ]
+  }
+ },
+ {
+  "route": "/missing-route-round-1",
+  "width": 1440,
+  "height": 900,
+  "status": 404,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+  "shot": "shots/live-missing-route-round-1-1440.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/missing-route-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ },
+ {
+  "route": "/i/missing-slug-round-1",
+  "width": 1440,
+  "height": 900,
+  "status": 200,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-1",
+  "shot": "shots/live-i-missing-slug-round-1-1440.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
+   },
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [
+   {
+    "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
+    "why": "csp"
+   }
+  ],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-1",
+    "status": 404
+   }
+  ],
+  "audit": {
+   "title": "Invitation",
+   "lang": "en",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 1021,
+   "rightEdge": [],
+   "clipped": [
+    {
+     "el": ".skip-link",
+     "tag": "A",
+     "text": "Skip to content\u179a\u17c6\u179b\u1784\u1791\u17c5\u1798\u17b6\u178f\u17b7\u1780\u17b6",
+     "scroll": 100,
+     "client": 1
+    }
+   ],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [
+    {
+     "el": ".skip-link",
+     "w": 1,
+     "h": 1
+    },
+    {
+     "el": "",
+     "w": 96,
+     "h": 14
+    }
+   ],
+   "h1": [
+    "Invitation unavailable"
+   ]
+  }
+ },
+ {
+  "route": "/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "width": 1440,
+  "height": 900,
+  "status": 401,
+  "final_url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+  "shot": "shots/live-invitations-00000000-0000-0000-0000-000000000000-editor-1440.png",
+  "console_errors": [
+   {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 401 ()"
+   }
+  ],
+  "console_warnings": [],
+  "page_errors": [],
+  "request_failed": [],
+  "http_errors": [
+   {
+    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/invitations/00000000-0000-0000-0000-000000000000/editor",
+    "status": 401
+   }
+  ],
+  "audit": {
+   "title": "",
+   "lang": "",
+   "overflowX": 0,
+   "scrollWidth": 1440,
+   "clientWidth": 1440,
+   "docHeight": 900,
+   "rightEdge": [],
+   "clipped": [],
+   "unlabelled": [],
+   "unnamed": [],
+   "imgs": 0,
+   "imgsNoAlt": 0,
+   "smallTargets": [],
+   "h1": []
+  }
+ }
+]
