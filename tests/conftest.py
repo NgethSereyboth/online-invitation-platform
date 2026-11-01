@@ -98,7 +98,29 @@ if _missing:
 # Module scope: one server for the module's six tests, because each one only reads
 # and writes its own invitation and starting a server per test would cost ~6x the
 # wall clock for no isolation that the data directory does not already give.
+import os  # noqa: E402  (after the sys.path setup above)
 import pytest  # noqa: E402  (after the sys.path setup above)
+
+
+@pytest.fixture(autouse=True)
+def _restore_data_dir_after_test():
+    """Keep a test's temporary EINVITE_DATA_DIR from leaking into later tests.
+
+    Five in-process suites set EINVITE_DATA_DIR before importing server.py. The
+    import cannot be undone, but leaving the variable behind lets a later
+    subprocess inherit a deleted temporary path. Snapshot and restore it around
+    every test instead of asking each of those files to remember the same
+    try/finally.
+    """
+    previous = os.environ.get("EINVITE_DATA_DIR")
+    present = "EINVITE_DATA_DIR" in os.environ
+    try:
+        yield
+    finally:
+        if present:
+            os.environ["EINVITE_DATA_DIR"] = previous
+        else:
+            os.environ.pop("EINVITE_DATA_DIR", None)
 
 
 @pytest.fixture(scope="module")

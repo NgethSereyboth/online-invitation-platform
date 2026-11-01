@@ -31,10 +31,11 @@ const localStorage=__store(__local),sessionStorage=__store(__session);
 window.alert=()=>{};window.confirm=()=>true;window.prompt=()=>'';
 window.fetch=async()=>({ok:false,status:404,statusText:'Not Found',json:async()=>({}),text:async()=>'',headers:new Headers()});
 </script>"""
-    html = html.replace(
-        '<head><script src="theme-init.js"></script>',
-        '<head>' + prelude + '<script src="theme-init.js"></script>',
-    )
+    # The shell has moved from theme-init.js to core/theme.js. Insert after the
+    # opening <head> so the storage/fetch stubs exist before any page script;
+    # matching the old theme-init tag silently skipped the prelude entirely, and
+    # about:blank then denied localStorage to every inlined bundle.
+    html = html.replace("<head>", "<head>" + prelude, 1)
 
     link_pattern = re.compile(r'<link\s+rel="stylesheet"\s+href="([^"]+)"\s*/?>')
 
@@ -74,7 +75,7 @@ window.assetStore={
     for name in ("rich-text-renderer.css","rich-text-editing.css","workspace.css"):
         path=ROOT/"src"/"css"/name
         if path.exists(): extras.append(f'<style data-v21="{name}">{path.read_text(encoding="utf-8")}</style>')
-    for name in ("rich-text-contract.js","rich-text-document-model.js","rich-text-renderer.js","rich-text-editing.js","workspace.js"):
+    for name in ("rich-text-contract.js","rich-text-document-model.js","rich-text-renderer.js","rich-text-editing.js","workspace.js","professional-editor.js"):
         path=ROOT/"src"/"js"/name
         if path.exists(): extras.append(f'<script data-v21="{name}">{path.read_text(encoding="utf-8").replace("</script>","<\\/script>")}</script>')
     return html.replace("</body>","".join(extras)+"</body>")
