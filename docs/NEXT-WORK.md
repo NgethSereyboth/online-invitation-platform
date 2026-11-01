@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **18** open defects (+5 untriaged suite failures below) · **36** open work-order tasks · **18** owner-held decisions · **11** verification debts |
+| Counts in this file | **18** open defects (+5 untriaged suite failures below) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
