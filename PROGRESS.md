@@ -2,14 +2,15 @@
 
 ## Current status
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
-  **207 commits ahead at the start of phase-2/3**; phases 2–8 plus this close-out make it
-  **216 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
+  **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
+  **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
   `7e22bef`. The push decision remains open.
-- **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
-  work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
+- **Queue of record:** `docs/NEXT-WORK.md` — 14 open/owner-blocked defects, **2 stuck**
+  (editor first-paint CLS and the pre-v17 manual canvas runners), **0 untriaged suite failures**,
+  36 work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
-  baseline failures are closed. Remaining Step 1 work is the product backlog in `NEXT-WORK.md`
-  (P0/P1/P2), not test triage.
+  baseline failures are closed. The product backlog's remaining code work is either owner-held
+  or marked stuck after measurement; the live-only deploy is the only external blocker.
 - **Phase 4–6 (2026-11-01, local):** D-3 is fixed: every editor session refreshes the server row
   and its `updatedAt` while keeping a newer local draft's content, so a second tab no longer
   autosaves against the previous tab's revision. Regression: `editor_multi_tab_autosave_test`
@@ -20,14 +21,38 @@
   the prelude after the shell changed. Commits: `a9c5e51`, `98d0306`, `e4a81c0`, generated
   bundle metadata `3d6ff85`, and Khmer-fixture policy fix `f2bfcfe`. Final full suite:
   **230 passed, 2 warnings in 1125.10 s (exit 0)**. Details are in the log below.
-- **Post-reset deploy queue (live-only):** Sites is paused by the daily request quota until
-  **2026-11-02T00:00:00Z**. Do not retry before then. After the reset: rebuild with
-  `python3 tools/build-sites-bundle.py`; confirm the bundle contains `manifest.webmanifest`,
-  `assets/icon-192.png`, `assets/icon-512.png`, and the `og:image:alt`/`twitter:image:alt` /
-  `noindex, nofollow` metadata; deploy production from `deploy/sites/manifest.json`; restart
-  `einvite-app` if the local origin changed; then repeat the live checks for the new invitation
-  metadata, missing-slug 404, signed-out editor redirect, check-in manifest/icons, and the
-  second-tab autosave flow. Until that deploy succeeds, every phase-2–8 change is local-only.
+- **Deploy retry (2026-11-01T12:50Z) — still refused:** the recorded sequence was run end to
+  end. `python3 tools/build-sites-bundle.py` exited 0 and the bundle contained
+  `manifest.webmanifest` (391 B), `assets/icon-192.png` (8,362 B), `assets/icon-512.png`
+  (20,993 B), `og:image:alt`, `twitter:image:alt` and `noindex, nofollow`. The production
+  `sites_deploy` then returned the exact error:
+  `sites_request_failed — Your sites have reached a hosting allowance and are paused. Open Sites to view usage and reset dates. Your data is preserved.`
+  `sites_inspect` reports `quota.state: suspended`, daily requests **10,755 / 10,000 exhausted**,
+  monthly 10,755 / 100,000, reset **2026-11-02T00:00:00Z**. A second attempt explicitly requested
+  by the owner at **2026-11-01T13:40Z** returned the identical refusal; the platform allowance is
+  the only blocker. No further retry is queued.
+- **Post-reset deploy (one terminal command + one tool call):** after
+  **2026-11-02T00:00:00Z**, run `python3 tools/build-sites-bundle.py`; assert the four bundle
+  artifacts above; then call
+  `sites_deploy(siteId="5f0c2a7e-3b1d-4c8e-9a6f-2d7e1b9c4a10", environment="production", requestId="<fresh-uuid>", manifestPath="deploy/sites/manifest.json")`.
+  There is no shell-only deploy path: the Freebuff Sites API is the deploy command. After the
+  receipt succeeds, confirm publication with `sites_inspect`, open the live URL, and repeat the
+  live checks for metadata, missing-slug 404, signed-out editor, manifest/icons and second-tab
+  autosave. Until then every phase-2–10 change is local-only.
+- **P1 editor first-paint CLS — STUCK after three measured attempts:** the 1440×900 probe
+  (`artifacts/verify/cls-before.json`) measured **0.5287** over 17 shifts. Attempt 1 shipped
+  `page-experience.css` with the document: **0.5075**. Attempt 2 trusted the workflow section
+  instead of the synthetic first pane: **0.5179**, so it was reverted. Attempt 3 put
+  `#designPagesManager` in its final static position and kept the static stylesheet:
+  **0.4959** over 17 shifts (commit `ff5f5c1`). An initial 0.4194 reading was **invalid**: the
+  manager had been grouped into the hidden Event pane, and the full suite caught the displaced
+  Pages cards. Explicit `data-studio-group="pages"` grouping fixed it; the corrected probe is
+  0.4959. The remaining contributors are deferred editor modules growing the canvas toolbar
+  (0.1537, 0.0628, 0.0443) and expanding/collapsing the inspector `ix-groups` (0.0581 +
+  0.0523); reaching the 0.1 target needs the deferred UI loaded before paint, which is a larger
+  boot redesign than the no-rewrite rule allows. The two safe invariants are guarded by a
+  collected test in `tests/v22_2_page_experience_contract_test.py`; the P1 remains open and is
+  marked stuck, not fixed.
 - **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
   **0 failed checks**; final full suite **223 passed, 2 warnings in 883.42 s (exit 0)**; one P1
   fixed (BUG-R1-1) and proven live, two P2s logged (soft 404, CSP console), one stale
@@ -78,15 +103,35 @@
   (`8c1d4e2f-…`) was **rejected before a receipt was created**: Sites quota is
   `state: suspended` because daily requests reached **10,755 / 10,000** (monthly 10,755 /
   100,000). The site is paused until **2026-11-02T00:00Z**; no new build is being served. The
-  current static build is unchanged from the last deploy, so the 118 accessible live records still
-  describe the current static HEAD. `/i/<missing>` and the signed-out editor are verified at 1440
-  on the local production server. `einvite-app` and `einvite-tunnel` are active; preview remains
-  on its 2026-10-31 build.
+  served build is still the last deploy; the phase-10 static-manager/styles changes are local-only.
+  `/i/<missing>` and the signed-out editor are verified at 1440 on the local production server.
+  `einvite-app` and `einvite-tunnel` are active; preview remains on its 2026-10-31 build.
 - **Baseline already measured:** build/bundles/smoke green; layout grazed 600 ms once and passed on a
   quiet rerun; pytest profile before the fixes was **5 failed / 218 passed** (15:01). Full log under
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — phase-10: editor first-paint CLS mitigation (P1 stuck)
+- The 1440×900 CLS probe measured **0.5287** over 17 shifts before the change. Static
+  `page-experience.css` alone reached **0.5075**; the workflow-section boot experiment reached
+  **0.5179** and was reverted. Moving `#designPagesManager` to its final static position on top
+  of the static stylesheet, with explicit `data-studio-group="pages"` grouping, reached
+  **0.4959** over 17 shifts (`ff5f5c1`). The earlier 0.4194 reading was invalid because the
+  manager was hidden in the Event pane; the corrected probe is the only measurement used here.
+- The remaining shifts are deferred editor modules resizing the canvas toolbar (0.1537, 0.0628,
+  0.0443) and the inspector `ix-groups` (0.0581 + 0.0523). Reaching the 0.1 target needs those
+  modules to render before first paint, which is a boot redesign rather than a targeted fix. The
+  P1 is therefore marked **stuck**, not fixed; the two safe structural invariants are guarded by
+  `tests/v22_2_page_experience_contract_test.py`.
+- The recorded deploy was retried at 12:50Z and again at 13:40Z after the owner explicitly
+  requested it; both attempts were refused by the Sites daily quota. The exact error, quota
+  numbers and post-reset sequence are at the top of this file. No further retry is queued.
+- The first full run after the static placement failed `template_pack_edit_export_test` because
+  the manager was grouped into the hidden Event pane. Explicit `data-studio-group="pages"` fixed
+  the regression; the collected contract guard covers the boot invariants. Final suite:
+  **231 passed, 1 warning in 1068.91 s (exit 0)**; the warning is the known worker-thread SQLite
+  teardown message. `build.py all --check` and `compileall` are green.
 
 ### 2026-11-01 — phase-7/8 close-out: generated metadata, suite green
 - `3d6ff85` (`phase-7`) records the 86-byte editor bundle change and its new SHA-256 in the

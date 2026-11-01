@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **15** open/owner-blocked defects (7 fixed in rounds 1–3 and phases 4–6; 1 stuck manual runner) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
+| Counts in this file | **14** open/owner-blocked defects (7 fixed in rounds 1–3 and phases 4–6; 2 stuck: the editor first-paint CLS and the manual canvas runner) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -53,6 +53,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 | 2026-11-01 | #12 admin suspension UI coverage | `98d0306` | `users-v2` Suspended/Active badge pinned on the real row; no product change |
 | 2026-11-01 | #14 test data-dir isolation + inline editor runner | `e4a81c0` | autouse `EINVITE_DATA_DIR` restore; `env_isolation_test`; runner boots professional editor v17 |
 | 2026-11-01 | Phase-7/8 close-out: generated manifests, Khmer policy | `3d6ff85`, `f2bfcfe` | full suite **230 passed in 1125.10 s (exit 0)**; final build/compile/bundle checks recorded in `PROGRESS.md` |
+| 2026-11-01 | Phase-10: static Pages stylesheet/manager placement; deploy retry refused | `ff5f5c1` | CLS **0.5287 → 0.4959** (the earlier 0.4194 was invalid while the manager was hidden in Event); remaining deferred-module shifts documented as stuck; full suite **231 passed in 1068.91 s (exit 0)**; Sites quota daily **10,755/10,000**, reset **2026-11-02T00:00Z**; two attempts refused, no further retry queued |
 
 ---
 
@@ -62,7 +63,7 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 
 | # | Area | Symptom | Pri | Next action | Src |
 |---|---|---|---|---|---|
-| 1 | Editor | First-paint CLS **0.5003** at 1440 px: late `.ei-section-order-builder` mount shifts the page grid 184 px; `page-experience.js` rebuilds the Pages host with `innerHTML` after the builder exists. Nine CSS reservations were measured and refuted. | P1 | Fix the boot order — render the builder before the Pages host is replaced. Do **not** add another reservation. | FB-75 → OD-23 |
+| 1 | Editor | **STUCK 2026-11-01** after three measured attempts. Baseline was **0.5287** at 1440×900; late toolbar/inspector modules still move the canvas after first paint. Static `page-experience.css` + static Pages-manager placement with explicit Pages grouping reached **0.4959** (`ff5f5c1`); a workflow-section boot trust made it **0.5179** and was reverted. The earlier 0.4194 was invalid: the manager was hidden in the Event pane. | P1 | Do **not** add another reservation. The remaining 0.1537/0.0628/0.0443 toolbar shifts and 0.0581/0.0523 inspector shifts need the deferred UI loaded before paint; that is a boot redesign, not a targeted fix. Structural invariants are guarded by the collected test in `tests/v22_2_page_experience_contract_test.py`. | FB-75 → OD-23 |
 | 2 | Guest page | **Fixed 2026-11-01** (`bbd3b9d`). Every published invitation showed **three `HTTP 401` blocks** (`signup-sheets`, `polls`, `album` fetch host routes anonymously). | fixed | Shipped the documented default: a 401 removes the section. Public read routes with `/api/public/` access checks remain the alternative if guests should read them. | UX-9 / OWNER-QUEUE |
 | 3 | Guests | **Fixed 2026-11-01** (`12087a8`). Row actions **Edit / Link / QR / Check-in / Remove did nothing** — the `[data-edit]` delegation was removed in `92806ad`; the functions and API routes were intact. | fixed | Delegated handler on the stable list container; **still owed:** one browser test per action. | UX-8 / OWNER-QUEUE |
 | 4 | Templates | `templates.html` CLS **0.604**, never fixed. | P2 | Ship the first screen's geometry in markup, as FB-43/44/67/75 did elsewhere. | D-1 |
