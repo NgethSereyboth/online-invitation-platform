@@ -9,14 +9,26 @@
   (P0/P1/P2), not test triage.
 - **Round 0 (baseline close-out):** `lt_4_3`, `lt_4_4` and `lt_2_2` pass — `4 passed in 51.59 s`.
   Verdicts and evidence: `bugs/round-0/FINDINGS.md`; plan: `FIX_PLAN.md`.
-- **Live site:** not yet redeployed in this mission. Deploy surface is `deploy/sites/` + `deploy/local/`;
-  the Python backend runs on this PC and Sites hosts the front end. Deployment follows the full
-  verification batch.
+- **Live site:** production redeployed 2026-11-01 02:27 UTC at
+  `https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page` and `published: true`. The served
+  `bundle-index-2.js` SHA-256 matches the local build (`2207b4a8…d021fd04`), the page returns 200 and
+  `/api/health` returns 200 through the Worker. `einvite-app` and `einvite-tunnel` are active; preview
+  remains on its 2026-10-31 build.
 - **Baseline already measured:** build/bundles/smoke green; layout grazed 600 ms once and passed on a
   quiet rerun; pytest profile before the fixes was **5 failed / 218 passed** (15:01). Full log under
   `artifacts/next-work/gates/`.
 
 ## Log
+
+### 2026-11-01 — verification and production deploy
+- Full suite: **223 passed, 2 warnings in 866.15 s** (`artifacts/verify/pytest-full.log`), exit 0.
+  The warnings are a teardown-time `sqlite3.OperationalError` on a worker thread, not failures.
+- Gates: `build.py all --check` → `MIRROR_CHECK_PASSED`; `bundles --check` →
+  `ROUTE_BUNDLE_CHECK_PASSED`; `compileall` clean. This repo configures no ESLint, tsc or ruff; those
+  build gates are its lint/type-check equivalent.
+- Deployed production with the existing `deploy/sites/manifest.json`. Before: live bundle had
+  `reorgBody=0`; after: `reorgBody=1` and byte-identical SHA-256 to `artifacts/sites-public`.
+- Restarted `einvite-app`; `/api/health` through the Site returns 200. Round 1 not started, per order.
 
 ### 2026-11-01 — round 0: the three editor baseline failures
 - **BUG-R0-1 (product, P1):** `typography-editor.js` installs after `inspector-reorg.js` and rebuilt
@@ -52,9 +64,6 @@
   (15 wedding, 5 ceremony, 36 all, 1 on "maroon") — no assertion removed or weakened.
 
 ## Open questions
-- **Live deploy target:** `deploy/sites/site-id.txt` exists but no deployment was performed in this
-  mission. If the Sites project is not the intended target, say so; otherwise the verification batch
-  is followed by the existing deploy path there.
 - **Inspector disclosures:** the 2026-10-30 reorganisation files text controls one disclosure deep.
   Round 1 should judge whether that is acceptable interaction cost for colour/digit conversion, or
   whether the Text group should open its first sub-section by default. No change made in round 0.
