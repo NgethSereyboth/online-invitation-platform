@@ -315,8 +315,8 @@
     },
     "guests.html": {
       "javascript": "bundle-guests.js",
-      "scriptBytes": 119940,
-      "scriptSha256": "f26f2edef6c499e31410925b2105096f8d5dad8b2026b4efb662c3ba400cd510",
+      "scriptBytes": 120389,
+      "scriptSha256": "d1e78fe5b9ce66022ec06ce8d034c3efe50df4bd10999d6781c7f3c20b601f95",
       "sources": {
         "scripts": [
           "core/i18n.js",
@@ -574,8 +574,8 @@
       "deferredStylesheetBytes": 0,
       "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-public.js",
-      "scriptBytes": 243084,
-      "scriptSha256": "63c62d3d2c1f1cdc4da9c67ae94364396a0795487ac4ff60ddc7b0e6c69ee817",
+      "scriptBytes": 243276,
+      "scriptSha256": "cbda372c33280706ab67038ec6722ff9affa1d223d8a3d7c9ce7adbe840e69fc",
       "sources": {
         "deferredScripts": [
           "invitation-edit-history.js"

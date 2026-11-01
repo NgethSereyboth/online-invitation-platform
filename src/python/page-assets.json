@@ -92,7 +92,7 @@
       ]
     },
     "guests.html": {
-      "bytes": 396486,
+      "bytes": 396935,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
@@ -142,7 +142,7 @@
       ]
     },
     "public.html": {
-      "bytes": 382265,
+      "bytes": 382457,
       "scriptCount": 2,
       "scripts": [
         "backend-mode.js",
