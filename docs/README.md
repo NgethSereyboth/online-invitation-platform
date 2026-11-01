@@ -40,7 +40,7 @@ sudo bash deploy/linux/install-einvite-laptop.sh --install-system-packages
 |-------|-------------|
 | [FIRST_TIME_INSTALL_AND_HOSTING.md](FIRST_TIME_INSTALL_AND_HOSTING.md) | Complete installation guide for all platforms |
 | [LINUX_LAPTOP_HOSTING.md](LINUX_LAPTOP_HOSTING.md) | One-command Linux laptop setup |
-| [LAPTOP_HOSTING.md](LAPTOP_HOSTING.md) | Windows laptop hosting guide |
+| [LAPTOP_HOSTING.md](guides/LAPTOP_HOSTING.md) | Windows laptop hosting guide |
 | [ONLINE_AND_SERVER_HOSTING.md](ONLINE_AND_SERVER_HOSTING.md) | Production server deployment |
 | [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) | Production architecture and operations |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture overview |

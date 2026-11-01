@@ -207,7 +207,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 - Real-phone checklist still unrun — the demo needs a host a phone can reach (owner #8).
 - Production domain activation needs a DNS/certificate provider; native installers, external AI
   providers, payment, monitoring, malware scanning and external object storage all need credentials.
-- `docs/PRODUCTION_LAUNCH_CHECKLIST.md` remains the gate for anything public.
+- `docs/guides/PRODUCTION_LAUNCH_CHECKLIST.md` remains the gate for anything public.
 
 ---
 
@@ -223,7 +223,8 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 4. `README.md` is SHA-256 pinned by `tests/v27_3_5_release_evidence_test.py` (OD-7 normalises line
    endings). Edit it only together with the pinned digest.
 5. Seven `docs/V0_52_*.md` files, `MULTI_HOST_DEPLOYMENT_REPORT.md` and `docs/ASSETS.md` are read by
-   tests — keep them until those tests change.
+   tests — keep them until those tests change. `docs/FONT_LICENSES_AND_REGISTRY.md` and
+   `docs/LEGACY-VERSION-HISTORY.md` are read by the font registry and a version test, so both stay put.
 
 ---
 
@@ -274,5 +275,5 @@ Each wave ends with `python3 build.py all`, `python3 build.py bundles --check` a
 | `docs/ROADMAP-V2.md` §2 | §4 | `… -- docs/ROADMAP-V2.md` |
 | `docs/a11y/WCAG-AA-AUDIT.md` | §5 | still on disk |
 | `artifacts/next-work/OWNER-QUEUE.md` | §3 | still on disk (gitignored) |
-| `plans/001…004` | §8 item 5; plan 002 tenant isolation is the only code item left there | still on disk |
+| `plans/001…004` | superseded: all four shipped; plan 002’s 404 path is live (`src/python/server.py:3998`) | `git checkout backup/pre-cleanup -- plans/` |
 | Everything ever fixed or rejected | `docs/HISTORY.md` | — |

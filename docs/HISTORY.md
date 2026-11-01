@@ -22,7 +22,7 @@
   178 superseded work orders, version reports, review passes and plans; their paths and sizes are in
   `docs/CLEANUP_MANIFEST.md`.
 - **Not recorded here.** Product behaviour is documented in `README.md`, `docs/ARCHITECTURE.md`,
-  `docs/DESIGN.md`, `docs/SECURITY.md` and the per-domain docs under `docs/`. The authoritative version
+  `docs/design/DESIGN.md`, `docs/SECURITY.md` and the per-domain docs under `docs/`. The authoritative version
   timeline stays in `VERSION_HISTORY.md` (pre-0.52 detail in `docs/LEGACY-VERSION-HISTORY.md`).
 
 ## 2. Bugs and fixes

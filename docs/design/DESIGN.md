@@ -144,8 +144,8 @@ The pack designs in four registers and maps each font role to a registered famil
 | Modern | Kantumruy Pro (→ Noto Sans Khmer) | Noto Sans Khmer | Jost (→ Noto Sans) | birthdays, business |
 | Festive | Koulen (→ Noto Sans Khmer) | Battambang (→ Noto Sans Khmer) | Montserrat (→ Noto Sans) | new year, water festival |
 
-Substitutions are listed in [FONT-SUBSTITUTIONS.md](templates/FONT-SUBSTITUTIONS.md);
-the gap is tracked in [FONT-GAP-2026-10-25.md](templates/FONT-GAP-2026-10-25.md).
+Substitutions are listed in [FONT-SUBSTITUTIONS.md](../templates/FONT-SUBSTITUTIONS.md);
+the gap is tracked in [FONT-GAP-2026-10-25.md](../templates/FONT-GAP-2026-10-25.md).
 No design downloads a third-party font at runtime.
 
 ### Khmer typesetting rules

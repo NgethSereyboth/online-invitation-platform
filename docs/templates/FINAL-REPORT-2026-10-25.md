@@ -25,7 +25,7 @@ sits on top of it as uncommitted changes.
 | TP-5.2 Public-page proof | **done, residual recorded** | `docs/templates/PUBLIC-PROOF-2026-10-25.md`: overflow/CSP/ornaments/alt pass on 5 categories × 3 views; the 375 px text defect was a one-line bug in the shared `installResponsive` discovery (spill 32/34 → 1/34, clipped 6 → 3). Residual: 3 objects overhang 0.7–6.2 px, owner call in `OWNER-QUEUE.md` |
 | TP-6.1 Khmer hygiene | **done** | `KHMER-HYGIENE-2026-10-25.md`: 453 text objects (240 Khmer), 0 Khmer strings over 18 code points without U+200B, 0 with non-zero letter-spacing |
 | TP-6.2 Cultural checklist | **done** | `CULTURAL-CHECKLIST-2026-10-25.md`, 36/36 pass |
-| TP-6.3 Docs | **done** | `CATALOG.md`, `HOW-TO-ADD-A-TEMPLATE.md`, `docs/DESIGN.md` addendum |
+| TP-6.3 Docs | **done** | `CATALOG.md`, `HOW-TO-ADD-A-TEMPLATE.md`, `docs/design/DESIGN.md` addendum |
 | TP-6.4 Close | **this report** | below |
 
 ## 2. Acceptance matrix (A1–A12)

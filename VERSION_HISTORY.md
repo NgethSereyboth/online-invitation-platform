@@ -557,7 +557,7 @@ tests pass isolated and in the clean rerun.
   (a long-lived canvas page stops reaching `editorReady` in headless Chromium), records
   375 on a fixed-width page instead of resizing, and writes after each row.
   `tools/acceptance-report.py` renders the A1–A12 matrix.
-- **Docs.** `docs/DESIGN.md`, `docs/templates/{CATALOG,HOW-TO-ADD-A-TEMPLATE,
+- **Docs.** `docs/design/DESIGN.md`, `docs/templates/{CATALOG,HOW-TO-ADD-A-TEMPLATE,
   ACCEPTANCE-2026-10-25,DESIGN-REVIEW-2026-10-25,KHMER-HYGIENE-2026-10-25,
   CULTURAL-CHECKLIST-2026-10-25}.md`, thumbnail hashes refreshed in `docs/ASSETS.md`.
 - **Primary files:** `src/js/export-quality.js`, `src/js/renderer-core.js`, `src/js/app.js`,
