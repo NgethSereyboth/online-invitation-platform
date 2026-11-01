@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **18** open defects (+5 untriaged suite failures below) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
+| Counts in this file | **18** open defects (+3 untriaged suite failures below) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -80,6 +80,11 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 `tools/run-gates.py --phase pytest` at `1bd1717`: **5 failed, 218 passed in 15:01**. The gate of
 record at `4880fcb` had 223 passed, so the suite is **not green at HEAD**. None of these files is
 one I changed in the guest fixes; each needs triage before anyone claims a green baseline.
+
+**Status after phase 1 (2026-11-01):** `platform_jobs` is created by the SQLite bootstrap, so
+`ai_resource_scopes_test` passes; the gallery test now drives the shared studio filter and passes.
+**Three remain** — colour-picker, run-typography and Khmer-format browser tests, all timing out on
+editor or public-page selectors after the 2026-10-31 chrome changes.
 
 | `tests/ai_resource_scopes_test.py::test_ai_resource_scopes` | `http.client.RemoteDisconnected: Remote end closed connection without response` | AI resource scopes / server |
 | `tests/lt_2_2_khmer_format_test.py::test_public_rendering_and_editor_round_trip` | `playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 10000ms exceeded.` | Khmer format round-trip (browser) |
