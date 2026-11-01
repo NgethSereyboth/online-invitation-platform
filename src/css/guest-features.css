@@ -126,7 +126,7 @@
 /* Album */
 .album-upload {
   display: grid;
-  grid-template-columns: 1fr 2fr auto;
+  grid-template-columns: minmax(160px, auto) minmax(0, 1fr) auto;
   gap: 8px;
   margin-bottom: 16px;
   align-items: end;
@@ -134,7 +134,12 @@
 .album-upload label {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   font-size: 12px;
+}
+.album-upload input[type=file] {
+  width: 100%;
+  min-width: 0;
 }
 .album-grid {
   display: grid;
@@ -173,6 +178,17 @@
   display: block;
   margin: 16px auto;
   padding: 8px 16px;
+}
+.album .load-more[hidden] {
+  display: none !important;
+}
+@media (max-width: 640px) {
+  .album-upload {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .album-upload button {
+    width: 100%;
+  }
 }
 
 /* Delivery dialog */
