@@ -216,7 +216,7 @@ Summary is each file's own first heading, not an invented description.
 | `docs/superpowers/plans/2026-10-16-version-free-source-names.md` | 8.3 KB | **delete** | completed plan document | Version-Free Source Names — Staged Plan |
 | `docs/SESSION-LOG-2026-09-26.md` | 8.4 KB | **delete** | dated agent session log (gitignored, so it was invisible to the tracked scan) | Session log — 2026-09-26 |
 | `docs/UX-AUDIT-2026-09-26.md` | 12 KB | **delete** | dated UX audit (gitignored; superseded by the 2026-10-29/30 audits) | UX audit — 2026-09-26 |
-| `docs/reviews/*.png` | 2.1 MB | **delete** | review captures from completed passes (gitignored; `docs/reviews/*.png` rule) | — |
+| `docs/reviews/*.png` | 42 MB | **delete** | review captures from completed passes (gitignored; `docs/reviews/*.png` rule) | — |
 
 ## 3. Group B and C — artefacts, caches and test sources
 
@@ -263,7 +263,7 @@ Summary is each file's own first heading, not an invented description.
 | Broken links to removed files | markdown-link scan over every tracked `.md` | **0** · three pre-existing hits remain and are unrelated: `docs/plugins/{PLUGIN-SANDBOX,MODERATION-PIPELINE}.md` are `(…)/(args)` parenthetical false positives, and `docs/CANVA-MOTION.md` points at `artifacts/canvas-motion/P6/…`, which was already absent |
 | Tracked deletion mechanism | `git rm` | 155 files, every one restorable from `backup/pre-cleanup` |
 | Untracked deletion mechanism | tar → delete | 21 paths archived to `artifacts/cleanup-backup-2026-11-01.tar.gz` (346.2 MB, gitignored) and the gitignored leftovers to `artifacts/cleanup-backup-2026-11-01-ignored.tar.gz` before removal |
-| Disk | `du` before/after | ≈ **685 MB** removed: `.lighthouseci/` 668 MB, `screenshots/` 8.3 MB, `.ff_screenshots/` 8.2 MB, `.sec04-tmp/` 485 KB, `deliverables/` 41 KB, plus caches |
+| Disk | `du` before/after | ≈ **730 MB** removed: `.lighthouseci/` 668 MB, `docs/reviews/` 42 MB, `screenshots/` 8.3 MB, `.ff_screenshots/` 8.2 MB, `.sec04-tmp/` 485 KB, `deliverables/` 41 KB, plus caches |
 
 **Not run:** the full 223-test suite and the ten-phase gate matrix. Only documentation and review
 files were removed; the five tests that read `docs/` or build inputs were run and pass, and both build
