@@ -81,13 +81,17 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 record at `4880fcb` had 223 passed, so the suite is **not green at HEAD**. None of these files is
 one I changed in the guest fixes; each needs triage before anyone claims a green baseline.
 
-| Test | First error | Area |
-|---|---|---|
-| `tests/ai_resource_scopes_test.py::test_ai_resource_scopes` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | AI resource scopes / server |
-| `tests/lt_2_2_khmer_format_test.py::test_public_rendering_and_editor_round_trip` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Khmer formatting round-trip |
-| `tests/lt_4_3_color_picker_test.py::test_colour_picker_extras` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Colour picker (Playwright) |
-| `tests/lt_4_4_run_typography_test.py::test_run_typography_from_inspector` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Run typography (Playwright) |
-| `tests/template_pack_gallery_test.py::test_pack_gallery_lists_filters_and_opens_a_design` | `- waiting for locator("#templatePackGallery [data-pack-filter=\"wedding\"]")` | Template-pack gallery (Playwright) |
+| `tests/ai_resource_scopes_test.py::test_ai_resource_scopes` | `http.client.RemoteDisconnected: Remote end closed connection without response` | AI resource scopes / server |
+| `tests/lt_2_2_khmer_format_test.py::test_public_rendering_and_editor_round_trip` | `playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 10000ms exceeded.` | Khmer format round-trip (browser) |
+| `tests/lt_4_3_color_picker_test.py::test_colour_picker_extras` | `playwright._impl._errors.TimeoutError: Locator.wait_for: Timeout 15000ms exceeded.` | Colour picker (browser) |
+| `tests/lt_4_4_run_typography_test.py::test_run_typography_from_inspector` | `playwright._impl._errors.TimeoutError: Page.wait_for_selector: Timeout 15000ms exceeded.` | Run typography (browser) |
+| `tests/template_pack_gallery_test.py::test_pack_gallery_lists_filters_and_opens_a_design` | `playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.` | Template-pack gallery (browser) |
+
+Four of the five are Playwright timeouts, and the selector they wait on —
+`#templatePackGallery [data-pack-filter=…]` — **does not exist in `src/html` or `src/js`**; the
+2026-10-30 PW-7 pass merged the filter rows. So either that pass regressed the gallery or these
+tests are stale: prove which before editing either side. The fifth failure is a server-side
+`RemoteDisconnected` (`no such table: platform_jobs` seen in a worker thread).
 
 ---
 
