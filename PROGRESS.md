@@ -1,7 +1,8 @@
 # PROGRESS — autonomous mission log
 
 ## Current status
-- **Branch:** `chore/cleanup`, local commits only (OD-3). Nothing pushed.
+- **Branch:** `chore/cleanup`; work through `7e22bef` is pushed to `origin/chore/cleanup`.
+  Security report commit `16fd826` is local only; the push decision is under Open questions.
 - **Queue of record:** `docs/NEXT-WORK.md` — 18 open defects, **0 untriaged suite failures**, 36
   work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
@@ -33,14 +34,19 @@
 
 ## Log
 
-### 2026-11-01 — Dependabot inventory
-- Documented all **92 open alerts** (49 unique advisories; 13/49/29/1 alerts by severity;
-  6/26/16/1 unique) in `docs/security/DEPENDABOT-ALERTS-2026-11-01.md`, including every alert ID,
-  manifest, version, fix and advisory link.
-- The default branch is the source of the count. The current branch already has Pillow 13.0.0
-  (82 alerts fixed once merged); Brotli 1.2.0 remains in three manifests; the seven old npm alerts
-  are no longer in this lockfile. Current `npm audit` separately reports three high dev-only
-  `zod`/`puppeteer-core` chain findings.
+### 2026-11-01 — Dependabot inventory (docs complete; follow-ups open)
+- Created `docs/security/DEPENDABOT-ALERTS-2026-11-01.md` and committed it as `16fd826`;
+  the commit is **local only and not pushed**.
+- Confirmed counts: **92 alerts / 49 unique advisories**; **13 critical, 49 high, 29 medium,
+  1 low** alerts (6/26/16/1 unique by severity). The report includes every alert ID, manifest,
+  installed version, fix and advisory link.
+- Three open follow-ups identified by the report:
+  1. **Pillow:** 82 alerts remain counted against `main` until the already-committed Pillow
+     `13.0.0` bump (`dac38e0`) reaches `main`.
+  2. **Brotli:** upgrade `1.2.0` → `1.2.1` in `docs/requirements-production.txt` and
+     `tools/requirements.txt`.
+  3. **npm:** resolve the dev-only advisories through `puppeteer-core` → `chromium-bidi` → `zod`;
+     the current `npm audit` reports three high findings.
 - No dependency pins were changed in this pass.
 
 ### 2026-11-01 — round 2: guest-page P2s fixed, deployed and re-swept
@@ -139,3 +145,6 @@
 - **Inspector disclosures:** the 2026-10-30 reorganisation files text controls one disclosure deep.
   Round 1 should judge whether that is acceptable interaction cost for colour/digit conversion, or
   whether the Text group should open its first sub-section by default. No change made in round 0.
+- **Push the Dependabot report?** `16fd826` is committed locally but not pushed. Pushing it would
+  publish the vulnerability inventory to the public `chore/cleanup` branch; decide whether to push
+  it now, after the Brotli/npm follow-ups, or not at all.
