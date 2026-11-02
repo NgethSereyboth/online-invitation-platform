@@ -7,8 +7,13 @@
   const left = document.querySelector('aside.left');
   const right = document.querySelector('aside.right');
   if (!body || !stage || !left || !right) return;
-  // Only add mobile-editor-v14 class at ≤600px where the legacy mobile layout applies
-  const mq = matchMedia('(max-width: 600px)');
+  // BUG-R4-2: the responsive contract switches the editor to its mobile
+  // drawer layout at ≤820px (EInviteResponsiveLayout.MOBILE_MAX), but this bar
+  // and the drawer commands used to stop at 600px. Between 601 and 820 the rail
+  // was off-canvas and inert with no control to open it, so Pages/Elements/Text
+  // were unreachable at 768. Both breakpoints must be the same value.
+  const MOBILE_MAX = window.EInviteResponsiveLayout?.MOBILE_MAX || 820;
+  const mq = matchMedia(`(max-width: ${MOBILE_MAX}px)`);
   function applyMobileClass() {
     if (mq.matches) body.classList.add('mobile-editor-v14');
     else body.classList.remove('mobile-editor-v14');

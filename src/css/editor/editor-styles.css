@@ -1441,6 +1441,35 @@ body[data-page="index"] #documentTitle {
        aside 356 but host parked at x=-591). */
     transform: none !important;
   }
+  /* BUG-R4-2: 601–820 is a drawer layout, but the bar that opens the drawer
+     was only styled inside max-width:600px. At 768 the rail was off-canvas and
+     inert with no visible control to open it, so Pages/Elements/Text were
+     unreachable. Show the same bar across the whole drawer range. */
+  body.mobile-editor-v14 { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  body.mobile-editor-v14 .mobile-editor-v14-bar {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 320;
+    min-height: calc(64px + env(safe-area-inset-bottom));
+    padding: 6px 5px calc(5px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--app-surface, #fff) 96%, transparent);
+    border-top: 1px solid var(--app-line, #ddd);
+    box-shadow: 0 -12px 34px rgba(0, 0, 0, .13);
+    backdrop-filter: blur(14px);
+  }
+  body.mobile-editor-v14 .mobile-editor-v14-bar button {
+    min-width: 0 !important; min-height: 52px !important; padding: 5px 2px !important;
+    border: 0 !important; border-radius: 12px !important; background: transparent !important;
+    display: flex !important; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; color: var(--app-muted, #666) !important; box-shadow: none !important;
+  }
+  body.mobile-editor-v14 .mobile-editor-v14-bar button span { font-size: 18px; line-height: 1; }
+  body.mobile-editor-v14 .mobile-editor-v14-bar button small {
+    font-size: 9px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  }
+  body.mobile-editor-v14 .mobile-editor-v14-bar button.active {
+    background: var(--app-accent-soft, #f3e5e8) !important; color: var(--app-accent, #8b465b) !important;
+  }
 }
 
 /* U1-6 · Dark theme: surfaces that hard-coded white/#eee while their text
