@@ -76,5 +76,5 @@
 - `python3 build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`
 - `python3 -m compileall -q src/python tests tools` → exit 0
 - `node --check`: no JS changed this round (N/A)
-- Full pytest suite: see `PROGRESS.md` (running at the time of writing).
+- Full pytest suite: **231 passed, 1 warning in 1210.03 s (exit 0)**.
 - The repo has no ESLint or TypeScript toolchain; this is noted here as required.

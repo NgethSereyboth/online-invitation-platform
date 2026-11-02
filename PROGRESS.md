@@ -25,9 +25,10 @@
   for settled rects, reveals the Transform panel, asserts `.motion-line.motion-snap`, the Guides
   toggle's persisted `editorModel.guidesVisible`, and the quick-inspector mobile default with its
   numeric transform. The stale expectations are listed in `bugs/round-4/FINDINGS.md`.
-- **Final gates (2026-11-02):** full suite **231 passed, 1 warning in 1291.81 s (exit 0)**;
-  `build.py all --check` printed `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall` exited 0; the
-  changed JS passes `node --check`. No ESLint/TypeScript toolchain exists in this repo.
+- **Final gates (2026-11-02):** round 6 re-ran the suite with no code change: **231 passed, 1
+  warning in 1210.03 s (exit 0)**. `build.py all --check` printed `BUILD_OK` +
+  `MIRROR_CHECK_PASSED`; `compileall` exited 0; no JS changed, so `node --check` was N/A. No
+  ESLint/TypeScript toolchain exists in this repo.
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
   **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
   **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at

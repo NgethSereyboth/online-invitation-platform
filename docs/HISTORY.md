@@ -321,3 +321,6 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
 - **No new defect**, so no source change and no redeploy. The live `bundle-index.css` SHA-256 still
   equals the local build (`8e323747…1aced`). Live CLS on the `/` demo: **0.000 (0 shifts)**; the
   workspace editor stays **0.3927**, open and not addressed. Record: `bugs/round-6/FINDINGS.md`.
+- **Gates:** `build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`; `compileall` exit 0; full
+  suite **231 passed, 1 warning in 1210.03 s (exit 0)**. No JS changed, so `node --check` was N/A;
+  the repo still has no ESLint/TypeScript toolchain.
