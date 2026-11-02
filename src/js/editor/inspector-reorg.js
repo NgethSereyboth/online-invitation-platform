@@ -364,6 +364,10 @@
     const hostProps = props();
     if (!hostPane || !hostProps) return;
     const selected = hasSelection();
+    // The first-selection prewarm briefly selects and clears an object to load
+    // typography code. It must not reveal six group summaries for one frame;
+    // that was the late 220px -> 502px -> 220px Pages-group reflow.
+    const prewarming = document.body.dataset.editorPrewarm === '1';
     hostPane.classList.toggle('ix-has-selection', selected);
     hostPane.classList.toggle('ix-no-selection', !selected);
     // PW-2: the Transform panel is dimmed + hinted until something is selected.
@@ -379,12 +383,12 @@
     });
     hostPane.querySelectorAll('.ix-group').forEach((groupNode) => {
       const page = groupNode.dataset.ixGroup === 'page';
-      groupNode.hidden = !page && !selected;
+      groupNode.hidden = !page && (!selected || prewarming);
       // Boot restore can briefly restore a selection (and therefore a Text
       // group) before the empty state arrives. Do not let that transient
       // open a second accordion; a real pointer/keyboard interaction unlocks
       // the normal selection-driven group below.
-      if (!userInteracted && !page) groupNode.open = false;
+      if ((!userInteracted || prewarming) && !page) groupNode.open = false;
     });
     if (!selected) {
       const pageGroup = hostPane.querySelector('.ix-group[data-ix-group="page"]');
@@ -544,7 +548,7 @@
     document.addEventListener('einvite:selection-changed', () => {
       requestAnimationFrame(() => {
         syncSelection();
-        if (!hasSelection()) openGroup('page', false);
+        if (!hasSelection() || document.body.dataset.editorPrewarm === '1') openGroup('page', false);
         // A restored/transient boot selection must not open the Text group;
         // that grew the inspector, then collapsed it when the real empty
         // state arrived. Only a real pointer/keyboard selection changes it.

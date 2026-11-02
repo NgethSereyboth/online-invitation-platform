@@ -5762,6 +5762,10 @@ boot();
     const hostProps = props();
     if (!hostPane || !hostProps) return;
     const selected = hasSelection();
+
+
+
+    const prewarming = document.body.dataset.editorPrewarm === '1';
     hostPane.classList.toggle('ix-has-selection', selected);
     hostPane.classList.toggle('ix-no-selection', !selected);
 
@@ -5777,12 +5781,12 @@ boot();
     });
     hostPane.querySelectorAll('.ix-group').forEach((groupNode) => {
       const page = groupNode.dataset.ixGroup === 'page';
-      groupNode.hidden = !page && !selected;
+      groupNode.hidden = !page && (!selected || prewarming);
 
 
 
 
-      if (!userInteracted && !page) groupNode.open = false;
+      if ((!userInteracted || prewarming) && !page) groupNode.open = false;
     });
     if (!selected) {
       const pageGroup = hostPane.querySelector('.ix-group[data-ix-group="page"]');
@@ -5942,7 +5946,7 @@ boot();
     document.addEventListener('einvite:selection-changed', () => {
       requestAnimationFrame(() => {
         syncSelection();
-        if (!hasSelection()) openGroup('page', false);
+        if (!hasSelection() || document.body.dataset.editorPrewarm === '1') openGroup('page', false);
 
 
 
@@ -6287,6 +6291,7 @@ boot();
   }
 
   function finish(ok) {
+    if (document.body) delete document.body.dataset.editorPrewarm;
 
 
 
@@ -6310,6 +6315,10 @@ boot();
     api.state = 'active';
     api.at = Math.round(performance.now());
     hideStrip();
+
+
+
+    if (document.body) document.body.dataset.editorPrewarm = '1';
     try { c.bridge.select([c.id], { prewarm: true }); } catch (e) { return finish(false); }
     setTimeout(function () {
       try { c.bridge.select([], { prewarm: true }); } catch (e) {}

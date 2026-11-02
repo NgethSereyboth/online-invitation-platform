@@ -2187,9 +2187,17 @@ _PLATFORM_V32_SERVICE = None
 _PLATFORM_SCHEMA_PATH = None
 def get_platform_v32_service():
     global _PLATFORM_V32_SERVICE, _PLATFORM_SCHEMA_PATH
-    if _PLATFORM_SCHEMA_PATH != str(db_path()):
+    current_schema_path = str(db_path())
+    if _PLATFORM_SCHEMA_PATH != current_schema_path:
+        # The data directory changed. Stop the old worker threads before they
+        # can poll the new/removed SQLite file with a stale service instance.
+        if _PLATFORM_V32_SERVICE is not None:
+            try:
+                _PLATFORM_V32_SERVICE.jobs.shutdown(timeout=5)
+            finally:
+                _PLATFORM_V32_SERVICE = None
         ensure_platform_schema(connect)  # a new data dir needs its own schema (ROADMAP §4.8)
-        _PLATFORM_SCHEMA_PATH = str(db_path())
+        _PLATFORM_SCHEMA_PATH = current_schema_path
     if _PLATFORM_V32_SERVICE is None:
         def platform_audit(user_id, action, target_type, target_id, metadata):
             write_audit_event(user_id, action, target_type, target_id, metadata, "platform-v32")

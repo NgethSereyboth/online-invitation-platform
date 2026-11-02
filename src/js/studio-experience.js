@@ -36,7 +36,9 @@
   if (header) {
     header.classList.add('studio-topbar');
     const brand = header.querySelector('strong');
-    if (brand) {
+    // The editor shell ships the final brand markup; only legacy headers that
+    // still contain plain text need the post-paint replacement.
+    if (brand && !brand.querySelector('.studio-brand-mark')) {
       brand.innerHTML = '<span class="studio-brand-mark">O</span><span class="studio-brand-copy"><b>OKID</b><small>Design Studio</small></span>';
     }
     // The v54 top bar nests #saveState/#previewBtn inside .studio-topbar-right, so

@@ -64,6 +64,7 @@
   }
 
   function finish(ok) {
+    if (document.body) delete document.body.dataset.editorPrewarm;
     // Typography queues one more refresh from the synthetic selection after
     // the bridge has cleared it; restoring now let that stale pass paint the
     // strip for ~40ms with nothing selected (and shift the canvas). Give the
@@ -87,6 +88,10 @@
     api.state = 'active';
     api.at = Math.round(performance.now());
     hideStrip();
+    // This is an internal warm-up selection, not a user selection. Mark the
+    // window so the inspector keeps its boot geometry until the synthetic
+    // selection is cleared and the real empty state renders.
+    if (document.body) document.body.dataset.editorPrewarm = '1';
     try { c.bridge.select([c.id], { prewarm: true }); } catch (e) { return finish(false); }
     setTimeout(function () {
       try { c.bridge.select([], { prewarm: true }); } catch (e) {}
