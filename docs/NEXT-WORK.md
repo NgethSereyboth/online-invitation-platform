@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **14** open/owner-blocked defects (7 fixed in rounds 1–3 and phases 4–6; 1 stuck: the editor first-paint CLS — the manual canvas runner was refreshed and passes in round 4) · **36** open work-order tasks · **18** owner-held decisions · **13** verification debts |
+| Counts in this file | **14** open/owner-blocked defects (8 fixed in rounds 1–6 and phases 4–6; 1 stuck: the pre-v17 manual canvas runners) · **36** open work-order tasks · **18** owner-held decisions · **13** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -54,7 +54,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 | 2026-11-01 | #14 test data-dir isolation + inline editor runner | `e4a81c0` | autouse `EINVITE_DATA_DIR` restore; `env_isolation_test`; runner boots professional editor v17 |
 | 2026-11-01 | Phase-7/8 close-out: generated manifests, Khmer policy | `3d6ff85`, `f2bfcfe` | full suite **230 passed in 1125.10 s (exit 0)**; final build/compile/bundle checks recorded in `PROGRESS.md` |
 | 2026-11-02 | Round 6 six-width live pass: 219 checks, 204 pass, 15 harness failures; no product defect confirmed; clean rerun blocked by the daily allowance | `—` | 202 captures; console/network clean every width; guest/RSVP local 61/61; CLS untouched |
-| 2026-11-02 | Round 6 final local pass: Canvas/X dismissal, static context row, Pages tip, boot-safe selection/prewarm; corrected 1024 gesture target | `fix-round-6` | **225/225 checks**, clean console/network; CLS desktop **0.0962** (one 0.1096 run), mobile **0.0906**; full suite **247 passed, 17 warnings**; live redeploy blocked until allowance reset |
+| 2026-11-02 | Round 6 final local pass: Canvas/X dismissal, static context row, Pages tip, boot-safe selection/prewarm, deterministic mobile/brand markup, SQLite teardown shutdown | `7532368`, `f524c31` | **225/225 checks**, clean console/network; CLS desktop **0.0698 / 0.0679 / 0.0810**, mobile **0.0973 / 0.0973 / 0.0943**; full suite **247 passed / 16 plugin warnings in 1092.83 s**; single deploy attempt refused by allowance (10,301/10,000), no receipt |
 | 2026-11-01 | Phase-10: static Pages stylesheet/manager placement; deploy retry refused | `ff5f5c1` | CLS **0.5287 → 0.4959** (the earlier 0.4194 was invalid while the manager was hidden in Event); remaining deferred-module shifts documented as stuck; full suite **231 passed in 1068.91 s (exit 0)**; Sites quota daily **10,755/10,000**, reset **2026-11-02T00:00Z**; two attempts refused, no further retry queued |
 
 ---
@@ -65,7 +65,7 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 
 | # | Area | Symptom | Pri | Next action | Src |
 |---|---|---|---|---|---|
-| 1 | Editor | **IMPROVED 2026-11-02, residual open**. Baseline **0.5287** → round 6 final **0.0962** desktop (one volatile run **0.1096**) and **0.0906** mobile. Remaining is the late Pages-group reflow (~0.03), not the old toolbar/inspector boot growth. | P1 | The ≤0.1 target is met on the settled desktop and mobile runs. A further fix means changing when the Pages builder folds its sections; do not add another reservation or weaken the observer. | FB-75 → OD-23 |
+| 1 | Editor | **Fixed 2026-11-02.** Baseline **0.5287** → final **0.0698 / 0.0679 / 0.0810** desktop and **0.0973 / 0.0973 / 0.0943** mobile, three consecutive runs each; all < 0.1. The prewarm selection no longer reveals inspector groups, and the 220 → 502 → 220 px Pages-group reflow is gone. | P1 | Keep the prewarm flag internal: real selections and programmatic user actions must still open their groups. Recheck the six CLS records after any boot-order change. | FB-75 → OD-23 |
 | 2 | Guest page | **Fixed 2026-11-01** (`bbd3b9d`). Every published invitation showed **three `HTTP 401` blocks** (`signup-sheets`, `polls`, `album` fetch host routes anonymously). | fixed | Shipped the documented default: a 401 removes the section. Public read routes with `/api/public/` access checks remain the alternative if guests should read them. | UX-9 / OWNER-QUEUE |
 | 3 | Guests | **Fixed 2026-11-01** (`12087a8`). Row actions **Edit / Link / QR / Check-in / Remove did nothing** — the `[data-edit]` delegation was removed in `92806ad`; the functions and API routes were intact. | fixed | Delegated handler on the stable list container; **still owed:** one browser test per action. | UX-8 / OWNER-QUEUE |
 | 4 | Templates | `templates.html` CLS **0.604**, never fixed. | P2 | Ship the first screen's geometry in markup, as FB-43/44/67/75 did elsewhere. | D-1 |
@@ -233,7 +233,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 | 10 | Intermittent app-server readiness flake (FB-09) | Causes spurious reds in browser gates. |
 | 11 | Dependabot reports **92 default-branch alerts / 49 unique advisories**: 82 Pillow alerts are already fixed on this branch by `13.0.0`; 3 Brotli alerts remain; the 7 old npm alerts are absent from this lockfile. | See `docs/security/DEPENDABOT-ALERTS-2026-11-01.md`; merge/cherry-pick the pins to `main` and upgrade Brotli to 1.2.1. |
 | 12 | Long-task ceiling is being grazed: 606–622 ms under load vs the frozen 600 ms | Do **not** raise the ceiling (OD-6). Re-measure quiet before treating a red as a regression; a genuine fix must cut work on `index.html`. |
-| 13 | Six-width live rerun blocked by the Sites daily allowance: 10,301/10,000 at 2026-11-02T03:40Z, reset 2026-11-03T00:00Z | The 219-check run left 15 harness-only failures; the corrected `bugs/round-6/live_flows.py` must be rerun after the reset before claiming a clean six-width live pass. |
+| 13 | Six-width **local** rerun is green (**225/225**); the **live** rerun is blocked by the Sites daily allowance: 10,301/10,000, 21,056/100,000 monthly, reset 2026-11-03T00:00Z. The single deploy request `593d9b20-ecfb-4e0d-9d88-799f4c6099ed` was refused before a receipt. | The corrected `bugs/round-6/live_flows.py` must be rerun on the deployed origin after the reset before claiming a clean six-width live pass. |
 
 ---
 

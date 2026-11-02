@@ -325,16 +325,23 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   unexpected requests. The final 1024 gesture fix scrolls the selected title into the canvas and
   requires its center to be in-view before dragging; the earlier failure screenshot showed the drag
   click hitting the topbar preview. Record: `bugs/round-6/live-flows-six.json`.
-- **CLS.** Editor first paint now measures desktop **0.0962** settled (one volatile **0.1096** run
-  with the known Pages-group reflow) and mobile **0.0906**, against baselines 0.4067 / 0.6219. The
-  ≤0.1 target is met on the settled desktop run and mobile; the Pages-group reflow remains a
-  residual risk.
+- **CLS.** Editor first paint on the final bundle measures desktop **0.0698 / 0.0679 / 0.0810**
+  and mobile **0.0973 / 0.0973 / 0.0943** over three consecutive runs each, against baselines
+  0.4067 / 0.6219. All six runs are < 0.1. The late 220 → 502 → 220 px Pages-group reflow is gone:
+  the prewarm selection keeps non-page groups hidden, and the mobile class plus final brand markup
+  now ship in the initial HTML. Residual `.ix-groups` movement is ≤ 0.0020.
+- **SQLite teardown.** `get_platform_v32_service()` now shuts down the old job queue when the DB
+  path changes, and the autouse data-dir fixture stops it before restoring `EINVITE_DATA_DIR`, so
+  workers no longer poll a removed database during teardown.
 - **Local guest/editor depth.** `bugs/round-4/flow_sweep.py` **61/61**, 0 console errors, six widths:
   guest hero/Khmer digits, zero empty feature panels, single credit, RSVP validation + thank-you,
   gallery form, editor drag/resize/rotate/multi-select/undo-redo/add/save/reload/export.
 - **Live deploy still blocked.** The origin hit **HTTP 429** at 03:40Z: daily requests **10,301 /
-  10,000**, site **paused**, reset **2026-11-03T00:00Z**; data preserved. No live deploy or live pass
-  is claimed for these app fixes.
+  10,000**, site **paused**, reset **2026-11-03T00:00Z**; data preserved. The single production
+  deploy attempt (`593d9b20-ecfb-4e0d-9d88-799f4c6099ed`) was refused before a receipt; the
+  latest successful deployment remains 2026-11-02T01:46:34Z. No live deploy or live pass is
+  claimed for these app fixes, and no retry was made.
 - **Gates:** `build.py all` exit 0, `build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`;
-  `compileall` exit 0; changed JS passes `node --check`; full suite **247 passed, 17 warnings in
-  1148.47 s (exit 0)**. The repo has no ESLint or TypeScript toolchain.
+  `compileall` exit 0; changed JS passes `node --check`; full suite **247 passed, 16 warnings in
+  1092.83 s (exit 0)**. The 16 warnings are the example plugin's `PytestReturnNotNoneWarning`s;
+  no SQLite/thread warning remains. The repo has no ESLint or TypeScript toolchain.

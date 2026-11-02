@@ -78,8 +78,11 @@ its hosting allowance.”** `sites_inspect` reports the site **paused**:
 - daily requests **10,301 / 10,000**, reset **2026-11-03T00:00Z**
 - monthly requests 21,056 / 100,000; data preserved
 
-The local final pass is green, but the deployed build predates these app fixes.
-No live deploy or live verification is claimed. The 429 is detected and
+The single production deploy attempt (`593d9b20-ecfb-4e0d-9d88-799f4c6099ed`)
+was refused with the same hosting-allowance error before a receipt was created.
+The latest successful deployment remains 2026-11-02T01:46:34Z. The local final
+pass is green, but the deployed build predates these app fixes. No live deploy
+or live verification is claimed, and no retry was made. The 429 is detected and
 recorded instead of cascading into a blank-page failure.
 
 ## Coverage limits
@@ -101,12 +104,14 @@ recorded instead of cascading into a blank-page failure.
 | BUG-R1-4 | Manual runners | **Pass** — v17 and v0_52 exit 0 (no code changed). |
 | BUG-R2-1/2/3 | Guest features, album reflow, single credit | **Pass** — local 61/61. |
 | BUG-R4-1/2/3 | Pages grouping, tablet/drawer recovery | **Pass** — local 61/61. |
-| P1 CLS | Editor first paint | **Improved** — desktop **0.0962** settled (one volatile 0.1096 run), mobile **0.0906**; target ≤0.1. The known Pages-group reflow remains. |
+| P1 CLS | Editor first paint | **Fixed locally** — desktop **0.0698 / 0.0679 / 0.0810**, mobile **0.0973 / 0.0973 / 0.0943** (three consecutive runs each); all < 0.1. The 220 → 502 → 220 px Pages-group reflow is gone; residual `.ix-groups` movement is ≤ 0.0020. |
 
 ## Gates
 
 - `py_compile bugs/round-6/live_flows.py` → pass after the final edits.
 - `python3 build.py all` → exit 0 (`BUILD_OK`); `build.py all --check` → `MIRROR_CHECK_PASSED`.
 - `python3 -m compileall -q src/python tests tools` → exit 0.
-- Full pytest suite: **247 passed, 17 warnings in 1148.47 s (exit 0)**; no failures.
+- Full pytest suite: **247 passed, 16 warnings in 1092.83 s (exit 0)**; no failures. The 16
+  warnings are all `PytestReturnNotNoneWarning` from the example plugin; the SQLite teardown /
+  `PytestUnhandledThreadExceptionWarning` is gone.
 - `node --check` on changed JS → pass. The repo has no ESLint or TypeScript toolchain.

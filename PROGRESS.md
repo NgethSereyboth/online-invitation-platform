@@ -6,37 +6,41 @@
   The 15 earlier failures were harness assumptions (drawer, redo identity, Appearance menu, deliberate
   404); the 1024 gestures now reset the canvas scroll, scroll the selected title into the viewport and
   assert its center is in-view before dragging. App fixes: Canvas/X dismissal, static context-row/toolbar
-  geometry, Pages tip placement, and boot-safe inspector selection (including silent prewarm). Editor CLS:
-  **desktop 0.0962** settled (one volatile **0.1096** run; the known Pages-group reflow remains) and
-  **mobile 0.0906**, target ≤0.1. The hosting allowance is still paused at **10,301 / 10,000**, reset
-  **2026-11-03T00:00Z**, so no live deploy or live pass is claimed. Full pytest passed:
-  **247 passed, 17 warnings in 1148.47 s (exit 0)**.
+  geometry, Pages tip placement, boot-safe inspector selection (including silent prewarm), deterministic
+  mobile/brand shell from first parse, and SQLite job-queue shutdown before data-directory teardown.
+  Editor CLS on the final bundle, three consecutive runs: desktop **0.0698 / 0.0679 / 0.0810**, mobile
+  **0.0973 / 0.0973 / 0.0943**; all six < 0.1, and the former 0.0573 / 0.0523 Pages-group reflow is
+  absent (residual `.ix-groups` movement ≤ 0.0020). The hosting allowance is still paused at
+  **10,301 / 10,000**, reset **2026-11-03T00:00Z**, so no live deploy or live pass is claimed.
+  The single production deploy attempt (`593d9b20-ecfb-4e0d-9d88-799f4c6099ed`) was refused by
+  that allowance before a receipt; the latest successful deployment remains 2026-11-02T01:46:34Z.
+  No retry was made.
 - **Deployed (2026-11-02T01:46Z):** the post-reset `sites_deploy` succeeded on the first try
   (`state: succeeded`, `published: true`, daily requests 0 / 10,000) and the production origin
   **https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page** now serves this build. The
   allowance is the only thing that had blocked rounds 2–4; no code change was needed to deploy.
-- **CLS improved and measured:** round 6 final editor first paint is **desktop 0.0962** on the
-  settled run (one volatile **0.1096** run) and **mobile 0.0906**, against baselines 0.4067 /
-  0.6219. The remaining shift is the late Pages-group reflow (~0.03); the old toolbar and
-  inspector boot growth is removed. The settled desktop and mobile runs meet ≤0.1; the volatile
-  desktop run is recorded rather than hidden.
+- **CLS fixed and measured:** round 6 final editor first paint is **0.0698 / 0.0679 / 0.0810**
+  desktop and **0.0973 / 0.0973 / 0.0943** mobile on the final bundle, against baselines 0.4067 /
+  0.6219. Every run is < 0.1. The late 220 → 502 → 220 px Pages-group growth is gone; the only
+  remaining `.ix-groups` movements are ≤ 0.0020, within normal settled text layout.
 - **Manual runners refreshed (BUG-R1-4 closed):** `v17_professional_editor_test` and
   `v0_52_free_canvas_drag_test` now assert v17 behaviour and both exit 0. The v17 fixture waits
   for settled rects, reveals the Transform panel, asserts `.motion-line.motion-snap`, the Guides
   toggle's persisted `editorModel.guidesVisible`, and the quick-inspector mobile default with its
   numeric transform. The stale expectations are listed in `bugs/round-4/FINDINGS.md`.
-- **Final gates (2026-11-02):** full suite **247 passed, 17 warnings in 1148.47 s (exit 0)**.
-  `build.py all --check` printed `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall` exited 0;
-  changed JS passes `node --check`; `git diff --check` is clean. No ESLint/TypeScript toolchain
-  exists in this repo.
+- **Final gates (2026-11-02):** full suite **247 passed, 16 warnings in 1092.83 s (exit 0)**.
+  The warnings are the 16 example-plugin `PytestReturnNotNoneWarning`s only; the SQLite teardown /
+  `PytestUnhandledThreadExceptionWarning` is gone. `build.py all --check` printed `BUILD_OK` +
+  `MIRROR_CHECK_PASSED`; `compileall` exited 0; changed JS passes `node --check`;
+  `git diff --check` is clean. No ESLint/TypeScript toolchain exists in this repo.
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
   **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
   **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
   `7e22bef`. The push decision remains open.
 - **Queue of record:** `docs/NEXT-WORK.md` — 14 open/owner-blocked defects, **1 stuck**
-  (the pre-v17 manual canvas runners), editor CLS improved to 0.0962 with a residual Pages-group
-  reflow, **0 untriaged suite failures**, 36 work-order tasks, 18 owner decisions, 12 verification
-  debts. History: `docs/HISTORY.md`.
+  (the pre-v17 manual canvas runners), editor CLS **0.0698–0.0810** desktop and **0.0943–0.0973**
+  mobile with no Pages-group reflow, **0 untriaged suite failures**, 36 work-order tasks, 18 owner
+  decisions, 12 verification debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
   baseline failures are closed. The product backlog's remaining code work is either owner-held
   or marked stuck after measurement; the live-only deploy is the only external blocker.
@@ -80,9 +84,9 @@
   (0.1537, 0.0628, 0.0443) and expanding/collapsing the inspector `ix-groups` (0.0581 +
   0.0523); reaching the 0.1 target needs the deferred UI loaded before paint, which is a larger
   boot redesign than the no-rewrite rule allows. The two safe invariants are guarded by a
-  collected test in `tests/v22_2_page_experience_contract_test.py`. Round 6 subsequently reduced
-  the final measurement to **0.0962** desktop / **0.0906** mobile; the residual Pages-group reflow
-  is recorded in `bugs/round-6/FINDINGS.md` rather than hidden.
+  collected test in `tests/v22_2_page_experience_contract_test.py`. Round 6 then removed the
+  prewarm and post-paint shell causes: the final six-run record is **0.0698 / 0.0679 / 0.0810**
+  desktop and **0.0973 / 0.0973 / 0.0943** mobile in `bugs/round-6/FINDINGS.md`.
 - **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
   **0 failed checks**; final full suite **223 passed, 2 warnings in 883.42 s (exit 0)**; one P1
   fixed (BUG-R1-1) and proven live, two P2s logged (soft 404, CSP console), one stale

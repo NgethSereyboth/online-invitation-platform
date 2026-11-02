@@ -1,8 +1,8 @@
 # Round 6 — fix plan
 
-**Local fixes verified; redeploy blocked by the daily allowance.** The 15
-failures in the first pass were harness assumptions, not product defects. The
-corrected local run is green at all six widths.
+**Local fixes verified; the single redeploy attempt was refused by the daily
+allowance.** The 15 failures in the first pass were harness assumptions, not
+product defects. The corrected local run is green at all six widths.
 
 | # | Task | Cause | Files | Status |
 |---|---|---|---|---|
@@ -10,8 +10,9 @@ corrected local run is green at all six widths.
 | 2 | Triage the 15 failures | Drawer opened by selection; exact-JSON redo identity; appearance menu; expected public-API 404 | — | Done — no product defect confirmed |
 | 3 | Correct the harness | Close inspector/Quick Edit before gestures; compare restored object count; drive the Light/Dark menu; filter both 404s; scroll the 1024 title into the canvas before gesturing | `live_flows.py` | Done |
 | 4 | Re-run all six widths locally | Final source and served bundle | — | **225/225 passed**, 0 failed; console/network clean |
-| 5 | Editor CLS | Late inspector-group growth and toolbar/Pages geometry | `stabilized.css`, `inspector-reorg.js`, `app.js`, `first-selection-prewarm.js`, `studio-experience.js` | **desktop 0.0962**, mobile **0.0906**; one desktop run 0.1096 (Pages-group reflow) |
-| 6 | Deploy | Origin still paused from the exhausted daily allowance | — | **Blocked** — 10,301/10,000; reset 2026-11-03T00:00Z |
+| 5 | Editor CLS | Prewarm selection revealed inspector groups; mobile class and brand markup arrived after first paint | `first-selection-prewarm.js`, `inspector-reorg.js`, `index.html`, `studio-experience.js` | **Fixed** — desktop **0.0698 / 0.0679 / 0.0810**, mobile **0.0973 / 0.0973 / 0.0943**; Pages-group reflow gone |
+| 6 | Deploy | Origin still paused from the exhausted daily allowance | — | **Refused once** — request `593d9b20-ecfb-4e0d-9d88-799f4c6099ed`; 10,301/10,000 daily, 21,056/100,000 monthly, reset 2026-11-03T00:00Z; no receipt, no retry |
+| 7 | SQLite teardown warning | Platform job threads outlived a test's temporary data directory | `src/python/server.py`, `tests/conftest.py` | **Fixed** — shut down `jobs` on DB-path change and before the autouse data-dir restore; final suite **247 passed / 16 plugin warnings in 1092.83 s**, no SQLite/thread warning |
 
 ## After the allowance resets
 
