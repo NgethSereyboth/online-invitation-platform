@@ -319,6 +319,11 @@ rsvp</textarea></label>
         <button id="rulersToggle" aria-pressed="false">Rulers</button><button id="safeMarginToggle" aria-pressed="false">Safe margins</button><span class="toolbar-divider"></span><button id="copyObjects" title="Copy selected objects (Ctrl/Cmd+C)">Copy</button><button id="pasteObjects" title="Paste objects (Ctrl/Cmd+V)">Paste</button>
         <span id="activeCanvasLabel">Main hero canvas</span>
       </div>
+      <!-- CLS: the selection context row used to be created inside .studio-canvas-toolbar
+           and reparented above the viewport after the first paint, which made the toolbar
+           grow and then collapse. Ship the final row at its final position; editor-pro.js
+           populates this node instead of moving it. -->
+      <div class="ei-context-toolbar v54-context-row visible" aria-label="Selection actions"><span class="ei-context-name">No selection</span><span class="divider"></span><button type="button" data-action="design">Design</button><button type="button" data-action="page-motion">Animate page</button><button type="button" data-action="check">Design check</button></div>
       <div id="canvasViewport" class="canvas-viewport">
         <div id="canvasFrame" class="canvas-frame">
           <div class="ruler ruler-x" aria-hidden="true"></div><div class="ruler ruler-y" aria-hidden="true"></div>

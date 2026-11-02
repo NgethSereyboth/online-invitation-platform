@@ -87,9 +87,9 @@
     api.state = 'active';
     api.at = Math.round(performance.now());
     hideStrip();
-    try { c.bridge.select([c.id]); } catch (e) { return finish(false); }
+    try { c.bridge.select([c.id], { prewarm: true }); } catch (e) { return finish(false); }
     setTimeout(function () {
-      try { c.bridge.select([]); } catch (e) {}
+      try { c.bridge.select([], { prewarm: true }); } catch (e) {}
       finish(true);
     }, HOLD_MS);
   }

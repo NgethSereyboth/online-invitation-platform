@@ -623,7 +623,9 @@
   if (pagePane) {
     const tip = document.createElement('div'); tip.className = 'studio-tip-card';
     tip.innerHTML = '<span>✦</span><div><strong>Build like a story, not a poster</strong><p>Mix artistic pages with live sections such as countdown, schedule, maps and RSVP.</p></div>';
-    $('.studio-pane-heading', pagePane)?.after(tip);
+    // Append after the page manager/sections. Inserting above the manager
+    // pushed the whole Pages stack down after first paint (~0.025 CLS).
+    pagePane.append(tip);
   }
   const mediaPane = $('[data-studio-pane="media"]', leftTabs.host);
   if (mediaPane) {

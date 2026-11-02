@@ -39,6 +39,7 @@
   };
   const icon = (path) => `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
   let built = false;
+  let userInteracted = false;
   let busy = false;
   let queued = 0;
 
@@ -379,6 +380,11 @@
     hostPane.querySelectorAll('.ix-group').forEach((groupNode) => {
       const page = groupNode.dataset.ixGroup === 'page';
       groupNode.hidden = !page && !selected;
+      // Boot restore can briefly restore a selection (and therefore a Text
+      // group) before the empty state arrives. Do not let that transient
+      // open a second accordion; a real pointer/keyboard interaction unlocks
+      // the normal selection-driven group below.
+      if (!userInteracted && !page) groupNode.open = false;
     });
     if (!selected) {
       const pageGroup = hostPane.querySelector('.ix-group[data-ix-group="page"]');
@@ -523,11 +529,26 @@
     if (hostProps) {
       new MutationObserver(syncSelection).observe(hostProps, { attributes: true, attributeFilter: ['hidden'] });
     }
+    document.addEventListener('pointerdown', () => { userInteracted = true; }, { capture: true, passive: true });
+    document.addEventListener('keydown', () => { userInteracted = true; }, { capture: true });
+    document.addEventListener('einvite:explicit-selection', (event) => {
+      if (event.detail?.boot) return;
+      userInteracted = true;
+      requestAnimationFrame(() => {
+        syncSelection();
+        if (!hasSelection()) return;
+        const textObject = document.querySelector('#textContentLabel:not([hidden])');
+        openGroup(textObject ? 'text' : 'position', false);
+      });
+    });
     document.addEventListener('einvite:selection-changed', () => {
       requestAnimationFrame(() => {
         syncSelection();
         if (!hasSelection()) openGroup('page', false);
-        else {
+        // A restored/transient boot selection must not open the Text group;
+        // that grew the inspector, then collapsed it when the real empty
+        // state arrived. Only a real pointer/keyboard selection changes it.
+        else if (userInteracted) {
           const active = pane()?.querySelector('.ix-group[open]');
           if (!active || active.dataset.ixGroup === 'page') {
             const textObject = document.querySelector('#textContentLabel:not([hidden])');
@@ -537,7 +558,7 @@
       });
     });
     const selectedText = document.querySelector('#textContentLabel:not([hidden])');
-    if (hasSelection()) openGroup(selectedText ? 'text' : 'position', false);
+    if (hasSelection() && userInteracted) openGroup(selectedText ? 'text' : 'position', false);
     else openGroup('page', false);
     syncSelection();
     syncTools();

@@ -3013,13 +3013,17 @@ else if(!activeUndoTransaction){pushHistory(state);window.dispatchEvent(new Cust
 return result;
 }catch(error){state=clone(before);if(state.editorModel)delete state.editorModel.selectionIds;if(options.render!==false)apply();throw error;}
 },
-select(ids=[]){
+select(ids=[],options={}){
 if(document.body.dataset.pePointerInteraction)return;
 const normalized=ids.map(String);
 editorSelectionIds=[...normalized];
 const wanted=new Set(normalized);
 const items=$$('.object').filter(item=>wanted.has(item.dataset.id));
 if(items.length)setExactSelection(items);else clearSelection();
+
+
+
+if(!options.prewarm)document.dispatchEvent(new CustomEvent('einvite:explicit-selection',{detail:{ids:normalized,boot:document.documentElement.dataset.editorReady!=='true'}}));
 const active=document.activeElement;
 const inactiveWorkspace=!active||active===document.body||active===document.documentElement;
 if(items.length&&inactiveWorkspace){
@@ -6746,7 +6750,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if (pagePane) {
     const tip = document.createElement('div'); tip.className = 'studio-tip-card';
     tip.innerHTML = '<span>✦</span><div><strong>Build like a story, not a poster</strong><p>Mix artistic pages with live sections such as countdown, schedule, maps and RSVP.</p></div>';
-    $('.studio-pane-heading', pagePane)?.after(tip);
+
+
+    pagePane.append(tip);
   }
   const mediaPane = $('[data-studio-pane="media"]', leftTabs.host);
   if (mediaPane) {

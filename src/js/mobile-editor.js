@@ -46,6 +46,10 @@
     const mobile = mq.matches;
     const mode = mobile ? currentMode() : 'desktop';
     body.dataset.mobileEditorMode = mode;
+    // Keep the responsive contract's own state in step. Without this, closing
+    // the drawer changed the classes but left editorDrawer='inspector', and the
+    // contract's class observer immediately reopened it.
+    body.dataset.editorDrawer = mode === 'tools' ? 'creation' : mode === 'quick' ? 'inspector' : 'canvas';
     if (!mobile) {
       body.classList.remove('mobile-creation-open', 'mobile-inspector-open', 'mobile-advanced-open');
       setHiddenState(left, false); setHiddenState(right, false);
@@ -65,6 +69,15 @@
     returnFocus = trigger || document.activeElement;
     body.classList.toggle('mobile-creation-open', mode === 'tools');
     body.classList.toggle('mobile-inspector-open', mode === 'quick');
+    // Canvas is the escape hatch from Quick Edit. The responsive contract
+    // mirrors inspector-open into the mobile drawer, so leaving it behind made
+    // Canvas appear to do nothing and kept the drawer over the canvas.
+    if (mode === 'canvas') {
+      body.dataset.inspectorDismissed = '1';
+      body.classList.remove('inspector-open');
+    } else {
+      delete body.dataset.inspectorDismissed;
+    }
     body.classList.remove('mobile-advanced-open');
     sync();
     if (mode === 'tools') $('.studio-pane.active input, .studio-pane.active button, .studio-pane.active select, .studio-pane.active textarea, .studio-rail-button')?.focus({preventScroll:true});
@@ -87,6 +100,20 @@
     <button type="button" id="mobilePublishV14"><span aria-hidden="true">↗</span><small>Publish</small></button>
     <button type="button" id="mobileAdvancedV14" aria-haspopup="dialog"><span aria-hidden="true">•••</span><small>Advanced</small></button>`;
   document.body.append(bar);
+  // The legacy X only removed inspector-open; the mirrored mobile class then
+  // reopened it. Treat X exactly like Canvas and keep the dismissal sticky.
+  document.addEventListener('click', event => {
+    if (!event.target.closest?.('.refine-inspector-close')) return;
+    body.dataset.inspectorDismissed = '1';
+    body.classList.remove('inspector-open', 'mobile-inspector-open');
+    body.dataset.editorDrawer = 'canvas';
+  }, true);
+  stage.addEventListener('pointerdown', event => {
+    const object = event.target.closest?.('.object');
+    if (object && !object.classList.contains('selected') && !object.classList.contains('multi-selected')) {
+      delete body.dataset.inspectorDismissed;
+    }
+  }, true);
   left.id ||= 'mobileCreationPanel';
   right.id ||= 'mobileQuickInspector';
   bar.addEventListener('click', event => {

@@ -581,7 +581,6 @@ const clampZoom=z=>Math.max(.1,Math.min(5,Number(z)||1));
 function cacheViewGeometry(){viewRect=viewport.getBoundingClientRect();viewportSize={width:viewport.clientWidth,height:viewport.clientHeight,left:viewport.clientLeft,top:viewport.clientTop};stageSize={width:stage.offsetWidth||390,height:stage.offsetHeight||844};return viewRect}
 function clientToWorld(x,y){const r=viewRect||cacheViewGeometry();return{x:(x-r.left-viewportSize.left+viewport.scrollLeft-view.x)/view.zoom,y:(y-r.top-viewportSize.top+viewport.scrollTop-view.y)/view.zoom}}
 function syncZoomReadout(){
- editorZoom=view.zoom;
  if(zoomControl){if(zoomControl.tagName==='SELECT'&&![...zoomControl.options].some(o=>Number(o.value)===view.zoom))zoomControl.add(new Option(`${Math.round(view.zoom*100)}%`,String(view.zoom)));zoomControl.value=String(view.zoom)}
  if(zoomSlider)zoomSlider.value=String(zoomToSlider(view.zoom));
  if(zoomReadout)zoomReadout.textContent=`${Math.round(view.zoom*100)}%`;
@@ -885,7 +884,7 @@ function createFrameAt(point){if(typeof createObject!=='function')return;const o
 stage.addEventListener('pointerdown',e=>{if(activeTool==='select'||activeTool==='hand')return;if(e.target.closest('.object,.selection-bounds,.safe-margin-overlay'))return;if(e.button!==0)return;if(activeTool==='zoom'){e.preventDefault();const zoom=currentZoom();setZoomModel(zoom*1.25,{cursor:{x:e.clientX,y:e.clientY},source:'tool'});return}const point=canvasPoint(e);e.preventDefault();e.stopImmediatePropagation();if(activeTool==='text')createTextAt(point);else if(activeTool==='frame')createFrameAt(point);else if(activeTool==='rect')createShapeAt('rectangle',point);else if(activeTool==='ellipse')createShapeAt('ellipse',point);else if(activeTool==='line')createShapeAt('line',point)},true);
 stage.addEventListener('dblclick',e=>{const frame=e.target.closest('.ei-frame-placeholder');if(!frame)return;if(typeof openMaterialPicker!=='function')return;openMaterialPicker('Choose photo for frame',(url,asset)=>{frame.classList.remove('ei-frame-placeholder');frame.dataset.framePlaceholder='false';frame.dataset.originalSrc=frame.querySelector('img')?.src||'';frame.dataset.src=url;const img=frame.querySelector('img');if(img){img.src=url;img.alt=asset?.name||'Invitation photo'}saveNow()})},true);
 
-const context=document.createElement('div');context.className='ei-context-toolbar';toolbar.insertBefore(context,$('#activeCanvasLabel'));
+const context=document.querySelector('.stage-wrap > .ei-context-toolbar')||document.createElement('div');context.className='ei-context-toolbar v54-context-row';if(!context.isConnected)toolbar.insertBefore(context,$('#activeCanvasLabel'));
 const divider=()=>'<span class="divider"></span>';
 function valueOf(id,fallback=''){return $('#'+id)?.value??fallback}
 function selectOptions(id){return $('#'+id)?.innerHTML||''}

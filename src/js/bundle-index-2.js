@@ -1080,7 +1080,6 @@ const clampZoom=z=>Math.max(.1,Math.min(5,Number(z)||1));
 function cacheViewGeometry(){viewRect=viewport.getBoundingClientRect();viewportSize={width:viewport.clientWidth,height:viewport.clientHeight,left:viewport.clientLeft,top:viewport.clientTop};stageSize={width:stage.offsetWidth||390,height:stage.offsetHeight||844};return viewRect}
 function clientToWorld(x,y){const r=viewRect||cacheViewGeometry();return{x:(x-r.left-viewportSize.left+viewport.scrollLeft-view.x)/view.zoom,y:(y-r.top-viewportSize.top+viewport.scrollTop-view.y)/view.zoom}}
 function syncZoomReadout(){
- editorZoom=view.zoom;
  if(zoomControl){if(zoomControl.tagName==='SELECT'&&![...zoomControl.options].some(o=>Number(o.value)===view.zoom))zoomControl.add(new Option(`${Math.round(view.zoom*100)}%`,String(view.zoom)));zoomControl.value=String(view.zoom)}
  if(zoomSlider)zoomSlider.value=String(zoomToSlider(view.zoom));
  if(zoomReadout)zoomReadout.textContent=`${Math.round(view.zoom*100)}%`;
@@ -1384,7 +1383,7 @@ function createFrameAt(point){if(typeof createObject!=='function')return;const o
 stage.addEventListener('pointerdown',e=>{if(activeTool==='select'||activeTool==='hand')return;if(e.target.closest('.object,.selection-bounds,.safe-margin-overlay'))return;if(e.button!==0)return;if(activeTool==='zoom'){e.preventDefault();const zoom=currentZoom();setZoomModel(zoom*1.25,{cursor:{x:e.clientX,y:e.clientY},source:'tool'});return}const point=canvasPoint(e);e.preventDefault();e.stopImmediatePropagation();if(activeTool==='text')createTextAt(point);else if(activeTool==='frame')createFrameAt(point);else if(activeTool==='rect')createShapeAt('rectangle',point);else if(activeTool==='ellipse')createShapeAt('ellipse',point);else if(activeTool==='line')createShapeAt('line',point)},true);
 stage.addEventListener('dblclick',e=>{const frame=e.target.closest('.ei-frame-placeholder');if(!frame)return;if(typeof openMaterialPicker!=='function')return;openMaterialPicker('Choose photo for frame',(url,asset)=>{frame.classList.remove('ei-frame-placeholder');frame.dataset.framePlaceholder='false';frame.dataset.originalSrc=frame.querySelector('img')?.src||'';frame.dataset.src=url;const img=frame.querySelector('img');if(img){img.src=url;img.alt=asset?.name||'Invitation photo'}saveNow()})},true);
 
-const context=document.createElement('div');context.className='ei-context-toolbar';toolbar.insertBefore(context,$('#activeCanvasLabel'));
+const context=document.querySelector('.stage-wrap > .ei-context-toolbar')||document.createElement('div');context.className='ei-context-toolbar v54-context-row';if(!context.isConnected)toolbar.insertBefore(context,$('#activeCanvasLabel'));
 const divider=()=>'<span class="divider"></span>';
 function valueOf(id,fallback=''){return $('#'+id)?.value??fallback}
 function selectOptions(id){return $('#'+id)?.innerHTML||''}
@@ -2542,6 +2541,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const mobile = mq.matches;
     const mode = mobile ? currentMode() : 'desktop';
     body.dataset.mobileEditorMode = mode;
+
+
+
+    body.dataset.editorDrawer = mode === 'tools' ? 'creation' : mode === 'quick' ? 'inspector' : 'canvas';
     if (!mobile) {
       body.classList.remove('mobile-creation-open', 'mobile-inspector-open', 'mobile-advanced-open');
       setHiddenState(left, false); setHiddenState(right, false);
@@ -2561,6 +2564,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     returnFocus = trigger || document.activeElement;
     body.classList.toggle('mobile-creation-open', mode === 'tools');
     body.classList.toggle('mobile-inspector-open', mode === 'quick');
+
+
+
+    if (mode === 'canvas') {
+      body.dataset.inspectorDismissed = '1';
+      body.classList.remove('inspector-open');
+    } else {
+      delete body.dataset.inspectorDismissed;
+    }
     body.classList.remove('mobile-advanced-open');
     sync();
     if (mode === 'tools') $('.studio-pane.active input, .studio-pane.active button, .studio-pane.active select, .studio-pane.active textarea, .studio-rail-button')?.focus({preventScroll:true});
@@ -2583,6 +2595,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <button type="button" id="mobilePublishV14"><span aria-hidden="true">↗</span><small>Publish</small></button>
     <button type="button" id="mobileAdvancedV14" aria-haspopup="dialog"><span aria-hidden="true">•••</span><small>Advanced</small></button>`;
   document.body.append(bar);
+
+
+  document.addEventListener('click', event => {
+    if (!event.target.closest?.('.refine-inspector-close')) return;
+    body.dataset.inspectorDismissed = '1';
+    body.classList.remove('inspector-open', 'mobile-inspector-open');
+    body.dataset.editorDrawer = 'canvas';
+  }, true);
+  stage.addEventListener('pointerdown', event => {
+    const object = event.target.closest?.('.object');
+    if (object && !object.classList.contains('selected') && !object.classList.contains('multi-selected')) {
+      delete body.dataset.inspectorDismissed;
+    }
+  }, true);
   left.id ||= 'mobileCreationPanel';
   right.id ||= 'mobileQuickInspector';
   bar.addEventListener('click', event => {
@@ -3823,6 +3849,9 @@ boot();
       if (narrow && (!mobile || inspectorOpen)) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
       return;
     }
+
+
+    if (narrow && document.body.dataset.inspectorDismissed === '1') return;
     document.body.classList.add('right-open');
     if (narrow) { try { layout?.openInspector?.(true); } catch { /* ignore */ } }
   }
@@ -5408,6 +5437,7 @@ boot();
   };
   const icon = (path) => `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
   let built = false;
+  let userInteracted = false;
   let busy = false;
   let queued = 0;
 
@@ -5748,6 +5778,11 @@ boot();
     hostPane.querySelectorAll('.ix-group').forEach((groupNode) => {
       const page = groupNode.dataset.ixGroup === 'page';
       groupNode.hidden = !page && !selected;
+
+
+
+
+      if (!userInteracted && !page) groupNode.open = false;
     });
     if (!selected) {
       const pageGroup = hostPane.querySelector('.ix-group[data-ix-group="page"]');
@@ -5892,11 +5927,26 @@ boot();
     if (hostProps) {
       new MutationObserver(syncSelection).observe(hostProps, { attributes: true, attributeFilter: ['hidden'] });
     }
+    document.addEventListener('pointerdown', () => { userInteracted = true; }, { capture: true, passive: true });
+    document.addEventListener('keydown', () => { userInteracted = true; }, { capture: true });
+    document.addEventListener('einvite:explicit-selection', (event) => {
+      if (event.detail?.boot) return;
+      userInteracted = true;
+      requestAnimationFrame(() => {
+        syncSelection();
+        if (!hasSelection()) return;
+        const textObject = document.querySelector('#textContentLabel:not([hidden])');
+        openGroup(textObject ? 'text' : 'position', false);
+      });
+    });
     document.addEventListener('einvite:selection-changed', () => {
       requestAnimationFrame(() => {
         syncSelection();
         if (!hasSelection()) openGroup('page', false);
-        else {
+
+
+
+        else if (userInteracted) {
           const active = pane()?.querySelector('.ix-group[open]');
           if (!active || active.dataset.ixGroup === 'page') {
             const textObject = document.querySelector('#textContentLabel:not([hidden])');
@@ -5906,7 +5956,7 @@ boot();
       });
     });
     const selectedText = document.querySelector('#textContentLabel:not([hidden])');
-    if (hasSelection()) openGroup(selectedText ? 'text' : 'position', false);
+    if (hasSelection() && userInteracted) openGroup(selectedText ? 'text' : 'position', false);
     else openGroup('page', false);
     syncSelection();
     syncTools();
@@ -6260,9 +6310,9 @@ boot();
     api.state = 'active';
     api.at = Math.round(performance.now());
     hideStrip();
-    try { c.bridge.select([c.id]); } catch (e) { return finish(false); }
+    try { c.bridge.select([c.id], { prewarm: true }); } catch (e) { return finish(false); }
     setTimeout(function () {
-      try { c.bridge.select([]); } catch (e) {}
+      try { c.bridge.select([], { prewarm: true }); } catch (e) {}
       finish(true);
     }, HOLD_MS);
   }

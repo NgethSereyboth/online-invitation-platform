@@ -559,6 +559,9 @@
       if (narrow && (!mobile || inspectorOpen)) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
       return;
     }
+    // Canvas/X is an explicit dismissal. Keep the selection and its handles,
+    // but do not let the next selection refresh re-open the drawer over them.
+    if (narrow && document.body.dataset.inspectorDismissed === '1') return;
     document.body.classList.add('right-open');
     if (narrow) { try { layout?.openInspector?.(true); } catch { /* ignore */ } }
   }

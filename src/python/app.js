@@ -496,13 +496,17 @@ else if(!activeUndoTransaction){pushHistory(state);window.dispatchEvent(new Cust
 return result;
 }catch(error){state=clone(before);if(state.editorModel)delete state.editorModel.selectionIds;if(options.render!==false)apply();throw error;}
 },
-select(ids=[]){
+select(ids=[],options={}){
 if(document.body.dataset.pePointerInteraction)return;
 const normalized=ids.map(String);
 editorSelectionIds=[...normalized];
 const wanted=new Set(normalized);
 const items=$$('.object').filter(item=>wanted.has(item.dataset.id));
 if(items.length)setExactSelection(items);else clearSelection();
+// An explicit API selection (tests, integrations, layer navigation) is a real
+// intent, unlike the draft selection restored during boot. Tell the inspector
+// so it opens the matching group; the boot flag keeps CLS-gating intact.
+if(!options.prewarm)document.dispatchEvent(new CustomEvent('einvite:explicit-selection',{detail:{ids:normalized,boot:document.documentElement.dataset.editorReady!=='true'}}));
 const active=document.activeElement;
 const inactiveWorkspace=!active||active===document.body||active===document.documentElement;
 if(items.length&&inactiveWorkspace){
