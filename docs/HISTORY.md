@@ -295,4 +295,11 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   guides go through `EInviteMotion.measurements.addGuide()`; mobile defaults to the quick inspector;
   `v0_52` expected the pre-v17 hidden outline. Details in `bugs/round-4/FINDINGS.md`.
 - **Round 5** verified the deployed origin (16 routes at 1440/360, key screenshots) — see
-  `bugs/round-5/FINDINGS.md` and `bugs/round-5/live-smoke.json`.
+  `bugs/round-5/FINDINGS.md` and `bugs/round-5/live-smoke.json`. All 32 loads were clean, and the
+  live `bundle-index.css` SHA-256 matches the local built file (`8e323747…1aced`), confirming the
+  deployed worker serves this build.
+- **Final gates:** `python3 build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`;
+  `python3 -m compileall -q src/python tests tools` → 0 (one pre-existing `SyntaxWarning` in
+  `tools/proof-public-page.py`); full suite **231 passed, 1 warning in 1291.81 s (exit 0)**. The
+  repo has no ESLint or TypeScript toolchain, so `node --check` on the changed JS plus the build
+  check are the available static gates.
