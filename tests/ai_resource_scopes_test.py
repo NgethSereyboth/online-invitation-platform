@@ -388,6 +388,13 @@ def run():
             httpd.shutdown()
             httpd.server_close()
             thread.join(timeout=3)
+            # Stop the platform job workers while the temporary database still
+            # exists; the conftest cleanup runs after this directory is gone.
+            platform = getattr(server, "_PLATFORM_V32_SERVICE", None)
+            if platform is not None:
+                platform.jobs.shutdown(timeout=5)
+                server._PLATFORM_V32_SERVICE = None
+                server._PLATFORM_SCHEMA_PATH = None
 
     print('AI_RESOURCE_SCOPES_TEST_PASSED')
     return 0

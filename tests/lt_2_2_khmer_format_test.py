@@ -246,6 +246,18 @@ def test_public_rendering_and_editor_round_trip() -> None:
                     "() => (window.EInviteEditorBridge?.getSelectedIds?.() || []).join(',') === 'title'",
                     timeout=15000,
                 )
+                # The bridge reports the id before the app repaints the inspector.
+                # Wait for the selected object class as well, so refreshSelectionUI()
+                # cannot overwrite the text field immediately after it is filled.
+                page.wait_for_function(
+                    "() => document.querySelector('[data-id=\"title\"]')?.classList.contains('selected')",
+                    timeout=15000,
+                )
+                # Let any repaint queued by the selection land before typing, so
+                # the field cannot be replaced after Playwright fills it.
+                page.evaluate(
+                    "() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))"
+                )
             except Exception as exc:
                 diagnostics = page.evaluate(
                     """() => ({

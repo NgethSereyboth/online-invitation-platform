@@ -99,6 +99,7 @@ if _missing:
 # and writes its own invitation and starting a server per test would cost ~6x the
 # wall clock for no isolation that the data directory does not already give.
 import os  # noqa: E402  (after the sys.path setup above)
+import sys  # noqa: E402  (after the sys.path setup above)
 import pytest  # noqa: E402  (after the sys.path setup above)
 
 
@@ -117,6 +118,19 @@ def _restore_data_dir_after_test():
     try:
         yield
     finally:
+        # An in-process server creates PlatformService.jobs worker threads. If
+        # the test then removes its temporary data directory, a worker wakes
+        # after the SQLite file is gone and raises an unhandled thread warning.
+        # Stop and release that queue while the test data still exists, before
+        # restoring the environment.
+        server_module = sys.modules.get("server")
+        service = getattr(server_module, "_PLATFORM_V32_SERVICE", None) if server_module else None
+        if service is not None:
+            try:
+                service.jobs.shutdown(timeout=5)
+            finally:
+                server_module._PLATFORM_V32_SERVICE = None
+                server_module._PLATFORM_SCHEMA_PATH = None
         if present:
             os.environ["EINVITE_DATA_DIR"] = previous
         else:
