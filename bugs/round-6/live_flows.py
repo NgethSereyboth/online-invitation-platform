@@ -146,6 +146,39 @@ def close_overlays(page):
     page.wait_for_timeout(120)
 
 
+def drawer_open(page):
+    return page.evaluate("() => ({inspector: document.body.classList.contains('inspector-open'), mobile: document.body.classList.contains('mobile-inspector-open')})")
+
+
+def close_canvas_drawer(page):
+    """Close the selection inspector without clearing the selection.
+
+    Canvas mode is the primary close path after the product fix. Fall back to
+    the visible X, then Escape. Assert the flags clear: a selected object with
+    the drawer still over the canvas is not a closed drawer.
+    """
+    for _ in range(5):
+        state = drawer_open(page)
+        if not state["inspector"] and not state["mobile"]:
+            break
+        acted = page.evaluate("""() => {
+            const close = [...document.querySelectorAll('.refine-inspector-close')]
+                .find(el => el.offsetParent !== null);
+            if (close) { close.click(); return 'x'; }
+            const canvas = document.querySelector('#mobileCanvasMode');
+            if (canvas && canvas.offsetParent !== null) { canvas.click(); return 'canvas'; }
+            return 'escape';
+        }""")
+        if acted == "escape":
+            page.keyboard.press("Escape")
+        page.wait_for_timeout(260)
+    state = drawer_open(page)
+    if state["inspector"] or state["mobile"]:
+        raise AssertionError(f"inspector drawer did not close: {state}")
+    page.evaluate("() => { if (window.EInviteToolController) EInviteToolController.setTool('select'); }")
+    page.wait_for_timeout(120)
+
+
 def audit(page, width, state, bucket):
     try:
         data = page.evaluate(AUDIT)
@@ -280,6 +313,12 @@ def editor_flow(page, width, height, bucket):
 
     page.goto(BASE + "/", wait_until="load", timeout=45000)
     wait_editor(page)
+    # A previous preview/publish/rail sequence can save a compact-width canvas
+    # pan that puts the artboard above the viewport. Start the gesture checks
+    # from the clean editor view a fresh tab gets.
+    page.evaluate("() => { for (const k of Object.keys(localStorage)) if (k.startsWith('einvite-workspace-v21:')) localStorage.removeItem(k); }")
+    page.reload(wait_until="load", timeout=45000)
+    wait_editor(page)
     close_overlays(page)
     page.wait_for_timeout(300)
 
@@ -302,23 +341,66 @@ def editor_flow(page, width, height, bucket):
     # Selecting at <=1180 also adds the desktop `inspector-open` drawer, which
     # sits above the canvas even after Canvas mode. Escape closes it and keeps
     # the selection/handles, which is the documented focus-canvas recovery.
+    dismiss(page)
     shot(page, width, "selection-inspector")
-    close_overlays(page)
-    if not page.evaluate("() => EInviteEditorBridge.getSelectedIds().length"):
-        page.evaluate("() => window.EInviteEditorBridge.select(['title'])")
-        page.wait_for_timeout(250)
+    close_canvas_drawer(page)
+    selected_ids = page.evaluate("() => EInviteEditorBridge.getSelectedIds().length")
+    drawer = drawer_open(page)
+    check("selection survives drawer close", lambda: {"selected": selected_ids, "inspector": drawer} if selected_ids and not drawer["inspector"] and not drawer["mobile"] else (_ for _ in ()).throw(AssertionError(f"drawer close failed: selected={selected_ids} drawer={drawer}")), page, width)
     page.evaluate("() => { if (window.EInviteToolController) EInviteToolController.setTool('select'); }")
     page.wait_for_timeout(250)
     before = obj_state(page)["title"]
-    box = page.locator('#stage .object[data-id="title"]').bounding_box()
+    title_box = page.locator('#stage .object[data-id="title"]')
+
+    def settled_title_box():
+        # Fit can animate; a box measured mid-zoom starts the drag on the
+        # background, which deselects the title and removes the rotate handle.
+        # The viewport can also still be scrolled from the preview checks, which
+        # puts the title above the canvas; a gesture there hits the topbar.
+        page.evaluate("""() => {
+            const viewport = document.querySelector('#canvasViewport');
+            if (viewport) { viewport.scrollTop = 0; viewport.scrollLeft = 0; }
+            try { window.EInviteCanvasViewController?.fit?.(); } catch {}
+        }""")
+        previous = None
+        for _ in range(12):
+            page.wait_for_timeout(120)
+            current = title_box.bounding_box()
+            if not current:
+                continue
+            viewport = page.locator('#canvasViewport').bounding_box()
+            if viewport:
+                cx = current["x"] + current["width"] / 2
+                cy = current["y"] + current["height"] / 2
+                if not (viewport["x"] <= cx <= viewport["x"] + viewport["width"]
+                        and viewport["y"] <= cy <= viewport["y"] + viewport["height"]):
+                    title_box.scroll_into_view_if_needed(timeout=1500)
+                    previous = None
+                    continue
+            if previous and all(abs(current[k] - previous[k]) < 0.4 for k in ("x", "y", "width", "height")):
+                return current
+            previous = current
+        return previous
+
+    box = settled_title_box()
     if not box:
         raise AssertionError("title has no box")
-    page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
-    page.mouse.down()
-    page.mouse.move(box["x"] + box["width"] / 2 + 26, box["y"] + box["height"] / 2 + 14, steps=6)
-    page.mouse.up()
-    page.wait_for_timeout(320)
-    after = obj_state(page)["title"]
+    for attempt in range(2):
+        page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        page.mouse.down()
+        page.mouse.move(box["x"] + box["width"] / 2 + 26, box["y"] + box["height"] / 2 + 14, steps=6)
+        page.mouse.up()
+        page.wait_for_timeout(320)
+        after = obj_state(page)["title"]
+        if after != before:
+            break
+        page.evaluate("() => window.EInviteEditorBridge.select(['title'])")
+        page.wait_for_timeout(220)
+        close_canvas_drawer(page)
+        page.evaluate("() => { if (window.EInviteToolController) EInviteToolController.setTool('select'); }")
+        box = settled_title_box()
+        if not box:
+            break
     check("drag", lambda: {"before": before.get("left"), "after": after.get("left")} if after != before else (_ for _ in ()).throw(AssertionError("title did not move")), page, width)
     shot(page, width, "editor-drag")
 
@@ -449,7 +531,7 @@ def templates_flow(page, width, bucket):
     check("templates search", lambda: {"before": before, "after": after, "value": search.input_value()} if search.input_value() == "wedding" and after < before else (_ for _ in ()).throw(AssertionError(f"search {before}->{after}")), page, width)
     search.fill("")
     page.wait_for_timeout(500)
-    mixed = "ខ្មែរ ១២៣"
+    mixed = "\u1781\u17d2\u1798\u17c2\u179a \u17e1\u17e2\u17e3"
     search.fill(mixed)
     page.wait_for_timeout(450)
     check("khmer numerals input", lambda: {"value": search.input_value(), "khmer": bool(re.search(r"[\u1780-\u17ff]", search.input_value())), "digits": bool(re.search(r"[\u17e0-\u17e9]", search.input_value()))} if search.input_value() == mixed else (_ for _ in ()).throw(AssertionError("Khmer text/numerals did not take")), page, width)

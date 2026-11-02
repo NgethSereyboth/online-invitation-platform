@@ -64,28 +64,58 @@
    "name": "mobile quick edit/canvas",
    "ok": true,
    "detail": {
-    "opened": true,
-    "mode": "canvas",
-    "selected": 1
+    "opened": false,
+    "mode": "canvas"
+   }
+  },
+  {
+   "width": 360,
+   "name": "selection survives drawer close",
+   "ok": true,
+   "detail": {
+    "selected": 1,
+    "inspector": {
+     "inspector": false,
+     "mobile": false
+    }
    }
   },
   {
    "width": 360,
    "name": "drag",
-   "ok": false,
-   "error": "AssertionError('title did not move')"
+   "ok": true,
+   "detail": {
+    "before": "8%",
+    "after": "16%"
+   }
   },
   {
    "width": 360,
    "name": "resize",
-   "ok": false,
-   "error": "AssertionError('resize did not change the title')"
+   "ok": true,
+   "detail": {
+    "before": {
+     "w": null,
+     "h": null,
+     "width": "84%",
+     "height": "13.0332%"
+    },
+    "after": {
+     "w": null,
+     "h": null,
+     "width": "74.692%",
+     "height": "13.0332%"
+    }
+   }
   },
   {
    "width": 360,
    "name": "rotate",
-   "ok": false,
-   "error": "AssertionError('rotate handle not visible')"
+   "ok": true,
+   "detail": {
+    "before": 0,
+    "after": 28.59
+   }
   },
   {
    "width": 360,
@@ -108,8 +138,12 @@
   {
    "width": 360,
    "name": "undo/redo",
-   "ok": false,
-   "error": "AssertionError('undo/redo True/False')"
+   "ok": true,
+   "detail": {
+    "before": 5,
+    "after_undo": 4,
+    "after_redo": 5
+   }
   },
   {
    "width": 360,
@@ -138,7 +172,7 @@
    "name": "export png",
    "ok": true,
    "detail": {
-    "bytes": 38754,
+    "bytes": 41905,
     "png": true
    }
   },
@@ -373,28 +407,58 @@
    "name": "mobile quick edit/canvas",
    "ok": true,
    "detail": {
-    "opened": true,
-    "mode": "canvas",
-    "selected": 1
+    "opened": false,
+    "mode": "canvas"
+   }
+  },
+  {
+   "width": 390,
+   "name": "selection survives drawer close",
+   "ok": true,
+   "detail": {
+    "selected": 1,
+    "inspector": {
+     "inspector": false,
+     "mobile": false
+    }
    }
   },
   {
    "width": 390,
    "name": "drag",
-   "ok": false,
-   "error": "AssertionError('title did not move')"
+   "ok": true,
+   "detail": {
+    "before": "8%",
+    "after": "16%"
+   }
   },
   {
    "width": 390,
    "name": "resize",
-   "ok": false,
-   "error": "AssertionError('resize did not change the title')"
+   "ok": true,
+   "detail": {
+    "before": {
+     "w": null,
+     "h": null,
+     "width": "84%",
+     "height": "13.0332%"
+    },
+    "after": {
+     "w": null,
+     "h": null,
+     "width": "75.3723%",
+     "height": "13.0332%"
+    }
+   }
   },
   {
    "width": 390,
    "name": "rotate",
-   "ok": false,
-   "error": "AssertionError('rotate handle not visible')"
+   "ok": true,
+   "detail": {
+    "before": 0,
+    "after": 26.96
+   }
   },
   {
    "width": 390,
@@ -417,8 +481,12 @@
   {
    "width": 390,
    "name": "undo/redo",
-   "ok": false,
-   "error": "AssertionError('undo/redo True/False')"
+   "ok": true,
+   "detail": {
+    "before": 5,
+    "after_undo": 4,
+    "after_redo": 5
+   }
   },
   {
    "width": 390,
@@ -447,7 +515,7 @@
    "name": "export png",
    "ok": true,
    "detail": {
-    "bytes": 38744,
+    "bytes": 41689,
     "png": true
    }
   },
@@ -679,7 +747,7 @@
    "name": "guest preview",
    "ok": true,
    "detail": {
-    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+    "url": "http://127.0.0.1:4180/",
     "extra_tabs": 0,
     "dialogs": 2
    }
@@ -689,9 +757,20 @@
    "name": "mobile quick edit/canvas",
    "ok": true,
    "detail": {
-    "opened": true,
-    "mode": "canvas",
-    "selected": 1
+    "opened": false,
+    "mode": "canvas"
+   }
+  },
+  {
+   "width": 768,
+   "name": "selection survives drawer close",
+   "ok": true,
+   "detail": {
+    "selected": 1,
+    "inspector": {
+     "inspector": false,
+     "mobile": false
+    }
    }
   },
   {
@@ -717,7 +796,7 @@
     "after": {
      "w": null,
      "h": null,
-     "width": "73.9733%",
+     "width": "73.0425%",
      "height": "13.0332%"
     }
    }
@@ -728,7 +807,7 @@
    "ok": true,
    "detail": {
     "before": 0,
-    "after": 23.85
+    "after": 26.1
    }
   },
   {
@@ -752,8 +831,12 @@
   {
    "width": 768,
    "name": "undo/redo",
-   "ok": false,
-   "error": "AssertionError('undo/redo True/False')"
+   "ok": true,
+   "detail": {
+    "before": 5,
+    "after_undo": 4,
+    "after_redo": 5
+   }
   },
   {
    "width": 768,
@@ -782,7 +865,7 @@
    "name": "export png",
    "ok": true,
    "detail": {
-    "bytes": 41683,
+    "bytes": 41436,
     "png": true
    }
   },
@@ -1023,28 +1106,59 @@
    "name": "guest preview",
    "ok": true,
    "detail": {
-    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+    "url": "http://127.0.0.1:4180/",
     "extra_tabs": 0,
     "dialogs": 2
    }
   },
   {
    "width": 1024,
+   "name": "selection survives drawer close",
+   "ok": true,
+   "detail": {
+    "selected": 1,
+    "inspector": {
+     "inspector": false,
+     "mobile": false
+    }
+   }
+  },
+  {
+   "width": 1024,
    "name": "drag",
-   "ok": false,
-   "error": "AssertionError('title did not move')"
+   "ok": true,
+   "detail": {
+    "before": "8%",
+    "after": "16%"
+   }
   },
   {
    "width": 1024,
    "name": "resize",
-   "ok": false,
-   "error": "AssertionError('resize did not change the title')"
+   "ok": true,
+   "detail": {
+    "before": {
+     "w": null,
+     "h": null,
+     "width": "84%",
+     "height": "13.0332%"
+    },
+    "after": {
+     "w": null,
+     "h": null,
+     "width": "74.4875%",
+     "height": "13.0332%"
+    }
+   }
   },
   {
    "width": 1024,
    "name": "rotate",
-   "ok": false,
-   "error": "AssertionError('rotate did not change the title')"
+   "ok": true,
+   "detail": {
+    "before": 0,
+    "after": 23.92
+   }
   },
   {
    "width": 1024,
@@ -1067,8 +1181,12 @@
   {
    "width": 1024,
    "name": "undo/redo",
-   "ok": false,
-   "error": "AssertionError('undo/redo True/False')"
+   "ok": true,
+   "detail": {
+    "before": 5,
+    "after_undo": 4,
+    "after_redo": 5
+   }
   },
   {
    "width": 1024,
@@ -1097,7 +1215,7 @@
    "name": "export png",
    "ok": true,
    "detail": {
-    "bytes": 38792,
+    "bytes": 42023,
     "png": true
    }
   },
@@ -1354,9 +1472,21 @@
    "name": "guest preview",
    "ok": true,
    "detail": {
-    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+    "url": "http://127.0.0.1:4180/",
     "extra_tabs": 0,
     "dialogs": 3
+   }
+  },
+  {
+   "width": 1280,
+   "name": "selection survives drawer close",
+   "ok": true,
+   "detail": {
+    "selected": 1,
+    "inspector": {
+     "inspector": false,
+     "mobile": false
+    }
    }
   },
   {
@@ -1382,7 +1512,7 @@
     "after": {
      "w": null,
      "h": null,
-     "width": "75.1969%",
+     "width": "74.6586%",
      "height": "13.0332%"
     }
    }
@@ -1393,7 +1523,7 @@
    "ok": true,
    "detail": {
     "before": 0,
-    "after": 23.56
+    "after": 23.69
    }
   },
   {
@@ -1417,8 +1547,12 @@
   {
    "width": 1280,
    "name": "undo/redo",
-   "ok": false,
-   "error": "AssertionError('undo/redo True/False')"
+   "ok": true,
+   "detail": {
+    "before": 5,
+    "after_undo": 4,
+    "after_redo": 5
+   }
   },
   {
    "width": 1280,
@@ -1447,7 +1581,7 @@
    "name": "export png",
    "ok": true,
    "detail": {
-    "bytes": 41224,
+    "bytes": 41558,
     "png": true
    }
   },
@@ -1704,9 +1838,21 @@
    "name": "guest preview",
    "ok": true,
    "detail": {
-    "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/",
+    "url": "http://127.0.0.1:4180/",
     "extra_tabs": 0,
     "dialogs": 3
+   }
+  },
+  {
+   "width": 1440,
+   "name": "selection survives drawer close",
+   "ok": true,
+   "detail": {
+    "selected": 1,
+    "inspector": {
+     "inspector": false,
+     "mobile": false
+    }
    }
   },
   {
@@ -1732,7 +1878,7 @@
     "after": {
      "w": null,
      "h": null,
-     "width": "75.1969%",
+     "width": "74.6586%",
      "height": "13.0332%"
     }
    }
@@ -1743,7 +1889,7 @@
    "ok": true,
    "detail": {
     "before": 0,
-    "after": 23.56
+    "after": 24.51
    }
   },
   {
@@ -1767,8 +1913,12 @@
   {
    "width": 1440,
    "name": "undo/redo",
-   "ok": false,
-   "error": "AssertionError('undo/redo True/False')"
+   "ok": true,
+   "detail": {
+    "before": 5,
+    "after_undo": 4,
+    "after_redo": 5
+   }
   },
   {
    "width": 1440,
@@ -1797,7 +1947,7 @@
    "name": "export png",
    "ok": true,
    "detail": {
-    "bytes": 41984,
+    "bytes": 42045,
     "png": true
    }
   },
@@ -1976,31 +2126,22 @@
    "console": [
     {
      "w": 360,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 360,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 360,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "pageerrors": [],
-   "failed": [
-    {
-     "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
-     "why": "csp"
-    }
-   ],
+   "failed": [],
    "http": [
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/i/missing-slug-round-6",
      "status": 404
     },
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/api/public/missing-slug-round-6",
      "status": 404
     }
    ],
@@ -2014,13 +2155,7 @@
      "scrollWidth": 360,
      "clientWidth": 360,
      "docHeight": 800,
-     "rightEdge": [
-      {
-       "el": "#workflowV5Focus",
-       "tag": "BUTTON",
-       "right": 368
-      }
-     ],
+     "rightEdge": [],
      "clipped": [
       {
        "el": ".skip-link",
@@ -2361,58 +2496,25 @@
      }
     }
    ],
-   "requests": [
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    }
-   ],
+   "requests": [],
    "missing_console": [
     {
      "w": 360,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 360,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 360,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_expected_404": [
     {
      "w": 360,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 360,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 360,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_unexpected": [],
@@ -2425,31 +2527,22 @@
    "console": [
     {
      "w": 390,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 390,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 390,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "pageerrors": [],
-   "failed": [
-    {
-     "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
-     "why": "csp"
-    }
-   ],
+   "failed": [],
    "http": [
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/i/missing-slug-round-6",
      "status": 404
     },
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/api/public/missing-slug-round-6",
      "status": 404
     }
    ],
@@ -2467,7 +2560,7 @@
       {
        "el": "#workflowV5Focus",
        "tag": "BUTTON",
-       "right": 428
+       "right": 414
       }
      ],
      "clipped": [
@@ -2796,58 +2889,25 @@
      }
     }
    ],
-   "requests": [
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    }
-   ],
+   "requests": [],
    "missing_console": [
     {
      "w": 390,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 390,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 390,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_expected_404": [
     {
      "w": 390,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 390,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 390,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_unexpected": [],
@@ -2860,31 +2920,22 @@
    "console": [
     {
      "w": 768,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 768,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 768,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "pageerrors": [],
-   "failed": [
-    {
-     "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
-     "why": "csp"
-    }
-   ],
+   "failed": [],
    "http": [
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/i/missing-slug-round-6",
      "status": 404
     },
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/api/public/missing-slug-round-6",
      "status": 404
     }
    ],
@@ -2902,7 +2953,7 @@
       {
        "el": "",
        "tag": "BUTTON",
-       "right": 776
+       "right": 797
       }
      ],
      "clipped": [
@@ -3324,58 +3375,25 @@
      }
     }
    ],
-   "requests": [
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    }
-   ],
+   "requests": [],
    "missing_console": [
     {
      "w": 768,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 768,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 768,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_expected_404": [
     {
      "w": 768,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 768,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 768,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_unexpected": [],
@@ -3388,31 +3406,22 @@
    "console": [
     {
      "w": 1024,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1024,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1024,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "pageerrors": [],
-   "failed": [
-    {
-     "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
-     "why": "csp"
-    }
-   ],
+   "failed": [],
    "http": [
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/i/missing-slug-round-6",
      "status": 404
     },
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/api/public/missing-slug-round-6",
      "status": 404
     }
    ],
@@ -3430,7 +3439,7 @@
       {
        "el": "",
        "tag": "BUTTON",
-       "right": 1028
+       "right": 1056
       }
      ],
      "clipped": [
@@ -4028,58 +4037,25 @@
      }
     }
    ],
-   "requests": [
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    }
-   ],
+   "requests": [],
    "missing_console": [
     {
      "w": 1024,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1024,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1024,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_expected_404": [
     {
      "w": 1024,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1024,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1024,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_unexpected": [],
@@ -4092,31 +4068,22 @@
    "console": [
     {
      "w": 1280,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1280,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1280,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "pageerrors": [],
-   "failed": [
-    {
-     "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
-     "why": "csp"
-    }
-   ],
+   "failed": [],
    "http": [
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/i/missing-slug-round-6",
      "status": 404
     },
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/api/public/missing-slug-round-6",
      "status": 404
     }
    ],
@@ -4134,7 +4101,7 @@
       {
        "el": "",
        "tag": "BUTTON",
-       "right": 1332
+       "right": 1292
       }
      ],
      "clipped": [
@@ -4559,58 +4526,25 @@
      }
     }
    ],
-   "requests": [
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    }
-   ],
+   "requests": [],
    "missing_console": [
     {
      "w": 1280,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1280,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1280,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_expected_404": [
     {
      "w": 1280,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1280,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1280,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_unexpected": [],
@@ -4623,31 +4557,22 @@
    "console": [
     {
      "w": 1440,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1440,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1440,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "pageerrors": [],
-   "failed": [
-    {
-     "url": "https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092",
-     "why": "csp"
-    }
-   ],
+   "failed": [],
    "http": [
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/i/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/i/missing-slug-round-6",
      "status": 404
     },
     {
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/api/public/missing-slug-round-6",
+     "url": "http://127.0.0.1:4180/api/public/missing-slug-round-6",
      "status": 404
     }
    ],
@@ -5066,58 +4991,25 @@
      }
     }
    ],
-   "requests": [
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    },
-    {
-     "method": "POST",
-     "url": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page/cdn-cgi/rum?"
-    }
-   ],
+   "requests": [],
    "missing_console": [
     {
      "w": 1440,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1440,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1440,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_expected_404": [
     {
      "w": 1440,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     },
     {
      "w": 1440,
-     "text": "Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action"
-    },
-    {
-     "w": 1440,
-     "text": "Failed to load resource: the server responded with a status of 404 ()"
+     "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
     }
    ],
    "console_unexpected": [],
@@ -5125,7 +5017,7 @@
    "failed_unexpected": []
   }
  ],
- "base": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page",
+ "base": "http://127.0.0.1:4180",
  "viewports": [
   [
    360,
