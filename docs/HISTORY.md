@@ -304,32 +304,37 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   repo has no ESLint or TypeScript toolchain, so `node --check` on the changed JS plus the build
   check are the available static gates.
 
-## 8. Round 6 — live six-width sweep (2026-11-02)
+## 8. Round 6 — six-width sweep and local fixes (2026-11-02)
 
 - **Coverage.** All 19 routes at 360/390/768/1024/1280/1440 on the published origin: **114/114
   loads**, every one 200 or the intended 404, 0 horizontal overflow, 0 page errors, 0 unexpected
   console errors. 108 “clipped” records are `.skip-link`/`.sr-only`; the 8 px right-edge buttons are
   the landing demo’s horizontal tool strip (same hits as round 4); the missing-slug 404 reports its
   deliberate subresources plus Cloudflare’s CSP-blocked beacon.
-- **Six-width live pass.** `live_flows.py` ran at 360/390/768/1024/1280/1440: **219 checks, 204
-  passed, 15 failed**, with 202 state captures. Console, page-error and unexpected-request checks
-  were clean at every width. Editor add/save/reload/export, template search + source/category/
-  favorites filters, Khmer numerals in search (`ខ្មែរ ១២៣`), registration validation, the auth
-  shells and the 404 all passed.
-- **Triage.** All 15 failures were harness assumptions: selecting an object opens the responsive
-  inspector/Quick Edit drawer, so pointer gestures ran under it (direct mobile drag works, and
-  Escape/Canvas restores the selected canvas); redo re-inserts an object with a new id, breaking an
-  exact-JSON equality check; Appearance is a Light/Dark menu, not a toggle; and the missing-slug
-  page deliberately fetches a second 404 API path. No product defect was confirmed.
-- **Blocked clean rerun.** The origin hit **HTTP 429** at 03:40Z: daily requests **10,301 / 10,000**,
-  site **paused**, reset **2026-11-03T00:00Z**; data preserved. The corrected harness detects 429
-  and stops, but the clean six-width live pass remains verification debt.
+- **First interaction pass.** `live_flows.py` at all six widths: **219 checks, 204 passed, 15
+  failed**, 202 state captures. All 15 were harness assumptions: the responsive drawer covered the
+  pointer target, redo re-inserts an object with a new id, Appearance is a Light/Dark menu, and the
+  missing-slug page deliberately fetches a second 404 API path. No product defect was confirmed.
+- **Fixes.** Canvas/X now closes and keeps closed the responsive inspector while preserving the
+  selection (`mobile-editor.js`, `editor-core.js`). The selection context row ships at its final
+  position instead of being reparented after paint (`editor-pro.js`, `index.html`). The Pages tip is
+  appended after the manager instead of above it (`studio-experience.js`). Boot-safe selection and a
+  silent prewarm stop transient inspector groups from opening (`app.js`, `inspector-reorg.js`,
+  `first-selection-prewarm.js`). Toolbar/geometry stabilization lives in `stabilized.css`.
+- **Final local pass.** **225/225 checks, 0 failures** at six widths, clean console, page errors and
+  unexpected requests. The final 1024 gesture fix scrolls the selected title into the canvas and
+  requires its center to be in-view before dragging; the earlier failure screenshot showed the drag
+  click hitting the topbar preview. Record: `bugs/round-6/live-flows-six.json`.
+- **CLS.** Editor first paint now measures desktop **0.0962** settled (one volatile **0.1096** run
+  with the known Pages-group reflow) and mobile **0.0906**, against baselines 0.4067 / 0.6219. The
+  ≤0.1 target is met on the settled desktop run and mobile; the Pages-group reflow remains a
+  residual risk.
 - **Local guest/editor depth.** `bugs/round-4/flow_sweep.py` **61/61**, 0 console errors, six widths:
   guest hero/Khmer digits, zero empty feature panels, single credit, RSVP validation + thank-you,
   gallery form, editor drag/resize/rotate/multi-select/undo-redo/add/save/reload/export.
-- **No app source changed**, so no redeploy is claimed. The live `bundle-index.css` SHA-256 still
-  equals the local build (`8e323747…1aced`). Live CLS on the `/` demo: **0.000 (0 shifts)**; the
-  workspace editor stays **0.3927**, open and not addressed. Record: `bugs/round-6/FINDINGS.md`.
-- **Gates:** `build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`; `compileall` exit 0; full
-  suite **231 passed, 1 warning in 1210.03 s (exit 0)**. No JS changed, so `node --check` was N/A;
-  the repo still has no ESLint/TypeScript toolchain.
+- **Live deploy still blocked.** The origin hit **HTTP 429** at 03:40Z: daily requests **10,301 /
+  10,000**, site **paused**, reset **2026-11-03T00:00Z**; data preserved. No live deploy or live pass
+  is claimed for these app fixes.
+- **Gates:** `build.py all` exit 0, `build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`;
+  `compileall` exit 0; changed JS passes `node --check`; full suite **247 passed, 17 warnings in
+  1148.47 s (exit 0)**. The repo has no ESLint or TypeScript toolchain.

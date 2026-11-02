@@ -1,42 +1,42 @@
 # PROGRESS — autonomous mission log
 
 ## Current status
-- **Round 6 six-width live pass (2026-11-02):** the harness ran at 360/390/768/1024/1280/1440 —
-  **219 checks, 204 passed, 15 failed**. All 15 were traced to harness assumptions (the responsive
-  inspector opened by selection, exact-JSON redo identity, the Appearance menu, and the expected
-  public-API 404), not confirmed product defects. 202 state captures; console, page errors and
-  unexpected requests were clean at every width; template search/filters, Khmer numerals
-  (`ខ្មែរ ១២៣`), registration validation, shells and 404 passed. The corrected rerun is **blocked**:
-  the daily hosting allowance was exhausted at 03:40Z (**10,301 / 10,000**, site paused, reset
-  **2026-11-03T00:00Z**). No app source change, no deploy; live demo CLS 0.000, workspace-editor
-  CLS 0.3927 left open. Record: `bugs/round-6/FINDINGS.md`.
+- **Round 6 final (2026-11-02, local):** the corrected harness passed at all six widths —
+  **225/225 checks, 0 failures**, clean console/page/network. Record: `bugs/round-6/live-flows-six.json`.
+  The 15 earlier failures were harness assumptions (drawer, redo identity, Appearance menu, deliberate
+  404); the 1024 gestures now reset the canvas scroll, scroll the selected title into the viewport and
+  assert its center is in-view before dragging. App fixes: Canvas/X dismissal, static context-row/toolbar
+  geometry, Pages tip placement, and boot-safe inspector selection (including silent prewarm). Editor CLS:
+  **desktop 0.0962** settled (one volatile **0.1096** run; the known Pages-group reflow remains) and
+  **mobile 0.0906**, target ≤0.1. The hosting allowance is still paused at **10,301 / 10,000**, reset
+  **2026-11-03T00:00Z**, so no live deploy or live pass is claimed. Full pytest passed:
+  **247 passed, 17 warnings in 1148.47 s (exit 0)**.
 - **Deployed (2026-11-02T01:46Z):** the post-reset `sites_deploy` succeeded on the first try
   (`state: succeeded`, `published: true`, daily requests 0 / 10,000) and the production origin
   **https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page** now serves this build. The
   allowance is the only thing that had blocked rounds 2–4; no code change was needed to deploy.
-- **CLS improved, not closed:** the same 1440×900 Load-only probe now measures **0.3927** on the
-  built bundle (was 0.4959 at phase 10 and 0.4840 at the start of this pass), 15 shifts, 0 page
-  errors. Fixes: the canvas toolbar is forced to one scrollable row (`flex-wrap:nowrap!important`,
-  it was wrapping to 118 px then reflowing to 60/106 px) and the typography disclosure no longer
-  injects an open group late. Residual shifts are the 62 px toolbar/topbar ramp in the first
-  1.7 s, the Pages section-builder remount (~0.05) and a late inspector-group growth; the ≤0.1
-  target is still not met.
+- **CLS improved and measured:** round 6 final editor first paint is **desktop 0.0962** on the
+  settled run (one volatile **0.1096** run) and **mobile 0.0906**, against baselines 0.4067 /
+  0.6219. The remaining shift is the late Pages-group reflow (~0.03); the old toolbar and
+  inspector boot growth is removed. The settled desktop and mobile runs meet ≤0.1; the volatile
+  desktop run is recorded rather than hidden.
 - **Manual runners refreshed (BUG-R1-4 closed):** `v17_professional_editor_test` and
   `v0_52_free_canvas_drag_test` now assert v17 behaviour and both exit 0. The v17 fixture waits
   for settled rects, reveals the Transform panel, asserts `.motion-line.motion-snap`, the Guides
   toggle's persisted `editorModel.guidesVisible`, and the quick-inspector mobile default with its
   numeric transform. The stale expectations are listed in `bugs/round-4/FINDINGS.md`.
-- **Final gates (2026-11-02):** round 6 re-ran the suite with no code change: **231 passed, 1
-  warning in 1210.03 s (exit 0)**. `build.py all --check` printed `BUILD_OK` +
-  `MIRROR_CHECK_PASSED`; `compileall` exited 0; no JS changed, so `node --check` was N/A. No
-  ESLint/TypeScript toolchain exists in this repo.
+- **Final gates (2026-11-02):** full suite **247 passed, 17 warnings in 1148.47 s (exit 0)**.
+  `build.py all --check` printed `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall` exited 0;
+  changed JS passes `node --check`; `git diff --check` is clean. No ESLint/TypeScript toolchain
+  exists in this repo.
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
   **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
   **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
   `7e22bef`. The push decision remains open.
-- **Queue of record:** `docs/NEXT-WORK.md` — 14 open/owner-blocked defects, **2 stuck**
-  (editor first-paint CLS and the pre-v17 manual canvas runners), **0 untriaged suite failures**,
-  36 work-order tasks, 18 owner decisions, 12 verification debts. History: `docs/HISTORY.md`.
+- **Queue of record:** `docs/NEXT-WORK.md` — 14 open/owner-blocked defects, **1 stuck**
+  (the pre-v17 manual canvas runners), editor CLS improved to 0.0962 with a residual Pages-group
+  reflow, **0 untriaged suite failures**, 36 work-order tasks, 18 owner decisions, 12 verification
+  debts. History: `docs/HISTORY.md`.
 - **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
   baseline failures are closed. The product backlog's remaining code work is either owner-held
   or marked stuck after measurement; the live-only deploy is the only external blocker.
@@ -68,7 +68,7 @@
   receipt succeeds, confirm publication with `sites_inspect`, open the live URL, and repeat the
   live checks for metadata, missing-slug 404, signed-out editor, manifest/icons and second-tab
   autosave. Until then every phase-2–10 change is local-only.
-- **P1 editor first-paint CLS — STUCK after three measured attempts:** the 1440×900 probe
+- **P1 editor first-paint CLS — earlier attempts (superseded by round 6):** the 1440×900 probe
   (`artifacts/verify/cls-before.json`) measured **0.5287** over 17 shifts. Attempt 1 shipped
   `page-experience.css` with the document: **0.5075**. Attempt 2 trusted the workflow section
   instead of the synthetic first pane: **0.5179**, so it was reverted. Attempt 3 put
@@ -80,8 +80,9 @@
   (0.1537, 0.0628, 0.0443) and expanding/collapsing the inspector `ix-groups` (0.0581 +
   0.0523); reaching the 0.1 target needs the deferred UI loaded before paint, which is a larger
   boot redesign than the no-rewrite rule allows. The two safe invariants are guarded by a
-  collected test in `tests/v22_2_page_experience_contract_test.py`; the P1 remains open and is
-  marked stuck, not fixed.
+  collected test in `tests/v22_2_page_experience_contract_test.py`. Round 6 subsequently reduced
+  the final measurement to **0.0962** desktop / **0.0906** mobile; the residual Pages-group reflow
+  is recorded in `bugs/round-6/FINDINGS.md` rather than hidden.
 - **Round 1 (live sweep):** 114 live route/viewport records + 31 authenticated local checks,
   **0 failed checks**; final full suite **223 passed, 2 warnings in 883.42 s (exit 0)**; one P1
   fixed (BUG-R1-1) and proven live, two P2s logged (soft 404, CSP console), one stale
