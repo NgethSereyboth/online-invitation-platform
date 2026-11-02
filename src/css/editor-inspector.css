@@ -285,12 +285,12 @@ body[data-page="index"] .studio-selection-toolbar { display: none; }
 /* Text formatting belongs to the canvas while the Edit tab is open. On
    Layers, Sections and Share it floated above the panel the user was reading
    and covered the invitation; hide it there. */
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v20TypographyToolbar { display: none; }
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) .v54-selection-card { display: none; }
+body[data-page="index"][data-active-inspector]:not([data-active-inspector="object"]) #v20TypographyToolbar { display: none; }
+body[data-page="index"][data-active-inspector]:not([data-active-inspector="object"]) .v54-selection-card { display: none; }
 /* The contextual Styles/Position/Duplicate/Delete strip is the Edit tab's
    quick-action row. On Layers its commands duplicate the row menu, and on
    Sections/Share they act on an object the user is not editing. */
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v23ContextToolbar { display: none; }
+body[data-page="index"][data-active-inspector]:not([data-active-inspector="object"]) #v23ContextToolbar { display: none; }
 /* A pointer selection focuses #stage (so the keyboard can nudge objects), which
    made the generic [tabindex]:focus-visible ring paint a second blue border
    around the whole invitation. The object outline is the selection signal. */

@@ -200,7 +200,11 @@
     // Canvas formatting overlays belong to the Edit tab. Styles drive off this
     // attribute so Layers/Sections/Share stop floating a text toolbar over the
     // invitation the user is trying to manage.
-    document.body.dataset.inspectorTab = id;
+    // Deliberately NOT `data-inspector-tab`: that attribute belongs to the tab
+    // buttons, and putting it on <body> made every `closest('[data-inspector-tab]')`
+    // delegate treat a tap anywhere (the mobile bottom bar included) as a tab
+    // click. `data-active-inspector` carries the same state for styling.
+    document.body.dataset.activeInspector = id;
     localStorage.setItem('einvite-editor-right-tab', id);
   };
   function buildInspector() {
