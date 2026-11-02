@@ -56,12 +56,12 @@ a tap.
 | BUG-R1-1 | Signed-out editor navigation | **Pass** — `/invitations/<id>/editor` → `/dashboard.html?next=…`. |
 | BUG-R1-2 | Published vs missing slug | **Pass** — published slug 200 and missing slug 404 at all six widths; missing route 404. |
 | BUG-R1-3 | Export / CSP regression | **Pass** — valid 38,876-byte PNG, 0 CSP/console errors during export. |
-| BUG-R1-4 | Manual-runner fixture | **Still stuck**, unchanged: the v17/manual-runner fixtures assert the pre-v17 interaction model; the real editor passes. |
+| BUG-R1-4 | Manual-runner fixture | **Pass** — refreshed to the v17 model (settled rects, revealed Transform panel, `.motion-line.motion-snap`, persisted Guides toggle, mobile quick inspector + numeric transform); `V18_PROFESSIONAL_EDITOR_TEST_PASSED`. `v0_52` also passes with the live selection outline. |
 | BUG-R2-1 | Empty guest features | **Pass** — 0 unconfigured sign-up/poll/album panels. |
 | BUG-R2-2 | Album form reflow | **Pass** — 390: 220 px fields, form 270 px; 1440: 330 px, form 380 px; label not clipped; load-more hidden; overflow 0. |
 | BUG-R2-3 | Duplicate platform credit | **Pass** — exactly one credit. |
 | Phase-10 | Pages-manager grouping | **Pass** — every width shows the active Pages pane with 1 real page card; 0 overflow. |
-| P1 CLS | Editor first paint | **Unchanged, still stuck** at 0.4959 (last measurement, phase 10). Not re-measured in round 4; no performance claim is made. |
+| P1 CLS | Editor first paint | **Improved to 0.3927** (from 0.4959 phase 10, 0.4840 at the start of this pass) on the built bundle, 1440×900, 15 shifts, 0 page errors. Two causes fixed: a wrapping toolbar and a late open typography disclosure. Remaining ramps are listed in the close-out section; the ≤0.1 target is not met. |
 
 ## Live-matrix triage
 
@@ -86,8 +86,28 @@ the signed-out editor — each at 360, 390, 768, 1024, 1280 and 1440.
 
 ## Deployment status
 
-No deployment was attempted, per the owner's instruction while the Sites
-allowance is suspended. Everything above was verified against the locally
-served phase-10 bundle, **not** the live origin. The live site is therefore not
-claimed to run this build. A post-reset `sites_deploy` plus a repeat of the
-public matrix and the 360/768 editor checks is the only remaining step.
+Superseded on 2026-11-02: the allowance reset and `sites_deploy` succeeded
+(`state: succeeded`, `published: true`). The build verified here is now live at
+https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page and round 5 checks
+the deployed origin.
+
+## Close-out (2026-11-02)
+
+- **CLS:** measured with `artifacts/verify/cls_bundle_probe.py` against the built
+  bundle at 1440×900, `waitUntil:load`, 7 s settle, buffered Layout Instability
+  API. Before this pass **0.4840** (15 shifts, 0 errors); after **0.3927**
+  (15 shifts, 0 errors). Phase-10 reference was 0.4959.
+- **What changed:** `body.studio-experience .stage-wrap > .studio-canvas-toolbar`
+  is now `flex-wrap:nowrap!important` (computed wrap made the 20+ toolbar
+  children, and later `#v23ContextToolbar`, take second rows: 118 → 60 → 106 px),
+  and `#advancedTextLayout` is injected closed instead of open.
+- **What remains:** a 62 px toolbar/topbar ramp in the first ~1.7 s, the
+  `.ei-section-order-builder` remount at ~2.4 s (~0.05), a 6 px layout step at
+  ~2.7 s, and a late inspector-group growth/revert around 6 s. Each is an
+  async module replacing first-paint geometry, not a missing reservation.
+- **Manual-runner drift found:** v17 renders snaps as `.motion-line.motion-snap`
+  (not `.pe-smart-guide`), routes guides through
+  `EInviteMotion.measurements.addGuide()` (not `.pe-user-guide`), opens the quick
+  inspector on mobile by default (not canvas mode), and needs the Transform
+  panel revealed before filling `[data-pe-transform]`. `v0_52` needed the live
+  (visible) selection outline. Those were fixture assumptions, not product bugs.

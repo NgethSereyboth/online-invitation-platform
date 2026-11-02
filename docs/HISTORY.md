@@ -275,3 +275,24 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   `artifacts/cleanup-backup-2026-11-01.tar.gz`, which is gitignored and stays on this machine.
 - The evidence trees themselves (`artifacts/`, 2.7 GB) were **not** deleted: they are untracked, so no
   git backup exists. The manifest records them as deferred, pending the owner's word.
+
+## 7. Round-4 close-out (2026-11-02)
+
+- **Deploy unblocked.** After the daily allowance reset, `sites_deploy` returned
+  `state: succeeded` at 2026-11-02T01:46:34Z and `sites_inspect` reports
+  `published: true`, daily requests 0 / 10,000. Production:
+  https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page. No code change was
+  needed to clear the blocker; the previous rounds were correct to record it as external.
+- **CLS 0.4959 → 0.4840 → 0.3927.** Same harness (`artifacts/verify/cls_bundle_probe.py`,
+  1440×900, load-only, 7 s settle, buffered Layout Instability API) against the built bundle:
+  15 shifts, 0 page errors. The two causes fixed were a toolbar that computed `flex-wrap: wrap`
+  (118 → 60 → 106 px as children arrived) and `#advancedTextLayout` being injected open into the
+  Text group. Residual: first-paint 62 px toolbar/topbar ramp, Pages builder remount (~0.05), a
+  6 px layout step, and a late inspector-group growth. Target ≤0.1 still not met, so this is
+  recorded as improved, not closed.
+- **BUG-R1-4 closed.** Both manual runners assert current v17 behaviour and exit 0. The drift was
+  fixture-side: settled rects were read mid-transition; snapping renders `.motion-line.motion-snap`;
+  guides go through `EInviteMotion.measurements.addGuide()`; mobile defaults to the quick inspector;
+  `v0_52` expected the pre-v17 hidden outline. Details in `bugs/round-4/FINDINGS.md`.
+- **Round 5** verified the deployed origin (16 routes at 1440/360, key screenshots) — see
+  `bugs/round-5/FINDINGS.md` and `bugs/round-5/live-smoke.json`.

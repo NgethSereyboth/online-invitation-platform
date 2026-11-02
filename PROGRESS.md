@@ -1,6 +1,22 @@
 # PROGRESS — autonomous mission log
 
 ## Current status
+- **Deployed (2026-11-02T01:46Z):** the post-reset `sites_deploy` succeeded on the first try
+  (`state: succeeded`, `published: true`, daily requests 0 / 10,000) and the production origin
+  **https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page** now serves this build. The
+  allowance is the only thing that had blocked rounds 2–4; no code change was needed to deploy.
+- **CLS improved, not closed:** the same 1440×900 Load-only probe now measures **0.3927** on the
+  built bundle (was 0.4959 at phase 10 and 0.4840 at the start of this pass), 15 shifts, 0 page
+  errors. Fixes: the canvas toolbar is forced to one scrollable row (`flex-wrap:nowrap!important`,
+  it was wrapping to 118 px then reflowing to 60/106 px) and the typography disclosure no longer
+  injects an open group late. Residual shifts are the 62 px toolbar/topbar ramp in the first
+  1.7 s, the Pages section-builder remount (~0.05) and a late inspector-group growth; the ≤0.1
+  target is still not met.
+- **Manual runners refreshed (BUG-R1-4 closed):** `v17_professional_editor_test` and
+  `v0_52_free_canvas_drag_test` now assert v17 behaviour and both exit 0. The v17 fixture waits
+  for settled rects, reveals the Transform panel, asserts `.motion-line.motion-snap`, the Guides
+  toggle's persisted `editorModel.guidesVisible`, and the quick-inspector mobile default with its
+  numeric transform. The stale expectations are listed in `bugs/round-4/FINDINGS.md`.
 - **Branch:** `main`, fast-forwarded from `chore/cleanup` at `1b93d57` on 2026-11-01. It was
   **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
   **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
