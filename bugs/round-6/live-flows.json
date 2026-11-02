@@ -1,0 +1,147 @@
+{
+ "checks": [
+  {
+   "name": "live CLS 1440",
+   "ok": true,
+   "detail": {
+    "value": 0,
+    "shifts": 0
+   }
+  },
+  {
+   "name": "live editor boots",
+   "ok": true,
+   "detail": {
+    "objects": 4,
+    "stage": true
+   }
+  },
+  {
+   "name": "live editor no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "live drag",
+   "ok": true,
+   "detail": {
+    "before": "8%",
+    "after": "16%"
+   }
+  },
+  {
+   "name": "live undo/redo",
+   "ok": true,
+   "detail": {
+    "changed": true,
+    "restored": true
+   }
+  },
+  {
+   "name": "live multi-select",
+   "ok": true,
+   "detail": {
+    "ids": 2,
+    "outlined": 2
+   }
+  },
+  {
+   "name": "live add text",
+   "ok": true,
+   "detail": {
+    "before": 4,
+    "after": 5
+   }
+  },
+  {
+   "name": "live export png",
+   "ok": true,
+   "detail": {
+    "bytes": 38853,
+    "png": true
+   }
+  },
+  {
+   "name": "live export console clean",
+   "ok": true,
+   "detail": "clean"
+  },
+  {
+   "name": "live mobile no overflow",
+   "ok": true,
+   "detail": 0
+  },
+  {
+   "name": "live mobile stage",
+   "ok": true,
+   "detail": {
+    "objects": 5,
+    "visible": true
+   }
+  },
+  {
+   "name": "live templates search present",
+   "ok": true,
+   "detail": true
+  },
+  {
+   "name": "live templates search",
+   "ok": true,
+   "detail": {
+    "before": 36,
+    "after": 15,
+    "value": "wedding"
+   }
+  },
+  {
+   "name": "live invalid register rejected",
+   "ok": true,
+   "detail": {
+    "url": "/dashboard",
+    "invalid": true,
+    "view": true,
+    "message": ""
+   }
+  },
+  {
+   "name": "live privacy language 1440",
+   "ok": true,
+   "detail": {
+    "km": true,
+    "lang": "km"
+   }
+  },
+  {
+   "name": "live privacy language 360",
+   "ok": true,
+   "detail": {
+    "en": true,
+    "overflow": 0
+   }
+  },
+  {
+   "name": "live missing invitation 404",
+   "ok": true,
+   "detail": {
+    "status": 404,
+    "heading": "Invitation unavailable",
+    "overflow": 0
+   }
+  },
+  {
+   "name": "live console clean",
+   "ok": true,
+   "detail": "clean"
+  }
+ ],
+ "errors": [
+  "CONSOLE:Failed to load resource: the server responded with a status of 404 ()",
+  "CONSOLE:Loading the script 'https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092' violates the following Content Security Policy directive: \"script-src 'self'\". Note that 'script-src-elem' was not explicitly set,",
+  "CONSOLE:Failed to load resource: the server responded with a status of 404 ()"
+ ],
+ "cls": {
+  "value": 0,
+  "shifts": 0
+ },
+ "base": "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page"
+}

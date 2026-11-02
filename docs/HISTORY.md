@@ -303,3 +303,21 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   `tools/proof-public-page.py`); full suite **231 passed, 1 warning in 1291.81 s (exit 0)**. The
   repo has no ESLint or TypeScript toolchain, so `node --check` on the changed JS plus the build
   check are the available static gates.
+
+## 8. Round 6 — live six-width sweep (2026-11-02)
+
+- **Coverage.** All 19 routes at 360/390/768/1024/1280/1440 on the published origin: **114/114
+  loads**, every one 200 or the intended 404, 0 horizontal overflow, 0 page errors, 0 unexpected
+  console errors. 108 “clipped” records are `.skip-link`/`.sr-only`; the 8 px right-edge buttons are
+  the landing demo’s horizontal tool strip (same hits as round 4); the missing-slug 404 reports its
+  deliberate subresources plus Cloudflare’s CSP-blocked beacon.
+- **Live interactions.** **18/18**: demo editor boots (4 objects), drag (8% → 16%), undo/redo,
+  multi-select, add text (4 → 5), **export PNG 38,853 B** with a clean console, 360 mobile layout,
+  templates search (36 → 15), invalid registration rejected without creating an account, privacy
+  language at 1440/360, and the 404 shell.
+- **Local guest/editor depth.** `bugs/round-4/flow_sweep.py` **61/61**, 0 console errors, six widths:
+  guest hero/Khmer digits, zero empty feature panels, single credit, RSVP validation + thank-you,
+  gallery form, editor drag/resize/rotate/multi-select/undo-redo/add/save/reload/export.
+- **No new defect**, so no source change and no redeploy. The live `bundle-index.css` SHA-256 still
+  equals the local build (`8e323747…1aced`). Live CLS on the `/` demo: **0.000 (0 shifts)**; the
+  workspace editor stays **0.3927**, open and not addressed. Record: `bugs/round-6/FINDINGS.md`.
