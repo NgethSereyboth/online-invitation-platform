@@ -21,7 +21,7 @@ def main():
         page.goto(base+'/dashboard.html',wait_until='networkidle');page.locator('#authRegisterTab').click();page.locator('#email').fill('v14-layout@example.com');page.locator('#password').fill('Strong-v14-layout-123');page.locator('#registerConfirmPassword').fill('Strong-v14-layout-123');page.locator('#loginBtn').click();page.wait_for_selector('#dashboardView:not([hidden])')
         result=page.evaluate("""async()=>{const d={schemaVersion:13,eventType:'Wedding',fields:{names:'V14 Layout Invitation',namesKm:'ពិធីអញ្ជើញ V14',date:'2027-01-17',time:'17:00',venue:'Phnom Penh',venueKm:'ភ្នំពេញ',message:'You are invited.',messageKm:'សូមគោរពអញ្ជើញ។'},settings:{rsvpEnabled:false,wishesEnabled:true,scheduleEnabled:true,venueEnabled:true,galleryEnabled:false,countdownEnabled:false,musicEnabled:false,openingEnabled:true,contactEnabled:false},languageMode:'both',accent:'#9d4555',palette:{background:'#fff8f2',surface:'#ffffff',text:'#342c26',heading:'#9d4555'},schedule:[],venues:[],customBlocks:[],designPages:[],objects:{title:{id:'title',type:'text',left:'10%',top:'18%',width:'80%',height:'110px',html:'V14 Layout Invitation',fontSize:42,color:'#342c26',zIndex:1}},sectionOrder:['schedule','venue','wishes']};const c=await fetch('/api/invitations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:'v14-layout-live',document:d})});if(!c.ok)throw Error(await c.text());const inv=await c.json();const p=await fetch('/api/invitations/'+inv.id+'/publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({document:d})});if(!p.ok)throw Error(await p.text());return {id:inv.id,slug:inv.slug}}""")
         cookies=setup.cookies();setup.close()
-        cases=[('editor',f"/invitations/{result['id']}/editor",1440,900,True),('editor',f"/invitations/{result['id']}/editor",390,844,True),('guest',f"/i/{result['slug']}",1440,900,False),('guest',f"/i/{result['slug']}",390,844,False)]
+        cases=[('editor',f"/invitations/{result['id']}/editor",1440,900,True),('editor',f"/invitations/{result['id']}/editor",768,900,True),('editor',f"/invitations/{result['id']}/editor",390,844,True),('guest',f"/i/{result['slug']}",1440,900,False),('guest',f"/i/{result['slug']}",390,844,False)]
         for kind,path,width,height,auth in cases:
             context=browser.new_context(viewport={'width':width,'height':height})
             if auth:context.add_cookies(cookies)
@@ -37,8 +37,32 @@ def main():
                     raise AssertionError((kind,width,diagnostic,errors,bad_responses)) from exc
                 check.wait_for_selector('#stage .object',timeout=20000)
                 if check.locator('#finalTourDismiss').count() and check.locator('#finalTourDismiss').is_visible(): check.locator('#finalTourDismiss').click()
-                if width==390:
-                    check.wait_for_selector('#mobileEditorV14Bar',state='visible');check.locator('#mobileToolsMode').click();check.wait_for_function("()=>document.body.dataset.mobileEditorMode==='tools'");assert check.locator('aside.left').get_attribute('aria-hidden')=='false';assert check.locator('aside.right').get_attribute('aria-hidden')=='true';check.locator('#mobileQuickMode').click();check.wait_for_function("()=>document.body.dataset.mobileEditorMode==='quick'");assert check.locator('aside.left').get_attribute('aria-hidden')=='true';assert check.locator('aside.right').get_attribute('aria-hidden')=='false'
+                if width<=820:
+                    check.wait_for_selector('#mobileEditorV14Bar',state='visible')
+                    # BUG-R4-1: only the inspector tab buttons may carry
+                    # data-inspector-tab. <body> used to carry it too, so every
+                    # closest('[data-inspector-tab]') delegate classified a tap
+                    # anywhere (the mobile bottom bar included) as a tab click.
+                    stray=check.evaluate("()=>[...document.querySelectorAll('[data-inspector-tab]')].filter(n=>!n.classList.contains('studio-inspector-tab')).map(n=>n.tagName)")
+                    assert stray==[],stray
+                    check.locator('#mobileToolsMode').click();check.wait_for_function("()=>document.body.dataset.mobileEditorMode==='tools'")
+                    drawer=check.evaluate("()=>document.body.dataset.editorDrawer")
+                    assert drawer=='creation',(width,drawer)
+                    assert check.locator('#mobileCreationPanel').is_visible()
+                    aria=(check.locator('aside.left').get_attribute('aria-hidden'),check.locator('aside.right').get_attribute('aria-hidden'))
+                    assert aria==('false','true'),(width,drawer,aria,check.evaluate("()=>document.body.className"))
+                    # BUG-R4-3: a selection refresh called closeInspector() even
+                    # when the creation drawer was the open one, so Tools closed
+                    # itself ~20 ms after the tap during boot. A refresh must
+                    # leave the creation drawer alone.
+                    check.evaluate("() => window.EInviteEditorBridge.select([])")
+                    check.wait_for_timeout(150)
+                    drawer=check.evaluate("() => document.body.dataset.editorDrawer")
+                    assert drawer=='creation',('selection-refresh',width,drawer)
+                    check.locator('#mobileQuickMode').click();check.wait_for_function("()=>document.body.dataset.mobileEditorMode==='quick'")
+                    assert check.evaluate("()=>document.body.dataset.editorDrawer")=='inspector'
+                    aria=(check.locator('aside.left').get_attribute('aria-hidden'),check.locator('aside.right').get_attribute('aria-hidden'))
+                    assert aria==('true','false'),(width,aria)
             else:
                 check.wait_for_function("()=>document.querySelector('#publicRoot')?.textContent.includes('V14 Layout Invitation')",timeout=15000)
             overflow=check.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth');assert overflow<=4,(kind,width,overflow)

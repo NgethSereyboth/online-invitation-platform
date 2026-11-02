@@ -548,7 +548,15 @@
     // is a no-op that leaves the panel translated off-screen (G6), so pass it.
     if (!hasSelection) {
       document.body.classList.remove('right-open');
-      if (narrow) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
+      // BUG-R4-3: `closeInspector` is the contract's "drawer -> canvas" command,
+      // not "close the inspector if it is open". Calling it on every selection
+      // refresh while the creation drawer was open closed Tools ~20 ms after the
+      // tap (measured at 360x800 during boot), leaving the bar pressed but the
+      // panel gone. On mobile only close the inspector when it is the open one.
+      const mobile = layout?.mode?.() === 'mobile';
+      const inspectorOpen = document.body.classList.contains('mobile-inspector-open') ||
+        document.body.dataset.editorDrawer === 'inspector';
+      if (narrow && (!mobile || inspectorOpen)) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
       return;
     }
     document.body.classList.add('right-open');
