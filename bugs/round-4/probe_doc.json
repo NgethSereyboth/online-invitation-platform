@@ -1,0 +1,37 @@
+{
+ "schemaVersion": 13,
+ "eventType": "Wedding",
+ "fields": {
+  "names": "[Groom name] & [Bride name]",
+  "namesKm": "",
+  "date": "2029-12-27",
+  "time": "16:05",
+  "venue": "[Venue]",
+  "venueKm": "",
+  "message": "We would be honoured to celebrate with you.",
+  "messageKm": ""
+ },
+ "settings": {
+  "rsvpEnabled": true,
+  "wishesEnabled": false,
+  "scheduleEnabled": true,
+  "venueEnabled": true,
+  "galleryEnabled": false,
+  "countdownEnabled": true,
+  "musicEnabled": false,
+  "openingEnabled": false,
+  "contactEnabled": false
+ },
+ "languageMode": "both",
+ "accent": "#9d4555",
+ "palette": {"background": "#fff8f2", "surface": "#ffffff", "text": "#342c26", "heading": "#9d4555"},
+ "sectionOrder": [],
+ "schedule": [],
+ "venues": [],
+ "customBlocks": [],
+ "designPages": [],
+ "objects": {
+  "title": {"id": "title", "type": "text", "left": "10%", "top": "18%", "width": "80%", "height": "110px",
+            "html": "Probe invitation", "fontSize": 42, "color": "#342c26", "zIndex": 1}
+ }
+}

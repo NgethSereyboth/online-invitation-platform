@@ -2189,6 +2189,31 @@ width:auto !important;
 min-width:0 !important;
 transform:none !important
 }
+body.mobile-editor-v14{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+body.mobile-editor-v14 .mobile-editor-v14-bar{
+display:grid !important;
+grid-template-columns:repeat(6,minmax(0,1fr));
+position:fixed;left:0;right:0;bottom:0;z-index:320;
+min-height:calc(64px + env(safe-area-inset-bottom));
+padding:6px 5px calc(5px + env(safe-area-inset-bottom));
+background:color-mix(in srgb,var(--app-surface,#fff) 96%,transparent);
+border-top:1px solid var(--app-line,#ddd);
+box-shadow:0 -12px 34px rgba(0,0,0,.13);
+backdrop-filter:blur(14px)
+}
+body.mobile-editor-v14 .mobile-editor-v14-bar button{
+min-width:0 !important;min-height:52px !important;padding:5px 2px !important;
+border:0 !important;border-radius:12px !important;background:transparent !important;
+display:flex !important;flex-direction:column;align-items:center;justify-content:center;
+gap:2px;color:var(--app-muted,#666) !important;box-shadow:none !important
+}
+body.mobile-editor-v14 .mobile-editor-v14-bar button span{font-size:18px;line-height:1}
+body.mobile-editor-v14 .mobile-editor-v14-bar button small{
+font-size:9px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%
+}
+body.mobile-editor-v14 .mobile-editor-v14-bar button.active{
+background:var(--app-accent-soft,#f3e5e8) !important;color:var(--app-accent,#8b465b) !important
+}
 }
 body[data-page="index"] .mobile-desktop-hint{
 background:color-mix(in srgb,var(--app-warn,#c98322) 10%,var(--app-surface,#fff)) !important;
@@ -2747,9 +2772,9 @@ transition:opacity 120ms ease,transform 120ms ease
 body[data-page="index"]:has(#v20TypographyToolbar:not([hidden])) #v54SelectionCard{display:none}
 body[data-page="index"] .studio-inspector-pane input[type="range"]{accent-color:var(--app-accent,#8b465b)}
 body[data-page="index"] .studio-selection-toolbar{display:none}
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v20TypographyToolbar{display:none}
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) .v54-selection-card{display:none}
-body[data-page="index"][data-inspector-tab]:not([data-inspector-tab="object"]) #v23ContextToolbar{display:none}
+body[data-page="index"][data-active-inspector]:not([data-active-inspector="object"]) #v20TypographyToolbar{display:none}
+body[data-page="index"][data-active-inspector]:not([data-active-inspector="object"]) .v54-selection-card{display:none}
+body[data-page="index"][data-active-inspector]:not([data-active-inspector="object"]) #v23ContextToolbar{display:none}
 body.studio-experience #stage:focus,
 body.studio-experience #stage:focus-visible{outline:none}
 body.workspace-experience-v54:not(.v54-has-selection) [data-inspector-pane="object"] > .ix-toolbox{display:none}

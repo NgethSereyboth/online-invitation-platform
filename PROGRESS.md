@@ -73,6 +73,23 @@
   40,937 B. Local production-mode 1440 fallback: valid invitation 200, missing slug 404, missing
   route 404, signed-out editor 200 → dashboard, all with zero overflow. **No new product bugs.**
   Findings: `bugs/round-3/FINDINGS.md`; plan: `bugs/round-3/FIX_PLAN.md`.
+- **Round 4 (local production bundle, 2026-11-02):** the phase-10 bundle was served on
+  loopback (proxy 4180, isolated backend 4181) because Sites is still suspended; per the
+  owner's instruction **no `sites_deploy` was attempted**. Public matrix: **120 records**
+  (20 routes × six widths), **120 screenshots**, 108 × 200, 12 × expected 404, **0 horizontal
+  overflow, 0 page errors, 0 failed requests**, 0 unlabelled inputs, 0 unnamed buttons; the
+  18 console errors are the deliberate missing-route 404s. Authenticated flow: **61 checks,
+  0 failed, 0 application console errors**; PNG export 38,876 B; the Pages pane shows a real
+  card at all six widths; RSVP, gallery reflow and Khmer digits pass. Three P1s fixed:
+  **BUG-R4-1** body no longer carries `data-inspector-tab` (`efafe0f`), **BUG-R4-2** the
+  creation bar now covers the whole drawer range 601–820 (`1e26fe7`), **BUG-R4-3**
+  `syncInspectorDrawer` no longer closes the creation drawer via `closeInspector` (`04270a5`,
+  which also removes the old boot-restore observation). Guards are in
+  `tests/v14_live_layout_test.py` (768 bar/drawer, stray-attribute, selection-refresh).
+  `python3 build.py all --check` is clean (`up_to_date=533`) and `compileall` exits 0. The
+  live site is **not** claimed to run this build; a post-reset deploy plus a repeat of the
+  matrix and the 360/768 editor checks is the only external step. CLS is unchanged (stuck at
+  0.4959, not re-measured this round).
 - **Brotli follow-up (done):** `940a799` raised `docs/requirements-production.txt` and
   `tools/requirements.txt` from 1.2.0 to **1.2.1**. A temporary venv resolved both requirement
   sets with `pip check` clean; the runtime `.venv` is now 1.2.1 and `einvite-app` restarted

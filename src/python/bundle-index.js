@@ -6323,7 +6323,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 
 
-    document.body.dataset.inspectorTab = id;
+
+
+
+
+    document.body.dataset.activeInspector = id;
     localStorage.setItem('einvite-editor-right-tab', id);
   };
   function buildInspector() {

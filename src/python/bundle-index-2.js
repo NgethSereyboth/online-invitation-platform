@@ -2504,7 +2504,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const right = document.querySelector('aside.right');
   if (!body || !stage || !left || !right) return;
 
-  const mq = matchMedia('(max-width: 600px)');
+
+
+
+
+  const MOBILE_MAX = window.EInviteResponsiveLayout?.MOBILE_MAX || 820;
+  const mq = matchMedia(`(max-width: ${MOBILE_MAX}px)`);
   function applyMobileClass() {
     if (mq.matches) body.classList.add('mobile-editor-v14');
     else body.classList.remove('mobile-editor-v14');
@@ -3807,7 +3812,15 @@ boot();
 
     if (!hasSelection) {
       document.body.classList.remove('right-open');
-      if (narrow) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
+
+
+
+
+
+      const mobile = layout?.mode?.() === 'mobile';
+      const inspectorOpen = document.body.classList.contains('mobile-inspector-open') ||
+        document.body.dataset.editorDrawer === 'inspector';
+      if (narrow && (!mobile || inspectorOpen)) { try { layout?.closeInspector?.(true); } catch { /* ignore */ } }
       return;
     }
     document.body.classList.add('right-open');

@@ -1,0 +1,8288 @@
+{
+ "360": [
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -381,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -369,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -369,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -381,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -381,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -162,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -381,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -381,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -162,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -162,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 359,
+    "h": 676,
+    "x": -683,
+    "y": 780,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 325,
+    "h": 940,
+    "x": -671,
+    "y": 1081,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 325,
+    "sh": 940,
+    "cw": 325,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 325,
+     "h": 940,
+     "x": -671,
+     "y": 1081,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 780,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 359,
+     "h": 676,
+     "x": -683,
+     "y": 732,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 360,
+     "h": 676,
+     "x": -378,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 360,
+     "h": 676,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 360,
+    "h": 676,
+    "x": -378,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 676,
+    "x": 378,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  }
+ ],
+ "390": [
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode mobile-editor-v14 professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "canvas"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 389,
+    "h": 720,
+    "x": -744,
+    "y": 824,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 355,
+    "h": 940,
+    "x": -732,
+    "y": 1125,
+    "display": "grid",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 355,
+    "sh": 940,
+    "cw": 355,
+    "ch": 940
+   },
+   "cards": 1,
+   "visibleCards": 0,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 355,
+     "h": 940,
+     "x": -732,
+     "y": 1125,
+     "display": "grid",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 824,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 389,
+     "h": 720,
+     "x": -744,
+     "y": 776,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 390,
+     "h": 720,
+     "x": -409,
+     "y": 56,
+     "display": "block",
+     "visibility": "hidden",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 390,
+     "h": 720,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 390,
+    "h": 720,
+    "x": -409,
+    "y": 56,
+    "display": "block",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 390,
+    "h": 720,
+    "x": 410,
+    "y": 56,
+    "display": "flex",
+    "visibility": "hidden",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  }
+ ],
+ "768": [
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  },
+  {
+   "body": {
+    "classes": "studio-experience workspace-experience-v54 studio-design-mode professional-editor-v17 windows-ui-v54 final-page-entered einvite-layout-mobile command-system-v23 v54-inspector-essential ui-ready professional-workflow-v23 navigation-history-v23 style-history-v23 asset-workflow-v23 photo-workflow-v23 photo-style-library-v23 review-workflow-v23 direct-manipulation-v24 content-browser-v24 smart-layout-v24 brand-components-v24 collaboration-v24 export-quality-v24 adaptive-templates-v25 studio-governance-v25 print-readiness-v25 template-bindings-v25 studio-operations-v26 studio-automation-v27 workflow-ux-v5 workflow-pro-editor-v6 workflow-final-audit-v7 mobile-pane-collapsed",
+    "drawer": "canvas",
+    "layout": "mobile",
+    "mode": "desktop"
+   },
+   "paneActive": true,
+   "pane": {
+    "w": 289,
+    "h": 794,
+    "x": -290,
+    "y": 104,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "manager": {
+    "w": 255,
+    "h": 994,
+    "x": -278,
+    "y": 414,
+    "display": "grid",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": null,
+    "inert": false
+   },
+   "managerScroll": {
+    "sw": 255,
+    "sh": 994,
+    "cw": 255,
+    "ch": 994
+   },
+   "cards": 1,
+   "visibleCards": 1,
+   "chain": [
+    {
+     "tag": "DIV",
+     "id": "designPagesManager",
+     "cls": "design-pages-manager",
+     "w": 255,
+     "h": 994,
+     "x": -278,
+     "y": 414,
+     "display": "grid",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "paneChain": [
+    {
+     "tag": "SECTION",
+     "id": "",
+     "cls": "studio-pane active",
+     "w": 289,
+     "h": 794,
+     "x": -290,
+     "y": 104,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    },
+    {
+     "tag": "DIV",
+     "id": "",
+     "cls": "studio-pane-host einvite-drawer-closed",
+     "w": 289,
+     "h": 842,
+     "x": -290,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "ASIDE",
+     "id": "mobileCreationPanel",
+     "cls": "left studio-left-panel einvite-drawer-closed",
+     "w": 356,
+     "h": 842,
+     "x": -356,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": "true",
+     "inert": true
+    },
+    {
+     "tag": "MAIN",
+     "id": "main",
+     "cls": "",
+     "w": 768,
+     "h": 842,
+     "x": 0,
+     "y": 56,
+     "display": "block",
+     "visibility": "visible",
+     "opacity": "1",
+     "hidden": false,
+     "ariaHidden": null,
+     "inert": false
+    }
+   ],
+   "left": {
+    "w": 356,
+    "h": 842,
+    "x": -356,
+    "y": 56,
+    "display": "block",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "right": {
+    "w": 360,
+    "h": 842,
+    "x": 768,
+    "y": 56,
+    "display": "flex",
+    "visibility": "visible",
+    "opacity": "1",
+    "hidden": false,
+    "ariaHidden": "true",
+    "inert": true
+   },
+   "panes": [
+    {
+     "pane": "event",
+     "active": false
+    },
+    {
+     "pane": "pages",
+     "active": true
+    },
+    {
+     "pane": "media",
+     "active": false
+    },
+    {
+     "pane": "blocks",
+     "active": false
+    },
+    {
+     "pane": "elements",
+     "active": false
+    },
+    {
+     "pane": "text",
+     "active": false
+    }
+   ]
+  }
+ ]
+}
