@@ -95,6 +95,9 @@ report can still be matched; dates are the fix date, `[unknown]` where the recor
 | PW-3 | Editor | Typography bar clipped its own values (1,073 px content in 660 px) | 32 px right padding reserved for an arrow that is never drawn (`appearance:none`, no background image) | Bar removed; every control already exists in the inspector / selection toolbar; `Responsive preview` kept | `src/html/index.html`, `src/css/*` | 2026-10-30 |
 | PW-4 | Editor | Unanchored 7-row menu opened over the artwork on every click | Floating menu duplicated the selection toolbar | Menu removed; all seven actions reachable in the inspector / toolbar | `src/js/*` | 2026-10-30 |
 | PW-5 | Editor | Status strip clipped Templates / Quality / Team at 1440 | 18 duplicate launchers in a 30 px bar | Bar keeps save state, readout, approval, shortcuts and **Tools**; duplicates removed; still 30 px | `src/js/editor-core.js`, `src/css/*` | 2026-10-30 |
+| BUG-R4-1 | Editor (mobile) | Every tap at ≤820 px was classified as an inspector-tab click, so the new bottom bar's Tools tap opened the wrong drawer | `<body>` carried `data-inspector-tab` as state — the same attribute delegated handlers use as a contract | Body state renamed `data-active-inspector`; v14 asserts only `.studio-inspector-tab` carries the attribute and that Tools/Quick yield `creation`/`inspector` | `src/js/studio-experience.js`, `src/css/editor-inspector.css` | 2026-11-02 |
+| BUG-R4-2 | Editor (601–820) | Creation bar `display:none` at 768; rail off-canvas at `x=-351` and inert, so Pages/Elements/Text were unreachable | `mobile-editor.js` used `max-width:600px` while the drawer contract switches at 820; bar rules existed only ≤600 | Both breakpoints use `EInviteResponsiveLayout.MOBILE_MAX`; bar rules extended to 601–820 with the six-column grid (six columns, not five); 768 px gate | `src/js/mobile-editor.js`, `src/css/editor/editor-styles.css` | 2026-11-02 |
+| BUG-R4-3 | Editor (mobile) | Tools closed ~20 ms after the tap while boot finished; a programmatic `openCreation()` was reverted the same way | `syncInspectorDrawer(false)` called `closeInspector()`, which means "drawer → canvas" regardless of which drawer was open | On mobile, close the inspector only when it is the open drawer; v14 clears the selection while Tools is open and requires `creation` | `src/js/editor/editor-core.js` | 2026-11-02 |
 | PW-6 | Account | Dark and Light toasts stacked and contradicted each other | One timer per toast, no dedupe key | New theme toast replaces the previous one; one toast naming the current theme | `src/js/modern-ui.js` | 2026-10-30 |
 | PW-7 | Templates | Two search fields and three filter rows on `/templates` | Duplicated pack + studio controls | One search that filters both lists, one filter row, ellipsis on overflow | `src/js/template-pack-gallery.js`, `src/html/templates.html` | 2026-10-30 |
 | PW-8 | Editor | "Current invitation" thumbnail was a purple gradient on a rose design | Placeholder card | Card removed (duplicated the topbar title) | `src/html/index.html` | 2026-10-30 |
@@ -190,6 +193,15 @@ passed (16 pages, 0 console errors, 0 non-2xx). The pytest phase, run separately
 `template_pack_gallery_test::test_pack_gallery_lists_filters_and_opens_a_design`. All five are
 untriaged and recorded in `docs/NEXT-WORK.md` §1. The gate of record (223 passed at `4880fcb`) no
 longer describes HEAD.
+
+### 2026-11-02 round-4 suite
+
+`pytest -q tests` after the three round-4 drawer fixes: **231 passed, 1 warning in 1055.53 s
+(exit 0)** — the same count as the pre-round gate, so no test regressed. Focused checks:
+`tests/v14_live_layout_test.py` passed at 1440/768/390 (bar, drawer, stray-attribute and
+selection-refresh guards); `bugs/round-4/flow_sweep.py` **61 checks, 0 failed, 0 console
+errors**; `bugs/round-4/live_sweep.py` **120 records** (108 × 200, 12 expected 404), 0
+horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
 
 ### Coverage that existed (retained — see the manifest's Group C note)
 

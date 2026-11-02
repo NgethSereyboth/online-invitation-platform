@@ -86,7 +86,9 @@
   `syncInspectorDrawer` no longer closes the creation drawer via `closeInspector` (`04270a5`,
   which also removes the old boot-restore observation). Guards are in
   `tests/v14_live_layout_test.py` (768 bar/drawer, stray-attribute, selection-refresh).
-  `python3 build.py all --check` is clean (`up_to_date=533`) and `compileall` exits 0. The
+  `python3 build.py all --check` is clean (`up_to_date=533`), `compileall` exits 0, and the
+  post-fix full suite is **231 passed, 1 warning in 1055.53 s (exit 0)** — the same count as the
+  pre-round gate. The
   live site is **not** claimed to run this build; a post-reset deploy plus a repeat of the
   matrix and the 360/768 editor checks is the only external step. CLS is unchanged (stuck at
   0.4959, not re-measured this round).
