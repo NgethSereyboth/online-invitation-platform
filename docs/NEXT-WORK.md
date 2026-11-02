@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **14** open/owner-blocked defects (7 fixed in rounds 1–3 and phases 4–6; 1 stuck: the editor first-paint CLS — the manual canvas runner was refreshed and passes in round 4) · **36** open work-order tasks · **18** owner-held decisions · **12** verification debts |
+| Counts in this file | **14** open/owner-blocked defects (7 fixed in rounds 1–3 and phases 4–6; 1 stuck: the editor first-paint CLS — the manual canvas runner was refreshed and passes in round 4) · **36** open work-order tasks · **18** owner-held decisions · **13** verification debts |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -53,7 +53,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 | 2026-11-01 | #12 admin suspension UI coverage | `98d0306` | `users-v2` Suspended/Active badge pinned on the real row; no product change |
 | 2026-11-01 | #14 test data-dir isolation + inline editor runner | `e4a81c0` | autouse `EINVITE_DATA_DIR` restore; `env_isolation_test`; runner boots professional editor v17 |
 | 2026-11-01 | Phase-7/8 close-out: generated manifests, Khmer policy | `3d6ff85`, `f2bfcfe` | full suite **230 passed in 1125.10 s (exit 0)**; final build/compile/bundle checks recorded in `PROGRESS.md` |
-| 2026-11-02 | Round 6 live six-width sweep: 114/114 route loads, 18/18 live interactions, 61/61 local flows, no new defect; no code change or redeploy; CLS live demo 0.000, workspace 0.3927 left open | `—` | build/compileall pass; live hash matches; full suite recorded in `PROGRESS.md`; record `bugs/round-6/FINDINGS.md` |
+| 2026-11-02 | Round 6 six-width live pass: 219 checks, 204 pass, 15 harness failures; no product defect confirmed; clean rerun blocked by the daily allowance | `—` | 202 captures; console/network clean every width; guest/RSVP local 61/61; CLS untouched |
 | 2026-11-01 | Phase-10: static Pages stylesheet/manager placement; deploy retry refused | `ff5f5c1` | CLS **0.5287 → 0.4959** (the earlier 0.4194 was invalid while the manager was hidden in Event); remaining deferred-module shifts documented as stuck; full suite **231 passed in 1068.91 s (exit 0)**; Sites quota daily **10,755/10,000**, reset **2026-11-02T00:00Z**; two attempts refused, no further retry queued |
 
 ---
@@ -232,6 +232,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 | 10 | Intermittent app-server readiness flake (FB-09) | Causes spurious reds in browser gates. |
 | 11 | Dependabot reports **92 default-branch alerts / 49 unique advisories**: 82 Pillow alerts are already fixed on this branch by `13.0.0`; 3 Brotli alerts remain; the 7 old npm alerts are absent from this lockfile. | See `docs/security/DEPENDABOT-ALERTS-2026-11-01.md`; merge/cherry-pick the pins to `main` and upgrade Brotli to 1.2.1. |
 | 12 | Long-task ceiling is being grazed: 606–622 ms under load vs the frozen 600 ms | Do **not** raise the ceiling (OD-6). Re-measure quiet before treating a red as a regression; a genuine fix must cut work on `index.html`. |
+| 13 | Six-width live rerun blocked by the Sites daily allowance: 10,301/10,000 at 2026-11-02T03:40Z, reset 2026-11-03T00:00Z | The 219-check run left 15 harness-only failures; the corrected `bugs/round-6/live_flows.py` must be rerun after the reset before claiming a clean six-width live pass. |
 
 ---
 

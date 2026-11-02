@@ -1,14 +1,15 @@
 # PROGRESS — autonomous mission log
 
 ## Current status
-- **Round 6 (2026-11-02, live):** the six-width sweep covered all 19 routes at 360/390/768/
-  1024/1280/1440 — **114/114 loads**, all 200/404, 0 overflow, 0 page errors, 0 unexpected console
-  errors. Live interactions **18/18** (drag, undo/redo, multi-select, add text, PNG export,
-  templates search 36→15, invalid registration, language toggle, 404 shell). Local guest/editor
-  depth **61/61** at six widths. **No new product defect**, so no source change and no redeploy;
-  the published `bundle-index.css` hash still matches local (`8e323747…1aced`). Live CLS on the `/`
-  demo is **0.000 (0 shifts)**; the workspace-editor CLS stays open at **0.3927** and was not
-  touched this round. Record: `bugs/round-6/FINDINGS.md`.
+- **Round 6 six-width live pass (2026-11-02):** the harness ran at 360/390/768/1024/1280/1440 —
+  **219 checks, 204 passed, 15 failed**. All 15 were traced to harness assumptions (the responsive
+  inspector opened by selection, exact-JSON redo identity, the Appearance menu, and the expected
+  public-API 404), not confirmed product defects. 202 state captures; console, page errors and
+  unexpected requests were clean at every width; template search/filters, Khmer numerals
+  (`ខ្មែរ ១២៣`), registration validation, shells and 404 passed. The corrected rerun is **blocked**:
+  the daily hosting allowance was exhausted at 03:40Z (**10,301 / 10,000**, site paused, reset
+  **2026-11-03T00:00Z**). No app source change, no deploy; live demo CLS 0.000, workspace-editor
+  CLS 0.3927 left open. Record: `bugs/round-6/FINDINGS.md`.
 - **Deployed (2026-11-02T01:46Z):** the post-reset `sites_deploy` succeeded on the first try
   (`state: succeeded`, `published: true`, daily requests 0 / 10,000) and the production origin
   **https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page** now serves this build. The

@@ -311,14 +311,23 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   console errors. 108 “clipped” records are `.skip-link`/`.sr-only`; the 8 px right-edge buttons are
   the landing demo’s horizontal tool strip (same hits as round 4); the missing-slug 404 reports its
   deliberate subresources plus Cloudflare’s CSP-blocked beacon.
-- **Live interactions.** **18/18**: demo editor boots (4 objects), drag (8% → 16%), undo/redo,
-  multi-select, add text (4 → 5), **export PNG 38,853 B** with a clean console, 360 mobile layout,
-  templates search (36 → 15), invalid registration rejected without creating an account, privacy
-  language at 1440/360, and the 404 shell.
+- **Six-width live pass.** `live_flows.py` ran at 360/390/768/1024/1280/1440: **219 checks, 204
+  passed, 15 failed**, with 202 state captures. Console, page-error and unexpected-request checks
+  were clean at every width. Editor add/save/reload/export, template search + source/category/
+  favorites filters, Khmer numerals in search (`ខ្មែរ ១២៣`), registration validation, the auth
+  shells and the 404 all passed.
+- **Triage.** All 15 failures were harness assumptions: selecting an object opens the responsive
+  inspector/Quick Edit drawer, so pointer gestures ran under it (direct mobile drag works, and
+  Escape/Canvas restores the selected canvas); redo re-inserts an object with a new id, breaking an
+  exact-JSON equality check; Appearance is a Light/Dark menu, not a toggle; and the missing-slug
+  page deliberately fetches a second 404 API path. No product defect was confirmed.
+- **Blocked clean rerun.** The origin hit **HTTP 429** at 03:40Z: daily requests **10,301 / 10,000**,
+  site **paused**, reset **2026-11-03T00:00Z**; data preserved. The corrected harness detects 429
+  and stops, but the clean six-width live pass remains verification debt.
 - **Local guest/editor depth.** `bugs/round-4/flow_sweep.py` **61/61**, 0 console errors, six widths:
   guest hero/Khmer digits, zero empty feature panels, single credit, RSVP validation + thank-you,
   gallery form, editor drag/resize/rotate/multi-select/undo-redo/add/save/reload/export.
-- **No new defect**, so no source change and no redeploy. The live `bundle-index.css` SHA-256 still
+- **No app source changed**, so no redeploy is claimed. The live `bundle-index.css` SHA-256 still
   equals the local build (`8e323747…1aced`). Live CLS on the `/` demo: **0.000 (0 shifts)**; the
   workspace editor stays **0.3927**, open and not addressed. Record: `bugs/round-6/FINDINGS.md`.
 - **Gates:** `build.py all --check` → `BUILD_OK` / `MIRROR_CHECK_PASSED`; `compileall` exit 0; full
