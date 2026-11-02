@@ -27,7 +27,10 @@ def main()->int:
   assert page.evaluate("()=>Math.max(...EInviteEditorBridge.getSelectedIds().map(id=>parseFloat(state.objects[id].left)))>100")
 
   # Restore an on-canvas position, drag at the viewport edge, and confirm that
-  # the viewport follows the pointer while the stale blue overlay is hidden.
+  # the viewport follows the pointer. V17 deliberately keeps the selection
+  # outline visible and moves it live with the object; the pre-v17 behaviour
+  # (hide the stale outline during the drag) is what this assertion used to
+  # require.
   page.evaluate("()=>{EInviteEditorBridge.replaceState(structuredClone(window.__freeCanvasBaseline),{history:true,save:false,reason:'free-canvas-drag-reset'});EInviteEditorBridge.select(['details'])}");page.wait_for_timeout(260)
   viewport=box(page,'#canvasViewport');obj=box(page,'#stage .object[data-id="details"]');assert viewport and obj
   page.locator('#stage .object[data-id="details"]').scroll_into_view_if_needed();page.wait_for_timeout(120)
@@ -36,7 +39,7 @@ def main()->int:
   sx=obj['x']+obj['width']/2;sy=max(viewport['y']+80,min(viewport['y']+viewport['height']-90,obj['y']+obj['height']/2));edge=viewport['y']+viewport['height']-4
   page.mouse.move(sx,sy);page.mouse.down();page.mouse.move(sx,edge,steps=8);page.wait_for_timeout(80)
   during=page.evaluate("()=>({overlay:getComputedStyle(document.querySelector('#peSelectionBox')).visibility,selected:document.querySelector('#stage .object[data-id=\"details\"]').classList.contains('selected')})")
-  assert during=={'overlay':'hidden','selected':True},during
+  assert during=={'overlay':'visible','selected':True},during
   page.mouse.move(sx,edge,steps=8);page.mouse.up();page.wait_for_timeout(260)
   after=page.evaluate("()=>({top:state.objects.details.top,scroll:document.querySelector('#canvasViewport').scrollTop,overlay:getComputedStyle(document.querySelector('#peSelectionBox')).visibility})")
   assert after['scroll']>before['scroll'],(before,after)

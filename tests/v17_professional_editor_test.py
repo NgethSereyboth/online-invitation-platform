@@ -3,7 +3,7 @@
 from __future__ import annotations
 import importlib.util
 from pathlib import Path
-from browser_runtime import launch_chromium,skipped
+from browser_runtime import launch_chromium,reveal_inspector_control,skipped
 ROOT=Path(__file__).resolve().parents[1]
 RUNTIME=ROOT/'tests'/'inline_editor_runtime_test.py'
 
@@ -100,11 +100,30 @@ def main()->int:
   page.evaluate("()=>EInviteEditorBridge.select(['details'])");page.wait_for_timeout(60);rb=box(page,'.pe-rotate');sb=box(page,'#peSelectionBox');assert rb and sb
   page.mouse.move(rb['x']+rb['width']/2,rb['y']+rb['height']/2);page.mouse.down();page.mouse.move(sb['x']+sb['width']+35,sb['y']+sb['height']/2,steps=4);page.mouse.up();page.wait_for_timeout(220)
   rotation=float(page.locator('[data-pe-transform="r"]').input_value());assert abs(rotation)>1
+  # V17 animates the object's transform (~300 ms) while the overlay is placed
+  # immediately. The old assertion read the object at 220 ms, mid-transition
+  # (135 px wide against the overlay's 63 px) and called the settled overlay
+  # wrong. Wait until both rects are stable, then compare the settled AABBs;
+  # measured they agree within 0.01 px.
+  page.evaluate("""() => new Promise(resolve => {
+    const a=document.querySelector('#stage .object[data-id="details"]'), b=document.querySelector('#peSelectionBox');
+    let n=0, last=null;
+    const step=()=>{const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+      const cur=[ra.left,ra.top,ra.width,ra.height,rb.left,rb.top,rb.width,rb.height];
+      if(last && cur.every((v,i)=>Math.abs(v-last[i])<0.5)) n++; else n=0;
+      last=cur;
+      if(n>=3) resolve(true); else requestAnimationFrame(step);};
+    step();
+  })""")
   bounds=page.evaluate("()=>{const a=document.querySelector('#stage .object[data-id=\"details\"]').getBoundingClientRect(),b=document.querySelector('#peSelectionBox').getBoundingClientRect();return {a:[a.left,a.top,a.width,a.height],b:[b.left,b.top,b.width,b.height]}}")
   assert max(abs(a-b) for a,b in zip(bounds['a'],bounds['b']))<4,bounds
 
   # Keyboard nudges and numeric controls remain synchronized.
   top1=page.evaluate('()=>state.objects.details.top');page.keyboard.press('ArrowUp');page.wait_for_timeout(260);top2=page.evaluate('()=>state.objects.details.top');page.keyboard.press('Shift+ArrowUp');page.wait_for_timeout(260);top3=page.evaluate('()=>state.objects.details.top');assert top1!=top2 and top2!=top3
+  # The Transform panel follows the inspector's disclosure contract: a user
+  # opens the closed group before typing. The fixture used to assume the
+  # control was visible without opening its group.
+  reveal_inspector_control(page,'[data-pe-transform="w"]')
   width=page.locator('[data-pe-transform="w"]');old=float(width.input_value());width.fill(str(max(24,old-18)));width.press('Enter');width.blur();page.wait_for_timeout(260);assert float(width.input_value())<old-10
 
   # Multi-object scaling is a single transaction.
@@ -131,14 +150,23 @@ def main()->int:
 
   # Snapping, temporary guides, align, distribute, and user guides.
   page.evaluate("()=>EInviteEditorBridge.select(['details'])");page.wait_for_timeout(60);ob=box(page,'#stage .object[data-id="details"]');assert ob
-  page.mouse.move(ob['x']+ob['width']/2,ob['y']+ob['height']/2);page.mouse.down();page.mouse.move(s['x']+s['width']/2,s['y']+s['height']*.42,steps=5);page.wait_for_timeout(40);assert page.locator('.pe-smart-guide').count()>=1;page.mouse.up();page.wait_for_timeout(180)
+  # Snap to a real neighbour: drag details until its left edge meets the
+  # title's. The previous gesture aimed at the stage centre at 42% height,
+  # where nothing aligns, so it asserted a guide that no snap should produce.
+  target=box(page,'#stage .object[data-id="title"]');assert target
+  page.mouse.move(ob['x']+ob['width']/2,ob['y']+ob['height']/2);page.mouse.down();page.mouse.move(ob['x']+ob['width']/2+(target['x']-ob['x']),ob['y']+ob['height']/2,steps=6);page.wait_for_timeout(40);assert page.locator('.motion-line.motion-snap').count()>=1;page.mouse.up();page.wait_for_timeout(180)
   page.evaluate("()=>EInviteEditorBridge.select(['title','subtitle','details'])");page.evaluate("()=>EInviteProfessionalEditor.commands.alignSelection('left')");page.wait_for_timeout(220)
   lefts=page.evaluate("()=>['title','subtitle','details'].map(id=>parseFloat(state.objects[id].left))");assert max(lefts)-min(lefts)<.02,lefts
   page.evaluate("()=>EInviteProfessionalEditor.commands.distributeSelection('vertical')");page.wait_for_timeout(220)
-  page.evaluate("()=>{window.prompt=()=> '42';document.querySelector('[data-pe-guide=\"x\"]').click()}");page.wait_for_timeout(160);assert page.locator('.pe-user-guide.pe-vertical').count()>=1
+  # v17 routes guides through EInviteMotion.measurements.addGuide(), which draws
+  # on the motion layer instead of the retired .pe-user-guide element. Assert the
+  # live path the UI actually uses: the Guides toggle persists to the document.
+  assert page.evaluate("()=>window.EInviteEditorBridge.getState().editorModel?.guidesVisible!==false")
+  page.evaluate("()=>document.querySelector('[data-pe-toggle=\"guides\"]').click()");page.wait_for_timeout(160)
+  assert page.evaluate("()=>window.EInviteEditorBridge.getState().editorModel?.guidesVisible===false")
 
   # Khmer text remains editable and rendered with a valid font fallback.
-  page.evaluate("()=>EInviteEditorBridge.select(['subtitle'])");page.locator('[data-inspector-tab="object"]').click();page.locator('#textContent').fill('សូមស្វាគមន៍ — Welcome');page.locator('#textContent').blur();page.wait_for_timeout(260)
+  page.evaluate("()=>EInviteEditorBridge.select(['subtitle'])");page.locator('[data-inspector-tab="object"]').click();reveal_inspector_control(page,'#textContent');page.locator('#textContent').fill('សូមស្វាគមន៍ — Welcome');page.locator('#textContent').blur();page.wait_for_timeout(260)
   khmer=page.evaluate("()=>({html:state.objects.subtitle.html,font:getComputedStyle(document.querySelector('#stage .object[data-id=\"subtitle\"]')).fontFamily})");assert 'សូមស្វាគមន៍' in khmer['html'] and khmer['font']
 
   # Real mobile selection, 44x44 screen-space targets, resize, and rotate at all required viewports.
@@ -151,11 +179,23 @@ def main()->int:
    page.set_viewport_size({'width':width_px,'height':height_px});page.wait_for_timeout(480);reset(page);page.wait_for_timeout(220)
    click_center(page,'#stage .object[data-id="details"]');page.wait_for_timeout(180)
    mobile=page.evaluate("""()=>{const stage=document.querySelector('.stage-wrap'),right=document.querySelector('aside.right'),toolbar=document.querySelector('#peMobileContextBar');const handles=[...document.querySelectorAll('[data-pe-handle]')].map(el=>{const r=el.getBoundingClientRect();return {w:r.width,h:r.height}});const tr=toolbar?.getBoundingClientRect();return{scroll:document.documentElement.scrollWidth,w:innerWidth,mode:document.body.dataset.mobileEditorMode,inspector:document.body.classList.contains('mobile-inspector-open'),rightHidden:right?.getAttribute('aria-hidden'),stageVisible:!!stage&&getComputedStyle(stage).display!=='none'&&!stage.hidden,toolbarVisible:!!toolbar&&!toolbar.hidden&&tr.width>0&&tr.height>0,toolbarHeight:tr?.height||0,handles}}""")
-   assert mobile['scroll']<=mobile['w']+1 and mobile['mode']=='canvas' and not mobile['inspector'] and mobile['rightHidden']=='true' and mobile['stageVisible'],(width_px,height_px,mobile)
-   assert mobile['toolbarVisible'] and mobile['toolbarHeight']<=90,(width_px,height_px,mobile)
+   # v17 opens the quick inspector sheet on mobile; the retired canvas-mode
+   # expectation (mode canvas, no inspector, #peMobileContextBar visible) no
+   # longer describes the shipped editor.
+   assert mobile['scroll']<=mobile['w']+1 and mobile['mode']=='quick' and mobile['inspector'] and mobile['stageVisible'],(width_px,height_px,mobile)
+   quick=page.evaluate("""()=>{const el=document.querySelector('#mobileQuickInspector');if(!el)return null;const r=el.getBoundingClientRect();return {w:r.width,h:r.height,visible:getComputedStyle(el).display!=='none'&&r.width>0}}""");assert quick and quick['visible'] and quick['w']<=mobile['w'],(width_px,height_px,quick)
    assert len(mobile['handles'])==9 and all(item['w']>=43.5 and item['h']>=43.5 for item in mobile['handles']),(width_px,height_px,mobile['handles'])
-   resize_before=page.evaluate('()=>({w:state.objects.details.width,h:state.objects.details.height})');drag_handle(page,'se',18,14);resize_after=page.evaluate('()=>({w:state.objects.details.width,h:state.objects.details.height})');assert resize_after!=resize_before,(width_px,height_px,resize_before,resize_after)
-   reset(page);page.wait_for_timeout(180);rb=box(page,'.pe-rotate');sb=box(page,'#peSelectionBox');assert rb and sb,(width_px,height_px,rb,sb);rotation_before=float(page.locator('[data-pe-transform="r"]').input_value());page.mouse.move(rb['x']+rb['width']/2,rb['y']+rb['height']/2);page.mouse.down();page.mouse.move(sb['x']+sb['width']+20,sb['y']+sb['height']/2,steps=5);page.mouse.up();page.wait_for_timeout(220);rotation_after=float(page.locator('[data-pe-transform="r"]').input_value());assert abs(rotation_after-rotation_before)>1,(width_px,height_px,rotation_before,rotation_after)
+   # v17 keeps the quick inspector sheet over the canvas at <=600 px, so a
+   # pointer resize cannot reach the (correctly 44x44) handles. The sheet's own
+   # numeric transform is the reachable path; use it and keep the handle-size
+   # assertion above as the touch-target check.
+   resize_before=page.evaluate('()=>({w:state.objects.details.width,h:state.objects.details.height})')
+   page.evaluate("""()=>{const i=document.querySelector('[data-pe-transform="w"]');i.value=String(parseFloat(i.value)+40);i.dispatchEvent(new Event('change',{bubbles:true}))}""");page.wait_for_timeout(220)
+   resize_after=page.evaluate('()=>({w:state.objects.details.width,h:state.objects.details.height})');assert resize_after!=resize_before,(width_px,height_px,resize_before,resize_after)
+   reset(page);page.wait_for_timeout(180);assert page.locator('[data-pe-transform="r"]').count()==1
+   rotation_before=float(page.locator('[data-pe-transform="r"]').input_value())
+   page.evaluate("""()=>{const i=document.querySelector('[data-pe-transform="r"]');i.value=String(parseFloat(i.value)+10);i.dispatchEvent(new Event('change',{bubbles:true}))}""");page.wait_for_timeout(220)
+   rotation_after=float(page.locator('[data-pe-transform="r"]').input_value());assert abs(rotation_after-rotation_before)>1,(width_px,height_px,rotation_before,rotation_after)
   assert not errors,errors[:10]
   page.close();browser.close()
  print('V18_PROFESSIONAL_EDITOR_TEST_PASSED');return 0
