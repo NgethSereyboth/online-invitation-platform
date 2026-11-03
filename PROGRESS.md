@@ -525,8 +525,8 @@
   **2026-11-02T00:00:00.000Z**.
 
 ## HEAD verification — 2026-11-03
-- **Audited commit:** `main` at **`ebb96d4`**; working tree had only the deliberately untracked
-  workspace folders before this evidence commit.
+- **Audited commit:** `main` source at **`ebb96d4`**, evidence HEAD **`286080e`**; working
+  tree had only the deliberately untracked workspace folders before this evidence commit.
 - **Artifact proof:** rebuilt with `python3 build.py all` (`BUILD_OK`, `MIRROR_CHECK_PASSED`),
   restarted `einvite-app`, and confirmed the served `bundle-index.js` SHA-256 is
   **`94570322281650015cd8ea4bc4672fe6649de5f9a08865f8421ea1d31ce2c06a`**, identical to both
@@ -544,10 +544,13 @@
   `git diff --check` clean. gitleaks/Trivy unavailable locally and skipped.
 
 ## Open questions
-- **Owner-held push + GitHub rescan:** the hosted Dependabot/CodeQL ledger is from the
-  old default branch. The committed HEAD has no current vulnerable pins and 32
-  non-generated CodeQL locations are reconciled, but the remote alerts will not clear
-  until the owner authorizes a push and GitHub rescans. No push has been made.
+- **Owner-held push + GitHub rescan:** the remote ledger — **92 Dependabot alerts (49 unique
+  advisories) / 118 CodeQL alerts / 0 secret-scanning alerts as last fetched** — still
+  describes the old default branch because **no push was performed and no rescan was run**.
+  The committed HEAD has no current vulnerable pins and all 32 non-generated CodeQL
+  locations are reconciled, but the hosted counts will not move until the owner authorizes a
+  push and GitHub rescans its ledger. No push has been made; clearing the remote ledger is
+  owner-held.
 - **Improvement sequence:** the research note recommends measuring LCP/INP first, then the
   low-risk LCP-image, 24 px hit-area and Khmer line-height fixes; the editor INP split and AVIF
   variants should follow only if measurement justifies them. No implementation was started.

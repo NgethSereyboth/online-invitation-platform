@@ -97,7 +97,7 @@ groups below are intentionally not suppressed in code.
 
 ## HEAD reconciliation — 2026-11-03
 
-The committed HEAD (`ebb96d4`) was re-audited against **fresh, fully paginated**
+The source commit (`ebb96d4`, at evidence HEAD `286080e`) was re-audited against **fresh, fully paginated**
 GitHub lists: **92 Dependabot alerts / 49 unique advisories**, **118 CodeQL alerts**,
 **0 secret-scanning alerts**. The complete Dependabot per-advisory table (package,
 affected range, committed pin, result, alert IDs) and every non-generated CodeQL
