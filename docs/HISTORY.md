@@ -366,3 +366,19 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
 - **Gates:** `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall` exit 0;
   all `src/js/*.js` pass `node --check`; `npm audit` 0 vulnerabilities; `git diff --check` clean.
   `einvite-app` restarted, `/api/health` 200 before the re-run. No push, no Sites deploy.
+
+## 2026-11-03 — verification close-out
+
+- **Manual runners repaired and green.** `v17_professional_editor_core_test.py` (rotation) and
+  `v0_52_free_canvas_drag_test.py` (canvas drag) both exit 0; the full
+  `v17_professional_editor_test.py` and `v17_professional_editor_mobile_test.py` also exit 0.
+  The fixes are test-side only: wait for the animated object and overlay rects to settle, open
+  the Transform disclosure before typing, boot a fresh page per mobile width, and reuse the
+  existing 1 px subpixel tolerance. No product code changed.
+- **Full suite:** **252 passed, 16 warnings in 1069.40 s (0:17:49), exit 0** on 2026-11-03.
+  The 16 warnings are the example-plugin return-value warnings; no test failed.
+- **Accessible names:** every control on the Responses and Materials pages has an accessible
+  name — **12/12** and **26/26**, audit including each page's generated card markup; no markup
+  change was needed.
+- **Docs:** NEXT-WORK #23 is fixed, the missing-label bullet is closed, verification debt #13
+  is superseded by the local-origin revision, and #7 records the suite run.

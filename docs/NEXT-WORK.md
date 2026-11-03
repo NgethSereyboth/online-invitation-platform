@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **14** open/owner-blocked defects (8 fixed in rounds 1–6 and phases 4–6; 1 stuck: the pre-v17 manual canvas runners) · **36** open work-order tasks · **18** owner-held decisions · **13** verification debts |
+| Counts in this file | **11** open/owner-blocked defects (rows 4, 5 and 23 closed on 2026-11-03; **0 stuck**) · **36** open work-order tasks · **18** owner-held decisions · **13** verification debts (11 open; #7 closed, #13 superseded) |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -96,7 +96,7 @@ Each row is a code-level bug with a named next action. Where the fix is a produc
 | 20 | Editor | Headless `set_viewport_size` at 375 crashes the GPU process on a heavy canvas page. | P3 | Reproduce on a real device; acceptance already opens a separate 375 page. No product change unless it reproduces outside headless. | OWNER-QUEUE |
 | 21 | Guest page | **Fixed in round 2** (`122a31a`). A missing `/i/<slug>` returned HTTP **200** while the API returned 404. | fixed | `serve_public` now derives status from the published row and returns 404 with `no-store` + `noindex`; legitimate invitations stay 200. | R1 sweep |
 | 22 | Guest page | **Fixed in round 2** (`82d16a0`). CSP blocked a generated `data:image/svg+xml` fetch on the guest/export path. | fixed | `inlineImages` copies `data:`/`blob:` sources directly instead of fetching them; export produces a valid PNG with no CSP errors. | R1 sweep |
-| 23 | Tests | **Fixture fixed 2026-11-01** (`phase-6`); runner now boots `EInviteProfessionalEditor` v17. Remaining manual assertions are **stuck**: the rotation test compares a rotated AABB to an unrotated overlay box, and the canvas-drag test expects the outline hidden during a drag; both assert the pre-v17 model. | stuck | Do not weaken assertions. Re-baseline the visual-contract tests against the current overlay design before making them part of a gate. Not in pytest. | R1 sweep |
+| 23 | Tests | **Fixed 2026-11-03.** All four manual runners exit 0 on real runs: `v17_professional_editor_core_test.py` (rotation), `v0_52_free_canvas_drag_test.py` (canvas drag), the full `v17_professional_editor_test.py`, and `v17_professional_editor_mobile_test.py`. The rotation check had read the object 220 ms into a ~300 ms transform and typed into a collapsed disclosure; the full runner reused a resized page; the quick-sheet width compared at subpixel precision. All repairs are test-side. | fixed | Run all four after any editor overlay/transform change. Keep them manual-only and outside pytest. | R1 sweep |
 
 ### Baseline suite failures (2026-11-01) — resolved
 
@@ -228,7 +228,7 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
   covered by the 2.1 audit.
 - **Khmer-specific partials (35):** no `:lang(km)` overrides yet; needs typography and line-height rules,
   plus dynamic `lang` on `public.html`.
-- **Missing labels** on search/filter selects in `guests`, `responses`, `templates`, `materials`.
+- **Closed 2026-11-03 — every control is named.** Audited every input, select, textarea, button and icon-only control in the shipped markup plus the generated response/material card markup: **responses 12/12** and **materials 26/26** have an accessible name from a visible wrap label, sr-only `<label>`, `aria-label`, or visible text. `guests` and `templates` were confirmed in round 10. Evidence: `artifacts/verify/a11y_names_2026-11-03.json` (gitignored).
 - **Closed, do not redo:** skip-to-content on all 16 pages, `<main>` on dashboard, light-mode
   `--text-3`/`--app-faint` contrast — applied and measured in the Phase 2b pass.
 - Baseline of record: 155 pass / 35 partial / 7 fail / 59 n/a of 256; axe a11y **1.00** on all 16 routes.
@@ -245,13 +245,13 @@ The 2026-10-21 reflected-HTML-injection item in `serve_public` is **closed** —
 | 4 | Canvas **performance** gate blocked by hardware | Record `environment-blocked`. |
 | 5 | Real-device checklist (`docs/qa/DEVICE-CHECKLIST.md`) not run | Native Windows/Linux, WebKit, Firefox, Android, iOS all uncertified. |
 | 6 | RILL walkthrough never executed (FB-18) | P2; local run only, public URL not required. |
-| 7 | `make test` full suite (223) not run since the clean-up | Four tests read `docs/` inputs; they passed, but the suite is the contract. |
+| 7 | **Closed 2026-11-03.** Full suite re-run on the final tree: **252 passed, 16 warnings in 1069.40 s (exit 0)** on 2026-11-03. | The suite is the contract; the earlier 223-run gap is closed. |
 | 8 | 226 zero-test files; v55/v14 not in `run-gates` (FB-08) | Coverage looks bigger than it is. |
 | 9 | pytest not in CI; branch-trigger gap (FB-07) | Local-only release makes this survivable, not good. |
 | 10 | Intermittent app-server readiness flake (FB-09) | Causes spurious reds in browser gates. |
 | 11 | Dependabot reports **92 default-branch alerts / 49 unique advisories**: 82 Pillow alerts are already fixed on this branch by `13.0.0`; 3 Brotli alerts remain; the 7 old npm alerts are absent from this lockfile. | See `docs/security/DEPENDABOT-ALERTS-2026-11-01.md`; merge/cherry-pick the pins to `main` and upgrade Brotli to 1.2.1. |
 | 12 | Long-task ceiling is being grazed: 606–622 ms under load vs the frozen 600 ms | Do **not** raise the ceiling (OD-6). Re-measure quiet before treating a red as a regression; a genuine fix must cut work on `index.html`. |
-| 13 | Six-width **local** rerun is green (**225/225**); the **live** rerun is blocked by the Sites daily allowance: 10,301/10,000, 21,056/100,000 monthly, reset 2026-11-03T00:00Z. The single deploy request `593d9b20-ecfb-4e0d-9d88-799f4c6099ed` was refused before a receipt. | The corrected `bugs/round-6/live_flows.py` must be rerun on the deployed origin after the reset before claiming a clean six-width live pass. |
+| 13 | **Superseded 2026-11-03 by the owner-directed mission revision.** The Sites deployment is out of scope; the local PC origin is authoritative. Post-fix six-width sweep: **249/249**, 0 failures, clean console/network on `http://127.0.0.1:4175`. | No live rerun is owed. Reopen only if the owner re-authorises Sites hosting. |
 
 ---
 

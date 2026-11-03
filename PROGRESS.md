@@ -45,6 +45,23 @@
   `git diff --check` clean. `einvite-app` restarted and `/api/health` returned 200 before
   the re-run. No push and no Sites deploy — owner-held.
 
+## Verification close-out — 2026-11-03
+- **Manual runners:** `v17_professional_editor_core_test.py` (rotation) and
+  `v0_52_free_canvas_drag_test.py` (canvas drag) both exit 0 on real runs; the broader
+  `v17_professional_editor_test.py` and `v17_professional_editor_mobile_test.py` also exit 0.
+  The repairs are test-harness only: wait for both the transformed object and the overlay rects
+  to settle before comparing (the 220 ms read was mid-animation), open the Transform disclosure
+  before typing, boot a fresh page per mobile width, and reuse the runner's existing 1 px
+  tolerance for subpixel quick-sheet width. No product code changed.
+- **Full suite:** **252 passed, 16 warnings in 1069.40 s (0:17:49), exit 0** on 2026-11-03.
+  The 16 warnings are the example-plugin `PytestReturnNotNoneWarning`s; no failures.
+- **Accessible names:** audited every input, select, textarea, button and icon-only control in
+  `responses.html`/`materials.html` plus their generated card markup — **12/12** and **26/26**
+  named; no markup change was needed. Evidence:
+  `artifacts/verify/a11y_names_2026-11-03.json` (gitignored).
+- **Docs:** NEXT-WORK #23 is fixed (not stuck), the missing-label bullet is closed, verification
+  debt #13 is superseded by the local-origin mission revision, and #7 records the suite run.
+
 ## Round 9 — guest/RSVP sweep and harness repair (2026-11-03)
 - **Result:** the full six-width sweep passed on the local PC origin —
   **249/249 checks, 0 failures, 6/6 widths**, exit 0, with clean page/console/network
@@ -122,6 +139,11 @@
   for settled rects, reveals the Transform panel, asserts `.motion-line.motion-snap`, the Guides
   toggle's persisted `editorModel.guidesVisible`, and the quick-inspector mobile default with its
   numeric transform. The stale expectations are listed in `bugs/round-4/FINDINGS.md`.
+- **Manual runners verified (2026-11-03):** all four manual Playwright runners exit 0 on real
+  runs against the inline v17 fixture — rotation core, canvas drag, the full professional-editor
+  runner, and the isolated mobile runner. The repairs were test-side only (settle the animated
+  rects, open the Transform disclosure, use a fresh page per mobile width, allow the existing
+  1 px subpixel tolerance); no product code changed.
 - **Final gates (2026-11-02):** full suite **247 passed, 16 warnings in 1092.83 s (exit 0)**.
   The warnings are the 16 example-plugin `PytestReturnNotNoneWarning`s only; the SQLite teardown /
   `PytestUnhandledThreadExceptionWarning` is gone. `build.py all --check` printed `BUILD_OK` +
@@ -131,13 +153,14 @@
   **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
   **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
   `7e22bef`. The push decision remains open.
-- **Queue of record:** `docs/NEXT-WORK.md` — 12 open/owner-blocked defects, **1 stuck**
-  (the pre-v17 manual canvas runners), editor CLS **0.0698–0.0810** desktop and **0.0943–0.0973**
-  mobile with no Pages-group reflow, **0 untriaged suite failures**, 36 work-order tasks, 18 owner
-  decisions, 12 verification debts. History: `docs/HISTORY.md`.
-- **Step 1 (finish leftover work):** the two pre-existing suite fixes and the three editor
-  baseline failures are closed. The product backlog's remaining code work is either owner-held
-  or marked stuck after measurement; the live-only deploy is the only external blocker.
+- **Queue of record:** `docs/NEXT-WORK.md` — 11 open/owner-blocked defects, **0 stuck**,
+  editor CLS **0.0698–0.0810** desktop and **0.0943–0.0973** mobile with no Pages-group reflow,
+  **0 untriaged suite failures**, 36 work-order tasks, 18 owner decisions, 11 open verification
+  debts (#7 closed by the 2026-11-03 suite run, #13 superseded). History: `docs/HISTORY.md`.
+- **Step 1 (finish leftover work):** the two pre-existing suite fixes, the three editor
+  baseline failures, the round-10 templates CLS and all manual runners are closed. The product
+  backlog's remaining code work is owner-held; the live-only deploy is out of scope under the
+  2026-11-03 mission revision.
 - **Phase 4–6 (2026-11-01, local):** D-3 is fixed: every editor session refreshes the server row
   and its `updatedAt` while keeping a newer local draft's content, so a second tab no longer
   autosaves against the previous tab's revision. Regression: `editor_multi_tab_autosave_test`
@@ -320,8 +343,9 @@
   immediately after `<head>` instead of matching the removed `theme-init.js` tag, and adds
   `professional-editor.js` to the inlined extras. `v17_professional_editor_test` now boots to
   version 17 instead of timing out. Its two behavioural assertions and
-  `v0_52_free_canvas_drag_test` were written against the older overlay model and are marked
-  **stuck** in `NEXT-WORK` #23; they are not part of the pytest gate.
+  `v0_52_free_canvas_drag_test` were written against the older overlay model and were marked
+  stuck at the time; both were repaired on 2026-11-03 (verification close-out above) and remain
+  outside the pytest gate.
 - **Gates:** `python3 build.py all --check` reported `MIRROR_CHECK_PASSED` and `BUILD_OK`;
   `python3 -m compileall -q src/python tests` exited 0; `tools/build-sites-bundle.py` exited 0 with
   the manifest, icons, and metadata present. Final full suite: **230 passed, 2 warnings
@@ -626,11 +650,10 @@
 - **Inspector disclosures:** the 2026-10-30 reorganisation files text controls one disclosure deep.
   Round 1 should judge whether that is acceptable interaction cost for colour/digit conversion, or
   whether the Text group should open its first sub-section by default. No change made in round 0.
-- **Canvas manual-runner drift (#23):** the fixture now boots the real professional editor, but
-  `v17_professional_editor_test` compares a rotated object's AABB against an unrotated overlay
-  box and `v0_52_free_canvas_drag_test` expects the selection outline to be hidden during a drag.
-  Both assert the pre-v17 interaction model; changing them would not prove a product fix. They
-  remain manual-only and are marked stuck rather than weakening the assertions.
+- **Canvas manual-runner drift (#23) — resolved 2026-11-03:** both stale expectations were
+  test-side, not product defects. The rotation check read the object 220 ms into a ~300 ms
+  transform, and the canvas runner asserted the retired hidden outline. Both runners now pass,
+  as do the full and mobile v17 runners; they remain manual-only and outside pytest.
 - **Push the Dependabot report?** `16fd826` is committed locally but not pushed. Pushing it would
   publish the vulnerability inventory to the public `chore/cleanup` branch; decide whether to push
   it now, after the Brotli/npm follow-ups, or not at all.
