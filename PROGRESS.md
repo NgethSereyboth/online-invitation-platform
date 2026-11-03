@@ -19,6 +19,28 @@
   `einvite-app` on this PC, then verify `127.0.0.1:4175` serves the new hashes. The Cloudflare
   tunnel/public site is ignored unless the owner explicitly reopens it.
 
+## Round 9 — guest/RSVP sweep and harness repair (2026-11-03)
+- **Result:** the full six-width sweep passed on the local PC origin —
+  **249/249 checks, 0 failures, 6/6 widths**, exit 0, with clean page/console/network
+  records. The only 404s are the deliberate missing-invitation pair. Record:
+  `bugs/round-9/live-flows-six.json`; report: `bugs/round-9/FINDINGS.md`; 231 captures
+  under `bugs/round-9/shots/flows-v2/`.
+- **Guest/RSVP coverage added:** the published local invitation `qa-ui-sweep-wedding`
+  is now exercised at every width — cover dismissal, heading/sections, one platform
+  credit, zero feature panels, English↔Khmer, empty-name rejection, and a valid RSVP
+  that must return 200/201 and render its confirmation.
+- **No product defect was reproduced.** Two verification defects were fixed at the
+  root and committed separately: **BUG-R9-1** (`7f283d5`, v17 mobile runner still
+  expected Quick-Edit-first; aligned with the deliberate canvas default) and
+  **BUG-R9-2** (`a5d8cc0`, guest harness assumed retired selectors and inferred RSVP
+  success from a delay; now asserts the POST response and both language variants).
+- **Gates:** `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall`
+  exit 0; every `src/js/*.js` passes `node --check`; `git diff --check` clean; both v17
+  runners exit 0. No `src/` file changed, so the served bundle and its SHA-256 are
+  unchanged and current.
+- **Push and any hosted deploy remain owner-held.** No push and no Sites deployment
+  were performed in this round.
+
 ## Round 7 — PC route parity + GitHub security close-out (2026-11-03)
 - **BUG-R7-1 (P1, fixed):** the direct PC origin returned 404 for production-style
   `/templates`, `/dashboard`, and `/designer`; only the `.html` paths worked. Added an
