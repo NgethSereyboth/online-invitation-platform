@@ -63,7 +63,7 @@ These audit notes are recorded, not counted as failures:
 
 | ID | Check | Result |
 |---|---|---|
-| BUG-R1-1 | Signed-out editor redirect | **Pass** — `/invitations/<id>/editor` → 302 `/dashboard.html?next=…`. |
+| BUG-R1-1 | Signed-out editor redirect | **Pass** — with `Accept: text/html`, `/invitations/<id>/editor` → 302 `/dashboard.html?next=…` and `Cache-Control: no-store`; API clients (`Accept: application/json`) correctly get 401 with the same cache header. |
 | BUG-R1-2 | Missing vs published slug | **Pass** — missing 404, published 200. |
 | BUG-R1-3 | PNG export / CSP | **Pass** — valid PNG at all widths, console clean. |
 | BUG-R1-4 | Manual runners | **Pass** — v17 and mobile v17 exit 0. |
