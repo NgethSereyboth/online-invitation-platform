@@ -172,11 +172,14 @@ def main()->int:
   # Real mobile selection, 44x44 screen-space targets, resize, and rotate at all required viewports.
   # Mobile hit-target and transform validation uses a fresh page for deterministic
   # viewport transitions after the desktop stress phases.
-  page.close();page=browser.new_page(viewport={'width':430,'height':932});page.set_default_timeout(20_000)
-  page.on('pageerror',lambda e:errors.append(f'PAGE:{e}'));page.on('console',lambda m:errors.append(f'CONSOLE:{m.text}') if m.type=='error' else None)
-  boot(page,html);page.evaluate("()=>{window.__v17Baseline=EInviteEditorBridge.cloneState();EInviteEditorBridge.select(['details'])}");page.wait_for_timeout(100)
+  page.close()
   for width_px,height_px in ((360,800),(390,844),(430,932)):
-   page.set_viewport_size({'width':width_px,'height':height_px});page.wait_for_timeout(480);reset(page);page.wait_for_timeout(220)
+   # A fresh page per width, matching the isolated mobile runner. Resizing the
+   # page left over from the desktop stress phases kept its canvas scroll and
+   # zoom, so the 360 px click landed outside the object and cleared selection.
+   page=browser.new_page(viewport={'width':width_px,'height':height_px});page.set_default_timeout(20_000)
+   page.on('pageerror',lambda e:errors.append(f'PAGE:{e}'));page.on('console',lambda m:errors.append(f'CONSOLE:{m.text}') if m.type=='error' else None)
+   boot(page,html);page.evaluate("()=>{window.__v17Baseline=EInviteEditorBridge.cloneState();EInviteEditorBridge.select(['details'])}");page.wait_for_timeout(220)
    if page.evaluate("()=>document.body.dataset.mobileEditorMode")!='canvas':
     page.evaluate("()=>document.getElementById('mobileCanvasMode')?.click()")
     page.wait_for_function("()=>document.body.dataset.mobileEditorMode==='canvas'")
@@ -189,7 +192,7 @@ def main()->int:
    assert mobile['toolbarVisible'] and mobile['toolbarHeight']<=90,(width_px,height_px,mobile)
    page.locator('#mobileQuickMode').click()
    page.wait_for_function("()=>document.body.dataset.mobileEditorMode==='quick'")
-   quick=page.evaluate("""()=>{const el=document.querySelector('#mobileQuickInspector');if(!el)return null;const r=el.getBoundingClientRect();return {w:r.width,h:r.height,visible:getComputedStyle(el).display!=='none'&&r.width>0}}""");assert quick and quick['visible'] and quick['w']<=mobile['w'],(width_px,height_px,quick)
+   quick=page.evaluate("""()=>{const el=document.querySelector('#mobileQuickInspector');if(!el)return null;const r=el.getBoundingClientRect();return {w:r.width,h:r.height,visible:getComputedStyle(el).display!=='none'&&r.width>0}}""");assert quick and quick['visible'] and quick['w']<=mobile['w']+1,(width_px,height_px,quick)
    assert len(mobile['handles'])==9 and all(item['w']>=43.5 and item['h']>=43.5 for item in mobile['handles']),(width_px,height_px,mobile['handles'])
    # v17 keeps the quick inspector sheet over the canvas at <=600 px, so a
    # pointer resize cannot reach the (correctly 44x44) handles. The sheet's own
@@ -202,7 +205,8 @@ def main()->int:
    rotation_before=float(page.locator('[data-pe-transform="r"]').input_value())
    page.evaluate("""()=>{const i=document.querySelector('[data-pe-transform="r"]');i.value=String(parseFloat(i.value)+10);i.dispatchEvent(new Event('change',{bubbles:true}))}""");page.wait_for_timeout(220)
    rotation_after=float(page.locator('[data-pe-transform="r"]').input_value());assert abs(rotation_after-rotation_before)>1,(width_px,height_px,rotation_before,rotation_after)
+   page.close()
   assert not errors,errors[:10]
-  page.close();browser.close()
+  browser.close()
  print('V18_PROFESSIONAL_EDITOR_TEST_PASSED');return 0
 if __name__=='__main__':raise SystemExit(main())

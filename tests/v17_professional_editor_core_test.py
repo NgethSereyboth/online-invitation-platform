@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Isolated core selection and transform regression coverage for V17."""
 from __future__ import annotations
-from browser_runtime import launch_chromium,skipped
+from browser_runtime import launch_chromium,reveal_inspector_control,skipped
 from v17_professional_editor_test import build,boot,box,click_center,drag_handle,reset
 
 def main()->int:
@@ -43,8 +43,26 @@ def main()->int:
   page.evaluate("()=>EInviteEditorBridge.select(['details'])");page.wait_for_timeout(60);rb=box(page,'.pe-rotate');sb=box(page,'#peSelectionBox');assert rb and sb
   page.mouse.move(rb['x']+rb['width']/2,rb['y']+rb['height']/2);page.mouse.down();page.mouse.move(sb['x']+sb['width']+35,sb['y']+sb['height']/2,steps=4);page.mouse.up();page.wait_for_timeout(220)
   rotation=float(page.locator('[data-pe-transform="r"]').input_value());assert abs(rotation)>1
+  # V17 animates the object's transform (~300 ms) while the overlay is placed
+  # immediately. Reading both rects at 220 ms compared a mid-transition object
+  # (135 px wide) with the overlay's 63 px and called the settled overlay
+  # wrong. Wait until both rects are stable, then compare the settled AABBs.
+  page.evaluate("""() => new Promise(resolve => {
+    const a=document.querySelector('#stage .object[data-id="details"]'), b=document.querySelector('#peSelectionBox');
+    let n=0, last=null;
+    const step=()=>{const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+      const cur=[ra.left,ra.top,ra.width,ra.height,rb.left,rb.top,rb.width,rb.height];
+      if(last && cur.every((v,i)=>Math.abs(v-last[i])<0.5)) n++; else n=0;
+      last=cur;
+      if(n>=3) resolve(true); else requestAnimationFrame(step);};
+    step();
+  })""")
   bounds=page.evaluate("()=>{const a=document.querySelector('#stage .object[data-id=\"details\"]').getBoundingClientRect(),b=document.querySelector('#peSelectionBox').getBoundingClientRect();return {a:[a.left,a.top,a.width,a.height],b:[b.left,b.top,b.width,b.height]}}");assert max(abs(a-b) for a,b in zip(bounds['a'],bounds['b']))<4,bounds
   top1=page.evaluate('()=>state.objects.details.top');page.keyboard.press('ArrowUp');page.wait_for_timeout(260);top2=page.evaluate('()=>state.objects.details.top');page.keyboard.press('Shift+ArrowUp');page.wait_for_timeout(260);top3=page.evaluate('()=>state.objects.details.top');assert top1!=top2 and top2!=top3
+  # The Transform panel follows the inspector's disclosure contract: a user
+  # opens the closed group before typing. This runner used to assume the
+  # control was visible without opening its group.
+  reveal_inspector_control(page,'[data-pe-transform="w"]')
   width=page.locator('[data-pe-transform="w"]');old=float(width.input_value());width.fill(str(max(24,old-18)));width.press('Enter');width.blur();page.wait_for_timeout(260);assert float(width.input_value())<old-10
   page.evaluate("()=>EInviteEditorBridge.replaceState(structuredClone(window.__v17Baseline),{history:true,save:false,reason:'east-multi-reset'})");page.wait_for_timeout(220);page.evaluate("()=>EInviteEditorBridge.select(['subtitle','details'])");page.wait_for_timeout(80);multi_before=page.evaluate("()=>({a:structuredClone(state.objects.subtitle),b:structuredClone(state.objects.details),h:undoStack.length})")
   east_hit=page.evaluate("()=>{const e=document.querySelector('[data-pe-handle=\"e\"]'),r=e.getBoundingClientRect(),s=document.querySelector('#stage').getBoundingClientRect(),h=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{bounds:[r.left,r.top,r.width,r.height],hit:h?.dataset?.peHandle||h?.id||h?.className||h?.tagName,outwardRoom:s.right-r.right}}")
