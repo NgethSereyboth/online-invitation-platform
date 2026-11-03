@@ -1,7 +1,7 @@
 # HEAD security reconciliation — 2026-11-03
 
 **Source commit audited:** `ebb96d4` (the last commit that changes source or build output).
-**Evidence HEAD:** `286080e` (this document and the round-8 evidence; it changes no `src/` file).
+**Evidence basis:** the round-8 sweep at `286080e` plus this docs-only reconciliation; no commit in that range changes a `src/` file.
 
 Fresh, fully paginated `gh api --paginate` results: **92 open Dependabot alerts (49 unique advisories)**, **118 open CodeQL alerts**, **0 open secret-scanning alerts**. All 118 CodeQL alerts carry `most_recent_instance.commit_sha = 50721ef`; none was produced from `ebb96d4`, so their line numbers are the old map. The hosted ledger is not cleared by a local edit; a push and rescan is owner-held. This file reconciles every Dependabot advisory against the committed pins and lists every non-generated CodeQL location.
 
