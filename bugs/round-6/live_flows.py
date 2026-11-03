@@ -28,7 +28,8 @@ from live_sweep import AUDIT  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
 BASE = os.environ.get("ROUND6_BASE", "https://site-607d0a9e087e425b9946eae2ab964d24.freebuff.page").rstrip("/")
-OUT = Path(__file__).resolve().parent
+OUT = Path(os.environ.get("ROUND6_OUT", str(Path(__file__).resolve().parent)))
+GUEST_SLUG = os.environ.get("ROUND9_GUEST_SLUG", "").strip()
 SHOTS = OUT / "shots" / "flows-v2"
 SHOTS.mkdir(parents=True, exist_ok=True)
 VIEWPORTS = [(360, 800), (390, 844), (768, 900), (1024, 900), (1280, 900), (1440, 900)]
@@ -652,6 +653,91 @@ def missing_flow(page, width, bucket):
     bucket["missing_console"] = bucket["console"][before_errors:]
 
 
+def guest_flow(page, width, bucket):
+    """Published guest page and RSVP: load, language switch, invalid, submit."""
+    if not GUEST_SLUG:
+        return
+    resp = page.goto(BASE + "/i/" + GUEST_SLUG, wait_until="load", timeout=45000)
+    page.wait_for_timeout(900)
+    cover = page.locator("#openCover")
+    if cover.count() and cover.is_visible():
+        cover.click()
+        page.wait_for_timeout(3500)
+    page.wait_for_selector("form#rsvp", state="attached", timeout=25000)
+    page.wait_for_timeout(500)
+    state = page.evaluate("""() => {
+      const f = document.querySelector('form#rsvp');
+      return {
+        title: (document.title || '').trim(),
+        heading: (document.querySelector('h2')?.innerText || '').trim(),
+        sections: document.querySelectorAll('[id^="invitation-section-"]').length,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        lang: document.documentElement.lang,
+        khmer: /[\u1780-\u17FF]/.test(document.body.innerText),
+        name_required: f?.querySelector('[name=name]')?.required === true,
+        credits: document.querySelectorAll('.guest-platform-credit, .guest-studio-brand').length,
+        features: document.querySelectorAll('.guest-feature').length,
+      };
+    }""")
+    check("guest invitation loads", lambda: {**state, "status": resp.status if resp else None}
+          if resp and resp.status == 200 and state["title"] and state["heading"] and state["sections"] >= 5 and state["overflow"] == 0 and state["name_required"] and state["credits"] == 1 and state["features"] == 0
+          else (_ for _ in ()).throw(AssertionError({"status": resp.status if resp else None, **state})), page, width)
+    shot(page, width, "guest-top", full=True)
+
+    if page.locator("#lang-en").count() and page.locator("#lang-km").count():
+        page.locator("#lang-en").click()
+        page.wait_for_timeout(600)
+        en = page.evaluate("() => ({lang: document.documentElement.lang, active: document.querySelector('#lang-en')?.classList.contains('active')})")
+        page.locator("#lang-km").click()
+        page.wait_for_timeout(600)
+        km = page.evaluate("() => ({lang: document.documentElement.lang, active: document.querySelector('#lang-km')?.classList.contains('active'), khmer: /[\u1780-\u17FF]/.test(document.body.innerText)})")
+        check("guest language toggle", lambda: {"en": en, "km": km}
+              if en["lang"] == "en" and en["active"] and km["lang"] == "km" and km["active"] and km["khmer"]
+              else (_ for _ in ()).throw(AssertionError({"en": en, "km": km})), page, width)
+        shot(page, width, "guest-khmer", full=True)
+
+    page.locator("form#rsvp [name=name]").fill("")
+    page.locator("form#rsvp button").last.click()
+    page.wait_for_timeout(700)
+    invalid = page.evaluate("""() => ({
+      url: location.pathname,
+      valid: document.querySelector('form#rsvp')?.checkValidity() ?? null,
+      still_form: !!document.querySelector('form#rsvp'),
+    })""")
+    check("rsvp invalid blocked", lambda: invalid
+          if invalid["url"].startswith("/i/") and invalid["still_form"] and invalid["valid"] is False
+          else (_ for _ in ()).throw(AssertionError(invalid)), page, width)
+    shot(page, width, "guest-rsvp-invalid", full=True)
+
+    page.locator("form#rsvp [name=name]").fill("[Guest name] round-9")
+    page.locator("form#rsvp [name=status]").select_option("Yes, joyfully")
+    page.locator("form#rsvp [name=count]").fill("2")
+    page.locator("form#rsvp [name=note]").fill("Round 9 sweep placeholder")
+    # The POST response is the contract; do not infer success from a delay.
+    try:
+        with page.expect_response(lambda r: "/rsvps" in r.url and r.request.method == "POST", timeout=30000) as posted:
+            page.locator("form#rsvp button").last.click()
+        status = posted.value.status
+    except Exception:
+        status = None
+    try:
+        page.wait_for_function("() => /Thank you|Response updated|Your response was received|Your latest response|សូមអរគុណ|បានកែប្រែការឆ្លើយតប/i.test(document.body.innerText || '')", timeout=20000)
+    except Exception:
+        pass
+    page.wait_for_timeout(200)
+    submitted = page.evaluate("""() => {
+      const f = document.querySelector('form#rsvp');
+      const text = (f?.innerText || document.body.innerText || '');
+      return {url: location.pathname, thank: /Thank you|Response updated|Your response was received|Your latest response|សូមអរគុណ|បានកែប្រែការឆ្លើយតប/i.test(text), overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+    }""")
+    submitted["status"] = status
+    check("rsvp submits", lambda: submitted
+          if status in (200, 201) and submitted["thank"] and submitted["overflow"] == 0
+          else (_ for _ in ()).throw(AssertionError(submitted)), page, width)
+    shot(page, width, "guest-rsvp-sent", full=True)
+    audit(page, width, "guest", bucket)
+
+
 def run_width(browser, width, height):
     context = browser.new_context(viewport={"width": width, "height": height}, accept_downloads=True, device_scale_factor=1)
     page = context.new_page()
@@ -667,6 +753,7 @@ def run_width(browser, width, height):
         dashboard_flow(page, width, bucket)
         designer_flow(page, width, bucket)
         missing_flow(page, width, bucket)
+        guest_flow(page, width, bucket)
     except Exception as exc:
         bucket["fatal"] = repr(exc)[:500]
         bucket["blocked"] = 429 if "HTTP 429" in bucket["fatal"] else None
