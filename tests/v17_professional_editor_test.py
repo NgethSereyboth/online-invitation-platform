@@ -177,12 +177,18 @@ def main()->int:
   boot(page,html);page.evaluate("()=>{window.__v17Baseline=EInviteEditorBridge.cloneState();EInviteEditorBridge.select(['details'])}");page.wait_for_timeout(100)
   for width_px,height_px in ((360,800),(390,844),(430,932)):
    page.set_viewport_size({'width':width_px,'height':height_px});page.wait_for_timeout(480);reset(page);page.wait_for_timeout(220)
+   if page.evaluate("()=>document.body.dataset.mobileEditorMode")!='canvas':
+    page.evaluate("()=>document.getElementById('mobileCanvasMode')?.click()")
+    page.wait_for_function("()=>document.body.dataset.mobileEditorMode==='canvas'")
    click_center(page,'#stage .object[data-id="details"]');page.wait_for_timeout(180)
    mobile=page.evaluate("""()=>{const stage=document.querySelector('.stage-wrap'),right=document.querySelector('aside.right'),toolbar=document.querySelector('#peMobileContextBar');const handles=[...document.querySelectorAll('[data-pe-handle]')].map(el=>{const r=el.getBoundingClientRect();return {w:r.width,h:r.height}});const tr=toolbar?.getBoundingClientRect();return{scroll:document.documentElement.scrollWidth,w:innerWidth,mode:document.body.dataset.mobileEditorMode,inspector:document.body.classList.contains('mobile-inspector-open'),rightHidden:right?.getAttribute('aria-hidden'),stageVisible:!!stage&&getComputedStyle(stage).display!=='none'&&!stage.hidden,toolbarVisible:!!toolbar&&!toolbar.hidden&&tr.width>0&&tr.height>0,toolbarHeight:tr?.height||0,handles}}""")
-   # v17 opens the quick inspector sheet on mobile; the retired canvas-mode
-   # expectation (mode canvas, no inspector, #peMobileContextBar visible) no
-   # longer describes the shipped editor.
-   assert mobile['scroll']<=mobile['w']+1 and mobile['mode']=='quick' and mobile['inspector'] and mobile['stageVisible'],(width_px,height_px,mobile)
+   # Round 6 ships canvas as the mobile default so a selection cannot reopen the
+   # drawer; the dedicated mobile runner asserts the same contract. Open Quick
+   # Edit through its real control and keep the sheet and transform coverage.
+   assert mobile['scroll']<=mobile['w']+1 and mobile['mode']=='canvas' and not mobile['inspector'] and mobile['rightHidden']=='true' and mobile['stageVisible'],(width_px,height_px,mobile)
+   assert mobile['toolbarVisible'] and mobile['toolbarHeight']<=90,(width_px,height_px,mobile)
+   page.locator('#mobileQuickMode').click()
+   page.wait_for_function("()=>document.body.dataset.mobileEditorMode==='quick'")
    quick=page.evaluate("""()=>{const el=document.querySelector('#mobileQuickInspector');if(!el)return null;const r=el.getBoundingClientRect();return {w:r.width,h:r.height,visible:getComputedStyle(el).display!=='none'&&r.width>0}}""");assert quick and quick['visible'] and quick['w']<=mobile['w'],(width_px,height_px,quick)
    assert len(mobile['handles'])==9 and all(item['w']>=43.5 and item['h']>=43.5 for item in mobile['handles']),(width_px,height_px,mobile['handles'])
    # v17 keeps the quick inspector sheet over the canvas at <=600 px, so a
