@@ -19,6 +19,32 @@
   `einvite-app` on this PC, then verify `127.0.0.1:4175` serves the new hashes. The Cloudflare
   tunnel/public site is ignored unless the owner explicitly reopens it.
 
+## Round 10 — `/templates` layout shift fixed (2026-11-03)
+- **Baseline sweep:** the six-width harness passed unchanged — **249/249 checks, 0 failures,
+  6/6 widths**, clean page/console/network (only the deliberate missing-invitation 404s).
+  The harness does not measure layout stability, so a Playwright CLS/LCP probe was run on
+  the two routes with open performance rows. Guest LCP measured **1004 ms** desktop /
+  **1328 ms** mobile (LCP element `STRONG`) and guest CLS **0 / 0.031** — both already inside
+  target, so D-2 is closed by measurement with no code change.
+- **BUG-R10-1 (P1, fixed):** `/templates` measured **CLS 0.825** at 1440×900 and **0.267**
+  at 390×844. `template-pack-gallery.js` inserted its section above `#studioGrid` after
+  first paint; the catalogue then grew it from 126 px to 3188 px at ~630 ms and pushed the
+  studio grid's visible state from y≈442 to y≈3500.
+- **Fix:** `templates.html` now ships the gallery section, status line and **36 skeleton
+  cards** in the initial markup (with its stylesheet and a static
+  `data-pack-gallery-module` script); `mount()` adopts that section, hydrates it, clears
+  `aria-busy` and removes the skeletons. Height is reserved before first paint, so nothing
+  below moves. After rebuild/restart: CLS **0.0101** desktop / **0.0009** mobile, LCP
+  568/500 ms, 36 real cards, 0 skeletons, Khmer switch intact, console/network clean, no
+  horizontal overflow.
+- **Full re-run after the fix:** **249/249 checks, 0 failures, 6/6 widths**, clean
+  page/console/network. Record: `bugs/round-10/` (`FINDINGS.md`, `FIX_PLAN.md`,
+  `cls-before`/`cls-after` measurements, 213 sweep captures under `shots/flows-v2/`).
+- **Gates:** `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall`
+  exit 0; every `src/js/*.js` passes `node --check`; `npm audit` 0 vulnerabilities;
+  `git diff --check` clean. `einvite-app` restarted and `/api/health` returned 200 before
+  the re-run. No push and no Sites deploy — owner-held.
+
 ## Round 9 — guest/RSVP sweep and harness repair (2026-11-03)
 - **Result:** the full six-width sweep passed on the local PC origin —
   **249/249 checks, 0 failures, 6/6 widths**, exit 0, with clean page/console/network
@@ -64,6 +90,11 @@
 - **No push and no Sites deploy.** The PC origin is authoritative for this mission.
 
 ## Current status
+- **Round 10 final (2026-11-03, local):** `/templates` CLS **0.825 → 0.0101** at 1440×900
+  and **0.267 → 0.0009** at 390×844 (BUG-R10-1, `fix-round-10`; static gallery skeletons
+  reserve the first screen in markup). Guest LCP measured 1.0 s desktop / 1.3 s mobile and
+  guest CLS 0/0.031, both already inside target. Post-fix six-width re-run: **249/249
+  checks, 0 failures**, clean console/page/network. Record: `bugs/round-10/`.
 - **Round 6 final (2026-11-02, local):** the corrected harness passed at all six widths —
   **225/225 checks, 0 failures**, clean console/page/network. Record: `bugs/round-6/live-flows-six.json`.
   The 15 earlier failures were harness assumptions (drawer, redo identity, Appearance menu, deliberate
@@ -100,7 +131,7 @@
   **207 commits ahead at the start of phase-2/3**; phases 2–10 plus this close-out make it
   **218 commits ahead of `origin/main`, not pushed**. `origin/chore/cleanup` remains at
   `7e22bef`. The push decision remains open.
-- **Queue of record:** `docs/NEXT-WORK.md` — 14 open/owner-blocked defects, **1 stuck**
+- **Queue of record:** `docs/NEXT-WORK.md` — 12 open/owner-blocked defects, **1 stuck**
   (the pre-v17 manual canvas runners), editor CLS **0.0698–0.0810** desktop and **0.0943–0.0973**
   mobile with no Pages-group reflow, **0 untriaged suite failures**, 36 work-order tasks, 18 owner
   decisions, 12 verification debts. History: `docs/HISTORY.md`.

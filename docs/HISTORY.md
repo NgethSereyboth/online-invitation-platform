@@ -345,3 +345,24 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   `compileall` exit 0; changed JS passes `node --check`; full suite **247 passed, 16 warnings in
   1092.83 s (exit 0)**. The 16 warnings are the example plugin's `PytestReturnNotNoneWarning`s;
   no SQLite/thread warning remains. The repo has no ESLint or TypeScript toolchain.
+
+## 2026-11-03 — round 10: `/templates` layout shift
+
+- **BUG-R10-1 fixed.** `/templates` shipped the 36-design pack gallery only after first paint:
+  `template-pack-gallery.js` inserted its section above `#studioGrid` when the module loaded,
+  and the catalogue fetch grew it from 126 px to 3188 px at ~630 ms. The studio grid's visible
+  state was pushed from y≈442 to y≈3500 — CLS **0.825** at 1440×900 and **0.267** at 390×844.
+- **Fix.** `templates.html` now ships the gallery section and **36 skeleton cards** in the
+  initial markup, with the gallery stylesheet and a static `data-pack-gallery-module` script.
+  `mount()` adopts that section instead of inserting one, hydrates the cards, clears
+  `aria-busy` and removes the skeletons. The reserved height means nothing below the gallery
+  moves. Measured after rebuild/restart: CLS **0.0101** desktop / **0.0009** mobile, LCP
+  568/500 ms, 36 real cards, 0 skeletons, Khmer switch intact, no horizontal overflow,
+  console/network clean.
+- **Sweep.** Post-fix six-width run: **249/249 checks, 0 failures, 6/6 widths**, clean
+  page/console/network (only the deliberate missing-invitation 404s). Record: `bugs/round-10/`.
+- **D-2 closed by measurement.** Guest LCP is **1004 ms** desktop / **1328 ms** mobile (LCP
+  element `STRONG`, not the hero image) and guest CLS is **0 / 0.031**; no change needed.
+- **Gates:** `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall` exit 0;
+  all `src/js/*.js` pass `node --check`; `npm audit` 0 vulnerabilities; `git diff --check` clean.
+  `einvite-app` restarted, `/api/health` 200 before the re-run. No push, no Sites deploy.
