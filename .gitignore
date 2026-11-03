@@ -210,3 +210,19 @@ scratch/
 
 # Round 1 raw sweep output (148 regenerable screenshots); key evidence is committed.
 bugs/round-1/shots/
+
+# ---------------------------------------------------------------------------
+# Verification close-out (2026-11-03).
+#
+# Raw sweep captures, probe error logs, agent tool state and the host-specific
+# PC service templates are regenerable or machine-local. The findings, probes,
+# scripts and measurement JSON stay tracked; this only hides the bulky/raw
+# output and local service files so `git status` reflects the product.
+# ---------------------------------------------------------------------------
+bugs/round-*/shots/
+bugs/round-*/evidence/
+bugs/round-10/*.err
+.cloud-attachments/
+.playwright-cli/
+.specify/
+/deploy/local/
