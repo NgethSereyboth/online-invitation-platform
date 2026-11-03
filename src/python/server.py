@@ -264,6 +264,27 @@ def process_webhook_jobs(limit=25, now_ms=None):
     return processed
 
 ROOT = Path(__file__).resolve().parent
+# Cloudflare Pages serves extensionless page URLs (for example /templates) from
+# the corresponding .html asset. The direct PC server previously exposed only
+# the explicit .html paths, so production-style links landed on a 404 here.
+# Keep the alias list explicit: never fall through to arbitrary HTML files.
+PAGE_ALIASES = {
+    "/account": "account.html",
+    "/admin": "admin.html",
+    "/analytics": "analytics.html",
+    "/billing": "billing.html",
+    "/checkin": "checkin.html",
+    "/dashboard": "dashboard.html",
+    "/designer": "designer.html",
+    "/guests": "guests.html",
+    "/materials": "materials.html",
+    "/privacy": "privacy.html",
+    "/public": "public.html",
+    "/reset": "reset.html",
+    "/responses": "responses.html",
+    "/templates": "templates.html",
+    "/verify": "verify.html",
+}
 DATA = Path(platform_env("EINVITE_DATA_DIR", str(ROOT / "data"))).expanduser().resolve()
 UPLOADS = DATA / "uploads"
 IMAGE_CACHE = DATA / "image-cache"
@@ -3496,6 +3517,10 @@ def studio_publish_readiness(db, owner_id, document, invitation_id=""):
     return {"ready":not unique,"policy":{k:bool(policy.get(k,False)) for k in ("approvedOnly","lockBrandColors","lockTypography","requireAdaptiveTemplate","requirePrintPreflight","requireStudioRelease")},"blockers":unique}
 
 
+def safe_header_value(value):
+    """Remove CR/LF from a value before using it in an HTTP header."""
+    return re.sub(r"[\r\n]+", "", str(value or ""))[:4096]
+
 def safe_request_id(value):
     """Normalize correlation IDs before reflecting them into logs or headers."""
     clean=re.sub(r"[^A-Za-z0-9._:-]","",str(value or ""))[:80]
@@ -3628,7 +3653,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             self.send_response(200)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Disposition", f'attachment; filename="{self._safe_inline_filename(filename)}"')
             self.send_header("Content-Length", str(len(payload)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
@@ -3706,7 +3731,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if parsed.query:
                     target += f"?{parsed.query}"
                 self.send_response(308)
-                self.send_header("Location", target)
+                self.send_header("Location", safe_header_value(target))
                 self.send_header("Content-Length", "0")
                 self.end_headers()
                 return False
@@ -4132,13 +4157,14 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.json(200 if not errors else 503,payload)
             object_match=re.fullmatch(r"/api/platform/v32/objects/(.+)",path)
             if object_match:
-                key=unquote(object_match.group(1));query=parse_qs(urlparse(self.path).query);expiry=int((query.get("expires") or [0])[0]);disposition=str((query.get("disposition") or ["inline"])[0]);signature=str((query.get("signature") or [""])[0])
-                if not service.storage.verify_signature(key,expiry,disposition,signature):return self.json(403,{"error":"Invalid or expired object signature"})
+                key=unquote(object_match.group(1));query=parse_qs(urlparse(self.path).query);expiry=int((query.get("expires") or [0])[0]);requested_disposition=str((query.get("disposition") or ["inline"])[0]);signature=str((query.get("signature") or [""])[0])
+                if not service.storage.verify_signature(key,expiry,requested_disposition,signature):return self.json(403,{"error":"Invalid or expired object signature"})
+                disposition="attachment" if requested_disposition=="attachment" else "inline"
                 with connect() as db:stored=db.execute("SELECT mime FROM object_versions WHERE object_key=? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1",(key,)).fetchone()
                 if not stored:return self.json(404,{"error":"Resource not found"})
                 mime=str(stored["mime"] or "application/octet-stream").lower();safe_inline=mime in {"image/jpeg","image/png","image/webp","image/gif","audio/mpeg","audio/mp4","video/mp4","video/webm"}
                 if not safe_inline:mime="application/octet-stream";disposition="attachment"
-                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{Path(key).name}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
+                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{self._safe_inline_filename(key)}"');self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
             user=self.platform_v32_user()
             if not user:return True
             if path=="/api/platform/v32/status":return self.json(200,service.status(user["id"]))
@@ -4247,7 +4273,7 @@ class Handler(SimpleHTTPRequestHandler):
             if host:
                 with connect() as db:domain_row=db.execute("SELECT slug FROM invitations WHERE custom_domain=? AND is_published=1 AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>?)",(host,int(time.time()*1000))).fetchone()
                 if domain_row:
-                    self.send_response(302);self.send_header("Location",f"/i/{quote(domain_row['slug'])}".replace("\r","").replace("\n",""));self.end_headers();return
+                    self.send_response(302);                    self.send_header("Location",safe_header_value(f"/i/{quote(domain_row['slug'])}"));self.end_headers();return
         management=re.fullmatch(r"/invitations/([^/]+)/(editor|guests|responses|analytics|materials|checkin)/?",path)
         if management:return self.serve_management_page(unquote(management.group(1)),management.group(2))
         if path == "/api/health":
@@ -4414,6 +4440,8 @@ class Handler(SimpleHTTPRequestHandler):
         if path.startswith("/api/invitations/") and re.fullmatch(r"/api/invitations/[^/]+/polls/[^/]+/results",path): return self.poll_results(path.split("/")[3],path.split("/")[5])
         if path.startswith("/uploads/"):return self.serve_asset(unquote(path[len("/uploads/"):]))
         if path=="/":return self.serve_html_file("index.html")
+        alias=PAGE_ALIASES.get(path.rstrip("/"))
+        if alias:return self.serve_html_file(alias)
         if re.fullmatch(r"/[A-Za-z0-9_.-]+\.html",path):
             return self.serve_html_file(path.lstrip("/"))
         return self.serve_public_static()
@@ -9365,7 +9393,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not row:return self.json(404,{"error":"Backup not found"})
         name=Path(str(row["archive_name"] or "")).name;target=BACKUPS/name
         if not name or not target.is_file():return self.json(404,{"error":"Backup file is unavailable"})
-        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{name}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
+        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{self._safe_inline_filename(name)}"');self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
 
     def normalize_studio_policy(self, data):
         if not isinstance(data,dict):data={}
@@ -11346,7 +11374,7 @@ class Handler(SimpleHTTPRequestHandler):
         })
         url = f"https://calendar.google.com/calendar/render?{params}"
         self.send_response(302)
-        self.send_header("Location", url)
+        self.send_header("Location", safe_header_value(url))
         self.send_header("Content-Length", "0")
         self.end_headers()
 

@@ -1,5 +1,8 @@
 name: Security Scan
 
+permissions:
+  contents: read
+
 # ROADMAP-V2 §2.7 — ASVS L2 Chapter 10 tooling (SAST / SCA / SBOM / secret /
 # container scanning). Runs on every push to main + the security-ui refactor
 # branch, on every pull request into main, and on a weekly schedule to catch

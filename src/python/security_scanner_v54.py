@@ -369,16 +369,16 @@ def scan_bytes(raw: bytes, name: str = "upload") -> dict[str, Any]:
     Returns:
         Same shape as :func:`scan_file`. The temp file is always removed.
     """
-    safe_stem = "".join(ch if ch.isalnum() or ch in "-_." else "-" for ch in (name or "upload"))[:80] or "upload"
-    tmp = tempfile.NamedTemporaryFile(prefix=f"einvite-scan-{uuid.uuid4().hex}-", suffix=f"-{safe_stem}", delete=False)
+    # The upload name is untrusted; never put it in the temporary path.
+    # scan_file only needs a readable file, so a fixed suffix is sufficient.
+    fd, tmp_name = tempfile.mkstemp(prefix=f"einvite-scan-{uuid.uuid4().hex}-", suffix=".bin")
     try:
-        tmp.write(raw)
-        tmp.flush()
-        tmp.close()
-        return scan_file(tmp.name)
+        with os.fdopen(fd, "wb") as tmp:
+            tmp.write(raw)
+        return scan_file(tmp_name)
     finally:
         try:
-            os.unlink(tmp.name)
+            os.unlink(tmp_name)
         except OSError:
             pass
 

@@ -287,6 +287,13 @@ def validate_production_environment(values: dict[str, str] | None = None) -> lis
     return list(audit_environment(values, require_production=True)["errors"])
 
 
+def redact_preflight_message(message: object) -> str:
+    """Keep diagnostics useful without echoing configuration values."""
+    text = str(message)
+    markers = ("secret", "key", "token", "password")
+    return "[redacted: sensitive configuration value]" if any(marker in text.lower() for marker in markers) else text
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate E-invitation production configuration without revealing secrets.")
     parser.add_argument("--env-file", type=Path, help="Optional dotenv file to validate on top of the current environment")
@@ -300,23 +307,17 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         report = {"ok": False, "errors": [str(exc)], "warnings": [], "summary": {}, "dependencies": {}}
     if args.json:
-        # Security: the report dict contains only boolean/dict metadata —
-        # no secret values are included. CodeQL py/clear-text-logging-sensitive-data
-        # is a false positive here, but we redact defensively.
         import copy
         safe_report = copy.deepcopy(report)
-        # Ensure no secret values leaked into errors/warnings (they shouldn't)
         for key in ("errors", "warnings"):
-            for i, msg in enumerate(safe_report.get(key, [])):
-                if any(s in str(msg).lower() for s in ("secret", "key", "token", "password")):
-                    safe_report[key][i] = f"[redacted: contains sensitive keyword]"
+            safe_report[key] = [redact_preflight_message(message) for message in safe_report.get(key, [])]
         print(json.dumps(safe_report, ensure_ascii=False, separators=(",", ":")))
     else:
         print("PRODUCTION_PREFLIGHT_PASSED" if report["ok"] else "PRODUCTION_PREFLIGHT_FAILED")
         for error in report.get("errors", []):
-            print(f"ERROR: {error}")
+            print(f"ERROR: {redact_preflight_message(error)}")
         for warning in report.get("warnings", []):
-            print(f"WARNING: {warning}")
+            print(f"WARNING: {redact_preflight_message(warning)}")
     return 0 if report["ok"] else 1
 
 

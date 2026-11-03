@@ -109,9 +109,11 @@ def safe_url(value,*,strict=False):
  if scheme in {"http","https"} and not parsed.hostname:
   if strict:raise ValueError("Invalid link URL")
   return ""
- if scheme=="mailto" and not re.fullmatch(r"mailto:[^\s@]+@[^\s@]+",raw,re.I):
-  if strict:raise ValueError("Invalid mail link")
-  return ""
+ if scheme=="mailto":
+  address=raw[7:]
+  if not address or address.count("@")!=1 or any(ch.isspace() for ch in address):
+   if strict:raise ValueError("Invalid mail link")
+   return ""
  if scheme=="tel" and not re.fullmatch(r"tel:\+?[0-9().\-\s]{3,32}",raw,re.I):
   if strict:raise ValueError("Invalid telephone link")
   return ""
@@ -384,7 +386,7 @@ def migrate_legacy(object_id,obj,*,style_ids=None,default_style_id="body"):
  style_id=str(obj.get("textStyleId") or default_style_id)
  if not STYLE_RE.fullmatch(style_id):style_id=default_style_id
  parser=_LegacyParser(object_id,style_id)
- if re.search(r"<[a-z][\s\S]*>",source,re.I):
+ if "<" in source and ">" in source:
   depth_parser=_LegacyDepthParser();depth_parser.feed(source);depth_parser.close();parser.feed(source);parser.close()
  else:
   for line in source.replace("\r\n","\n").replace("\r","\n").split("\n"):

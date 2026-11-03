@@ -53,6 +53,11 @@ def _run(helper, *args, **kwargs) -> _FakeHandler:
     return handler
 
 
+def test_header_values_strip_line_breaks():
+    assert _server.safe_header_value("https://example.test/path\r\nX-Injected: yes") == "https://example.test/pathX-Injected: yes"
+    assert "\r" not in _server.safe_header_value("a\rb\nc") and "\n" not in _server.safe_header_value("a\rb\nc")
+
+
 def test_binary_helpers_quote_escape_attacker_controlled_filenames():
     raw_filename = 'photo"; filename*=UTF-8\'\'evil.png\r\nX-Injected: yes'
     body = b"image bytes"

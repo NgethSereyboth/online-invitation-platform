@@ -1,5 +1,46 @@
 # PROGRESS — autonomous mission log
 
+## Mission revision — 2026-11-03 (owner-directed)
+- **Primary origin:** the local PC server at **`http://127.0.0.1:4175`** (`einvite-app`,
+  `src/python/server.py`). The Freebuff Sites deployment and its daily request allowance are
+  **out of scope** for this mission. No `sites_deploy` call is part of the loop.
+- **Loop:** use the same Playwright six-width pattern against the PC origin; record every state
+  under `bugs/round-N/`; fix confirmed product defects at the root; rebuild the generated bundle,
+  restart the local service when source changes, and repeat. The local service is authoritative.
+- **Security workstream:** treat GitHub's open security feedback as a first-class gate. The
+  2026-11-03 snapshot is **92 Dependabot alerts**, **118 CodeQL alerts**, **0 secret-scanning
+  alerts**, and a failed scheduled Security Scan (`41472118974`, 2026-11-02T15:29Z). Raw API/CI
+  evidence is in gitignored `artifacts/security/2026-11-03/`; the triage and fix record is
+  `docs/security/GITHUB-SECURITY-TRIAGE-2026-11-03.md`.
+- **Security gate:** after fixes, run the local security scan and `npm audit`; a clean result means
+  no new high/critical findings and every remaining warning triaged as a false positive or an
+  explicit, owner-held follow-up. Do not suppress or downgrade a finding to make CI green.
+- **Deployment definition changed:** “deploy” now means rebuild the served bundle and restart
+  `einvite-app` on this PC, then verify `127.0.0.1:4175` serves the new hashes. The Cloudflare
+  tunnel/public site is ignored unless the owner explicitly reopens it.
+
+## Round 7 — PC route parity + GitHub security close-out (2026-11-03)
+- **BUG-R7-1 (P1, fixed):** the direct PC origin returned 404 for production-style
+  `/templates`, `/dashboard`, and `/designer`; only the `.html` paths worked. Added an
+  explicit 15-page `PAGE_ALIASES` allowlist in `src/python/server.py` and a byte-for-byte
+  alias regression (`tests/page_route_alias_test.py`). No arbitrary HTML fallback exists.
+- **Baseline before the fix:** 18 failures across six widths — three per width, all the
+  `/templates` 404 and its console/network consequences. **Final after rebuild/restart:**
+  **225/225 checks, 0 failures, 6/6 widths**, with clean page/console/network checks.
+  Record: `bugs/round-7/live-flows-six.json`; report: `bugs/round-7/FINDINGS.md`.
+- **GitHub security feedback:** captured **92 Dependabot alerts / 49 advisories**, **118
+  CodeQL alerts**, **0 secret-scanning alerts**, and failed run `41472118974`. The old CI
+  failure was Pillow `12.3.0` / Brotli `1.2.0`; current pins are `13.0.0` / `1.2.1`.
+  Fixed workflow permissions, preflight logging, scanner temp paths, timeline prototype
+  writes, HTTP header values, rich-text regex/fallback, and the npm Puppeteer chain.
+- **Security gates:** local scan **PASS** (bandit 0 HIGH, pip-audit clean, SBOM 10
+  components); `npm ci` succeeded; `npm audit` **0 vulnerabilities**; `build.py all`
+  **BUILD_OK**; `compileall`, `node --check`, and `git diff --check` clean. gitleaks and
+  Trivy remain unavailable/skipped. The remote CodeQL ledger is not claimed cleared — it
+  needs a push and rescan; remaining dispositions are in
+  `docs/security/GITHUB-SECURITY-TRIAGE-2026-11-03.md`.
+- **No push and no Sites deploy.** The PC origin is authoritative for this mission.
+
 ## Current status
 - **Round 6 final (2026-11-02, local):** the corrected harness passed at all six widths —
   **225/225 checks, 0 failures**, clean console/page/network. Record: `bugs/round-6/live-flows-six.json`.

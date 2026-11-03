@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
-  "serialNumber": "urn:uuid:49b81d3e-bf75-46f0-9563-72510118e426",
+  "serialNumber": "urn:uuid:161f9204-9054-4ebf-9545-dc1d8cb9c298",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-10-08T09:32:05Z",
+    "timestamp": "2026-11-03T00:53:32Z",
     "tools": [
       {
         "vendor": "eInvite",
@@ -171,21 +171,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/pillow@12.3.0",
+      "bom-ref": "pkg:pypi/pillow@13.0.0",
       "name": "Pillow",
-      "version": "12.3.0",
-      "purl": "pkg:pypi/pillow@12.3.0",
+      "version": "13.0.0",
+      "purl": "pkg:pypi/pillow@13.0.0",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "6c0016e7b354317c4e9e525b937ac8596c38d2d232b419529b9cd7a1cd46e39a"
+          "content": "6f38f3f885a09cafc93fd667b1173a92f379e43785d635e7983c893f0da319fb"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/25/c2/669d88644cddb1485bd9534e63e8cf476c8e51cb3c3a1297677023505c0e/pillow-12.3.0-cp310-cp310-macosx_10_10_x86_64.whl"
+          "url": "https://files.pythonhosted.org/packages/6c/d7/af6af1b8cc55e07cb0489d5b0950bf5a9bb1461eeba825700b6d8d0e26ea/pillow-13.0.0-cp311-cp311-macosx_10_10_x86_64.whl"
         },
         {
           "type": "website",
@@ -246,21 +246,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/fonttools@4.66.1",
+      "bom-ref": "pkg:pypi/fonttools@4.68.0",
       "name": "fonttools",
-      "version": "4.66.1",
-      "purl": "pkg:pypi/fonttools@4.66.1",
+      "version": "4.68.0",
+      "purl": "pkg:pypi/fonttools@4.68.0",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "d4f76868aea9cc4ce47fdbeaa904c02ee7d85dd0ad095071ae77f0bda6e62cf5"
+          "content": "362443ab355701d6fd26b10d022cd6c8456e1e248f80103c44cbe5ef0228f87f"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/0a/2e/2c6d3daaa5152bbb2fc2b44037399366af7eb5fb2fbf7d9a236813753f77/fonttools-4.66.1-cp311-cp311-macosx_10_9_universal2.whl"
+          "url": "https://files.pythonhosted.org/packages/21/51/7c725115425be01aa0fac87eb38f8e8c8c04de80d49a99b08a74898b25ee/fonttools-4.68.0-cp311-cp311-macosx_10_9_universal2.whl"
         },
         {
           "type": "website",
@@ -278,21 +278,21 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/brotli@1.2.0",
+      "bom-ref": "pkg:pypi/brotli@1.2.1",
       "name": "Brotli",
-      "version": "1.2.0",
-      "purl": "pkg:pypi/brotli@1.2.0",
+      "version": "1.2.1",
+      "purl": "pkg:pypi/brotli@1.2.1",
       "properties": [],
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "99cfa69813d79492f0e5d52a20fd18395bc82e671d5d40bd5a91d13e75e468e8"
+          "content": "09b560859a04d112d206639c7e444161ee2f413098aa6de11d43daf3ce883d24"
         }
       ],
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://files.pythonhosted.org/packages/18/53/e89399a54323d1606abf616fdc053139eff83a16f7641a40b0fb9e838e67/brotli-1.2.0-cp27-cp27m-macosx_10_9_x86_64.whl"
+          "url": "https://files.pythonhosted.org/packages/30/a2/2eb5c0b320f23d9d841529057807ed94077e2973dce04f0109f435860c38/brotli-1.2.1-cp27-cp27m-macosx_10_9_x86_64.whl"
         },
         {
           "type": "website",
@@ -318,11 +318,11 @@
         "pkg:pypi/psycopg@3.3.6",
         "pkg:pypi/redis@8.1.0",
         "pkg:pypi/qrcode@8.2",
-        "pkg:pypi/pillow@12.3.0",
+        "pkg:pypi/pillow@13.0.0",
         "pkg:pypi/argon2-cffi@25.1.0",
         "pkg:pypi/cryptography@50.0.2",
-        "pkg:pypi/fonttools@4.66.1",
-        "pkg:pypi/brotli@1.2.0"
+        "pkg:pypi/fonttools@4.68.0",
+        "pkg:pypi/brotli@1.2.1"
       ]
     }
   ]

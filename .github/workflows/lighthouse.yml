@@ -1,5 +1,8 @@
 name: Performance Budgets
 
+permissions:
+  contents: read
+
 # Three-layer performance budget (optimisation pass, task 7).
 #
 #   Layer 1 — declarative:  docs/perf/lighthouse-budgets.json holds the per-route

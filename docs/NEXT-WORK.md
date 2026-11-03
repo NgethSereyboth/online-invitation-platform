@@ -59,6 +59,15 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 
 ---
 
+### 2026-11-03 — Round 7: PC route parity and security close-out
+- Fixed **BUG-R7-1**: direct PC 404s for `/templates`, `/dashboard`, and `/designer`
+  now resolve through the closed `PAGE_ALIASES` map; the alias regression passes.
+- Six-width PC sweep: **225/225 checks, 0 failures**; security scan **PASS**, npm audit
+  **0 vulnerabilities**. Details: `bugs/round-7/FINDINGS.md` and
+  `docs/security/GITHUB-SECURITY-TRIAGE-2026-11-03.md`.
+- The 92 Dependabot / 118 CodeQL counts are hosted-ledger snapshots from before the local
+  commits; they require a push and rescan. No remote clearing is claimed.
+
 ## 1. Open defects
 
 Each row is a code-level bug with a named next action. Where the fix is a product decision, it says so.
@@ -182,6 +191,15 @@ already in force are listed so work can continue meanwhile.
 ---
 
 ## 4. Security and certification backlog
+
+**2026-11-03 GitHub feedback pass (active):** the GitHub Security Scan run `41472118974` failed
+because the old default branch still pinned Pillow 12.3.0 and Brotli 1.2.0; the current tree pins
+Pillow 13.0.0 and Brotli 1.2.1. The remaining live audit is the dev-only npm chain
+(`puppeteer-core 25.12.0 → chromium-bidi 17.0.2 → zod 3.25.76`, 3 high). CodeQL currently reports
+118 alerts at the old default branch; 32 are generated-mirror duplicates, so triage begins from
+the unique source locations. The raw log is `artifacts/security/2026-11-03/` and the actionable
+record will be `docs/security/GITHUB-SECURITY-TRIAGE-2026-11-03.md`. The PC origin
+`http://127.0.0.1:4175` is the verification target for this pass, not Sites.
 
 Implemented and covered by tests — **verify, don't rebuild**: account lockout, MFA recovery codes,
 security notification emails, JIT elevation, resource-scoped permissions, field encryption, durable
