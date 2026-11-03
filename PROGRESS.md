@@ -524,7 +524,30 @@
 - This is an external quota block, not an application failure. Do not retry in a loop before
   **2026-11-02T00:00:00.000Z**.
 
+## HEAD verification — 2026-11-03
+- **Audited commit:** `main` at **`ebb96d4`**; working tree had only the deliberately untracked
+  workspace folders before this evidence commit.
+- **Artifact proof:** rebuilt with `python3 build.py all` (`BUILD_OK`, `MIRROR_CHECK_PASSED`),
+  restarted `einvite-app`, and confirmed the served `bundle-index.js` SHA-256 is
+  **`94570322281650015cd8ea4bc4672fe6649de5f9a08865f8421ea1d31ce2c06a`**, identical to both
+  `src/python/bundle-index.js` and `src/js/bundle-index.js`. `/api/health`, `/`, `/templates`,
+  `/dashboard`, and `/designer` return 200 on `127.0.0.1:4175`.
+- **Independent sweep:** **225/225 checks, 0 failures, 6/6 widths**, clean page/console/network;
+  record `bugs/round-8/live-flows-six.json`, report `bugs/round-8/FINDINGS.md`.
+- **Fresh GitHub ledger:** 92 Dependabot / 49 unique advisories, 118 CodeQL, 0 secret-scanning.
+  The full per-advisory reconciliation is `docs/security/HEAD-RECONCILIATION-2026-11-03.md`:
+  **0 current vulnerable packages** (Pillow 13.0.0, Brotli 1.2.1; all seven old npm packages
+  absent from the committed lock), 86 generated-mirror CodeQL alerts, and 32 non-generated
+  locations reconciled. Hosted counts require an owner-authorized push/rescan.
+- **Gates:** security scan PASS (bandit 0 HIGH, pip-audit, SBOM 10 components); `npm audit` 0;
+  `build.py all --check` BUILD_OK; `compileall` exit 0; every `src/js/*.js` `node --check` exit 0;
+  `git diff --check` clean. gitleaks/Trivy unavailable locally and skipped.
+
 ## Open questions
+- **Owner-held push + GitHub rescan:** the hosted Dependabot/CodeQL ledger is from the
+  old default branch. The committed HEAD has no current vulnerable pins and 32
+  non-generated CodeQL locations are reconciled, but the remote alerts will not clear
+  until the owner authorizes a push and GitHub rescans. No push has been made.
 - **Improvement sequence:** the research note recommends measuring LCP/INP first, then the
   low-risk LCP-image, 24 px hit-area and Khmer line-height fixes; the editor INP split and AVIF
   variants should follow only if measurement justifies them. No implementation was started.

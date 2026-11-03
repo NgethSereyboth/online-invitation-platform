@@ -95,6 +95,20 @@ groups below are intentionally not suppressed in code.
 | `py/clear-text-logging-sensitive-data` | 2 | Fixed at the call site with `redact_preflight_message()`; the static analyzer does not model the custom helper, so a rescan is the only way to confirm its ledger. |
 | `py/incomplete-url-substring-sanitization` | 2 | Test-only assertions over literal fixture URLs, not runtime URL validation. |
 
+## HEAD reconciliation — 2026-11-03
+
+The committed HEAD (`ebb96d4`) was re-audited against **fresh, fully paginated**
+GitHub lists: **92 Dependabot alerts / 49 unique advisories**, **118 CodeQL alerts**,
+**0 secret-scanning alerts**. The complete Dependabot per-advisory table (package,
+affected range, committed pin, result, alert IDs) and every non-generated CodeQL
+disposition are in `docs/security/HEAD-RECONCILIATION-2026-11-03.md`.
+
+Result: **0 current vulnerable packages** — 42 Python advisory rows resolve to
+Pillow `13.0.0` / Brotli `1.2.1`; all seven npm advisories name packages absent from
+the committed lock. Of 118 CodeQL alerts, 86 are generated bundle/build mirrors; all
+32 non-generated locations are either fixed in source or explicitly justified in the
+reconciliation table. The hosted ledger remains owner-held until a push and rescan.
+
 ## Acceptance for this pass
 
 1. `npm audit --package-lock-only` reports zero findings.
