@@ -721,14 +721,14 @@ def guest_flow(page, width, bucket):
     except Exception:
         status = None
     try:
-        page.wait_for_function("() => /Thank you|Response updated|Your response was received|Your latest response|សូមអរគុណ|បានកែប្រែការឆ្លើយតប/i.test(document.body.innerText || '')", timeout=20000)
+        page.wait_for_function("() => /Thank you|Response updated|Your response was received|Your latest response|\u179f\u17bc\u1798\u17a2\u179a\u1782\u17bb\u178e|\u1794\u17b6\u1793\u1780\u17c2\u1794\u17d2\u179a\u17c2\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794/i.test(document.body.innerText || '')", timeout=20000)
     except Exception:
         pass
     page.wait_for_timeout(200)
     submitted = page.evaluate("""() => {
       const f = document.querySelector('form#rsvp');
       const text = (f?.innerText || document.body.innerText || '');
-      return {url: location.pathname, thank: /Thank you|Response updated|Your response was received|Your latest response|សូមអរគុណ|បានកែប្រែការឆ្លើយតប/i.test(text), overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+      return {url: location.pathname, thank: /Thank you|Response updated|Your response was received|Your latest response|\u179f\u17bc\u1798\u17a2\u179a\u1782\u17bb\u178e|\u1794\u17b6\u1793\u1780\u17c2\u1794\u17d2\u179a\u17c2\u1780\u17b6\u179a\u1786\u17d2\u179b\u17be\u1799\u178f\u1794/i.test(text), overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth};
     }""")
     submitted["status"] = status
     check("rsvp submits", lambda: submitted

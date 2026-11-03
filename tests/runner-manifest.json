@@ -79,6 +79,11 @@
       "invocation": ".venv/bin/python tests/p2a_post_send_edit_test.py",
       "kind": "module-script"
     },
+    "page_route_alias_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/page_route_alias_test.py",
+      "kind": "module-script"
+    },
     "p2a_signup_sheets_test.py": {
       "checked_by": null,
       "invocation": ".venv/bin/python tests/p2a_signup_sheets_test.py",
