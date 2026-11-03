@@ -1,0 +1,112 @@
+[
+ {
+  "route": "templates",
+  "path": "/templates",
+  "width": 390,
+  "status": 200,
+  "cls": 0.267,
+  "lcp": 732,
+  "lcpEl": "P",
+  "shifts": [
+   {
+    "value": 0.1143,
+    "t": 680,
+    "nodes": [
+     "DIV.studio-toolbar",
+     "#studioGrid",
+     "P."
+    ]
+   },
+   {
+    "value": 0.1527,
+    "t": 791,
+    "nodes": [
+     "DIV.empty"
+    ]
+   }
+  ],
+  "docHeight": 6294
+ },
+ {
+  "route": "templates",
+  "path": "/templates",
+  "width": 1440,
+  "status": 200,
+  "cls": 0.8254,
+  "lcp": 640,
+  "lcpEl": "IMG",
+  "shifts": [
+   {
+    "value": 0.0199,
+    "t": 237,
+    "nodes": [
+     "#studioGrid",
+     "DIV.studio-toolbar",
+     "P."
+    ]
+   },
+   {
+    "value": 0.0086,
+    "t": 264,
+    "nodes": [
+     "#studioGrid"
+    ]
+   },
+   {
+    "value": 0.0155,
+    "t": 297,
+    "nodes": [
+     "#studioGrid",
+     "DIV.pack-head"
+    ]
+   },
+   {
+    "value": 0.7815,
+    "t": 371,
+    "nodes": [
+     "#main",
+     "DIV.empty"
+    ]
+   }
+  ],
+  "docHeight": 3735
+ },
+ {
+  "route": "guest",
+  "path": "/i/qa-ui-sweep-wedding",
+  "width": 390,
+  "status": 200,
+  "cls": 0.0308,
+  "lcp": 1328,
+  "lcpEl": "STRONG",
+  "shifts": [
+   {
+    "value": 0.018,
+    "t": 516,
+    "nodes": [
+     "#publicRoot",
+     "#guestInvitationTitle"
+    ]
+   },
+   {
+    "value": 0.0128,
+    "t": 1249,
+    "nodes": [
+     "#publicRoot"
+    ]
+   }
+  ],
+  "docHeight": 6211
+ },
+ {
+  "route": "guest",
+  "path": "/i/qa-ui-sweep-wedding",
+  "width": 1440,
+  "status": 200,
+  "cls": 0,
+  "lcp": 1004,
+  "lcpEl": "STRONG",
+  "shifts": [],
+  "docHeight": 6450
+ }
+]

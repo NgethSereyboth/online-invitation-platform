@@ -1,0 +1,26 @@
+{
+ "390:baseline": {
+  "cls": 0.2573,
+  "shifts": 3
+ },
+ "390:hide-loading": {
+  "cls": 0.2133,
+  "shifts": 4
+ },
+ "390:no-loading": {
+  "cls": 0.2129,
+  "shifts": 4
+ },
+ "1440:baseline": {
+  "cls": 0.8228,
+  "shifts": 3
+ },
+ "1440:hide-loading": {
+  "cls": 0.8274,
+  "shifts": 3
+ },
+ "1440:no-loading": {
+  "cls": 0.8237,
+  "shifts": 3
+ }
+}

@@ -1,0 +1,112 @@
+SHIFTS
+[]
+GEOMETRY CHANGES (first 30)
+[
+ {
+  "t": 370,
+  "gallery": null,
+  "grid": {
+   "top": 287,
+   "h": 128
+  },
+  "loading": {
+   "top": 287,
+   "h": 128
+  },
+  "packGrid": null,
+  "doc": 902
+ },
+ {
+  "t": 520,
+  "gallery": {
+   "top": 290,
+   "h": 56
+  },
+  "grid": {
+   "top": 360,
+   "h": 128
+  },
+  "loading": {
+   "top": 360,
+   "h": 128
+  },
+  "packGrid": {
+   "top": 360,
+   "h": 0
+  },
+  "doc": 902
+ },
+ {
+  "t": 552,
+  "gallery": {
+   "top": 288,
+   "h": 126
+  },
+  "grid": {
+   "top": 442,
+   "h": 128
+  },
+  "loading": {
+   "top": 442,
+   "h": 128
+  },
+  "packGrid": {
+   "top": 393,
+   "h": 0
+  },
+  "doc": 900
+ },
+ {
+  "t": 571,
+  "gallery": {
+   "top": 288,
+   "h": 126
+  },
+  "grid": {
+   "top": 442,
+   "h": 146
+  },
+  "loading": null,
+  "packGrid": {
+   "top": 393,
+   "h": 0
+  },
+  "doc": 900
+ },
+ {
+  "t": 628,
+  "gallery": {
+   "top": 284,
+   "h": 3188
+  },
+  "grid": {
+   "top": 3500,
+   "h": 146
+  },
+  "loading": null,
+  "packGrid": {
+   "top": 389,
+   "h": 3062
+  },
+  "doc": 3736
+ },
+ {
+  "t": 650,
+  "gallery": {
+   "top": 284,
+   "h": 3188
+  },
+  "grid": {
+   "top": 3500,
+   "h": 146
+  },
+  "loading": null,
+  "packGrid": {
+   "top": 389,
+   "h": 3062
+  },
+  "doc": 3735
+ }
+]
+MUTATIONS (gallery/grid only)
+[]

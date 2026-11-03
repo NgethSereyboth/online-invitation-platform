@@ -134,10 +134,19 @@
 
   async function mount() {
     const studio = document.querySelector('#studioGrid');
-    if (!studio || document.querySelector(`#${SECTION_ID}`)) return null;
+    if (!studio) return null;
     ensureStyles();
-    const section = buildSection();
-    studio.before(section);
+    // templates.html ships this section (with skeleton cards) so its height is
+    // reserved before first paint. Adopt it instead of inserting a second one:
+    // a late insertion above #studioGrid moved the studio grid by ~3000px and
+    // was the source of the page's 0.8 layout shift.
+    let section = document.querySelector(`#${SECTION_ID}`);
+    if (section && section.dataset.packMounted === '1') return section;
+    if (!section) {
+      section = buildSection();
+      studio.before(section);
+    }
+    section.dataset.packMounted = '1';
     currentSection = section;
     // Pick up any filter the shared toolbar set before this module mounted.
     const toolbarSearch = document.querySelector('#studioSearch');
@@ -149,11 +158,21 @@
       const pack = await ensureLoader();
       state.catalog = await pack.loadCatalog();
       render(section);
+      section.setAttribute('aria-busy', 'false');
+      const grid = section.querySelector('[data-pack-grid]');
+      if (grid) grid.setAttribute('aria-busy', 'false');
       status.textContent = '';
     } catch (error) {
       status.textContent = window.EInviteTemplatePack
         ? window.EInviteTemplatePack.catalogErrorText
         : 'Could not load the template list. Try again.';
+      // Drop the skeletons: they only reserve space until the catalogue answers.
+      const grid = section.querySelector('[data-pack-grid]');
+      if (grid) {
+        grid.innerHTML = '';
+        grid.setAttribute('aria-busy', 'false');
+      }
+      section.setAttribute('aria-busy', 'false');
       return section;
     }
     section.addEventListener('click', async (event) => {

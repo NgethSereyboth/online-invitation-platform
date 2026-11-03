@@ -181,16 +181,18 @@
       ]
     },
     "templates.html": {
-      "bytes": 414232,
-      "scriptCount": 3,
+      "bytes": 428070,
+      "scriptCount": 4,
       "scripts": [
         "core/theme.js",
         "backend-mode.js",
+        "template-pack-gallery.js",
         "bundle-templates.js"
       ],
-      "styleCount": 1,
+      "styleCount": 2,
       "styles": [
-        "bundle-templates.css"
+        "bundle-templates.css",
+        "template-pack-gallery.css"
       ]
     },
     "verify.html": {
@@ -301,6 +303,7 @@
         "bundle-analytics.js",
         "bundle-materials.js",
         "bundle-checkin.js",
+        "template-pack-gallery.js",
         "bundle-templates.js",
         "bundle-designer.js"
       ],
@@ -311,6 +314,7 @@
         "bundle-materials.css",
         "bundle-checkin.css",
         "bundle-templates.css",
+        "template-pack-gallery.css",
         "bundle-designer.css"
       ]
     },

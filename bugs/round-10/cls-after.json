@@ -1,0 +1,97 @@
+[
+ {
+  "route": "templates",
+  "path": "/templates",
+  "width": 390,
+  "status": 200,
+  "cls": 0.0009,
+  "lcp": 500,
+  "lcpEl": "P",
+  "shifts": [
+   {
+    "value": 0.0009,
+    "t": 496,
+    "nodes": [
+     "undefined.",
+     "undefined.",
+     "undefined."
+    ]
+   }
+  ],
+  "docHeight": 6294
+ },
+ {
+  "route": "templates",
+  "path": "/templates",
+  "width": 1440,
+  "status": 200,
+  "cls": 0.0101,
+  "lcp": 568,
+  "lcpEl": "IMG",
+  "shifts": [
+   {
+    "value": 0.003,
+    "t": 261,
+    "nodes": [
+     "#templatePackGallery",
+     "DIV.studio-toolbar",
+     "P."
+    ]
+   },
+   {
+    "value": 0.0008,
+    "t": 303,
+    "nodes": [
+     "DIV.app-topbar-right",
+     "DIV.ui-theme"
+    ]
+   },
+   {
+    "value": 0.0064,
+    "t": 353,
+    "nodes": [
+     "DIV.pack-grid"
+    ]
+   }
+  ],
+  "docHeight": 3735
+ },
+ {
+  "route": "guest",
+  "path": "/i/qa-ui-sweep-wedding",
+  "width": 390,
+  "status": 200,
+  "cls": 0.0308,
+  "lcp": 800,
+  "lcpEl": "STRONG",
+  "shifts": [
+   {
+    "value": 0.018,
+    "t": 203,
+    "nodes": [
+     "#publicRoot",
+     "#guestInvitationTitle"
+    ]
+   },
+   {
+    "value": 0.0128,
+    "t": 704,
+    "nodes": [
+     "#publicRoot"
+    ]
+   }
+  ],
+  "docHeight": 6211
+ },
+ {
+  "route": "guest",
+  "path": "/i/qa-ui-sweep-wedding",
+  "width": 1440,
+  "status": 200,
+  "cls": 0,
+  "lcp": 856,
+  "lcpEl": "STRONG",
+  "shifts": [],
+  "docHeight": 6450
+ }
+]

@@ -117,6 +117,33 @@
   min-width: 0;
 }
 
+/* Placeholder cards that hold the gallery's height from first paint until the
+   catalogue renders. Same thumbnail ratio as .pack-card-open img. */
+.pack-skeleton-card {
+  display: block;
+  min-width: 0;
+}
+
+.pack-skeleton-card::before {
+  content: '';
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--pack-ratio, 5 / 7);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--app-text, #2f2a26) 12%, transparent);
+  background: color-mix(in srgb, var(--app-text, #2f2a26) 6%, transparent);
+}
+
+.pack-skeleton-card::after {
+  content: '';
+  display: block;
+  width: 62%;
+  height: 0.75rem;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--app-text, #2f2a26) 10%, transparent);
+}
+
 .pack-card-open {
   display: flex;
   flex-direction: column;
