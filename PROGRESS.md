@@ -112,6 +112,16 @@
   reserve the first screen in markup). Guest LCP measured 1.0 s desktop / 1.3 s mobile and
   guest CLS 0/0.031, both already inside target. Post-fix six-width re-run: **249/249
   checks, 0 failures**, clean console/page/network. Record: `bugs/round-10/`.
+- **Round 11 final (2026-11-04, local):** clean re-run confirming no regressions since round 10 —
+  **249/249 checks, 0 failures, 6/6 widths**, clean console/page/network (only deliberate 404s).
+  Editor (add, drag, resize, rotate, multi-select, undo/redo, save, reload/recover, PNG export),
+  template studio (cards, search, source/category/favorite filters, Khmer), dashboard (signed-out
+  shell, registration, sign-in), designer, missing-404 route, guest invitation (load, language toggle,
+  RSVP invalid + submit) all pass at every width. Record: `bugs/round-11/`.
+  The first sweep attempt was cut short by the 300 s timeout cap; the second (unbuffered) attempt
+  completed successfully — the lone `FAILED 768 drag` line in `sweep.log` is from the overlapping
+  first-run writer and is not reflected in `live-flows-six.json`, which shows drag passing at all
+  widths. No product defect found; no code change.
 - **Round 6 final (2026-11-02, local):** the corrected harness passed at all six widths —
   **225/225 checks, 0 failures**, clean console/page/network. Record: `bugs/round-6/live-flows-six.json`.
   The 15 earlier failures were harness assumptions (drawer, redo identity, Appearance menu, deliberate
