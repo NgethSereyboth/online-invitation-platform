@@ -177,8 +177,8 @@
     },
     "checkin.html": {
       "javascript": "bundle-checkin.js",
-      "scriptBytes": 38401,
-      "scriptSha256": "c42f594ae991d1496939c75bdd57a7f20e028174b6c405f5729d03c367126307",
+      "scriptBytes": 38405,
+      "scriptSha256": "1377c1500b8dfec7789ce436ca448b8b5e461912478ecb7d8218c9b796c05f0a",
       "sources": {
         "scripts": [
           "core/i18n.js",

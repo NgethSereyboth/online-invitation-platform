@@ -1,5 +1,14 @@
-# Gitleaks configuration — allowlist for confirmed-safe test fixtures.
-# See: docs/security/SECURITY-FIX-GUIDE.md §5.3 Step 4
+# Gitleaks configuration — default rules plus an allowlist for confirmed-safe
+# test fixtures. See: docs/security/SECURITY-FIX-GUIDE.md §5.3 Step 4
+#
+# `useDefault = true` is load-bearing: a gitleaks config that declares only an
+# allowlist replaces the entire built-in ruleset, so `gitleaks --config
+# .gitleaks.toml` (the pre-commit hook) scanned with zero rules and could never
+# detect a secret. Verified 2026-11-07 with a synthetic AWS key: default rules
+# found it, this config did not. Keep the extension in place.
+
+[extend]
+useDefault = true
 
 [allowlist]
 description = "Known safe test fixtures and example files"

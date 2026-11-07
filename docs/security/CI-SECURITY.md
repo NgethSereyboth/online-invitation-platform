@@ -19,7 +19,7 @@
 | 1 | SAST | [`bandit`](https://bandit.readthedocs.io) `-r src/python ai_agent platform_v32 future_platform_v52 -lll` | Python AST patterns: `exec()`/`eval()` on dynamic input, hardcoded passwords, weak crypto (`hashlib.md5`), `shell=True` on untrusted input, assert-as-security-check, YAML unsafe loaders, etc. | HIGH severity only (bandit `-lll` reports HIGH only; the 38 remaining MEDIUM findings are documented as a background queue in `docs/reviews/security-status.md`) |
 | 2 | SCA / dependency audit | [`pip-audit`](https://github.com/pypa/pip-audit) `-r docs/requirements-production.txt --desc` | Known CVEs / GHSAs against every pinned production dependency, via the PyPA advisory DB + OSV. | HIGH or CRITICAL CVSS |
 | 3 | SBOM | [`scripts/generate-sbom.py`](../../scripts/generate-sbom.py) (stdlib-only) | Emits a CycloneDX 1.5 SBOM of every production dependency + checksum + license. Always runs; never fails the build (only warns). | n/a — informational |
-| 4 | Secret scanning | [`gitleaks`](https://github.com/gitleaks/gitleaks) `detect --no-git --source .` | AWS keys, GitHub PATs, Slack tokens, private keys, generic high-entropy strings, etc. | Any finding (1+) |
+| 4 | Secret scanning | [`gitleaks`](https://github.com/gitleaks/gitleaks) `detect --no-git --source . --config .gitleaks.toml --redact` | AWS keys, GitHub PATs, Slack tokens, private keys, generic high-entropy strings, etc. | Any finding (1+) |
 | 5 | Container scan | [`trivy`](https://aquasecurity.github.io/trivy/) `image --severity HIGH,CRITICAL --exit-code 1` | OS-package CVEs + library CVEs inside the `einvite-scan:latest` image built from `deploy/Dockerfile`. Only runs if `deploy/Dockerfile` exists AND both `trivy` and `docker` are installed. | HIGH or CRITICAL |
 
 Every tool is run by `scripts/security-scan.sh`. The script is the single
@@ -304,7 +304,9 @@ the current pinned dependencies. If a new CVE is published against
   (fetch-depth: 0) but the script still uses `--no-git`. A future
   iteration could drop `--no-git` in CI to also catch secrets in
   historical commits — requires careful handling of false positives
-  from old commits that have already been rotated.
+  from old commits that have already been rotated. The current CI
+  invocation explicitly loads `.gitleaks.toml` and passes `--redact`
+  so the uploaded report never contains raw secret values.
 * **`trivy` SBOM consumption.** trivy can ingest CycloneDX SBOMs and
   cross-reference them against its vuln DB. A future iteration could
   feed our `sbom.cdx.json` to trivy as a second scan target
