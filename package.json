@@ -3,9 +3,14 @@
   "private": true,
   "scripts": {
     "serve:lhci": "python3 tools/serve-gzip.py --port 8124",
-    "lhci": "npx --yes @lhci/cli@0.15.1"
+    "lhci": "npx --yes @lhci/cli@0.15.1",
+    "verify": "python3 tools/verify.py",
+    "lint:security": ".tools/eslint-env/node_modules/.bin/eslint --config .tools/eslint-env/eslint.config.mjs src/js",
+    "lint:security:changed": ".tools/eslint-env/node_modules/.bin/eslint --config .tools/eslint-env/eslint.config.mjs src/js/checkin.js src/js/plugin_sandbox_host.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.0",
     "puppeteer-core": "^25.16.0"
   }
 }

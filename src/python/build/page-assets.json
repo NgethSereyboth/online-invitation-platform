@@ -53,7 +53,7 @@
       ]
     },
     "checkin.html": {
-      "bytes": 182914,
+      "bytes": 182918,
       "scriptCount": 3,
       "scripts": [
         "core/theme.js",
