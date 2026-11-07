@@ -1,0 +1,164 @@
+name: Authenticated DAST (ZAP)
+
+permissions:
+  contents: read
+
+# The scan runs only against a disposable loopback fixture created in this job.
+# There is deliberately no target URL secret: a workflow input or repository
+# secret must never be able to point the active scanner at production.
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: dast-authenticated-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap-authenticated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Fork pull requests do not receive secrets. The prepare step below
+      # generates synthetic values when these are empty; the fixture database
+      # is still disposable and local.
+      DAST_EMAIL: ${{ secrets.DAST_EMAIL }}
+      DAST_PASSWORD: ${{ secrets.DAST_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare disposable fixture credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          DAST_ARTIFACTS="$GITHUB_WORKSPACE/artifacts/dast"
+          ZAP_WORK="$RUNNER_TEMP/zap-work"
+          echo "DAST_ARTIFACTS=$DAST_ARTIFACTS" >> "$GITHUB_ENV"
+          echo "ZAP_WORK=$ZAP_WORK" >> "$GITHUB_ENV"
+          mkdir -p "$DAST_ARTIFACTS" "$RUNNER_TEMP/dast-auth" "$ZAP_WORK"
+          # The ZAP container runs under its own UID. The config must be
+          # readable and the report directory writable across that boundary;
+          # the session JSON itself stays mode 600 and is never mounted for
+          # writing. These are ephemeral runner paths, not artifacts.
+          chmod 755 "$RUNNER_TEMP/dast-auth"
+          chmod 777 "$ZAP_WORK"
+
+          if [ -z "${DAST_EMAIL:-}" ]; then
+            echo "DAST_EMAIL=dast-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}@example.com" >> "$GITHUB_ENV"
+          fi
+          if [ -z "${DAST_PASSWORD:-}" ]; then
+            password="$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')"
+            echo "::add-mask::$password"
+            echo "DAST_PASSWORD=$password" >> "$GITHUB_ENV"
+          fi
+
+      - name: Start isolated fixture origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/dast/start_fixture_server.sh
+          set -a
+          . "$RUNNER_TEMP/einvite-dast/fixture.env"
+          set +a
+          echo "DAST_BACKEND_BASE=$DAST_BACKEND_BASE" >> "$GITHUB_ENV"
+
+      - name: Bootstrap disposable authenticated session
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/dast/bootstrap_session.py \
+            --base "$DAST_BACKEND_BASE" \
+            --email "$DAST_EMAIL" \
+            --password "$DAST_PASSWORD" \
+            --session-file "$RUNNER_TEMP/dast-auth/session.json" \
+            --zap-config "$RUNNER_TEMP/dast-auth/zap-auth.properties" \
+            --summary "$DAST_ARTIFACTS/auth-summary.json"
+
+      - name: Start read-only DAST policy proxy
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/dast/start_safe_proxy.sh
+          set -a
+          . "$RUNNER_TEMP/einvite-dast/proxy.env"
+          set +a
+          echo "DAST_PROXY_BASE=$DAST_PROXY_BASE" >> "$GITHUB_ENV"
+
+      - name: Verify authenticated session through the proxy
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/dast/verify_session.py \
+            --base "$DAST_PROXY_BASE" \
+            --session-file "$RUNNER_TEMP/dast-auth/session.json" \
+            --summary "$DAST_ARTIFACTS/auth-verification.json"
+
+      - name: Run authenticated ZAP active scan
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          docker run --rm --network host \
+            -v "$ZAP_WORK:/zap/wrk:rw" \
+            -v "$RUNNER_TEMP/dast-auth:/zap/auth:ro" \
+            ghcr.io/zaproxy/zaproxy:2.17.0 \
+            zap-full-scan.py \
+              -t "$DAST_PROXY_BASE" \
+              -r zap-authenticated.html \
+              -J zap-authenticated.json \
+              -x zap-authenticated.xml \
+              -m 2 -T 10 \
+              -z "-configfile /zap/auth/zap-auth.properties -config scanner.maxScanDurationInMins=5" \
+              2>&1 | tee "$DAST_ARTIFACTS/zap-scan.log"
+          zap_exit=${PIPESTATUS[0]}
+          set -e
+          # Copy ZAP's reports out of the container-writable directory into the
+          # runner-owned artifact directory before inspecting or uploading them.
+          if [ -d "$ZAP_WORK" ]; then
+            cp -R --no-preserve=ownership "$ZAP_WORK"/. "$DAST_ARTIFACTS"/ || true
+          fi
+          printf '%s\n' "$zap_exit" > "$DAST_ARTIFACTS/zap-exit-code.txt"
+          echo "ZAP_EXIT=$zap_exit"
+          if [ "$zap_exit" -gt 1 ]; then
+            echo "ZAP did not complete (exit $zap_exit)" >&2
+            exit "$zap_exit"
+          fi
+
+          # The ZAP wrapper uses exit 1 for warnings. The security gate is the
+          # parsed report: fail only on High/Critical alerts.
+          python3 scripts/dast/check_zap_report.py \
+            --report "$DAST_ARTIFACTS/zap-authenticated.json" \
+            --summary "$DAST_ARTIFACTS/zap-summary.json"
+
+      - name: Redact session material from reports
+        if: always()
+        shell: bash
+        run: |
+          ARTIFACTS="${DAST_ARTIFACTS:-$GITHUB_WORKSPACE/artifacts/dast}"
+          python3 scripts/dast/redact_report.py \
+            --session-file "$RUNNER_TEMP/dast-auth/session.json" \
+            --artifacts "$ARTIFACTS"
+
+      - name: Upload authenticated ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: authenticated-dast-${{ github.run_id }}
+          path: artifacts/dast/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Clean up isolated fixture
+        if: always()
+        shell: bash
+        run: |
+          bash scripts/dast/cleanup_fixture.sh
