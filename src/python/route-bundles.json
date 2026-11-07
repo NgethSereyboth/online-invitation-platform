@@ -458,7 +458,6 @@
           "compact-theme.css",
           "final-experience.css",
           "editor-suite.css",
-          "ai-assistant-loader.css",
           "ui-dialogs.css",
           "tokens.css",
           "theme-hardening.css",
@@ -484,8 +483,8 @@
           "editor-responsive-contract.css"
         ]
       },
-      "styleBytes": 470366,
-      "styleSha256": "24740a9bbd8fb2d8d90dd74e781153444d0ff9c78fc9110fd10d5f87267ec483",
+      "styleBytes": 469317,
+      "styleSha256": "c7cb76697696376e02dcfc8b5c247580c8b44fc29e33cf65cf4542e941bd365b",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {

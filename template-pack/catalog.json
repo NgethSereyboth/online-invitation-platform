@@ -1,6 +1,6 @@
 {
  "version": 1,
- "count": 36,
+ "count": 100,
  "templates": [
   {
    "id": "wd-royal-maroon-gold",
@@ -1044,6 +1044,1932 @@
     "accent2": "#CFA23A",
     "deep": "#5E4008",
     "line": "#CFA23A"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "wd-olive-letter",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "The Olive Letter",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "wedding",
+    "english",
+    "editorial",
+    "garden",
+    "olive",
+    "minimal",
+    "modern",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F3EFE2",
+    "paper": "#FBF7EA",
+    "ink": "#253027",
+    "soft": "#636B5E",
+    "accent": "#53654A",
+    "accent2": "#B08A4F",
+    "deep": "#1D2A21",
+    "line": "#B9B39F"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-garden-sun",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Garden Sun",
+    "km": "អាពាហ៍ពិពាហ៍ សួនថ្ងៃរះ"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "garden",
+    "terracotta",
+    "editorial",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F5EDDF",
+    "paper": "#FFF9EE",
+    "ink": "#26372E",
+    "soft": "#5E6658",
+    "accent": "#A95035",
+    "accent2": "#C79A58",
+    "deep": "#1D2A23",
+    "line": "#C7B79C"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-coastal-vows",
+   "category": "wedding",
+   "canvas": "p45",
+   "name": {
+    "en": "Coastal Vows",
+    "km": "អាពាហ៍ពិពាហ៍ ឆ្នេរសមុទ្រ"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "coastal",
+    "photo",
+    "blue",
+    "modern"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#E8F1F0",
+    "paper": "#F7FBFA",
+    "ink": "#153A43",
+    "soft": "#456B72",
+    "accent": "#176B73",
+    "accent2": "#A9793F",
+    "deep": "#0D2A33",
+    "line": "#9FBFBF"
+   },
+   "typography": "elegant",
+   "photoSlots": [
+    "couple"
+   ]
+  },
+  {
+   "id": "en-afterglow-disco",
+   "category": "birthday",
+   "canvas": "sq",
+   "name": {
+    "en": "Afterglow Disco",
+    "km": "ខួបកំណើត រាំពេលយប់"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "disco",
+    "neon",
+    "party",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#17122B",
+    "paper": "#241A43",
+    "ink": "#FFF4E0",
+    "soft": "#CDB7E8",
+    "accent": "#FF6B5A",
+    "accent2": "#8DE0D0",
+    "deep": "#0B0818",
+    "line": "#A98BD8"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-cloud-nine-baby",
+   "category": "birthday",
+   "canvas": "p45",
+   "name": {
+    "en": "Cloud Nine Baby",
+    "km": "ស្វាគមន៍កូនថ្មី ពណ៌ទន់"
+   },
+   "tags": [
+    "english",
+    "baby",
+    "shower",
+    "pastel",
+    "photo",
+    "soft"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FBF4E8",
+    "paper": "#FFFFFF",
+    "ink": "#35474B",
+    "soft": "#5E6F71",
+    "accent": "#B65F4A",
+    "accent2": "#78A9AA",
+    "deep": "#2D4E54",
+    "line": "#D7C4AF"
+   },
+   "typography": "elegant",
+   "photoSlots": [
+    "portrait"
+   ]
+  },
+  {
+   "id": "en-noir-graduate",
+   "category": "greeting",
+   "canvas": "p45",
+   "name": {
+    "en": "Noir Graduate",
+    "km": "បញ្ចប់ការសិក្សា ខ្មៅ និងមាស"
+   },
+   "tags": [
+    "english",
+    "graduation",
+    "noir",
+    "gold",
+    "modern",
+    "portrait"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#101014",
+    "paper": "#F4EEDC",
+    "ink": "#F7F0DC",
+    "soft": "#B9B4A4",
+    "accent": "#E7C45A",
+    "accent2": "#B79A42",
+    "deep": "#08080B",
+    "line": "#E7C45A"
+   },
+   "typography": "modern",
+   "photoSlots": []
+  },
+  {
+   "id": "en-summit-26",
+   "category": "business",
+   "canvas": "land",
+   "name": {
+    "en": "Summit 26",
+    "km": "សន្និសីទ ឆ្នាំ ២០២៦"
+   },
+   "tags": [
+    "english",
+    "business",
+    "conference",
+    "summit",
+    "landscape",
+    "grid"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0C1C17",
+    "paper": "#12281F",
+    "ink": "#F4F1DE",
+    "soft": "#A9C1B4",
+    "accent": "#D8FF65",
+    "accent2": "#7ED0B0",
+    "deep": "#05100C",
+    "line": "#4D7767"
+   },
+   "typography": "modern",
+   "photoSlots": []
+  },
+  {
+   "id": "en-terracotta-home",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "Terracotta Home",
+    "km": "ឡើងផ្ទះថ្មី ដីឥដ្ឋ"
+   },
+   "tags": [
+    "english",
+    "housewarming",
+    "terracotta",
+    "arch",
+    "warm",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F5EBDD",
+    "paper": "#FFF8ED",
+    "ink": "#3B2B24",
+    "soft": "#725A4B",
+    "accent": "#A74E30",
+    "accent2": "#D9A15B",
+    "deep": "#2E1D17",
+    "line": "#D6B79A"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-deco-anniversary",
+   "category": "wedding",
+   "canvas": "story",
+   "name": {
+    "en": "Deco Anniversary",
+    "km": "ខួបអាពាហ៍ពិពាហ៍ ស្ថាបត្យកម្ម"
+   },
+   "tags": [
+    "english",
+    "anniversary",
+    "deco",
+    "gold",
+    "story",
+    "formal"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#12100D",
+    "paper": "#1C1812",
+    "ink": "#F8EAD0",
+    "soft": "#D7C1A0",
+    "accent": "#E1B45A",
+    "accent2": "#B8873E",
+    "deep": "#080706",
+    "line": "#E1B45A"
+   },
+   "typography": "ceremonial",
+   "photoSlots": []
+  },
+  {
+   "id": "en-moonlit-halloween",
+   "category": "birthday",
+   "canvas": "sq",
+   "name": {
+    "en": "Moonlit Halloween",
+    "km": "ជប់លៀងហាឡូវីន"
+   },
+   "tags": [
+    "english",
+    "halloween",
+    "birthday",
+    "masquerade",
+    "moon",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#1A1424",
+    "paper": "#2A1E38",
+    "ink": "#FFF2DC",
+    "soft": "#D7C1B0",
+    "accent": "#FF8A3D",
+    "accent2": "#C6A0E8",
+    "deep": "#0E0A14",
+    "line": "#8D6BB0"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-midnight-new-year",
+   "category": "greeting",
+   "canvas": "story",
+   "name": {
+    "en": "Midnight New Year",
+    "km": "ឆ្នាំថ្មី ពាក់កណ្តាលអធ្រាត្រ"
+   },
+   "tags": [
+    "english",
+    "new-year",
+    "midnight",
+    "gold",
+    "story",
+    "party"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#08131A",
+    "paper": "#0E2230",
+    "ink": "#F9EED6",
+    "soft": "#BBD0D5",
+    "accent": "#E8C56A",
+    "accent2": "#7FD7C4",
+    "deep": "#040A0E",
+    "line": "#E8C56A"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-bokor-vows",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Bokor Vows",
+    "km": "អាពាហ៍ពិពាហ៍ បូកគោ"
+   },
+   "tags": [
+    "khmer",
+    "wedding",
+    "bokor",
+    "green",
+    "arch",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#EFF4EC",
+    "paper": "#FBFCF6",
+    "ink": "#17372E",
+    "soft": "#4D675B",
+    "accent": "#2F6C5B",
+    "accent2": "#B08A4E",
+    "deep": "#0F2820",
+    "line": "#B9CFC2"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-silk-engagement",
+   "category": "wedding",
+   "canvas": "p45",
+   "name": {
+    "en": "Silk Engagement",
+    "km": "ពិធីភ្ជាប់ពាក្យ សូត្រខ្មែរ"
+   },
+   "tags": [
+    "khmer",
+    "engagement",
+    "silk",
+    "teal",
+    "gold",
+    "pattern"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0F3C3A",
+    "paper": "#14504A",
+    "ink": "#F8EBCF",
+    "soft": "#CBB98D",
+    "accent": "#E1BE72",
+    "accent2": "#D98A66",
+    "deep": "#082623",
+    "line": "#E1BE72"
+   },
+   "typography": "ceremonial",
+   "photoSlots": []
+  },
+  {
+   "id": "km-neon-birthday",
+   "category": "birthday",
+   "canvas": "sq",
+   "name": {
+    "en": "Neon Birthday",
+    "km": "ខួបកំណើត ពន្លឺពណ៌"
+   },
+   "tags": [
+    "khmer",
+    "birthday",
+    "neon",
+    "pink",
+    "square",
+    "modern"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#10131B",
+    "paper": "#1B2230",
+    "ink": "#F7F2FF",
+    "soft": "#B8AED6",
+    "accent": "#FF4FA3",
+    "accent2": "#35E0D0",
+    "deep": "#070A10",
+    "line": "#FF4FA3"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "km-baby-blessing",
+   "category": "greeting",
+   "canvas": "p45",
+   "name": {
+    "en": "Baby Blessing",
+    "km": "ពរជ័យកូនថ្មី"
+   },
+   "tags": [
+    "khmer",
+    "baby",
+    "blessing",
+    "pastel",
+    "soft",
+    "portrait"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FFF8E7",
+    "paper": "#FFFFFF",
+    "ink": "#3D3A34",
+    "soft": "#756D61",
+    "accent": "#B76E60",
+    "accent2": "#7FA99A",
+    "deep": "#6B4A44",
+    "line": "#E4CDBA"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-wood-earth-home",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "Wood & Earth Home",
+    "km": "ឡើងផ្ទះថ្មី ឈើ និងដី"
+   },
+   "tags": [
+    "khmer",
+    "housewarming",
+    "wood",
+    "earth",
+    "arch",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#EFE5D6",
+    "paper": "#FBF3E7",
+    "ink": "#2F2A22",
+    "soft": "#665B4C",
+    "accent": "#8A5438",
+    "accent2": "#B58A58",
+    "deep": "#221C16",
+    "line": "#C9B49A"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-lotus-merit",
+   "category": "ceremony",
+   "canvas": "story",
+   "name": {
+    "en": "Lotus Merit",
+    "km": "បុណ្យទាន ផ្កាឈូកស"
+   },
+   "tags": [
+    "khmer",
+    "merit",
+    "lotus",
+    "quiet",
+    "story",
+    "respectful"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FBF7ED",
+    "paper": "#FFFDF7",
+    "ink": "#2C2B26",
+    "soft": "#625D52",
+    "accent": "#8A673A",
+    "accent2": "#C9A76A",
+    "deep": "#3E3423",
+    "line": "#D7C4A5"
+   },
+   "typography": "ceremonial",
+   "photoSlots": []
+  },
+  {
+   "id": "km-sra-sor-new-year",
+   "category": "greeting",
+   "canvas": "land",
+   "name": {
+    "en": "Sra Sor New Year",
+    "km": "ចូលឆ្នាំថ្មី ស្រស់ស្រាយ"
+   },
+   "tags": [
+    "khmer",
+    "khmer-new-year",
+    "festival",
+    "landscape",
+    "bright",
+    "palm"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FFF2D0",
+    "paper": "#FFF9EA",
+    "ink": "#4A1F12",
+    "soft": "#8A4B2A",
+    "accent": "#D23F2B",
+    "accent2": "#D99A2B",
+    "deep": "#7A2010",
+    "line": "#D23F2B"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "km-modern-graduate",
+   "category": "greeting",
+   "canvas": "p45",
+   "name": {
+    "en": "Modern Graduate",
+    "km": "បញ្ចប់ការសិក្សា ទំនើប"
+   },
+   "tags": [
+    "khmer",
+    "graduation",
+    "modern",
+    "blue",
+    "grid",
+    "portrait"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F2F0E8",
+    "paper": "#FFFFFF",
+    "ink": "#1C2A38",
+    "soft": "#5E6C78",
+    "accent": "#1F5FA8",
+    "accent2": "#C59A2E",
+    "deep": "#111C26",
+    "line": "#C9D1D8"
+   },
+   "typography": "modern",
+   "photoSlots": []
+  },
+  {
+   "id": "km-golden-anniversary",
+   "category": "wedding",
+   "canvas": "story",
+   "name": {
+    "en": "Golden Anniversary",
+    "km": "ខួបអាពាហ៍ពិពាហ៍ មាសក្រហម"
+   },
+   "tags": [
+    "khmer",
+    "anniversary",
+    "gold",
+    "burgundy",
+    "story",
+    "formal"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#2A0D17",
+    "paper": "#3A1420",
+    "ink": "#F8E7C8",
+    "soft": "#D9BFA2",
+    "accent": "#D9A94A",
+    "accent2": "#A9752E",
+    "deep": "#18060C",
+    "line": "#D9A94A"
+   },
+   "typography": "ceremonial",
+   "photoSlots": []
+  },
+  {
+   "id": "km-river-night",
+   "category": "greeting",
+   "canvas": "land",
+   "name": {
+    "en": "River Night",
+    "km": "បុណ្យអុំទូក យប់ទន្លេ"
+   },
+   "tags": [
+    "khmer",
+    "water-festival",
+    "night",
+    "river",
+    "landscape",
+    "lanterns"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0A1B2A",
+    "paper": "#102A3C",
+    "ink": "#F4E9D0",
+    "soft": "#B7C9D2",
+    "accent": "#E8B65A",
+    "accent2": "#69C2C9",
+    "deep": "#04101A",
+    "line": "#E8B65A"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-amber-arch",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Amber Arch",
+    "km": "ទ្វារធ្នូមាស"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "arch",
+    "olive",
+    "brass",
+    "letterpress",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F2EADA",
+    "paper": "#FAF4E6",
+    "ink": "#2C3327",
+    "soft": "#646B54",
+    "accent": "#8E5A3C",
+    "accent2": "#B08C4F",
+    "deep": "#232A20",
+    "line": "#CFC2A4"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-cathedral-rose",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Cathedral Rose",
+    "km": "មង្គលការផ្កាកុលាប"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "cathedral",
+    "stained-glass",
+    "forest",
+    "gold",
+    "formal",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#12251E",
+    "paper": "#1A3128",
+    "ink": "#F3EADA",
+    "soft": "#C9BEAA",
+    "accent": "#C8A15C",
+    "accent2": "#7C3B45",
+    "deep": "#081410",
+    "line": "#5E6F5F"
+   },
+   "typography": "ceremonial",
+   "photoSlots": []
+  },
+  {
+   "id": "en-riso-thirty",
+   "category": "birthday",
+   "canvas": "sq",
+   "name": {
+    "en": "Riso Thirty",
+    "km": "ខួប​កំណើត​៣០​ឆ្នាំ"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "milestone",
+    "risograph",
+    "square",
+    "bold"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F2EBDD",
+    "paper": "#F7F1E4",
+    "ink": "#161210",
+    "soft": "#6B6258",
+    "accent": "#FF48B0",
+    "accent2": "#0078BF",
+    "deep": "#12203A",
+    "line": "#D8CDB9"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-chrome-gala",
+   "category": "business",
+   "canvas": "land",
+   "name": {
+    "en": "Chrome Gala",
+    "km": "ពិធី​ប្រគល់​រង្វាន់​ក្រូម"
+   },
+   "tags": [
+    "english",
+    "business",
+    "awards",
+    "gala",
+    "chrome",
+    "neon",
+    "banner"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#07080B",
+    "paper": "#EDEFF3",
+    "ink": "#F2F4F8",
+    "soft": "#9AA1AC",
+    "accent": "#C8FF3D",
+    "accent2": "#C9CFD6",
+    "deep": "#101218",
+    "line": "#2A2E37"
+   },
+   "typography": "modern",
+   "photoSlots": []
+  },
+  {
+   "id": "en-kraft-hearth",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "Kraft Hearth",
+    "km": "ពិធី​ប្រទានពរ​ផ្ទះ​ថ្មី"
+   },
+   "tags": [
+    "english",
+    "housewarming",
+    "kraft",
+    "stamp",
+    "folk",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#C9A876",
+    "paper": "#E7D3B0",
+    "ink": "#201A14",
+    "soft": "#5A4632",
+    "accent": "#B4472E",
+    "accent2": "#6E7A52",
+    "deep": "#17120D",
+    "line": "#A8875C"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-ticket-anniv",
+   "category": "wedding",
+   "canvas": "land",
+   "name": {
+    "en": "Silver Stub",
+    "km": "ខួប​អាពាហ៍ពិពាហ៍​២៥​ឆ្នាំ"
+   },
+   "tags": [
+    "english",
+    "anniversary",
+    "ticket",
+    "editorial",
+    "banner",
+    "oxblood"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F3EBD9",
+    "paper": "#FBF6E8",
+    "ink": "#17130F",
+    "soft": "#6A5B4A",
+    "accent": "#6E1B2A",
+    "accent2": "#B08A4F",
+    "deep": "#2A1418",
+    "line": "#D6C6AC"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-confetti-shower",
+   "category": "ceremony",
+   "canvas": "sq",
+   "name": {
+    "en": "Confetti Shower",
+    "km": "ពិធី​សែន​ទារក"
+   },
+   "tags": [
+    "english",
+    "baby-shower",
+    "pastel",
+    "confetti",
+    "soft",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FBF6EE",
+    "paper": "#FFFFFF",
+    "ink": "#3A3330",
+    "soft": "#7A6F69",
+    "accent": "#F3B7C4",
+    "accent2": "#BFE3D0",
+    "deep": "#6A4B5A",
+    "line": "#EADFD2",
+    "sky": "#CDBFEA",
+    "wash1": "#F7E3A1"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-award-noir",
+   "category": "business",
+   "canvas": "p45",
+   "name": {
+    "en": "Award Noir",
+    "km": "ពិធី​រង្វាន់​រាត្រី​ខ្មៅ"
+   },
+   "tags": [
+    "english",
+    "awards",
+    "black-tie",
+    "poster",
+    "gold",
+    "formal"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0B0B0C",
+    "paper": "#EDE6D6",
+    "ink": "#F4EFE3",
+    "soft": "#A79C86",
+    "accent": "#C6A15B",
+    "accent2": "#8E6B33",
+    "deep": "#000000",
+    "line": "#3A342A"
+   },
+   "typography": "ceremonial",
+   "photoSlots": []
+  },
+  {
+   "id": "en-folk-grad",
+   "category": "greeting",
+   "canvas": "a5p",
+   "name": {
+    "en": "Folk Cap",
+    "km": "ពិធី​បញ្ចប់​ការសិក្សា"
+   },
+   "tags": [
+    "english",
+    "graduation",
+    "folk",
+    "warm",
+    "craft",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F3E7CE",
+    "paper": "#FBF2DF",
+    "ink": "#241C15",
+    "soft": "#6B5033",
+    "accent": "#A6492E",
+    "accent2": "#D9A03C",
+    "deep": "#3E5A3A",
+    "line": "#D8C39B"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-museum-engage",
+   "category": "wedding",
+   "canvas": "p45",
+   "name": {
+    "en": "Quiet Museum",
+    "km": "ពិធី​ភ្ជាប់ពាក្យ​បែប​សារមន្ទីរ"
+   },
+   "tags": [
+    "english",
+    "engagement",
+    "swiss",
+    "minimal",
+    "museum",
+    "editorial"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F7F6F2",
+    "paper": "#FFFFFF",
+    "ink": "#1C1C1A",
+    "soft": "#6E6E68",
+    "accent": "#D2401E",
+    "accent2": "#1C1C1A",
+    "deep": "#101010",
+    "line": "#DAD8D0"
+   },
+   "typography": "modern",
+   "photoSlots": []
+  },
+  {
+   "id": "en-festival-lineup",
+   "category": "greeting",
+   "canvas": "story",
+   "name": {
+    "en": "After Hours",
+    "km": "ពិធីបុណ្យ​តន្ត្រី​ពេលយប់"
+   },
+   "tags": [
+    "english",
+    "festival",
+    "lineup",
+    "bold",
+    "night",
+    "story"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0E0E0E",
+    "paper": "#F2EEE3",
+    "ink": "#F2EEE3",
+    "soft": "#A8A29A",
+    "accent": "#D8FF3E",
+    "accent2": "#FF5A1F",
+    "deep": "#000000",
+    "line": "#333333"
+   },
+   "typography": "festive",
+   "photoSlots": []
+  },
+  {
+   "id": "en-watercolour-christen",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "Washed in Light",
+    "km": "ពិធី​ជ្រមុជទឹក​ទារក"
+   },
+   "tags": [
+    "english",
+    "christening",
+    "watercolour",
+    "soft",
+    "ceremony",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FBF7F0",
+    "paper": "#FFFFFF",
+    "ink": "#3B3A36",
+    "soft": "#7E8478",
+    "accent": "#A9C6D8",
+    "accent2": "#A9BFA3",
+    "deep": "#6E7F86",
+    "line": "#DDE3DC",
+    "wash1": "#E7C3C3"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-royal-kbach",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Royal Kbach",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "kbach",
+    "gold",
+    "royal",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#5C0F1B",
+    "paper": "#6E1624",
+    "ink": "#FAEDCE",
+    "soft": "#E6CFA4",
+    "accent": "#DDB25E",
+    "accent2": "#A8322C",
+    "deep": "#370710",
+    "line": "#C9A45C"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-naga-blessing",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Naga Blessing",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "naga",
+    "gold",
+    "traditional",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#1A1410",
+    "paper": "#241B14",
+    "ink": "#F6E9CE",
+    "soft": "#D9C39C",
+    "accent": "#D6A85A",
+    "accent2": "#8A5A2B",
+    "deep": "#0C0907",
+    "line": "#6B4A26"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-lotus-vow",
+   "category": "wedding",
+   "canvas": "p45",
+   "name": {
+    "en": "Lotus Vow",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "lotus",
+    "ivory",
+    "serif",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F4EBDD",
+    "paper": "#FBF4E7",
+    "ink": "#382A22",
+    "soft": "#6E5A48",
+    "accent": "#B08A4F",
+    "accent2": "#9E4A3C",
+    "deep": "#221812",
+    "line": "#D8C6A8"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-peacock-silk",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Peacock Silk",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "peacock",
+    "silk",
+    "teal",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0F3835",
+    "paper": "#154743",
+    "ink": "#F1E7CF",
+    "soft": "#C9D2C0",
+    "accent": "#C9A45C",
+    "accent2": "#6FA396",
+    "deep": "#06211F",
+    "line": "#2E5C56"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-betel-promise",
+   "category": "wedding",
+   "canvas": "p45",
+   "name": {
+    "en": "Betel Promise",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "engagement",
+    "betel",
+    "blush",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F7EEE5",
+    "paper": "#FDF8F0",
+    "ink": "#3B2C25",
+    "soft": "#7A6355",
+    "accent": "#B4574C",
+    "accent2": "#C9A45C",
+    "deep": "#241813",
+    "line": "#E2CDB6"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-moon-engagement",
+   "category": "wedding",
+   "canvas": "story",
+   "name": {
+    "en": "Moon Engagement",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "engagement",
+    "moon",
+    "night",
+    "story"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0E1730",
+    "paper": "#152140",
+    "ink": "#EDE9DC",
+    "soft": "#AEB7CE",
+    "accent": "#D6BE86",
+    "accent2": "#7C8BB0",
+    "deep": "#060B18",
+    "line": "#2A3554"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-silk-programme",
+   "category": "wedding",
+   "canvas": "a5p",
+   "name": {
+    "en": "Silk Programme",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "programme",
+    "three-day",
+    "silk",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0F3835",
+    "paper": "#154743",
+    "ink": "#F1E7CF",
+    "soft": "#C9D2C0",
+    "accent": "#C9A45C",
+    "accent2": "#6FA396",
+    "deep": "#06211F",
+    "line": "#2E5C56"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "km-modern-monogram",
+   "category": "wedding",
+   "canvas": "p45",
+   "name": {
+    "en": "Modern Monogram",
+    "km": "សិរីមង្គល​អាពាហ៍​ពិពាហ៍"
+   },
+   "tags": [
+    "english",
+    "wedding",
+    "monogram",
+    "minimal",
+    "modern",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F6F4EE",
+    "paper": "#FFFFFF",
+    "ink": "#1F1F1F",
+    "soft": "#6A6A6A",
+    "accent": "#A8894F",
+    "accent2": "#3E4A46",
+    "deep": "#111111",
+    "line": "#DAD6CC"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-ordination-saffron",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "Saffron Ordination",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "ceremony",
+    "ordination",
+    "saffron",
+    "temple",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F6EBD8",
+    "paper": "#FCF5E6",
+    "ink": "#3A2A18",
+    "soft": "#7A6040",
+    "accent": "#C97A2B",
+    "accent2": "#9A5A1E",
+    "deep": "#241708",
+    "line": "#E0C9A4"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-house-blessing",
+   "category": "ceremony",
+   "canvas": "p45",
+   "name": {
+    "en": "Threshold Blessing",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "ceremony",
+    "housewarming",
+    "blessing",
+    "clay",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F1E4D6",
+    "paper": "#FAF1E6",
+    "ink": "#3E2A22",
+    "soft": "#7C5B48",
+    "accent": "#B26A4A",
+    "accent2": "#7E8A6A",
+    "deep": "#251610",
+    "line": "#DCC6AE"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-memorial-light",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "In Quiet Light",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "ceremony",
+    "memorial",
+    "quiet",
+    "ivory",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F3F1EC",
+    "paper": "#FAF9F5",
+    "ink": "#30302E",
+    "soft": "#6E6E68",
+    "accent": "#8C8C80",
+    "accent2": "#B0A48C",
+    "deep": "#191917",
+    "line": "#DAD8D0"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-baby-blessing",
+   "category": "ceremony",
+   "canvas": "sq",
+   "name": {
+    "en": "Little Blessing",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "ceremony",
+    "baby",
+    "blessing",
+    "pastel",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#EEF4EC",
+    "paper": "#F9FBF6",
+    "ink": "#2F3A32",
+    "soft": "#6B7B6E",
+    "accent": "#A9C3A4",
+    "accent2": "#E2B7C0",
+    "deep": "#1C241E",
+    "line": "#D6E2D2"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-merit-gold",
+   "category": "ceremony",
+   "canvas": "p45",
+   "name": {
+    "en": "Merit of Gold",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "ceremony",
+    "merit",
+    "gold",
+    "temple",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F4EBDD",
+    "paper": "#FBF4E7",
+    "ink": "#382A22",
+    "soft": "#6E5A48",
+    "accent": "#B08A4F",
+    "accent2": "#9E4A3C",
+    "deep": "#221812",
+    "line": "#D8C6A8"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-longevity-ninety",
+   "category": "ceremony",
+   "canvas": "a5p",
+   "name": {
+    "en": "Ninety Years",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "ceremony",
+    "longevity",
+    "elder",
+    "red",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#8A1620",
+    "paper": "#9C1D28",
+    "ink": "#FBEDD2",
+    "soft": "#EBCFA6",
+    "accent": "#E0B45E",
+    "accent2": "#6E1018",
+    "deep": "#540A10",
+    "line": "#D2A85C"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-khmer-new-year",
+   "category": "greeting",
+   "canvas": "sq",
+   "name": {
+    "en": "Sok Sabay",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "new-year",
+    "khmer",
+    "gold",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#1A1410",
+    "paper": "#241B14",
+    "ink": "#F6E9CE",
+    "soft": "#D9C39C",
+    "accent": "#D6A85A",
+    "accent2": "#8A5A2B",
+    "deep": "#0C0907",
+    "line": "#6B4A26"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-pchum-ben",
+   "category": "greeting",
+   "canvas": "p45",
+   "name": {
+    "en": "Pchum Ben",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "pchum-ben",
+    "ancestors",
+    "indigo",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#161E38",
+    "paper": "#1E2A4A",
+    "ink": "#EEEADF",
+    "soft": "#B9C0D4",
+    "accent": "#C9AE72",
+    "accent2": "#7C88A8",
+    "deep": "#0A1020",
+    "line": "#2C3654"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-water-festival",
+   "category": "greeting",
+   "canvas": "land",
+   "name": {
+    "en": "Water Festival",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "water-festival",
+    "boat",
+    "night",
+    "banner"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0E1730",
+    "paper": "#152140",
+    "ink": "#EDE9DC",
+    "soft": "#AEB7CE",
+    "accent": "#D6BE86",
+    "accent2": "#7C8BB0",
+    "deep": "#060B18",
+    "line": "#2A3554"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-kathina",
+   "category": "greeting",
+   "canvas": "a5p",
+   "name": {
+    "en": "Kathina Offering",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "kathina",
+    "merit",
+    "saffron",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F6EBD8",
+    "paper": "#FCF5E6",
+    "ink": "#3A2A18",
+    "soft": "#7A6040",
+    "accent": "#C97A2B",
+    "accent2": "#9A5A1E",
+    "deep": "#241708",
+    "line": "#E0C9A4"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-vesak-moon",
+   "category": "greeting",
+   "canvas": "p45",
+   "name": {
+    "en": "Vesak Moon",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "vesak",
+    "moon",
+    "indigo",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#161E38",
+    "paper": "#1E2A4A",
+    "ink": "#EEEADF",
+    "soft": "#B9C0D4",
+    "accent": "#C9AE72",
+    "accent2": "#7C88A8",
+    "deep": "#0A1020",
+    "line": "#2C3654"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-womens-day",
+   "category": "greeting",
+   "canvas": "sq",
+   "name": {
+    "en": "For Her",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "women",
+    "coral",
+    "bold",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FBEDE3",
+    "paper": "#FFF7F0",
+    "ink": "#33231F",
+    "soft": "#7A5A50",
+    "accent": "#E2684F",
+    "accent2": "#2E6F6A",
+    "deep": "#1E1310",
+    "line": "#EBCDBB"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-christmas-gold",
+   "category": "greeting",
+   "canvas": "p45",
+   "name": {
+    "en": "Gold Night",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "christmas",
+    "gold",
+    "pine",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#0E241C",
+    "paper": "#153025",
+    "ink": "#F4EBD8",
+    "soft": "#CBD3BE",
+    "accent": "#C7A45E",
+    "accent2": "#8E3B33",
+    "deep": "#06120D",
+    "line": "#2A4436"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-with-thanks",
+   "category": "greeting",
+   "canvas": "sq",
+   "name": {
+    "en": "With Thanks",
+    "km": "សូមជូនពរ"
+   },
+   "tags": [
+    "english",
+    "greeting",
+    "thank-you",
+    "ivory",
+    "quiet",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F4EBDD",
+    "paper": "#FBF4E7",
+    "ink": "#382A22",
+    "soft": "#6E5A48",
+    "accent": "#B08A4F",
+    "accent2": "#9E4A3C",
+    "deep": "#221812",
+    "line": "#D8C6A8"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-first-birthday",
+   "category": "birthday",
+   "canvas": "sq",
+   "name": {
+    "en": "One Year",
+    "km": "ពិធី​អបអរសាទរ​ខួបកំណើត"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "first",
+    "pastel",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FDF4EC",
+    "paper": "#FFFFFF",
+    "ink": "#3C3330",
+    "soft": "#7C6F69",
+    "accent": "#F0B7C4",
+    "accent2": "#B9DCCB",
+    "deep": "#5A3E48",
+    "line": "#EEDFD2"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-sweet-sixteen",
+   "category": "birthday",
+   "canvas": "story",
+   "name": {
+    "en": "Sixteen",
+    "km": "ពិធី​អបអរសាទរ​ខួបកំណើត"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "sixteen",
+    "neon",
+    "story"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#111111",
+    "paper": "#1A1A1A",
+    "ink": "#F5F0E4",
+    "soft": "#B9B1A2",
+    "accent": "#D8B25E",
+    "accent2": "#E2543C",
+    "deep": "#000000",
+    "line": "#333333"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-sixty-years",
+   "category": "birthday",
+   "canvas": "a5p",
+   "name": {
+    "en": "Sixty Years",
+    "km": "ពិធី​អបអរសាទរ​ខួបកំណើត"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "sixty",
+    "red",
+    "gold",
+    "a5"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#8A1620",
+    "paper": "#9C1D28",
+    "ink": "#FBEDD2",
+    "soft": "#EBCFA6",
+    "accent": "#E0B45E",
+    "accent2": "#6E1018",
+    "deep": "#540A10",
+    "line": "#D2A85C"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-carnival-day",
+   "category": "birthday",
+   "canvas": "land",
+   "name": {
+    "en": "Carnival Day",
+    "km": "ពិធី​អបអរសាទរ​ខួបកំណើត"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "kids",
+    "carnival",
+    "banner"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#FBEDE3",
+    "paper": "#FFF7F0",
+    "ink": "#33231F",
+    "soft": "#7A5A50",
+    "accent": "#E2684F",
+    "accent2": "#2E6F6A",
+    "deep": "#1E1310",
+    "line": "#EBCDBB"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-thirty-gold",
+   "category": "birthday",
+   "canvas": "sq",
+   "name": {
+    "en": "Thirty, Golden",
+    "km": "ពិធី​អបអរសាទរ​ខួបកំណើត"
+   },
+   "tags": [
+    "english",
+    "birthday",
+    "thirty",
+    "gold",
+    "square"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#111111",
+    "paper": "#1A1A1A",
+    "ink": "#F5F0E4",
+    "soft": "#B9B1A2",
+    "accent": "#D8B25E",
+    "accent2": "#E2543C",
+    "deep": "#000000",
+    "line": "#333333"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-foundry-opening",
+   "category": "business",
+   "canvas": "land",
+   "name": {
+    "en": "Foundry Opening",
+    "km": "ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ"
+   },
+   "tags": [
+    "english",
+    "business",
+    "opening",
+    "lime",
+    "banner"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#111111",
+    "paper": "#1A1A1A",
+    "ink": "#F5F0E4",
+    "soft": "#B9B1A2",
+    "accent": "#D8B25E",
+    "accent2": "#E2543C",
+    "deep": "#000000",
+    "line": "#333333"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-annual-gala",
+   "category": "business",
+   "canvas": "p45",
+   "name": {
+    "en": "Annual Gala",
+    "km": "ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ"
+   },
+   "tags": [
+    "english",
+    "business",
+    "gala",
+    "navy",
+    "gold",
+    "p45"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#161E38",
+    "paper": "#1E2A4A",
+    "ink": "#EEEADF",
+    "soft": "#B9C0D4",
+    "accent": "#C9AE72",
+    "accent2": "#7C88A8",
+    "deep": "#0A1020",
+    "line": "#2C3654"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-summit-2027",
+   "category": "business",
+   "canvas": "land",
+   "name": {
+    "en": "Summit 2027",
+    "km": "ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ"
+   },
+   "tags": [
+    "english",
+    "business",
+    "conference",
+    "summit",
+    "banner"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#F5F5F2",
+    "paper": "#FFFFFF",
+    "ink": "#151515",
+    "soft": "#5E5E5E",
+    "accent": "#2563EB",
+    "accent2": "#0F172A",
+    "deep": "#000000",
+    "line": "#D8D8D8"
+   },
+   "typography": "elegant",
+   "photoSlots": []
+  },
+  {
+   "id": "en-launch-noir",
+   "category": "business",
+   "canvas": "story",
+   "name": {
+    "en": "Launch Noir",
+    "km": "ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ"
+   },
+   "tags": [
+    "english",
+    "business",
+    "launch",
+    "noir",
+    "story"
+   ],
+   "pages": 1,
+   "palette": {
+    "bg": "#111111",
+    "paper": "#1A1A1A",
+    "ink": "#F5F0E4",
+    "soft": "#B9B1A2",
+    "accent": "#D8B25E",
+    "accent2": "#E2543C",
+    "deep": "#000000",
+    "line": "#333333"
    },
    "typography": "elegant",
    "photoSlots": []

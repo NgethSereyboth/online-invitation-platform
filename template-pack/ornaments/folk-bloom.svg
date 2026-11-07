@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220">
+  <g fill="#AA0001">
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(0 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(45 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(90 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(135 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(180 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(225 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(270 150 86)"/>
+    <ellipse cx="150" cy="86" rx="9" ry="24" transform="rotate(315 150 86)"/>
+    <circle cx="150" cy="86" r="9" fill="#AA0001"/>
+    <ellipse cx="98" cy="100" rx="20" ry="8" transform="rotate(-24 98 100)"/>
+    <ellipse cx="89" cy="120" rx="20" ry="8" transform="rotate(-24 89 120)"/>
+    <ellipse cx="80" cy="140" rx="20" ry="8" transform="rotate(-24 80 140)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(0 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(45 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(90 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(135 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(180 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(225 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(270 250 86)"/>
+    <ellipse cx="250" cy="86" rx="9" ry="24" transform="rotate(315 250 86)"/>
+    <circle cx="250" cy="86" r="9" fill="#AA0001"/>
+    <ellipse cx="302" cy="100" rx="20" ry="8" transform="rotate(204 302 100)"/>
+    <ellipse cx="311" cy="120" rx="20" ry="8" transform="rotate(204 311 120)"/>
+    <ellipse cx="320" cy="140" rx="20" ry="8" transform="rotate(204 320 140)"/>
+    <path d="M20,196 a18,18 0 0 1 36,0 M56,196 a18,18 0 0 1 36,0 M92,196 a18,18 0 0 1 36,0 M128,196 a18,18 0 0 1 36,0 M164,196 a18,18 0 0 1 36,0 M200,196 a18,18 0 0 1 36,0 M236,196 a18,18 0 0 1 36,0 M272,196 a18,18 0 0 1 36,0 M308,196 a18,18 0 0 1 36,0 M344,196 a18,18 0 0 1 36,0" fill="none" stroke="#AA0002" stroke-width="2.2"/>
+    <path d="M8,206 H392" stroke="#AA0002" stroke-width="1.2"/>
+  </g>
+</svg>

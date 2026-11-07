@@ -1,14 +1,16 @@
-# OKID template pack v1 — 36 Khmer-event templates (designed by Claude)
+# OKID template pack v1 — 100 event templates (designed by Claude)
 
 This folder is **design source material**, not app code. Claude planned and designed it; the Freebuff agent integrates it under
 `docs/HISTORY.md`. Everything here is original work (no third-party artwork, no copied templates).
 
+46 designs are Khmer-led with an English companion line; **23** are English-led — **The Olive Letter**, **Amber Arch**, **Cathedral Rose** and the 2026 event additions.
+
 ```
 template-pack/
   README.md                 this file
-  catalog.json              36 entries: id, category, canvas, names (EN/KM), tags, pages, palette, typography, photo slots
+  catalog.json              100 entries: id, category, canvas, names (EN/KM), tags, pages, palette, typography, photo slots
   templates/<id>.json       one design spec per template (layer lists, percent coordinates, palette roles)
-  ornaments/*.svg           27 original SVG ornaments (lotus, kbach corners/strips, dividers, frames, skyline, confetti ...)
+  ornaments/*.svg           64 original SVG ornaments (lotus, kbach corners/strips, dividers, frames, skyline, confetti ...)
   copy-bank.json            ALL Khmer + English copy (117 keys) + Khmer calendar words/digits. The only Khmer source for the pack.
   KHMER-COPY-MAP.md         the same copy as a table for native review (word-break marks stripped)
   fonts.json                font roles -> Google Fonts OFL families
@@ -51,12 +53,12 @@ size 1.9 % of canvas width, safe margin 3 % on all sides.
 Checks per template: WCAG contrast (4.5 body, 3.0 large) against the opaque fill under every text layer, text boxes inside the safe area, text-over-text
 overlap, stack overflow at design time, every `copy` key exists, every ornament file exists, Khmer line-height, minimum size, no literal Khmer in layers,
 no Khmer in the generator source outside `copybank.py`, at least 30 templates, no Latin letters in any Khmer string (placeholders in `[ ]` aside).
-Last run: **0 errors / 0 warnings on 36 templates.**
+Last run: **0 errors / 0 warnings on the generated templates**; the hand-authored designs are validated by the app converter and the pack tests.
 
 To rebuild after a change: `PACK_FONTS=<dir of the 14 TTFs named in generator/engine.py FONTS> python3 generator/build_pack.py --write && python3 generator/lint.py`
 (needs Pillow with raqm, cairosvg and Node for the Khmer word breaker). `--preview` writes PNG renders to `_preview/`.
 
-## The 36 templates
+## The 100 templates
 
 | # | id | category | canvas | pages | EN name | Khmer name | photo slots |
 |---|---|---|---|---|---|---|---|
@@ -96,6 +98,70 @@ To rebuild after a change: `PACK_FONTS=<dir of the 14 TTFs named in generator/en
 | 34 | `biz-grand-opening` | business | p45 | 1 | Grand Opening | សម្ពោធ ខ្សែបូ | — |
 | 35 | `biz-corporate-gala` | business | a5p | 1 | Corporate Gala | ជប់លៀងប្រចាំឆ្នាំ ព្រលប់ | — |
 | 36 | `anniv-golden` | wedding | p45 | 1 | Wedding Anniversary | ខួបអាពាហ៍ពិពាហ៍ មាសផ្កាឈូក | — |
+| 37 | `wd-olive-letter` | wedding | a5p | 1 | The Olive Letter | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 38 | `en-garden-sun` | wedding | a5p | 1 | Garden Sun | អាពាហ៍ពិពាហ៍ សួនថ្ងៃរះ | — |
+| 39 | `en-coastal-vows` | wedding | p45 | 1 | Coastal Vows | អាពាហ៍ពិពាហ៍ ឆ្នេរសមុទ្រ | couple |
+| 40 | `en-afterglow-disco` | birthday | sq | 1 | Afterglow Disco | ខួបកំណើត រាំពេលយប់ | — |
+| 41 | `en-cloud-nine-baby` | birthday | p45 | 1 | Cloud Nine Baby | ស្វាគមន៍កូនថ្មី ពណ៌ទន់ | portrait |
+| 42 | `en-noir-graduate` | greeting | p45 | 1 | Noir Graduate | បញ្ចប់ការសិក្សា ខ្មៅ និងមាស | — |
+| 43 | `en-summit-26` | business | land | 1 | Summit 26 | សន្និសីទ ឆ្នាំ ២០២៦ | — |
+| 44 | `en-terracotta-home` | ceremony | a5p | 1 | Terracotta Home | ឡើងផ្ទះថ្មី ដីឥដ្ឋ | — |
+| 45 | `en-deco-anniversary` | wedding | story | 1 | Deco Anniversary | ខួបអាពាហ៍ពិពាហ៍ ស្ថាបត្យកម្ម | — |
+| 46 | `en-moonlit-halloween` | birthday | sq | 1 | Moonlit Halloween | ជប់លៀងហាឡូវីន | — |
+| 47 | `en-midnight-new-year` | greeting | story | 1 | Midnight New Year | ឆ្នាំថ្មី ពាក់កណ្តាលអធ្រាត្រ | — |
+| 48 | `km-bokor-vows` | wedding | a5p | 1 | Bokor Vows | អាពាហ៍ពិពាហ៍ បូកគោ | — |
+| 49 | `km-silk-engagement` | wedding | p45 | 1 | Silk Engagement | ពិធីភ្ជាប់ពាក្យ សូត្រខ្មែរ | — |
+| 50 | `km-neon-birthday` | birthday | sq | 1 | Neon Birthday | ខួបកំណើត ពន្លឺពណ៌ | — |
+| 51 | `km-baby-blessing` | greeting | p45 | 1 | Baby Blessing | ពរជ័យកូនថ្មី | — |
+| 52 | `km-wood-earth-home` | ceremony | a5p | 1 | Wood & Earth Home | ឡើងផ្ទះថ្មី ឈើ និងដី | — |
+| 53 | `km-lotus-merit` | ceremony | story | 1 | Lotus Merit | បុណ្យទាន ផ្កាឈូកស | — |
+| 54 | `km-sra-sor-new-year` | greeting | land | 1 | Sra Sor New Year | ចូលឆ្នាំថ្មី ស្រស់ស្រាយ | — |
+| 55 | `km-modern-graduate` | greeting | p45 | 1 | Modern Graduate | បញ្ចប់ការសិក្សា ទំនើប | — |
+| 56 | `km-golden-anniversary` | wedding | story | 1 | Golden Anniversary | ខួបអាពាហ៍ពិពាហ៍ មាសក្រហម | — |
+| 57 | `km-river-night` | greeting | land | 1 | River Night | បុណ្យអុំទូក យប់ទន្លេ | — |
+| 58 | `en-amber-arch` | wedding | a5p | 1 | Amber Arch | ទ្វារធ្នូមាស | — |
+| 59 | `en-cathedral-rose` | wedding | a5p | 1 | Cathedral Rose | មង្គលការផ្កាកុលាប | — |
+| 60 | `en-riso-thirty` | birthday | sq | 1 | Riso Thirty | ខួប​កំណើត​៣០​ឆ្នាំ | — |
+| 61 | `en-chrome-gala` | business | land | 1 | Chrome Gala | ពិធី​ប្រគល់​រង្វាន់​ក្រូម | — |
+| 62 | `en-kraft-hearth` | ceremony | a5p | 1 | Kraft Hearth | ពិធី​ប្រទានពរ​ផ្ទះ​ថ្មី | — |
+| 63 | `en-ticket-anniv` | wedding | land | 1 | Silver Stub | ខួប​អាពាហ៍ពិពាហ៍​២៥​ឆ្នាំ | — |
+| 64 | `en-confetti-shower` | ceremony | sq | 1 | Confetti Shower | ពិធី​សែន​ទារក | — |
+| 65 | `en-award-noir` | business | p45 | 1 | Award Noir | ពិធី​រង្វាន់​រាត្រី​ខ្មៅ | — |
+| 66 | `en-folk-grad` | greeting | a5p | 1 | Folk Cap | ពិធី​បញ្ចប់​ការសិក្សា | — |
+| 67 | `en-museum-engage` | wedding | p45 | 1 | Quiet Museum | ពិធី​ភ្ជាប់ពាក្យ​បែប​សារមន្ទីរ | — |
+| 68 | `en-festival-lineup` | greeting | story | 1 | After Hours | ពិធីបុណ្យ​តន្ត្រី​ពេលយប់ | — |
+| 69 | `en-watercolour-christen` | ceremony | a5p | 1 | Washed in Light | ពិធី​ជ្រមុជទឹក​ទារក | — |
+| 70 | `km-royal-kbach` | wedding | a5p | 1 | Royal Kbach | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 71 | `km-naga-blessing` | wedding | a5p | 1 | Naga Blessing | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 72 | `km-lotus-vow` | wedding | p45 | 1 | Lotus Vow | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 73 | `km-peacock-silk` | wedding | a5p | 1 | Peacock Silk | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 74 | `km-betel-promise` | wedding | p45 | 1 | Betel Promise | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 75 | `km-moon-engagement` | wedding | story | 1 | Moon Engagement | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 76 | `km-silk-programme` | wedding | a5p | 1 | Silk Programme | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 77 | `km-modern-monogram` | wedding | p45 | 1 | Modern Monogram | សិរីមង្គល​អាពាហ៍​ពិពាហ៍ | — |
+| 78 | `en-ordination-saffron` | ceremony | a5p | 1 | Saffron Ordination | សូមជូនពរ | — |
+| 79 | `en-house-blessing` | ceremony | p45 | 1 | Threshold Blessing | សូមជូនពរ | — |
+| 80 | `en-memorial-light` | ceremony | a5p | 1 | In Quiet Light | សូមជូនពរ | — |
+| 81 | `en-baby-blessing` | ceremony | sq | 1 | Little Blessing | សូមជូនពរ | — |
+| 82 | `en-merit-gold` | ceremony | p45 | 1 | Merit of Gold | សូមជូនពរ | — |
+| 83 | `en-longevity-ninety` | ceremony | a5p | 1 | Ninety Years | សូមជូនពរ | — |
+| 84 | `en-khmer-new-year` | greeting | sq | 1 | Sok Sabay | សូមជូនពរ | — |
+| 85 | `en-pchum-ben` | greeting | p45 | 1 | Pchum Ben | សូមជូនពរ | — |
+| 86 | `en-water-festival` | greeting | land | 1 | Water Festival | សូមជូនពរ | — |
+| 87 | `en-kathina` | greeting | a5p | 1 | Kathina Offering | សូមជូនពរ | — |
+| 88 | `en-vesak-moon` | greeting | p45 | 1 | Vesak Moon | សូមជូនពរ | — |
+| 89 | `en-womens-day` | greeting | sq | 1 | For Her | សូមជូនពរ | — |
+| 90 | `en-christmas-gold` | greeting | p45 | 1 | Gold Night | សូមជូនពរ | — |
+| 91 | `en-with-thanks` | greeting | sq | 1 | With Thanks | សូមជូនពរ | — |
+| 92 | `en-first-birthday` | birthday | sq | 1 | One Year | ពិធី​អបអរសាទរ​ខួបកំណើត | — |
+| 93 | `en-sweet-sixteen` | birthday | story | 1 | Sixteen | ពិធី​អបអរសាទរ​ខួបកំណើត | — |
+| 94 | `en-sixty-years` | birthday | a5p | 1 | Sixty Years | ពិធី​អបអរសាទរ​ខួបកំណើត | — |
+| 95 | `en-carnival-day` | birthday | land | 1 | Carnival Day | ពិធី​អបអរសាទរ​ខួបកំណើត | — |
+| 96 | `en-thirty-gold` | birthday | sq | 1 | Thirty, Golden | ពិធី​អបអរសាទរ​ខួបកំណើត | — |
+| 97 | `en-foundry-opening` | business | land | 1 | Foundry Opening | ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ | — |
+| 98 | `en-annual-gala` | business | p45 | 1 | Annual Gala | ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ | — |
+| 99 | `en-summit-2027` | business | land | 1 | Summit 2027 | ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ | — |
+| 100 | `en-launch-noir` | business | story | 1 | Launch Noir | ពិធីជប់លៀង​អាហារ​ពេលល្ងាច​ប្រចាំឆ្នាំ | — |
 
 ## Known limits (honest list)
 

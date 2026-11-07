@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280">
+  <path d="M52,238 C58,150 104,92 200,66" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <path d="M70,242 C76,162 116,108 200,84" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+  <ellipse cx="60" cy="240" rx="14" ry="9" fill="none" stroke="currentColor" stroke-width="2.2" transform="rotate(-16 60 240)"/>
+  <circle cx="65" cy="237" r="2" fill="currentColor"/>
+  <path d="M54,232 l-5,-11 M62,231 l1,-13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="84.54" cy="203.6" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="103.58" cy="182.96" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="122.03" cy="162.32" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="139.79" cy="141.68" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="156.86" cy="121.04" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="173.34" cy="100.4" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <path d="M348,238 C342,150 296,92 200,66" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <path d="M330,242 C324,162 284,108 200,84" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+  <ellipse cx="340" cy="240" rx="14" ry="9" fill="none" stroke="currentColor" stroke-width="2.2" transform="rotate(16 340 240)"/>
+  <circle cx="335" cy="237" r="2" fill="currentColor"/>
+  <path d="M346,232 l5,-11 M338,231 l-1,-13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="315.46" cy="203.6" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="296.42" cy="182.96" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="277.97" cy="162.32" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="260.21" cy="141.68" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="243.14" cy="121.04" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <circle cx="226.66" cy="100.4" r="2" fill="none" stroke="currentColor" stroke-width="0.9"/>
+  <path d="M200,30 C186,48 186,64 200,78 C214,64 214,48 200,30 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+  <path d="M176,52 C172,66 182,76 200,80 C218,76 228,66 224,52" fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <path d="M200,14 l7,9 l-7,9 l-7,-9 Z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+  <path d="M52,268 H348" stroke="currentColor" stroke-width="1"/>
+</svg>

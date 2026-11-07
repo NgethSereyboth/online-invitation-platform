@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Acceptance harness for the 36-template Khmer event pack (TP-3, A1-A12).
+"""Acceptance harness for the 57-template Khmer/English event pack (TP-3, A1-A12).
 
 Runs the real editor against a throw-away app server and records, per template:
 
@@ -51,10 +51,12 @@ BY_ID = {entry["id"]: entry for entry in CATALOG["templates"]}
 BATCHES = {
     "wedding-a": ["wd-royal-maroon-gold", "wd-ivory-kbach-frame", "wd-lotus-watercolour", "wd-midnight-navy-gold", "wd-temple-arch"],
     "wedding-b": ["wd-quiet-ivory", "wd-jade-garden", "wd-saffron-sunrise", "wd-red-gold-story", "wd-save-the-date"],
-    "wedding-c": ["wd-hair-cutting", "wd-reception-dark-plum", "wd-photo-modern", "wd-three-day-program", "anniv-golden"],
+    "wedding-c": ["wd-hair-cutting", "wd-reception-dark-plum", "wd-photo-modern", "wd-three-day-program", "wd-olive-letter", "anniv-golden"],
     "birthday-business": ["bd-first-pastel", "bd-kids-party", "bd-golden-soiree", "bd-longevity-60", "bd-modern-bold", "biz-grand-opening", "biz-corporate-gala"],
     "ceremony": ["hw-housewarming", "merit-dana", "kathina-robe", "pchum-ben", "memorial-ceremony"],
     "greetings": ["gr-khmer-new-year", "gr-water-festival", "gr-global-new-year", "gr-thank-you", "gr-graduation", "gr-newborn", "gr-sympathy", "gr-get-well", "gr-blessings"],
+    "english-additions": ["en-garden-sun", "en-coastal-vows", "en-afterglow-disco", "en-cloud-nine-baby", "en-noir-graduate", "en-summit-26", "en-terracotta-home", "en-deco-anniversary", "en-moonlit-halloween", "en-midnight-new-year"],
+    "khmer-additions": ["km-bokor-vows", "km-silk-engagement", "km-neon-birthday", "km-baby-blessing", "km-wood-earth-home", "km-lotus-merit", "km-sra-sor-new-year", "km-modern-graduate", "km-golden-anniversary", "km-river-night"],
 }
 
 LONG_TASK_INIT = """

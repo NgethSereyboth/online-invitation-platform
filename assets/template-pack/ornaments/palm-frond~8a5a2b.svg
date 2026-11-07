@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <path d="M200,286 C196,220 190,150 200,28" fill="none" stroke="#8A5A2B" stroke-width="2"/>
+  <path d="M200,60 C170.93,52 141.85,58 141.85,72" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,60 C229.07,52 258.15,58 258.15,72" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,80 C164.5,72 129,78 129,92" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,80 C235.5,72 271,78 271,92" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,100 C159.36,92 118.72,98 118.72,112" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,100 C240.64,92 281.28,98 281.28,112" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,120 C155.83,112 111.67,118 111.67,132" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,120 C244.17,112 288.33,118 288.33,132" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,140 C154.14,132 108.28,138 108.28,152" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,140 C245.86,132 291.72,138 291.72,152" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,160 C154.38,152 108.76,158 108.76,172" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,160 C245.62,152 291.24,158 291.24,172" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,180 C156.55,172 113.1,178 113.1,192" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,180 C243.45,172 286.9,178 286.9,192" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,200 C160.51,192 121.01,198 121.01,212" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,200 C239.49,192 278.99,198 278.99,212" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,220 C166,212 132,218 132,232" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,220 C234,212 268,218 268,232" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,240 C172.69,232 145.38,238 145.38,252" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,240 C227.31,232 254.62,238 254.62,252" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,260 C180.15,252 160.3,258 160.3,272" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+  <path d="M200,260 C219.85,252 239.7,258 239.7,272" fill="none" stroke="#8A5A2B" stroke-width="1" stroke-linecap="round"/>
+</svg>
