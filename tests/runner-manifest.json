@@ -178,7 +178,7 @@
       "checked_by": null,
       "invocation": ".venv/bin/python tests/static_integrity_test.py",
       "kind": "manual-runner",
-      "note": "COLLECT_IGNORE: import-time side effects / platform-gated (see tests/conftest.py)"
+      "note": "direct runner; also collected by pytest after the collection-harness fix"
     },
     "theme_launcher_runtime_test.py": {
       "checked_by": null,

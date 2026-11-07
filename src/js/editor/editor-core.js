@@ -243,7 +243,6 @@
         el.style.setProperty('--ei-font-size', el.getAttribute('data-font-size') + 'px');
       });
       if (reason && window.__EINVITE_DEBUG_AUTOFIT) {
-        // eslint-disable-next-line no-console
         console.debug('[AutoFitGuard]', reason, suppressed ? 'suppressed' : 'released');
       }
     }

@@ -28,7 +28,7 @@ survive, with the reason. Run on this tree under the same interpreter pytest use
 
     TESTS_IMPORT_AUDIT {"modules": 250, "importable": 238, "notImportable": 12, ...}
 
-The 12 below are that list verbatim. Two things keep it from rotting:
+The 11 below are that list verbatim. Two things keep it from rotting:
 
   * `COLLECT_IGNORE` is checked against the filesystem at the top of this module.
     If a listed file is deleted or renamed, collection fails immediately with the
@@ -60,7 +60,6 @@ for _root in (REPO_ROOT, REPO_ROOT / "src" / "python", TESTS_DIR):
 COLLECT_IGNORE = [
     # hangs >8s at import: module body starts the backend
     "final_features_test.py",
-    "static_integrity_test.py",
     "v21_0_rich_text_server_test.py",
     # asserts about the served DOM at import time (and prints a banner)
     "_capture_v22_2.py",

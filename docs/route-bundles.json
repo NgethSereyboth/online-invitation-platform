@@ -362,10 +362,10 @@
       "deferredStylesheetSha256": "946bb5fd2544f721789aa640be4ea6c71ae7846371dda68836dfea9c9e91bb3e",
       "javascript": "bundle-index.js",
       "javascript2": "bundle-index-2.js",
-      "javascript2Bytes": 552988,
-      "javascript2Sha256": "9b949393fefcf4b6e3a414d651cc29abf50605e5b628ca117e5bcdb4ed75db58",
-      "scriptBytes": 522111,
-      "scriptSha256": "94570322281650015cd8ea4bc4672fe6649de5f9a08865f8421ea1d31ce2c06a",
+      "javascript2Bytes": 552987,
+      "javascript2Sha256": "7b55c858b529b4923fb6397c683e1f8440b605aedc29da755ff5a7543866ca03",
+      "scriptBytes": 522058,
+      "scriptSha256": "bb5f0800893b9b493a05eaeb7c40d32ea7e7a7a0e9756ce532b455c14a688043",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [

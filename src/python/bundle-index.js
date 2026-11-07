@@ -589,7 +589,7 @@ function notify(type,detail={}){const payload={type,...detail};subscribers.forEa
 function normalizeCommand(input){
 if(!input||typeof input!=='object'||!input.id)throw Error('Command id');
 return Object.freeze({
-title:input.id,category:'General',keywords:[],visible:()=>true,enabled:()=>true,bindings:{},allowFromControls:false,...input,
+title:input.id,category:'General',visible:()=>true,enabled:()=>true,bindings:{},allowFromControls:false,...input,
 keywords:Array.isArray(input.keywords)?input.keywords:String(input.keywords||'').split(/\s+/).filter(Boolean)
 });
 }
@@ -4135,7 +4135,7 @@ backgroundEnabled:!!options.backgroundEnabled,backgroundColor:options.background
 fillMode:options.fillMode||'solid',gradientStart:options.gradientStart||'#d9a6ad',gradientEnd:options.gradientEnd||'#9d4555',gradientAngle:Number(options.gradientAngle??135),
 textGradientEnabled:!!options.textGradientEnabled,textGradientStart:options.textGradientStart||'#9d4555',textGradientEnd:options.textGradientEnd||'#b58a3a',textGradientAngle:Number(options.textGradientAngle??90),
 textStrokeWidth:Number(options.textStrokeWidth||0),textStrokeColor:options.textStrokeColor||'#ffffff',textShadowBlur:Number(options.textShadowBlur||0),textShadowColor:options.textShadowColor||'#000000',textTransform:options.textTransform||'none',
-animationDelay:Number(options.animationDelay||0),caption:'',shapeKind:options.shapeKind||'rectangle'
+animationDelay:Number(options.animationDelay||0),caption:''
 }
 }
 function designPagePreset(type='title'){

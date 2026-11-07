@@ -76,6 +76,26 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 1b. SAST — semgrep (p/python + p/owasp-top-ten)
+#   The full rule set repeatedly exceeded the CI window on the 11k-line
+#   src/python/server.py. scripts/semgrep_scan.py scans the small modules in
+#   one pass, batches server.py by rule subset, and retries slow batches
+#   rule-by-rule. See docs/security/CI-SECURITY.md.
+# ---------------------------------------------------------------------------
+if command -v semgrep >/dev/null 2>&1 || [ -x .tools/sec-venv/bin/semgrep ]; then
+  echo "[security-scan] Running semgrep SAST (batched Python rules)..."
+  if python3 scripts/semgrep_scan.py --reports-dir reports; then
+    echo "[security-scan] semgrep: PASS (no findings or scan errors)"
+  else
+    echo "[security-scan] FAIL: semgrep found issues or could not complete"
+    FAILED=1
+  fi
+else
+  echo "[security-scan] WARN: semgrep not installed, skipping SAST"
+  echo "[security-scan]        install with: pip install semgrep==1.184.0"
+fi
+
+# ---------------------------------------------------------------------------
 # 2. Dependency audit — pip-audit (fail on HIGH/CRITICAL)
 # ---------------------------------------------------------------------------
 # pip-audit docs: https://github.com/pypa/pip-audit
