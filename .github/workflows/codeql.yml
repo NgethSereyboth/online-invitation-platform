@@ -50,6 +50,7 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
+        id: analyze
         uses: github/codeql-action/analyze@v3
         with:
           category: '/language:${{ matrix.language }}'
@@ -59,6 +60,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: codeql-sarif-${{ matrix.language }}
-          path: ${{ runner.temp }}/results/*.sarif
+          path: ${{ steps.analyze.outputs.sarif-output }}/*.sarif
           if-no-files-found: warn
           retention-days: 1
