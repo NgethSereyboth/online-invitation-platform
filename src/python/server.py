@@ -7541,7 +7541,7 @@ class Handler(SimpleHTTPRequestHandler):
         if status_filter not in ("all","published","draft","archived"):
             return self.json(400,{"error":"status must be all, published, draft or archived"})
         search=(query.get("q") or [""])[-1].strip()
-        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?))" ]
+        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?))" ]
         params=[user["id"],user["id"],user["id"]]
         if status_filter=="published":
             clauses.append("i.archived=0 AND i.is_published=1")

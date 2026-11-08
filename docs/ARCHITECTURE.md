@@ -559,11 +559,19 @@ five-failure/15-minute account lockout under ten rapid invalid logins.
 
 Two indexes support dashboard pagination without changing response shapes:
 
-- `idx_invitations_owner_archived_updated(owner_id, archived, updated_at DESC)` — owner list
-  and archive filters. `EXPLAIN QUERY PLAN` reports
-  `SEARCH invitations USING INDEX idx_invitations_owner_archived_updated (owner_id=? AND archived=?)`.
-- `idx_invitation_collaborators_user_invite(user_id, invitation_id)` — collaborator list and
-  membership checks; the existing `idx_invitation_collaborators_user` remains in use.
+- `idx_invitations_owner_archived_updated(owner_id, archived, updated_at DESC)` — the archived
+  and published owner filters. At 50k rows `EXPLAIN QUERY PLAN` reports
+  `SEARCH i USING INDEX idx_invitations_owner_archived_updated (ANY(owner_id) AND archived=?)`.
+- `idx_invitation_collaborators_user_invite(user_id, invitation_id)` — the dashboard's
+  collaborator `IN` subquery, where SQLite uses it as a covering index. Membership checks still
+  use the primary-key autoindex, and the ordered collaborator list still uses
+  `idx_invitation_collaborators_user`.
+
+The dashboard scope uses `i.id IN (SELECT invitation_id FROM invitation_collaborators
+WHERE user_id=?)`, not a correlated `EXISTS`. Both are equivalent, but the `IN` form lets SQLite
+choose the multi-index OR path instead of scanning `invitations`; the unfiltered list uses
+`idx_invitations_owner`. `tests/qa_deep_dive_query_plan_test.py` pins the no-full-table-scan
+plans at 20k rows and asserts the production clause is the set-membership form.
 
 ### 10.5 Verification commands
 

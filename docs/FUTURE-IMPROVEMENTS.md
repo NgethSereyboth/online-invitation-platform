@@ -42,13 +42,16 @@ so it belongs in its own workstream.
 
 ## 3. Pagination query coverage
 
-**Problem.** The owner and collaborator pagination paths now use
-`idx_invitations_owner_archived_updated` and `idx_invitation_collaborators_user_invite`.
-Status/date filters and search may still fall back to a scan at larger data volumes.
+**Problem.** The archived/published owner paths now use
+`idx_invitations_owner_archived_updated`, and the collaborator `IN` subquery uses
+`idx_invitation_collaborators_user_invite`. The unfiltered list uses
+`idx_invitations_owner` plus a temporary B-tree for ordering. Search and
+status/date filters at larger volumes still need full plan coverage.
 
 **Proposed solution.** Capture `EXPLAIN QUERY PLAN` for every dashboard filter combination
 with a seeded 100k-invitation fixture, and add covering indexes only where the plan shows a
-scan. Add a query-plan regression test that fails on `SCAN invitations`.
+scan. `tests/qa_deep_dive_query_plan_test.py` already pins the owner scope at 20k rows; extend
+it to every filter combination.
 
 ## 4. Full-page dashboard visual baseline
 
