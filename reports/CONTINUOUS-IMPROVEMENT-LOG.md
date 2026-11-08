@@ -51,3 +51,18 @@
   `artifacts/sprint2/analyze-after-header2.log`.
 - **Dependency:** `hypothesis==6.170.15` is pinned in `requirements-dev.txt`; a
   fresh install and `pip check` both pass.
+
+## 2026-11-08 — Sprint close
+
+- **Full suite:** `250 passed in 1120.81s (18:40)`, exit 0
+  (`artifacts/sprint2/pytest-full.log`).
+- **Playwright:** `13-security.spec.ts` (chromium) — **8 passed** on a disposable
+  4310 origin; the server was stopped and the user's 4175 server (PID 3005) was
+  left running.
+- **Final gates:** `python3 build.py all --check` → `BUILD_OK`/730 mirror files;
+  `npm run lint` and `npm run lint:security` → PASS; `make analyze` → 213/213
+  complexity and 11/11 vulture, `ANALYSIS_OK`; `pip check`, `compileall` and
+  `git diff --check` → PASS.
+- **Report:** `reports/sprint-2-summary.md`. Deferrals and rejected work:
+  `docs/FUTURE-IMPROVEMENTS.md`.
+- **No merge, no push, no production access.**
