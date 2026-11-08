@@ -7498,8 +7498,39 @@ class Handler(SimpleHTTPRequestHandler):
     def list_invitations(self):
         user=self.require_user()
         if not user:return
+        query=parse_qs(urlsplit(self.path).query)
+        try:
+            raw_limit=(query.get("limit") or [""])[-1]
+            raw_offset=(query.get("offset") or [""])[-1]
+            limit=int(raw_limit) if raw_limit not in ("",None) else -1
+            offset=int(raw_offset) if raw_offset not in ("",None) else 0
+        except (TypeError,ValueError):
+            return self.json(400,{"error":"limit and offset must be integers"})
+        if limit!=-1:limit=max(1,min(limit,100))
+        offset=max(0,offset)
+        status_filter=(query.get("status") or ["all"])[-1].strip().lower()
+        if status_filter not in ("all","published","draft","archived"):
+            return self.json(400,{"error":"status must be all, published, draft or archived"})
+        search=(query.get("q") or [""])[-1].strip()
+        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?))" ]
+        params=[user["id"],user["id"],user["id"]]
+        if status_filter=="published":
+            clauses.append("i.archived=0 AND i.is_published=1")
+        elif status_filter=="draft":
+            clauses.append("i.archived=0 AND i.is_published=0")
+        elif status_filter=="archived":
+            clauses.append("i.archived=1")
+        if search:
+            like=f"%{search.lower()}%"
+            clauses.append("(LOWER(COALESCE(json_extract(i.draft_json,'$.fields.names'),'')) LIKE ? OR LOWER(i.slug) LIKE ?)")
+            params.extend([like,like])
+        sql=("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,"
+             "CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,"
+             "(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,"
+             "COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role "
+             "FROM invitations i WHERE "+" AND ".join(clauses)+" ORDER BY i.archived,i.updated_at DESC LIMIT ? OFFSET ?")
         with connect() as db:
-            rows=db.execute("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role FROM invitations i WHERE i.deleted_at IS NULL AND (i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?)) ORDER BY i.archived,i.updated_at DESC",(user["id"],user["id"],user["id"])).fetchall()
+            rows=db.execute(sql,(*params,limit,offset)).fetchall()
         result=[]
         for row in rows:
             draft=json.loads(row["draft_json"])
