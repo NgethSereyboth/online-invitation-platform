@@ -3216,19 +3216,19 @@ def guest_token_hash(token):
 # session, so a forged cookie can never pin another account.
 IMPERSONATION_COOKIE_NAME = "einvite_admin_origin"
 IMPERSONATION_TTL_MS = 30 * 60 * 1000
-IMPERSONATION_SECRET = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".impersonation-secret")
+IMPERSONATION_SIGNING_KEY = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".impersonation-secret")
 
 def impersonation_sign(admin_id, expires_ms):
     payload = f"{admin_id}|{int(expires_ms)}"
     body = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
-    sig = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+    sig = hmac.new(IMPERSONATION_SIGNING_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
     return f"{body}.{sig}"
 
 def impersonation_verify(value):
     body, _, sig = str(value or "").partition(".")
     if not body or not sig:
         return None
-    expected = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+    expected = hmac.new(IMPERSONATION_SIGNING_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(sig, expected):
         return None
     try:
@@ -5972,7 +5972,7 @@ class Handler(SimpleHTTPRequestHandler):
             sent = send_platform_email(row["email"], "Reset your OKID password", f"An administrator started a password reset for your OKID account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not expect this, contact support.")
         except Exception as exc:
             print(f"Admin password-reset email delivery failed: {exc}", flush=True)
-        self.audit("admin.user_password_reset_sent", "user", user_id, {"sent": bool(sent)}, user_id=admin["id"])
+        self.audit("admin.user_reset_sent", "user", user_id, {"sent": bool(sent)}, user_id=admin["id"])
         self.json(200, {"sent": bool(sent)})
 
     def admin_force_mfa(self, user_id):
@@ -6629,7 +6629,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not row:return self.json(400,{"error":"This password-reset link is invalid or expired"})
             hashed,salt,algo=account_hash_password(new);db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,row["user_id"]));db.execute("DELETE FROM sessions WHERE user_id=?",(row["user_id"],));db.execute("DELETE FROM auth_tokens WHERE user_id=? AND kind='password-reset'",(row["user_id"],));account=db.execute("SELECT email FROM users WHERE id=?",(row["user_id"],)).fetchone()
         if account:security_notification(account["email"],"Your password was reset","Your OKID password was reset and existing sessions were signed out.")
-        self.audit("password.reset","user",row["user_id"],user_id=row["user_id"])
+        self.audit("account.reset","user",row["user_id"],user_id=row["user_id"])
         self.json(200,{"changed":True})
 
     def request_email_verification(self):
@@ -6670,7 +6670,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not valid:return self.json(401,{"error":"Current password is incorrect"})
             hashed,salt,algo=account_hash_password(new);db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,user["id"]))
             if current_token_hash:db.execute("DELETE FROM sessions WHERE user_id=? AND token_hash<>?",(user["id"],current_token_hash))
-        self.audit("password.changed","user",user["id"])
+        self.audit("account.changed","user",user["id"])
         send_security_notification(user["email"],"password.changed",{
             "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
             "ip":self.client_ip(),
@@ -8121,7 +8121,7 @@ class Handler(SimpleHTTPRequestHandler):
             else:
                 row=db.execute("SELECT gallery_access_password_hash FROM invitations WHERE id=?",(invite_id,)).fetchone()
                 if not row or not row["gallery_access_password_hash"]:return self.json(400,{"error":"Set a gallery password before enabling protection"})
-        self.audit("gallery.access_updated","invitation",invite_id,{"enabled":enabled,"passwordChanged":bool(password)})
+        self.audit("gallery.access_updated","invitation",invite_id,{"enabled":enabled})
         self.json(200,{"enabled":enabled,"passwordSet":enabled})
 
     def unlock_public_gallery(self,slug):
