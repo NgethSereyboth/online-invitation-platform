@@ -600,7 +600,7 @@
         return `
           <li class="host-poll-result-bar-row">
             <span class="host-poll-result-label">${esc(opt.label || '')}</span>
-            <div class="host-poll-result-bar-track"><div class="host-poll-result-bar-fill" style="width:${pct}%"></div></div>
+            <div class="host-poll-result-bar-track"><div class="host-poll-result-bar-fill" data-csp-style="width:${pct}%"></div></div>
             <span class="host-poll-result-count">${votes}</span>
           </li>`;
       }).join('');

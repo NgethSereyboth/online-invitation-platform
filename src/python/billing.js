@@ -19,7 +19,7 @@ async function api(path,options={}){
 }
 const fmtBytes=value=>{const n=Number(value||0);if(n<1e6)return `${(n/1e3).toFixed(n<1e5?1:0)} KB`;if(n<1e9)return `${(n/1e6).toFixed(n<1e8?1:0)} MB`;return `${(n/1e9).toFixed(1)} GB`};
 const fmtPrice=(minor,currency)=>new Intl.NumberFormat(undefined,{style:'currency',currency,minimumFractionDigits:currency==='KHR'?0:2}).format(Number(minor||0)/(currency==='KHR'?1:100));
-const meter=(value,limit)=>{const percent=limit?Math.min(100,Math.round(value/limit*100)):0;return `<div class="meter"><i style="width:${percent}%"></i></div><small>${percent}% ${_txt('used','បានប្រើ')}</small>`};
+const meter=(value,limit)=>{const percent=limit?Math.min(100,Math.round(value/limit*100)):0;return `<div class="meter"><i data-csp-style="width:${percent}%"></i></div><small>${percent}% ${_txt('used','បានប្រើ')}</small>`};
 
 function checkoutBanner(){
   const state=new URLSearchParams(location.search).get('checkout');

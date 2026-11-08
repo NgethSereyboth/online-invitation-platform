@@ -772,12 +772,12 @@ function ensureTextWorkspace(){
       </div></section>
       <section class="refine-text-section fp-text-fonts"><div><h3>Fonts</h3><small>Apply to selected text</small></div><div class="fp-text-category-tabs"></div><div class="fp-inline-font-list"></div><button type="button" class="refine-browse-fonts">Browse full font library</button></section>
       <section class="refine-text-section"><div><h3>Font combinations</h3><small>Invitation-ready typography</small></div><div class="fp-text-combo-grid">
-        <button type="button" class="fp-text-combo" data-v7-combo="gold"><span class="hero" style="font-family:Georgia,serif;color:#b48a20">GOLDEN<br>HOUR</span><small>Luxury serif</small></button>
-        <button type="button" class="fp-text-combo" data-v7-combo="editorial"><span class="hero" style="font-family:Didot,Georgia,serif">THE<br><i>MOMENT</i></span><small>Editorial contrast</small></button>
-        <button type="button" class="fp-text-combo" data-v7-combo="modern"><span class="hero" style="font-family:Arial,sans-serif;font-weight:800">TITLE<br>DETAILS</span><small>Modern clean</small></button>
-        <button type="button" class="fp-text-combo" data-v7-combo="romance"><span class="hero" style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
-        <button type="button" class="fp-text-combo" data-v7-combo="khmer"><span class="hero" lang="km" style="font-family:'Khmer OS Muol Light','Noto Serif Khmer',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
-        <button type="button" class="fp-text-combo" data-v7-combo="minimal"><span class="hero" style="font-family:Inter,Arial,sans-serif;letter-spacing:.12em">SAVE<br>THE DATE</span><small>Minimal spaced</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="gold"><span class="hero" data-csp-style="font-family:Georgia,serif;color:#b48a20">GOLDEN<br>HOUR</span><small>Luxury serif</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="editorial"><span class="hero" data-csp-style="font-family:Didot,Georgia,serif">THE<br><i>MOMENT</i></span><small>Editorial contrast</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="modern"><span class="hero" data-csp-style="font-family:Arial,sans-serif;font-weight:800">TITLE<br>DETAILS</span><small>Modern clean</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="romance"><span class="hero" data-csp-style="font-family:Georgia,serif;font-style:italic;color:#426b52">Bride &<br>Groom</span><small>Romantic serif</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="khmer"><span class="hero" lang="km" data-csp-style="font-family:'Khmer OS Muol Light','Noto Serif Khmer',serif;color:#9b6b13">សិរីមង្គល</span><small>Khmer ceremonial</small></button>
+        <button type="button" class="fp-text-combo" data-v7-combo="minimal"><span class="hero" data-csp-style="font-family:Inter,Arial,sans-serif;letter-spacing:.12em">SAVE<br>THE DATE</span><small>Minimal spaced</small></button>
       </div></section>`;
     panelHost.append(pane);
   }
