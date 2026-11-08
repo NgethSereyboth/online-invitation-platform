@@ -48,7 +48,10 @@ def main() -> None:
     sqlite_path = Path(args.sqlite)
     if not sqlite_path.is_file():
         raise SystemExit(f"SQLite database not found: {sqlite_path}")
-    schema = (ROOT / "postgres_schema.sql").read_text(encoding="utf-8")
+    schema_path = ROOT / "postgres_schema.sql"
+    if not schema_path.is_file():
+        schema_path = ROOT.parent.parent / "docs" / "postgres_schema.sql"
+    schema = schema_path.read_text(encoding="utf-8")
     source = sqlite3.connect(sqlite_path)
     source.row_factory = sqlite3.Row
     with psycopg.connect(args.database_url) as target:

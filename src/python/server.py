@@ -1880,6 +1880,7 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_deleted_items_owner ON deleted_items(owner_id,deleted_at DESC);
                     CREATE TABLE IF NOT EXISTS invitation_collaborators(invitation_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'viewer', created_at INTEGER NOT NULL, PRIMARY KEY(invitation_id,user_id));
                     CREATE INDEX IF NOT EXISTS idx_invitation_collaborators_user ON invitation_collaborators(user_id,created_at);
+                    CREATE INDEX IF NOT EXISTS idx_invitation_collaborators_user_invite ON invitation_collaborators(user_id,invitation_id);
                     CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_kind ON auth_tokens(user_id,kind,expires_at);
                     CREATE INDEX IF NOT EXISTS idx_user_components_owner_kind ON user_components(owner_id,kind,updated_at);
                     CREATE INDEX IF NOT EXISTS idx_studio_resources_owner_kind ON studio_resources(owner_id,kind,status,updated_at DESC);
@@ -1999,6 +2000,12 @@ def connect_sqlite():
                     if "flagged_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_at INTEGER")
                     if "flag_reason" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flag_reason TEXT NOT NULL DEFAULT ''")
                     if "flagged_by" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_by TEXT NOT NULL DEFAULT ''")
+                    # `list_invitations` paginates by (archived, updated_at DESC)
+                    # and filters status by is_published. Both columns are added
+                    # by the ALTER block above, so these indexes belong here, not
+                    # in the base executescript (which runs before the ALTERs).
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_invitations_owner_archived_updated ON invitations(owner_id,archived,updated_at DESC) WHERE deleted_at IS NULL")
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_invitations_owner_status_updated ON invitations(owner_id,archived,is_published,updated_at DESC) WHERE deleted_at IS NULL")
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_custom_domain ON invitations(custom_domain) WHERE custom_domain IS NOT NULL AND custom_domain<>''")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
@@ -2130,7 +2137,12 @@ def _ensure_postgres_schema(connection):
     if _PG_SCHEMA_READY:return
     with _PG_SCHEMA_LOCK:
         if _PG_SCHEMA_READY:return
-        schema=(ROOT/"postgres_schema.sql").read_text(encoding="utf-8")
+        # `docs/postgres_schema.sql` is the canonical schema in this repo;
+        # packaged deployments may place a copy beside server.py. Resolve both
+        # so a PostgreSQL boot cannot fail on a missing copied file.
+        schema_path=ROOT/"postgres_schema.sql"
+        if not schema_path.is_file():schema_path=ROOT.parent.parent/"docs"/"postgres_schema.sql"
+        schema=schema_path.read_text(encoding="utf-8")
         connection.execute(schema,prepare=False)
         # Backfill the V12 stored-object registry for existing PostgreSQL assets.
         connection.execute("""
@@ -7531,25 +7543,34 @@ class Handler(SimpleHTTPRequestHandler):
         if status_filter not in ("all","published","draft","archived"):
             return self.json(400,{"error":"status must be all, published, draft or archived"})
         search=(query.get("q") or [""])[-1].strip()
-        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?))" ]
-        params=[user["id"],user["id"],user["id"]]
-        if status_filter=="published":
-            clauses.append("i.archived=0 AND i.is_published=1")
-        elif status_filter=="draft":
-            clauses.append("i.archived=0 AND i.is_published=0")
-        elif status_filter=="archived":
-            clauses.append("i.archived=1")
+        # Split owner and collaborator scopes into two indexable branches. The
+        # previous `owner_id=? OR EXISTS(...)` shape made SQLite scan the whole
+        # invitations table. The owner branch can use
+        # idx_invitations_owner_archived_updated; the collaborator branch can
+        # drive from idx_invitation_collaborators_user_invite instead.
+        status_clause=""
+        if status_filter=="published":status_clause=" AND i.archived=0 AND i.is_published=1"
+        elif status_filter=="draft":status_clause=" AND i.archived=0 AND i.is_published=0"
+        elif status_filter=="archived":status_clause=" AND i.archived=1"
+        search_clause="";search_params=[]
         if search:
             like=f"%{search.lower()}%"
-            clauses.append("(LOWER(COALESCE(json_extract(i.draft_json,'$.fields.names'),'')) LIKE ? OR LOWER(i.slug) LIKE ?)")
-            params.extend([like,like])
-        sql=("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,"
-             "CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,"
-             "(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,"
-             "COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role "
-             "FROM invitations i WHERE "+" AND ".join(clauses)+" ORDER BY i.archived,i.updated_at DESC LIMIT ? OFFSET ?")
+            search_clause=" AND (LOWER(COALESCE(json_extract(i.draft_json,'$.fields.names'),'')) LIKE ? OR LOWER(i.slug) LIKE ?)"
+            search_params=[like,like]
+        select=("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,"
+                "CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,"
+                "(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,"
+                "COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role "
+                "FROM invitations i WHERE i.deleted_at IS NULL AND ")
+        owner_params=[user["id"],user["id"],*search_params]
+        owner_sql=select+"i.owner_id=?"+status_clause+search_clause
+        collaborator_params=[user["id"],user["id"],user["id"],*search_params]
+        collaborator_sql=(select+"i.id IN (SELECT c.invitation_id FROM invitation_collaborators c WHERE c.user_id=?) "
+                          "AND (i.owner_id IS NULL OR i.owner_id<>?)"+status_clause+search_clause)
+        sql=("SELECT * FROM ("+owner_sql+" UNION ALL "+collaborator_sql+") "
+             "ORDER BY archived,updated_at DESC LIMIT ? OFFSET ?")
         with connect() as db:
-            rows=db.execute(sql,(*params,limit,offset)).fetchall()
+            rows=db.execute(sql,(*owner_params,*collaborator_params,limit,offset)).fetchall()
         result=[]
         for row in rows:
             draft=json.loads(row["draft_json"])

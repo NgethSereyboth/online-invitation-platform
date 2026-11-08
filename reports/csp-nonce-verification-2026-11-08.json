@@ -1,0 +1,149 @@
+{
+  "generatedAt": "2026-11-08T06:22:29+00:00",
+  "branch": null,
+  "baseUrl": "http://127.0.0.1:58861",
+  "pages": [
+    {
+      "path": "/",
+      "status": 200,
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-vqgQAX43I3BsYhYPmq-Nmw'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'",
+      "styleSrc": "'self' 'nonce-vqgQAX43I3BsYhYPmq-Nmw'",
+      "nonce": "vqgQAX43I3BsYhYPmq-Nmw",
+      "unsafeInline": false,
+      "styleTagCount": 0,
+      "styleTags": [],
+      "styleTagsMissingNonce": 0,
+      "styleTagsMismatchedNonce": 0,
+      "styleNonceCheck": "vacuous (0 <style> elements)",
+      "nonceProbe": "applied",
+      "stylesheets": [
+        "bundle-index.css",
+        "page-experience.css",
+        "rich-text-renderer.css",
+        "rich-text-editing.css",
+        "professional-workflow.css",
+        "navigation-history.css",
+        "style-history.css",
+        "asset-workflow.css",
+        "photo-workflow.css",
+        "photo-style-library.css",
+        "review.css",
+        "direct-manipulation.css",
+        "content-browser.css",
+        "smart-layout.css",
+        "brand-components.css",
+        "collaboration-v24.css",
+        "workspace.css",
+        "export-quality.css",
+        "adaptive-templates.css",
+        "studio-governance.css",
+        "http://127.0.0.1:58861/bundle-index-deferred.css",
+        "print-readiness.css"
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "cspStyleViolations": [],
+      "checks": [
+        {
+          "name": "/ responds 200",
+          "passed": true,
+          "detail": "status=200"
+        },
+        {
+          "name": "/ sends Content-Security-Policy",
+          "passed": true,
+          "detail": "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-vqgQAX43I3BsYhYPmq-Nmw'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data"
+        },
+        {
+          "name": "/ style-src has a nonce",
+          "passed": true,
+          "detail": "'self' 'nonce-vqgQAX43I3BsYhYPmq-Nmw'"
+        },
+        {
+          "name": "/ style-src has no 'unsafe-inline'",
+          "passed": true,
+          "detail": "'self' 'nonce-vqgQAX43I3BsYhYPmq-Nmw'"
+        },
+        {
+          "name": "/ every <style> has the header nonce",
+          "passed": true,
+          "detail": "0 style element(s) — vacuous: page has no inline <style>"
+        },
+        {
+          "name": "/ accepts a nonce-bearing stylesheet",
+          "passed": true,
+          "detail": "probe=applied"
+        },
+        {
+          "name": "/ logs no style-src CSP violation",
+          "passed": true,
+          "detail": "0 violation(s)"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "/checkin",
+      "status": 200,
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-XLXbu8ZTVBd309itGDbFMw'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'",
+      "styleSrc": "'self' 'nonce-XLXbu8ZTVBd309itGDbFMw'",
+      "nonce": "XLXbu8ZTVBd309itGDbFMw",
+      "unsafeInline": false,
+      "styleTagCount": 0,
+      "styleTags": [],
+      "styleTagsMissingNonce": 0,
+      "styleTagsMismatchedNonce": 0,
+      "styleNonceCheck": "vacuous (0 <style> elements)",
+      "nonceProbe": "applied",
+      "stylesheets": [
+        "bundle-checkin.css"
+      ],
+      "consoleErrors": [],
+      "pageErrors": [],
+      "cspStyleViolations": [],
+      "checks": [
+        {
+          "name": "/checkin responds 200",
+          "passed": true,
+          "detail": "status=200"
+        },
+        {
+          "name": "/checkin sends Content-Security-Policy",
+          "passed": true,
+          "detail": "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-XLXbu8ZTVBd309itGDbFMw'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data"
+        },
+        {
+          "name": "/checkin style-src has a nonce",
+          "passed": true,
+          "detail": "'self' 'nonce-XLXbu8ZTVBd309itGDbFMw'"
+        },
+        {
+          "name": "/checkin style-src has no 'unsafe-inline'",
+          "passed": true,
+          "detail": "'self' 'nonce-XLXbu8ZTVBd309itGDbFMw'"
+        },
+        {
+          "name": "/checkin every <style> has the header nonce",
+          "passed": true,
+          "detail": "0 style element(s) — vacuous: page has no inline <style>"
+        },
+        {
+          "name": "/checkin accepts a nonce-bearing stylesheet",
+          "passed": true,
+          "detail": "probe=applied"
+        },
+        {
+          "name": "/checkin logs no style-src CSP violation",
+          "passed": true,
+          "detail": "0 violation(s)"
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "notes": [
+    "/ has 0 <style> elements; the DOM nonce check is vacuous and the nonce probe is the positive control.",
+    "/checkin has 0 <style> elements; the DOM nonce check is vacuous and the nonce probe is the positive control."
+  ],
+  "passed": true
+}
