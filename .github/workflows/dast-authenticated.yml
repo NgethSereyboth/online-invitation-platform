@@ -36,6 +36,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install fixture dependencies
+        # The fixture server imports cryptography for field encryption during
+        # registration/login. Without it the server closes the connection and
+        # bootstrap_session.py sees RemoteDisconnected.
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r docs/requirements-production.txt
+
       - name: Prepare disposable fixture credentials
         shell: bash
         run: |

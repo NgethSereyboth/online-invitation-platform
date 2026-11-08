@@ -108,6 +108,9 @@ def test_flagship_template_opens_edits_and_exports(tmp_path):
             except Exception as exc:  # pragma: no cover - environment dependent
                 pytest.skip(f"Chromium unavailable: {exc}")
             context = browser.new_context(accept_downloads=True, viewport={"width": 1440, "height": 1000})
+            # The print surface calls window.print() in its popup. Headless CI
+            # has no native dialog, so stub it before any page can block.
+            context.add_init_script("window.print = () => {};")
             page = context.new_page()
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(base + "/dashboard.html", wait_until="domcontentloaded", timeout=30000)

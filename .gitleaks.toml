@@ -18,6 +18,11 @@ paths = [
   '''deploy/\.env\.example$''',
   '''deploy/\.env\.production\.example$''',
   '''docs/.*\.sha256$''',
+  # Evidence captures, not credentials: REA records Canva's generated
+  # script_key identifiers, and the mutation log records a test response
+  # containing the ai_agent_enabled flag. Keep these exclusions narrow.
+  '''tools/evidence/rea-canva-bundle\.json$''',
+  '''tools/evidence/instrument-repair-flag-branch\.txt$''',
 ]
 
 # Example AWS key pattern used in documentation — not a real key
