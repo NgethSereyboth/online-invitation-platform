@@ -87,7 +87,7 @@ def _write_png(payload: dict, path: Path) -> Image.Image:
 
 def test_khmer_export_fidelity() -> None:
     sync_playwright = pytest.importorskip('playwright.sync_api')
-    from browser_runtime import dismiss_editor_onboarding, launch_chromium
+    from browser_runtime import add_style_tag_with_nonce, dismiss_editor_onboarding, launch_chromium
     from playwright.sync_api import sync_playwright as playwright_context
     from v14_test_utils import app_server
 
@@ -134,14 +134,17 @@ def test_khmer_export_fidelity() -> None:
                     }""",
                     document(phrases),
                 )
-                page.goto(base + f"/invitations/{created['id']}/editor", wait_until='domcontentloaded', timeout=30000)
+                editor_response = page.goto(base + f"/invitations/{created['id']}/editor", wait_until='domcontentloaded', timeout=30000)
+                csp = editor_response.headers.get('content-security-policy', '') if editor_response else ''
+                nonce_match = re.search(r"'nonce-([^']+)'", csp)
+                assert nonce_match, csp
                 page.wait_for_function("() => document.documentElement.dataset.editorReady === 'true'", timeout=30000)
                 dismiss_editor_onboarding(page)
                 page.wait_for_selector('.object[data-id="sheet"]', timeout=20000)
                 page.wait_for_timeout(900)
                 page.evaluate("() => EInviteEditorBridge.select([])")
                 page.mouse.move(2, 2)
-                page.add_style_tag(content=(
+                add_style_tag_with_nonce(page, nonce=nonce_match.group(1), content=(
                     'html body #stage#stage{background:#fff8f2!important;border-radius:0!important;'
                     'box-shadow:none!important}.canvas-viewport:after{display:none!important}'
                 ))

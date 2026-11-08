@@ -27,6 +27,10 @@ ALLOWED_KHMER_PATHS = (
     "assets/template-pack/",
     "src/python/assets/template-pack/",
     "tests/data/template-pack-khmer-allowlist.txt",
+    # Playwright specs deliberately type and assert Khmer input/UI copy.
+    "e2e/specs/05-guest-rsvp.spec.ts",
+    "e2e/specs/11-forms.spec.ts",
+    "e2e/specs/12-i18n.spec.ts",
 )
 ALLOWED_EXISTING = ROOT / "tests" / "data" / "template-pack-khmer-allowlist.txt"
 OBJECT_TYPES = {"text", "image", "shape", "decoration"}

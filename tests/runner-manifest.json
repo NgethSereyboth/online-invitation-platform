@@ -109,6 +109,11 @@
       "invocation": ".venv/bin/python tests/plugin_sandbox_test.py",
       "kind": "manual-runner"
     },
+    "plugin_permission_regex_test.py": {
+      "checked_by": null,
+      "invocation": ".venv/bin/python tests/plugin_permission_regex_test.py",
+      "kind": "module-script"
+    },
     "private_access_header_test.py": {
       "checked_by": null,
       "invocation": ".venv/bin/python tests/private_access_header_test.py",
