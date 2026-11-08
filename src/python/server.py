@@ -2205,7 +2205,6 @@ def write_audit_event(user_id, action, target_type="", target_id="", metadata=No
     now=int(time.time()*1000);meta=json.dumps(metadata or {},ensure_ascii=False,sort_keys=True,separators=(",",":"))[:20000]
     with connect() as db:
         previous=db.execute("SELECT event_hash FROM audit_events ORDER BY created_at DESC,id DESC LIMIT 1").fetchone();previous_hash=previous["event_hash"] if previous else ""
-        # codeql[py/weak-sensitive-data-hashing] -- audit-chain integrity hash, not password storage
         event_id=str(uuid.uuid4());payload=f"{event_id}|{user_id or ''}|{action}|{target_type}|{target_id}|{meta}|{str(ip_address)[:80]}|{previous_hash}|{now}";event_hash=hashlib.sha256(payload.encode()).hexdigest()
         # ROADMAP §4.1 — encrypt the metadata; the chain hash stays over the
         # plaintext JSON (the verifier reads the revealed value), and admin_only
@@ -3222,7 +3221,6 @@ IMPERSONATION_SECRET = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".
 def impersonation_sign(admin_id, expires_ms):
     payload = f"{admin_id}|{int(expires_ms)}"
     body = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
-    # codeql[py/weak-sensitive-data-hashing] -- HMAC signature, not password storage
     sig = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
     return f"{body}.{sig}"
 
