@@ -567,18 +567,48 @@ BOT_PROTECTION_SECRET = platform_env("EINVITE_BOT_PROTECTION_SECRET", "").strip(
 PASSKEY_RP_NAME = platform_env("EINVITE_PASSKEY_RP_NAME", "OKID").strip() or "OKID"
 REQUIRE_VERIFIED_EMAIL = platform_env("EINVITE_REQUIRE_VERIFIED_EMAIL", "1" if PRODUCTION_MODE else "0").lower() in {"1","true","yes"}
 # V54.28 (sec-8 — §2.8) — CSP report-only monitoring.
-# The enforcing CSP below is sent verbatim on every response. A mirror
-# ``Content-Security-Policy-Report-Only`` header (built from this same
-# string + ``; report-uri /api/csp-report``) is also sent so the host can
-# observe what the enforcing policy WOULD have blocked without breaking
-# anything in production. See ``docs/security/CSP-MONITORING.md`` for the
-# weekly rollup query. Keep the two in lock-step — any directive tightened
-# in enforcement must also be tightened here so the report-only mirror
-# remains an accurate predictor.
-CSP_HEADER = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-              "img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data:; "
-              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; "
-              "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
+# The enforcing CSP is generated per response. ``style-src`` carries a
+# cryptographically-random nonce instead of 'unsafe-inline'; the same nonce
+# is injected into every <style> element served from our HTML files. Most
+# inline ``style=""`` attributes were migrated to CSS classes at build time
+# or to ``data-csp-style`` attributes applied through CSSOM at runtime.
+# ``img-src`` no longer allows every HTTPS host: user uploads are served from
+# 'self', and an object-storage public origin is allowed only when explicitly
+# configured. A mirror ``Content-Security-Policy-Report-Only`` header (built
+# from the exact same policy + ``; report-uri /api/csp-report``) is also sent
+# so the host can observe what the enforcing policy would have blocked. Keep
+# the two in lock-step. See ``docs/security/CSP-MONITORING.md``.
+def _csp_object_storage_origin():
+    """Return the exact HTTPS origin of the configured public media bucket."""
+    parsed = urlsplit(OBJECT_STORAGE_PUBLIC_BASE_URL)
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        return ""
+    return f"https://{parsed.netloc.lower()}"
+
+
+_CSP_IMG_SRC = "img-src 'self' data: blob:" + (
+    f" {_csp_object_storage_origin()}" if _csp_object_storage_origin() else ""
+)
+CSP_HEADER_TEMPLATE = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-{nonce}'; "
+    "{img_src}; media-src 'self' blob:; font-src 'self' data:; "
+    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; "
+    "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'"
+)
+
+
+def csp_header(nonce=None):
+    """Build the enforcing CSP for one response, with a fresh style nonce."""
+    nonce = nonce or secrets.token_urlsafe(16)
+    return CSP_HEADER_TEMPLATE.replace("{nonce}", nonce).replace("{img_src}", _CSP_IMG_SRC)
+
+
+def inject_style_nonce(page, nonce):
+    """Add the per-response CSP nonce to every <style> tag in a served page."""
+    if not nonce:
+        return page
+    attr = f' nonce="{html.escape(nonce, quote=True)}"'
+    return re.sub(r"(<style)(?=[\s>])", lambda match: match.group(1) + attr, page, flags=re.IGNORECASE)
 # Reporting API group config (https://www.w3.org/TR/reporting-1/) referenced
 # by the ``report-to csp`` directive appended to the report-only header.
 # ``max_age`` = 126 days (10886400 seconds); the endpoint is relative so it
@@ -3535,7 +3565,11 @@ def is_loopback_address(value):
 class Handler(SimpleHTTPRequestHandler):
     server_version="EInvite"
     sys_version=""
-    def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(ROOT), **kwargs)
+    def __init__(self, *args, **kwargs):
+        # One nonce per response: it is used by end_headers() and by the HTML
+        # renderers below so the header and the <style> elements agree.
+        self.csp_nonce = secrets.token_urlsafe(16)
+        super().__init__(*args, directory=str(ROOT), **kwargs)
     def setup(self):
         super().setup()
         self.connection.settimeout(REQUEST_SOCKET_TIMEOUT_SECONDS)
@@ -3600,15 +3634,17 @@ class Handler(SimpleHTTPRequestHandler):
         # - script-src 'self' only: no inline scripts in any HTML template
         #   (every <script> tag carries a src= attribute), so 'unsafe-inline'
         #   is NOT needed for scripts and is omitted.
-        # - style-src 'self' 'unsafe-inline': the editor and public renderer
-        #   emit inline style="..." attributes heavily, so 'unsafe-inline' is
-        #   required for styles.
+        # - style-src 'self' 'nonce-...': the nonce is generated per response
+        #   and injected into <style> tags by serve_html_file()/serve_public().
+        #   Inline style attributes are applied through CSSOM by
+        #   core/theme.js, which CSP permits without 'unsafe-inline'.
         # - frame-src retained for YouTube/SoundCloud iframe embeds used by the
         #   public invitation video/music feature.
         # - frame-ancestors 'self' (rather than 'none'): the editor's storyboard
         #   preview iframes /i/{slug} on the same origin. See the comment on
         #   X-Frame-Options above.
-        self.send_header("Content-Security-Policy", CSP_HEADER)
+        csp = csp_header(self.csp_nonce)
+        self.send_header("Content-Security-Policy", csp)
         # V54.28 (sec-8 — §2.8) — CSP report-only mirror. Same policy as the
         # enforcing header above, plus ``report-uri /api/csp-report`` and a
         # Reporting API ``report-to`` group so the browser posts violations
@@ -3616,7 +3652,7 @@ class Handler(SimpleHTTPRequestHandler):
         # still blocks the offending resource — this mirror only REPORTS what
         # WOULD have been blocked under the same policy. The audit endpoint
         # is rate-limited (60/min per IP) and never fails the request.
-        self.send_header("Content-Security-Policy-Report-Only", CSP_HEADER + "; report-uri /api/csp-report; report-to csp")
+        self.send_header("Content-Security-Policy-Report-Only", csp + "; report-uri /api/csp-report; report-to csp")
         self.send_header("Report-To", CSP_REPORT_TO_HEADER)
         super().end_headers()
     def safe_write(self, body):
@@ -4022,6 +4058,7 @@ class Handler(SimpleHTTPRequestHandler):
         path=(ROOT/filename).resolve()
         if path.parent!=ROOT or not path.is_file():return self.json(404,{"error":"Page not found"})
         page=path.read_text(encoding="utf-8")
+        page=inject_style_nonce(page,self.csp_nonce)
         marker='<meta name="einvite-backend" content="full">'
         base='<base href="/">'
         head_bits=(marker if marker not in page else '')+(base if '<base ' not in page else '')
@@ -11123,6 +11160,7 @@ class Handler(SimpleHTTPRequestHandler):
         # scheme://host prefix otherwise).
         escaped_slug=html.escape(slug,quote=True)
         page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
+        page=inject_style_nonce(page,self.csp_nonce)
         body=page.encode()
         # A missing, draft, archived, deleted, expired or unpublished slug has
         # no public document — get_public() uses the same predicate. Render the
@@ -11804,7 +11842,6 @@ def create_app():
         "X-Frame-Options": "SAMEORIGIN",
         "Cross-Origin-Opener-Policy": "same-origin",
         "Cross-Origin-Resource-Policy": "same-site",
-        "Content-Security-Policy": CSP_HEADER,
         "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     }
 
@@ -11884,6 +11921,13 @@ def create_app():
         for name, value in _SECURITY_HEADERS.items():
             if name.lower() not in existing:
                 headers.append((name, value))
+        # Error paths may bypass Handler.end_headers(); still emit a CSP with
+        # a fresh nonce. Served HTML uses Handler.end_headers() for the same
+        # policy, so this fallback cannot mismatch an injected nonce.
+        if "content-security-policy" not in existing:
+            policy = csp_header()
+            headers.append(("Content-Security-Policy", policy))
+            headers.append(("Content-Security-Policy-Report-Only", policy + "; report-uri /api/csp-report; report-to csp"))
         return headers
 
     def wsgi_app(environ, start_response):

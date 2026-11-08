@@ -131,13 +131,13 @@
         <label>Buddhist Era year<input id="khmerYear" type="number" min="2400" max="2700" value="2570"></label>
         <button id="useKhmerDate" type="button">Use this Khmer date</button>
       </details>
-      <label><input id="khmerNumerals" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Khmer numerals</label>
+      <label><input id="khmerNumerals" type="checkbox" class="inline-check"> Khmer numerals</label>
       <label>Venue — English<input id="venue" value="The Riverside Ballroom, Phnom Penh"></label>
       <label>Venue — Khmer<input id="venueKm" class="khmer-text" lang="km" value="សាលពិធីមង្គលការ រាជធានីភ្នំពេញ"></label>
       <label>Invitation message — English<textarea id="message">Together with our families, we warmly invite you to celebrate our wedding.</textarea></label>
       <label>Invitation message — Khmer<textarea id="messageKm" class="khmer-text" lang="km">ជាមួយនឹងក្រុមគ្រួសាររបស់យើង យើងខ្ញុំសូមគោរពអញ្ជើញលោកអ្នកចូលរួមអបអរសាទរពិធីមង្គលការរបស់យើង។</textarea></label>
       <h2>Host contact</h2>
-      <label><input id="contactEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show contact-host buttons</label>
+      <label><input id="contactEnabled" type="checkbox" checked class="inline-check"> Show contact-host buttons</label>
       <label>Phone number<input id="contactPhone" type="tel" placeholder="+855 12 345 678"></label>
       <label>Telegram username or link<input id="contactTelegram" placeholder="username or https://t.me/username"></label>
       <!-- POSTER-PANEL-HIDE: owner decision (CANVA-UI §5, accepted 2026-10-20) — poster
@@ -145,20 +145,20 @@
            groups (and the Event/Blocks rail buttons) when state.eventType === 'Poster'. -->
       <div id="guestResponseGroup" data-poster-hide="true">
       <h2>Guest response</h2>
-      <label><input id="rsvpEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Enable RSVP attendance form</label>
+      <label><input id="rsvpEnabled" type="checkbox" checked class="inline-check"> Enable RSVP attendance form</label>
       <p class="hint">Turn this off for a pure invitation with no attending, declined, or pending response. Existing historical responses are preserved.</p>
       <div id="rsvpOptionsPanel" class="card">
         <label>RSVP closing date<input id="rsvpCloseDate" type="date"></label>
         <label>Maximum guests per response<input id="rsvpMaxGuests" type="number" min="1" max="50" value="10"></label>
-        <label><input id="rsvpMealQuestion" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Ask meal preference</label>
-        <label><input id="rsvpTransportQuestion" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Ask transport needs</label>
-        <label><input id="rsvpAccommodationQuestion" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Ask accommodation needs</label>
+        <label><input id="rsvpMealQuestion" type="checkbox" class="inline-check"> Ask meal preference</label>
+        <label><input id="rsvpTransportQuestion" type="checkbox" class="inline-check"> Ask transport needs</label>
+        <label><input id="rsvpAccommodationQuestion" type="checkbox" class="inline-check"> Ask accommodation needs</label>
       </div>
       <h3>Custom RSVP questions</h3>
       <p class="hint">Add optional questions such as meal preference, transportation, accommodation, or special requests.</p>
       <div id="rsvpFieldsManager" class="custom-blocks-manager"></div>
       <button id="addRsvpField" type="button">+ Add RSVP question</button>
-      <label><input id="wishesEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Enable private guest wishes</label>
+      <label><input id="wishesEnabled" type="checkbox" class="inline-check"> Enable private guest wishes</label>
       <p class="hint">Guests can send a separate congratulatory message without submitting RSVP. Wishes are visible only to the invitation owner.</p>
       </div>
       <div id="designPagesManager" class="design-pages-manager" data-studio-group="pages"></div>
@@ -201,12 +201,12 @@ rsvp</textarea></label>
       <h3>Reusable page templates</h3>
       <div id="savedPageTemplates" class="saved-page-templates"></div>
       <div id="countdownGroup" data-poster-hide="true">
-      <label><input id="countdownEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show live event countdown</label>
+      <label><input id="countdownEnabled" type="checkbox" checked class="inline-check"> Show live event countdown</label>
       <label>Countdown heading — English<input id="countdownTitle" value="Counting down to our celebration"></label>
       <label>Countdown heading — Khmer<input id="countdownTitleKm" class="khmer-text" lang="km" value="រាប់ថយក្រោយទៅកាន់ថ្ងៃដ៏ពិសេសរបស់យើង"></label>
       <label>Countdown layout<select id="countdownLayout"><option value="cards">Number cards</option><option value="minimal">Minimal</option><option value="pill">Compact pills</option></select></label>
       </div>
-      <label><input id="scheduleEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show event schedule</label>
+      <label><input id="scheduleEnabled" type="checkbox" checked class="inline-check"> Show event schedule</label>
       <label>Schedule — English, one item per line<textarea id="scheduleText" placeholder="4:00 PM | Guest arrival&#10;5:00 PM | Ceremony&#10;6:30 PM | Dinner">4:00 PM | Guest arrival
 5:00 PM | Wedding ceremony
 6:30 PM | Dinner reception</textarea></label>
@@ -214,12 +214,12 @@ rsvp</textarea></label>
 5:00 PM | ពិធីមង្គលការ
 6:30 PM | ពិសាអាហារពេលល្ងាច</textarea></label>
       <label>Schedule layout<select id="scheduleLayout"><option value="timeline">Elegant timeline</option><option value="cards">Event cards</option><option value="minimal">Minimal list</option></select></label>
-      <label><input id="venueEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show venue and map</label>
+      <label><input id="venueEnabled" type="checkbox" checked class="inline-check"> Show venue and map</label>
       <label>Map link<input id="mapUrl" type="url" placeholder="https://maps.google.com/..."></label>
       <label>Additional venues — English, one per line<textarea id="venuesText" placeholder="Reception | Hotel Ballroom | https://maps.google.com/..."></textarea></label>
       <label>Additional venues — Khmer, matching line order<textarea id="venuesTextKm" class="khmer-text" lang="km" placeholder="ពិធីទទួលភ្ញៀវ | សាលសណ្ឋាគារ | https://maps.google.com/..."></textarea></label>
       <label>Venue layout<select id="venueLayout"><option value="cards">Venue cards</option><option value="stacked">Stacked details</option><option value="split">Split layout</option></select></label>
-      <label><input id="galleryEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show photo gallery</label>
+      <label><input id="galleryEnabled" type="checkbox" checked class="inline-check"> Show photo gallery</label>
       <label>Gallery layout<select id="galleryStyle"><option value="grid">Elegant grid</option><option value="filmstrip">Horizontal film strip</option><option value="full">Full-width portraits</option></select></label>
       <h2>Materials</h2>
       <div class="asset-library-controls">
@@ -233,7 +233,7 @@ rsvp</textarea></label>
       <p id="assetLibraryStats" class="hint"></p>
       <label class="upload">Upload photo<input id="photoUpload" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
       <label class="upload">Upload featured video<input id="videoUpload" type="file" accept="video/mp4,video/webm"></label>
-      <label><input id="videoEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Show featured video section</label>
+      <label><input id="videoEnabled" type="checkbox" class="inline-check"> Show featured video section</label>
       <div id="videoState" class="card">No featured video selected.</div>
       <button id="clearVideo" type="button">Clear featured video</button>
       <h3>Background music & external media</h3>
@@ -243,13 +243,13 @@ rsvp</textarea></label>
       <label>SoundCloud URL<input id="soundcloudUrl" type="url" placeholder="https://soundcloud.com/artist/track"></label>
       <label>YouTube display mode<select id="youtubeDisplayMode"><option value="background">Background playback only</option><option value="embedded">Visible embedded player</option><option value="featured">Featured-video section</option></select></label>
       <div class="card external-media-warning" role="note"><strong>External media privacy</strong><p class="hint">YouTube and SoundCloud can receive the guest’s IP address and browser information when playback begins. Only official embed domains are allowed.</p></div>
-      <label><input id="musicEnabled" type="checkbox" style="display:inline-block;width:auto;margin-right:8px"> Enable background music</label>
-      <label><input id="musicStartAfterOpen" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Start after invitation is opened</label>
-      <label><input id="musicLoop" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Loop playback</label>
+      <label><input id="musicEnabled" type="checkbox" class="inline-check"> Enable background music</label>
+      <label><input id="musicStartAfterOpen" type="checkbox" checked class="inline-check"> Start after invitation is opened</label>
+      <label><input id="musicLoop" type="checkbox" checked class="inline-check"> Loop playback</label>
       <label>Volume <span id="musicVolumeValue">75%</span><input id="musicVolume" type="range" min="0" max="100" step="1" value="75"></label>
       <label>Fade in <span id="musicFadeValue">1.2s</span><input id="musicFadeIn" type="range" min="0" max="10" step="0.2" value="1.2"></label>
-      <label><input id="showMusicControl" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show guest music control</label>
-      <label><input id="openingEnabled" type="checkbox" checked style="display:inline-block;width:auto;margin-right:8px"> Show “Tap to open” entrance</label>
+      <label><input id="showMusicControl" type="checkbox" checked class="inline-check"> Show guest music control</label>
+      <label><input id="openingEnabled" type="checkbox" checked class="inline-check"> Show “Tap to open” entrance</label>
       <label>Opening scene<select id="openingStyle"><option value="soft-monogram">Soft Monogram</option><option value="royal-khmer-gate">Royal Khmer Gate</option><option value="silk-curtain">Silk Curtain</option><option value="floral-reveal">Floral Reveal</option><option value="cinematic-photo">Cinematic Photo</option><option value="minimal-editorial">Minimal Editorial</option></select></label>
       <div id="musicState" class="card">No music selected.</div>
       <div id="assets" class="assets"></div>
@@ -331,10 +331,10 @@ rsvp</textarea></label>
           <div id="stage" class="stage">
             <div class="safe-margin-overlay" aria-hidden="true"><span>Safe area</span></div>
             <div class="decor">✦</div>
-        <div class="object text-object" data-id="title" data-text-style-id="display" data-typography-model-version="1" data-font-pairing="serif-formal" data-font="noto-serif" data-font-size="64" data-text-auto-fit="fit" data-text-auto-fit-max="88" data-text-min-font-size="18" data-font-weight="700" data-line-height="1.08" data-text-wrap="balance" style="left:8%;top:10%;width:84%;height:110px"><div class="content title">Sophea & Dara</div><i></i></div>
-        <div class="object text-object" data-id="subtitle" data-text-style-id="subheading" data-typography-model-version="1" data-font-pairing="sans-modern" data-font="noto-sans" data-font-size="28" data-text-auto-fit="fit" data-text-auto-fit-max="36" data-text-min-font-size="14" data-font-weight="700" data-line-height="1.25" data-text-wrap="pretty" style="left:12%;top:31%;width:76%;height:80px"><div class="content subtitle">Together with our families, we warmly invite you to celebrate our wedding.</div><i></i></div>
-        <div class="object image-object" data-id="hero" style="left:12%;top:49%;width:76%;height:250px"><img alt="Wedding flowers" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23eac7b8'/%3E%3Cstop offset='1' stop-color='%239d4555'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23g)'/%3E%3Ccircle cx='270' cy='280' r='120' fill='%23f9eee5' opacity='.8'/%3E%3Ccircle cx='490' cy='270' r='150' fill='%23d98c9a' opacity='.7'/%3E%3Ctext x='400' y='530' text-anchor='middle' font-family='serif' font-size='34' fill='white'%3EOur Celebration%3C/text%3E%3C/svg%3E"><i></i></div>
-        <div class="object text-object" data-id="details" data-text-style-id="body" data-typography-model-version="1" data-font-pairing="sans-modern" data-font="noto-sans" data-font-size="18" data-text-auto-fit="none" data-text-auto-fit-max="22" data-text-min-font-size="12" data-font-weight="400" data-line-height="1.5" data-text-wrap="pretty" style="left:12%;top:83%;width:76%;height:90px"><div class="content details">27 December 2026<br>The Riverside Ballroom, Phnom Penh</div><i></i></div>
+<div class="object text-object" data-id="title" data-csp-left="8%" data-csp-top="10%" data-csp-width="84%" data-csp-height="110px" data-text-style-id="display" data-typography-model-version="1" data-font-pairing="serif-formal" data-font="noto-serif" data-font-size="64" data-text-auto-fit="fit" data-text-auto-fit-max="88" data-text-min-font-size="18" data-font-weight="700" data-line-height="1.08" data-text-wrap="balance"><div class="content title">Sophea & Dara</div><i></i></div>
+        <div class="object text-object" data-id="subtitle" data-csp-left="12%" data-csp-top="31%" data-csp-width="76%" data-csp-height="80px" data-text-style-id="subheading" data-typography-model-version="1" data-font-pairing="sans-modern" data-font="noto-sans" data-font-size="28" data-text-auto-fit="fit" data-text-auto-fit-max="36" data-text-min-font-size="14" data-font-weight="700" data-line-height="1.25" data-text-wrap="pretty"><div class="content subtitle">Together with our families, we warmly invite you to celebrate our wedding.</div><i></i></div>
+        <div class="object image-object" data-id="hero" data-csp-left="12%" data-csp-top="49%" data-csp-width="76%" data-csp-height="250px"><img alt="Wedding flowers" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23eac7b8'/%3E%3Cstop offset='1' stop-color='%239d4555'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23g)'/%3E%3Ccircle cx='270' cy='280' r='120' fill='%23f9eee5' opacity='.8'/%3E%3Ccircle cx='490' cy='270' r='150' fill='%23d98c9a' opacity='.7'/%3E%3Ctext x='400' y='530' text-anchor='middle' font-family='serif' font-size='34' fill='white'%3EOur Celebration%3C/text%3E%3C/svg%3E"><i></i></div>
+        <div class="object text-object" data-id="details" data-csp-left="12%" data-csp-top="83%" data-csp-width="76%" data-csp-height="90px" data-text-style-id="body" data-typography-model-version="1" data-font-pairing="sans-modern" data-font="noto-sans" data-font-size="18" data-text-auto-fit="none" data-text-auto-fit-max="22" data-text-min-font-size="12" data-font-weight="400" data-line-height="1.5" data-text-wrap="pretty"><div class="content details">27 December 2026<br>The Riverside Ballroom, Phnom Penh</div><i></i></div>
           </div>
           </div>
           <div id="canvasMeasurements" aria-hidden="true"></div>

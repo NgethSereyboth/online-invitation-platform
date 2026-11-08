@@ -26,7 +26,7 @@ The review build contains production-oriented security foundations, but deployme
 4. Keep `EINVITE_DEV_AUTH_TOKENS=0` in production.
 5. Use PostgreSQL and Redis for multi-instance deployments.
 6. Configure backups, monitoring, log retention and secret rotation.
-7. Tighten CSP further after remaining legacy inline style attributes are migrated; executable inline scripts are already blocked.
+7. Keep the CSP strict: executable scripts, inline style attributes and unnonced `<style>` blocks are blocked; `style-src` uses a fresh per-response nonce, and `img-src` allows only `'self'`, `data:`, `blob:` and the configured object-storage origin. Add any new image host to `img-src` deliberately instead of restoring `https:`.
 8. Require a working malware scanner for every upload-processing instance. Laptop mode probes Microsoft Defender before startup; production can use `EINVITE_MALWARE_SCANNER_COMMAND` with a maintained scanner such as ClamAV.
 9. Configure `EINVITE_ALLOWED_HOSTS` with the exact application and custom-domain hosts accepted by the deployment.
 

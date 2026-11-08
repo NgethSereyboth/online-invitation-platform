@@ -14,14 +14,14 @@ Every response now carries THREE CSP-related headers (see `end_headers` in
 
 | Header | Purpose |
 |---|---|
-| `Content-Security-Policy` | The enforcing policy. Violations are BLOCKED by the browser. Unchanged since V54.0. |
+| `Content-Security-Policy` | The enforcing policy. Violations are BLOCKED by the browser. Generated per response with a fresh style nonce and the restricted image allowlist. |
 | `Content-Security-Policy-Report-Only` | A mirror of the enforcing policy + `report-uri /api/csp-report` + `report-to csp`. Violations are REPORTED but NOT blocked. |
 | `Report-To` | Reporting API group config — points at the same `/api/csp-report` endpoint with `max_age=10886400` (126 days). |
 
 The report-only policy is the **exact same string** as the enforcing policy,
 plus `; report-uri /api/csp-report; report-to csp`. Keep them in lock-step —
-the constant `CSP_HEADER` (defined at the top of `server.py`) is the single
-source of truth for both.
+both are built from `CSP_HEADER_TEMPLATE` in `server.py` for each response, so
+they share the same per-response style nonce (`csp_header(nonce)`).
 
 > ⚠️ **Do not** flip the report-only header into an enforcing header until
 > a week of clean reports. The whole point of §2.8 is to observe first,
@@ -228,5 +228,6 @@ exercises:
    noise must not pollute the audit trail).
 3. Reporting-API shape (array body) → `204` + same downstream effects.
 4. Rate limit: 60 requests succeed, 61st returns `429`.
-5. Enforcement policy unchanged: the `Content-Security-Policy` header
-   is byte-identical to its pre-V54.28 value.
+5. Report-only parity: the `Content-Security-Policy-Report-Only` header
+   matches the enforcing policy for the same response and only appends the
+   reporting directives.

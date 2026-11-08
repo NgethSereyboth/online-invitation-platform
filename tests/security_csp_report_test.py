@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import sys
 import time
@@ -50,14 +51,8 @@ from v14_test_utils import app_server, temporary_data
 ROOT = Path(__file__).resolve().parents[1]
 DB_FILENAME = "invites.db"
 
-# The V54 enforcement CSP — the EXACT string that was on the
-# Content-Security-Policy header before V54.28. The report-only header
-# must NOT change this; it adds a parallel report-only header instead.
-PRE_V54_28_CSP = (
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-    "img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data:; "
-    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; "
-    "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'"
+CSP_STYLE_NONCE_RE = re.compile(
+    r"style-src 'self' 'nonce-([A-Za-z0-9_-]+)'"
 )
 
 EMAIL = "sec8-csp@example.com"
@@ -229,11 +224,18 @@ def run_header_check(base):
     report_only = headers.get("Content-Security-Policy-Report-Only")
     report_to = headers.get("Report-To")
 
-    assert_eq(enforcing, PRE_V54_28_CSP,
-              "enforcing Content-Security-Policy header unchanged")
+    assert_truthy(enforcing, "enforcing Content-Security-Policy header present")
+    match = CSP_STYLE_NONCE_RE.search(enforcing or "")
+    assert_truthy(match, "style-src carries a nonce")
+    nonce = match.group(1)
+    assert "'unsafe-inline'" not in enforcing, "style-src must not allow unsafe-inline"
+    assert "style-src-attr" not in enforcing, "style-src-attr fallback must not be present"
+    assert "img-src 'self' data: blob:" in enforcing, "img-src starts with the exact allowlist"
+    assert "https:" not in enforcing.split("img-src", 1)[1].split(";", 1)[0], (
+        "img-src must not contain the broad https: source")
     # The report-only header must mirror the enforcing policy + report-uri.
     assert_truthy(report_only, "Content-Security-Policy-Report-Only header present")
-    assert_truthy(report_only.startswith(PRE_V54_28_CSP),
+    assert_truthy(report_only.startswith(enforcing),
                   "report-only header mirrors the enforcing policy prefix")
     assert_truthy("report-uri /api/csp-report" in report_only,
                   "report-only header carries report-uri /api/csp-report")
@@ -244,6 +246,18 @@ def run_header_check(base):
                   "Report-To header points at /api/csp-report")
     assert_truthy('"group":"csp"' in report_to.replace(" ", ""),
                   'Report-To header declares the "csp" group')
+
+    # Every HTML page gets the same nonce in its <style> tags. A fresh
+    # response must use a fresh nonce, not a process-wide constant.
+    status, body, page_headers = http_request(
+        base, "/i18n-css-en.html", method="GET")
+    assert_eq(status, 200, "style fixture GET status")
+    page_policy = page_headers.get("Content-Security-Policy", "")
+    page_match = CSP_STYLE_NONCE_RE.search(page_policy)
+    assert_truthy(page_match, "style fixture carries a style nonce")
+    assert f'nonce="{page_match.group(1)}"' in body.decode("utf-8", "replace"), (
+        "served <style> tags carry the response nonce")
+    assert page_match.group(1) != nonce, "each response must use a fresh nonce"
 
 
 def run_unauthenticated_legacy(base, data, log_dir):

@@ -21,8 +21,9 @@ function cleanNode(node,doc){
   if(dropWithContent.has(node.tagName))return doc.createTextNode('');
   if(!allowed.has(node.tagName)){const frag=doc.createDocumentFragment();[...node.childNodes].forEach(child=>frag.append(cleanNode(child,doc)));return frag}
   const el=doc.createElement(node.tagName.toLowerCase());
-  if(node.tagName==='SPAN'&&node.getAttribute('style')){
-    const safe=[];String(node.getAttribute('style')).split(';').forEach(pair=>{const [rawKey,...rest]=pair.split(':'),key=(rawKey||'').trim().toLowerCase(),value=safeStyleValue(key,rest.join(':'));if(allowedStyles.has(key)&&value)safe.push(`${key}:${value}`)});if(safe.length)el.setAttribute('style',safe.join(';'))
+  const inlineCss=node.getAttribute('data-csp-style')||node.getAttribute('style');
+  if(node.tagName==='SPAN'&&inlineCss){
+    const safe=[];String(inlineCss).split(';').forEach(pair=>{const [rawKey,...rest]=pair.split(':'),key=(rawKey||'').trim().toLowerCase(),value=safeStyleValue(key,rest.join(':'));if(allowedStyles.has(key)&&value)safe.push(`${key}:${value}`)});if(safe.length)el.setAttribute('data-csp-style',safe.join(';'))
   }
   if(node.tagName==='A'){
     const href=safeHref(node.getAttribute('href'));if(href)el.setAttribute('href',href);
@@ -30,10 +31,19 @@ function cleanNode(node,doc){
   }
   [...node.childNodes].forEach(child=>el.append(cleanNode(child,doc)));return el
 }
+/* Rich-text HTML arrives from saved documents and can still carry literal
+   style="..." attributes. Parsing that string through template.innerHTML makes
+   Blink evaluate every style attribute against style-src-attr, which reports a
+   CSP violation even for an inert template. Rename the attribute in the string
+   first (keeping the original value byte-for-byte so entity encoding and quote
+   style do not change); cleanNode whitelists the declarations from there. */
+function parkStyleAttributes(source){
+  return String(source).replace(/(\s)style(\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+)/gi,'$1data-csp-style$2')
+}
 function sanitizeRichText(html){
   const source=String(html??'');if(!source)return'';
   if(typeof document==='undefined')return esc(stripTags(source));
-  const template=document.createElement('template');template.innerHTML=source;const out=document.createElement('div');[...template.content.childNodes].forEach(node=>out.append(cleanNode(node,document)));return out.innerHTML
+  const template=document.createElement('template');template.innerHTML=parkStyleAttributes(source);const out=document.createElement('div');[...template.content.childNodes].forEach(node=>out.append(cleanNode(node,document)));return out.innerHTML
 }
 function plainText(html){if(typeof document==='undefined')return stripTags(html);const div=document.createElement('div');div.innerHTML=sanitizeRichText(html);return div.textContent||''}
 function imageAdjustmentState(o={}){const state={...o};let layers=o.imageAdjustmentLayers||[];if(typeof layers==='string'){try{layers=JSON.parse(layers)}catch{layers=[]}}if(!Array.isArray(layers))layers=[];for(const layer of layers){if(!layer||layer.enabled===false)continue;const value=Number(layer.value||0);switch(layer.type){case'brightness':state.imageBrightness=Number(state.imageBrightness??100)+value;break;case'contrast':state.imageContrast=Number(state.imageContrast??100)+value;break;case'saturation':state.imageSaturation=Number(state.imageSaturation??100)+value;break;case'hue':state.imageHue=Number(state.imageHue||0)+value;break;case'blur':state.imageBlur=Number(state.imageBlur||0)+Math.max(0,value);break;case'grayscale':state.imageGrayscale=Math.max(Number(state.imageGrayscale||0),value);break;case'sepia':state.imageSepia=Math.max(Number(state.imageSepia||0),value);break;case'vibrance':state.imageVibrance=Number(state.imageVibrance||0)+value;break;case'temperature':state.imageTemperature=Number(state.imageTemperature||0)+value;break;case'gamma':state.imageGamma=Number(state.imageGamma||1)*Math.max(.25,value||1);break}}return state}
@@ -77,11 +87,11 @@ function renderObject(o={},options={}){
  const borderWidth=Math.max(0,Math.min(12,Number(o.borderWidth||0))),borderRadius=Math.max(0,Math.min(120,Number(o.borderRadius||0))),shadowBlur=Math.max(0,Math.min(60,Number(o.shadowBlur||0))),opacity=Math.max(.1,Math.min(1,Number(o.opacity??1))),shadow=shadowBlur?`0 ${Math.max(2,Math.round(shadowBlur/3))}px ${shadowBlur}px ${esc(o.shadowColor||'#000000')}55`:'none';
  const height=String(o.height||'80px').includes('%')?o.height:`${parseFloat(o.height||80)/pageHeight*100}%`,top=String(o.top||'0').includes('%')?o.top:`${parseFloat(o.top||0)/pageHeight*100}%`;
  const common=`left:${esc(o.left||'0')};top:${esc(top)};width:${esc(objectDimension(o.width,'x'))};height:${esc(height)};z-index:${Number(o.zIndex||1)};transform:rotate(${Number(o.rotation||0)}deg);opacity:${opacity};border:${borderWidth}px solid ${esc(o.borderColor||'#ffffff')};border-radius:${borderRadius}px;box-shadow:${shadow};animation-name:${animationName(o.animation)};animation-duration:${Math.max(300,Math.min(3000,Number(o.duration||900)))}ms;${advancedObjectStyle(o)}`;
- if(o.type==='image'&&o.src){const masks={none:'none',circle:'ellipse(50% 50% at 50% 50%)',arch:'inset(0 round 48% 48% 12% 12%)',diamond:'polygon(50% 0,100% 50%,50% 100%,0 50%)',hexagon:'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',blob:'polygon(50% 0,78% 8%,96% 35%,91% 72%,66% 100%,31% 94%,6% 68%,0 32%,22% 7%)'},frames={none:['0','transparent'],white:['8px','#ffffff'],gold:['8px','#c79b42'],dark:['8px','#201b1b']},frame=frames[o.imageFrame||'none']||frames.none;return`<div class="published-object published-image reveal" data-object-id="${esc(id)}"${String(o.alt||'').trim()?'':' aria-hidden="true"'} style="${common};${o.dominantColor?`background:${esc(o.dominantColor)};`:''}"><img src="${esc(o.src)}"${responsiveImageAttributes(o)} alt="${String(o.alt||'').trim()?esc(o.alt):''}" loading="lazy" decoding="async" style="object-fit:${esc(o.imageFit||'cover')};object-position:${Number(o.imagePositionX??50)}% ${Number(o.imagePositionY??50)}%;border-radius:inherit;clip-path:${masks[o.imageMask||'none']||'none'};padding:${frame[0]};background:${frame[1]};box-sizing:border-box;filter:${imageFilterStyle(o)};transform:${imageTransformStyle(o)};${imageMaskStyle(o)}"></div>`}
- if(o.type==='shape'){const kind=['rectangle','circle','line'].includes(o.shapeKind)?o.shapeKind:'rectangle',radius=kind==='circle'?'999px':'inherit';return`<div class="published-object published-shape published-shape-${kind} reveal" data-object-id="${esc(id)}" aria-hidden="true" style="${common};background:${shapeFillStyle(o)};border-radius:${radius}"></div>`}
+ if(o.type==='image'&&o.src){const masks={none:'none',circle:'ellipse(50% 50% at 50% 50%)',arch:'inset(0 round 48% 48% 12% 12%)',diamond:'polygon(50% 0,100% 50%,50% 100%,0 50%)',hexagon:'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',blob:'polygon(50% 0,78% 8%,96% 35%,91% 72%,66% 100%,31% 94%,6% 68%,0 32%,22% 7%)'},frames={none:['0','transparent'],white:['8px','#ffffff'],gold:['8px','#c79b42'],dark:['8px','#201b1b']},frame=frames[o.imageFrame||'none']||frames.none;return`<div class="published-object published-image reveal" data-object-id="${esc(id)}"${String(o.alt||'').trim()?'':' aria-hidden="true"'} data-csp-style="${common};${o.dominantColor?`background:${esc(o.dominantColor)};`:''}"><img src="${esc(o.src)}"${responsiveImageAttributes(o)} alt="${String(o.alt||'').trim()?esc(o.alt):''}" loading="lazy" decoding="async" data-csp-style="object-fit:${esc(o.imageFit||'cover')};object-position:${Number(o.imagePositionX??50)}% ${Number(o.imagePositionY??50)}%;border-radius:inherit;clip-path:${masks[o.imageMask||'none']||'none'};padding:${frame[0]};background:${frame[1]};box-sizing:border-box;filter:${imageFilterStyle(o)};transform:${imageTransformStyle(o)};${imageMaskStyle(o)}"></div>`}
+ if(o.type==='shape'){const kind=['rectangle','circle','line'].includes(o.shapeKind)?o.shapeKind:'rectangle',radius=kind==='circle'?'999px':'inherit';return`<div class="published-object published-shape published-shape-${kind} reveal" data-object-id="${esc(id)}" aria-hidden="true" data-csp-style="${common};background:${shapeFillStyle(o)};border-radius:${radius}"></div>`}
  const t=RendererAdapters.project(options.document||{},o,{id,text:plainText(content),locale:options.locale});
  const outerStyle=RendererAdapters.outerStyle(t),flowStyle=RendererAdapters.flowStyle(t),attrs=RendererAdapters.attributes(t);
- return`<div class="published-object published-text reveal${heroTitle?' hero-object-title':''}${o.type==='decoration'?' published-decoration':''}" data-object-id="${esc(id)}" ${attrs} style="${common};${outerStyle}${advancedTextStyle(o)}"><div class="typography-flow" style="${flowStyle}">${content}</div></div>`
+ return`<div class="published-object published-text reveal${heroTitle?' hero-object-title':''}${o.type==='decoration'?' published-decoration':''}" data-object-id="${esc(id)}" ${attrs} data-csp-style="${common};${outerStyle}${advancedTextStyle(o)}"><div class="typography-flow" data-csp-style="${flowStyle}">${content}</div></div>`
 }
 window.EInviteTypographyRendererAdapters=RendererAdapters;
 window.EInviteRenderer={esc,sanitizeRichText,plainText,RendererAdapters,typographyProjection,typographyFontStack,typographyLayoutStyle,typographyOuterStyle,fitTypographyElement,installResponsiveTypography,imageFilterStyle,imageTransformStyle,imageMaskStyle,objectDimension,animationName,advancedObjectStyle,advancedTextStyle,shapeFillStyle,responsiveImageAttributes,renderObject};
