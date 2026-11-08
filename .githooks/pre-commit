@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Scan only the staged diff with the project config. The config extends the
+# default gitleaks rules; without that extension this hook would silently
+# scan with zero rules (the pre-2026-11-07 state).
+set -euo pipefail
+
+if [ -x .tools/bin/gitleaks ]; then
+  gitleaks_bin=".tools/bin/gitleaks"
+elif command -v gitleaks >/dev/null 2>&1; then
+  gitleaks_bin="$(command -v gitleaks)"
+else
+  echo "[pre-commit] gitleaks not installed; secret scan skipped." >&2
+  exit 0
+fi
+
+exec "$gitleaks_bin" git --pre-commit --staged --config .gitleaks.toml --redact --no-banner

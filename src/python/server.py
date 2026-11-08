@@ -11842,7 +11842,6 @@ def create_app():
         "X-Frame-Options": "SAMEORIGIN",
         "Cross-Origin-Opener-Policy": "same-origin",
         "Cross-Origin-Resource-Policy": "same-site",
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     }
 
     # Headers that the WSGI server (waitress) manages — skip these in the
@@ -11915,12 +11914,21 @@ def create_app():
         def shutdown(self, *args):
             pass
 
-    def _inject_security_headers(headers):
-        """Append any §1B security header that the response is missing."""
+    def _inject_security_headers(headers, secure=False):
+        """Append any §1B security header that the response is missing.
+
+        HSTS is intentionally not in ``_SECURITY_HEADERS``: sending it on a
+        plain-HTTP development response is misleading and conflicts with the
+        handler's ``EINVITE_COOKIE_SECURE`` gate. It is added here only when
+        secure mode is enabled, including for early error responses that never
+        reach ``end_headers()``.
+        """
         existing = {name.lower() for name, _ in headers}
         for name, value in _SECURITY_HEADERS.items():
             if name.lower() not in existing:
                 headers.append((name, value))
+        if secure and "strict-transport-security" not in existing:
+            headers.append(("Strict-Transport-Security", "max-age=31536000; includeSubDomains"))
         # Error paths may bypass Handler.end_headers(); still emit a CSP with
         # a fresh nonce. Served HTML uses Handler.end_headers() for the same
         # policy, so this fallback cannot mismatch an injected nonce.
@@ -11935,7 +11943,7 @@ def create_app():
         # response — including error paths where the Handler may not reach
         # end_headers().
         def _start_response(status, headers, exc_info=None):
-            return start_response(status, _inject_security_headers(headers), exc_info)
+            return start_response(status, _inject_security_headers(headers, COOKIE_SECURE), exc_info)
 
         # --- Build raw HTTP request from WSGI environ ----------------
         try:
@@ -12053,7 +12061,11 @@ def create_app():
                 lower = name.lower()
                 if lower in _WSGI_MANAGED_HEADERS:
                     continue
-                if lower in seen:
+                # Multiple Set-Cookie headers are valid and required: login
+                # sends both the session cookie and the double-submit CSRF
+                # cookie. De-duplicating by name silently dropped the CSRF
+                # cookie under waitress and broke every authenticated mutation.
+                if lower in seen and lower != "set-cookie":
                     continue
                 seen.add(lower)
                 headers_out.append((name, value))

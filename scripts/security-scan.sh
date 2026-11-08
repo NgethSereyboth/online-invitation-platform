@@ -157,11 +157,13 @@ fi
 #   detect            scan for secrets
 #   --no-git          scan every file, not just git history
 #   --source .        scan the current directory
+#   --config          use the same default-rule config as the pre-commit hook
+#   --redact          never write raw secret values into logs or the uploaded report
 #   --report-path P   write findings (JSON) to P
 # To install: brew install gitleaks | choco install gitleaks | see releases
 if command -v gitleaks >/dev/null 2>&1; then
   echo "[security-scan] Running gitleaks (secret scanning)..."
-  if gitleaks detect --no-git --source . --report-path "${GITLEAKS_REPORT}"; then
+  if gitleaks detect --no-git --source . --config .gitleaks.toml --redact --report-path "${GITLEAKS_REPORT}"; then
     echo "[security-scan] gitleaks: PASS (no secrets detected)"
   else
     code=$?
