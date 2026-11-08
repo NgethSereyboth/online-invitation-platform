@@ -517,4 +517,65 @@ Phase 1+ of `docs/ROADMAP.md` will introduce:
 
 ---
 
-*Phase 0.2 deliverable of `docs/ROADMAP.md`. Verified against actual code 2026-10-29 (Stage F).*
+## 10. QA Deep-Dive Hardening (2026-11-08)
+
+This section records behavior added or proven on `qa/deep-dive-improvements`. It does not
+change the public API.
+
+### 10.1 CSP nonce lifecycle
+
+`Handler.__init__` creates `self.csp_nonce` with `secrets.token_urlsafe(16)` for every
+response. `csp_header()` embeds it as `style-src 'self' 'nonce-…'`, server-rendered `<style>`
+tags receive the same value, and `end_headers()` emits the policy. Pages without inline styles
+or scripts (for example `dashboard.html`) expose the nonce only through the response header.
+The Playwright visual harness therefore reads the nonce from the navigation response's
+`Content-Security-Policy` header; copying `script[nonce]` does not work on those pages, and a
+second HTTP request would receive a different nonce.
+
+### 10.2 Static delivery and cache policy
+
+`Handler.static_cache_policy()` is applied by both `do_GET` and `do_HEAD` after
+`public_static_path()` approves the request:
+
+| Path class | Header |
+|---|---|
+| `/assets/template-pack/…` (content-addressed artwork) | `public, max-age=86400` |
+| Root bundles, `/assets/`, `/vendor/`, `/core/`, `/licenses/` | `public, max-age=3600, must-revalidate` |
+| API responses | unchanged `no-store` |
+
+`SimpleHTTPRequestHandler.send_head()` still emits `Last-Modified`, so the one-hour policy
+supports conditional revalidation rather than forcing a full download.
+
+### 10.3 Session lifecycle
+
+Sessions are cookie-first (`HttpOnly`, `SameSite=Lax`, optional `Secure`). Logout deletes the
+server-side `sessions` row and clears both the session and CSRF cookies; idle expiry does the
+same. Invalid or expired sessions preserve the documented API contract:
+`GET /api/auth/me` returns `200 {"user": null}` (never a breaking 401 for that endpoint).
+`tests/qa_deep_dive_sessions_test.py` asserts the row deletion, the response contract and the
+five-failure/15-minute account lockout under ten rapid invalid logins.
+
+### 10.4 Pagination indexes
+
+Two indexes support dashboard pagination without changing response shapes:
+
+- `idx_invitations_owner_archived_updated(owner_id, archived, updated_at DESC)` — owner list
+  and archive filters. `EXPLAIN QUERY PLAN` reports
+  `SEARCH invitations USING INDEX idx_invitations_owner_archived_updated (owner_id=? AND archived=?)`.
+- `idx_invitation_collaborators_user_invite(user_id, invitation_id)` — collaborator list and
+  membership checks; the existing `idx_invitation_collaborators_user` remains in use.
+
+### 10.5 Verification commands
+
+```bash
+.venv/bin/python scripts/qa_api_fuzz.py
+.venv/bin/python -m pytest tests/qa_deep_dive_sessions_test.py tests/qa_deep_dive_static_cache_test.py -q
+npx playwright test --config=e2e/playwright.config.ts --project=chromium e2e/specs/06-a11y.spec.ts
+npx playwright test --config=e2e/playwright.config.ts --project=chromium e2e/specs/07-visual.spec.ts
+```
+
+Large refactors and deferred optimizations are tracked in `docs/FUTURE-IMPROVEMENTS.md`.
+
+---
+
+*Phase 0.2 deliverable of `docs/ROADMAP.md`. Verified against actual code 2026-10-29 (Stage F); QA hardening section added 2026-11-08.*
