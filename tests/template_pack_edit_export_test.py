@@ -294,8 +294,13 @@ def test_flagship_template_opens_edits_and_exports(tmp_path):
 
             # PDF: the current page opens in a print window that holds one sized
             # page image and calls print() itself.
+            # The print handler opens a popup and seeds it with document.write(),
+            # which Chromium reports as a pending navigation. Playwright's click
+            # auto-wait can sit on that navigation until the 30 s click timeout on
+            # a loaded CI runner, so opt out of the post-click wait; the popup is
+            # still awaited and its rendered surface asserted below.
             with page.expect_popup(timeout=30000) as popup_info:
-                page.locator("[data-print]").click()
+                page.locator("[data-print]").click(no_wait_after=True)
             printed = popup_info.value
             printed.wait_for_selector("img", timeout=20000)
             surface = printed.evaluate(
