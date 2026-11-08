@@ -59,13 +59,10 @@
     return `<span class="i18n i18n-en" lang="en">${esc(en)}</span> <span class="i18n i18n-km khmer-text" lang="km" lang="km">${esc(km)}</span>`;
   };
 
-  // V54.18 (§3.4) — upload-progress CSS injected once per document from JS (the task
-  // scope forbade .css edits); idempotent, existing tokens with hard-coded fallbacks.
-  const PROGRESS_STYLE_ID = 'einvite-album-progress-style-v54-18';
-  if (!document.getElementById(PROGRESS_STYLE_ID)) {
-    const styleEl = document.createElement('style');
-    styleEl.id = PROGRESS_STYLE_ID;
-    styleEl.textContent = [
+  // V54.18 (§3.4) — upload-progress CSS applied once per document from JS.
+  // A constructable stylesheet keeps the rules available under the strict
+  // style-src nonce policy without injecting an unnonced <style> element.
+  const PROGRESS_CSS = [
       '.album-upload-progress{margin:8px 0 16px;padding:12px 14px;border:1px solid var(--border-1,#e2e3e8);border-radius:var(--radius-md,14px);background:var(--surface-2,#f8f8fb);}',
       '.album-upload-progress[hidden]{display:none!important;}',
       '.album-upload-progress-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}',
@@ -82,8 +79,17 @@
       '.album-upload-retry:hover{background:var(--brand-2,#9c6cff);border-color:var(--brand-2,#9c6cff);color:#fff;}',
       '.album-upload-cancel[hidden],.album-upload-retry[hidden]{display:none!important;}',
       '@media(max-width:540px){.album-upload-progress-bar{flex:1 1 100%;}}',
-    ].join('\n');
-    document.head.appendChild(styleEl);
+  ].join('\n');
+  if (!window.__einviteAlbumProgressStyles) {
+    try {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(PROGRESS_CSS);
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+      window.__einviteAlbumProgressStyles = true;
+    } catch {
+      // Constructable stylesheets are unavailable: the progress markup still
+      // works, it just inherits the surrounding theme styles.
+    }
   }
 
   function enhance(root, opts) {

@@ -1,29 +1,19 @@
 """Static integrity checks for local HTML assets and JavaScript syntax."""
 from __future__ import annotations
-import re,subprocess,sys,tempfile
+import re, subprocess, tempfile
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1]
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
 def resolve_repo_path(relative):
-    stripped=relative.lstrip('/')
-    for candidate in (ROOT/stripped,ROOT/'src'/'js'/stripped,ROOT/'src'/'css'/stripped,ROOT/'src'/'html'/stripped):
-        if candidate.exists():return candidate
+    stripped = relative.lstrip('/')
+    for candidate in (ROOT/stripped, ROOT/'src'/'js'/stripped, ROOT/'src'/'css'/stripped, ROOT/'src'/'html'/stripped):
+        if candidate.exists():
+            return candidate
     return ROOT/stripped
-HTML=list(ROOT.glob('src/html/*.html'))
-missing=[]
-for page in HTML:
-    text=page.read_text(encoding='utf-8')
-    for attr in ('src','href'):
-        for value in re.findall(fr'{attr}=["\']([^"\']+)["\']',text,re.I):
-            if value.startswith(('http://','https://','data:','#','mailto:','tel:')) or '${' in value:continue
-            value=value.split('?',1)[0].split('#',1)[0]
-            if not value or value.startswith('/api/') or value.startswith('/i/') or value.startswith('/uploads/'):continue
-            target=resolve_repo_path(value)
-            if not target.exists():missing.append((page.name,value))
-if missing:raise AssertionError(f'Missing local assets: {missing}')
-# All external JS files parse.
-for js in ROOT.glob('src/js/*.js'):
-    subprocess.run(['node','--check',str(js)],check=True,stdout=subprocess.DEVNULL)
-# Inline scripts parse as a combined file per HTML document.
+
+
 def _inline_scripts(text):
     """Inline <script> bodies, with HTML comments removed first.
 
@@ -34,15 +24,54 @@ def _inline_scripts(text):
     real inline script *before* the comment; once the last inline block moved into a module (C1/D2),
     index.html collected to a syntax error instead of a check. Comments are not inline scripts.
     """
-    without_comments=re.sub(r'<!--.*?-->','',text,flags=re.S)
-    return re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>',without_comments,re.S|re.I)
-# Inline scripts parse as a combined file per HTML document.
-for page in HTML:
-    scripts=_inline_scripts(page.read_text(encoding='utf-8'))
-    if not scripts:continue
-    with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
-        f.write('\n'.join(scripts));name=f.name
-    result=subprocess.run(['node','--check',name],capture_output=True,text=True)
-    Path(name).unlink(missing_ok=True)
-    if result.returncode:raise AssertionError(f'{page.name} inline JavaScript failed: {result.stderr}')
-print('STATIC_INTEGRITY_TEST_PASSED')
+    without_comments = re.sub(r'<!--.*?-->', '', text, flags=re.S)
+    return re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script(?:\s[^>]*)?>', without_comments, re.S | re.I)
+
+
+def check_static_integrity():
+    """Run the asset-resolution and JavaScript syntax checks."""
+    html_pages = list(ROOT.glob('src/html/*.html'))
+    missing = []
+    for page in html_pages:
+        text = page.read_text(encoding='utf-8')
+        for attr in ('src', 'href'):
+            for value in re.findall(fr'{attr}=[\"\']([^\"\']+)[\"\']', text, re.I):
+                if value.startswith(('http://', 'https://', 'data:', '#', 'mailto:', 'tel:')) or '${' in value:
+                    continue
+                value = value.split('?', 1)[0].split('#', 1)[0]
+                # Runtime placeholders are substituted by the server at render time, not local files.
+                if re.fullmatch(r'__[A-Z0-9_]+__', value):
+                    continue
+                if not value or value.startswith('/api/') or value.startswith('/i/') or value.startswith('/uploads/'):
+                    continue
+                target = resolve_repo_path(value)
+                if not target.exists():
+                    missing.append((page.name, value))
+    if missing:
+        raise AssertionError(f'Missing local assets: {missing}')
+
+    # All external JS files parse.
+    for js in ROOT.glob('src/js/*.js'):
+        subprocess.run(['node', '--check', str(js)], check=True, stdout=subprocess.DEVNULL)
+
+    # Inline scripts parse as a combined file per HTML document.
+    for page in html_pages:
+        scripts = _inline_scripts(page.read_text(encoding='utf-8'))
+        if not scripts:
+            continue
+        with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as f:
+            f.write('\n'.join(scripts))
+            name = f.name
+        result = subprocess.run(['node', '--check', name], capture_output=True, text=True)
+        Path(name).unlink(missing_ok=True)
+        if result.returncode:
+            raise AssertionError(f'{page.name} inline JavaScript failed: {result.stderr}')
+
+
+def test_static_integrity():
+    check_static_integrity()
+
+
+if __name__ == '__main__':
+    check_static_integrity()
+    print('STATIC_INTEGRITY_TEST_PASSED')

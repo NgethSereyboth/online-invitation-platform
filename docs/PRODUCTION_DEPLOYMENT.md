@@ -149,9 +149,10 @@ EINVITE_PUBLIC_BASE_URL=https://your-domain.example
 
 The backend also sends CSP, HSTS when secure mode is enabled, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, COOP and CORP headers. Cookie-authenticated state changes receive a same-origin check.
 
-The current CSP blocks inline scripts and inline style elements. A narrowly scoped
-`style-src-attr 'unsafe-inline'` compatibility allowance remains for legacy dynamic
-element style attributes; remove it only after those editor paths are migrated.
+The CSP blocks inline scripts, inline style attributes and unnonced `<style>`
+elements. `style-src` uses a fresh per-response nonce, and `img-src` allows
+`'self'`, `data:`, `blob:` and only the configured object-storage origin. If you
+add another image host, add its exact HTTPS origin to the policy deliberately.
 
 ## SMTP
 

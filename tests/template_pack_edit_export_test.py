@@ -11,6 +11,7 @@ a nudge, a colour change through the inspector, a new page, undo/redo, and a PNG
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -84,11 +85,11 @@ def exported_width(svg: str, object_id: str) -> int | None:
     marker = svg.find(f'data-id="{object_id}"')
     if marker < 0:
         return None
-    start = svg.find(' style="', marker)
-    if start < 0:
+    start = svg.rfind('<', 0, marker)
+    end = svg.find('>', marker)
+    if start < 0 or end < 0:
         return None
-    end = svg.find('"', start + len(' style="'))
-    match = re.search(r"width:(\d+(?:\.\d+)?)px", svg[start:end])
+    match = re.search(r"width:\s*(\d+(?:\.\d+)?)px", svg[start:end])
     return int(float(match.group(1))) if match else None
 
 
@@ -107,6 +108,9 @@ def test_flagship_template_opens_edits_and_exports(tmp_path):
             except Exception as exc:  # pragma: no cover - environment dependent
                 pytest.skip(f"Chromium unavailable: {exc}")
             context = browser.new_context(accept_downloads=True, viewport={"width": 1440, "height": 1000})
+            # The print surface calls window.print() in its popup. Headless CI
+            # has no native dialog, so stub it before any page can block.
+            context.add_init_script("window.print = () => {};")
             page = context.new_page()
             page.on("pageerror", lambda error: errors.append(str(error)))
             page.goto(base + "/dashboard.html", wait_until="domcontentloaded", timeout=30000)
@@ -298,7 +302,8 @@ def test_flagship_template_opens_edits_and_exports(tmp_path):
                 """() => ({
                     images: document.querySelectorAll('img').length,
                     sized: [...document.querySelectorAll('img')].every(img => img.naturalWidth > 0 || img.src.startsWith('data:image/svg+xml')),
-                    pageRule: [...document.querySelectorAll('style')].some(s => (s.textContent || '').includes('@page')),
+                    pageRule: [...document.querySelectorAll('style')].some(s => (s.textContent || '').includes('@page'))
+                        || (document.adoptedStyleSheets || []).some(sheet => [...sheet.cssRules].some(rule => rule.cssText.includes('@page'))),
                 })"""
             )
             assert surface["images"] == 1 and surface["sized"] and surface["pageRule"], surface

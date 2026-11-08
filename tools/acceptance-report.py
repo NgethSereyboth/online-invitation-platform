@@ -122,7 +122,7 @@ def main() -> int:
 
     counts: dict[str, dict[str, int]] = {c: {} for c in CHECKS}
     lines = [
-        "# Acceptance matrix — 36 templates (A1–A12)",
+        f"# Acceptance matrix — {len(rows)} templates (A1–A12)",
         "",
         "Generated from `artifacts/next-work/review-tp/acceptance-all.json` by",
         "`tools/acceptance-report.py`. The harness drives the real editor on a throw-away",

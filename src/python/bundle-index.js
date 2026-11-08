@@ -589,7 +589,7 @@ function notify(type,detail={}){const payload={type,...detail};subscribers.forEa
 function normalizeCommand(input){
 if(!input||typeof input!=='object'||!input.id)throw Error('Command id');
 return Object.freeze({
-title:input.id,category:'General',keywords:[],visible:()=>true,enabled:()=>true,bindings:{},allowFromControls:false,...input,
+title:input.id,category:'General',visible:()=>true,enabled:()=>true,bindings:{},allowFromControls:false,...input,
 keywords:Array.isArray(input.keywords)?input.keywords:String(input.keywords||'').split(/\s+/).filter(Boolean)
 });
 }
@@ -1025,8 +1025,9 @@ function cleanNode(node,doc){
   if(dropWithContent.has(node.tagName))return doc.createTextNode('');
   if(!allowed.has(node.tagName)){const frag=doc.createDocumentFragment();[...node.childNodes].forEach(child=>frag.append(cleanNode(child,doc)));return frag}
   const el=doc.createElement(node.tagName.toLowerCase());
-  if(node.tagName==='SPAN'&&node.getAttribute('style')){
-    const safe=[];String(node.getAttribute('style')).split(';').forEach(pair=>{const [rawKey,...rest]=pair.split(':'),key=(rawKey||'').trim().toLowerCase(),value=safeStyleValue(key,rest.join(':'));if(allowedStyles.has(key)&&value)safe.push(`${key}:${value}`)});if(safe.length)el.setAttribute('style',safe.join(';'))
+  const inlineCss=node.getAttribute('data-csp-style')||node.getAttribute('style');
+  if(node.tagName==='SPAN'&&inlineCss){
+    const safe=[];String(inlineCss).split(';').forEach(pair=>{const [rawKey,...rest]=pair.split(':'),key=(rawKey||'').trim().toLowerCase(),value=safeStyleValue(key,rest.join(':'));if(allowedStyles.has(key)&&value)safe.push(`${key}:${value}`)});if(safe.length)el.setAttribute('data-csp-style',safe.join(';'))
   }
   if(node.tagName==='A'){
     const href=safeHref(node.getAttribute('href'));if(href)el.setAttribute('href',href);
@@ -1034,10 +1035,19 @@ function cleanNode(node,doc){
   }
   [...node.childNodes].forEach(child=>el.append(cleanNode(child,doc)));return el
 }
+
+
+
+
+
+
+function parkStyleAttributes(source){
+  return String(source).replace(/(\s)style(\s*=\s*)(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+)/gi,'$1data-csp-style$2')
+}
 function sanitizeRichText(html){
   const source=String(html??'');if(!source)return'';
   if(typeof document==='undefined')return esc(stripTags(source));
-  const template=document.createElement('template');template.innerHTML=source;const out=document.createElement('div');[...template.content.childNodes].forEach(node=>out.append(cleanNode(node,document)));return out.innerHTML
+  const template=document.createElement('template');template.innerHTML=parkStyleAttributes(source);const out=document.createElement('div');[...template.content.childNodes].forEach(node=>out.append(cleanNode(node,document)));return out.innerHTML
 }
 function plainText(html){if(typeof document==='undefined')return stripTags(html);const div=document.createElement('div');div.innerHTML=sanitizeRichText(html);return div.textContent||''}
 function imageAdjustmentState(o={}){const state={...o};let layers=o.imageAdjustmentLayers||[];if(typeof layers==='string'){try{layers=JSON.parse(layers)}catch{layers=[]}}if(!Array.isArray(layers))layers=[];for(const layer of layers){if(!layer||layer.enabled===false)continue;const value=Number(layer.value||0);switch(layer.type){case'brightness':state.imageBrightness=Number(state.imageBrightness??100)+value;break;case'contrast':state.imageContrast=Number(state.imageContrast??100)+value;break;case'saturation':state.imageSaturation=Number(state.imageSaturation??100)+value;break;case'hue':state.imageHue=Number(state.imageHue||0)+value;break;case'blur':state.imageBlur=Number(state.imageBlur||0)+Math.max(0,value);break;case'grayscale':state.imageGrayscale=Math.max(Number(state.imageGrayscale||0),value);break;case'sepia':state.imageSepia=Math.max(Number(state.imageSepia||0),value);break;case'vibrance':state.imageVibrance=Number(state.imageVibrance||0)+value;break;case'temperature':state.imageTemperature=Number(state.imageTemperature||0)+value;break;case'gamma':state.imageGamma=Number(state.imageGamma||1)*Math.max(.25,value||1);break}}return state}
@@ -1081,11 +1091,11 @@ function renderObject(o={},options={}){
  const borderWidth=Math.max(0,Math.min(12,Number(o.borderWidth||0))),borderRadius=Math.max(0,Math.min(120,Number(o.borderRadius||0))),shadowBlur=Math.max(0,Math.min(60,Number(o.shadowBlur||0))),opacity=Math.max(.1,Math.min(1,Number(o.opacity??1))),shadow=shadowBlur?`0 ${Math.max(2,Math.round(shadowBlur/3))}px ${shadowBlur}px ${esc(o.shadowColor||'#000000')}55`:'none';
  const height=String(o.height||'80px').includes('%')?o.height:`${parseFloat(o.height||80)/pageHeight*100}%`,top=String(o.top||'0').includes('%')?o.top:`${parseFloat(o.top||0)/pageHeight*100}%`;
  const common=`left:${esc(o.left||'0')};top:${esc(top)};width:${esc(objectDimension(o.width,'x'))};height:${esc(height)};z-index:${Number(o.zIndex||1)};transform:rotate(${Number(o.rotation||0)}deg);opacity:${opacity};border:${borderWidth}px solid ${esc(o.borderColor||'#ffffff')};border-radius:${borderRadius}px;box-shadow:${shadow};animation-name:${animationName(o.animation)};animation-duration:${Math.max(300,Math.min(3000,Number(o.duration||900)))}ms;${advancedObjectStyle(o)}`;
- if(o.type==='image'&&o.src){const masks={none:'none',circle:'ellipse(50% 50% at 50% 50%)',arch:'inset(0 round 48% 48% 12% 12%)',diamond:'polygon(50% 0,100% 50%,50% 100%,0 50%)',hexagon:'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',blob:'polygon(50% 0,78% 8%,96% 35%,91% 72%,66% 100%,31% 94%,6% 68%,0 32%,22% 7%)'},frames={none:['0','transparent'],white:['8px','#ffffff'],gold:['8px','#c79b42'],dark:['8px','#201b1b']},frame=frames[o.imageFrame||'none']||frames.none;return`<div class="published-object published-image reveal" data-object-id="${esc(id)}"${String(o.alt||'').trim()?'':' aria-hidden="true"'} style="${common};${o.dominantColor?`background:${esc(o.dominantColor)};`:''}"><img src="${esc(o.src)}"${responsiveImageAttributes(o)} alt="${String(o.alt||'').trim()?esc(o.alt):''}" loading="lazy" decoding="async" style="object-fit:${esc(o.imageFit||'cover')};object-position:${Number(o.imagePositionX??50)}% ${Number(o.imagePositionY??50)}%;border-radius:inherit;clip-path:${masks[o.imageMask||'none']||'none'};padding:${frame[0]};background:${frame[1]};box-sizing:border-box;filter:${imageFilterStyle(o)};transform:${imageTransformStyle(o)};${imageMaskStyle(o)}"></div>`}
- if(o.type==='shape'){const kind=['rectangle','circle','line'].includes(o.shapeKind)?o.shapeKind:'rectangle',radius=kind==='circle'?'999px':'inherit';return`<div class="published-object published-shape published-shape-${kind} reveal" data-object-id="${esc(id)}" aria-hidden="true" style="${common};background:${shapeFillStyle(o)};border-radius:${radius}"></div>`}
+ if(o.type==='image'&&o.src){const masks={none:'none',circle:'ellipse(50% 50% at 50% 50%)',arch:'inset(0 round 48% 48% 12% 12%)',diamond:'polygon(50% 0,100% 50%,50% 100%,0 50%)',hexagon:'polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)',blob:'polygon(50% 0,78% 8%,96% 35%,91% 72%,66% 100%,31% 94%,6% 68%,0 32%,22% 7%)'},frames={none:['0','transparent'],white:['8px','#ffffff'],gold:['8px','#c79b42'],dark:['8px','#201b1b']},frame=frames[o.imageFrame||'none']||frames.none;return`<div class="published-object published-image reveal" data-object-id="${esc(id)}"${String(o.alt||'').trim()?'':' aria-hidden="true"'} data-csp-style="${common};${o.dominantColor?`background:${esc(o.dominantColor)};`:''}"><img src="${esc(o.src)}"${responsiveImageAttributes(o)} alt="${String(o.alt||'').trim()?esc(o.alt):''}" loading="lazy" decoding="async" data-csp-style="object-fit:${esc(o.imageFit||'cover')};object-position:${Number(o.imagePositionX??50)}% ${Number(o.imagePositionY??50)}%;border-radius:inherit;clip-path:${masks[o.imageMask||'none']||'none'};padding:${frame[0]};background:${frame[1]};box-sizing:border-box;filter:${imageFilterStyle(o)};transform:${imageTransformStyle(o)};${imageMaskStyle(o)}"></div>`}
+ if(o.type==='shape'){const kind=['rectangle','circle','line'].includes(o.shapeKind)?o.shapeKind:'rectangle',radius=kind==='circle'?'999px':'inherit';return`<div class="published-object published-shape published-shape-${kind} reveal" data-object-id="${esc(id)}" aria-hidden="true" data-csp-style="${common};background:${shapeFillStyle(o)};border-radius:${radius}"></div>`}
  const t=RendererAdapters.project(options.document||{},o,{id,text:plainText(content),locale:options.locale});
  const outerStyle=RendererAdapters.outerStyle(t),flowStyle=RendererAdapters.flowStyle(t),attrs=RendererAdapters.attributes(t);
- return`<div class="published-object published-text reveal${heroTitle?' hero-object-title':''}${o.type==='decoration'?' published-decoration':''}" data-object-id="${esc(id)}" ${attrs} style="${common};${outerStyle}${advancedTextStyle(o)}"><div class="typography-flow" style="${flowStyle}">${content}</div></div>`
+ return`<div class="published-object published-text reveal${heroTitle?' hero-object-title':''}${o.type==='decoration'?' published-decoration':''}" data-object-id="${esc(id)}" ${attrs} data-csp-style="${common};${outerStyle}${advancedTextStyle(o)}"><div class="typography-flow" data-csp-style="${flowStyle}">${content}</div></div>`
 }
 window.EInviteTypographyRendererAdapters=RendererAdapters;
 window.EInviteRenderer={esc,sanitizeRichText,plainText,RendererAdapters,typographyProjection,typographyFontStack,typographyLayoutStyle,typographyOuterStyle,fitTypographyElement,installResponsiveTypography,imageFilterStyle,imageTransformStyle,imageMaskStyle,objectDimension,animationName,advancedObjectStyle,advancedTextStyle,shapeFillStyle,responsiveImageAttributes,renderObject};
@@ -3247,10 +3257,10 @@ $$('.object').forEach((o,index)=>{
 const img=o.querySelector('img');
 const previousObject=state.objects[o.dataset.id]?clone(state.objects[o.dataset.id]):null;
 state.objects[o.dataset.id]={
-left:o.style.left,
-top:o.style.top,
-width:o.style.width,
-height:o.style.height,
+left:o.style.left||o.dataset.cspLeft||'',
+top:o.style.top||o.dataset.cspTop||'',
+width:o.style.width||o.dataset.cspWidth||'',
+height:o.style.height||o.dataset.cspHeight||'',
 font:v19FontId(o.dataset.font),
 fontPairing:o.dataset.fontPairing||pairingForFont(o.dataset.font),
 textStyleId:o.dataset.textStyleId||(o.dataset.id==='title'?'display':o.dataset.id==='subtitle'?'subheading':o.dataset.id==='details'?'body':undefined),
@@ -3757,7 +3767,7 @@ time=$('#time').value,timeLabel=window.EInviteKhmerFormat?EInviteKhmerFormat.for
 const details=$('[data-id="details"] .content');
 const venueLabel=mode==='km'?($('#venueKm').value||$('#venue').value):$('#venue').value;
 if(details){
-if(!state.objects?.details?.richText)details.innerHTML=`${label}${timeLabel?` · ${timeLabel}`:''}<br>${venueLabel}`;
+if(!state.objects?.details?.richText){details.textContent=`${label}${timeLabel?` · ${timeLabel}`:''}`;details.append(document.createElement('br'),document.createTextNode(String(venueLabel??'')))}
 details.classList.toggle('khmer-text',mode==='km');details.lang=mode==='km'?'km':''
 }
 refreshKhmerDate();
@@ -4135,7 +4145,7 @@ backgroundEnabled:!!options.backgroundEnabled,backgroundColor:options.background
 fillMode:options.fillMode||'solid',gradientStart:options.gradientStart||'#d9a6ad',gradientEnd:options.gradientEnd||'#9d4555',gradientAngle:Number(options.gradientAngle??135),
 textGradientEnabled:!!options.textGradientEnabled,textGradientStart:options.textGradientStart||'#9d4555',textGradientEnd:options.textGradientEnd||'#b58a3a',textGradientAngle:Number(options.textGradientAngle??90),
 textStrokeWidth:Number(options.textStrokeWidth||0),textStrokeColor:options.textStrokeColor||'#ffffff',textShadowBlur:Number(options.textShadowBlur||0),textShadowColor:options.textShadowColor||'#000000',textTransform:options.textTransform||'none',
-animationDelay:Number(options.animationDelay||0),caption:'',shapeKind:options.shapeKind||'rectangle'
+animationDelay:Number(options.animationDelay||0),caption:''
 }
 }
 function designPagePreset(type='title'){
@@ -5641,7 +5651,7 @@ const src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?rel=
 items.push(`<div class="external-video external-video-${safeHtml(display)}"><iframe class="youtube-visible-player" src="${safeHtml(src)}" title="YouTube video" allow="encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><p class="external-media-fallback">${languageText('If the video cannot be embedded,','ប្រសិនបើវីដេអូមិនអាចបង្ហាញបាន',mode)} <a href="https://youtu.be/${safeHtml(id)}" target="_blank" rel="noopener noreferrer">${languageText('open it on YouTube','បើកនៅលើ YouTube',mode)}</a>.</p></div>`)
 }
 if(!items.length)return'';
-return`<section class="video-section reveal" style="${combinedSectionStyle(d,'video')}"><h2>${languageText('Featured Video','វីដេអូពិសេស',mode)}</h2>${items.join('')}</section>`
+return`<section class="video-section reveal" data-csp-style="${combinedSectionStyle(d,'video')}"><h2>${languageText('Featured Video','វីដេអូពិសេស',mode)}</h2>${items.join('')}</section>`
 }
 function contactMarkup(d){
 if(d.settings?.contactEnabled===false)return'';
@@ -5649,7 +5659,7 @@ const phone=String(d.contactPhone||'').trim(),telegram=normalizedTelegram(d.cont
 const phoneHref=/^[+0-9() .-]{5,30}$/.test(phone)?`tel:${phone.replace(/[^+0-9]/g, '')}`:'';
 if(!phoneHref&&!telegram)return'';
 const mode=d.languageMode||'both';
-return`<section class="contact-section reveal" style="${combinedSectionStyle(d,'contact')}"><h2>${languageText('Contact the hosts','ទំនាក់ទំនងម្ចាស់កម្មវិធី',mode)}</h2><div class="contact-actions">${phoneHref?`<a href="${safeHtml(phoneHref)}">☎ ${languageText('Call','ទូរស័ព្ទ',mode)}</a>`:''}${telegram?`<a href="${safeHtml(telegram)}" target="_blank" rel="noopener">✈ Telegram</a>`:''}</div></section>`
+return`<section class="contact-section reveal" data-csp-style="${combinedSectionStyle(d,'contact')}"><h2>${languageText('Contact the hosts','ទំនាក់ទំនងម្ចាស់កម្មវិធី',mode)}</h2><div class="contact-actions">${phoneHref?`<a href="${safeHtml(phoneHref)}">☎ ${languageText('Call','ទូរស័ព្ទ',mode)}</a>`:''}${telegram?`<a href="${safeHtml(telegram)}" target="_blank" rel="noopener">✈ Telegram</a>`:''}</div></section>`
 }
 function templateDecorMarkup(theme){
 const marks={
@@ -5664,13 +5674,13 @@ function customBlocksMarkup(d){
 const mode=d.languageMode||'both',blocks=(d.customBlocks||[]).filter(block=>block.enabled!==false);
 if(!blocks.length)return'';
 const layout=safeHtml(d.sectionLayouts?.custom||'cards');
-return`<div class="custom-blocks custom-layout-${layout} reveal" style="${combinedSectionStyle(d,'custom')}">${blocks.map(block => `<section class="custom-info-block block-${safeHtml(block.type || 'custom')}"><div class="block-icon">${block.type==='story'?'♥':block.type==='dress-code'?'✦':block.type==='note'?'!':block.type==='quote'?'“':block.type==='accommodation'?'⌂':block.type==='gift'?'◇':'◇'}</div><h2>${languageText(block.heading||customBlockLabel(block.type),block.headingKm||block.heading||customBlockLabel(block.type),mode)}</h2><p>${languageText(block.body||'',block.bodyKm||block.body||'',mode)}</p></section>`).join('')}</div>`
+return`<div class="custom-blocks custom-layout-${layout} reveal" data-csp-style="${combinedSectionStyle(d,'custom')}">${blocks.map(block => `<section class="custom-info-block block-${safeHtml(block.type || 'custom')}"><div class="block-icon">${block.type==='story'?'♥':block.type==='dress-code'?'✦':block.type==='note'?'!':block.type==='quote'?'“':block.type==='accommodation'?'⌂':block.type==='gift'?'◇':'◇'}</div><h2>${languageText(block.heading||customBlockLabel(block.type),block.headingKm||block.heading||customBlockLabel(block.type),mode)}</h2><p>${languageText(block.body||'',block.bodyKm||block.body||'',mode)}</p></section>`).join('')}</div>`
 }
 function eventJourneyMarkupEditor(d){
 const mode=d.languageMode||'both',events=(d.events||[]).filter(event=>event&&event.enabled!==false&&event.name);
 if(!events.length)return'';
 const timezone=String(d.timezone||'').trim();
-return`<section class="event-journey reveal" style="${combinedSectionStyle(d,'events')}"><h2>${languageText('Events & ceremonies','កម្មវិធី និងពិធី',mode)}</h2>${timezone?`<p class="event-timezone">${languageText('Timezone','តំបន់ពេលវេលា',mode)}: ${safeHtml(timezone)}</p>`:''}<div class="event-journey-list">${events.map(event=>{const date=event.date?new Date(`${event.date}T${event.time||'00:00'}:00`):null,dateText=date&&!Number.isNaN(date.getTime())?date.toLocaleString(undefined,{dateStyle:'medium',timeStyle:event.time?'short':undefined}):[event.date,event.time].filter(Boolean).join(' '),map=/^https?:\/\//i.test(event.mapUrl||'')?`<a href="${safeHtml(event.mapUrl)}" target="_blank" rel="noopener">${languageText('Directions','ទិសដៅ',mode)}</a>`:'';return `<article class="event-journey-card"><span class="event-type">${safeHtml(event.type||'event')}</span><h3>${safeHtml(event.name)}</h3>${dateText?`<p><strong>${safeHtml(dateText)}</strong></p>`:''}${event.venue?`<p>${safeHtml(event.venue)}</p>`:''}${map}</article>`}).join('')}</div></section>`
+return`<section class="event-journey reveal" data-csp-style="${combinedSectionStyle(d,'events')}"><h2>${languageText('Events & ceremonies','កម្មវិធី និងពិធី',mode)}</h2>${timezone?`<p class="event-timezone">${languageText('Timezone','តំបន់ពេលវេលា',mode)}: ${safeHtml(timezone)}</p>`:''}<div class="event-journey-list">${events.map(event=>{const date=event.date?new Date(`${event.date}T${event.time||'00:00'}:00`):null,dateText=date&&!Number.isNaN(date.getTime())?date.toLocaleString(undefined,{dateStyle:'medium',timeStyle:event.time?'short':undefined}):[event.date,event.time].filter(Boolean).join(' '),map=/^https?:\/\//i.test(event.mapUrl||'')?`<a href="${safeHtml(event.mapUrl)}" target="_blank" rel="noopener">${languageText('Directions','ទិសដៅ',mode)}</a>`:'';return `<article class="event-journey-card"><span class="event-type">${safeHtml(event.type||'event')}</span><h3>${safeHtml(event.name)}</h3>${dateText?`<p><strong>${safeHtml(dateText)}</strong></p>`:''}${event.venue?`<p>${safeHtml(event.venue)}</p>`:''}${map}</article>`}).join('')}</div></section>`
 }
 
 
@@ -5694,7 +5704,7 @@ if(info.accommodation)items.push([languageText('Accommodation','កន្លែ�
 if(info.note)items.push([languageText('Guest note','សេចក្តីជូនដំណឹង',mode),info.note]);
 const gift=/^https?:\/\//i.test(info.giftLink||'')?`<a class="button-link" href="${safeHtml(info.giftLink)}" target="_blank" rel="noopener noreferrer">${safeHtml(info.giftLabel||'Gift registry')}</a>`:'',payment=/^https?:\/\//i.test(info.paymentLink||'')?`<a class="button-link" href="${safeHtml(info.paymentLink)}" target="_blank" rel="noopener noreferrer">${safeHtml(info.paymentLabel||'Contribution / payment')}</a>`:'',qr=guestGiftQrMarkupEditor(info);
 if(!items.length&&!gift&&!payment&&!qr)return'';
-return`<section class="guest-information reveal" style="${combinedSectionStyle(d,'guest-info')}"><h2>${languageText('Guest information','ព័ត៌មានសម្រាប់ភ្ញៀវ',mode)}</h2><div class="guest-information-grid">${items.map(([label,value])=>`<article><strong>${label}</strong><p>${safeHtml(value)}</p></article>`).join('')}${qr}</div>${gift||payment?`<div class="guest-information-actions">${gift}${payment}</div>`:''}</section>`
+return`<section class="guest-information reveal" data-csp-style="${combinedSectionStyle(d,'guest-info')}"><h2>${languageText('Guest information','ព័ត៌មានសម្រាប់ភ្ញៀវ',mode)}</h2><div class="guest-information-grid">${items.map(([label,value])=>`<article><strong>${label}</strong><p>${safeHtml(value)}</p></article>`).join('')}${qr}</div>${gift||payment?`<div class="guest-information-actions">${gift}${payment}</div>`:''}</section>`
 }
 function sectionAnimationStyle(d,name){
 const setting=d.sectionAnimations?.[name]||initial.sectionAnimations?.[name]||{preset:'fade-up',duration:900};
@@ -5759,15 +5769,15 @@ const mode=d.languageMode||'both',f=d.fields||{},objects=Object.entries(d.object
 if(!objects.length)return'';
 const contentFor=(id,o)=>{if(id==='title')return languageText(f.names||'',f.namesKm||f.names||'',mode);if(id==='subtitle')return languageText(f.message||'',f.messageKm||f.message||'',mode);if(id==='details'){const date=gregorianLabel(f),venue=languageText(f.venue||'',f.venueKm||f.venue||'',mode);return`${safeHtml(date)}${f.time?` · ${safeHtml(localizedTime(f.time))}`:''}<br>${venue}`}return window.EInviteRenderer?EInviteRenderer.sanitizeRichText(o.html||''):safeHtml(String(o.html||'').replace(/<[^>]+>/g,' ').trim())};
 const rendered=window.EInviteRenderer?.renderObject?objects.map(([id,o])=>EInviteRenderer.renderObject(o,{id,pageHeight:844,content:contentFor(id,o),heroTitle:id==='title',document:d})).join(''):'';
-return`<section class="artistic-hero-section reveal" style="${sectionAnimationStyle(d,'hero')}"><div class="published-artboard">${rendered}</div></section>`
+return`<section class="artistic-hero-section reveal" data-csp-style="${sectionAnimationStyle(d,'hero')}"><div class="published-artboard">${rendered}</div></section>`
 }
 function galleryMarkup(d){
 if(d.settings?.galleryEnabled===false)return'';
 const photos=orderedPhotos(d);
 if(!photos.length)return'';
-return`<section class="photo-gallery gallery-${safeHtml(d.galleryStyle||'grid')} reveal" style="${combinedSectionStyle(d,'gallery')}" aria-label="Photo gallery">${photos.map((photo,index)=>{
+return`<section class="photo-gallery gallery-${safeHtml(d.galleryStyle||'grid')} reveal" data-csp-style="${combinedSectionStyle(d,'gallery')}" aria-label="Photo gallery">${photos.map((photo,index)=>{
         const animation = animationName(photo.animation), duration = Math.max(300, Math.min(3000, +(photo.duration || 900))), delay = Math.min(index * .12, .72);
-        return `<figure class="gallery-photo"><img src="${safeHtml(photo.src)}" alt="${safeHtml(photo.alt||`Celebration photo ${index+1}`)}" loading="${index?'lazy':'eager'}" class="reveal" style="animation-name:${animation};animation-duration:${duration}ms;animation-delay:${delay}s;object-fit:${safeHtml(photo.imageFit||'cover')};object-position:${Number(photo.imagePositionX??50)}% ${Number(photo.imagePositionY??50)}%;filter:${imageFilterStyle(photo)};transform:scaleX(${photo.imageFlipX?-1:1}) scaleY(${photo.imageFlipY?-1:1})">${photo.caption?`<figcaption>${safeHtml(photo.caption)}</figcaption>`:''}</figure>`
+        return `<figure class="gallery-photo"><img src="${safeHtml(photo.src)}" alt="${safeHtml(photo.alt||`Celebration photo ${index+1}`)}" loading="${index?'lazy':'eager'}" class="reveal" data-csp-style="animation-name:${animation};animation-duration:${duration}ms;animation-delay:${delay}s;object-fit:${safeHtml(photo.imageFit||'cover')};object-position:${Number(photo.imagePositionX??50)}% ${Number(photo.imagePositionY??50)}%;filter:${imageFilterStyle(photo)};transform:scaleX(${photo.imageFlipX?-1:1}) scaleY(${photo.imageFlipY?-1:1})">${photo.caption?`<figcaption>${safeHtml(photo.caption)}</figcaption>`:''}</figure>`
     }).join('')}</section>`
 }
 function bindLanguageSwitch(scope,mode,doc=state){
@@ -5863,7 +5873,7 @@ const master=d.masterPageStyle||{},source=page.useMasterBackground&&master.enabl
 const image=safeSectionImageUrl(source.backgroundImage),overlay=Math.max(0,Math.min(80,Number(source.backgroundOverlay||0)))/100,bg=/^#[0-9a-f]{6}$/i.test(source.background||'')?source.background:'#fffaf6',imageRules=image?`background-image:linear-gradient(rgba(0,0,0,${overlay}),rgba(0,0,0,${overlay})),url(&quot;${safeHtml(image)}&quot;);background-size:${source.backgroundSize==='contain'?'contain':'cover'};background-position:center;background-repeat:no-repeat;`:'';
 const animation=animationName(page.animation?.preset||'fade-up'),duration=Math.max(300,Math.min(3000,Number(page.animation?.duration||900))),motion=animation?`animation-name:${animation};animation-duration:${duration}ms`:'animation:none';
 const transition=['none','soft','overlap','sweep'].includes(page.transition?.preset)?page.transition.preset:'soft',transitionDuration=Math.max(200,Math.min(2000,Number(page.transition?.duration||600)));
-return`<section class="design-page-section reveal page-transition-${transition}" style="--page-transition-duration:${transitionDuration}ms;background:${bg};${imageRules}${motion}"><div class="published-artboard published-page-artboard">${designPageObjectMarkup(page.objects||{},844,d)}</div></section>`
+return`<section class="design-page-section reveal page-transition-${transition}" data-csp-style="--page-transition-duration:${transitionDuration}ms;background:${bg};${imageRules}${motion}"><div class="published-artboard published-page-artboard">${designPageObjectMarkup(page.objects||{},844,d)}</div></section>`
 }
 function previewRsvpCustomFields(d,mode){return(d.rsvpFields||[]).map(field=>{const name=`custom_${String(field.id||'').replace(/[^A-Za-z0-9_-]/g,'')}`,label=languageText(field.label||'Question',field.labelKm||field.label||'Question',mode),required=field.required?' required':'',type=field.type||'text';if(type==='textarea')return`<label>${label}<textarea name="${safeHtml(name)}" maxlength="2000"${required}></textarea></label>`;if(type==='select')return`<label>${label}<select name="${safeHtml(name)}"${required}><option value="">${safeHtml(mode==='km'?'សូមជ្រើសរើស':'Select an option')}</option>${(field.options||[]).map(option=>`<option value="${safeHtml(option)}">${safeHtml(option)}</option>`).join('')}</select></label>`;if(type==='number')return`<label>${label}<input name="${safeHtml(name)}" type="number"${required}></label>`;return`<label>${label}<input name="${safeHtml(name)}" maxlength="2000"${required}></label>`}).join('')}
 function guestHTML(snap){
@@ -5876,23 +5886,23 @@ duration=Math.max(300,Math.min(3000,+(objs[0]?.duration||900))),
 gregorian=gregorianLabel(f),
 khmer=d.khmerDate||khmerDateFor(f.date,f.time),
 dateBlock=d.dateFormat==='khmer'?`<h2 class="khmer-text" lang="km">${safeHtml(khmer||gregorian)}</h2>`:d.dateFormat==='gregorian'?`<h2>${safeHtml(gregorian)}</h2>`:`<h2 class="khmer-text" lang="km">${safeHtml(khmer||gregorian)}</h2><p>${safeHtml(gregorian)}</p>`,
-rsvp=d.settings?.rsvpEnabled===false?'':`<form id="guestRsvp" class="reveal" style="${combinedSectionStyle(d,'rsvp')}"><h2>${languageText('RSVP','សូមឆ្លើយតបការអញ្ជើញ',mode)}</h2><label>${languageText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120"></label><label>${languageText('Will you attend?','តើអ្នកនឹងចូលរួមទេ?',mode)}<select name="status"><option value="Yes, joyfully" data-en="Yes, joyfully" data-km="បាទ/ចាស ខ្ញុំនឹងចូលរួម">Yes, joyfully</option><option value="Unable to attend" data-en="Unable to attend" data-km="សូមអភ័យទោស ខ្ញុំមិនអាចចូលរួមបានទេ">Unable to attend</option><option value="Maybe" data-en="Maybe" data-km="ប្រហែលជា">Maybe</option></select></label><label>${languageText('Number of guests','ចំនួនភ្ញៀវ',mode)}<input name="count" type="number" min="1" max="10" value="1"></label>${previewRsvpCustomFields(d,mode)}<label>${languageText('Message','សារ',mode)}<textarea name="note" maxlength="1000"></textarea></label><button class="primary">${languageText('Send RSVP','ផ្ញើការឆ្លើយតប',mode)}</button></form>`,
-schedule=d.settings?.scheduleEnabled===false?'':`<section class="schedule-section schedule-layout-${safeHtml(d.sectionLayouts?.schedule||'timeline')} reveal" style="${combinedSectionStyle(d,'schedule')}"><h2>${languageText('Schedule','កម្មវិធី',mode)}</h2><div class="schedule-list">${(d.schedule||[]).map(x=>`<article><strong>${safeHtml(x.time)}</strong><span>${languageText(x.title||'',x.titleKm||x.title||'',mode)}</span></article>`).join('')}</div></section>`,
-countdown=d.settings?.countdownEnabled===false?'':`<section class="countdown-section countdown-layout-${safeHtml(d.sectionLayouts?.countdown||'cards')} reveal" style="${combinedSectionStyle(d,'countdown')}"><h2>${languageText(d.countdownTitle||'Counting down to our celebration',d.countdownTitleKm||d.countdownTitle||'រាប់ថយក្រោយ',mode)}</h2><div class="countdown" data-target="${safeHtml(`${f.date}T${f.time||'00:00'}:00`)}" data-numerals="${d.settings?.khmerNumerals===true?'khmr':'latn'}"><span><strong data-unit="days">0</strong>${languageText('Days','ថ្ងៃ',mode)}</span><span><strong data-unit="hours">0</strong>${languageText('Hours','ម៉ោង',mode)}</span><span><strong data-unit="minutes">0</strong>${languageText('Minutes','នាទី',mode)}</span><span><strong data-unit="seconds">0</strong>${languageText('Seconds','វិនាទី',mode)}</span></div></section>`,
+rsvp=d.settings?.rsvpEnabled===false?'':`<form id="guestRsvp" class="reveal" data-csp-style="${combinedSectionStyle(d,'rsvp')}"><h2>${languageText('RSVP','សូមឆ្លើយតបការអញ្ជើញ',mode)}</h2><label>${languageText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120"></label><label>${languageText('Will you attend?','តើអ្នកនឹងចូលរួមទេ?',mode)}<select name="status"><option value="Yes, joyfully" data-en="Yes, joyfully" data-km="បាទ/ចាស ខ្ញុំនឹងចូលរួម">Yes, joyfully</option><option value="Unable to attend" data-en="Unable to attend" data-km="សូមអភ័យទោស ខ្ញុំមិនអាចចូលរួមបានទេ">Unable to attend</option><option value="Maybe" data-en="Maybe" data-km="ប្រហែលជា">Maybe</option></select></label><label>${languageText('Number of guests','ចំនួនភ្ញៀវ',mode)}<input name="count" type="number" min="1" max="10" value="1"></label>${previewRsvpCustomFields(d,mode)}<label>${languageText('Message','សារ',mode)}<textarea name="note" maxlength="1000"></textarea></label><button class="primary">${languageText('Send RSVP','ផ្ញើការឆ្លើយតប',mode)}</button></form>`,
+schedule=d.settings?.scheduleEnabled===false?'':`<section class="schedule-section schedule-layout-${safeHtml(d.sectionLayouts?.schedule||'timeline')} reveal" data-csp-style="${combinedSectionStyle(d,'schedule')}"><h2>${languageText('Schedule','កម្មវិធី',mode)}</h2><div class="schedule-list">${(d.schedule||[]).map(x=>`<article><strong>${safeHtml(x.time)}</strong><span>${languageText(x.title||'',x.titleKm||x.title||'',mode)}</span></article>`).join('')}</div></section>`,
+countdown=d.settings?.countdownEnabled===false?'':`<section class="countdown-section countdown-layout-${safeHtml(d.sectionLayouts?.countdown||'cards')} reveal" data-csp-style="${combinedSectionStyle(d,'countdown')}"><h2>${languageText(d.countdownTitle||'Counting down to our celebration',d.countdownTitleKm||d.countdownTitle||'រាប់ថយក្រោយ',mode)}</h2><div class="countdown" data-target="${safeHtml(`${f.date}T${f.time||'00:00'}:00`)}" data-numerals="${d.settings?.khmerNumerals===true?'khmr':'latn'}"><span><strong data-unit="days">0</strong>${languageText('Days','ថ្ងៃ',mode)}</span><span><strong data-unit="hours">0</strong>${languageText('Hours','ម៉ោង',mode)}</span><span><strong data-unit="minutes">0</strong>${languageText('Minutes','នាទី',mode)}</span><span><strong data-unit="seconds">0</strong>${languageText('Seconds','វិនាទី',mode)}</span></div></section>`,
 map=/^https?:\/\//i.test(d.mapUrl||'')?`<p><a href="${safeHtml(d.mapUrl)}" target="_blank" rel="noopener" class="button-link">${languageText('Open map','បើកផែនទី',mode)}</a></p>`:'',
 extraVenues=(d.venues||[]).map(v=>{
 let link=/^https?:\/\//i.test(v.mapUrl||'')?`<br><a href="${safeHtml(v.mapUrl)}" target="_blank" rel="noopener">${languageText('Open map','បើកផែនទី',mode)}</a>`:'';
 return`<article class="venue-card"><strong>${languageText(v.name||'',v.nameKm||v.name||'',mode)}</strong><p>${languageText(v.address||'',v.addressKm||v.address||'',mode)}</p>${link}</article>`
 }).join(''),
-venue=d.settings?.venueEnabled===false?'':`<section class="venue-section venue-layout-${safeHtml(d.sectionLayouts?.venue||'cards')} reveal" style="${combinedSectionStyle(d,'venue')}"><h2>${languageText('Venue','ទីតាំងកម្មវិធី',mode)}</h2><div class="venue-card primary-venue"><strong>${languageText(f.venue||'',f.venueKm||f.venue||'',mode)}</strong>${map}</div>${extraVenues}</section>`,
-wishes=d.settings?.wishesEnabled===true?`<form id="guestWish" class="reveal" style="${combinedSectionStyle(d,'wishes')}"><h2>${languageText('Send your wishes','ផ្ញើសារជូនពរ',mode)}</h2><label>${languageText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120"></label><label>${languageText('Your message','សារជូនពរ',mode)}<textarea name="message" required maxlength="2000"></textarea></label><button class="primary">${languageText('Send wishes','ផ្ញើសារជូនពរ',mode)}</button></form>`:'',
+venue=d.settings?.venueEnabled===false?'':`<section class="venue-section venue-layout-${safeHtml(d.sectionLayouts?.venue||'cards')} reveal" data-csp-style="${combinedSectionStyle(d,'venue')}"><h2>${languageText('Venue','ទីតាំងកម្មវិធី',mode)}</h2><div class="venue-card primary-venue"><strong>${languageText(f.venue||'',f.venueKm||f.venue||'',mode)}</strong>${map}</div>${extraVenues}</section>`,
+wishes=d.settings?.wishesEnabled===true?`<form id="guestWish" class="reveal" data-csp-style="${combinedSectionStyle(d,'wishes')}"><h2>${languageText('Send your wishes','ផ្ញើសារជូនពរ',mode)}</h2><label>${languageText('Your name','ឈ្មោះរបស់អ្នក',mode)}<input name="name" required maxlength="120"></label><label>${languageText('Your message','សារជូនពរ',mode)}<textarea name="message" required maxlength="2000"></textarea></label><button class="primary">${languageText('Send wishes','ផ្ញើសារជូនពរ',mode)}</button></form>`:'',
 key=animationName(anim),
 motion=`animation-name:${key};animation-duration:${duration}ms`,
 sections={gallery:galleryMarkup(d),video:featuredVideoMarkup(d),countdown,events:eventJourneyMarkupEditor(d),schedule,custom:customBlocksMarkup(d),'guest-info':guestExperienceMarkupEditor(d),venue,contact:contactMarkup(d),wishes,rsvp},
 ordered=(d.sectionOrder||initial.sectionOrder).map(x=>String(x).startsWith('page:')?designPageMarkup(d,x):(sections[x]||'')).join('');
 const theme=safeHtml(d.theme||'rose');
 const paletteClass=d.palettePreset&&d.palettePreset!=='template'?' palette-applied':'';
-return`<div class="guest theme-${theme} template-${theme}${paletteClass}" style="${paletteRootStyle(d)}" data-language="${mode==='km'?'km':'en'}">${languageSwitcher(mode)}${artisticHeroMarkup(d)}<section class="guest-hero guest-summary">${templateDecorMarkup(d.theme||'rose')}<p class="invite-kicker">${languageText('YOU ARE INVITED','សូមគោរពអញ្ជើញ',mode)}</p><div class="hero-date">${dateBlock}</div></section>${ordered}</div>`
+return`<div class="guest theme-${theme} template-${theme}${paletteClass}" data-csp-style="${paletteRootStyle(d)}" data-language="${mode==='km'?'km':'en'}">${languageSwitcher(mode)}${artisticHeroMarkup(d)}<section class="guest-hero guest-summary">${templateDecorMarkup(d.theme||'rose')}<p class="invite-kicker">${languageText('YOU ARE INVITED','សូមគោរពអញ្ជើញ',mode)}</p><div class="hero-date">${dateBlock}</div></section>${ordered}</div>`
 }
 const guestCountdownTimers=new WeakMap();
 function startCountdown(scope=document){

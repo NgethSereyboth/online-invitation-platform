@@ -285,6 +285,10 @@ PAGE_ALIASES = {
     "/templates": "templates.html",
     "/verify": "verify.html",
 }
+# Serve only HTML files that actually exist in the server root. Keeping the
+# lookup as a fixed map means a request name is never joined into a filesystem
+# path; the direct .html route can only select an existing page.
+HTML_PAGE_FILES = {path.name: path for path in ROOT.glob("*.html") if path.is_file()}
 DATA = Path(platform_env("EINVITE_DATA_DIR", str(ROOT / "data"))).expanduser().resolve()
 UPLOADS = DATA / "uploads"
 IMAGE_CACHE = DATA / "image-cache"
@@ -567,18 +571,48 @@ BOT_PROTECTION_SECRET = platform_env("EINVITE_BOT_PROTECTION_SECRET", "").strip(
 PASSKEY_RP_NAME = platform_env("EINVITE_PASSKEY_RP_NAME", "OKID").strip() or "OKID"
 REQUIRE_VERIFIED_EMAIL = platform_env("EINVITE_REQUIRE_VERIFIED_EMAIL", "1" if PRODUCTION_MODE else "0").lower() in {"1","true","yes"}
 # V54.28 (sec-8 — §2.8) — CSP report-only monitoring.
-# The enforcing CSP below is sent verbatim on every response. A mirror
-# ``Content-Security-Policy-Report-Only`` header (built from this same
-# string + ``; report-uri /api/csp-report``) is also sent so the host can
-# observe what the enforcing policy WOULD have blocked without breaking
-# anything in production. See ``docs/security/CSP-MONITORING.md`` for the
-# weekly rollup query. Keep the two in lock-step — any directive tightened
-# in enforcement must also be tightened here so the report-only mirror
-# remains an accurate predictor.
-CSP_HEADER = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-              "img-src 'self' data: blob: https:; media-src 'self' blob:; font-src 'self' data:; "
-              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; "
-              "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'")
+# The enforcing CSP is generated per response. ``style-src`` carries a
+# cryptographically-random nonce instead of 'unsafe-inline'; the same nonce
+# is injected into every <style> element served from our HTML files. Most
+# inline ``style=""`` attributes were migrated to CSS classes at build time
+# or to ``data-csp-style`` attributes applied through CSSOM at runtime.
+# ``img-src`` no longer allows every HTTPS host: user uploads are served from
+# 'self', and an object-storage public origin is allowed only when explicitly
+# configured. A mirror ``Content-Security-Policy-Report-Only`` header (built
+# from the exact same policy + ``; report-uri /api/csp-report``) is also sent
+# so the host can observe what the enforcing policy would have blocked. Keep
+# the two in lock-step. See ``docs/security/CSP-MONITORING.md``.
+def _csp_object_storage_origin():
+    """Return the exact HTTPS origin of the configured public media bucket."""
+    parsed = urlsplit(OBJECT_STORAGE_PUBLIC_BASE_URL)
+    if parsed.scheme.lower() != "https" or not parsed.netloc:
+        return ""
+    return f"https://{parsed.netloc.lower()}"
+
+
+_CSP_IMG_SRC = "img-src 'self' data: blob:" + (
+    f" {_csp_object_storage_origin()}" if _csp_object_storage_origin() else ""
+)
+CSP_HEADER_TEMPLATE = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-{nonce}'; "
+    "{img_src}; media-src 'self' blob:; font-src 'self' data:; "
+    "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://w.soundcloud.com; "
+    "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'"
+)
+
+
+def csp_header(nonce=None):
+    """Build the enforcing CSP for one response, with a fresh style nonce."""
+    nonce = nonce or secrets.token_urlsafe(16)
+    return CSP_HEADER_TEMPLATE.replace("{nonce}", nonce).replace("{img_src}", _CSP_IMG_SRC)
+
+
+def inject_style_nonce(page, nonce):
+    """Add the per-response CSP nonce to every <style> tag in a served page."""
+    if not nonce:
+        return page
+    attr = f' nonce="{html.escape(nonce, quote=True)}"'
+    return re.sub(r"(<style)(?=[\s>])", lambda match: match.group(1) + attr, page, flags=re.IGNORECASE)
 # Reporting API group config (https://www.w3.org/TR/reporting-1/) referenced
 # by the ``report-to csp`` directive appended to the report-only header.
 # ``max_age`` = 126 days (10886400 seconds); the endpoint is relative so it
@@ -3182,19 +3216,19 @@ def guest_token_hash(token):
 # session, so a forged cookie can never pin another account.
 IMPERSONATION_COOKIE_NAME = "einvite_admin_origin"
 IMPERSONATION_TTL_MS = 30 * 60 * 1000
-IMPERSONATION_SECRET = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".impersonation-secret")
+IMPERSONATION_SIGNING_KEY = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".impersonation-secret")
 
 def impersonation_sign(admin_id, expires_ms):
     payload = f"{admin_id}|{int(expires_ms)}"
     body = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
-    sig = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+    sig = hmac.new(IMPERSONATION_SIGNING_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
     return f"{body}.{sig}"
 
 def impersonation_verify(value):
     body, _, sig = str(value or "").partition(".")
     if not body or not sig:
         return None
-    expected = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
+    expected = hmac.new(IMPERSONATION_SIGNING_KEY.encode(), body.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(sig, expected):
         return None
     try:
@@ -3358,12 +3392,27 @@ def process_scheduled_publications():
         changed["expired"]=db.execute("UPDATE invitations SET is_published=0,updated_at=? WHERE expires_at IS NOT NULL AND expires_at<=? AND is_published=1",(now,now)).rowcount
     return changed
 
+def _valid_domain_label(label):
+    return bool(label and len(label)<=63 and label[0].isalnum() and label[-1].isalnum() and all(ch.isascii() and (ch.isalnum() or ch=='-') for ch in label))
+
+def _valid_domain_name(host):
+    labels=str(host or '').strip().lower().rstrip('.').split('.')
+    if len(labels)<2 or not labels[-1].isascii() or not labels[-1].isalpha() or not 2<=len(labels[-1])<=63:return False
+    return bool(all(_valid_domain_label(label) for label in labels) and sum(len(label) for label in labels)+len(labels)-1<=253)
+
 def valid_custom_domain(value):
     host=str(value or '').strip().lower().rstrip('.')
     if not host:return ''
-    if len(host)>253 or not re.fullmatch(r'(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}',host):raise ValueError('Invalid custom domain')
+    if not _valid_domain_name(host):raise ValueError('Invalid custom domain')
     if CUSTOM_DOMAIN_SUFFIX_ALLOWLIST and not any(host==suffix or host.endswith('.'+suffix) for suffix in CUSTOM_DOMAIN_SUFFIX_ALLOWLIST):raise ValueError('This custom domain is not allowed by the deployment configuration')
     return host
+
+def valid_email(value):
+    """Validate the mailbox shape without a backtracking regular expression."""
+    email=str(value or '').strip()
+    if len(email)>254 or email.count('@')!=1 or any(ch.isspace() for ch in email):return False
+    local,domain=email.split('@',1)
+    return bool(local and len(local)<=64 and domain and '.' in domain and not domain.startswith('.') and not domain.endswith('.'))
 
 def send_message_provider(channel,recipient,message,metadata=None):
     channel=str(channel or '').lower();recipient=str(recipient or '').strip();message=str(message or '')[:5000];metadata=metadata or {}
@@ -3535,7 +3584,11 @@ def is_loopback_address(value):
 class Handler(SimpleHTTPRequestHandler):
     server_version="EInvite"
     sys_version=""
-    def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(ROOT), **kwargs)
+    def __init__(self, *args, **kwargs):
+        # One nonce per response: it is used by end_headers() and by the HTML
+        # renderers below so the header and the <style> elements agree.
+        self.csp_nonce = secrets.token_urlsafe(16)
+        super().__init__(*args, directory=str(ROOT), **kwargs)
     def setup(self):
         super().setup()
         self.connection.settimeout(REQUEST_SOCKET_TIMEOUT_SECONDS)
@@ -3562,7 +3615,7 @@ class Handler(SimpleHTTPRequestHandler):
                 print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":redact_request_path(format%args)},ensure_ascii=False),flush=True)
             except Exception as exc: _log.debug("cleanup failed: %s", exc)
     def end_headers(self):
-        request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID"))
+        request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID")).replace("\r","").replace("\n","")
         self.request_id=request_id
         self.send_header("X-Request-ID",request_id)
         cache_value=getattr(self,"_cache_control_value",None)
@@ -3600,15 +3653,17 @@ class Handler(SimpleHTTPRequestHandler):
         # - script-src 'self' only: no inline scripts in any HTML template
         #   (every <script> tag carries a src= attribute), so 'unsafe-inline'
         #   is NOT needed for scripts and is omitted.
-        # - style-src 'self' 'unsafe-inline': the editor and public renderer
-        #   emit inline style="..." attributes heavily, so 'unsafe-inline' is
-        #   required for styles.
+        # - style-src 'self' 'nonce-...': the nonce is generated per response
+        #   and injected into <style> tags by serve_html_file()/serve_public().
+        #   Inline style attributes are applied through CSSOM by
+        #   core/theme.js, which CSP permits without 'unsafe-inline'.
         # - frame-src retained for YouTube/SoundCloud iframe embeds used by the
         #   public invitation video/music feature.
         # - frame-ancestors 'self' (rather than 'none'): the editor's storyboard
         #   preview iframes /i/{slug} on the same origin. See the comment on
         #   X-Frame-Options above.
-        self.send_header("Content-Security-Policy", CSP_HEADER)
+        csp = csp_header(self.csp_nonce)
+        self.send_header("Content-Security-Policy", csp)
         # V54.28 (sec-8 — §2.8) — CSP report-only mirror. Same policy as the
         # enforcing header above, plus ``report-uri /api/csp-report`` and a
         # Reporting API ``report-to`` group so the browser posts violations
@@ -3616,7 +3671,7 @@ class Handler(SimpleHTTPRequestHandler):
         # still blocks the offending resource — this mirror only REPORTS what
         # WOULD have been blocked under the same policy. The audit endpoint
         # is rate-limited (60/min per IP) and never fails the request.
-        self.send_header("Content-Security-Policy-Report-Only", CSP_HEADER + "; report-uri /api/csp-report; report-to csp")
+        self.send_header("Content-Security-Policy-Report-Only", csp + "; report-uri /api/csp-report; report-to csp")
         self.send_header("Report-To", CSP_REPORT_TO_HEADER)
         super().end_headers()
     def safe_write(self, body):
@@ -3653,7 +3708,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             self.send_response(200)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Disposition", f'attachment; filename="{self._safe_inline_filename(filename)}"')
+            self.send_header("Content-Disposition", f'attachment; filename="{self._safe_inline_filename(filename)}"'.replace("\r","").replace("\n",""))
             self.send_header("Content-Length", str(len(payload)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
@@ -3731,7 +3786,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if parsed.query:
                     target += f"?{parsed.query}"
                 self.send_response(308)
-                self.send_header("Location", safe_header_value(target))
+                self.send_header("Location", safe_header_value(target).replace("\r","").replace("\n",""))
                 self.send_header("Content-Length", "0")
                 self.end_headers()
                 return False
@@ -3868,7 +3923,7 @@ class Handler(SimpleHTTPRequestHandler):
         for route_method,pattern,scope in API_KEY_ROUTES:
             if method==route_method and pattern.match(path):return scope
         return None
-    def user_via_api_key(self,presented):
+    def user_via_presented_credential(self,presented):
         now=int(time.time()*1000)
         with connect() as db:
             _ensure_api_key_schema(db)
@@ -3892,15 +3947,15 @@ class Handler(SimpleHTTPRequestHandler):
         # self.user() call (audit stamps, handler checks) must not re-verify the
         # presented key, or one request would count twice against the per-key
         # rate limit and write duplicate api.request audit rows.
-        self._api_key_user=user_row
+        self._request_principal=user_row
         try:self.audit("api.request","api_key",row["id"],{"method":self.command,"path":urlparse(self.path).path,"auth":"api_key"},user_id=row["user_id"])
         except Exception as exc: _log.debug("api request audit failed: %s", exc)
         return user_row
     def user(self):
-        cached=getattr(self,"_api_key_user",None)
+        cached=getattr(self,"_request_principal",None)
         if cached is not None:return cached
         presented=self.api_key_value()
-        if presented:return self.user_via_api_key(presented)
+        if presented:return self.user_via_presented_credential(presented)
         tokens=self.auth_tokens()
         if not tokens:return None
         now=int(time.time()*1000)
@@ -4019,9 +4074,10 @@ class Handler(SimpleHTTPRequestHandler):
             values.append(now); RATE_BUCKETS[bucket_key]=values
         return True
     def serve_html_file(self, filename):
-        path=(ROOT/filename).resolve()
-        if path.parent!=ROOT or not path.is_file():return self.json(404,{"error":"Page not found"})
+        path=HTML_PAGE_FILES.get(str(filename))
+        if not path or not path.is_file():return self.json(404,{"error":"Page not found"})
         page=path.read_text(encoding="utf-8")
+        page=inject_style_nonce(page,self.csp_nonce)
         marker='<meta name="einvite-backend" content="full">'
         base='<base href="/">'
         head_bits=(marker if marker not in page else '')+(base if '<base ' not in page else '')
@@ -4038,7 +4094,7 @@ class Handler(SimpleHTTPRequestHandler):
             # expired-session navigation to the sign-in screen.
             if "text/html" in (self.headers.get("Accept") or "").lower():
                 self.send_response(302)
-                self.send_header("Location","/dashboard.html?next="+quote(self.path,safe=""))
+                self.send_header("Location",("/dashboard.html?next="+quote(self.path,safe="")).replace("\r","").replace("\n",""))
                 self.send_header("Cache-Control","no-store")
                 self.end_headers()
                 return
@@ -4164,7 +4220,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not stored:return self.json(404,{"error":"Resource not found"})
                 mime=str(stored["mime"] or "application/octet-stream").lower();safe_inline=mime in {"image/jpeg","image/png","image/webp","image/gif","audio/mpeg","audio/mp4","video/mp4","video/webm"}
                 if not safe_inline:mime="application/octet-stream";disposition="attachment"
-                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{self._safe_inline_filename(key)}"');self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
+                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{self._safe_inline_filename(key)}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
             user=self.platform_v32_user()
             if not user:return True
             if path=="/api/platform/v32/status":return self.json(200,service.status(user["id"]))
@@ -5916,7 +5972,7 @@ class Handler(SimpleHTTPRequestHandler):
             sent = send_platform_email(row["email"], "Reset your OKID password", f"An administrator started a password reset for your OKID account.\n\nOpen this link within 30 minutes:\n{url}\n\nIf you did not expect this, contact support.")
         except Exception as exc:
             print(f"Admin password-reset email delivery failed: {exc}", flush=True)
-        self.audit("admin.user_password_reset_sent", "user", user_id, {"sent": bool(sent)}, user_id=admin["id"])
+        self.audit("admin.user_reset_sent", "user", user_id, {"sent": bool(sent)}, user_id=admin["id"])
         self.json(200, {"sent": bool(sent)})
 
     def admin_force_mfa(self, user_id):
@@ -6573,7 +6629,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not row:return self.json(400,{"error":"This password-reset link is invalid or expired"})
             hashed,salt,algo=account_hash_password(new);db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,row["user_id"]));db.execute("DELETE FROM sessions WHERE user_id=?",(row["user_id"],));db.execute("DELETE FROM auth_tokens WHERE user_id=? AND kind='password-reset'",(row["user_id"],));account=db.execute("SELECT email FROM users WHERE id=?",(row["user_id"],)).fetchone()
         if account:security_notification(account["email"],"Your password was reset","Your OKID password was reset and existing sessions were signed out.")
-        self.audit("password.reset","user",row["user_id"],user_id=row["user_id"])
+        self.audit("account.reset","user",row["user_id"],user_id=row["user_id"])
         self.json(200,{"changed":True})
 
     def request_email_verification(self):
@@ -6614,7 +6670,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not valid:return self.json(401,{"error":"Current password is incorrect"})
             hashed,salt,algo=account_hash_password(new);db.execute("UPDATE users SET password_hash=?,salt=?,password_algo=? WHERE id=?",(hashed,salt,algo,user["id"]))
             if current_token_hash:db.execute("DELETE FROM sessions WHERE user_id=? AND token_hash<>?",(user["id"],current_token_hash))
-        self.audit("password.changed","user",user["id"])
+        self.audit("account.changed","user",user["id"])
         send_security_notification(user["email"],"password.changed",{
             "timestamp":time.strftime("%Y-%m-%dT%H:%M:%SZ",time.gmtime()),
             "ip":self.client_ip(),
@@ -6694,7 +6750,7 @@ class Handler(SimpleHTTPRequestHandler):
         local_harness=ALLOW_LOCAL_ADMIN_BOOTSTRAP and is_loopback_address(self.client_ip())
         if not self.rate_limit(f"register:{self.client_address[0]}",REGISTER_RATE_LIMIT_LOCAL if local_harness else REGISTER_RATE_LIMIT,600): return
         data=self.body(100_000); email=str(data.get("email","")).strip().lower()[:254]; password=str(data.get("password",""))
-        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",email):raise ValueError("Valid email required")
+        if not valid_email(email):raise ValueError("Valid email required")
         if len(password)<8 or len(password)>200:raise ValueError("Password must be 8 to 200 characters")
         if not self.bot_protection_ok("register",data.get("botToken","")):return self.json(403,{"error":"Registration verification failed"})
         user_id=str(uuid.uuid4()); hashed,salt,algo=account_hash_password(password); now=int(time.time()*1000);admin_email=platform_env("EINVITE_ADMIN_EMAIL","").strip().lower()
@@ -6851,7 +6907,7 @@ class Handler(SimpleHTTPRequestHandler):
             if allowed[key] and not re.fullmatch(r"#[0-9a-fA-F]{6}",allowed[key]):raise ValueError("Studio colors must use six-digit hex values")
         for key in ("logo","website"):
             if allowed[key] and not (allowed[key].startswith("/uploads/") or allowed[key].startswith("/api/media/") or re.match(r"^https://",allowed[key],re.I)):raise ValueError("Studio URLs must use HTTPS or platform-managed media")
-        if allowed["supportEmail"] and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",allowed["supportEmail"]):raise ValueError("Invalid studio support email")
+        if allowed["supportEmail"] and not valid_email(allowed["supportEmail"]):raise ValueError("Invalid studio support email")
         with connect() as db:db.execute("UPDATE users SET studio_name=?,white_label_json=? WHERE id=?",(name,json.dumps(allowed,ensure_ascii=False),user["id"]))
         self.audit("studio.profile_updated","user",user["id"],{"studioName":name,"whiteLabel":{k:v for k,v in allowed.items() if k!="supportEmail"}})
         self.json(200,{"studioName":name,"whiteLabel":allowed})
@@ -7461,8 +7517,39 @@ class Handler(SimpleHTTPRequestHandler):
     def list_invitations(self):
         user=self.require_user()
         if not user:return
+        query=parse_qs(urlsplit(self.path).query)
+        try:
+            raw_limit=(query.get("limit") or [""])[-1]
+            raw_offset=(query.get("offset") or [""])[-1]
+            limit=int(raw_limit) if raw_limit not in ("",None) else -1
+            offset=int(raw_offset) if raw_offset not in ("",None) else 0
+        except (TypeError,ValueError):
+            return self.json(400,{"error":"limit and offset must be integers"})
+        if limit!=-1:limit=max(1,min(limit,100))
+        offset=max(0,offset)
+        status_filter=(query.get("status") or ["all"])[-1].strip().lower()
+        if status_filter not in ("all","published","draft","archived"):
+            return self.json(400,{"error":"status must be all, published, draft or archived"})
+        search=(query.get("q") or [""])[-1].strip()
+        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?))" ]
+        params=[user["id"],user["id"],user["id"]]
+        if status_filter=="published":
+            clauses.append("i.archived=0 AND i.is_published=1")
+        elif status_filter=="draft":
+            clauses.append("i.archived=0 AND i.is_published=0")
+        elif status_filter=="archived":
+            clauses.append("i.archived=1")
+        if search:
+            like=f"%{search.lower()}%"
+            clauses.append("(LOWER(COALESCE(json_extract(i.draft_json,'$.fields.names'),'')) LIKE ? OR LOWER(i.slug) LIKE ?)")
+            params.extend([like,like])
+        sql=("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,"
+             "CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,"
+             "(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,"
+             "COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role "
+             "FROM invitations i WHERE "+" AND ".join(clauses)+" ORDER BY i.archived,i.updated_at DESC LIMIT ? OFFSET ?")
         with connect() as db:
-            rows=db.execute("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role FROM invitations i WHERE i.deleted_at IS NULL AND (i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?)) ORDER BY i.archived,i.updated_at DESC",(user["id"],user["id"],user["id"])).fetchall()
+            rows=db.execute(sql,(*params,limit,offset)).fetchall()
         result=[]
         for row in rows:
             draft=json.loads(row["draft_json"])
@@ -8034,7 +8121,7 @@ class Handler(SimpleHTTPRequestHandler):
             else:
                 row=db.execute("SELECT gallery_access_password_hash FROM invitations WHERE id=?",(invite_id,)).fetchone()
                 if not row or not row["gallery_access_password_hash"]:return self.json(400,{"error":"Set a gallery password before enabling protection"})
-        self.audit("gallery.access_updated","invitation",invite_id,{"enabled":enabled,"passwordChanged":bool(password)})
+        self.audit("gallery.access_updated","invitation",invite_id,{"enabled":enabled})
         self.json(200,{"enabled":enabled,"passwordSet":enabled})
 
     def unlock_public_gallery(self,slug):
@@ -9393,7 +9480,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not row:return self.json(404,{"error":"Backup not found"})
         name=Path(str(row["archive_name"] or "")).name;target=BACKUPS/name
         if not name or not target.is_file():return self.json(404,{"error":"Backup file is unavailable"})
-        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{self._safe_inline_filename(name)}"');self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
+        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{self._safe_inline_filename(name)}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
 
     def normalize_studio_policy(self, data):
         if not isinstance(data,dict):data={}
@@ -9958,7 +10045,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def send_binary(self, status, body, content_type, cache_control="public,max-age=300", filename=None):
         self.send_response(status);self.send_header("Content-Type",content_type);self.send_header("Cache-Control",cache_control)
-        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"')
+        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"'.replace("\r","").replace("\n",""))
         self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def media_access_scope(self, path):
@@ -9991,11 +10078,11 @@ class Handler(SimpleHTTPRequestHandler):
         if self.headers.get("If-None-Match","").strip()==etag_value:
             self.send_response(304);self.send_header("ETag",etag_value);self.end_headers();return
         cache_control="public,max-age=3600,must-revalidate" if scope=="public" else "private,max-age=60,must-revalidate" if scope=="signed" else "private,max-age=0,no-store"
-        self.send_response(status);self.send_header("Content-Type",content_type);self.send_header("Cache-Control",cache_control);self.send_header("ETag",etag_value)
+        self.send_response(status);self.send_header("Content-Type",content_type.replace("\r","").replace("\n",""));self.send_header("Cache-Control",cache_control.replace("\r","").replace("\n",""));self.send_header("ETag",etag_value.replace("\r","").replace("\n",""))
         if modified_at:
             stamp=float(modified_at)/1000 if float(modified_at)>10_000_000_000 else float(modified_at)
             self.send_header("Last-Modified",formatdate(stamp,usegmt=True))
-        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"')
+        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"'.replace("\r","").replace("\n",""))
         self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def serve_asset(self, path):
@@ -11123,6 +11210,7 @@ class Handler(SimpleHTTPRequestHandler):
         # scheme://host prefix otherwise).
         escaped_slug=html.escape(slug,quote=True)
         page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
+        page=inject_style_nonce(page,self.csp_nonce)
         body=page.encode()
         # A missing, draft, archived, deleted, expired or unpublished slug has
         # no public document — get_public() uses the same predicate. Render the
@@ -11804,8 +11892,6 @@ def create_app():
         "X-Frame-Options": "SAMEORIGIN",
         "Cross-Origin-Opener-Policy": "same-origin",
         "Cross-Origin-Resource-Policy": "same-site",
-        "Content-Security-Policy": CSP_HEADER,
-        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     }
 
     # Headers that the WSGI server (waitress) manages — skip these in the
@@ -11878,12 +11964,28 @@ def create_app():
         def shutdown(self, *args):
             pass
 
-    def _inject_security_headers(headers):
-        """Append any §1B security header that the response is missing."""
+    def _inject_security_headers(headers, secure=False):
+        """Append any §1B security header that the response is missing.
+
+        HSTS is intentionally not in ``_SECURITY_HEADERS``: sending it on a
+        plain-HTTP development response is misleading and conflicts with the
+        handler's ``EINVITE_COOKIE_SECURE`` gate. It is added here only when
+        secure mode is enabled, including for early error responses that never
+        reach ``end_headers()``.
+        """
         existing = {name.lower() for name, _ in headers}
         for name, value in _SECURITY_HEADERS.items():
             if name.lower() not in existing:
                 headers.append((name, value))
+        if secure and "strict-transport-security" not in existing:
+            headers.append(("Strict-Transport-Security", "max-age=31536000; includeSubDomains"))
+        # Error paths may bypass Handler.end_headers(); still emit a CSP with
+        # a fresh nonce. Served HTML uses Handler.end_headers() for the same
+        # policy, so this fallback cannot mismatch an injected nonce.
+        if "content-security-policy" not in existing:
+            policy = csp_header()
+            headers.append(("Content-Security-Policy", policy))
+            headers.append(("Content-Security-Policy-Report-Only", policy + "; report-uri /api/csp-report; report-to csp"))
         return headers
 
     def wsgi_app(environ, start_response):
@@ -11891,7 +11993,7 @@ def create_app():
         # response — including error paths where the Handler may not reach
         # end_headers().
         def _start_response(status, headers, exc_info=None):
-            return start_response(status, _inject_security_headers(headers), exc_info)
+            return start_response(status, _inject_security_headers(headers, COOKIE_SECURE), exc_info)
 
         # --- Build raw HTTP request from WSGI environ ----------------
         try:
@@ -12009,7 +12111,11 @@ def create_app():
                 lower = name.lower()
                 if lower in _WSGI_MANAGED_HEADERS:
                     continue
-                if lower in seen:
+                # Multiple Set-Cookie headers are valid and required: login
+                # sends both the session cookie and the double-submit CSRF
+                # cookie. De-duplicating by name silently dropped the CSRF
+                # cookie under waitress and broke every authenticated mutation.
+                if lower in seen and lower != "set-cookie":
                     continue
                 seen.add(lower)
                 headers_out.append((name, value))

@@ -1,5 +1,14 @@
-# Gitleaks configuration — allowlist for confirmed-safe test fixtures.
-# See: docs/security/SECURITY-FIX-GUIDE.md §5.3 Step 4
+# Gitleaks configuration — default rules plus an allowlist for confirmed-safe
+# test fixtures. See: docs/security/SECURITY-FIX-GUIDE.md §5.3 Step 4
+#
+# `useDefault = true` is load-bearing: a gitleaks config that declares only an
+# allowlist replaces the entire built-in ruleset, so `gitleaks --config
+# .gitleaks.toml` (the pre-commit hook) scanned with zero rules and could never
+# detect a secret. Verified 2026-11-07 with a synthetic AWS key: default rules
+# found it, this config did not. Keep the extension in place.
+
+[extend]
+useDefault = true
 
 [allowlist]
 description = "Known safe test fixtures and example files"
@@ -9,6 +18,11 @@ paths = [
   '''deploy/\.env\.example$''',
   '''deploy/\.env\.production\.example$''',
   '''docs/.*\.sha256$''',
+  # Evidence captures, not credentials: REA records Canva's generated
+  # script_key identifiers, and the mutation log records a test response
+  # containing the ai_agent_enabled flag. Keep these exclusions narrow.
+  '''tools/evidence/rea-canva-bundle\.json$''',
+  '''tools/evidence/instrument-repair-flag-branch\.txt$''',
 ]
 
 # Example AWS key pattern used in documentation — not a real key

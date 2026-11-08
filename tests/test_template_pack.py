@@ -2,7 +2,7 @@
 """TP-1.2: the OKID template pack converts to valid native documents.
 
 Checks the built output under ``assets/template-pack/`` against the design source in
-``template-pack/``: 36 templates, unique ids that collide with nothing already
+``template-pack/``: 100 templates, unique ids that collide with nothing already
 shipped, every copy key resolving, every ornament safe and small, native documents
 the editor can open, a clean converter ``--check``, and a repo-wide scan proving no
 Khmer was typed outside the files allowed to carry it.
@@ -27,6 +27,10 @@ ALLOWED_KHMER_PATHS = (
     "assets/template-pack/",
     "src/python/assets/template-pack/",
     "tests/data/template-pack-khmer-allowlist.txt",
+    # Playwright specs deliberately type and assert Khmer input/UI copy.
+    "e2e/specs/05-guest-rsvp.spec.ts",
+    "e2e/specs/11-forms.spec.ts",
+    "e2e/specs/12-i18n.spec.ts",
 )
 ALLOWED_EXISTING = ROOT / "tests" / "data" / "template-pack-khmer-allowlist.txt"
 OBJECT_TYPES = {"text", "image", "shape", "decoration"}
@@ -48,12 +52,12 @@ def built_files():
     return sorted((OUT / "built").glob("*.js"))
 
 
-def test_thirty_six_templates_and_unique_ids():
+def test_thirty_seven_templates_and_unique_ids():
     cat = catalog()
-    assert cat["count"] == 36, cat["count"]
+    assert cat["count"] == 100, cat["count"]
     ids = [item["id"] for item in cat["templates"]]
-    assert len(ids) == len(set(ids)) == 36
-    assert len(built_files()) == 36
+    assert len(ids) == len(set(ids)) == 100
+    assert len(built_files()) == 100
     assert {path.stem for path in built_files()} == set(ids)
     assert all(re.fullmatch(r"[a-z0-9-]+", template_id) for template_id in ids)
 
@@ -83,7 +87,7 @@ def test_every_copy_key_resolves_in_the_bank():
 
 def test_ornaments_exist_are_small_and_safe():
     sources = {path.name: path for path in (PACK / "ornaments").glob("*.svg")}
-    assert len(sources) == 27, len(sources)
+    assert len(sources) == 64, len(sources)
     for path in sources.values():
         assert path.stat().st_size <= 12 * 1024, (path.name, path.stat().st_size)
     built = list((OUT / "ornaments").glob("*.svg"))
@@ -239,7 +243,7 @@ def test_server_accepts_every_document():
         env={**__import__("os").environ, "EINVITE_DATA_DIR": "/tmp/template-pack-validate"},
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "TEMPLATE_PACK_DOCUMENTS 36 invalid 0" in result.stdout, result.stdout
+    assert "TEMPLATE_PACK_DOCUMENTS 100 invalid 0" in result.stdout, result.stdout
 
 
 def test_converter_check_is_clean():

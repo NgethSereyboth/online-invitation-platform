@@ -97,7 +97,7 @@
         const pct = total > 0 ? Math.round((votes / total) * 100) : 0;
         const checked = (poll.myVotes || []).includes(opt.id) ? 'checked' : '';
         const input = closed ? '' : `<input type="${poll.multiSelect ? 'checkbox' : 'radio'}" name="option" value="${esc(opt.id)}" ${checked}>`;
-        const bar = showResults ? `<div class="bar" style="width:${pct}%"></div><span class="vote-count">${votes} ${langText('votes', mode)}</span>` : '';
+        const bar = showResults ? `<div class="bar" data-csp-style="width:${pct}%"></div><span class="vote-count">${votes} ${langText('votes', mode)}</span>` : '';
         return `<li class="option">${input}<span class="label">${esc(opt.label)}</span>${bar}</li>`;
       }).join('');
       return `

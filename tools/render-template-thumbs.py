@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the 36 template-pack thumbnails in the real editor (TP-1.4).
+"""Render the 57 template-pack thumbnails in the real editor (TP-1.4).
 
 For each built template the script creates a throwaway invitation on the test
 server, opens its editor, switches to the first design page, and captures the
@@ -11,7 +11,7 @@ Intermediate PNGs stay in ``artifacts/next-work/template-thumbs/`` (git-ignored)
 only the WebPs are product assets.
 
 Usage:
-    .venv/bin/python tools/render-template-thumbs.py                # all 36
+    .venv/bin/python tools/render-template-thumbs.py                # all 57
     .venv/bin/python tools/render-template-thumbs.py --only wd-royal-maroon-gold
     .venv/bin/python tools/render-template-thumbs.py --base http://127.0.0.1:8124  # reuse a server
 """
@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -145,7 +146,115 @@ def capture(page, base: str, invitation_id: str, page_id: str) -> bytes:
     page.wait_for_timeout(900)
     page.evaluate("async () => { if (document.fonts && document.fonts.ready) await document.fonts.ready; await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); }")
     page.wait_for_timeout(350)
-    return page.locator("#stage").screenshot(timeout=30000)
+    # The studio's panels float over the stage, and an element screenshot of
+    # #stage includes whatever overlaps it. Hide that chrome so a thumbnail is
+    # the invitation alone (the defect the 37-design set shipped with).
+    # The floating canvas toolbar and zoom dock sit over the viewport edges, so
+    # only those overlays are hidden. The side panes stay mounted: removing them
+    # makes the editor re-render the canvas blank. The browser window (see main)
+    # is wide and tall enough that the 0.6-zoom artboard fits between the panes.
+    page.evaluate("""() => {
+        const overlays = [
+            '.studio-canvas-toolbar', '#v54CanvasHud', '#workflowPanelToggle',
+            '#workflowV6Flow', '.app-drawer-scrim', '.ui-tooltip', 'dialog.final-tour',
+        ];
+        for (const selector of overlays) {
+            document.querySelectorAll(selector).forEach((node) => {
+                node.style.setProperty('display', 'none', 'important');
+            });
+        }
+        // Page switches animate a wipe over the artboard. A screenshot taken
+        // while the stage box is already stable can catch that wipe mid-flight
+        // (a translucent sheet over the lower half), so settle animations first.
+        const style = document.createElement('style');
+        style.id = 'thumb-capture-freeze';
+        style.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
+        document.head.append(style);
+    }""")
+    page.wait_for_timeout(500)
+    # With the viewport free, restore the thumbnail zoom and centre both scroll
+    # axes so the artboard sits wholly inside the canvas viewport.
+    # Fit, not a forced zoom: the canvas pans by transform (not scroll), so any
+    # manual scroll/zoom leaves the artboard off-centre. Fit is the app's own
+    # centring and guarantees the whole card is inside the viewport.
+    page.evaluate("""() => {
+        const view = window.EInviteCanvasViewController;
+        if (view && view.fit) view.fit();
+    }""")
+    page.wait_for_timeout(1200)
+
+    def measure():
+        return page.evaluate("""() => {
+            const r = document.querySelector('#stage').getBoundingClientRect();
+            return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)];
+        }""")
+
+    def visible(rect, size) -> bool:
+        return (240 <= rect[2] <= 2000 and 240 <= rect[3] <= 2000
+                and rect[0] >= 0 and rect[1] >= 0
+                and rect[0] + rect[2] <= size[0] and rect[1] + rect[3] <= size[1])
+
+    # The editor places the artboard itself; do not scroll it, because a manual
+    # scroll and the canvas transform disagree about units. Capture the viewport
+    # (whose pixels are always right) and crop the live stage box, accepting the
+    # pair only when the box held still across the shot.
+    size = page.viewport_size
+    shot = None
+    previous = None
+    for _ in range(8):
+        page.wait_for_timeout(400)
+        before = measure()
+        clip = {"x": before[0], "y": before[1], "width": before[2], "height": before[3]}
+        frame = page.screenshot(clip=clip, timeout=30000)
+        after = measure()
+        stable = abs(before[0] - after[0]) <= 2 and abs(before[1] - after[1]) <= 2
+        if previous is not None and frame == previous and not stable:
+            raise RuntimeError(f"stage never settled (last {after})")
+        # Identical consecutive frames prove the compositor has finished painting;
+        # a half-painted frame (torn bands) differs and is discarded.
+        if stable and previous is not None and same_frame(previous, frame):
+            shot = frame
+            break
+        previous = frame
+    if shot is None and previous is not None and visible(after, (size["width"], size["height"])):
+        shot = crop_to_rect(previous, after)
+    if shot is None:
+        raise RuntimeError(f"stage not stably visible (last {before} / {after})")
+    return shot
+
+
+def same_frame(first: bytes, second: bytes, tolerance: float = 4.0) -> bool:
+    """True when two frames match apart from sub-pixel GPU noise.
+
+    The stage background is WebGL, so byte equality is rare even on a settled
+    page, while a torn frame (bands from different scroll offsets) differs by a
+    large margin. Compare tiny greyscale thumbnails instead.
+    """
+    if first == second:
+        return True
+    if not first or not second:
+        return False
+    from PIL import Image, ImageChops
+
+    left = Image.open(io.BytesIO(first)).convert("L").resize((80, 80))
+    right = Image.open(io.BytesIO(second)).convert("L").resize((80, 80))
+    difference = ImageChops.difference(left, right)
+    return sum(difference.getdata()) / 6400 < tolerance
+
+
+def crop_to_rect(png: bytes, rect: list[int]) -> bytes:
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(png)).convert("RGB")
+    x = max(0, round(rect[0]))
+    y = max(0, round(rect[1]))
+    width = min(round(rect[2]), image.width - x)
+    height = min(round(rect[3]), image.height - y)
+    if width < 240 or height < 240:
+        raise RuntimeError(f"stage {rect} does not fit the {image.width}x{image.height} viewport")
+    buffer = io.BytesIO()
+    image.crop((x, y, x + width, y + height)).save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def main(argv=None) -> int:
@@ -167,7 +276,9 @@ def main(argv=None) -> int:
     EVIDENCE.mkdir(parents=True, exist_ok=True)
 
     def run(browser, base: str, email: str) -> int:
-        page = browser.new_page(viewport={"width": 1500, "height": 1700}, device_scale_factor=1)
+        # Wide enough that the 0.6-zoom artboard (max 960×1152) sits between the
+        # 370 px left pane and 330 px right pane without overflowing under them.
+        page = browser.new_page(viewport={"width": 1700, "height": 1250}, device_scale_factor=1)
         page.on("pageerror", lambda error: print(f"PAGEERROR {error}", file=sys.stderr))
         register(page, base, email)
         failures = 0
@@ -181,7 +292,7 @@ def main(argv=None) -> int:
                 webp = encode_webp(png)
                 (OUT / f"{template_id}.webp").write_bytes(webp)
                 print(f"THUMB {template_id} {len(webp)} bytes")
-            except Exception as error:  # keep going: one bad template must not stop 35
+            except Exception as error:  # keep going: one bad template must not stop the rest
                 failures += 1
                 print(f"THUMB_FAILED {template_id}: {error}", file=sys.stderr)
         page.close()
@@ -205,8 +316,7 @@ def main(argv=None) -> int:
         import hashlib
         assets = ROOT / "docs" / "ASSETS.md"
         text = assets.read_text(encoding="utf-8")
-        start = text.index("## Gallery thumbnails (36)")
-        marker = "| `%s`"
+        start = text.index("## Gallery thumbnails")
         table_start = text.index("|---|---|---|", start) + len("|---|---|---|")
         table_end = text.index("\n\n", table_start)
         lines = []

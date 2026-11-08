@@ -170,11 +170,11 @@
       <table class="ei-admin-table"><thead><tr>
         <th>${esc(t('flag'))}</th><th>${esc(t('tier'))}</th><th>${esc(t('on'))}/${esc(t('off'))}</th><th>${esc(t('updatedAt'))}</th><th></th>
       </tr></thead><tbody>${rows || `<tr><td colspan="5">${esc(t('noFlags'))}</td></tr>`}</tbody></table>
-      <section class="ei-admin-section" style="margin-top:24px;">
+      <section class="ei-admin-section" data-csp-style="margin-top:24px;">
         <h3>${esc(t('sessionPolicyTitle'))}</h3>
         <p class="ei-help">${esc(t('sessionPolicyDesc'))}</p>
-        <div class="ei-form-row" style="align-items:center; gap:12px; flex-wrap:wrap;">
-          <label for="sessionIdleSelect" style="display:flex; align-items:center; gap:8px;">${esc(t('sessionPolicyLabel'))} <select id="sessionIdleSelect" data-setting="sessionIdleDays">${sessionOptions}</select></label>
+        <div class="ei-form-row" data-csp-style="align-items:center; gap:12px; flex-wrap:wrap;">
+          <label for="sessionIdleSelect" data-csp-style="display:flex; align-items:center; gap:8px;">${esc(t('sessionPolicyLabel'))} <select id="sessionIdleSelect" data-setting="sessionIdleDays">${sessionOptions}</select></label>
           <button id="sessionIdleSave" data-action="save-session-idle">${esc(t('sessionPolicySave'))}</button>
         </div>
       </section>`;

@@ -16,7 +16,7 @@ function notify(type,detail={}){const payload={type,...detail};subscribers.forEa
 function normalizeCommand(input){
 if(!input||typeof input!=='object'||!input.id)throw Error('Command id');
 return Object.freeze({
-title:input.id,category:'General',keywords:[],visible:()=>true,enabled:()=>true,bindings:{},allowFromControls:false,...input,
+title:input.id,category:'General',visible:()=>true,enabled:()=>true,bindings:{},allowFromControls:false,...input,
 keywords:Array.isArray(input.keywords)?input.keywords:String(input.keywords||'').split(/\s+/).filter(Boolean)
 });
 }

@@ -50,3 +50,13 @@
 
 /* 5. Editor toolbar polish: match selected zoom & size select heights */
 .studio-canvas-toolbar select{height:32px}
+
+/* CSP hardening (2026-11-07): the editor previously carried these declarations
+   in inline style attributes. They live here so style-src needs no
+   'unsafe-inline'; title/hero geometry is mirrored in data-csp-* attributes
+   because app.js captures the initial canvas state from them. */
+body[data-page="index"] .left label input.inline-check[type="checkbox"] { display:inline-block; width:auto; margin-right:8px; }
+body[data-page="index"] #stage .object[data-id="title"] { left:8%; top:10%; width:84%; height:110px; }
+body[data-page="index"] #stage .object[data-id="subtitle"] { left:12%; top:31%; width:76%; height:80px; }
+body[data-page="index"] #stage .object[data-id="hero"] { left:12%; top:49%; width:76%; height:250px; }
+body[data-page="index"] #stage .object[data-id="details"] { left:12%; top:83%; width:76%; height:90px; }

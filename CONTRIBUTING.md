@@ -25,6 +25,20 @@ when it exists.
 Optional environment variables live in `.env.example`; copy it to `.env` and
 fill in what you need. Never commit a filled `.env`.
 
+### Install the secret-scanning Git hook (required)
+
+Every contributor must install the tracked pre-commit hook once per clone:
+
+```bash
+bash scripts/install-git-hooks.sh
+```
+
+This sets `core.hooksPath=.githooks`. The hook runs `.tools/bin/gitleaks` with
+`.gitleaks.toml` against the staged diff and blocks commits containing
+detectable secrets. The installer is reversible with
+`git config --unset core.hooksPath`. If gitleaks is not installed, the hook
+prints a warning and exits without scanning; CI must still run the secret scan.
+
 ## 2. Build
 
 `build.py` at the repo root is the only supported entry point.

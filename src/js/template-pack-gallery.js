@@ -1,7 +1,7 @@
 /*
- * Khmer events gallery (TP-1.4).
+ * Event designs gallery (TP-1.4).
  *
- * Renders the 36 template-pack designs as a dedicated section above the Template
+ * Renders the 100 template-pack designs as a dedicated section above the Template
  * Studio grid. The catalogue and every document stay out of all bundles: this
  * module loads on demand, then the loader fetches what the visitor opens.
  *
@@ -17,6 +17,7 @@
   const STYLE_HREF = 'template-pack-gallery.css';
   const state = { catalog: null, category: 'all', query: '' };
   let currentSection = null;
+  let filterFrame = 0;
 
   // The studio toolbar owns search and category. Keeping those controls in one
   // place avoids a second search field and a duplicate set of category chips on
@@ -24,7 +25,15 @@
   function applyFilter(detail = {}) {
     if (typeof detail.query === 'string') state.query = detail.query.trim().toLowerCase();
     if (typeof detail.category === 'string') state.category = detail.category || 'all';
-    if (currentSection) render(currentSection);
+    // A 100-card grid rebuilt per keystroke drops frames on mid-range phones;
+    // coalesce bursts of filter input into one paint.
+    if (currentSection) {
+      if (filterFrame) cancelAnimationFrame(filterFrame);
+      filterFrame = requestAnimationFrame(() => {
+        filterFrame = 0;
+        if (currentSection) render(currentSection);
+      });
+    }
   }
   window.addEventListener('einvite:studio-filter', (event) => applyFilter(event.detail || {}));
 
@@ -78,17 +87,13 @@
     const pages = entry.pages === 1
       ? text('1 page', '1 page')
       : text(`${entry.pages} pages`, `${entry.pages} pages`);
-    const label = text(
-      `Use ${entry.name.en} — ${entry.canvasLabel}, ${pages}`,
-      `Use ${entry.name.km} — ${entry.canvasLabel}, ${pages}`,
-    );
     return `<article class="pack-card" role="listitem">
-      <button type="button" class="pack-card-open" data-pack-template="${esc(entry.id)}" aria-label="${esc(label)}">
+      <button type="button" class="pack-card-open" data-pack-template="${esc(entry.id)}" aria-label="Use ${esc(name)}">
         <img src="${esc(entry.thumb)}" width="${Number(entry.thumbWidth) || 420}" height="${Number(entry.thumbHeight) || 420}"
              loading="lazy" decoding="async" alt="">
         <span class="pack-name">
           <span class="pack-name-primary" lang="${isKm() ? 'km' : 'en'}">${esc(name)}</span>
-          <span class="pack-name-secondary" lang="${isKm() ? 'en' : 'km'}" aria-hidden="true">${esc(other)}</span>
+          <span class="pack-name-secondary" lang="${isKm() ? 'en' : 'km'}">${esc(other)}</span>
         </span>
         <span class="pack-meta">${esc(entry.canvasLabel)} · ${esc(pages)}</span>
       </button>
@@ -118,10 +123,10 @@
     section.setAttribute('aria-labelledby', 'packGalleryTitle');
     section.innerHTML = `<div class="pack-head">
         <div>
-          <h2 id="packGalleryTitle">${esc(text('Khmer events', 'Khmer events'))}</h2>
+          <h2 id="packGalleryTitle">${esc(text('Event designs', 'Event designs'))}</h2>
           <p class="pack-hint">${esc(text(
-            'Thirty-six ready-made designs for Khmer weddings, birthdays, ceremonies, greetings and business events. Pick one to start an invitation you can edit.',
-            'Thirty-six ready-made designs for Khmer weddings, birthdays, ceremonies, greetings and business events. Pick one to start an invitation you can edit.',
+            'One hundred ready-made designs for weddings, birthdays, ceremonies, greetings and business events — Khmer-led and English-led. Pick one to start an invitation you can edit.',
+            'One hundred ready-made designs for weddings, birthdays, ceremonies, greetings and business events — Khmer-led and English-led. Pick one to start an invitation you can edit.',
           ))}</p>
         </div>
         <span class="pack-count" data-pack-count aria-live="polite"></span>

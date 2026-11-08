@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose the 36 pack thumbnails into one contact sheet (TP-4.2).
+"""Compose the 57 pack thumbnails into one contact sheet (TP-4.2).
 
 Usage: .venv/bin/python tools/contact-sheet.py
 Output: artifacts/next-work/review-tp/contact-sheet.png (not committed)

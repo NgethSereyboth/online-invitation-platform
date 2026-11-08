@@ -186,7 +186,7 @@
       var barW = (s.count / max) * 100;
       return '<div class="ei-funnel-row">'
         + '<div class="ei-funnel-label">' + escapeHtml(s.step) + '</div>'
-        + '<div class="ei-funnel-bar"><span style="width:' + barW + '%"></span></div>'
+        + '<div class="ei-funnel-bar"><span data-csp-style="width:' + barW + '%"></span></div>'
         + '<div class="ei-funnel-count">' + escapeHtml(s.count) + ' <small>(' + s.pct + '%)</small></div>'
         + '</div>';
     }).join("");
@@ -209,7 +209,7 @@
     var buckets = scroll.buckets || [];
     var bars = buckets.map(function (b) {
       return '<div class="ei-scroll-bucket"><span>' + b.pct + '%</span>'
-        + '<div class="ei-scroll-bar"><span style="height:' + (b.count > 0 ? 100 : 0) + '%"></span></div>'
+        + '<div class="ei-scroll-bar"><span data-csp-style="height:' + (b.count > 0 ? 100 : 0) + '%"></span></div>'
         + '<small>' + b.count + '</small></div>';
     }).join("");
     return '<div class="ei-scroll">'

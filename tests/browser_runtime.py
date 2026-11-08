@@ -8,6 +8,20 @@ def skipped(label,exc):
  print(f'{label}_SKIPPED',exc)
  return 1 if browser_required() else 0
 
+def add_style_tag_with_nonce(page, *, content=None, path=None, nonce=None):
+ """Add a test stylesheet to a CSP-served page without weakening its policy.
+
+ Playwright's `page.add_style_tag` creates a <style> element with no nonce;
+ the editor pages use `style-src 'self' 'nonce-...'`, so the browser rightly
+ blocks that injection. Reuse the nonce the server injected into the page's
+ own <style> tags, exactly as the served styles do.
+ """
+ nonce=nonce or page.evaluate("()=>document.querySelector('style[nonce]')?.getAttribute('nonce')||''")
+ if not nonce:
+  raise AssertionError('CSP style nonce not found on the served page')
+ css=content if content is not None else Path(path).read_text(encoding='utf-8')
+ page.evaluate("""({css,nonce})=>{const style=document.createElement('style');style.setAttribute('nonce',nonce);style.textContent=css;document.head.append(style)}""",{'css':css,'nonce':nonce})
+
 def mark_editor_onboarding_seen():
  """Init script that seeds the editor tour's 'seen' storage before page JS runs.
 

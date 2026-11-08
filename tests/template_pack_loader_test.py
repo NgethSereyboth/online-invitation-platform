@@ -86,7 +86,7 @@ def test_pack_loader_is_lazy_and_cached():
                 LOADER,
             )
 
-            assert loaded["count"] == 36
+            assert loaded["count"] == 100
             assert loaded["sameCatalog"] is True, "the catalogue promise must be cached"
             assert loaded["sameDocument"] is True, "a fetched template must be cached"
             assert loaded["message"] == "Could not load this template. Try again."

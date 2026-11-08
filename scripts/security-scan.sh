@@ -76,6 +76,26 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 1b. SAST — semgrep (p/python + p/owasp-top-ten)
+#   The full rule set repeatedly exceeded the CI window on the 11k-line
+#   src/python/server.py. scripts/semgrep_scan.py scans the small modules in
+#   one pass, batches server.py by rule subset, and retries slow batches
+#   rule-by-rule. See docs/security/CI-SECURITY.md.
+# ---------------------------------------------------------------------------
+if command -v semgrep >/dev/null 2>&1 || [ -x .tools/sec-venv/bin/semgrep ]; then
+  echo "[security-scan] Running semgrep SAST (batched Python rules)..."
+  if python3 scripts/semgrep_scan.py --reports-dir reports; then
+    echo "[security-scan] semgrep: PASS (no findings or scan errors)"
+  else
+    echo "[security-scan] FAIL: semgrep found issues or could not complete"
+    FAILED=1
+  fi
+else
+  echo "[security-scan] WARN: semgrep not installed, skipping SAST"
+  echo "[security-scan]        install with: pip install semgrep==1.184.0"
+fi
+
+# ---------------------------------------------------------------------------
 # 2. Dependency audit — pip-audit (fail on HIGH/CRITICAL)
 # ---------------------------------------------------------------------------
 # pip-audit docs: https://github.com/pypa/pip-audit
@@ -137,11 +157,13 @@ fi
 #   detect            scan for secrets
 #   --no-git          scan every file, not just git history
 #   --source .        scan the current directory
+#   --config          use the same default-rule config as the pre-commit hook
+#   --redact          never write raw secret values into logs or the uploaded report
 #   --report-path P   write findings (JSON) to P
 # To install: brew install gitleaks | choco install gitleaks | see releases
 if command -v gitleaks >/dev/null 2>&1; then
   echo "[security-scan] Running gitleaks (secret scanning)..."
-  if gitleaks detect --no-git --source . --report-path "${GITLEAKS_REPORT}"; then
+  if gitleaks detect --no-git --source . --config .gitleaks.toml --redact --report-path "${GITLEAKS_REPORT}"; then
     echo "[security-scan] gitleaks: PASS (no secrets detected)"
   else
     code=$?
