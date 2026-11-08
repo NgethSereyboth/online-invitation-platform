@@ -142,3 +142,41 @@ plans, session/rate-limit edge cases, dead code and documentation.
 **Not verified here / out of scope:** live HSTS and CSP on the deployed origin, live cookie
 and CSRF checks (blocked by the deployment finding), full server decomposition, content-hashed
 immutable assets, full-page dashboard baseline. See `docs/FUTURE-IMPROVEMENTS.md`.
+
+---
+
+## 2026-11-08T08:30Z — Release-candidate stabilization
+
+- **Found:** the architecture claim that the dashboard owner path used
+  `idx_invitations_owner_archived_updated` was not true for the real `list_invitations` SQL. A
+  correlated `EXISTS` inside the `OR` forced `SCAN i` at empty and 50k-row scale. The index
+  existed, but the query could not use it.
+- **Fixed:** replaced the correlated `EXISTS` with the equivalent set-membership
+  `i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?)`. At 50k rows
+  the archived/published filters now report
+  `SEARCH i USING INDEX idx_invitations_owner_archived_updated (ANY(owner_id) AND archived=?)`;
+  the unfiltered/search paths use a `MULTI-INDEX OR` over `idx_invitations_owner` and the
+  collaborator covering index instead of a scan.
+- **Tests:** new `tests/qa_deep_dive_query_plan_test.py` builds a 20k-row in-memory schema,
+  asserts no full table scan for the scope and unfiltered plans, and asserts the production
+  `list_invitations` clause is the set-membership form. **2 passed**.
+- **Evidence:** `artifacts/qa-rc/query-plan-scale.json` (50k rows, before/after plans) and
+  `artifacts/qa-rc/logs/focused-security.log` (13 passed).
+- **Docs:** `docs/ARCHITECTURE.md` §10.4 and `docs/FUTURE-IMPROVEMENTS.md` §3 now describe the
+  actual plans and the remaining temporary B-tree/100k-row coverage gap.
+- **Commit:** `29f7722`.
+
+## 2026-11-08T09:00Z — Full-suite reconciliation
+
+- **Found:** the first full `pytest tests/` run on the RC tree reported **239 passed, 3 failed**:
+  the gallery test still expected the removed overriding `aria-label`, the new fuzzer contained
+  Khmer text forbidden outside approved files, and the old pack cache test expected non-pack
+  assets to have no `Cache-Control`.
+- **Fixed:** the gallery test now asserts the visible name is the accessible name and the
+  control is reachable by that name; the fuzzer uses emoji/Arabic/Greek instead of Khmer; the
+  pack cache test asserts the documented one-hour policy for stable-name assets. The gallery
+  smoke also waits for `domcontentloaded` at the editor URL instead of the long-pending `load`
+  event.
+- **Tests:** gallery 1 passed; text/cache contracts 2 passed; fuzzer 44 cases / 0 failures;
+  final full-suite rerun **242 passed in 1126.27 s (18:46)**.
+- **Commit:** `6c47cb9`.
