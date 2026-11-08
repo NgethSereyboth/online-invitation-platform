@@ -2,7 +2,7 @@
 """TP-1.4: the Khmer events gallery lists the pack, filters it, and creates an invitation.
 
 Runs against the real test server in a real browser: the section mounts on
-``templates.html``, the 36 cards render with lazy, sized thumbnails, the filters and
+``templates.html``, the 100 cards render with lazy, sized thumbnails, the filters and
 search narrow the list, and choosing a design creates an invitation and lands in
 the editor. The pack must stay out of the bundles, so no pack document is requested
 until a card is chosen.
@@ -44,9 +44,9 @@ def test_pack_gallery_lists_filters_and_opens_a_design():
             page.wait_for_selector("#templatePackGallery", timeout=20000)
             page.wait_for_selector("#templatePackGallery .pack-card", timeout=20000)
 
-            assert page.locator("#templatePackGallery .pack-card").count() == 36
+            assert page.locator("#templatePackGallery .pack-card").count() == 100
             assert not [url for url in requests if "/assets/template-pack/built/" in url], requests
-            assert page.locator("#packGalleryTitle").inner_text().strip().lower() == "khmer events"
+            assert page.locator("#packGalleryTitle").inner_text().strip().lower() == "event designs"
 
             images = page.eval_on_selector_all(
                 "#templatePackGallery .pack-card img",
@@ -58,7 +58,7 @@ def test_pack_gallery_lists_filters_and_opens_a_design():
                     src: node.getAttribute('src'),
                 }))""",
             )
-            assert len(images) == 36
+            assert len(images) == 100
             for image in images:
                 assert image["loading"] == "lazy", image
                 assert image["width"] == "420" and image["height"], image
@@ -81,19 +81,19 @@ def test_pack_gallery_lists_filters_and_opens_a_design():
 
             # Filters: the studio toolbar owns search and category (PW-7) and the
             # gallery follows it through `einvite:studio-filter`. Wedding is the
-            # largest group, Ceremony is five; the counts are the same contract the
+            # largest group, Ceremony is seventeen; the counts are the same contract the
             # old per-gallery chips asserted.
             page.select_option("#studioCategory", "wedding")
             page.wait_for_timeout(150)
             wedding = page.locator("#templatePackGallery .pack-card").count()
-            assert wedding == 15, wedding
+            assert wedding == 34, wedding
             assert page.locator("#studioCategory").input_value() == "wedding"
             page.select_option("#studioCategory", "ceremony")
             page.wait_for_timeout(150)
-            assert page.locator("#templatePackGallery .pack-card").count() == 5
+            assert page.locator("#templatePackGallery .pack-card").count() == 17
             page.select_option("#studioCategory", "all")
             page.wait_for_timeout(150)
-            assert page.locator("#templatePackGallery .pack-card").count() == 36
+            assert page.locator("#templatePackGallery .pack-card").count() == 100
 
             # Search narrows the same list.
             page.fill("#studioSearch", "maroon")

@@ -1,10 +1,10 @@
 /*
  * Template-pack loader (TP-1.3).
  *
- * The 36 Khmer-event templates are *not* in any bundle. This module is loaded on
+ * The 100 template-pack designs are *not* in any bundle. This module is loaded on
  * demand by the Template Studio and fetches:
  *
- *   /assets/template-pack/catalog.js        the small catalogue (36 entries)
+ *   /assets/template-pack/catalog.js        the small catalogue (100 entries)
  *   /assets/template-pack/built/<id>.js     one template's native document
  *
  * Both are ES modules rather than .json because the server's static whitelist

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 600">
+  <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+  <path d="M20,10 v12"/>
+    <path d="M20,31 v12"/>
+    <path d="M20,52 v12"/>
+    <path d="M20,73 v12"/>
+    <path d="M20,94 v12"/>
+    <path d="M20,115 v12"/>
+    <path d="M20,136 v12"/>
+    <path d="M20,157 v12"/>
+    <path d="M20,178 v12"/>
+    <path d="M20,199 v12"/>
+    <path d="M20,220 v12"/>
+    <path d="M20,241 v12"/>
+    <path d="M20,262 v12"/>
+    <path d="M20,283 v12"/>
+    <path d="M20,304 v12"/>
+    <path d="M20,325 v12"/>
+    <path d="M20,346 v12"/>
+    <path d="M20,367 v12"/>
+    <path d="M20,388 v12"/>
+    <path d="M20,409 v12"/>
+    <path d="M20,430 v12"/>
+    <path d="M20,451 v12"/>
+    <path d="M20,472 v12"/>
+    <path d="M20,493 v12"/>
+    <path d="M20,514 v12"/>
+    <path d="M20,535 v12"/>
+    <path d="M20,556 v12"/>
+    <path d="M20,577 v12"/>
+  </g>
+  <circle cx="20" cy="0" r="14" fill="currentColor"/>
+  <circle cx="20" cy="600" r="14" fill="currentColor"/>
+</svg>

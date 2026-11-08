@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+<g fill="none" stroke="currentColor"><circle cx="150" cy="150" r="46" stroke-width="4"/><circle cx="150" cy="150" r="82" stroke-width="2" opacity=".8"/><circle cx="150" cy="150" r="118" stroke-width="1.2" opacity=".55"/></g>
+<g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M150 10v22M150 268v22M10 150h22M268 150h22M51 51l16 16M233 233l16 16M249 51l-16 16M67 233l-16 16"/></g>
+<g fill="currentColor"><circle cx="150" cy="150" r="7"/><circle cx="46" cy="66" r="3"/><circle cx="254" cy="66" r="3"/><circle cx="46" cy="234" r="3"/><circle cx="254" cy="234" r="3"/></g>
+</svg>

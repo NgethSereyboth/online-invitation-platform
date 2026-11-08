@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 360">
+<path d="M30 344V174a120 120 0 0 1 240 0v170" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+<circle cx="150" cy="174" r="46" fill="currentColor"/>
+<g stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+<path d="M150 96V72M150 276v-24M72 174H48M252 174h-24M95 119l-17-17M222 246l-17-17M95 229l-17 17M222 102l-17 17"/>
+</g>
+<path d="M18 344h264" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>

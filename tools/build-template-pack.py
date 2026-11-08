@@ -4,9 +4,9 @@
 Reads the design source in ``template-pack/`` and writes browser-served files under
 ``assets/template-pack/``:
 
-  catalog.js                  ES module: the 36 catalogue entries the gallery lists
+  catalog.js                  ES module: the 57 catalogue entries the gallery lists
   built/<id>.js               ES module: one template as a native invitation document
-  ornaments/<stem>~<colours>.svg   recoloured copies of the 27 ornaments
+  ornaments/<stem>~<colours>.svg   recoloured copies of the source ornaments
 
 The output is ES modules, not ``.json``, because ``ServerHandler.public_static_path``
 refuses every ``.json`` (a disclosure fix) and the gallery must fetch these lazily
@@ -85,6 +85,7 @@ SCENE_GROUPS = {
     "wd-photo-modern": ("botanical-blush", "floral-reveal"),
     "anniv-golden": ("botanical-blush", "soft-monogram"),
     "wd-quiet-ivory": ("botanical-blush", "soft-monogram"),
+    "wd-olive-letter": ("modern-cambodian-luxury", "minimal-editorial"),
     "wd-save-the-date": ("botanical-blush", "soft-monogram"),
     # Playful / festive reveal.
     "bd-first-pastel": ("botanical-blush", "floral-reveal"),
@@ -109,6 +110,75 @@ SCENE_GROUPS = {
     "gr-blessings": ("modern-cambodian-luxury", "minimal-editorial"),
     "gr-thank-you": ("modern-cambodian-luxury", "minimal-editorial"),
     "gr-newborn": ("botanical-blush", "soft-monogram"),
+    # 2026 English-led additions.
+    "en-garden-sun": ("botanical-blush", "floral-reveal"),
+    "en-coastal-vows": ("botanical-blush", "cinematic-photo"),
+    "en-afterglow-disco": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-cloud-nine-baby": ("botanical-blush", "soft-monogram"),
+    "en-noir-graduate": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-summit-26": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-terracotta-home": ("botanical-blush", "minimal-editorial"),
+    "en-deco-anniversary": ("royal-khmer-gold", "silk-curtain"),
+    "en-moonlit-halloween": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-midnight-new-year": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-amber-arch": ("botanical-blush", "soft-monogram"),
+    # 2026 English event additions (designs 59–68).
+    "en-riso-thirty": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-chrome-gala": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-kraft-hearth": ("botanical-blush", "minimal-editorial"),
+    "en-ticket-anniv": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-confetti-shower": ("botanical-blush", "soft-monogram"),
+    "en-award-noir": ("royal-khmer-gold", "silk-curtain"),
+    "en-folk-grad": ("botanical-blush", "floral-reveal"),
+    "en-museum-engage": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-festival-lineup": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-watercolour-christen": ("botanical-blush", "soft-monogram"),
+    # 2026 English-led wedding addition.
+    "en-cathedral-rose": ("royal-khmer-gold", "silk-curtain"),
+    # 2026 Khmer-led additions.
+    "km-bokor-vows": ("botanical-blush", "floral-reveal"),
+    "km-silk-engagement": ("royal-khmer-gold", "silk-curtain"),
+    "km-neon-birthday": ("modern-cambodian-luxury", "cinematic-photo"),
+    "km-baby-blessing": ("botanical-blush", "soft-monogram"),
+    "km-wood-earth-home": ("botanical-blush", "minimal-editorial"),
+    "km-lotus-merit": ("modern-cambodian-luxury", "minimal-editorial"),
+    "km-sra-sor-new-year": ("botanical-blush", "floral-reveal"),
+    "km-modern-graduate": ("modern-cambodian-luxury", "minimal-editorial"),
+    "km-golden-anniversary": ("royal-khmer-gold", "silk-curtain"),
+    "km-river-night": ("modern-cambodian-luxury", "cinematic-photo"),
+    # 2026 pack-100 additions.
+    "km-royal-kbach": ("royal-khmer-gold", "silk-curtain"),
+    "km-naga-blessing": ("royal-khmer-gold", "silk-curtain"),
+    "km-lotus-vow": ("botanical-blush", "soft-monogram"),
+    "km-peacock-silk": ("royal-khmer-gold", "silk-curtain"),
+    "km-betel-promise": ("botanical-blush", "floral-reveal"),
+    "km-moon-engagement": ("modern-cambodian-luxury", "cinematic-photo"),
+    "km-silk-programme": ("royal-khmer-gold", "silk-curtain"),
+    "km-modern-monogram": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-ordination-saffron": ("botanical-blush", "soft-monogram"),
+    "en-house-blessing": ("botanical-blush", "minimal-editorial"),
+    "en-memorial-light": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-baby-blessing": ("botanical-blush", "soft-monogram"),
+    "en-merit-gold": ("royal-khmer-gold", "silk-curtain"),
+    "en-longevity-ninety": ("royal-khmer-gold", "silk-curtain"),
+    "en-khmer-new-year": ("botanical-blush", "floral-reveal"),
+    "en-pchum-ben": ("royal-khmer-gold", "silk-curtain"),
+    "en-water-festival": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-kathina": ("botanical-blush", "soft-monogram"),
+    "en-vesak-moon": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-womens-day": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-christmas-gold": ("royal-khmer-gold", "silk-curtain"),
+    "en-with-thanks": ("botanical-blush", "soft-monogram"),
+    "en-first-birthday": ("botanical-blush", "floral-reveal"),
+    "en-sweet-sixteen": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-sixty-years": ("royal-khmer-gold", "silk-curtain"),
+    "en-carnival-day": ("botanical-blush", "floral-reveal"),
+    "en-thirty-gold": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-foundry-opening": ("modern-cambodian-luxury", "cinematic-photo"),
+    "en-annual-gala": ("royal-khmer-gold", "silk-curtain"),
+    "en-summit-2027": ("modern-cambodian-luxury", "minimal-editorial"),
+    "en-launch-noir": ("modern-cambodian-luxury", "cinematic-photo"),
+
 }
 
 CATEGORY_EVENT = {
@@ -314,8 +384,13 @@ def text_object(layer, z, canvas_h, palette, copy, where) -> dict:
             # Substituted families are wider than the pack's display faces. Fit
             # keeps the designed box and only shrinks a line that would clip.
             "textAutoFit": "fit",
-            "textAutoFitMax": float(layer.get("size", 24)),
-            "textMinFontSize": 10,
+            # Tiny labels (11 px dates, 12 px captions) used to fail server
+            # normalization: the typography model probes compact overrides
+            # against the body style, whose minimum is 12 px. A max below that
+            # floor reads as a contradiction. The designed size still governs
+            # the text; auto-fit only shrinks, never grows to the ceiling.
+            "textAutoFitMax": max(float(layer.get("size", 24)), 12.0),
+            "textMinFontSize": min(10.0, max(8.0, float(layer.get("size", 24)))),
             "letterSpacing": 0,
             "lineHeight": line_px,
             "textWrap": "balance",

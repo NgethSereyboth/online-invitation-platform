@@ -203,9 +203,9 @@ def main() -> int:
     names = {entry["id"]: entry["name"]["en"] for entry in catalog["templates"]}
 
     lines = [
-        "# Design review — 36 templates (TP-4.1)",
+        f"# Design review — {len(rows)} templates (TP-4.1)",
         "",
-        "Reviewed in the real editor at 1440 and on a fixed-width 375 page; the 36-up sheet is",
+        f"Reviewed in the real editor at 1440 and on a fixed-width 375 page; the {len(rows)}-up sheet is",
         "`artifacts/next-work/review-tp/contact-sheet.png` (not committed). Scores come from the",
         f"acceptance run in `{Path(args.json).name}` via `tools/design-review-report.py` — each",
         "axis has its measurement in the Notes column, so a score can be re-derived or disputed",
