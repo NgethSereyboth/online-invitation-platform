@@ -1617,7 +1617,7 @@ backgroundEnabled:!!options.backgroundEnabled,backgroundColor:options.background
 fillMode:options.fillMode||'solid',gradientStart:options.gradientStart||'#d9a6ad',gradientEnd:options.gradientEnd||'#9d4555',gradientAngle:Number(options.gradientAngle??135),
 textGradientEnabled:!!options.textGradientEnabled,textGradientStart:options.textGradientStart||'#9d4555',textGradientEnd:options.textGradientEnd||'#b58a3a',textGradientAngle:Number(options.textGradientAngle??90),
 textStrokeWidth:Number(options.textStrokeWidth||0),textStrokeColor:options.textStrokeColor||'#ffffff',textShadowBlur:Number(options.textShadowBlur||0),textShadowColor:options.textShadowColor||'#000000',textTransform:options.textTransform||'none',
-animationDelay:Number(options.animationDelay||0),caption:'',shapeKind:options.shapeKind||'rectangle'
+animationDelay:Number(options.animationDelay||0),caption:''
 }
 }
 function designPagePreset(type='title'){

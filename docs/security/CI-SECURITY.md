@@ -17,6 +17,7 @@
 | # | Scan | Tool | What it checks | Fail threshold |
 |---|------|------|----------------|----------------|
 | 1 | SAST | [`bandit`](https://bandit.readthedocs.io) `-r src/python ai_agent platform_v32 future_platform_v52 -lll` | Python AST patterns: `exec()`/`eval()` on dynamic input, hardcoded passwords, weak crypto (`hashlib.md5`), `shell=True` on untrusted input, assert-as-security-check, YAML unsafe loaders, etc. | HIGH severity only (bandit `-lll` reports HIGH only; the 38 remaining MEDIUM findings are documented as a background queue in `docs/reviews/security-status.md`) |
+| 1b | SAST | [`semgrep`](https://semgrep.dev) `p/python` + `p/owasp-top-ten`, run by `scripts/semgrep_scan.py` | Python and generic security rules, including injection, deserialization, crypto, and secret patterns. Small modules run once; `src/python/server.py` runs in bounded rule batches so the 11k-line file cannot exhaust the CI timeout. | Any finding or scan error |
 | 2 | SCA / dependency audit | [`pip-audit`](https://github.com/pypa/pip-audit) `-r docs/requirements-production.txt --desc` | Known CVEs / GHSAs against every pinned production dependency, via the PyPA advisory DB + OSV. | HIGH or CRITICAL CVSS |
 | 3 | SBOM | [`scripts/generate-sbom.py`](../../scripts/generate-sbom.py) (stdlib-only) | Emits a CycloneDX 1.5 SBOM of every production dependency + checksum + license. Always runs; never fails the build (only warns). | n/a — informational |
 | 4 | Secret scanning | [`gitleaks`](https://github.com/gitleaks/gitleaks) `detect --no-git --source .` | AWS keys, GitHub PATs, Slack tokens, private keys, generic high-entropy strings, etc. | Any finding (1+) |
@@ -48,6 +49,7 @@ The script:
 | Tool | macOS | Windows | Linux |
 |------|-------|---------|-------|
 | `bandit` | `pip install bandit` | `pip install bandit` | `pip install bandit` |
+| `semgrep` | `pip install semgrep==1.184.0` | `pip install semgrep==1.184.0` | `pip install semgrep==1.184.0` |
 | `pip-audit` | `pip install pip-audit` | `pip install pip-audit` | `pip install pip-audit` |
 | `gitleaks` | `brew install gitleaks` | `choco install gitleaks` | see [releases](https://github.com/gitleaks/gitleaks/releases) |
 | `trivy` | `brew install trivy` | see [docs](https://aquasecurity.github.io/trivy/latest/getting-started/installation/) | `sudo apt install trivy` (Debian/Ubuntu repo) |

@@ -3,9 +3,15 @@
   "private": true,
   "scripts": {
     "serve:lhci": "python3 tools/serve-gzip.py --port 8124",
-    "lhci": "npx --yes @lhci/cli@0.15.1"
+    "lhci": "npx --yes @lhci/cli@0.15.1",
+    "lint": "node_modules/.bin/eslint \"src/js/**/*.js\" --max-warnings=0",
+    "lint:security": "node_modules/.bin/eslint --config eslint.security.config.mjs \"src/js/**/*.js\" --max-warnings=0"
   },
   "devDependencies": {
+    "eslint": "9.39.5",
     "puppeteer-core": "^25.16.0"
+  },
+  "engines": {
+    "node": ">=22.12.0 <23"
   }
 }
