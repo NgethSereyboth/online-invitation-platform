@@ -59,7 +59,8 @@ changed to the editor, the test waited for the page's `load` event, which long-l
 keep pending. It now waits for `domcontentloaded`, which is sufficient for the URL/navigation
 contract.
 
-All four checks pass individually after the fix. The final full-suite run is the remaining gate.
+All four checks pass individually after the fix. The final full-suite rerun passed **242/242** in
+1126.27 s.
 
 ### Focused batch contents
 
@@ -171,4 +172,4 @@ pins, and generated header-injection tests.
 - The first full pytest run on the RC tree exposed three contract regressions; all are fixed in
   `6c47cb9`, and the final full-suite rerun passed **242/242**.
 - Dashboard ordering still uses a temporary B-tree; the fix removes the table scan, not the sort.
-- The release packet is committed on top of `29f7722`; the PR head is the authoritative final SHA.
+- The release packet is committed on top of `6c47cb9`; the PR head is the authoritative final SHA.
