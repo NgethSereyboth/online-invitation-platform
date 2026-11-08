@@ -136,13 +136,14 @@ jobs:
           fi
           printf '%s\n' "$zap_exit" > "$DAST_ARTIFACTS/zap-exit-code.txt"
           echo "ZAP_EXIT=$zap_exit"
-          if [ "$zap_exit" -gt 1 ]; then
+          if [ "$zap_exit" -gt 2 ]; then
             echo "ZAP did not complete (exit $zap_exit)" >&2
             exit "$zap_exit"
           fi
 
-          # The ZAP wrapper uses exit 1 for warnings. The security gate is the
-          # parsed report: fail only on High/Critical alerts.
+          # ZAP uses exit 2 for warnings and exit 1 for FAILs; both still
+          # produce a report. The parsed report is the security gate: fail
+          # only on High/Critical alerts.
           python3 scripts/dast/check_zap_report.py \
             --report "$DAST_ARTIFACTS/zap-authenticated.json" \
             --summary "$DAST_ARTIFACTS/zap-summary.json"

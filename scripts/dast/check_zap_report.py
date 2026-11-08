@@ -19,7 +19,10 @@ def alert_risk(alert):
         code = int(raw_code)
     except (TypeError, ValueError):
         code = -1
-    description = str(alert.get("riskdesc", "")).lower()
+    # ZAP appends confidence in parentheses, e.g. "Low (High)". Only the
+    # text before that parenthesis describes the risk; confidence must not
+    # promote a Low/Informational finding to High.
+    description = str(alert.get("riskdesc", "")).split("(", 1)[0].strip().lower()
     if code >= 4 or "critical" in description:
         return "Critical", max(code, 4)
     if code >= 3 or "high" in description:
