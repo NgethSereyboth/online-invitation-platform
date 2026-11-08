@@ -364,8 +364,8 @@
       "javascript2": "bundle-index-2.js",
       "javascript2Bytes": 553149,
       "javascript2Sha256": "50536ad8bbf05ae0cd5299609e746bb238ce765955aadd5f452deacaf714d01e",
-      "scriptBytes": 522566,
-      "scriptSha256": "29d8c33388feb2a4f2bbc0e4b6a4b02f858716fd96de890d1f501c70f97aedc6",
+      "scriptBytes": 522645,
+      "scriptSha256": "96241718e9426fb0862396ff6aa4088ad21f0beb179a3d7319fc95e1eb5967d1",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [

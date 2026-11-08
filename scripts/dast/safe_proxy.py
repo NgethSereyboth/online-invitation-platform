@@ -120,7 +120,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             for name, value in response.getheaders():
                 if name.lower() in HOP_HEADERS:
                     continue
-                self.send_header(name, value)
+                self.send_header(name.replace("\r", "").replace("\n", ""), value.replace("\r", "").replace("\n", ""))
             self.send_header("Content-Length", str(len(data)))
             self.send_header("Connection", "close")
             self.end_headers()

@@ -285,6 +285,10 @@ PAGE_ALIASES = {
     "/templates": "templates.html",
     "/verify": "verify.html",
 }
+# Serve only HTML files that actually exist in the server root. Keeping the
+# lookup as a fixed map means a request name is never joined into a filesystem
+# path; the direct .html route can only select an existing page.
+HTML_PAGE_FILES = {path.name: path for path in ROOT.glob("*.html") if path.is_file()}
 DATA = Path(platform_env("EINVITE_DATA_DIR", str(ROOT / "data"))).expanduser().resolve()
 UPLOADS = DATA / "uploads"
 IMAGE_CACHE = DATA / "image-cache"
@@ -2201,6 +2205,7 @@ def write_audit_event(user_id, action, target_type="", target_id="", metadata=No
     now=int(time.time()*1000);meta=json.dumps(metadata or {},ensure_ascii=False,sort_keys=True,separators=(",",":"))[:20000]
     with connect() as db:
         previous=db.execute("SELECT event_hash FROM audit_events ORDER BY created_at DESC,id DESC LIMIT 1").fetchone();previous_hash=previous["event_hash"] if previous else ""
+        # codeql[py/weak-sensitive-data-hashing] -- audit-chain integrity hash, not password storage
         event_id=str(uuid.uuid4());payload=f"{event_id}|{user_id or ''}|{action}|{target_type}|{target_id}|{meta}|{str(ip_address)[:80]}|{previous_hash}|{now}";event_hash=hashlib.sha256(payload.encode()).hexdigest()
         # ROADMAP §4.1 — encrypt the metadata; the chain hash stays over the
         # plaintext JSON (the verifier reads the revealed value), and admin_only
@@ -3217,6 +3222,7 @@ IMPERSONATION_SECRET = persistent_data_secret("EINVITE_IMPERSONATION_SECRET", ".
 def impersonation_sign(admin_id, expires_ms):
     payload = f"{admin_id}|{int(expires_ms)}"
     body = base64.urlsafe_b64encode(payload.encode()).decode().rstrip("=")
+    # codeql[py/weak-sensitive-data-hashing] -- HMAC signature, not password storage
     sig = hmac.new(IMPERSONATION_SECRET.encode(), body.encode(), hashlib.sha256).hexdigest()
     return f"{body}.{sig}"
 
@@ -3388,12 +3394,27 @@ def process_scheduled_publications():
         changed["expired"]=db.execute("UPDATE invitations SET is_published=0,updated_at=? WHERE expires_at IS NOT NULL AND expires_at<=? AND is_published=1",(now,now)).rowcount
     return changed
 
+def _valid_domain_label(label):
+    return bool(label and len(label)<=63 and label[0].isalnum() and label[-1].isalnum() and all(ch.isascii() and (ch.isalnum() or ch=='-') for ch in label))
+
+def _valid_domain_name(host):
+    labels=str(host or '').strip().lower().rstrip('.').split('.')
+    if len(labels)<2 or not labels[-1].isascii() or not labels[-1].isalpha() or not 2<=len(labels[-1])<=63:return False
+    return bool(all(_valid_domain_label(label) for label in labels) and sum(len(label) for label in labels)+len(labels)-1<=253)
+
 def valid_custom_domain(value):
     host=str(value or '').strip().lower().rstrip('.')
     if not host:return ''
-    if len(host)>253 or not re.fullmatch(r'(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}',host):raise ValueError('Invalid custom domain')
+    if not _valid_domain_name(host):raise ValueError('Invalid custom domain')
     if CUSTOM_DOMAIN_SUFFIX_ALLOWLIST and not any(host==suffix or host.endswith('.'+suffix) for suffix in CUSTOM_DOMAIN_SUFFIX_ALLOWLIST):raise ValueError('This custom domain is not allowed by the deployment configuration')
     return host
+
+def valid_email(value):
+    """Validate the mailbox shape without a backtracking regular expression."""
+    email=str(value or '').strip()
+    if len(email)>254 or email.count('@')!=1 or any(ch.isspace() for ch in email):return False
+    local,domain=email.split('@',1)
+    return bool(local and len(local)<=64 and domain and '.' in domain and not domain.startswith('.') and not domain.endswith('.'))
 
 def send_message_provider(channel,recipient,message,metadata=None):
     channel=str(channel or '').lower();recipient=str(recipient or '').strip();message=str(message or '')[:5000];metadata=metadata or {}
@@ -3596,7 +3617,7 @@ class Handler(SimpleHTTPRequestHandler):
                 print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":redact_request_path(format%args)},ensure_ascii=False),flush=True)
             except Exception as exc: _log.debug("cleanup failed: %s", exc)
     def end_headers(self):
-        request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID"))
+        request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID")).replace("\r","").replace("\n","")
         self.request_id=request_id
         self.send_header("X-Request-ID",request_id)
         cache_value=getattr(self,"_cache_control_value",None)
@@ -3689,7 +3710,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             self.send_response(200)
             self.send_header("Content-Type", content_type)
-            self.send_header("Content-Disposition", f'attachment; filename="{self._safe_inline_filename(filename)}"')
+            self.send_header("Content-Disposition", f'attachment; filename="{self._safe_inline_filename(filename)}"'.replace("\r","").replace("\n",""))
             self.send_header("Content-Length", str(len(payload)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
@@ -3767,7 +3788,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if parsed.query:
                     target += f"?{parsed.query}"
                 self.send_response(308)
-                self.send_header("Location", safe_header_value(target))
+                self.send_header("Location", safe_header_value(target).replace("\r","").replace("\n",""))
                 self.send_header("Content-Length", "0")
                 self.end_headers()
                 return False
@@ -4055,8 +4076,8 @@ class Handler(SimpleHTTPRequestHandler):
             values.append(now); RATE_BUCKETS[bucket_key]=values
         return True
     def serve_html_file(self, filename):
-        path=(ROOT/filename).resolve()
-        if path.parent!=ROOT or not path.is_file():return self.json(404,{"error":"Page not found"})
+        path=HTML_PAGE_FILES.get(str(filename))
+        if not path or not path.is_file():return self.json(404,{"error":"Page not found"})
         page=path.read_text(encoding="utf-8")
         page=inject_style_nonce(page,self.csp_nonce)
         marker='<meta name="einvite-backend" content="full">'
@@ -4075,7 +4096,7 @@ class Handler(SimpleHTTPRequestHandler):
             # expired-session navigation to the sign-in screen.
             if "text/html" in (self.headers.get("Accept") or "").lower():
                 self.send_response(302)
-                self.send_header("Location","/dashboard.html?next="+quote(self.path,safe=""))
+                self.send_header("Location",("/dashboard.html?next="+quote(self.path,safe="")).replace("\r","").replace("\n",""))
                 self.send_header("Cache-Control","no-store")
                 self.end_headers()
                 return
@@ -4201,7 +4222,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not stored:return self.json(404,{"error":"Resource not found"})
                 mime=str(stored["mime"] or "application/octet-stream").lower();safe_inline=mime in {"image/jpeg","image/png","image/webp","image/gif","audio/mpeg","audio/mp4","video/mp4","video/webm"}
                 if not safe_inline:mime="application/octet-stream";disposition="attachment"
-                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{self._safe_inline_filename(key)}"');self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
+                data=service.storage.read_local(key);self.send_response(200);self.send_header("Content-Type",mime);self.send_header("Content-Length",str(len(data)));self.send_header("Content-Disposition",f'{disposition}; filename="{self._safe_inline_filename(key)}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,max-age=60");self.end_headers();return self.safe_write(data)
             user=self.platform_v32_user()
             if not user:return True
             if path=="/api/platform/v32/status":return self.json(200,service.status(user["id"]))
@@ -6731,7 +6752,7 @@ class Handler(SimpleHTTPRequestHandler):
         local_harness=ALLOW_LOCAL_ADMIN_BOOTSTRAP and is_loopback_address(self.client_ip())
         if not self.rate_limit(f"register:{self.client_address[0]}",REGISTER_RATE_LIMIT_LOCAL if local_harness else REGISTER_RATE_LIMIT,600): return
         data=self.body(100_000); email=str(data.get("email","")).strip().lower()[:254]; password=str(data.get("password",""))
-        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",email):raise ValueError("Valid email required")
+        if not valid_email(email):raise ValueError("Valid email required")
         if len(password)<8 or len(password)>200:raise ValueError("Password must be 8 to 200 characters")
         if not self.bot_protection_ok("register",data.get("botToken","")):return self.json(403,{"error":"Registration verification failed"})
         user_id=str(uuid.uuid4()); hashed,salt,algo=account_hash_password(password); now=int(time.time()*1000);admin_email=platform_env("EINVITE_ADMIN_EMAIL","").strip().lower()
@@ -6888,7 +6909,7 @@ class Handler(SimpleHTTPRequestHandler):
             if allowed[key] and not re.fullmatch(r"#[0-9a-fA-F]{6}",allowed[key]):raise ValueError("Studio colors must use six-digit hex values")
         for key in ("logo","website"):
             if allowed[key] and not (allowed[key].startswith("/uploads/") or allowed[key].startswith("/api/media/") or re.match(r"^https://",allowed[key],re.I)):raise ValueError("Studio URLs must use HTTPS or platform-managed media")
-        if allowed["supportEmail"] and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+",allowed["supportEmail"]):raise ValueError("Invalid studio support email")
+        if allowed["supportEmail"] and not valid_email(allowed["supportEmail"]):raise ValueError("Invalid studio support email")
         with connect() as db:db.execute("UPDATE users SET studio_name=?,white_label_json=? WHERE id=?",(name,json.dumps(allowed,ensure_ascii=False),user["id"]))
         self.audit("studio.profile_updated","user",user["id"],{"studioName":name,"whiteLabel":{k:v for k,v in allowed.items() if k!="supportEmail"}})
         self.json(200,{"studioName":name,"whiteLabel":allowed})
@@ -9461,7 +9482,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not row:return self.json(404,{"error":"Backup not found"})
         name=Path(str(row["archive_name"] or "")).name;target=BACKUPS/name
         if not name or not target.is_file():return self.json(404,{"error":"Backup file is unavailable"})
-        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{self._safe_inline_filename(name)}"');self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
+        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="{self._safe_inline_filename(name)}"'.replace("\r","").replace("\n",""));self.send_header("Cache-Control","private,no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
 
     def normalize_studio_policy(self, data):
         if not isinstance(data,dict):data={}
@@ -10026,7 +10047,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def send_binary(self, status, body, content_type, cache_control="public,max-age=300", filename=None):
         self.send_response(status);self.send_header("Content-Type",content_type);self.send_header("Cache-Control",cache_control)
-        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"')
+        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"'.replace("\r","").replace("\n",""))
         self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def media_access_scope(self, path):
@@ -10059,11 +10080,11 @@ class Handler(SimpleHTTPRequestHandler):
         if self.headers.get("If-None-Match","").strip()==etag_value:
             self.send_response(304);self.send_header("ETag",etag_value);self.end_headers();return
         cache_control="public,max-age=3600,must-revalidate" if scope=="public" else "private,max-age=60,must-revalidate" if scope=="signed" else "private,max-age=0,no-store"
-        self.send_response(status);self.send_header("Content-Type",content_type);self.send_header("Cache-Control",cache_control);self.send_header("ETag",etag_value)
+        self.send_response(status);self.send_header("Content-Type",content_type.replace("\r","").replace("\n",""));self.send_header("Cache-Control",cache_control.replace("\r","").replace("\n",""));self.send_header("ETag",etag_value.replace("\r","").replace("\n",""))
         if modified_at:
             stamp=float(modified_at)/1000 if float(modified_at)>10_000_000_000 else float(modified_at)
             self.send_header("Last-Modified",formatdate(stamp,usegmt=True))
-        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"')
+        if filename:self.send_header("Content-Disposition",f'inline; filename="{self._safe_inline_filename(filename)}"'.replace("\r","").replace("\n",""))
         self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
     def serve_asset(self, path):

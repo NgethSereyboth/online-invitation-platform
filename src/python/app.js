@@ -1239,7 +1239,7 @@ time=$('#time').value,timeLabel=window.EInviteKhmerFormat?EInviteKhmerFormat.for
 const details=$('[data-id="details"] .content');
 const venueLabel=mode==='km'?($('#venueKm').value||$('#venue').value):$('#venue').value;
 if(details){
-if(!state.objects?.details?.richText)details.innerHTML=`${label}${timeLabel?` · ${timeLabel}`:''}<br>${venueLabel}`;
+if(!state.objects?.details?.richText){details.textContent=`${label}${timeLabel?` · ${timeLabel}`:''}`;details.append(document.createElement('br'),document.createTextNode(String(venueLabel??'')))}
 details.classList.toggle('khmer-text',mode==='km');details.lang=mode==='km'?'km':''
 }
 refreshKhmerDate();

@@ -25,7 +25,7 @@ def _inline_scripts(text):
     index.html collected to a syntax error instead of a check. Comments are not inline scripts.
     """
     without_comments = re.sub(r'<!--.*?-->', '', text, flags=re.S)
-    return re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', without_comments, re.S | re.I)
+    return re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>', without_comments, re.S | re.I)
 
 
 def check_static_integrity():
