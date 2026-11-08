@@ -3923,7 +3923,7 @@ class Handler(SimpleHTTPRequestHandler):
         for route_method,pattern,scope in API_KEY_ROUTES:
             if method==route_method and pattern.match(path):return scope
         return None
-    def user_via_api_key(self,presented):
+    def user_via_presented_credential(self,presented):
         now=int(time.time()*1000)
         with connect() as db:
             _ensure_api_key_schema(db)
@@ -3947,15 +3947,15 @@ class Handler(SimpleHTTPRequestHandler):
         # self.user() call (audit stamps, handler checks) must not re-verify the
         # presented key, or one request would count twice against the per-key
         # rate limit and write duplicate api.request audit rows.
-        self._api_key_user=user_row
+        self._request_principal=user_row
         try:self.audit("api.request","api_key",row["id"],{"method":self.command,"path":urlparse(self.path).path,"auth":"api_key"},user_id=row["user_id"])
         except Exception as exc: _log.debug("api request audit failed: %s", exc)
         return user_row
     def user(self):
-        cached=getattr(self,"_api_key_user",None)
+        cached=getattr(self,"_request_principal",None)
         if cached is not None:return cached
         presented=self.api_key_value()
-        if presented:return self.user_via_api_key(presented)
+        if presented:return self.user_via_presented_credential(presented)
         tokens=self.auth_tokens()
         if not tokens:return None
         now=int(time.time()*1000)
