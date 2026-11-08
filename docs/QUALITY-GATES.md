@@ -28,5 +28,10 @@ The gate is covered by `tests/tooling_analysis_test.py`, including a temporary
 new-function failure, a matching-baseline pass, an increased-complexity
 failure, and a new-vulture-finding failure.
 
+The gate runs in both local and CI paths: `tools/run-gates.py --phase analyze`
+checks for the fail-closed `ANALYSIS_OK` marker, and the Tests workflow runs
+`make analyze` after the build check. A new finding therefore fails the full
+local matrix and CI, not only a manually invoked target.
+
 `make coverage` runs the suite with `pytest-cov` and a terminal missing-lines
 report; it is a diagnostic target, not a threshold gate.

@@ -66,3 +66,25 @@
 - **Report:** `reports/sprint-2-summary.md`. Deferrals and rejected work:
   `docs/FUTURE-IMPROVEMENTS.md`.
 - **No merge, no push, no production access.**
+
+## 2026-11-08 — Analysis gate wired into local and CI runners
+
+- **Found:** `make analyze` existed as a manual target, but neither
+  `tools/run-gates.py` nor the Tests workflow called it. A new complexity or
+  vulture finding could therefore pass both the local matrix and CI.
+- **Fixed:** added the `analyze` phase after `bundles`, with a fail-closed
+  `ANALYSIS_OK` marker; added `make analyze` to
+  `.github/workflows/tests.yml`; documented the wiring in
+  `docs/QUALITY-GATES.md` and `tools/README.md`.
+- **Tests:** the new wiring test was red first; `tests/tooling_analysis_test.py`
+  now **6 passed**; `tests/test_runner_manifest.py` and
+  `tests/lhci_invocation_test.py` **4 passed**;
+  `.venv/bin/python tools/run-gates.py --phase analyze` printed
+  `PASS analyze` / `GATES_PASSED`; `make analyze` printed 213/213 and 11/11 with
+  `ANALYSIS_OK`; build, compileall and diff checks pass. The workflow parses
+  with system PyYAML 6.0.1 and the repo's `js-yaml`.
+- **Evidence:** `artifacts/sprint2/wiring-red.log`,
+  `artifacts/sprint2/wiring-pytest.log`,
+  `artifacts/sprint2/wiring-run-gates.log`,
+  `artifacts/sprint2/wiring-related-tests.log`,
+  `artifacts/sprint2/workflow-parse.log`.

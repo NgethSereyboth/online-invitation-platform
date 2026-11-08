@@ -80,3 +80,15 @@ def test_repository_baseline_matches_current_tree():
     tool = _load_tool()
 
     assert tool.run_gate(ROOT / "src" / "python", baseline=baseline) == 0
+
+
+def test_analysis_gate_is_wired_into_local_and_ci_runners():
+    """A passing local target is not enough; both gate runners must call it."""
+    runner = (ROOT / "tools" / "run-gates.py").read_text(encoding="utf-8")
+    workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "'analyze'" in runner, "run-gates.py must expose an analyze phase"
+    assert "ANALYSIS_OK" in runner, "run-gates.py must fail closed on the analysis marker"
+    assert "make analyze" in workflow, "CI tests.yml must run make analyze"

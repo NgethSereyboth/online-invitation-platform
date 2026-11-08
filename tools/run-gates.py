@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """tools/run-gates.py — one-command gate runner for the eInvite repo (Linux portable).
 
-Phases (default --phase all): build → bundles → smoke → layout → pytest → budgets → lhci → csp → canvas → important.
+Phases (default --phase all): build → bundles → analyze → smoke → layout → pytest → budgets → lhci → csp → canvas → important.
   build   `python3 build.py all`            (BUILD_OK + MIRROR_CHECK_PASSED)
   bundles `python3 build.py bundles --check` (ROUTE_BUNDLE_CHECK_PASSED)
+  analyze `tools/analyze.py` (radon/vulture vs the recorded baseline; must print ANALYSIS_OK)
   smoke   `tools/serve-gzip.py --port <port>` + `node tools/page-errors.mjs --all`
   layout  `tools/ui-layout-guard.py --base <app-server>` (FB-31: horizontal scroll /
           nameless controls / header overlap+height / auth-padding / editor contract,
@@ -52,7 +53,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 GATES_DIR=ROOT/'artifacts'/'next-work'/'gates'
 LOCK=GATES_DIR/'.run-gates.lock'
-PHASES=['build','bundles','smoke','layout','pytest','budgets','lhci','csp','canvas','important']
+PHASES=['build','bundles','analyze','smoke','layout','pytest','budgets','lhci','csp','canvas','important']
 PY=sys.executable
 VENV_PY=ROOT/'.venv'/'bin'/'python'
 # One pin, in one place. The unscoped `lhci` package resolves to an unrelated squatted
@@ -73,6 +74,7 @@ IMPORTANT_PIN=3791
 MARKERS={
     'build':   ('BUILD_OK','MIRROR_CHECK_PASSED'),
     'bundles': ('ROUTE_BUNDLE_CHECK_PASSED',),
+    'analyze': ('ANALYSIS_OK',),
     'smoke':   ('TOTAL pages=16','consoleErrors=0','non2xx=0'),
     'layout':  ('UI_LAYOUT_GUARD_PASSED',),
     'csp':     ('CSP_CHECK_PASSED',),
@@ -259,6 +261,7 @@ def main():
             log_line(log,'PHASE',phase)
             if phase=='build':cmd=[PY,'build.py','all']
             elif phase=='bundles':cmd=[PY,'build.py','bundles','--check']
+            elif phase=='analyze':cmd=[PY,str(ROOT/'tools'/'analyze.py')]
             elif phase=='smoke':cmd=['node','tools/page-errors.mjs','--all']
             elif phase=='pytest':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'-m','pytest','tests/','-q']
             elif phase=='budgets':cmd=[str(VENV_PY) if VENV_PY.exists() else PY,'tests/v55_route_weight_budget_test.py']
