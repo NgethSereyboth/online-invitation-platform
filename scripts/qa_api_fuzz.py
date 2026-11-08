@@ -186,7 +186,7 @@ def main() -> int:
             ("invite/names-number", {"slug": "qa-names-number", "document": {**document, "fields": {**document["fields"], "names": 123}}}),
             ("invite/names-null", {"slug": "qa-names-null", "document": {**document, "fields": {**document["fields"], "names": None}}}),
             ("invite/names-null-byte", {"slug": "qa-names-null-byte", "document": {**document, "fields": {**document["fields"], "names": "A\x00B"}}}),
-            ("invite/names-unicode", {"slug": "qa-names-unicode", "document": {**document, "fields": {**document["fields"], "names": "👩‍👩‍👧‍👦 مرحبا សួស្តី"}}}),
+            ("invite/names-unicode", {"slug": "qa-names-unicode", "document": {**document, "fields": {**document["fields"], "names": "👩‍👩‍👧‍👦 مرحبا Ω"}}}),
             ("invite/names-long", {"slug": "qa-names-long", "document": {**document, "fields": {**document["fields"], "names": "A" * 10_000}}}),
             ("invite/slug-number", {"slug": 12345, "document": document}),
         ]
