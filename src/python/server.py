@@ -3567,8 +3567,8 @@ def studio_publish_readiness(db, owner_id, document, invitation_id=""):
 
 
 def safe_header_value(value):
-    """Remove CR/LF from a value before using it in an HTTP header."""
-    return re.sub(r"[\r\n]+", "", str(value or ""))[:4096]
+    """Remove CR/LF/NUL from a value before using it in an HTTP header."""
+    return re.sub(r"[\r\n\x00]+", "", str(value or ""))[:4096]
 
 def safe_request_id(value):
     """Normalize correlation IDs before reflecting them into logs or headers."""

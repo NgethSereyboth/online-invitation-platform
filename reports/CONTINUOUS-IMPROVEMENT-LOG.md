@@ -29,3 +29,25 @@
   `artifacts/sprint2/analyze-write.log`, `artifacts/sprint2/tooling-tests.log`.
 - **Docs:** `docs/QUALITY-GATES.md` records the 213 / 11 baseline and the
   regeneration rule.
+
+## 2026-11-08 — Header-injection properties
+
+- **Found:** `safe_header_value()` stripped CR and LF but left NUL, so a
+  NUL-containing value could reach a `Location` header. Header filenames and
+  the media/download paths had existing example tests but no generated input
+  coverage.
+- **Fixed:** `safe_header_value()` now strips CR, LF and NUL before the
+  4,096-byte cap. Added Hypothesis-generated tests for CR, LF, CRLF, NUL,
+  quotes, semicolons, backslashes and Unicode line separators across header
+  values, `Location`, filenames, download/binary/media responses and cookie
+  construction.
+- **Tests:** property + media-header + tooling + reflected-injection suites —
+  **16 passed**. The red run recorded 3 genuine NUL failures before the fix;
+  the fourth red assertion was a test-helper assumption about `attachment;`
+  versus `inline;` and was corrected. `make analyze` stays at the 213 / 11
+  baseline.
+- **Evidence:** `artifacts/sprint2/header-properties-red.log`,
+  `artifacts/sprint2/header-task-tests.log`,
+  `artifacts/sprint2/analyze-after-header2.log`.
+- **Dependency:** `hypothesis==6.170.15` is pinned in `requirements-dev.txt`; a
+  fresh install and `pip check` both pass.
