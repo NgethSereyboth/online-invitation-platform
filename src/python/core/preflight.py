@@ -112,27 +112,26 @@ def _secret_error(name: str, value: str) -> str:
     return ""
 
 
-def audit_environment(values: dict[str, str] | None = None, *, require_production: bool = True, check_dependencies: bool = False) -> dict:
-    env = dict(os.environ)
-    if values:
-        env.update({str(k): str(v) for k, v in values.items()})
-    errors: list[str] = []
-    warnings: list[str] = []
-    production = truthy(env.get("EINVITE_PRODUCTION"))
-    durable = truthy(env.get("EINVITE_REQUIRE_DURABLE_SERVICES", "1" if production else "0"))
-    if require_production and not production:
-        errors.append("EINVITE_PRODUCTION must be enabled for a production preflight.")
-
-    public_url = env.get("EINVITE_PUBLIC_BASE_URL", "").strip()
-    url_problem = _url_error(public_url, {"https"}, "EINVITE_PUBLIC_BASE_URL", root_only=True)
-    if url_problem:
-        errors.append(url_problem)
-    public_hostname = (urlparse(public_url).hostname or "").lower().rstrip(".") if not url_problem else ""
+def _audit_allowed_hosts(env: dict[str, str], public_hostname: str, errors: list[str]) -> set[str]:
     allowed_hosts = {item.strip().lower().rstrip(".") for item in env.get("EINVITE_ALLOWED_HOSTS", "").split(",") if item.strip()}
     if any(item in {"*", "0.0.0.0", "::"} or not valid_exact_host(item) for item in allowed_hosts):
         errors.append("EINVITE_ALLOWED_HOSTS must contain only exact DNS hostnames or loopback addresses.")
     if public_hostname and public_hostname not in allowed_hosts:
         errors.append("EINVITE_ALLOWED_HOSTS must include the EINVITE_PUBLIC_BASE_URL hostname.")
+    return allowed_hosts
+
+
+def _audit_public_surface(env: dict[str, str], errors: list[str]):
+    public_url = env.get("EINVITE_PUBLIC_BASE_URL", "").strip()
+    url_problem = _url_error(public_url, {"https"}, "EINVITE_PUBLIC_BASE_URL", root_only=True)
+    if url_problem:
+        errors.append(url_problem)
+    public_hostname = (urlparse(public_url).hostname or "").lower().rstrip(".") if not url_problem else ""
+    allowed_hosts = _audit_allowed_hosts(env, public_hostname, errors)
+    return allowed_hosts, url_problem
+
+
+def _audit_production_flags(env: dict[str, str], production: bool, errors: list[str], warnings: list[str]) -> None:
     if not truthy(env.get("EINVITE_COOKIE_SECURE")):
         errors.append("EINVITE_COOKIE_SECURE must be enabled in production.")
     if production and not truthy(env.get("EINVITE_REQUIRE_VERIFIED_EMAIL", "1")):
@@ -144,6 +143,8 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
     if production and not truthy(env.get("EINVITE_REQUIRE_MALWARE_SCAN")):
         errors.append("EINVITE_REQUIRE_MALWARE_SCAN must be enabled in production.")
 
+
+def _audit_secrets(env: dict[str, str], errors: list[str]) -> dict[str, str]:
     secrets = {name: env.get(name, "").strip() for name in SECRET_NAMES}
     for name, value in secrets.items():
         problem = _secret_error(name, value)
@@ -152,7 +153,10 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
     present_secrets = [value for value in secrets.values() if value]
     if len(present_secrets) != len(set(present_secrets)):
         errors.append("Upload, media, and guest-token signing secrets must be distinct.")
+    return secrets
 
+
+def _audit_database(env: dict[str, str], durable: bool, errors: list[str], warnings: list[str]) -> str:
     database_url = env.get("EINVITE_DATABASE_URL", "").strip()
     if database_url:
         problem = _url_error(database_url, {"postgres", "postgresql"}, "EINVITE_DATABASE_URL")
@@ -166,7 +170,10 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
         errors.append("EINVITE_DATABASE_URL is required when durable production services are enabled.")
     else:
         warnings.append("SQLite is enabled; use PostgreSQL before running multiple web or worker instances.")
+    return database_url
 
+
+def _audit_redis(env: dict[str, str], durable: bool, errors: list[str], warnings: list[str]) -> str:
     redis_url = env.get("EINVITE_REDIS_URL", "").strip()
     if redis_url:
         problem = _url_error(redis_url, {"redis", "rediss"}, "EINVITE_REDIS_URL")
@@ -178,40 +185,65 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
         errors.append("EINVITE_REDIS_URL is required when durable production services are enabled.")
     else:
         warnings.append("Redis is not configured; rate limits remain process-local.")
+    return redis_url
 
+
+def _audit_object_storage_provider(env: dict[str, str], durable: bool, errors: list[str]) -> str:
     provider = env.get("EINVITE_OBJECT_STORAGE_PROVIDER", "local").strip().lower() or "local"
     if provider not in {"local", "s3", "r2", "minio"}:
         errors.append("EINVITE_OBJECT_STORAGE_PROVIDER must be local, s3, r2, or minio.")
     if durable and provider == "local":
         errors.append("Durable production mode requires S3-compatible object storage instead of local media storage.")
-    if provider != "local":
-        bucket = env.get("EINVITE_OBJECT_STORAGE_BUCKET", "").strip()
-        access_key = env.get("EINVITE_OBJECT_STORAGE_ACCESS_KEY", "").strip()
-        secret_key = env.get("EINVITE_OBJECT_STORAGE_SECRET_KEY", "").strip()
-        endpoint = env.get("EINVITE_OBJECT_STORAGE_ENDPOINT", "").strip()
-        if not bucket or PLACEHOLDER.search(bucket):
-            errors.append("EINVITE_OBJECT_STORAGE_BUCKET must be configured with a non-placeholder bucket name.")
-        if not access_key or not secret_key or PLACEHOLDER.search(access_key) or PLACEHOLDER.search(secret_key):
-            errors.append("Object-storage access and secret keys must both be configured with non-placeholder values.")
-        if provider in {"r2", "minio"} and not endpoint:
-            errors.append("R2 and MinIO require EINVITE_OBJECT_STORAGE_ENDPOINT.")
-        if endpoint:
-            schemes = {"https"}
-            if truthy(env.get("EINVITE_ALLOW_INSECURE_OBJECT_STORAGE")):
-                schemes.add("http")
-            problem = _url_error(endpoint, schemes, "EINVITE_OBJECT_STORAGE_ENDPOINT")
-            if problem:
-                errors.append(problem)
-        cdn = env.get("EINVITE_OBJECT_STORAGE_PUBLIC_BASE_URL", "").strip()
-        if cdn:
-            problem = _url_error(cdn, {"https"}, "EINVITE_OBJECT_STORAGE_PUBLIC_BASE_URL", root_only=True)
-            if problem:
-                errors.append(problem)
+    return provider
 
+
+def _audit_object_storage_credentials(env: dict[str, str], provider: str, errors: list[str]) -> None:
+    if provider == "local":
+        return
+    bucket = env.get("EINVITE_OBJECT_STORAGE_BUCKET", "").strip()
+    access_key = env.get("EINVITE_OBJECT_STORAGE_ACCESS_KEY", "").strip()
+    secret_key = env.get("EINVITE_OBJECT_STORAGE_SECRET_KEY", "").strip()
+    endpoint = env.get("EINVITE_OBJECT_STORAGE_ENDPOINT", "").strip()
+    if not bucket or PLACEHOLDER.search(bucket):
+        errors.append("EINVITE_OBJECT_STORAGE_BUCKET must be configured with a non-placeholder bucket name.")
+    if not access_key or not secret_key or PLACEHOLDER.search(access_key) or PLACEHOLDER.search(secret_key):
+        errors.append("Object-storage access and secret keys must both be configured with non-placeholder values.")
+    if provider in {"r2", "minio"} and not endpoint:
+        errors.append("R2 and MinIO require EINVITE_OBJECT_STORAGE_ENDPOINT.")
+
+
+def _audit_object_storage_endpoint(env: dict[str, str], errors: list[str]) -> None:
+    endpoint = env.get("EINVITE_OBJECT_STORAGE_ENDPOINT", "").strip()
+    if endpoint:
+        schemes = {"https"}
+        if truthy(env.get("EINVITE_ALLOW_INSECURE_OBJECT_STORAGE")):
+            schemes.add("http")
+        problem = _url_error(endpoint, schemes, "EINVITE_OBJECT_STORAGE_ENDPOINT")
+        if problem:
+            errors.append(problem)
+    cdn = env.get("EINVITE_OBJECT_STORAGE_PUBLIC_BASE_URL", "").strip()
+    if cdn:
+        problem = _url_error(cdn, {"https"}, "EINVITE_OBJECT_STORAGE_PUBLIC_BASE_URL", root_only=True)
+        if problem:
+            errors.append(problem)
+
+
+def _audit_object_storage(env: dict[str, str], durable: bool, errors: list[str]) -> str:
+    provider = _audit_object_storage_provider(env, durable, errors)
+    if provider != "local":
+        _audit_object_storage_credentials(env, provider, errors)
+        _audit_object_storage_endpoint(env, errors)
+    return provider
+
+
+def _audit_backup_storage(env: dict[str, str], durable: bool, errors: list[str]) -> str:
     backup_provider = env.get("EINVITE_BACKUP_PROVIDER", "local").strip().lower() or "local"
     if durable and backup_provider == "local":
         errors.append("Durable production mode requires non-local backup storage.")
+    return backup_provider
 
+
+def _audit_trusted_proxies(env: dict[str, str], errors: list[str], warnings: list[str]) -> list[str]:
     trusted = [item.strip() for item in env.get("EINVITE_TRUSTED_PROXY_IPS", "").split(",") if item.strip()]
     if any(item in {"*", "0.0.0.0/0", "::/0"} for item in trusted):
         errors.append("EINVITE_TRUSTED_PROXY_IPS must not trust every address.")
@@ -219,8 +251,10 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
         errors.append("EINVITE_TRUSTED_PROXY_IPS must contain exact IP addresses, not hostnames or CIDR ranges.")
     if not trusted:
         warnings.append("No trusted reverse-proxy IPs are configured; forwarded headers will be ignored.")
+    return trusted
 
-    # Admin IP allowlist (ROADMAP §4.2a)
+
+def _audit_admin_allowlist(env: dict[str, str], production: bool, errors: list[str], warnings: list[str]) -> None:
     admin_allowlist_raw = env.get("EINVITE_ADMIN_IP_ALLOWLIST", "").strip()
     if production:
         if not admin_allowlist_raw:
@@ -253,14 +287,46 @@ def audit_environment(values: dict[str, str] | None = None, *, require_productio
     else:
         warnings.append("EINVITE_ADMIN_IP_ALLOWLIST is not set; admin routes are accessible from any IP (non-production only)")
 
+
+def _audit_backup_proxy_admin(env: dict[str, str], production: bool, durable: bool, errors: list[str], warnings: list[str]):
+    backup_provider = _audit_backup_storage(env, durable, errors)
+    trusted = _audit_trusted_proxies(env, errors, warnings)
+    _audit_admin_allowlist(env, production, errors, warnings)
+    return backup_provider, trusted
+
+
+def _audit_dependencies(check_dependencies: bool, database_url: str, redis_url: str, provider: str, errors: list[str]) -> dict[str, bool]:
     dependencies: dict[str, bool] = {}
-    if check_dependencies:
-        required = {"psycopg": bool(database_url), "redis": bool(redis_url), "boto3": provider != "local"}
-        for module, needed in required.items():
-            available = importlib.util.find_spec(module) is not None
-            dependencies[module] = available
-            if needed and not available:
-                errors.append(f"Required production dependency is missing: {module}.")
+    if not check_dependencies:
+        return dependencies
+    required = {"psycopg": bool(database_url), "redis": bool(redis_url), "boto3": provider != "local"}
+    for module, needed in required.items():
+        available = importlib.util.find_spec(module) is not None
+        dependencies[module] = available
+        if needed and not available:
+            errors.append(f"Required production dependency is missing: {module}.")
+    return dependencies
+
+
+def audit_environment(values: dict[str, str] | None = None, *, require_production: bool = True, check_dependencies: bool = False) -> dict:
+    env = dict(os.environ)
+    if values:
+        env.update({str(k): str(v) for k, v in values.items()})
+    errors: list[str] = []
+    warnings: list[str] = []
+    production = truthy(env.get("EINVITE_PRODUCTION"))
+    durable = truthy(env.get("EINVITE_REQUIRE_DURABLE_SERVICES", "1" if production else "0"))
+    if require_production and not production:
+        errors.append("EINVITE_PRODUCTION must be enabled for a production preflight.")
+
+    allowed_hosts, url_problem = _audit_public_surface(env, errors)
+    _audit_production_flags(env, production, errors, warnings)
+    secrets = _audit_secrets(env, errors)
+    database_url = _audit_database(env, durable, errors, warnings)
+    redis_url = _audit_redis(env, durable, errors, warnings)
+    provider = _audit_object_storage(env, durable, errors)
+    backup_provider, trusted = _audit_backup_proxy_admin(env, production, durable, errors, warnings)
+    dependencies = _audit_dependencies(check_dependencies, database_url, redis_url, provider, errors)
 
     return {
         "ok": not errors,
