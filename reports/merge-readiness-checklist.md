@@ -43,8 +43,9 @@ conditions (quiet-host layout timing, PostgreSQL runtime verification). The PR r
 - [x] LHCI: **16/16 reports, minA11y 1.00**.
 - [x] Layout structural matrix: **zero structural failures** after the clipped-raw-field guard
   correction.
-- [~] Layout timing: **602 ms vs 600 ms** under load average ~9; same cell passed 30/30 in
-  isolation. **Rerun on an idle host before merge.**
+- [~] Layout timing: **602 ms vs 600 ms** under load average ~9; a separate 1440×900
+dark-Khmer editor run passed 30/30. The failing light-mode cells were not individually
+rerun. **Rerun on an idle host before merge.**
 - [ ] `!important` inventory: **3,833 > 3,791**. `main` is already 3,829. **Owner decision
   required; pin was not raised.**
 - [ ] PostgreSQL DDL/index runtime verification: not run on this host.

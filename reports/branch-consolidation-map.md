@@ -114,7 +114,7 @@ All commands were run on this checkout. Evidence is under `artifacts/release-*` 
 | LHCI | **PASS — 16/16 reports, minA11y 1.00** |
 | Gates: build, bundles, analyze, smoke, budgets, csp, canvas | **PASS** |
 | Layout structural checks | **PASS — 1,692/1,693 checks; zero structural failures after the guard correction** |
-| Layout timing check | **FAIL (host-load-sensitive)** — 602 ms vs 600 ms in the final full run; 711 ms in the prior run; the affected cell passed 30/30 in a targeted rerun. Load average was ~9. |
+| Layout timing check | **FAIL (host-load-sensitive)** — 602 ms vs 600 ms in the final full run; 711 ms in the prior run. A separate 1440×900 dark-Khmer editor run passed 30/30; the failing light-mode cells were not individually rerun. Load average was ~9. |
 | `!important` ratchet | **FAIL — 3,833 > pin 3,791** |
 
 The source tree at the verified code tip (`3591f90`) changed **89 files, +3,451/−146**; the
@@ -126,9 +126,9 @@ guard correction adds one file and 20 lines. Release reports are separate commit
    `main` is already 3,829; the frozen pin is 3,791. QA adds four intentional occurrences in
    `src/css/dashboard-page.css`. The pin was **not** raised. This needs an owner decision (pin
    update or a 42-occurrence CSS cleanup).
-2. **Layout timing is not proven on a quiet host.** Structural checks are clean and the
-   affected cell passed in isolation, but the full gate's 600 ms long-task ceiling was exceeded
-   by 2 ms while the desktop was heavily loaded. Rerun on an idle host before merge.
+2. **Layout timing is not proven on a quiet host.** Structural checks are clean, but the full
+   gate's 600 ms long-task ceiling was exceeded by 2 ms while the desktop was heavily loaded.
+   The failing light-mode cells were not individually rerun. Rerun on an idle host before merge.
 3. **PostgreSQL DDL was not runtime-verified.** The fallback and indexes are covered by static
    tests only on this host.
 4. **Canva credential history remains.** The file is removed from the working tree but was not

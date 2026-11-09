@@ -68,7 +68,7 @@ Run on this checkout; raw evidence is under `artifacts/release-*` and
 | Gates: build, bundles, analyze, smoke, budgets, csp, canvas | **PASS** |
 | LHCI | **PASS — 16/16 reports, minA11y 1.00** |
 | Layout structural matrix | **PASS — 1,692/1,693 checks; zero structural failures** |
-| Layout long-task timing | **FAIL (host-load-sensitive)** — 602 ms vs 600 ms; 711 ms in the prior full run; the same cell passed 30/30 in isolation, with load average ~9 |
+| Layout long-task timing | **FAIL (host-load-sensitive)** — 602 ms vs 600 ms; 711 ms in the prior full run; a separate 1440×900 dark-Khmer editor run passed 30/30, but the failing light-mode cells were not individually rerun. Load average was ~9. |
 | `!important` ratchet | **FAIL — 3,833 > 3,791** |
 
 No speedup is claimed from the QA query/index work: the query-plan tests pass, but no
