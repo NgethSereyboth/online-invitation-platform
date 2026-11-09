@@ -2001,6 +2001,12 @@ def connect_sqlite():
                     if "flagged_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_at INTEGER")
                     if "flag_reason" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flag_reason TEXT NOT NULL DEFAULT ''")
                     if "flagged_by" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_by TEXT NOT NULL DEFAULT ''")
+                    # `list_invitations` paginates by (archived, updated_at DESC)
+                    # and filters status by is_published. Both columns are added
+                    # by the ALTER block above, so these indexes belong here, not
+                    # in the base executescript (which runs before the ALTERs).
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_invitations_owner_archived_updated ON invitations(owner_id,archived,updated_at DESC) WHERE deleted_at IS NULL")
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_invitations_owner_status_updated ON invitations(owner_id,archived,is_published,updated_at DESC) WHERE deleted_at IS NULL")
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_custom_domain ON invitations(custom_domain) WHERE custom_domain IS NOT NULL AND custom_domain<>''")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
@@ -2132,7 +2138,12 @@ def _ensure_postgres_schema(connection):
     if _PG_SCHEMA_READY:return
     with _PG_SCHEMA_LOCK:
         if _PG_SCHEMA_READY:return
-        schema=(ROOT/"postgres_schema.sql").read_text(encoding="utf-8")
+        # `docs/postgres_schema.sql` is the canonical schema in this repo;
+        # packaged deployments may place a copy beside server.py. Resolve both
+        # so a PostgreSQL boot cannot fail on a missing copied file.
+        schema_path=ROOT/"postgres_schema.sql"
+        if not schema_path.is_file():schema_path=ROOT.parent.parent/"docs"/"postgres_schema.sql"
+        schema=schema_path.read_text(encoding="utf-8")
         connection.execute(schema,prepare=False)
         # Backfill the V12 stored-object registry for existing PostgreSQL assets.
         connection.execute("""
