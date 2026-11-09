@@ -6,12 +6,17 @@
 90% confidence against `src/python`, then compares the results with
 `tools/analysis_baseline.json`.
 
-The baseline is debt, not a target. On 2026-11-08 it recorded:
+The baseline is debt, not a target. On 2026-11-09 it recorded:
 
 | Metric | Baseline |
 |---|---:|
-| Functions/methods above CC 10 | **213** |
-| Vulture findings at >=90% confidence | **11** |
+| Functions/methods above CC 10 | **209** |
+| Vulture findings at >=90% confidence | **1** |
+
+The Sprint 3 refactor reduced the recorded count from 213 to 209 and the
+vulture count from 11 to 1 by extracting bounded helpers and removing three
+independently unused imports. `server.JITElevationManager` remains because an
+existing security test monkey-patches it.
 
 The gate fails when:
 

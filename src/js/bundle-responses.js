@@ -337,7 +337,8 @@ function toast(message,options={}){
   const stack=ensureStack(),item=document.createElement('div');item.className=`ei-toast ${options.type||''}`.trim();
   const icon=options.icon||(options.type==='error'?'!':options.type==='success'?'✓':'✦');
   item.innerHTML=`<span class="ei-toast-icon"></span><strong></strong><button type="button" aria-label="Dismiss">×</button>`;
-  item.querySelector('.ei-toast-icon').textContent=icon;item.querySelector('strong').textContent=text;
+  const reference=String(options.reference||'').replace(/[^A-Za-z0-9._:-]/g,'').slice(0,80);
+  item.querySelector('.ei-toast-icon').textContent=icon;item.querySelector('strong').textContent=reference?`${text} · Reference: ${reference}`:text;
   const close=()=>{if(item.classList.contains('out'))return;item.classList.add('out');setTimeout(()=>item.remove(),190)};item.querySelector('button').onclick=close;stack.append(item);setTimeout(close,Math.max(1500,Number(options.duration||3600)));return item
 }
 function buildDialog({title='Please confirm',message='',icon='✦',input=false,value='',multiline=false,confirmText='Continue',cancelText='Cancel',danger=false,selectOptions=null}={}){

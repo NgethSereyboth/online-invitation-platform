@@ -144,11 +144,17 @@ def test_dashboard_scope_uses_indexes_instead_of_a_scan():
 
 def test_server_dashboard_query_uses_set_membership():
     source = (ROOT / "src/python/server.py").read_text(encoding="utf-8")
-    start = source.index("    def list_invitations(self):")
-    end = source.find("\n    def ", start + 1)
-    dashboard = source[start : end if end != -1 else None]
-    assert "i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?)" in dashboard
+    # The statement moved to a module-level builder so the query-plan test can
+    # EXPLAIN the real SQL (Sprint 6). The scope clause itself must not change.
+    start = source.index("def invitation_list_statement(")
+    end = source.find("\ndef ", start + 1)
+    statement = source[start : end if end != -1 else None]
+    assert "i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?)" in statement
     assert (
         "EXISTS(SELECT 1 FROM invitation_collaborators c "
         "WHERE c.invitation_id=i.id AND c.user_id=?)"
-    ) not in dashboard
+    ) not in statement
+    handler_start = source.index("    def list_invitations(self):")
+    handler_end = source.find("\n    def ", handler_start + 1)
+    handler = source[handler_start : handler_end if handler_end != -1 else None]
+    assert "invitation_list_statement(user[\"id\"],status_filter,search)" in handler
