@@ -3526,57 +3526,162 @@ def studio_brand_lock_blockers(document,resource_row,policy):
         if mismatch:blockers.append({"code":"brand_typography_locked","message":"Restore the approved studio typography pairings before publishing."})
     return blockers
 
-def studio_publish_readiness(db, owner_id, document, invitation_id=""):
-    row=db.execute("SELECT policy_json FROM studio_governance WHERE owner_id=?",(owner_id,)).fetchone()
-    if not row:return {"ready":True,"policy":{},"blockers":[]}
-    try:policy=json.loads(row["policy_json"] or "{}")
-    except Exception:policy={}
-    blockers=[]
-    if policy.get("requireAdaptiveTemplate") and not bool((document.get("templateFamily") or {}).get("adaptive")):
-        blockers.append({"code":"adaptive_template_required","message":"Apply an adaptive studio template family before publishing."})
-    refs=studio_document_resource_references(document);resolved={}
+_STUDIO_POLICY_KEYS = (
+    "approvedOnly", "lockBrandColors", "lockTypography",
+    "requireAdaptiveTemplate", "requirePrintPreflight", "requireStudioRelease",
+)
+
+
+def _studio_governance_policy(db, owner_id):
+    """Return the owner's studio policy, or ``None`` when no policy exists."""
+    row = db.execute("SELECT policy_json FROM studio_governance WHERE owner_id=?", (owner_id,)).fetchone()
+    if not row:
+        return None
+    try:
+        return json.loads(row["policy_json"] or "{}")
+    except Exception:  # noqa: BLE001 - malformed policy is treated as empty
+        return {}
+
+
+def _studio_resource_blocker(resource, ref):
+    if not resource:
+        return {"code": "approved_resource_unavailable", "message": "A governed studio resource is missing or belongs to another studio."}
+    if resource["status"] != "approved":
+        return {"code": "approved_resource_required", "message": f"{resource['kind'].replace('-', ' ').title()} resource is not approved for official use."}
+    if ref["version"] and int(resource["version"] or 1) != ref["version"]:
+        return {"code": "governed_resource_outdated", "message": "Apply the current approved studio-resource version before publishing."}
+    return None
+
+
+def _studio_resource_blockers(db, owner_id, refs, policy):
+    """Resolve referenced resources and collect approved-only blockers."""
+    resolved = {}
+    blockers = []
     for ref in refs:
-        resource=db.execute("SELECT id,kind,status,version,payload_json,governance_json FROM studio_resources WHERE id=? AND owner_id=?",(ref["id"],owner_id)).fetchone()
-        if resource:resolved[ref["id"]]=resource
-        if policy.get("approvedOnly"):
-            if not resource:blockers.append({"code":"approved_resource_unavailable","message":"A governed studio resource is missing or belongs to another studio."})
-            elif resource["status"]!="approved":blockers.append({"code":"approved_resource_required","message":f"{resource['kind'].replace('-',' ').title()} resource is not approved for official use."})
-            elif ref["version"] and int(resource["version"] or 1)!=ref["version"]:blockers.append({"code":"governed_resource_outdated","message":"Apply the current approved studio-resource version before publishing."})
+        resource = db.execute(
+            "SELECT id,kind,status,version,payload_json,governance_json "
+            "FROM studio_resources WHERE id=? AND owner_id=?",
+            (ref["id"], owner_id),
+        ).fetchone()
+        if resource:
+            resolved[ref["id"]] = resource
+        if not policy.get("approvedOnly"):
+            continue
+        blocker = _studio_resource_blocker(resource, ref)
+        if blocker:
+            blockers.append(blocker)
     if policy.get("approvedOnly") and not refs:
-        blockers.append({"code":"approved_resource_required","message":"Studio policy requires at least one approved governed resource."})
-    governance=document.get("studioGovernance") if isinstance(document.get("studioGovernance"),dict) else {}
-    brand_id=governance.get("brandResourceId") or (governance.get("resourceId") if governance.get("resourceKind")=="brand" else "") or ((document.get("eventBrand") or {}).get("id") if isinstance(document.get("eventBrand"),dict) and (document.get("eventBrand") or {}).get("governed") else "")
-    if brand_id and brand_id in resolved:blockers.extend(studio_brand_lock_blockers(document,resolved[brand_id],policy))
-    if policy.get("requirePrintPreflight"):
-        preflight=document.get("printReadiness") if isinstance(document.get("printReadiness"),dict) else {}
-        expected=studio_print_fingerprint(document)
-        if preflight.get("status")!="ready":blockers.append({"code":"print_preflight_required","message":"Run and mark the print preflight current before publishing."})
-        elif preflight.get("fingerprint")!=expected:blockers.append({"code":"print_preflight_stale","message":"The invitation changed after its last print preflight."})
-    if policy.get("requireStudioRelease"):
-        pin=db.execute("SELECT release_id,release_version FROM invitation_studio_release_pins WHERE invitation_id=? AND owner_id=?",(invitation_id,owner_id)).fetchone() if invitation_id else None
-        if not pin:blockers.append({"code":"studio_release_required","message":"Pin this invitation to the active studio release before publishing."})
-        else:
-            release=db.execute("SELECT id,status,version,manifest_json FROM studio_releases WHERE id=? AND owner_id=?",(pin["release_id"],owner_id)).fetchone()
-            if not release or release["status"]!="active":blockers.append({"code":"studio_release_inactive","message":"The pinned studio release is no longer active."})
-            elif int(release["version"] or 1)!=int(pin["release_version"] or 1):blockers.append({"code":"studio_release_pin_outdated","message":"Re-pin this invitation to the current studio release version."})
-            else:
-                try:manifest=json.loads(release["manifest_json"] or "[]")
-                except Exception:manifest=[]
-                manifest_map={str(item.get("id","")):(int(item.get("version") or 1),str(item.get("kind",""))) for item in manifest if isinstance(item,dict) and item.get("id")}
-                if not manifest_map:blockers.append({"code":"studio_release_empty","message":"The active studio release does not contain approved resources."})
-                for resource_id,(release_version,release_kind) in manifest_map.items():
-                    live=db.execute("SELECT kind,status,version FROM studio_resources WHERE id=? AND owner_id=?",(resource_id,owner_id)).fetchone()
-                    if not live:blockers.append({"code":"studio_release_resource_missing","message":"A resource included in the active studio release is no longer available."})
-                    elif live["status"]!="approved" or str(live["kind"])!=release_kind or int(live["version"] or 1)!=release_version:blockers.append({"code":"studio_release_resource_changed","message":"The active studio release contains a resource that changed after activation. Activate a new release."})
-                for ref in refs:
-                    expected_ref=manifest_map.get(ref["id"])
-                    if not expected_ref:blockers.append({"code":"studio_release_resource_unpinned","message":"A governed resource used by this invitation is outside the pinned studio release."})
-                    elif ref["version"] and expected_ref[0]!=ref["version"]:blockers.append({"code":"studio_release_resource_outdated","message":"Apply the resource versions included in the pinned studio release."})
-    unique=[];seen=set()
+        blockers.append({"code": "approved_resource_required", "message": "Studio policy requires at least one approved governed resource."})
+    return blockers, resolved
+
+
+def _studio_brand_id(document):
+    governance = document.get("studioGovernance") if isinstance(document.get("studioGovernance"), dict) else {}
+    return governance.get("brandResourceId") or (governance.get("resourceId") if governance.get("resourceKind") == "brand" else "") or ((document.get("eventBrand") or {}).get("id") if isinstance(document.get("eventBrand"), dict) and (document.get("eventBrand") or {}).get("governed") else "")
+
+
+def _studio_print_blockers(document, policy):
+    if not policy.get("requirePrintPreflight"):
+        return []
+    preflight = document.get("printReadiness") if isinstance(document.get("printReadiness"), dict) else {}
+    expected = studio_print_fingerprint(document)
+    if preflight.get("status") != "ready":
+        return [{"code": "print_preflight_required", "message": "Run and mark the print preflight current before publishing."}]
+    if preflight.get("fingerprint") != expected:
+        return [{"code": "print_preflight_stale", "message": "The invitation changed after its last print preflight."}]
+    return []
+
+
+def _studio_release_pin_state(db, owner_id, invitation_id, policy):
+    if not policy.get("requireStudioRelease"):
+        return None, []
+    pin = db.execute(
+        "SELECT release_id,release_version FROM invitation_studio_release_pins "
+        "WHERE invitation_id=? AND owner_id=?", (invitation_id, owner_id),
+    ).fetchone() if invitation_id else None
+    if not pin:
+        return None, [{"code": "studio_release_required", "message": "Pin this invitation to the active studio release before publishing."}]
+    release = db.execute(
+        "SELECT id,status,version,manifest_json FROM studio_releases "
+        "WHERE id=? AND owner_id=?", (pin["release_id"], owner_id),
+    ).fetchone()
+    if not release or release["status"] != "active":
+        return None, [{"code": "studio_release_inactive", "message": "The pinned studio release is no longer active."}]
+    if int(release["version"] or 1) != int(pin["release_version"] or 1):
+        return None, [{"code": "studio_release_pin_outdated", "message": "Re-pin this invitation to the current studio release version."}]
+    return release, []
+
+
+def _studio_manifest_map(release):
+    try:
+        manifest = json.loads(release["manifest_json"] or "[]")
+    except Exception:  # noqa: BLE001 - malformed release manifests are empty
+        manifest = []
+    return {str(item.get("id", "")): (int(item.get("version") or 1), str(item.get("kind", ""))) for item in manifest if isinstance(item, dict) and item.get("id")}
+
+
+def _studio_manifest_resource_blockers(db, owner_id, manifest_map):
+    blockers = []
+    for resource_id, (release_version, release_kind) in manifest_map.items():
+        live = db.execute("SELECT kind,status,version FROM studio_resources WHERE id=? AND owner_id=?", (resource_id, owner_id)).fetchone()
+        if not live:
+            blockers.append({"code": "studio_release_resource_missing", "message": "A resource included in the active studio release is no longer available."})
+        elif live["status"] != "approved" or str(live["kind"]) != release_kind or int(live["version"] or 1) != release_version:
+            blockers.append({"code": "studio_release_resource_changed", "message": "The active studio release contains a resource that changed after activation. Activate a new release."})
+    return blockers
+
+
+def _studio_manifest_ref_blockers(manifest_map, refs):
+    blockers = []
+    for ref in refs:
+        expected_ref = manifest_map.get(ref["id"])
+        if not expected_ref:
+            blockers.append({"code": "studio_release_resource_unpinned", "message": "A governed resource used by this invitation is outside the pinned studio release."})
+        elif ref["version"] and expected_ref[0] != ref["version"]:
+            blockers.append({"code": "studio_release_resource_outdated", "message": "Apply the resource versions included in the pinned studio release."})
+    return blockers
+
+
+def _studio_release_manifest_blockers(db, owner_id, release, refs):
+    manifest_map = _studio_manifest_map(release)
+    blockers = []
+    if not manifest_map:
+        blockers.append({"code": "studio_release_empty", "message": "The active studio release does not contain approved resources."})
+    blockers.extend(_studio_manifest_resource_blockers(db, owner_id, manifest_map))
+    blockers.extend(_studio_manifest_ref_blockers(manifest_map, refs))
+    return blockers
+
+
+def _studio_release_blockers(db, owner_id, invitation_id, refs, policy):
+    release, blockers = _studio_release_pin_state(db, owner_id, invitation_id, policy)
+    if blockers or release is None:
+        return blockers
+    return _studio_release_manifest_blockers(db, owner_id, release, refs)
+
+
+def studio_publish_readiness(db, owner_id, document, invitation_id=""):
+    policy = _studio_governance_policy(db, owner_id)
+    if policy is None:
+        return {"ready": True, "policy": {}, "blockers": []}
+    refs = studio_document_resource_references(document)
+    resource_blockers, resolved = _studio_resource_blockers(db, owner_id, refs, policy)
+    blockers = []
+    if policy.get("requireAdaptiveTemplate") and not bool((document.get("templateFamily") or {}).get("adaptive")):
+        blockers.append({"code": "adaptive_template_required", "message": "Apply an adaptive studio template family before publishing."})
+    blockers.extend(resource_blockers)
+    brand_id = _studio_brand_id(document)
+    if brand_id and brand_id in resolved:
+        blockers.extend(studio_brand_lock_blockers(document, resolved[brand_id], policy))
+    blockers.extend(_studio_print_blockers(document, policy))
+    blockers.extend(_studio_release_blockers(db, owner_id, invitation_id, refs, policy))
+    unique = []
+    seen = set()
     for blocker in blockers:
-        key=(blocker.get("code"),blocker.get("message"))
-        if key not in seen:seen.add(key);unique.append(blocker)
-    return {"ready":not unique,"policy":{k:bool(policy.get(k,False)) for k in ("approvedOnly","lockBrandColors","lockTypography","requireAdaptiveTemplate","requirePrintPreflight","requireStudioRelease")},"blockers":unique}
+        key = (blocker.get("code"), blocker.get("message"))
+        if key not in seen:
+            seen.add(key)
+            unique.append(blocker)
+    return {"ready": not unique, "policy": {k: bool(policy.get(k, False)) for k in _STUDIO_POLICY_KEYS}, "blockers": unique}
 
 
 def safe_header_value(value):
@@ -4522,52 +4627,106 @@ class Handler(SimpleHTTPRequestHandler):
         if re.fullmatch(r"/[A-Za-z0-9_.-]+\.html",path):
             return self.serve_html_file(path.lstrip("/"))
         return self.serve_public_static()
+    def _put_auth_account_routes(self, path):
+        if path == "/api/auth/password": self.change_password(); return True
+        if path == "/api/account/studio": self.update_studio_profile(); return True
+        return False
+
+    def _put_studio_routes(self, path):
+        if path == "/api/studio/governance": self.update_studio_governance(); return True
+        if path == "/api/studio/backup-policy": self.update_studio_backup_policy(); return True
+        if path.startswith("/api/studio/releases/") and path.count("/") == 4: self.update_studio_release(path.split("/")[4]); return True
+        if path.startswith("/api/studio/resources/") and path.count("/") == 4: self.update_studio_resource(path.split("/")[4]); return True
+        return False
+
+    def _put_asset_upload_routes(self, path):
+        if path.startswith("/api/uploads/") and path.count("/")==3: self.append_upload_chunk(path.split("/")[3]); return True
+        if path.startswith("/api/assets/") and path.count("/") == 3: self.update_asset(path.split("/")[3]); return True
+        return False
+
+    def _put_studio_upload_routes(self, path):
+        return self._put_studio_routes(path) or self._put_asset_upload_routes(path)
+
+    def _put_admin_user_routes(self, path):
+        if path.startswith("/api/admin/users/") and path.endswith("/role"): self.admin_update_user_role(path.split("/")[4]); return True
+        if path.startswith("/api/admin/users/") and path.endswith("/plan"): self.admin_update_user_plan(path.split("/")[4]); return True
+        if path.startswith("/api/admin/users/") and path.endswith("/uploads"): self.admin_update_user_upload_permission(path.split("/")[4]); return True
+        if path.startswith("/api/admin/users/") and path.endswith("/session-policy"): self.admin_update_user_session_policy(path.split("/")[4]); return True
+        if path == "/api/admin/settings/session-idle-days-nonadmin": self.admin_update_session_idle_setting(); return True
+        return False
+
+    def _put_admin_policy_routes(self, path):
+        if path.startswith("/api/admin/templates/") and path.endswith("/visibility"): self.admin_update_template_visibility(path.split("/")[4]); return True
+        if path.startswith("/api/admin/invitations/") and path.endswith("/published"): self.admin_update_invitation_published(path.split("/")[4]); return True
+        if path == "/api/admin/feature-flags": self.admin_update_feature_flags(); return True
+        admin_report_resolve_match = re.fullmatch(r"/api/admin/reports/([^/]+)/?", path)
+        if admin_report_resolve_match: self.admin_resolve_report(unquote(admin_report_resolve_match.group(1))); return True
+        return False
+
+    def _put_admin_catalog_routes(self, path):
+        if path.startswith("/api/templates/") and path.count("/") == 3: self.update_template(path.split("/")[3]); return True
+        if path.startswith("/api/page-templates/") and path.count("/") == 3: self.update_page_template(path.split("/")[3]); return True
+        if path.startswith("/api/components/") and path.count("/") == 3: self.update_component(path.split("/")[3]); return True
+        return False
+
+    def _put_admin_routes(self, path):
+        return (self._put_auth_account_routes(path) or self._put_studio_upload_routes(path) or
+                self._put_admin_user_routes(path) or self._put_admin_policy_routes(path) or
+                self._put_admin_catalog_routes(path))
+
+    def _put_invitation_guest_routes(self, path):
+        if path.startswith("/api/invitations/") and path.endswith("/studio-release"): self.pin_invitation_studio_release(path.split("/")[3]); return True
+        if "/guests/" in path and path.endswith("/check-in"): self.check_in_guest(path.split("/")[3],path.split("/")[5]); return True
+        if "/rsvps/" in path: self.update_rsvp(path.split("/")[3],path.split("/")[5]); return True
+        if path.startswith("/api/invitations/") and "/guests/" in path and path.count("/")==5: self.update_guest_details(path.split("/")[3],path.split("/")[5]); return True
+        return False
+
+    def _put_invitation_comment_routes(self, path):
+        if path.startswith("/api/invitations/") and "/comments/" in path and path.count("/")==5: self.resolve_comment(path.split("/")[3],path.split("/")[5]); return True
+        if path.startswith("/api/invitations/") and "/approvals/" in path and path.count("/")==5: self.decide_approval(path.split("/")[3],path.split("/")[5]); return True
+        return False
+
+    def _put_invitation_review_setting_routes(self, path):
+        if path.startswith("/api/invitations/") and path.endswith("/review-policy"): self.update_review_policy(path.split("/")[3]); return True
+        if path.startswith("/api/invitations/") and path.endswith("/review-notifications"): self.mark_review_notifications(path.split("/")[3]); return True
+        if path.startswith("/api/invitations/") and "/review-tasks/" in path and path.count("/")==5: self.update_review_task(path.split("/")[3],path.split("/")[5]); return True
+        return False
+
+    def _put_invitation_lifecycle_routes(self, path):
+        if path.startswith("/api/invitations/") and path.endswith("/operations"): self.update_invitation_operations(path.split("/")[3]); return True
+        if path.startswith("/api/invitations/") and path.endswith("/archive"): self.archive_invitation(path.split("/")[3]); return True
+        if path.startswith("/api/invitations/") and path.endswith("/slug"): self.update_slug(path.split("/")[3]); return True
+        return False
+
+    def _put_invitation_access_routes(self, path):
+        if path.startswith("/api/invitations/") and path.endswith("/access"): self.update_access(path.split("/")[3]); return True
+        if path.startswith("/api/invitations/") and path.endswith("/gallery-access"): self.update_gallery_access(path.split("/")[3]); return True
+        return False
+
+    def _put_invitation_guest_feature_routes(self, path):
+        gift_item_put_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/([^/]+)/?", path)
+        if gift_item_put_match: self.update_gift_registry_item(unquote(gift_item_put_match.group(1)), unquote(gift_item_put_match.group(2))); return True
+        if path.startswith("/api/invitations/") and "/signup-sheets/" in path and path.count("/")==5: self.update_signup_sheet(path.split("/")[3],path.split("/")[5]); return True
+        if path.startswith("/api/invitations/") and "/polls/" in path and path.count("/")==5: self.update_poll(path.split("/")[3],path.split("/")[5]); return True
+        return False
+
+    def _put_invitation_routes(self, path):
+        if self._put_invitation_guest_routes(path): return True
+        if self._put_invitation_comment_routes(path): return True
+        if self._put_invitation_review_setting_routes(path): return True
+        if self._put_invitation_lifecycle_routes(path): return True
+        if self._put_invitation_access_routes(path): return True
+        if self._put_invitation_guest_feature_routes(path): return True
+        if path.startswith("/api/invitations/"): self.save_draft(path.split("/")[3]); return True
+        return False
+
     def do_PUT(self):
         if not self.guard_request_boundary():return
         if not self.guard_cookie_origin():return
         path = urlparse(self.path).path
         try:
-            if path == "/api/auth/password": return self.change_password()
-            if path == "/api/account/studio": return self.update_studio_profile()
-            if path == "/api/studio/governance": return self.update_studio_governance()
-            if path == "/api/studio/backup-policy": return self.update_studio_backup_policy()
-            if path.startswith("/api/invitations/") and path.endswith("/studio-release"): return self.pin_invitation_studio_release(path.split("/")[3])
-            if path.startswith("/api/studio/releases/") and path.count("/") == 4: return self.update_studio_release(path.split("/")[4])
-            if path.startswith("/api/studio/resources/") and path.count("/") == 4: return self.update_studio_resource(path.split("/")[4])
-            if path.startswith("/api/uploads/") and path.count("/")==3: return self.append_upload_chunk(path.split("/")[3])
-            if path.startswith("/api/assets/") and path.count("/") == 3: return self.update_asset(path.split("/")[3])
-            if path.startswith("/api/admin/users/") and path.endswith("/role"): return self.admin_update_user_role(path.split("/")[4])
-            if path.startswith("/api/admin/users/") and path.endswith("/plan"): return self.admin_update_user_plan(path.split("/")[4])
-            if path.startswith("/api/admin/users/") and path.endswith("/uploads"): return self.admin_update_user_upload_permission(path.split("/")[4])
-            if path.startswith("/api/admin/users/") and path.endswith("/session-policy"): return self.admin_update_user_session_policy(path.split("/")[4])
-            if path == "/api/admin/settings/session-idle-days-nonadmin": return self.admin_update_session_idle_setting()
-            if path.startswith("/api/admin/templates/") and path.endswith("/visibility"): return self.admin_update_template_visibility(path.split("/")[4])
-            if path.startswith("/api/admin/invitations/") and path.endswith("/published"): return self.admin_update_invitation_published(path.split("/")[4])
-            if path == "/api/admin/feature-flags": return self.admin_update_feature_flags()
-            admin_report_resolve_match = re.fullmatch(r"/api/admin/reports/([^/]+)/?", path)
-            if admin_report_resolve_match: return self.admin_resolve_report(unquote(admin_report_resolve_match.group(1)))
-            if "/guests/" in path and path.endswith("/check-in"): return self.check_in_guest(path.split("/")[3],path.split("/")[5])
-            if "/rsvps/" in path: return self.update_rsvp(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/templates/") and path.count("/") == 3: return self.update_template(path.split("/")[3])
-            if path.startswith("/api/page-templates/") and path.count("/") == 3: return self.update_page_template(path.split("/")[3])
-            if path.startswith("/api/components/") and path.count("/") == 3: return self.update_component(path.split("/")[3])
-            if path.startswith("/api/invitations/") and "/guests/" in path and path.count("/")==5: return self.update_guest_details(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/invitations/") and "/comments/" in path and path.count("/")==5: return self.resolve_comment(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/invitations/") and "/approvals/" in path and path.count("/")==5: return self.decide_approval(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/invitations/") and path.endswith("/review-policy"): return self.update_review_policy(path.split("/")[3])
-            if path.startswith("/api/invitations/") and path.endswith("/review-notifications"): return self.mark_review_notifications(path.split("/")[3])
-            if path.startswith("/api/invitations/") and "/review-tasks/" in path and path.count("/")==5: return self.update_review_task(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/invitations/") and path.endswith("/operations"): return self.update_invitation_operations(path.split("/")[3])
-            if path.startswith("/api/invitations/") and path.endswith("/archive"): return self.archive_invitation(path.split("/")[3])
-            if path.startswith("/api/invitations/") and path.endswith("/slug"): return self.update_slug(path.split("/")[3])
-            if path.startswith("/api/invitations/") and path.endswith("/access"): return self.update_access(path.split("/")[3])
-            if path.startswith("/api/invitations/") and path.endswith("/gallery-access"): return self.update_gallery_access(path.split("/")[3])
-            # Phase 2a (V54.1) — guest-feature PUT endpoints (host edits).
-            gift_item_put_match = re.fullmatch(r"/api/invitations/([^/]+)/gift-registry/([^/]+)/?", path)
-            if gift_item_put_match: return self.update_gift_registry_item(unquote(gift_item_put_match.group(1)), unquote(gift_item_put_match.group(2)))
-            if path.startswith("/api/invitations/") and "/signup-sheets/" in path and path.count("/")==5: return self.update_signup_sheet(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/invitations/") and "/polls/" in path and path.count("/")==5: return self.update_poll(path.split("/")[3],path.split("/")[5])
-            if path.startswith("/api/invitations/"): return self.save_draft(path.split("/")[3])
+            if self._put_admin_routes(path): return
+            if self._put_invitation_routes(path): return
             self.json(404, {"error": "Not found"})
         except MalwareDetected as exc:
             # V54: upload failed its malware scan — return 422 (not 400) so the
@@ -11946,6 +12105,7 @@ def create_app():
             self._write_buf = response_buf
 
         def makefile(self, mode="rb", buffering=None, /, **kw):
+            del buffering, kw  # socket.makefile compatibility parameters; the fake uses fixed buffers.
             if "r" in mode:
                 return self._read_buf
             return self._write_buf

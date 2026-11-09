@@ -17,7 +17,7 @@ from __future__ import annotations
 import base64
 from typing import Any, Dict
 
-from .base import DeliveryChannel, SendResult, _env, _post_json, _require_http_url
+from .base import DeliveryChannel, SendResult, _env, _require_http_url
 
 
 class SmsChannel(DeliveryChannel):
