@@ -1,6 +1,6 @@
 # eInvite API Contracts
 
-**Status:** enforced by `tests/api_contract_test.py` against a real local server.  
+**Status:** enforced by `tests/api_contract_test.py` against a real local server.
 **Scope:** the core authentication, invitation, guest, and check-in routes refactored by the
 Sprint 3/4 work.
 
@@ -86,7 +86,7 @@ The error uses the standardized error schema below.
 
 Request: `{ "email": string, "password": string }`.
 
-**201 — same session envelope as registration.**  
+**201 — same session envelope as registration.**
 **Errors:** `401` for incorrect credentials; `423` for a temporarily locked account. MFA-enabled
 accounts return the separate `202` MFA challenge flow, which is outside this core contract.
 
