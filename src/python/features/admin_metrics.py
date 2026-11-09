@@ -18,7 +18,6 @@ Public API
 ``compute_system_status(db, health)``  — green/yellow/red banner
 """
 from __future__ import annotations
-import bisect
 import threading
 import time
 from collections import deque

@@ -8,7 +8,6 @@
     "src/python/build/prepare_production_env.py|function||create_environment": 15,
     "src/python/core/auth.py|function||cbor_decode": 18,
     "src/python/core/deps.py|function||main": 17,
-    "src/python/core/preflight.py|function||audit_environment": 85,
     "src/python/core/webhooks.py|function||deliver": 16,
     "src/python/core/webhooks.py|function||validate_destination": 15,
     "src/python/core/webhooks.py|function||verify_signature": 12,
@@ -50,7 +49,6 @@
     "src/python/security_scanner_v54.py|function||_clamd_instream": 18,
     "src/python/security_scanner_v54.py|function||_detect_scanner_uncached": 13,
     "src/python/security_scanner_v54.py|function||_windows_defender_cli": 11,
-    "src/python/server.py|class||Handler": 11,
     "src/python/server.py|function||_khmer_font_metadata": 14,
     "src/python/server.py|function||apply_guest_bindings": 17,
     "src/python/server.py|function||build_studio_archive": 37,
@@ -77,7 +75,6 @@
     "src/python/server.py|function||send_security_notification": 11,
     "src/python/server.py|function||studio_brand_lock_blockers": 35,
     "src/python/server.py|function||studio_document_resource_references": 24,
-    "src/python/server.py|function||studio_publish_readiness": 59,
     "src/python/server.py|function||update_material_import_job": 15,
     "src/python/server.py|function||valid_email": 11,
     "src/python/server.py|function||validate_document": 263,
@@ -137,7 +134,6 @@
     "src/python/server.py|method|Handler|do_DELETE": 52,
     "src/python/server.py|method|Handler|do_GET": 180,
     "src/python/server.py|method|Handler|do_POST": 217,
-    "src/python/server.py|method|Handler|do_PUT": 77,
     "src/python/server.py|method|Handler|export_account": 37,
     "src/python/server.py|method|Handler|freeze_guest_links": 19,
     "src/python/server.py|method|Handler|get_analytics": 12,
@@ -216,17 +212,7 @@
   },
   "complexity_threshold": 10,
   "vulture": [
-    "src/python/core/admin_ip_allowlist.py: unused import 'Set'",
-    "src/python/delivery_channels/sms_channel.py: unused import '_post_json'",
-    "src/python/features/admin_metrics.py: unused import 'bisect'",
-    "src/python/server.py: unused import 'marketplace_summary'",
-    "src/python/server.py: unused import 'tool_catalog'",
-    "src/python/server.py: unused import 'JITElevationManager'",
-    "src/python/server.py: unused import '_delivery_available_channels'",
-    "src/python/server.py: unused import 'DeliveryChannelError'",
-    "src/python/server.py: unused import 'TTLibError'",
-    "src/python/server.py: unused variable 'buffering'",
-    "src/python/server.py: unused variable 'kw'"
+    "src/python/server.py: unused import 'JITElevationManager'"
   ],
   "vulture_min_confidence": 90
 }
