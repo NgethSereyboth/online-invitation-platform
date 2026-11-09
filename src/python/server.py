@@ -3726,11 +3726,18 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
         return None
+    def parse_request(self):
+        # Establish the correlation ID before send_response() logs the request;
+        # end_headers() then reuses the same value for the response header.
+        ok=super().parse_request()
+        if ok:
+            self.request_id=safe_request_id(self.headers.get("X-Request-ID"))
+        return ok
     def log_message(self, format, *args):
         # Keep request handling independent from a terminal that may be closed.
         if JSON_LOGS:
             try:
-                print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":redact_request_path(format%args)},ensure_ascii=False),flush=True)
+                print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"requestId":getattr(self,"request_id",""),"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":redact_request_path(format%args)},ensure_ascii=False),flush=True)
             except Exception as exc: _log.debug("cleanup failed: %s", exc)
     def end_headers(self):
         request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID")).replace("\r","").replace("\n","")
