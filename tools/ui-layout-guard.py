@@ -123,7 +123,27 @@ KHMER_FONT_JS = r"""
 MEASURE_JS = r"""
 () => {
   const vw = window.innerWidth, vh = window.innerHeight;
+  // A control can have a visible computed style and a non-zero rect while its
+  // ancestor is clipped out of the render tree. The editor keeps the raw
+  // section-order textarea inside `.ei-raw-field` (position:absolute; 1x1;
+  // overflow:hidden; clip-path:inset(50%)) as a fallback for the visual builder.
+  // checkVisibility() does not reject that ancestor, so skip the clipped
+  // subtree explicitly rather than reporting its inner textarea as a clipped
+  // user-facing field.
+  const hiddenByClippedAncestor = (el) => {
+    for (let n = el.parentElement; n && n !== document.documentElement; n = n.parentElement) {
+      const s = getComputedStyle(n);
+      if (s.display === 'none' || s.visibility === 'hidden' || s.opacity === '0') return true;
+      if ((s.overflowX === 'hidden' || s.overflowX === 'clip') &&
+          (s.overflowY === 'hidden' || s.overflowY === 'clip') &&
+          n.clientWidth <= 1 && n.clientHeight <= 1) return true;
+      if (s.clip && s.clip !== 'auto' && s.clip.includes('rect(0')) return true;
+      if (s.clipPath && s.clipPath !== 'none' && s.clipPath.includes('inset(50%')) return true;
+    }
+    return false;
+  };
   const visible = (el) => {
+    if (hiddenByClippedAncestor(el)) return false;
     const s = getComputedStyle(el);
     if (s.display === 'none' || s.visibility === 'hidden' || s.opacity === '0') return false;
     // Chromium still reports a non-zero rect for a control inside a closed
