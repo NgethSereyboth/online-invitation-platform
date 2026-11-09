@@ -2,7 +2,8 @@
 
 **Branch:** `improve/sprint-2-hardening-and-polish`
 **Base:** `main` at `140aa77`
-**Commits:** `d639471` (analysis gate), `eed6bb6` (header-injection properties)
+**Commits:** `d639471` (analysis gate), `eed6bb6` (header-injection properties),
+`492cd20` (analysis-gate wiring)
 **Merge status:** not merged; no push or PR created in this sprint.
 
 ## Completed tasks
@@ -41,6 +42,20 @@ corrected. Green suite: `header_injection_property_test.py`,
 `security_media_headers_test.py`, `tooling_analysis_test.py`,
 `security_reflected_injection_test.py` — **16 passed**.
 
+### 3. Analysis gate wired into local and CI runners — `492cd20`
+
+- Closed the integration gap: the gate existed only as `make analyze`, so
+  neither the local `run-gates.py` matrix nor CI could catch a new finding.
+- Added an `analyze` phase after `bundles` with the fail-closed `ANALYSIS_OK`
+  marker, plus a `make analyze` step in the Tests workflow.
+- Documented the wiring in `docs/QUALITY-GATES.md` and `tools/README.md`.
+
+**Evidence:** the new wiring test was red first; `tests/tooling_analysis_test.py`
+**6 passed**; `tests/test_runner_manifest.py` and
+`tests/lhci_invocation_test.py` **4 passed**; `run-gates.py --phase analyze`
+printed `PASS analyze` / `GATES_PASSED`; the workflow parsed with both PyYAML
+and `js-yaml`.
+
 ## Rejected or deferred tasks
 
 | Task | Decision | Why |
@@ -68,9 +83,13 @@ Details: `docs/FUTURE-IMPROVEMENTS.md`.
 | `python3 -m compileall -q src/python tests tools` | PASS |
 | `pip check` | PASS |
 | Focused pytest (property + media + tooling + reflected) | **16 passed** |
+| Wiring pytest (`tooling_analysis_test.py`) | **6 passed** |
+| Runner/LHCI tests (`test_runner_manifest.py`, `lhci_invocation_test.py`) | **4 passed** |
+| `tools/run-gates.py --phase analyze` | PASS — `GATES_PASSED` |
+| Tests workflow YAML parse | PASS — PyYAML 6.0.1 and `js-yaml` |
 | Analytics ingestion | 6 passed; phase 4 alone 1 passed |
 | `git diff --check` | PASS |
-| Full pytest suite | **250 passed in 1120.81s (18:40)**, exit 0 |
+| Full pytest suite (before wiring task) | **250 passed in 1120.81s (18:40)**, exit 0 |
 | Playwright `13-security.spec.ts` (chromium) | **8 passed** on a disposable 4310 server; server stopped, 4175 untouched |
 
 Artifacts: `artifacts/sprint2/` (gitignored, local to this review machine).
@@ -88,8 +107,10 @@ Artifacts: `artifacts/sprint2/` (gitignored, local to this review machine).
 - The Playwright security spec passed, but the NUL header behavior is covered
   only by unit/property tests; a browser cannot be made to send NUL header
   values through normal navigation.
-- The full suite passed once; the 18:40 runtime is slow, so keep an eye on test
-  duration if the suite grows further.
+- The full suite passed once before the wiring task; the wiring change is
+  covered by its targeted and runner tests, not by a second 18-minute run.
+- The 18:40 suite runtime is slow; keep an eye on duration if the suite grows
+  further.
 
 ## Recommended Sprint 3
 

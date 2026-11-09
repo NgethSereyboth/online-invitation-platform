@@ -1,7 +1,8 @@
 # Continuous Improvement Log — Sprint 2
 
 **Branch:** `improve/sprint-2-hardening-and-polish` (from `main` `140aa77`)
-**Scope:** static-analysis tooling, header-injection properties, test stability.
+**Scope:** static-analysis tooling, header-injection properties, test stability,
+local/CI gate wiring.
 **Rule:** no merge into `main`; every change stays on this branch for review.
 
 > The QA deep-dive log and sprint plan live on `qa/deep-dive-improvements`
@@ -52,21 +53,6 @@
 - **Dependency:** `hypothesis==6.170.15` is pinned in `requirements-dev.txt`; a
   fresh install and `pip check` both pass.
 
-## 2026-11-08 — Sprint close
-
-- **Full suite:** `250 passed in 1120.81s (18:40)`, exit 0
-  (`artifacts/sprint2/pytest-full.log`).
-- **Playwright:** `13-security.spec.ts` (chromium) — **8 passed** on a disposable
-  4310 origin; the server was stopped and the user's 4175 server (PID 3005) was
-  left running.
-- **Final gates:** `python3 build.py all --check` → `BUILD_OK`/730 mirror files;
-  `npm run lint` and `npm run lint:security` → PASS; `make analyze` → 213/213
-  complexity and 11/11 vulture, `ANALYSIS_OK`; `pip check`, `compileall` and
-  `git diff --check` → PASS.
-- **Report:** `reports/sprint-2-summary.md`. Deferrals and rejected work:
-  `docs/FUTURE-IMPROVEMENTS.md`.
-- **No merge, no push, no production access.**
-
 ## 2026-11-08 — Analysis gate wired into local and CI runners
 
 - **Found:** `make analyze` existed as a manual target, but neither
@@ -88,3 +74,21 @@
   `artifacts/sprint2/wiring-run-gates.log`,
   `artifacts/sprint2/wiring-related-tests.log`,
   `artifacts/sprint2/workflow-parse.log`.
+
+## 2026-11-08 — Sprint close
+
+- **Scope:** three bounded tasks; no product/UI change and no new runtime
+  dependency.
+- **Full suite:** `250 passed in 1120.81s (18:40)`, exit 0, recorded before the
+  wiring task (`artifacts/sprint2/pytest-full.log`). The wiring task was checked
+  with its targeted and runner tests rather than a second 18-minute suite.
+- **Playwright:** `13-security.spec.ts` (chromium) — **8 passed** on a disposable
+  4310 origin; the server was stopped and the user's 4175 server (PID 3005) was
+  left running.
+- **Final gates:** `python3 build.py all --check` → `BUILD_OK`/730 mirror files;
+  `npm run lint` and `npm run lint:security` → PASS; `make analyze` → 213/213
+  complexity and 11/11 vulture, `ANALYSIS_OK`; `pip check`, `compileall` and
+  `git diff --check` → PASS.
+- **Report:** `reports/sprint-2-summary.md`. Deferrals and rejected work:
+  `docs/FUTURE-IMPROVEMENTS.md`.
+- **No merge, no push, no production access.**

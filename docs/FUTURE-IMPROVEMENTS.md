@@ -3,7 +3,7 @@
 **Branch:** `improve/sprint-2-hardening-and-polish`
 **Base:** `main` `140aa77`
 **Status:** items below were considered for Sprint 2 and deliberately deferred or
-rejected. None is required for the two completed Sprint 2 tasks.
+rejected. None is required for the completed Sprint 2 tasks.
 
 The fuller QA deep-dive backlog and sprint plan live on the unmerged
 `qa/deep-dive-improvements` branch (draft PR #27). They are not duplicated here
