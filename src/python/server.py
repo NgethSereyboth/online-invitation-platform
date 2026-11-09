@@ -10,6 +10,7 @@ from email.message import EmailMessage
 from email.utils import formatdate
 from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_api_key, verify_api_key, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, verify_recovery_code)
 from core.config import get as config_get
+from core import db_metrics
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
@@ -1793,6 +1794,10 @@ def connect_sqlite():
     db = sqlite3.connect(path, timeout=10)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA journal_mode=WAL")
+    # WAL + NORMAL is the recommended web pairing: a power loss can cost the
+    # last few committed transactions but cannot corrupt the database. FULL
+    # fsyncs on every commit and is the dominant cost of SQLite writes.
+    db.execute("PRAGMA synchronous=NORMAL")
     db.execute("PRAGMA busy_timeout=5000")
     db.execute("PRAGMA foreign_keys=ON")
     try:
@@ -3699,6 +3704,131 @@ def is_loopback_address(value):
     except ValueError:return str(value or "").lower() in {"localhost","ip6-localhost"}
 
 
+def invitation_list_statement(owner_id, status_filter="all", search=""):
+    """Return ``(sql, params)`` for the dashboard listing.
+
+    Module-level so the query-plan regression can EXPLAIN the exact statement
+    the handler runs instead of a copy that can drift. Placeholder order is the
+    statement order: collaboration role, owner scope, collaborator scope, then
+    one LIKE pair per search term. Callers append LIMIT/OFFSET.
+    """
+    clauses=["i.deleted_at IS NULL","(i.owner_id=? OR i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?))"]
+    params=[owner_id,owner_id,owner_id]
+    if status_filter=="published":
+        clauses.append("i.archived=0 AND i.is_published=1")
+    elif status_filter=="draft":
+        clauses.append("i.archived=0 AND i.is_published=0")
+    elif status_filter=="archived":
+        clauses.append("i.archived=1")
+    if search:
+        like=f"%{search.lower()}%"
+        clauses.append("(LOWER(COALESCE(json_extract(i.draft_json,'$.fields.names'),'')) LIKE ? OR LOWER(i.slug) LIKE ?)")
+        params.extend([like,like])
+    sql=("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,"
+         "CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,"
+         "(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,"
+         "COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role "
+         "FROM invitations i WHERE "+" AND ".join(clauses)+" ORDER BY i.archived,i.updated_at DESC LIMIT ? OFFSET ?")
+    return sql,params
+
+
+def guest_list_statement(owner_id, invite_id):
+    """Return ``(sql, params)`` for the manager guest list.
+
+    One statement resolves the caller's role and the guest rows. RSVP statuses
+    are batch-fetched for the whole invitation by :func:`guest_rsvp_statement`
+    and mapped in the handler, instead of a correlated
+    ``lower(r.name)=lower(g.name)`` lookup that could not use an index and
+    re-read every RSVP row once per guest.
+    """
+    sql=("SELECT i.owner_id,i.deleted_at,"
+         "(SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?) collaborator_role,"
+         "g.id,g.name,g.slug,g.phone,g.email,g.group_name,g.household_id,g.tags_json,g.table_name,g.seat_label,"
+         "g.delivery_status,g.opened_at,g.token_salt,g.token_version,g.token_expires_at,g.token_revoked_at,"
+         "g.created_at,g.checked_in,g.checked_in_at "
+         "FROM invitations i LEFT JOIN guests g ON g.invitation_id=i.id "
+         "WHERE i.id=? ORDER BY g.created_at DESC")
+    return sql,(owner_id,invite_id)
+
+
+def guest_rsvp_statement(invite_id):
+    """Latest RSVP status per lower-cased guest name for one invitation.
+
+    Newest first, so the first row seen for a name wins when the handler
+    builds its map. The (invitation_id, created_at DESC) index serves the
+    range filter and the order in one pass — no per-guest query, and the
+    ``lower(name)`` comparison matches the legacy lookup's semantics exactly.
+    """
+    return ("SELECT lower(name) lookup_name,status FROM rsvps WHERE invitation_id=? ORDER BY created_at DESC",(invite_id,))
+
+
+def _invitation_role_from_row(row, user_id):
+    """Resolve a role from a row carrying owner_id/deleted_at/collaborator_role."""
+    if row is None:return None
+    if row["owner_id"]==user_id and row["deleted_at"] is None:return "owner"
+    return row["collaborator_role"]
+
+
+def _latest_rsvp_statuses(db, invite_id):
+    sql,params=guest_rsvp_statement(invite_id)
+    latest={}
+    for rsvp in db.execute(sql,params).fetchall():
+        latest.setdefault(rsvp["lookup_name"],rsvp["status"])
+    return latest
+
+
+def _guest_page(db, user_id, invite_id):
+    """Return ``(rows, latest_rsvps)``; ``rows is None`` means access denied."""
+    sql,params=guest_list_statement(user_id,invite_id)
+    rows=db.execute(sql,params).fetchall()
+    if not rows:return None,{}
+    if _invitation_role_from_row(rows[0],user_id) not in {"owner","manager"}:return None,{}
+    if rows[0]["id"] is None:return [],{}
+    return rows,_latest_rsvp_statuses(db,invite_id)
+
+
+def _strip_guest_access_columns(item):
+    for key in ("owner_id","deleted_at","collaborator_role"):item.pop(key,None)
+
+
+def _guest_payload(rows, latest):
+    result=[]
+    for row in rows:
+        item=dict(row);token=None
+        _strip_guest_access_columns(item)
+        item["rsvp_status"]=latest.get((row["name"] or "").lower())
+        if item.get("token_salt") and not item.get("token_revoked_at") and (not item.get("token_expires_at") or item["token_expires_at"]>int(time.time()*1000)):
+            token=guest_token_value(item["id"],item["token_salt"],item.get("token_version") or 1)
+        item["token"]=token;item["personalLinkAvailable"]=bool(token)
+        try:item["tags"]=json.loads(item.pop("tags_json") or "[]")
+        except Exception:item["tags"]=[]
+        result.append(item)
+    return result
+
+
+def _check_in_target(db, user_id, invite_id, guest_id):
+    row=db.execute("SELECT i.owner_id,i.deleted_at,(SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?) collaborator_role,g.id guest_id,g.checked_in,g.checked_in_at FROM invitations i LEFT JOIN guests g ON g.invitation_id=i.id AND g.id=? WHERE i.id=?",(user_id,guest_id,invite_id)).fetchone()
+    return _invitation_role_from_row(row,user_id),row
+
+
+def _check_in_state(row, checked):
+    already=bool(row["checked_in"]) and bool(checked)
+    if already:return True,int(row["checked_in_at"] or 0)
+    return False,(int(time.time()*1000) if checked else None)
+
+
+def _touch_session_if_stale(db, token_hash, last_seen_at, now):
+    """Write last_seen_at at most once a minute per session.
+
+    Issuing the UPDATE unconditionally — even when its WHERE matches no row —
+    still opens a write transaction in SQLite/WAL and makes every read request
+    compete with the writer.
+    """
+    if now-int(last_seen_at or 0)<=60_000:return
+    try:db.execute("UPDATE sessions SET last_seen_at=? WHERE token_hash=?",(now,token_hash))
+    except Exception as exc: _log.debug("cleanup failed: %s", exc)
+
+
 class Handler(SimpleHTTPRequestHandler):
     server_version="EInvite"
     sys_version=""
@@ -3732,6 +3862,8 @@ class Handler(SimpleHTTPRequestHandler):
         ok=super().parse_request()
         if ok:
             self.request_id=safe_request_id(self.headers.get("X-Request-ID"))
+            # Sprint 6: one statement counter per request; end_headers() reads it.
+            db_metrics.reset()
         return ok
     def log_message(self, format, *args):
         # Keep request handling independent from a terminal that may be closed.
@@ -3743,6 +3875,7 @@ class Handler(SimpleHTTPRequestHandler):
         request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID")).replace("\r","").replace("\n","")
         self.request_id=request_id
         self.send_header("X-Request-ID",request_id)
+        if db_metrics.enabled():self.send_header("X-DB-Query-Count",str(db_metrics.count()))
         cache_value=getattr(self,"_cache_control_value",None)
         if cache_value:self.send_header("Cache-Control",cache_value)
         if getattr(self,"_expire_stale_session",False) and not getattr(self,"_session_replaced",False):
@@ -4096,8 +4229,7 @@ class Handler(SimpleHTTPRequestHandler):
                         if now-int(row["last_seen_at"] or 0)>idle_limit:
                             self._expire_stale_session=True
                             return None
-                    try:db.execute("UPDATE sessions SET last_seen_at=? WHERE token_hash=? AND last_seen_at<?",(now,token_hash,now-60_000))
-                    except Exception as exc: _log.debug("cleanup failed: %s", exc)
+                    _touch_session_if_stale(db,token_hash,row["last_seen_at"],now)
                     return row
         if self.cookie_token():self._expire_stale_session=True
         return None
@@ -7718,23 +7850,7 @@ class Handler(SimpleHTTPRequestHandler):
         if status_filter not in ("all","published","draft","archived"):
             return self.json(400,{"error":"status must be all, published, draft or archived"})
         search=(query.get("q") or [""])[-1].strip()
-        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?))" ]
-        params=[user["id"],user["id"],user["id"]]
-        if status_filter=="published":
-            clauses.append("i.archived=0 AND i.is_published=1")
-        elif status_filter=="draft":
-            clauses.append("i.archived=0 AND i.is_published=0")
-        elif status_filter=="archived":
-            clauses.append("i.archived=1")
-        if search:
-            like=f"%{search.lower()}%"
-            clauses.append("(LOWER(COALESCE(json_extract(i.draft_json,'$.fields.names'),'')) LIKE ? OR LOWER(i.slug) LIKE ?)")
-            params.extend([like,like])
-        sql=("SELECT i.id,i.slug,i.updated_at,i.archived,i.views,i.access_mode,i.is_published,"
-             "CASE WHEN i.is_published=1 THEN 'Published' ELSE 'Draft' END status,"
-             "(SELECT COUNT(*) FROM rsvps r WHERE r.invitation_id=i.id) rsvps,i.draft_json,i.owner_id,"
-             "COALESCE((SELECT role FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?),'owner') collaboration_role "
-             "FROM invitations i WHERE "+" AND ".join(clauses)+" ORDER BY i.archived,i.updated_at DESC LIMIT ? OFFSET ?")
+        sql,params=invitation_list_statement(user["id"],status_filter,search)
         with connect() as db:
             rows=db.execute(sql,(*params,limit,offset)).fetchall()
         result=[]
@@ -7777,10 +7893,11 @@ class Handler(SimpleHTTPRequestHandler):
         user=self.require_user()
         if not user:return
         with connect() as db:
-            if not self.can_read_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
-            row=db.execute("SELECT id,slug,draft_json,updated_at,archived,access_mode,is_published,owner_id,last_client_id,last_mutation_id,custom_domain,publish_at,unpublish_at,expires_at,gallery_access_password_hash FROM invitations WHERE id=?",(invite_id,)).fetchone()
-            role=self.invitation_role(db,invite_id,user["id"])
-        if not row:return self.json(404,{"error":"Invitation not found"})
+            # One statement resolves access and the row: can_read_invitation()
+            # plus invitation_role() previously re-ran the ownership lookup.
+            row=db.execute("SELECT i.id,i.slug,i.draft_json,i.updated_at,i.archived,i.access_mode,i.is_published,i.owner_id,i.last_client_id,i.last_mutation_id,i.custom_domain,i.publish_at,i.unpublish_at,i.expires_at,i.gallery_access_password_hash,i.deleted_at,c.role collaborator_role FROM invitations i LEFT JOIN invitation_collaborators c ON c.invitation_id=i.id AND c.user_id=? WHERE i.id=?",(user["id"],invite_id)).fetchone()
+            role=None if row is None else ("owner" if row["owner_id"]==user["id"] and row["deleted_at"] is None else row["collaborator_role"])
+        if row is None or role is None:return self.json(404,{"error":"Invitation not found"})
         self.json(200,{"id":row["id"],"slug":row["slug"],"document":json.loads(row["draft_json"]),"updatedAt":row["updated_at"],"archived":bool(row["archived"]),"accessMode":row["access_mode"] or "unlisted","published":bool(row["is_published"]),"collaborationRole":role,"owner":row["owner_id"]==user["id"],"lastClientId":row["last_client_id"],"lastMutationId":row["last_mutation_id"],"customDomain":row["custom_domain"] or "","publishAt":row["publish_at"],"unpublishAt":row["unpublish_at"],"expiresAt":row["expires_at"],"galleryProtected":bool(row["gallery_access_password_hash"])})
     def archive_invitation(self,invite_id):
         user=self.require_user()
@@ -8695,18 +8812,9 @@ class Handler(SimpleHTTPRequestHandler):
         user=self.require_user()
         if not user:return
         with connect() as db:
-            if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
-            rows=db.execute("SELECT g.id,g.name,g.slug,g.phone,g.email,g.group_name,g.household_id,g.tags_json,g.table_name,g.seat_label,g.delivery_status,g.opened_at,g.token_salt,g.token_version,g.token_expires_at,g.token_revoked_at,g.created_at,g.checked_in,g.checked_in_at,(SELECT status FROM rsvps r WHERE r.invitation_id=g.invitation_id AND lower(r.name)=lower(g.name) ORDER BY created_at DESC LIMIT 1) rsvp_status FROM guests g WHERE g.invitation_id=? ORDER BY g.created_at DESC",(invite_id,)).fetchall()
-        result=[]
-        for row in rows:
-            item=dict(row);token=None
-            if item.get("token_salt") and not item.get("token_revoked_at") and (not item.get("token_expires_at") or item["token_expires_at"]>int(time.time()*1000)):
-                token=guest_token_value(item["id"],item["token_salt"],item.get("token_version") or 1)
-            item["token"]=token;item["personalLinkAvailable"]=bool(token);
-            try:item["tags"]=json.loads(item.pop("tags_json") or "[]")
-            except Exception:item["tags"]=[]
-            result.append(item)
-        self.json(200,result)
+            rows,latest=_guest_page(db,user["id"],invite_id)
+            if rows is None:return self.json(403,{"error":"Invitation management permission required"})
+        self.json(200,_guest_payload(rows,latest))
 
     def add_guest(self,invite_id):
         user=self.require_user()
@@ -8809,11 +8917,10 @@ class Handler(SimpleHTTPRequestHandler):
         if not self.rate_limit(f"invitation-guest-checkin:{user['id']}",60,60):return
         data=self.body(10_000);checked=1 if data.get("checkedIn",True) else 0
         with connect() as db:
-            if not self.can_manage_invitation(db,invite_id,user["id"]):return self.json(403,{"error":"Invitation management permission required"})
-            row=db.execute("SELECT checked_in,checked_in_at FROM guests WHERE id=? AND invitation_id=?",(guest_id,invite_id)).fetchone()
-            if not row:return self.json(404,{"error":"Guest not found"})
-            already=bool(row["checked_in"]) and bool(checked)
-            checked_at=int(row["checked_in_at"] or 0) if already else (int(time.time()*1000) if checked else None)
+            role,row=_check_in_target(db,user["id"],invite_id,guest_id)
+            if role not in {"owner","manager"}:return self.json(403,{"error":"Invitation management permission required"})
+            if row["guest_id"] is None:return self.json(404,{"error":"Guest not found"})
+            already,checked_at=_check_in_state(row,checked)
             db.execute("UPDATE guests SET checked_in=?,checked_in_at=? WHERE id=? AND invitation_id=?",(checked,checked_at,guest_id,invite_id))
         self.json(200,{"checkedIn":bool(checked),"checkedInAt":checked_at,"alreadyCheckedIn":already})
     def public_action_publication(self, db, slug, access_token=None):

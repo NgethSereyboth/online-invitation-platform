@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import sqlite3
 
+from core import db_metrics
 from core.crypto import CIPHERTEXT_PREFIX, decrypt_field, encrypt_field, hash_for_lookup
 
 __all__ = [
@@ -176,9 +177,11 @@ class SensitiveConnection:
         object.__setattr__(self, "_connection", connection)
 
     def execute(self, sql, params=()):
+        db_metrics.record(sql)
         return SensitiveCursor(self._connection.execute(sql, params))
 
     def executemany(self, sql, seq_of_params):
+        db_metrics.record(sql)
         return SensitiveCursor(self._connection.executemany(sql, seq_of_params))
 
     def __getattr__(self, name):
