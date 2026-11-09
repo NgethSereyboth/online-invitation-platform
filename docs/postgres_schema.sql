@@ -401,6 +401,8 @@ CREATE TABLE IF NOT EXISTS invitation_collaborators (
   PRIMARY KEY(invitation_id,user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_invitation_collaborators_user ON invitation_collaborators(user_id,created_at DESC);
+-- Covering lookup for the list_invitations collaborator membership subquery.
+CREATE INDEX IF NOT EXISTS idx_invitation_collaborators_user_invite ON invitation_collaborators(user_id,invitation_id);
 
 -- V13 future-development security foundation
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_algo TEXT NOT NULL DEFAULT 'pbkdf2-sha256-v1';
@@ -516,7 +518,13 @@ CREATE INDEX IF NOT EXISTS idx_deleted_items_owner ON deleted_items(owner_id,del
 -- V13 recovery lifecycle
 ALTER TABLE invitations ADD COLUMN IF NOT EXISTS deleted_at BIGINT;
 ALTER TABLE invitations ADD COLUMN IF NOT EXISTS purge_at BIGINT;
+-- Existing databases created before is_published was added need the column
+-- before the status index below can be built.
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS is_published INTEGER NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS idx_invitations_trash ON invitations(owner_id, deleted_at, purge_at);
+-- list_invitations: owner scope, archived-first ordering, optional status.
+CREATE INDEX IF NOT EXISTS idx_invitations_owner_archived_updated ON invitations(owner_id, archived, updated_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_invitations_owner_status_updated ON invitations(owner_id, archived, is_published, updated_at DESC) WHERE deleted_at IS NULL;
 
 -- V13 production storage, worker queue, bandwidth and backup tracking
 ALTER TABLE stored_objects ADD COLUMN IF NOT EXISTS storage_key TEXT NOT NULL DEFAULT '';

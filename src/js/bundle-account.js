@@ -471,9 +471,8 @@ function renderSignedOut(){
  const panel=document.createElement('section');panel.className='account-card account-signed-out';panel.dataset.signedOut='1';
  const title=document.createElement('h2');title.textContent=_txt('Sign in','Sign in');
  const note=document.createElement('p');note.className='download-note';note.textContent=_txt('Sign in through the full application server to manage this account.','ចូលតាមម៉ាស៊ីនបម្រើកម្មវិធីពេញលេញ ដើម្បីគ្រប់គ្រងគណនីនេះ។');
- const link=document.createElement('a');link.className='button-link account-sign-in';link.href='dashboard.html';link.setAttribute('rel','noopener');
- const button=document.createElement('button');button.type='button';button.className='primary';button.textContent=_txt('Sign in','Sign in');
- link.append(button);panel.append(title,note,link);
+ const link=document.createElement('a');link.className='button-link primary account-sign-in';link.href='dashboard.html';link.setAttribute('rel','noopener');link.textContent=_txt('Sign in','Sign in');
+ panel.append(title,note,link);
  if(grid)grid.before(panel);else main.append(panel);
  return panel;
 }

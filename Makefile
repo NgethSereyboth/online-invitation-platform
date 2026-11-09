@@ -22,12 +22,14 @@ LHCI_CONFIG ?= tools/lighthouserc.js
 # NOT a local dependency — FB-10 removed it to clear six advisories.
 LHCI ?= npx --yes @lhci/cli@0.15.1
 
-.PHONY: help build check test serve dev serve-gzip perf smoke reproduce clean
+.PHONY: help build check test analyze coverage serve dev serve-gzip perf smoke reproduce clean
 
 help:
 	@echo "make build      - regenerate every generated artifact (python3 build.py all)"
 	@echo "make check      - verify generated artifacts without writing (route bundles gate)"
 	@echo "make test       - run the Python test suite"
+	@echo "make analyze    - compare radon/vulture against the recorded baseline"
+	@echo "make coverage   - run the Python suite with a terminal coverage report"
 	@echo "make serve      - plain static preview on http://127.0.0.1:$(PORT) (no gzip)"
 	@echo "make serve-gzip - gzip static server; REQUIRED for every Lighthouse number"
 	@echo "make dev        - real development server (API + assets)"
@@ -44,6 +46,14 @@ check:
 
 test:
 	$(PYTHON) -m pytest tests/
+
+# Baseline-diff static analysis. The baseline records the known debt so the
+# gate fails on new complexity or new high-confidence vulture findings only.
+analyze:
+	$(PYTHON) tools/analyze.py
+
+coverage:
+	$(PYTHON) -m pytest tests/ --cov=src/python --cov-report=term-missing
 
 # Static preview only: no API, so authenticated pages render their signed-out
 # state. Use `make dev` for the full application. Not gzip-correct — do not

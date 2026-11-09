@@ -88,7 +88,7 @@
       ? text('1 page', '1 page')
       : text(`${entry.pages} pages`, `${entry.pages} pages`);
     return `<article class="pack-card" role="listitem">
-      <button type="button" class="pack-card-open" data-pack-template="${esc(entry.id)}" aria-label="Use ${esc(name)}">
+      <button type="button" class="pack-card-open" data-pack-template="${esc(entry.id)}">
         <img src="${esc(entry.thumb)}" width="${Number(entry.thumbWidth) || 420}" height="${Number(entry.thumbHeight) || 420}"
              loading="lazy" decoding="async" alt="">
         <span class="pack-name">

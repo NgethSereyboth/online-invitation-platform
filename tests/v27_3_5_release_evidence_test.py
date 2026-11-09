@@ -19,7 +19,10 @@ ROOT=Path(__file__).resolve().parents[1]
 # satisfy was fixed (dev install moved to requirements-dev.txt, venv-prefixed
 # server start, Docker generator now takes --public-url and --admin-ip-allowlist,
 # PYTHONPATH made consistent). 77830ff3… is the normalized digest of that text.
-README_SHA='77830ff30640f51d3509f2493ad1efea7a3675fd98bde2f73ebcecd8a79ca6b6'
+# Re-pinned 2026-11-08 for the QA deep-dive README section documenting the CSP
+# nonce lifecycle, the authenticated DAST workflow and the repeatable QA checks.
+# 5fa2b0a4… is the normalized digest of that text.
+README_SHA='5fa2b0a47e3da9ff9412e79d4254898864f5229d4d719ad54efc7689a30bec3b'
 MANIFEST='V0_52_RELEASE_FILE_HASHES.sha256'
 DOCS={'V0_52_ARCHITECTURE.md','V0_52_CHANGELOG.md','V0_52_TEST_MATRIX.md','V0_52_KNOWN_LIMITATIONS.md','V0_52_IMPLEMENTATION_STATUS.md','V0_52_CODEX_TEST_HANDOFF.md','V0_52_CHANGED_FILES.md'}
 REQUIRED_TESTS={'v53_1_operator_repair_contract_test.py','v53_1_ai_project_operator_backend_test.py','v27_3_5_ai_transaction_browser_test.py','v27_3_5_ai_rich_text_browser_test.py','v27_3_5_ai_target_revision_test.py','v27_3_5_ai_layout_preview_test.py','v27_3_5_ai_accessibility_mobile_test.py','v27_3_5_ai_backend_contract_test.py','v27_3_5_mobile_canvas_hud_test.py','v27_3_5_release_evidence_test.py','v27_3_5_typography_preview_sequence_test.py','v28_agent_server_contract_test.py','v28_agent_performance_contract_test.py','v30_raster_workspace_contract_test.py','v31_collaboration_contract_test.py','v32_platform_contract_test.py','v0_52_remaining_fixes_contract_test.py','v0_52_asset_identity_test.py','v0_52_production_deployment_hardening_test.py','v0_52_security_boundary_test.py','v0_52_upload_permission_test.py','v0_52_multi_host_deployment_test.py','v0_52_platform_dark_mode_browser_test.py','v0_52_public_lazy_loader_browser_test.py','v30_raster_worker_browser_test.py','v0_52_ai_real_server_test.py','v0_52_ai_live_browser_test.py','v0_52_dashboard_cover_navigation_test.py','v0_52_autosave_status_test.py','v0_52_publish_barrier_server_test.py','v0_52_publish_autosave_barrier_browser_test.py'}

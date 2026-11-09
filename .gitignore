@@ -226,3 +226,8 @@ bugs/round-10/*.err
 .playwright-cli/
 .specify/
 /deploy/local/
+
+# Canva evidence capture: it may contain live credentials. It is tracked in
+# history until the owner runs the filter-repo scrub; keep it out of the index
+# and every future commit.
+/tools/evidence/rea-canva-bundle.json

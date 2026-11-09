@@ -8,14 +8,14 @@ from html.parser import HTMLParser
 from contextlib import contextmanager
 from email.message import EmailMessage
 from email.utils import formatdate
-from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_api_key, verify_api_key, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, hash_recovery_code, verify_recovery_code)
+from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_api_key, verify_api_key, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, verify_recovery_code)
 from core.config import get as config_get
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
 from security_scanner_v54 import (MalwareDetected, detect_scanner as v54_detect_scanner, enforce_scanner_on_startup as v54_enforce_scanner_on_startup, scan_bytes as v54_scan_bytes, scan_file as v54_scan_file)
 # V54.33 (phase-4a — §4.4) — plugin marketplace CA for double-signature verification.
-from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured, marketplace_summary)
+from plugin_marketplace_ca import (verify_plugin_signature, check_revocation, is_ca_configured)
 from features.secrets import ensure_secret as v54_ensure_secret
 from features import settings
 from features.invitation_versions import (
@@ -42,7 +42,7 @@ from typography_contract import normalize_font_id, finite_number
 from typography_document_model import normalize_document_typography
 from rich_text_document_model import normalize_document_rich_text
 from document_schema_v32 import normalize_document_v32
-from ai_agent import AgentConfig, AgentService, AgentServiceError, ensure_agent_schema, tool_catalog
+from ai_agent import AgentConfig, AgentService, AgentServiceError, ensure_agent_schema
 from ai_agent.jit_elevation import JITElevationError, JITElevationManager, ensure_jit_schema
 from platform_v32 import PlatformConfig, PlatformService, PlatformServiceError, ensure_personal_workspace, ensure_platform_schema
 from future_platform_v52 import FuturePlatformService, FuturePlatformError, ensure_future_schema
@@ -51,7 +51,7 @@ from future_platform_v52 import FuturePlatformService, FuturePlatformError, ensu
 # stdlib-only and the email channel reuses the existing SMTP path via
 # ``register_email_sender`` (wired at boot, below) so importing it never
 # creates a hard dependency on Twilio / WhatsApp / Telegram SDKs.
-from delivery_channels import get_channel as _delivery_get_channel, available_channels as _delivery_available_channels, channel_metadata as _delivery_channel_metadata, register_email_sender as _delivery_register_email_sender, ChannelError as DeliveryChannelError
+from delivery_channels import get_channel as _delivery_get_channel, channel_metadata as _delivery_channel_metadata, register_email_sender as _delivery_register_email_sender
 
 # ROADMAP-v0.54-to-v1.0 Part 6 — creator analytics (§6.1–§6.9). The feature
 # module ships the schema, the ingestion helpers, the background
@@ -1809,6 +1809,7 @@ def connect_sqlite():
                     CREATE TABLE IF NOT EXISTS billing_events(id TEXT PRIMARY KEY, event_type TEXT NOT NULL, payload_hash TEXT NOT NULL, received_at INTEGER NOT NULL, processed_at INTEGER);
                     CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, id TEXT NOT NULL DEFAULT '', user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL, user_agent TEXT NOT NULL DEFAULT '', ip_address TEXT NOT NULL DEFAULT '', last_seen_at INTEGER NOT NULL DEFAULT 0, device_name TEXT NOT NULL DEFAULT '', csrf_hash TEXT NOT NULL DEFAULT '');
                     CREATE TABLE IF NOT EXISTS invitations(id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, draft_json TEXT NOT NULL, updated_at INTEGER NOT NULL, owner_id TEXT, archived INTEGER NOT NULL DEFAULT 0, views INTEGER NOT NULL DEFAULT 0, last_client_id TEXT, last_mutation_id TEXT, deleted_at INTEGER, purge_at INTEGER, custom_domain TEXT, publish_at INTEGER, unpublish_at INTEGER, expires_at INTEGER, gallery_access_password_hash TEXT, gallery_access_password_salt TEXT);
+                    CREATE INDEX IF NOT EXISTS idx_invitations_owner_archived_updated ON invitations(owner_id,archived,updated_at DESC);
                     CREATE TABLE IF NOT EXISTS publications(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, version INTEGER NOT NULL, document_json TEXT NOT NULL, published_at INTEGER NOT NULL);
                     CREATE TABLE IF NOT EXISTS rsvps(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, publication_id TEXT NOT NULL, guest_id TEXT, name TEXT NOT NULL, normalized_name TEXT NOT NULL DEFAULT '', status TEXT NOT NULL, guest_count INTEGER NOT NULL, note TEXT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL DEFAULT 0, answers_json TEXT NOT NULL DEFAULT '{}');
                     CREATE TABLE IF NOT EXISTS stored_objects(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, path TEXT UNIQUE NOT NULL, storage_key TEXT NOT NULL DEFAULT '', sha256 TEXT NOT NULL DEFAULT '', mime TEXT NOT NULL, size INTEGER NOT NULL, width INTEGER NOT NULL DEFAULT 0, height INTEGER NOT NULL DEFAULT 0, dominant_color TEXT NOT NULL DEFAULT '', processing_state TEXT NOT NULL DEFAULT 'ready', quarantine_state TEXT NOT NULL DEFAULT 'released', scan_status TEXT NOT NULL DEFAULT 'not-configured', ref_count INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
@@ -1880,6 +1881,7 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_deleted_items_owner ON deleted_items(owner_id,deleted_at DESC);
                     CREATE TABLE IF NOT EXISTS invitation_collaborators(invitation_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'viewer', created_at INTEGER NOT NULL, PRIMARY KEY(invitation_id,user_id));
                     CREATE INDEX IF NOT EXISTS idx_invitation_collaborators_user ON invitation_collaborators(user_id,created_at);
+                    CREATE INDEX IF NOT EXISTS idx_invitation_collaborators_user_invite ON invitation_collaborators(user_id,invitation_id);
                     CREATE INDEX IF NOT EXISTS idx_auth_tokens_user_kind ON auth_tokens(user_id,kind,expires_at);
                     CREATE INDEX IF NOT EXISTS idx_user_components_owner_kind ON user_components(owner_id,kind,updated_at);
                     CREATE INDEX IF NOT EXISTS idx_studio_resources_owner_kind ON studio_resources(owner_id,kind,status,updated_at DESC);
@@ -1999,6 +2001,12 @@ def connect_sqlite():
                     if "flagged_at" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_at INTEGER")
                     if "flag_reason" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flag_reason TEXT NOT NULL DEFAULT ''")
                     if "flagged_by" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN flagged_by TEXT NOT NULL DEFAULT ''")
+                    # `list_invitations` paginates by (archived, updated_at DESC)
+                    # and filters status by is_published. Both columns are added
+                    # by the ALTER block above, so these indexes belong here, not
+                    # in the base executescript (which runs before the ALTERs).
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_invitations_owner_archived_updated ON invitations(owner_id,archived,updated_at DESC) WHERE deleted_at IS NULL")
+                    db.execute("CREATE INDEX IF NOT EXISTS idx_invitations_owner_status_updated ON invitations(owner_id,archived,is_published,updated_at DESC) WHERE deleted_at IS NULL")
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_custom_domain ON invitations(custom_domain) WHERE custom_domain IS NOT NULL AND custom_domain<>''")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
@@ -2130,7 +2138,12 @@ def _ensure_postgres_schema(connection):
     if _PG_SCHEMA_READY:return
     with _PG_SCHEMA_LOCK:
         if _PG_SCHEMA_READY:return
-        schema=(ROOT/"postgres_schema.sql").read_text(encoding="utf-8")
+        # `docs/postgres_schema.sql` is the canonical schema in this repo;
+        # packaged deployments may place a copy beside server.py. Resolve both
+        # so a PostgreSQL boot cannot fail on a missing copied file.
+        schema_path=ROOT/"postgres_schema.sql"
+        if not schema_path.is_file():schema_path=ROOT.parent.parent/"docs"/"postgres_schema.sql"
+        schema=schema_path.read_text(encoding="utf-8")
         connection.execute(schema,prepare=False)
         # Backfill the V12 stored-object registry for existing PostgreSQL assets.
         connection.execute("""
@@ -2985,7 +2998,7 @@ def optimize_custom_font(raw,filename="font.ttf",declared_mime="application/octe
         raise ValueError("Unsupported custom font MIME type")
     source_format=_font_source_signature(raw)
     try:
-        from fontTools.ttLib import TTFont,TTLibError
+        from fontTools.ttLib import TTFont
     except ImportError as exc:
         raise RuntimeError("Custom font optimization requires fonttools[woff]. Install requirements-test.txt or requirements-production.txt.") from exc
     try:
@@ -3567,8 +3580,8 @@ def studio_publish_readiness(db, owner_id, document, invitation_id=""):
 
 
 def safe_header_value(value):
-    """Remove CR/LF from a value before using it in an HTTP header."""
-    return re.sub(r"[\r\n]+", "", str(value or ""))[:4096]
+    """Remove CR/LF/NUL from a value before using it in an HTTP header."""
+    return re.sub(r"[\r\n\x00]+", "", str(value or ""))[:4096]
 
 def safe_request_id(value):
     """Normalize correlation IDs before reflecting them into logs or headers."""
@@ -4131,20 +4144,28 @@ class Handler(SimpleHTTPRequestHandler):
         except ValueError:return None
         return candidate if candidate.is_file() else None
 
-    def serve_public_static(self):
-        if not self.public_static_path():return self.json(404,{"error":"Not found"})
+    def static_cache_policy(self):
         # TP-2.1: the template-pack artwork is immutable per filename (ornaments
         # carry a colour hash) and fetched on demand by the picker, so it is worth
-        # caching. Everything else keeps the previous no-header behaviour.
+        # caching for a day. Other public assets keep stable filenames across
+        # releases, so reuse them for an hour and revalidate afterwards;
+        # send_head() still emits Last-Modified/ETag for conditional requests.
         if unquote(urlparse(self.path).path).startswith("/assets/template-pack/"):
-            self._cache_control_value="public, max-age=86400"
+            return "public, max-age=86400"
+        return "public, max-age=3600, must-revalidate"
+
+    def serve_public_static(self):
+        if not self.public_static_path():return self.json(404,{"error":"Not found"})
+        self._cache_control_value=self.static_cache_policy()
         return super().do_GET()
 
     def do_HEAD(self):
         # HEAD must follow the same deny-by-default boundary as GET; otherwise
         # it can still enumerate private files, sizes and modification dates.
         if not self.guard_request_boundary():return
-        if self.public_static_path():return super().do_HEAD()
+        if self.public_static_path():
+            self._cache_control_value=self.static_cache_policy()
+            return super().do_HEAD()
         self.send_response(404);self.send_header("Cache-Control","no-store");self.end_headers()
 
     def future_v52_error(self, exc):
@@ -7531,7 +7552,7 @@ class Handler(SimpleHTTPRequestHandler):
         if status_filter not in ("all","published","draft","archived"):
             return self.json(400,{"error":"status must be all, published, draft or archived"})
         search=(query.get("q") or [""])[-1].strip()
-        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR EXISTS(SELECT 1 FROM invitation_collaborators c WHERE c.invitation_id=i.id AND c.user_id=?))" ]
+        clauses=["i.deleted_at IS NULL","(i.owner_id=? OR i.id IN (SELECT invitation_id FROM invitation_collaborators WHERE user_id=?))" ]
         params=[user["id"],user["id"],user["id"]]
         if status_filter=="published":
             clauses.append("i.archived=0 AND i.is_published=1")

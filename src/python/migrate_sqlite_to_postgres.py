@@ -32,6 +32,11 @@ TABLES = [
     "access_tokens", "user_components", "guest_messages", "auth_tokens", "invitation_collaborators",
 ]
 
+def _postgres_schema_path() -> Path:
+    """Prefer a packaged schema beside this module, otherwise use docs/."""
+    packaged = ROOT / "postgres_schema.sql"
+    return packaged if packaged.is_file() else ROOT.parent.parent / "docs" / "postgres_schema.sql"
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sqlite", default=str(DEFAULT_SQLITE))
@@ -48,7 +53,7 @@ def main() -> None:
     sqlite_path = Path(args.sqlite)
     if not sqlite_path.is_file():
         raise SystemExit(f"SQLite database not found: {sqlite_path}")
-    schema = (ROOT / "postgres_schema.sql").read_text(encoding="utf-8")
+    schema = _postgres_schema_path().read_text(encoding="utf-8")
     source = sqlite3.connect(sqlite_path)
     source.row_factory = sqlite3.Row
     with psycopg.connect(args.database_url) as target:

@@ -256,6 +256,25 @@ directory map and a "where does new code go" decision tree.
 
 > **Note:** The previous draft of this README suggested `python -m platform_v32.service` as a dev command — that module has no `__main__` block. The correct entry point is `src/python/server.py` with `PYTHONPATH=`.
 
+### Quality & security verification
+
+The QA branch keeps edge-case, accessibility and visual checks repeatable:
+
+```bash
+# API edge cases: malformed JSON, wrong types, boundary values, Unicode
+.venv/bin/python scripts/qa_api_fuzz.py
+
+# Accessibility and visual regressions (server must already be running)
+npx playwright test --config=e2e/playwright.config.ts --project=chromium e2e/specs/06-a11y.spec.ts
+npx playwright test --config=e2e/playwright.config.ts --project=chromium e2e/specs/07-visual.spec.ts
+```
+
+Every HTML response carries a fresh CSP `style-src` nonce in the
+`Content-Security-Policy` header; server-rendered `<style>` tags receive that nonce, and pages
+without inline scripts expose it only through the header. The authenticated ZAP DAST workflow
+(`.github/workflows/dast-authenticated.yml`) runs on every pull request against a disposable
+loopback fixture, so the active scanner can never be pointed at production.
+
 ---
 
 ## 🖼️ Screenshots
