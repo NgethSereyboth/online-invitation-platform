@@ -24,12 +24,17 @@
 # Versions are exact, matching the pinning discipline of
 # docs/requirements-production.txt and tools/requirements.txt. Verified current
 # against the index this installs from (`python3 -m pip index versions <name>`,
-# 2026-10-12): pytest 9.1.1, pytest-timeout 2.4.0.
+# 2026-10-12): pytest 9.1.1, pytest-timeout 2.4.0. Static-analysis and
+# coverage pins verified 2026-11-08: pytest-cov 7.1.0, vulture 2.16, radon 6.0.1.
 #
 #   https://pypi.org/project/pytest/9.1.1/
 #   https://pypi.org/project/pytest-timeout/2.4.0/
 pytest==9.1.1
 pytest-timeout==2.4.0
+pytest-cov==7.1.0
+vulture==2.16
+radon==6.0.1
+hypothesis==6.170.15
 
 # The browser/asset toolchain the test suite imports (playwright for the geometry
 # tests, Pillow/qrcode for the asset tests, fonttools/Brotli for subsetting).
