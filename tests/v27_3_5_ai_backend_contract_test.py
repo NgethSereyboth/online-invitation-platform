@@ -23,13 +23,9 @@ def main()->int:
   unauth=object.__new__(mod.Handler);unauth_out=[];unauth.require_user=lambda:None;unauth.json=lambda status,body:unauth_out.append((status,body));unauth.ai_assist();assert unauth_out==[],unauth_out
   mod.AI_ENDPOINT='';mod.AI_API_KEY='';h,out=handler(mod,{'task':'write','prompt':arbitrary,'context':{'names':'Hosts'}});h.ai_assist();assert out[-1][0]==200 and out[-1][1]['provider']=='template' and out[-1][1]['providerMode']=='offline' and arbitrary not in out[-1][1]['text'],out
   h,out=handler(mod,{'task':'unknown','prompt':'x','context':{}});h.ai_assist();assert out[-1]==(400,{'error':'Unsupported assistant task'}),out
-  class Resp:
-   def __enter__(self):return self
-   def __exit__(self,*a):return False
-   def read(self,n):return json.dumps(['invalid-shape']).encode()
-  mod.AI_ENDPOINT='https://provider.invalid';original=mod.urllib.request.urlopen;mod.urllib.request.urlopen=lambda *a,**k:Resp()
+  mod.AI_ENDPOINT='https://provider.invalid';original=mod.resilience.post_json;mod.resilience.post_json=lambda *a,**k:['invalid-shape']
   h,out=handler(mod,{'task':'write','prompt':'x','context':{'names':'Hosts'}});h.ai_assist();body=out[-1][1];assert body['provider']=='template' and body['providerMode']=='fallback' and 'providerMessage' in body and 'invalid-shape' not in json.dumps(body),out
-  mod.urllib.request.urlopen=original
+  mod.resilience.post_json=original
   h,out=handler(mod,{'task':'write','prompt':'x','context':{}},rate=False);h.ai_assist();assert out==[],out
  finally:mod.AI_ENDPOINT,mod.AI_API_KEY=old_endpoint,old_key
  print('V27_3_5_AI_BACKEND_CONTRACT_TEST_PASSED');return 0

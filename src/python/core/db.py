@@ -35,11 +35,17 @@ Standard library only. No import-time side effects.
 from __future__ import annotations
 
 import sqlite3
+import threading
+import time
 
 from core import db_metrics
 from core.crypto import CIPHERTEXT_PREFIX, decrypt_field, encrypt_field, hash_for_lookup
 
 __all__ = [
+    "QueryDeadlineExceeded",
+    "clear_deadline",
+    "deadline_expired",
+    "set_deadline",
     "PROTECTED_COLUMNS",
     "protect",
     "reveal",
@@ -60,6 +66,45 @@ PROTECTED_COLUMNS = {
     "audit_events": ("metadata_json",),
     "invitation_edit_history": ("diff_json",),
 }
+
+
+class QueryDeadlineExceeded(RuntimeError):
+    """The request exceeded its database time budget.
+
+    Raised by the connection facade before/after a statement and by SQLite's
+    progress handler while a long query runs. The HTTP layer maps it to 504 so
+    a wedged query releases its worker thread instead of hanging the request.
+    """
+
+
+_REQUEST_STATE = threading.local()
+
+
+def set_deadline(seconds: float) -> None:
+    """Start a database deadline for the current request thread."""
+    _REQUEST_STATE.deadline = time.monotonic() + max(0.01, float(seconds))
+
+
+def clear_deadline() -> None:
+    """Remove the current request thread's database deadline."""
+    _REQUEST_STATE.deadline = None
+
+
+def deadline_expired() -> bool:
+    deadline = getattr(_REQUEST_STATE, "deadline", None)
+    return deadline is not None and time.monotonic() > deadline
+
+
+def _check_deadline() -> None:
+    if deadline_expired():
+        raise QueryDeadlineExceeded("The database request exceeded its time budget")
+
+
+def _raise_if_interrupted(exc: sqlite3.OperationalError):
+    """Translate SQLite's progress-handler interrupt into the 504 exception."""
+    if "interrupted" in str(exc).lower():
+        raise QueryDeadlineExceeded("The database request exceeded its time budget") from exc
+    raise exc
 
 
 def _is_token(value) -> bool:
@@ -152,19 +197,28 @@ class SensitiveCursor:
     def __init__(self, cursor):
         self._cursor = cursor
 
+    def _fetch(self, operation):
+        try:
+            return operation()
+        except sqlite3.OperationalError as exc:
+            _raise_if_interrupted(exc)
+
     def fetchone(self):
-        return reveal_row(self._cursor.fetchone())
+        return reveal_row(self._fetch(self._cursor.fetchone))
 
     def fetchall(self):
-        return [reveal_row(row) for row in self._cursor.fetchall()]
+        return [reveal_row(row) for row in self._fetch(self._cursor.fetchall)]
 
     def fetchmany(self, size=None):
-        rows = self._cursor.fetchmany(size) if size is not None else self._cursor.fetchmany()
+        rows = self._fetch(lambda: self._cursor.fetchmany(size) if size is not None else self._cursor.fetchmany())
         return [reveal_row(row) for row in rows]
 
     def __iter__(self):
-        for row in self._cursor:
-            yield reveal_row(row)
+        try:
+            for row in self._cursor:
+                yield reveal_row(row)
+        except sqlite3.OperationalError as exc:
+            _raise_if_interrupted(exc)
 
     def __getattr__(self, name):
         return getattr(self._cursor, name)
@@ -177,12 +231,25 @@ class SensitiveConnection:
         object.__setattr__(self, "_connection", connection)
 
     def execute(self, sql, params=()):
+        _check_deadline()
         db_metrics.record(sql)
-        return SensitiveCursor(self._connection.execute(sql, params))
+        try:
+            cursor = self._connection.execute(sql, params)
+        except sqlite3.OperationalError as exc:
+            _raise_if_interrupted(exc)
+        # A test wrapper or a slow driver can spend the budget before returning.
+        _check_deadline()
+        return SensitiveCursor(cursor)
 
     def executemany(self, sql, seq_of_params):
+        _check_deadline()
         db_metrics.record(sql)
-        return SensitiveCursor(self._connection.executemany(sql, seq_of_params))
+        try:
+            cursor = self._connection.executemany(sql, seq_of_params)
+        except sqlite3.OperationalError as exc:
+            _raise_if_interrupted(exc)
+        _check_deadline()
+        return SensitiveCursor(cursor)
 
     def __getattr__(self, name):
         return getattr(self._connection, name)

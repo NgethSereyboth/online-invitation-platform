@@ -53,7 +53,7 @@ for _ in range(10):                                           # walk up to find 
 sys.path.insert(0, _HERE)                                      # src/python  (server.py, core/)
 sys.path.append(_REPO_ROOT)                                    # repo root   (ai_agent/, platform_v32/)
 
-from server import create_app  # noqa: E402
+from server import MAX_REQUEST_BODY_BYTES, create_app  # noqa: E402
 
 app = create_app()
 
@@ -86,10 +86,11 @@ if __name__ == "__main__":
         port=args.port,
         threads=args.threads,
         ident="EInvite",  # suppress "Server: waitress" header (SEC-02 info-disclosure)
-        # 10 MB ceiling — the Handler.body() default is 20 MB but per-endpoint
-        # limits are far smaller (login: 100 KB, admin settings: 20 KB). 10 MB
-        # accommodates authenticated uploads while preventing trivial DoS.
-        max_request_body_size=10_485_760,
+        # Sprint 7 — one transport ceiling for every route, shared with the
+        # handler's pre-read check (413 before a byte is buffered). The default
+        # 25 MiB admits the 15 MB materials limit with base64/JSON overhead while
+        # still refusing an unbounded body.
+        max_request_body_size=MAX_REQUEST_BODY_BYTES,
         max_request_header_size=16_386,  # RFC 9110 maximum
         channel_timeout=30,  # idle-connection lifetime in seconds
     )

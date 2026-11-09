@@ -163,20 +163,20 @@ def _post_json(url: str, payload: Dict[str, Any], headers: Optional[Dict[str, st
     req_headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if headers:
         req_headers.update(headers)
-    req = urllib.request.Request(_require_http_url(url), data=data, headers=req_headers, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            raw = response.read() or b"{}"
-            try:
-                return json.loads(raw)
-            except json.JSONDecodeError:
-                return {"_raw": raw.decode("utf-8", errors="replace")}
-    except urllib.error.HTTPError as exc:
-        body = ""
+        from core import resilience
+        response = resilience.request(
+            "POST", _require_http_url(url), body=data, headers=req_headers,
+            max_bytes=1_000_000, read_timeout_s=float(timeout),
+        )
+        raw = response.body or b"{}"
         try:
-            body = exc.read().decode("utf-8", errors="replace")[:500]
-        except Exception:
-            pass
-        return {"_error": f"HTTP {exc.code}: {body}", "_status": exc.code}
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            parsed = {"_raw": raw.decode("utf-8", errors="replace")}
+        if response.status >= 400:
+            parsed = {**(parsed if isinstance(parsed, dict) else {"_raw": parsed}),
+                      "_error": f"HTTP {response.status}", "_status": response.status}
+        return parsed
     except Exception as exc:
-        return {"_error": f"{type(exc).__name__}: {exc}"}
+        return {"_error": f"{type(exc).__name__}: {exc}", "_kind": getattr(exc, "kind", "transport")}

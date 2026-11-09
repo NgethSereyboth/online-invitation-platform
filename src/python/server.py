@@ -2,7 +2,7 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, unquote, parse_qs, quote, urlsplit
 from pathlib import Path
-import argparse, base64, hashlib, hmac, html, io, ipaddress, json, os, re, secrets, sqlite3, time, uuid, threading, smtplib, ssl, mimetypes, urllib.request, urllib.error, subprocess, shlex, shutil, warnings, zipfile, signal, sys  # nosec B404 - subprocess is used only with fixed argument lists and no shell input
+import argparse, base64, errno, hashlib, hmac, html, io, ipaddress, json, os, re, secrets, sqlite3, time, uuid, threading, smtplib, ssl, mimetypes, urllib.request, urllib.error, subprocess, shlex, shutil, warnings, zipfile, signal, sys  # nosec B404 - subprocess is used only with fixed argument lists and no shell input
 from http.cookies import SimpleCookie
 from html.parser import HTMLParser
 from contextlib import contextmanager
@@ -10,7 +10,7 @@ from email.message import EmailMessage
 from email.utils import formatdate
 from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_api_key, verify_api_key, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, verify_recovery_code)
 from core.config import get as config_get
-from core import db_metrics
+from core import db_metrics, resilience
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
@@ -35,7 +35,8 @@ from features import reports as reports_feature
 from core.security_helpers import safe_set_clause
 from core.admin_ip_allowlist import init_admin_ip_allowlist, check_admin_ip_allowed, audit_admin_ip_denied
 from core.crypto import ensure_encryption_key, hash_for_lookup, key_fingerprint, key_source
-from core.db import find_user_by_email, protect, reveal, reveal_connection
+from core.db import (QueryDeadlineExceeded, clear_deadline, deadline_expired,
+                     find_user_by_email, protect, reveal, reveal_connection, set_deadline)
 from core.webhooks import (QUEUE_BACKOFF_BASE_S, QUEUE_MAX_ATTEMPTS, RETRYABLE_STATUSES,
                            deliver as deliver_webhook, generate_webhook_secret,
                            validate_destination)
@@ -564,6 +565,18 @@ def _is_trusted_proxy(addr: str) -> bool:
 TRUSTED_PROXY_IPS = _TRUSTED_PROXY_NETWORKS  # backward-compat alias
 ALLOWED_HOSTS = {x.strip().lower().rstrip(".") for x in re.split(r"[\s,]+", platform_env("EINVITE_ALLOWED_HOSTS", "")) if x.strip()}
 REQUEST_SOCKET_TIMEOUT_SECONDS = max(5, min(300, int(platform_env("EINVITE_REQUEST_SOCKET_TIMEOUT_SECONDS", "45"))))
+# Sprint 7 — bounded request bodies, database work and free space.
+# 25 MiB is the transport ceiling (Waitress uses the same value in serve.py);
+# individual routes still enforce smaller limits, e.g. 15 MB for materials.
+MAX_REQUEST_BODY_BYTES = max(1_000_000, min(100_000_000, int(platform_env("EINVITE_MAX_REQUEST_BYTES", str(25 * 1024 * 1024)))))
+MIN_FREE_DISK_BYTES = max(0, min(10_000_000_000, int(platform_env("EINVITE_MIN_FREE_DISK_BYTES", str(50 * 1024 * 1024)))))
+DB_QUERY_BUDGET_SECONDS = max(0.1, min(120.0, float(platform_env("EINVITE_DB_QUERY_BUDGET_SECONDS", "15"))))
+
+
+class InsufficientStorage(RuntimeError):
+    """A write would exhaust the volume's free space; the HTTP layer maps this to 507."""
+class PayloadTooLarge(RuntimeError):
+    """A declared request body exceeds the transport ceiling; maps to 413."""
 MAX_CONCURRENT_REQUESTS = max(8, min(512, int(platform_env("EINVITE_MAX_CONCURRENT_REQUESTS", "64"))))
 ACCOUNT_TRASH_DAYS = max(1, min(365, int(platform_env("EINVITE_ACCOUNT_TRASH_DAYS", "30"))))
 AUDIT_RETENTION_DAYS = max(30, min(3650, int(platform_env("EINVITE_AUDIT_RETENTION_DAYS", "730"))))
@@ -816,6 +829,19 @@ def asset_public_url(path):
 def responsive_asset_url(path):
     return f"/api/image/{quote(Path(str(path or '')).name,safe='')}"
 
+def ensure_disk_space(directory,incoming=0):
+    """Refuse a write that would leave the volume below the configured reserve.
+
+    ``shutil.disk_usage`` can fail on an unusual filesystem; in that case the
+    write proceeds and the ENOSPC handler in ``store_asset_bytes`` remains the
+    backstop. A configured reserve of 0 disables the pre-check.
+    """
+    try: free=shutil.disk_usage(str(directory)).free
+    except OSError: return
+    needed=int(MIN_FREE_DISK_BYTES)+max(0,int(incoming))
+    if needed and free<needed:
+        raise InsufficientStorage(f"Only {free} bytes free; at least {needed} bytes are required")
+
 def store_asset_bytes(path,raw,mime,owner_id=""):
     clean=Path(str(path or "")).name
     key=object_storage_key(clean,owner_id)
@@ -824,7 +850,12 @@ def store_asset_bytes(path,raw,mime,owner_id=""):
         if OBJECT_STORAGE_KMS_KEY_ID:params.update(ServerSideEncryption="aws:kms",SSEKMSKeyId=OBJECT_STORAGE_KMS_KEY_ID)
         else:params.update(ServerSideEncryption="AES256")
         object_storage_client().put_object(**params)
-    else:(UPLOADS/clean).write_bytes(raw)
+    else:
+        ensure_disk_space(UPLOADS,len(raw))
+        try:(UPLOADS/clean).write_bytes(raw)
+        except OSError as exc:
+            if exc.errno==errno.ENOSPC:raise InsufficientStorage("The server is out of storage space") from exc
+            raise
     return key
 
 def purge_derivative_cache(path, source_hash=""):
@@ -1788,6 +1819,11 @@ def _p2a_document_diff(before, after, max_paths=200):
     return out
 
 
+def sqlite_deadline_probe():
+    """SQLite progress handler: non-zero aborts a statement past its deadline."""
+    return 1 if deadline_expired() else 0
+
+
 @contextmanager
 def connect_sqlite():
     path = db_path()
@@ -1800,6 +1836,10 @@ def connect_sqlite():
     db.execute("PRAGMA synchronous=NORMAL")
     db.execute("PRAGMA busy_timeout=5000")
     db.execute("PRAGMA foreign_keys=ON")
+    # Sprint 7 — abort a long-running query when the request's budget expires.
+    # SQLite calls this every 10k VM instructions; returning non-zero interrupts
+    # the statement, and core.db maps that to QueryDeadlineExceeded.
+    db.set_progress_handler(sqlite_deadline_probe, 10_000)
     try:
         global _SQLITE_SCHEMA_READY, _SQLITE_SCHEMA_READY_PATH
         if _SQLITE_SCHEMA_READY_PATH != str(path):
@@ -3432,7 +3472,12 @@ def valid_email(value):
     local,domain=email.split('@',1)
     return bool(local and len(local)<=64 and domain and '.' in domain and not domain.startswith('.') and not domain.endswith('.'))
 
-def send_message_provider(channel,recipient,message,metadata=None):
+def outbound_error_status(exc, timeout_status=504, failure_status=502):
+    """Map a timeout/open breaker to 504 and every other outbound failure to 502."""
+    return timeout_status if getattr(exc, "kind", "") in {"timeout", "circuit_open"} else failure_status
+
+
+def send_message_provider(channel,recipient,message,metadata=None,request_id=""):
     channel=str(channel or '').lower();recipient=str(recipient or '').strip();message=str(message or '')[:5000];metadata=metadata or {}
     if channel=='email':
         if not recipient or '@' not in recipient:return {"status":"skipped","error":"Guest email is missing"}
@@ -3440,13 +3485,14 @@ def send_message_provider(channel,recipient,message,metadata=None):
         except Exception as exc:return {"status":"failed","error":str(exc)}
     if channel not in {'sms','whatsapp','telegram'}:return {"status":"failed","error":"Unsupported messaging channel"}
     if not MESSAGING_WEBHOOK_ENDPOINT:return {"status":"preview","error":"Messaging provider is not configured"}
-    payload=json.dumps({"channel":channel,"recipient":recipient,"message":message,"metadata":metadata}).encode('utf-8');headers={"Content-Type":"application/json"}
+    payload={"channel":channel,"recipient":recipient,"message":message,"metadata":metadata};headers={"Content-Type":"application/json"}
     if MESSAGING_WEBHOOK_SECRET:headers['Authorization']='Bearer '+MESSAGING_WEBHOOK_SECRET
     try:
-        req=urllib.request.Request(require_http_endpoint(MESSAGING_WEBHOOK_ENDPOINT),data=payload,headers=headers,method='POST')
-        with urllib.request.urlopen(req,timeout=12) as response:
-            body=json.loads(response.read() or b'{}');return {"status":"sent","providerId":str(body.get('id','webhook'))}
-    except Exception as exc:return {"status":"failed","error":str(exc)}
+        body=resilience.post_json(require_http_endpoint(MESSAGING_WEBHOOK_ENDPOINT),payload,headers=headers,max_bytes=1_000_000,read_timeout_s=min(5.0,resilience.read_timeout()))
+        return {"status":"sent","providerId":str(body.get('id','webhook'))}
+    except Exception as exc:
+        print(json.dumps({"level":"warning","event":"messaging_provider_failed","requestId":request_id,"errorType":type(exc).__name__,"kind":getattr(exc,"kind",""),"message":str(exc)[:300]},ensure_ascii=False),flush=True)
+        return {"status":"failed","error":"Messaging provider is temporarily unavailable"}
 
 def process_scheduled_campaigns():
     now=int(time.time()*1000)
@@ -3468,7 +3514,7 @@ def process_scheduled_campaigns():
             with connect() as db:
                 for guest in guests:
                     recipient=guest.get('email') if campaign['channel']=='email' else guest.get('phone')
-                    result=send_message_provider(campaign['channel'],recipient,campaign['message'],{'guestName':guest.get('name'),'invitationId':campaign['invitation_id']})
+                    result=send_message_provider(campaign['channel'],recipient,campaign['message'],{'guestName':guest.get('name'),'invitationId':campaign['invitation_id']},request_id=f"campaign-{campaign['id']}")
                     state=result.get('status','failed');sent+=state=='sent';preview+=state in {'preview','queued'};failed+=state in {'failed','skipped'};stamp=int(time.time()*1000)
                     db.execute("INSERT INTO message_deliveries(id,campaign_id,guest_id,channel,status,provider_id,error,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",(str(uuid.uuid4()),campaign['id'],guest['id'],campaign['channel'],state,result.get('providerId',''),result.get('error',''),stamp,stamp))
                     if state=='sent':db.execute("UPDATE guests SET delivery_status='sent' WHERE id=?",(guest['id'],))
@@ -3864,7 +3910,42 @@ class Handler(SimpleHTTPRequestHandler):
             self.request_id=safe_request_id(self.headers.get("X-Request-ID"))
             # Sprint 6: one statement counter per request; end_headers() reads it.
             db_metrics.reset()
+            # Sprint 7: every request gets a bounded database budget.
+            set_deadline(DB_QUERY_BUDGET_SECONDS)
         return ok
+    def log_failure(self, event, exc, **fields):
+        """Log a failure with the Sprint 4 correlation ID, never its payload."""
+        payload = {"level": "warning", "event": event,
+                   "requestId": getattr(self, "request_id", ""),
+                   "errorType": type(exc).__name__, "message": str(exc)[:300]}
+        payload.update(fields)
+        try: print(json.dumps(payload, ensure_ascii=False), flush=True)
+        except Exception: pass
+    def error_response(self, status, message, code, headers=None):
+        """Send a JSON error only if the response has not started yet."""
+        if getattr(self, "_headers_buffer", None):
+            return False
+        return self.json(status, {"error": message, "code": code,
+                                  "requestId": getattr(self, "request_id", "")}, headers=headers)
+    def database_timeout(self, exc):
+        self.log_failure("request_database_timeout", exc, timeoutSeconds=DB_QUERY_BUDGET_SECONDS)
+        return self.error_response(504, "The request took too long to read from the database. Please retry.",
+                                   "database_timeout", {"Retry-After": "1", "Connection": "close"})
+    def insufficient_storage(self, exc):
+        self.log_failure("request_insufficient_storage", exc)
+        return self.error_response(507, "The server is out of storage space. Please retry later or contact the operator.",
+                                   "insufficient_storage", {"Retry-After": "30", "Connection": "close"})
+    def payload_too_large(self, exc):
+        return self.json(413, {"error": f"Request body exceeds the {MAX_REQUEST_BODY_BYTES} byte limit",
+                               "code": "payload_too_large", "limit": MAX_REQUEST_BODY_BYTES,
+                               "requestId": getattr(self, "request_id", "")}, headers={"Connection": "close"})
+    def handle_one_request(self):
+        # A query deadline raised inside a do_* method would otherwise escape
+        # the stdlib handler and reset the connection with no status line.
+        try: super().handle_one_request()
+        except QueryDeadlineExceeded as exc: self.database_timeout(exc)
+        except InsufficientStorage as exc: self.insufficient_storage(exc)
+        except PayloadTooLarge as exc: self.payload_too_large(exc)
     def log_message(self, format, *args):
         # Keep request handling independent from a terminal that may be closed.
         if JSON_LOGS:
@@ -3931,7 +4012,8 @@ class Handler(SimpleHTTPRequestHandler):
         # is rate-limited (60/min per IP) and never fails the request.
         self.send_header("Content-Security-Policy-Report-Only", csp + "; report-uri /api/csp-report; report-to csp")
         self.send_header("Report-To", CSP_REPORT_TO_HEADER)
-        super().end_headers()
+        try: super().end_headers()
+        finally: clear_deadline()
     def safe_write(self, body):
         try:
             self.wfile.write(body)
@@ -4003,6 +4085,20 @@ class Handler(SimpleHTTPRequestHandler):
         authority=self.request_authority()
         if authority.startswith("["):return authority[1:authority.find("]")]
         return authority.rsplit(":",1)[0] if authority.count(":")==1 else authority
+    def _enforce_declared_body_limit(self):
+        """Raise PayloadTooLarge when Content-Length exceeds the transport ceiling."""
+        lengths = self.headers.get_all("Content-Length") or []
+        if not lengths:
+            return
+        try:
+            declared = int(lengths[0])
+        except (TypeError, ValueError):
+            return
+        if declared <= MAX_REQUEST_BODY_BYTES:
+            return
+        self.log_failure("request_body_too_large", ValueError("declared content length exceeds limit"),
+                         declaredBytes=declared, limitBytes=MAX_REQUEST_BODY_BYTES)
+        raise PayloadTooLarge(declared)
     def guard_request_boundary(self):
         """Reject ambiguous request framing and untrusted Host headers.
 
@@ -4026,6 +4122,7 @@ class Handler(SimpleHTTPRequestHandler):
             self.json(400,{"error":"Unsupported request transfer encoding","code":"request_framing_rejected"});return False
         if len(lengths)>1:
             self.json(400,{"error":"Ambiguous request length","code":"request_framing_rejected"});return False
+        self._enforce_declared_body_limit()
         authority=self.request_authority();host=self.request_host()
         if self.request_version=="HTTP/1.1" and not authority:
             self.json(400,{"error":"A valid Host header is required","code":"host_required"});return False
@@ -4297,14 +4394,14 @@ class Handler(SimpleHTTPRequestHandler):
     def bot_protection_ok(self, action, token=""):
         if not BOT_PROTECTION_ENDPOINT:return True
         if not token:return False
-        payload=json.dumps({"token":str(token)[:4000],"action":action,"ip":self.client_ip()}).encode()
         headers={"Content-Type":"application/json","User-Agent":"E-invitation-website/1.0"}
         if BOT_PROTECTION_SECRET:headers["Authorization"]=f"Bearer {BOT_PROTECTION_SECRET}"
         try:
-            req=urllib.request.Request(require_http_endpoint(BOT_PROTECTION_ENDPOINT),data=payload,headers=headers,method="POST")
-            with urllib.request.urlopen(req,timeout=5) as response:result=json.loads(response.read(100000) or b"{}")
+            result=resilience.post_json(require_http_endpoint(BOT_PROTECTION_ENDPOINT),{"token":str(token)[:4000],"action":action,"ip":self.client_ip()},headers=headers,max_bytes=100_000,read_timeout_s=min(2.0,resilience.read_timeout()))
             return bool(result.get("success") or result.get("ok"))
-        except Exception:return False
+        except Exception as exc:
+            self.log_failure("bot_protection_unavailable", exc)
+            return False
     def require_verified_for_sensitive_action(self, user, action="this action"):
         if user and not bool(user["email_verified"]):
             self.json(403,{"error":f"Verify your email before {action}","code":"email_verification_required"});return False
@@ -5772,12 +5869,11 @@ class Handler(SimpleHTTPRequestHandler):
         if task not in allowed:return self.json(400,{"error":"Unsupported assistant task"})
         fallback_message=""
         if AI_ENDPOINT:
-            payload=json.dumps({"task":task,"prompt":prompt,"context":context,"model":AI_MODEL or None},ensure_ascii=False).encode()
+            payload={"task":task,"prompt":prompt,"context":context,"model":AI_MODEL or None}
             headers={"Content-Type":"application/json","User-Agent":"E-invitation-website/1.0"}
             if AI_API_KEY:headers["Authorization"]=f"Bearer {AI_API_KEY}"
             try:
-                request=urllib.request.Request(require_http_endpoint(AI_ENDPOINT),data=payload,headers=headers,method="POST")
-                with urllib.request.urlopen(request,timeout=AI_TIMEOUT) as response:result=json.loads(response.read(2_000_000) or b"{}")
+                result=resilience.post_json(require_http_endpoint(AI_ENDPOINT),payload,headers=headers,max_bytes=2_000_000,read_timeout_s=float(AI_TIMEOUT))
                 if not isinstance(result,dict):raise ValueError("Provider returned an invalid response shape")
                 output=result.get("text") or result.get("output") or result.get("output_text")
                 if not output and isinstance(result.get("choices"),list) and result["choices"]:
@@ -5787,7 +5883,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.json(200,{"text":output.strip()[:50_000],"provider":"external","providerMode":"connected"})
             except Exception as exc:
                 fallback_message="Connected provider was unavailable; a deterministic offline template was used."
-                if JSON_LOGS:print(json.dumps({"level":"warning","event":"ai_provider_failed","errorType":type(exc).__name__},ensure_ascii=False),flush=True)
+                self.log_failure("ai_provider_failed", exc)
         return self.json(200,{"text":self.local_ai_response(task,prompt,context),"provider":"template","providerMode":"fallback" if fallback_message else "offline",**({"providerMessage":fallback_message} if fallback_message else {})})
 
     def billing_status(self):
@@ -5817,34 +5913,30 @@ class Handler(SimpleHTTPRequestHandler):
         amount_minor=BILLING_PLAN_PRICES[plan]
         if amount_minor<=0:return self.json(503,{"error":"The selected plan does not have a configured price"})
         base=self.origin_base().rstrip("/")
-        payload=json.dumps({
+        payload={
             "orderId":order_id,"userId":user["id"],"email":user["email"],"plan":plan,
             "amountMinor":amount_minor,"currency":BILLING_CURRENCY,"paymentMethods":["card"],
             "returnUrl":base+"/billing.html?checkout=success&order="+quote(order_id),
             "cancelUrl":base+"/billing.html?checkout=cancelled&order="+quote(order_id),
             "webhookUrl":base+"/api/billing/webhook",
-        },ensure_ascii=False).encode()
+        }
         headers={"Content-Type":"application/json","User-Agent":"E-invitation-website/1.0"}
         if BILLING_API_KEY:headers["Authorization"]=f"Bearer {BILLING_API_KEY}"
         with connect() as db:
             db.execute("INSERT INTO billing_orders(id,user_id,plan,status,provider,amount_minor,currency,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",(order_id,user["id"],plan,"pending",BILLING_PROVIDER_NAME,amount_minor,BILLING_CURRENCY,now,now))
         try:
-            request=urllib.request.Request(require_http_endpoint(BILLING_CHECKOUT_ENDPOINT),data=payload,headers=headers,method="POST")
-            with urllib.request.urlopen(request,timeout=20) as response:result=json.loads(response.read(1_000_000) or b"{}")
+            result=resilience.post_json(require_http_endpoint(BILLING_CHECKOUT_ENDPOINT),payload,headers=headers,max_bytes=1_000_000,read_timeout_s=10.0)
             url=str(result.get("url") or result.get("checkoutUrl") or result.get("checkout_url") or "")
             if not re.match(r"^https://",url,re.I):raise ValueError("Billing provider returned an invalid checkout URL")
             provider_session=str(result.get("sessionId") or result.get("session_id") or "")[:300]
             with connect() as db:db.execute("UPDATE billing_orders SET provider_session_id=?,updated_at=? WHERE id=?",(provider_session,int(time.time()*1000),order_id))
             self.audit("billing.checkout_started","billing_order",order_id,{"plan":plan,"amountMinor":amount_minor,"currency":BILLING_CURRENCY})
             return self.json(200,{"url":url,"plan":plan,"orderId":order_id})
-        except urllib.error.HTTPError as exc:
-            with connect() as db:db.execute("UPDATE billing_orders SET status='failed',updated_at=? WHERE id=?",(int(time.time()*1000),order_id))
-            try:message=json.loads(exc.read() or b"{}").get("error")
-            except Exception:message=None
-            return self.json(502,{"error":message or "Billing provider checkout failed"})
         except Exception as exc:
             with connect() as db:db.execute("UPDATE billing_orders SET status='failed',updated_at=? WHERE id=?",(int(time.time()*1000),order_id))
-            if JSON_LOGS:print(json.dumps({"level":"warning","event":"billing_checkout_failed","orderId":order_id,"message":str(exc)[:300]}),flush=True)
+            self.log_failure("billing_checkout_failed", exc, orderId=order_id)
+            if getattr(exc,"kind","") in {"timeout","circuit_open"}:
+                return self.json(504,{"error":"The payment provider timed out; no charge was made. Please retry.","code":"billing_provider_timeout"},headers={"Retry-After":"2"})
             return self.json(502,{"error":"Billing provider checkout failed"})
 
     def billing_webhook(self):
@@ -8544,7 +8636,7 @@ class Handler(SimpleHTTPRequestHandler):
         with connect() as db:
             for guest in guests:
                 recipient=guest["email"] if campaign["channel"]=='email' else guest["phone"]
-                result=send_message_provider(campaign["channel"],recipient,campaign["message"],{"guestName":guest["name"],"invitationId":invite_id})
+                result=send_message_provider(campaign["channel"],recipient,campaign["message"],{"guestName":guest["name"],"invitationId":invite_id},request_id=getattr(self,"request_id",""))
                 status=result.get("status","failed");sent+=status=='sent';preview+=status in {'preview','queued'};failed+=status in {'failed','skipped'};did=str(uuid.uuid4());now=int(time.time()*1000)
                 db.execute("INSERT INTO message_deliveries(id,campaign_id,guest_id,channel,status,provider_id,error,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",(did,campaign_id,guest["id"],campaign["channel"],status,result.get("providerId",''),result.get("error",''),now,now))
                 if status=='sent':db.execute("UPDATE guests SET delivery_status='sent' WHERE id=?",(guest["id"],))
@@ -10259,6 +10351,7 @@ class Handler(SimpleHTTPRequestHandler):
         size=int(self.headers.get("Content-Length","0") or 0)
         if size<=0:raise ValueError("The selected font is empty")
         if size>MAX_CUSTOM_FONT_SOURCE_BYTES:raise ValueError("Custom fonts must be 8 MB or smaller")
+        ensure_disk_space(UPLOADS,size)
         if str(self.headers.get("X-Font-License-Acknowledged","")).strip().lower() not in {"1","true","yes"}:raise ValueError("Confirm that you have permission to use and publish this font")
         raw=self.rfile.read(size)
         if len(raw)!=size:raise ValueError("Font upload was incomplete")
@@ -10288,6 +10381,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not owner:return self.json(404,{"error":"Invitation not found"})
         mime=str(self.headers.get("Content-Type","application/octet-stream")).split(";",1)[0].strip().lower();size=int(self.headers.get("Content-Length","0") or 0)
         validate_material_request(mime,size)
+        ensure_disk_space(UPLOADS,size)
         raw=self.rfile.read(size)
         if len(raw)!=size:raise ValueError("Material upload was incomplete")
         name=unquote(str(self.headers.get("X-File-Name","upload")))[:180] or "upload";folder=sanitize_material_folder(unquote(str(self.headers.get("X-Material-Folder",""))));import_job_id=str(self.headers.get("X-Material-Import-Job","") or "")[:120];aid=str(uuid.uuid4())
@@ -10309,7 +10403,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.can_edit_invitation(db,invite_id,user["id"]):return self.json(404,{"error":"Invitation not found"})
             owner=self.invitation_owner_user(db,invite_id)
         if not owner:return self.json(404,{"error":"Invitation not found"})
-        data=self.body(80_000_000);raw=base64.b64decode(data["base64"],validate=True);mime=str(data.get("mime","application/octet-stream")).lower();validate_material_request(mime,len(raw))
+        data=self.body(80_000_000);raw=base64.b64decode(data["base64"],validate=True);mime=str(data.get("mime","application/octet-stream")).lower();validate_material_request(mime,len(raw));ensure_disk_space(UPLOADS,len(raw))
         aid=str(uuid.uuid4());digest=hashlib.sha256(raw).hexdigest()
         with connect() as db:existing=db.execute("SELECT id FROM stored_objects WHERE owner_id=? AND sha256=? AND size=? AND mime=? AND processing_state='ready' LIMIT 1",(owner["id"],digest,len(raw),mime)).fetchone()
         if not existing and not self.require_plan_capacity(owner,"storageBytes",len(raw)):return
@@ -11776,12 +11870,9 @@ class Handler(SimpleHTTPRequestHandler):
         if not venue:
             return self.json(404, {"error": "No venue set for this invitation", "code": "no_venue"})
         # Geocode via OpenStreetMap Nominatim (server-side, cached)
-        import urllib.request as _urq
         try:
             url = f"https://nominatim.openstreetmap.org/search?q={quote(venue)}&format=json&limit=1"
-            req = _urq.Request(url, headers={"User-Agent": "eInvite/1.0 (geocoding)"})
-            with _urq.urlopen(req, timeout=5) as r:
-                results = json.loads(r.read())
+            results = resilience.get_json(url, headers={"User-Agent": "eInvite/1.0 (geocoding)"}, max_bytes=1_000_000, read_timeout_s=5.0)
             if not results:
                 return self.json(404, {"error": "Venue could not be geocoded", "code": "geocode_failed"})
             lat = float(results[0]["lat"]); lng = float(results[0]["lon"])
@@ -11790,7 +11881,8 @@ class Handler(SimpleHTTPRequestHandler):
                 db.execute("UPDATE invitations SET venue_lat=?, venue_lng=?, venue_geocoded_at=? WHERE id=?", (lat, lng, int(time.time()*1000), invite_id))
             return self.json(200, {"lat": lat, "lng": lng, "displayName": display, "cached": False})
         except Exception as exc:
-            return self.json(502, {"error": f"Geocoding service unavailable: {exc}", "code": "geocode_unavailable"})
+            self.log_failure("geocode_failed", exc, invitationId=invite_id)
+            return self.json(outbound_error_status(exc), {"error": "Geocoding service is temporarily unavailable", "code": "geocode_unavailable", "requestId": getattr(self, "request_id", "")})
 
     # ─── V54.33 (phase-4a — §4.4) Plugin marketplace ────────────────────────
     def marketplace_submit(self):
@@ -11948,21 +12040,18 @@ class Handler(SimpleHTTPRequestHandler):
         if not (client_id and client_secret):
             return self.json(503, {"error": "Canva OAuth not configured (EINVITE_CANVA_CLIENT_ID + EINVITE_CANVA_CLIENT_SECRET required)", "code": "canva_not_configured"})
         # Exchange code for access token via Canva Connect API
-        import urllib.request as _urq
         try:
-            token_req = _urq.Request(
+            token_data = resilience.post_json(
                 "https://api.canva.com/rest/v1/oauth/token",
-                data=json.dumps({
+                {
                     "grant_type": "authorization_code",
                     "code": code,
                     "client_id": client_id,
                     "client_secret": client_secret,
-                }).encode(),
-                method="POST",
-                headers={"Content-Type": "application/json"},
+                },
+                max_bytes=1_000_000,
+                read_timeout_s=10.0,
             )
-            with _urq.urlopen(token_req, timeout=10) as r:
-                token_data = json.loads(r.read())
             access_token = str(token_data.get("access_token") or "")[:2000]
             if not access_token:
                 return self.json(502, {"error": "Canva returned no access token", "code": "no_access_token"})
@@ -11973,7 +12062,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.audit("canva.oauth_connected", "user", user["id"], {})
             return self.json(200, {"ok": True, "connected": True})
         except Exception as exc:
-            return self.json(502, {"error": f"Canva OAuth exchange failed: {exc}", "code": "oauth_exchange_failed"})
+            self.log_failure("canva_oauth_exchange_failed", exc, userId=user["id"])
+            return self.json(outbound_error_status(exc), {"error": "Canva OAuth exchange failed", "code": "oauth_exchange_failed", "requestId": getattr(self, "request_id", "")})
 
     def canva_import(self):
         """POST /api/canva/import — import a Canva design URL or uploaded PNG/PDF.
@@ -12302,6 +12392,18 @@ def create_app():
                 [("Content-Type", "text/plain; charset=utf-8")],
             )
             return [b"Invalid Content-Length"]
+
+        if content_length > MAX_REQUEST_BODY_BYTES:
+            request_id = safe_request_id(environ.get("HTTP_X_REQUEST_ID")).replace("\r", "").replace("\n", "")
+            payload = json.dumps({
+                "error": f"Request body exceeds the {MAX_REQUEST_BODY_BYTES} byte limit",
+                "code": "payload_too_large", "limit": MAX_REQUEST_BODY_BYTES, "requestId": request_id,
+            }, ensure_ascii=False).encode()
+            _start_response("413 Payload Too Large", [
+                ("Content-Type", "application/json; charset=utf-8"),
+                ("Content-Length", str(len(payload))), ("X-Request-ID", request_id),
+            ])
+            return [payload]
 
         body = (
             environ["wsgi.input"].read(content_length)
