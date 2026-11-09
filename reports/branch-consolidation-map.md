@@ -5,6 +5,9 @@
 
 **Policy:** no merge into `main`; no force-push; no branch deletion until merge confirmation.
 
+**Draft PR:** [#28](https://github.com/NgethSereyboth/online-invitation-platform/pull/28)
+against `main`.
+
 ## Base
 
 | Ref | SHA | State |

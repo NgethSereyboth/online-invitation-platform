@@ -75,8 +75,10 @@ conditions (quiet-host layout timing, PostgreSQL runtime verification). The PR r
 - [ ] Reviewer reruns layout on an idle host.
 - [ ] Reviewer verifies PostgreSQL DDL/index behavior in a disposable instance.
 - [ ] Reviewer confirms no `main` changes and authorizes merge.
-- [ ] Open draft PR against `main` with title
+- [x] Draft PR [#28](https://github.com/NgethSereyboth/online-invitation-platform/pull/28)
+  opened against `main` with title
   `release: consolidated security, QA, and improvement branches`.
+- [ ] Obtain owner/reviewer approval; draft status is not an approval.
 
 **Merge recommendation:** keep this PR in draft until the owner resolves the `!important` pin and
 the layout timing row is reproduced or cleared on an idle host. Structural and test evidence is
