@@ -181,7 +181,7 @@ def main() -> int:
     assert all(marker in dockerignore for marker in (".env.*", "!.env.production.example", "*.sqlite3", "*.log"))
     gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
     assert all(marker in gitignore for marker in (".env.*", "!.env.production.example", "*.pem", "*.key"))
-    checklist = (ROOT / "docs" / "PRODUCTION_LAUNCH_CHECKLIST.md").read_text(encoding="utf-8")
+    checklist = (ROOT / "docs" / "guides" / "PRODUCTION_LAUNCH_CHECKLIST.md").read_text(encoding="utf-8")
     assert all(marker in checklist for marker in ("restore drill", "/api/health/ready", "rollback", "private bucket"))
     test_requirements = (ROOT / "docs" / "requirements-test.txt").read_text(encoding="utf-8")
     assert "playwright==1.61.0" in test_requirements, "Browser release evidence must use the audited toolchain"

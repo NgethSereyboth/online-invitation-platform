@@ -161,6 +161,7 @@ MAX_BACKOFF_S = 30.0
 #: Delivery limits from the work order (D-6): a slow or chatty receiver must not
 #: hold the worker, and a huge response body must not be buffered.
 DEFAULT_TIMEOUT_S = 5.0
+DEFAULT_CONNECT_TIMEOUT_S = 2.0
 MAX_RESPONSE_BYTES = 64 * 1024
 #: Backoff between queue attempts is 1, 2, 4, 8 s (the fifth attempt is final).
 QUEUE_BACKOFF_BASE_S = 1.0
@@ -251,7 +252,8 @@ def _connect_pinned(scheme: str, host: str, port: int, ip: str, timeout: float) 
         raise
 
 
-def _post_pinned(destination: dict, body: bytes, headers: dict, timeout: float) -> int:
+def _post_pinned(destination: dict, body: bytes, headers: dict, timeout: float,
+                 connect_timeout: Optional[float] = None) -> int:
     """POST once to the pinned address and return the status. No redirects.
 
     ``http.client`` never follows ``3xx`` responses — it returns the status — so a
@@ -261,8 +263,10 @@ def _post_pinned(destination: dict, body: bytes, headers: dict, timeout: float) 
     host, port = destination["host"], destination["port"]
     ip = destination["ips"][0]
     path = destination["path"] + ("?" + destination["query"] if destination.get("query") else "")
-    connection = http.client.HTTPConnection(host, port, timeout=timeout)
-    connection.sock = _connect_pinned(destination["scheme"], host, port, ip, timeout)
+    connect_timeout = min(float(timeout), float(connect_timeout or timeout))
+    connection = http.client.HTTPConnection(host, port, timeout=connect_timeout)
+    connection.sock = _connect_pinned(destination["scheme"], host, port, ip, connect_timeout)
+    connection.sock.settimeout(float(timeout))  # read deadline, independent of connect
     try:
         default_port = 443 if destination["scheme"] == "https" else 80
         connection.putrequest("POST", path, skip_host=True, skip_accept_encoding=True)
@@ -283,6 +287,7 @@ def deliver(url: str, body: bytes, secret: str, *,
             timeout: float = DEFAULT_TIMEOUT_S,
             backoff_base: float = DEFAULT_BACKOFF_BASE_S,
             allow_private: bool = False,
+            connect_timeout: Optional[float] = DEFAULT_CONNECT_TIMEOUT_S,
             sleep=None,
             opener=None,
             timestamp_ms: Optional[int] = None) -> dict:
@@ -328,7 +333,7 @@ def deliver(url: str, body: bytes, secret: str, *,
                     except Exception:
                         pass
             else:
-                status = _post_pinned(destination, body, headers, timeout)
+                status = _post_pinned(destination, body, headers, timeout, connect_timeout)
             if status not in RETRYABLE_STATUSES:
                 return {
                     "ok": 200 <= status < 300,

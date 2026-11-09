@@ -155,7 +155,7 @@ until that branch is reviewed and merged.
 ## Next candidates
 
 1. Reconcile PR #27, then extend the query-plan matrix on top of its rewrite.
-2. Reduce the 213-entry complexity baseline by a bounded, reviewed set.
+2. Reduce the 209-entry complexity baseline by a bounded, reviewed set.
 3. Add the fixed-seed full-page dashboard fixture once the QA harness is merged.
 4. Add a staging-only HSTS/CSP assertion to the existing authenticated DAST
    workflow, with an isolated origin and credentials.
