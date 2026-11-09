@@ -76,11 +76,11 @@ def test_every_template_pack_asset_is_served_and_cached():
 
 
 def test_cache_header_is_scoped_to_the_pack():
-    """The new header is scoped to /assets/template-pack/ only."""
+    """Stable-name assets get the one-hour policy; pack artwork gets the day policy."""
     with app_server() as (_process, base, _data):
         status, headers, _body = fetch(base, "/assets/fonts/noto-serif-latin-400.woff2")
         assert status == 200
-        assert "cache-control" not in headers, headers.get("cache-control")
+        assert headers.get("cache-control") == "public, max-age=3600, must-revalidate", headers.get("cache-control")
 
 
 def test_asset_record_is_current():

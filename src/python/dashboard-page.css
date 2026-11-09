@@ -150,3 +150,12 @@ body[data-page="dashboard"] .dashboard-empty-preview strong { font-size: var(--f
   .invite-overflow__toggle,
   .invite-overflow__menu button { min-width: 44px; min-height: 44px; }
 }
+
+/* A11y: the create-invitation gallery must keep every action reachable and
+   legible. The live thumbnail uses a decorative accent that is too light on
+   pale card grounds, so blend it with the palette's body text; keep the cards
+   tall enough that the preview action never escapes the clipped card. */
+.template-choice { min-height: 320px; }
+.template-choice .template-select-action { height: auto !important; }
+.template-choice .preview-card-btn { min-height: 36px !important; height: 36px !important; max-height: 36px !important; }
+.template-live-thumb .mini-title { color: color-mix(in srgb, var(--thumb-heading, var(--thumb-accent, #9d4555)) 60%, var(--thumb-text, #342c26)); }

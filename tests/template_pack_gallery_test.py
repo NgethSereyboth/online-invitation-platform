@@ -73,11 +73,16 @@ def test_pack_gallery_lists_filters_and_opens_a_design():
                     secondary: card.querySelector('.pack-name-secondary').textContent.trim(),
                     meta: card.querySelector('.pack-meta').textContent.trim(),
                     label: card.querySelector('.pack-card-open').getAttribute('aria-label'),
+                    text: card.querySelector('.pack-card-open').innerText.trim(),
                 })""",
             )
             assert first["primary"] and first["secondary"] and first["primary"] != first["secondary"], first
             assert "A5 portrait" in first["meta"] and "2 pages" in first["meta"], first
-            assert first["label"].startswith("Use "), first
+            # The visible card text is the accessible name: the old "Use <name>"
+            # aria-label overrode it (WCAG 2.5.3 label-in-name), so it was removed.
+            assert first["label"] is None, first
+            assert first["primary"] in first["text"], first
+            page.get_by_role("button", name=first["primary"], exact=False).first.wait_for()
 
             # Filters: the studio toolbar owns search and category (PW-7) and the
             # gallery follows it through `einvite:studio-filter`. Wedding is the
@@ -120,7 +125,9 @@ def test_pack_gallery_lists_filters_and_opens_a_design():
             page.wait_for_selector("dialog.ei-dialog[open]", timeout=20000)
             page.locator("dialog.ei-dialog input").fill("Pack gallery smoke")
             page.locator("dialog.ei-dialog [data-confirm]").click()
-            page.wait_for_url("**/editor", timeout=30000)
+            # The editor URL is the success condition; its long-lived media can keep the
+            # window load event pending, so do not gate the smoke on `load`.
+            page.wait_for_url("**/editor", wait_until="domcontentloaded", timeout=30000)
             page.wait_for_function(
                 "() => document.documentElement.dataset.editorReady === 'true'",
                 timeout=45000,
