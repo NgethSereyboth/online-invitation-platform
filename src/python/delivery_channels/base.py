@@ -43,12 +43,15 @@ class SendResult:
             not available or when the send failed.
         error: Human-readable error message. Empty string on success.
         raw: Optional provider response dict kept for audit logging.
+        retryable: True when a transient transport/5xx failure means the host
+            may hand this message to the durable outbound retry queue.
     """
     channel: str
     status: str
     provider_message_id: str = ""
     error: str = ""
     raw: Optional[Dict[str, Any]] = None
+    retryable: bool = False
 
     def __post_init__(self):
         if self.status not in VALID_STATUSES:
@@ -176,7 +179,10 @@ def _post_json(url: str, payload: Dict[str, Any], headers: Optional[Dict[str, st
             parsed = {"_raw": raw.decode("utf-8", errors="replace")}
         if response.status >= 400:
             parsed = {**(parsed if isinstance(parsed, dict) else {"_raw": parsed}),
-                      "_error": f"HTTP {response.status}", "_status": response.status}
+                      "_error": f"HTTP {response.status}", "_status": response.status,
+                      "_retryable": False}
         return parsed
     except Exception as exc:
-        return {"_error": f"{type(exc).__name__}: {exc}", "_kind": getattr(exc, "kind", "transport")}
+        return {"_error": f"{type(exc).__name__}: {exc}",
+                "_kind": getattr(exc, "kind", "transport"),
+                "_retryable": bool(getattr(exc, "retryable", False))}

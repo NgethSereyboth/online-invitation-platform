@@ -38,6 +38,9 @@ import socket
 import ssl
 import threading
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass
 from typing import Mapping, Optional
 from urllib.parse import urlsplit
@@ -345,3 +348,123 @@ def post_json(url: str, payload, **kwargs):
     response = request("POST", url, body=body, headers=headers, **kwargs)
     _raise_for_http_error(response.status)
     return response.json()
+
+
+def _read_wire_response(response, limit: int, host: str) -> bytes:
+    """Read a urllib response with the same body cap as :func:`request`.
+
+    ``urllib`` is retained for form-encoded providers because Twilio-compatible
+    gateways expose the canonical wire format that way. The socket deadline is
+    tightened to the read budget after the headers arrive.
+    """
+    try:
+        raw = response.read(limit + 1)
+    except TypeError:  # small test doubles implement read() without a size
+        raw = response.read()
+    if len(raw) > limit:
+        raise OutboundError(
+            f"{host} response exceeded the {limit} byte limit",
+            kind="too_large",
+            status=int(getattr(response, "status", 0) or 0),
+        )
+    return bytes(raw or b"")
+
+
+def _form_failure(message: str, kind: str, status: Optional[int] = None) -> dict:
+    result = {"_error": message, "_kind": kind, "_retryable": True}
+    if status is not None:
+        result["_status"] = status
+    return result
+
+
+def _form_transport(
+    url: str,
+    body: bytes,
+    headers: dict,
+    connect_s: float,
+    read_s: float,
+    max_bytes: int,
+    host: str,
+    key: str,
+    breaker: CircuitBreaker,
+):
+    """Run the urllib exchange and map transport errors to retry metadata."""
+    try:
+        wire = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        with urllib.request.urlopen(wire, timeout=connect_s) as response:
+            try:  # separate read deadline after DNS/TCP/TLS and headers
+                response.fp.raw._sock.settimeout(read_s)
+            except Exception:
+                pass
+            status = int(getattr(response, "status", 200) or 200)
+            return status, _read_wire_response(response, int(max_bytes), host), None
+    except urllib.error.HTTPError as exc:
+        try:
+            raw = _read_wire_response(exc, int(max_bytes), host)
+        except Exception:
+            raw = b""
+        return int(exc.code), raw, None
+    except (socket.timeout, TimeoutError):
+        breaker.record_failure(key)
+        return 0, b"", _form_failure(f"{host} timed out", "timeout")
+    except (OSError, http.client.HTTPException) as exc:
+        breaker.record_failure(key)
+        return 0, b"", _form_failure(
+            f"{host} request failed ({type(exc).__name__})", "transport"
+        )
+
+
+def _form_response(status: int, raw: bytes) -> dict:
+    try:
+        parsed = json.loads(raw or b"{}")
+    except (TypeError, ValueError):
+        parsed = {"_raw": raw.decode("utf-8", errors="replace")}
+    if not isinstance(parsed, dict):
+        parsed = {"_raw": parsed}
+    if status >= 400:
+        parsed = {**parsed, "_error": f"HTTP {status}", "_status": status, "_retryable": False}
+    return parsed
+
+
+def post_form(
+    url: str,
+    payload,
+    *,
+    headers: Optional[Mapping[str, str]] = None,
+    max_bytes: int = DEFAULT_MAX_BYTES,
+    connect_timeout_s: Optional[float] = None,
+    read_timeout_s: Optional[float] = None,
+    breaker_key: Optional[str] = None,
+    breaker_instance: Optional[CircuitBreaker] = None,
+):
+    """POST a form body through the shared timeout and breaker policy.
+
+    This is the form-encoded sibling of :func:`post_json` for Twilio-compatible
+    gateways. It uses the configured connect/read deadlines and the per-host
+    breaker; the response body is capped. A 5xx or transport error returns
+    ``_retryable=True`` so the channel can hand the message to the durable
+    retry queue. A 4xx is final and is returned as an error dictionary rather
+    than opening the breaker.
+    """
+    _scheme, host, port, _path = _parse_target(url)
+    key, active_breaker = _resolve_breaker(host, port, breaker_key, breaker_instance)
+    if not active_breaker.allow(key):
+        return _form_failure(f"Circuit open for {host}; retry later", "circuit_open")
+    connect_s, read_s = _resolve_timeouts(connect_timeout_s, read_timeout_s)
+    body = urllib.parse.urlencode(payload or {}).encode("utf-8")
+    request_headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+    }
+    request_headers.update(dict(headers or {}))
+    status, raw, error = _form_transport(
+        url, body, request_headers, connect_s, read_s, int(max_bytes),
+        host, key, active_breaker,
+    )
+    if error is not None:
+        return error
+    if status >= 500:
+        active_breaker.record_failure(key)
+        return _form_failure(f"HTTP {status}", "server", status)
+    active_breaker.record_success(key)
+    return _form_response(status, raw)

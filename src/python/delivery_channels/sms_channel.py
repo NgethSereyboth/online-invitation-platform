@@ -41,43 +41,24 @@ class SmsChannel(DeliveryChannel):
     def _send(self, invitation_id: str, recipient: str, message: str,
               channel_config: Dict[str, Any]) -> SendResult:
         url = f"{self.api_origin.rstrip('/')}/Accounts/{self.account_sid}/Messages.json"
-        # URL-encoded form body — Twilio accepts JSON too, but form is the
-        # canonical Twilio shape and avoids nested-JSON quirks.
-        from urllib.parse import urlencode
-        body = urlencode({
-            "To": recipient,
-            "From": channel_config.get("from") or self.from_number,
-            "Body": message[:1600],  # Twilio max per segment is 1600 chars
-        })
         auth = base64.b64encode(f"{self.account_sid}:{self.auth_token}".encode()).decode()
-        # Use _post_json's machinery but with a form body — implement inline.
-        import urllib.request, urllib.error
-        req = urllib.request.Request(_require_http_url(url), data=body.encode("utf-8"),
-                                     headers={
-                                         "Authorization": f"Basic {auth}",
-                                         "Content-Type": "application/x-www-form-urlencoded",
-                                         "Accept": "application/json",
-                                     }, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                payload = response.read() or b"{}"
-                try:
-                    data = __import__("json").loads(payload)
-                except Exception:
-                    data = {"_raw": payload.decode("utf-8", errors="replace")}
-        except urllib.error.HTTPError as exc:
-            err_body = ""
-            try:
-                err_body = exc.read().decode("utf-8", errors="replace")[:500]
-            except Exception:
-                pass
-            return SendResult(channel=self.name, status="failed",
-                              error=f"HTTP {exc.code}: {err_body}")
-        except Exception as exc:
-            return SendResult(channel=self.name, status="failed",
-                              error=f"{type(exc).__name__}: {exc}")
+        # Twilio's canonical wire format is form-encoded. The shared resilience
+        # form helper supplies configured connect/read deadlines, a bounded
+        # response and the per-host breaker while preserving that wire shape.
+        from core import resilience
+        data = resilience.post_form(
+            _require_http_url(url),
+            {
+                "To": recipient,
+                "From": channel_config.get("from") or self.from_number,
+                "Body": message[:1600],
+            },
+            headers={"Authorization": f"Basic {auth}"},
+            max_bytes=1_000_000,
+        )
         if data.get("_error"):
-            return SendResult(channel=self.name, status="failed", error=data["_error"])
+            return SendResult(channel=self.name, status="failed", error=data["_error"],
+                              retryable=bool(data.get("_retryable")))
         if data.get("error_code") or data.get("status") == "failed":
             return SendResult(channel=self.name, status="failed",
                               error=str(data.get("error_message") or data))

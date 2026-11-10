@@ -2,8 +2,9 @@ from __future__ import annotations
 import json,time,uuid,threading,queue
 
 class JobQueue:
+    _STOP=object()
     def __init__(self,connect,workers=2,audit=None,poll_interval=.75):
-        self.connect=connect;self.workers=max(0,min(32,int(workers)));self.audit=audit;self.handlers={};self.queue=queue.Queue(maxsize=10000);self.threads=[];self.stopping=False;self.poll_interval=max(.1,min(10,float(poll_interval)));self._start()
+        self.connect=connect;self.workers=max(0,min(32,int(workers)));self.audit=audit;self.handlers={};self.queue=queue.Queue(maxsize=10000);self.threads=[];self.stopping=False;self.poll_interval=max(.1,min(10,float(poll_interval)));self.last_error='';self._start()
     def _start(self):
         for index in range(self.workers):
             thread=threading.Thread(target=self._worker,name=f'einvite-worker-{index+1}',daemon=True);thread.start();self.threads.append(thread)
@@ -29,9 +30,31 @@ class JobQueue:
         while not self.stopping:
             job_id=None
             try:job_id=self.queue.get(timeout=self.poll_interval)
-            except queue.Empty:job_id=self._claim_pending()
+            except queue.Empty:
+                # The old loop claimed a row even after shutdown began. On a
+                # temporary data directory that race queried a deleted SQLite
+                # file and raised "no such table: platform_jobs" from the
+                # daemon thread. Check the stop flag before touching the DB.
+                if self.stopping:break
+                try:job_id=self._claim_pending()
+                except Exception as exc:
+                    if self.stopping:break
+                    self.last_error=f'{type(exc).__name__}: {exc}'
+                    print(__import__('json').dumps({'level':'warning','event':'platform_job_worker_failed','message':self.last_error[:300]},ensure_ascii=False),flush=True)
+                    time.sleep(self.poll_interval)
+                    continue
+            if job_id is self._STOP:
+                try:self.queue.task_done()
+                except ValueError:pass
+                break
             if not job_id:continue
             try:self._run(job_id)
+            except Exception as exc:
+                # A transient DB error must not kill the worker thread. Log it
+                # and keep the loop alive unless shutdown was requested.
+                if self.stopping:break
+                self.last_error=f'{type(exc).__name__}: {exc}'
+                print(__import__('json').dumps({'level':'warning','event':'platform_job_worker_failed','message':self.last_error[:300]},ensure_ascii=False),flush=True)
             finally:
                 try:self.queue.task_done()
                 except ValueError:pass
@@ -69,7 +92,15 @@ class JobQueue:
         now=int(time.time()*1000)
         with self.connect() as db:db.execute("UPDATE platform_jobs SET status=?,progress=?,result_json=?,error_text=?,completed_at=?,updated_at=? WHERE id=?",(status,1 if status=='completed' else 0,json.dumps(result,ensure_ascii=False,separators=(',',':'))[:1_000_000],str(error)[:2000],now,now,job_id))
     def shutdown(self,timeout=10):
+        """Stop new claims, wake every worker and join the threads.
+
+        Pending rows stay queued in SQLite for the next process; only in-flight
+        work gets the remaining ``timeout``. Waking the workers matters because
+        each one may be blocked in ``queue.get`` for up to ``poll_interval``.
+        """
         self.stopping=True;deadline=time.time()+max(0,float(timeout))
-        while self.queue.unfinished_tasks and time.time()<deadline:time.sleep(.05)
+        for _ in self.threads:
+            try:self.queue.put_nowait(self._STOP)
+            except queue.Full:pass
         for thread in self.threads:thread.join(max(0,deadline-time.time()))
         return not any(thread.is_alive() for thread in self.threads)

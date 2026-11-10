@@ -13,12 +13,10 @@ Recipients are numeric chat ids (``channel_config["chat_id"]`` overrides
 ``<a href="...">`` links to the public invitation URL.
 """
 from __future__ import annotations
-import json
-import urllib.request
-import urllib.error
 from typing import Any, Dict
 
-from .base import DeliveryChannel, SendResult, _env, _require_http_url
+from core import resilience
+from .base import DeliveryChannel, SendResult, _env, _require_http_url, _post_json
 
 
 class TelegramChannel(DeliveryChannel):
@@ -47,30 +45,11 @@ class TelegramChannel(DeliveryChannel):
             "parse_mode": str(channel_config.get("parse_mode") or "HTML"),
             "disable_web_page_preview": bool(channel_config.get("disable_preview", False)),
         }
-        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(_require_http_url(url), data=data,
-                                     headers={"Content-Type": "application/json"},
-                                     method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                raw = response.read() or b"{}"
-                try:
-                    parsed = json.loads(raw)
-                except Exception:
-                    parsed = {"_raw": raw.decode("utf-8", errors="replace")}
-        except urllib.error.HTTPError as exc:
-            err_body = ""
-            try:
-                err_body = exc.read().decode("utf-8", errors="replace")[:500]
-            except Exception:
-                pass
-            return SendResult(channel=self.name, status="failed",
-                              error=f"HTTP {exc.code}: {err_body}")
-        except Exception as exc:
-            return SendResult(channel=self.name, status="failed",
-                              error=f"{type(exc).__name__}: {exc}")
+        parsed = _post_json(_require_http_url(url), payload,
+                            timeout=float(resilience.read_timeout()))
         if parsed.get("_error"):
-            return SendResult(channel=self.name, status="failed", error=parsed["_error"])
+            return SendResult(channel=self.name, status="failed", error=parsed["_error"],
+                              retryable=bool(parsed.get("_retryable")))
         if not parsed.get("ok"):
             return SendResult(channel=self.name, status="failed",
                               error=str(parsed.get("description") or parsed))

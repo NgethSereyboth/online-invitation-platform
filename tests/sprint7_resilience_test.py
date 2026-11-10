@@ -244,7 +244,7 @@ def test_outbound_4xx_is_a_failure(monkeypatch):
         assert info.value.status == 400
 
 
-def test_messaging_provider_timeout_degrades_to_failed(monkeypatch):
+def test_messaging_provider_timeout_queues_for_retry(monkeypatch):
     with _FaultServer() as peer:
         peer.delay = 1.5
         monkeypatch.setattr(app_server, "MESSAGING_WEBHOOK_ENDPOINT", peer.url)
@@ -254,7 +254,11 @@ def test_messaging_provider_timeout_degrades_to_failed(monkeypatch):
             "sms", "+15550000000", "hello", {"guestName": "S7"}, request_id="req-sprint7"
         )
         elapsed = time.monotonic() - started
-        assert result["status"] == "failed", result
+        # Sprint 8: a transient timeout is durable work, not a user-facing
+        # failure. The HTTP caller gets a queued result immediately.
+        assert result["status"] == "queued", result
+        assert result["queuedForRetry"] is True
+        assert result["retryId"]
         assert "temporarily unavailable" in result["error"]
         assert elapsed < 1.5, elapsed
         assert peer.hits == 1
