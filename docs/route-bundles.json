@@ -176,16 +176,25 @@
       "stylesheet": "bundle-billing.css"
     },
     "checkin.html": {
+      "deferredJavascript": "bundle-checkin-deferred.js",
+      "deferredJavascriptBytes": 4046,
+      "deferredJavascriptSha256": "e4676a6ddb15589773d82da008eb208f0686ad1667fb404a1028ff90a69c099b",
+      "deferredStylesheet": "bundle-checkin-deferred.css",
+      "deferredStylesheetBytes": 0,
+      "deferredStylesheetSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "javascript": "bundle-checkin.js",
-      "scriptBytes": 38545,
-      "scriptSha256": "f2932cbc82c76bdd7858d0f3a9fc1d01cbdb8df9100ce5179ad372cd2b6e5069",
+      "scriptBytes": 35855,
+      "scriptSha256": "daa600ea1ba58f33e9950d2f30a7d46e78b046b87a6b603361f1d21c6655b100",
       "sources": {
+        "deferredScripts": [
+          "accessibility-polish.js"
+        ],
         "scripts": [
+          "route-deferred-loader.js",
           "core/i18n.js",
           "ui-dialogs.js",
           "invitation-context.js",
           "checkin.js",
-          "accessibility-polish.js",
           "ui/app-shell.js"
         ],
         "styles": [

@@ -53,11 +53,12 @@
       ]
     },
     "checkin.html": {
-      "bytes": 184821,
-      "scriptCount": 3,
+      "bytes": 183376,
+      "scriptCount": 4,
       "scripts": [
         "core/theme.js",
         "backend-mode.js",
+        "async-css-loader.js",
         "bundle-checkin.js"
       ],
       "styleCount": 1,
@@ -143,9 +144,10 @@
       ]
     },
     "public.html": {
-      "bytes": 384885,
-      "scriptCount": 2,
+      "bytes": 386130,
+      "scriptCount": 3,
       "scripts": [
+        "async-css-loader.js",
         "backend-mode.js",
         "bundle-public.js"
       ],
@@ -302,6 +304,7 @@
         "bundle-responses.js",
         "bundle-analytics.js",
         "bundle-materials.js",
+        "async-css-loader.js",
         "bundle-checkin.js",
         "template-pack-gallery.js",
         "bundle-templates.js",
@@ -328,6 +331,7 @@
         "public.html"
       ],
       "scripts": [
+        "async-css-loader.js",
         "backend-mode.js",
         "bundle-public.js"
       ],

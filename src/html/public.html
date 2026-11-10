@@ -23,7 +23,10 @@
   <meta name="twitter:image" content="__INVITATION_OG_IMAGE__">
   <meta name="twitter:image:alt" content="Invitation preview">
   <link rel="canonical" href="__INVITATION_PUBLIC_URL__">
-  <link rel="stylesheet" href="bundle-public.css">
+  <!--CRITICAL_CSS-->
+  <link rel="preload" href="bundle-public.css" as="style" data-async-css>
+  <noscript><link rel="stylesheet" href="bundle-public.css"></noscript>
+  <script src="async-css-loader.js"></script>
 
   <script src="backend-mode.js"></script>
 </head>
