@@ -12,6 +12,9 @@ from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_
 from core.config import get as config_get
 from core import db_metrics, resilience
 from core.outbound_queue import OutboundRetryQueue
+from core.privacy import (PII_MARKER, build_export_archive, collect_account_export,
+                          delete_account_data, run_pii_retention, scrub_pii_text,
+                          scrub_pii_value)
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
@@ -298,6 +301,7 @@ IMAGE_CACHE = DATA / "image-cache"
 QUARANTINE = DATA / "quarantine"
 SOCIAL_CACHE = DATA / "social-cache"
 BACKUPS = DATA / "backups"
+PRIVACY_EXPORTS = DATA / "privacy-exports"
 DB = DATA / "invites.db"
 
 
@@ -345,6 +349,7 @@ IMAGE_CACHE.mkdir(parents=True, exist_ok=True)
 QUARANTINE.mkdir(parents=True, exist_ok=True)
 SOCIAL_CACHE.mkdir(parents=True, exist_ok=True)
 BACKUPS.mkdir(parents=True, exist_ok=True)
+PRIVACY_EXPORTS.mkdir(parents=True, exist_ok=True)
 
 
 def persistent_data_secret(env_name, filename):
@@ -2326,6 +2331,7 @@ def get_platform_v32_service():
             config=PlatformConfig.from_environment(),
             upload_validator=platform_upload_validator,
         )
+        _PLATFORM_V32_SERVICE.jobs.register("privacy-export", run_privacy_export_job)
     return _PLATFORM_V32_SERVICE
 
 
@@ -3351,12 +3357,41 @@ def impersonation_verify(value):
     return {"uid": admin_id, "exp": expires}
 
 def redact_request_path(value):
-    """Redact credentials and personalized guest tokens from request logs."""
-    raw = str(value or "")
-    return re.sub(r"([?&](?:access|guest|g|token|code)=)[^&]*", r"\1[redacted]", raw, flags=re.I)
+    """Redact credentials and PII from request logs."""
+    raw = unquote(str(value or ""))
+    raw = re.sub(r"([?&](?:access|guest|g|token|code)=)[^&]*", r"\1[redacted]", raw, flags=re.I)
+    return scrub_pii_text(raw)
 
 def password_hash(password, salt):
     return hashlib.pbkdf2_hmac("sha256",password.encode(),bytes.fromhex(salt),210_000).hex()
+
+
+def privacy_export_async_bytes():
+    try:
+        value = int(platform_env("EINVITE_PRIVACY_EXPORT_ASYNC_BYTES", "1000000"))
+    except (TypeError, ValueError):
+        value = 1_000_000
+    return max(0, min(100_000_000, value))
+
+
+def run_privacy_export_job(payload, progress, cancelled):
+    """Build a private ZIP export through the Sprint 8 platform job queue."""
+    user_id = str(payload.get("userId") or "")
+    export_id = str(payload.get("exportId") or "")
+    if not user_id or not re.fullmatch(r"[0-9a-f]{32}", export_id):
+        raise ValueError("Invalid privacy export job")
+    if cancelled():
+        raise RuntimeError("Privacy export cancelled")
+    export = collect_account_export(connect, user_id)
+    progress(0.75)
+    raw = build_export_archive(export)
+    target = PRIVACY_EXPORTS / f"{export_id}.zip"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_suffix(".tmp")
+    temporary.write_bytes(raw)
+    temporary.replace(target)
+    progress(1)
+    return {"exportId": export_id, "fileName": target.name, "sizeBytes": len(raw)}
 
 
 def enqueue_background_job(kind,payload,delay_ms=0):
@@ -3559,7 +3594,7 @@ def send_message_provider(channel,recipient,message,metadata=None,request_id="",
         body=resilience.post_json(require_http_endpoint(MESSAGING_WEBHOOK_ENDPOINT),payload,headers=headers,max_bytes=1_000_000,read_timeout_s=min(5.0,resilience.read_timeout()))
         return {"status":"sent","providerId":str(body.get('id','webhook'))}
     except Exception as exc:
-        print(json.dumps({"level":"warning","event":"messaging_provider_failed","requestId":request_id,"errorType":type(exc).__name__,"kind":getattr(exc,"kind",""),"message":str(exc)[:300]},ensure_ascii=False),flush=True)
+        print(json.dumps({"level":"warning","event":"messaging_provider_failed","requestId":request_id,"errorType":type(exc).__name__,"kind":getattr(exc,"kind",""),"message":scrub_pii_text(str(exc))[:300]},ensure_ascii=False),flush=True)
         queued=_queue_messaging_retry(channel,recipient,message,metadata,request_id,exc,queue_retry)
         return queued or {"status":"failed","error":"Messaging provider is temporarily unavailable"}
 
@@ -4013,8 +4048,8 @@ class Handler(SimpleHTTPRequestHandler):
         """Log a failure with the Sprint 4 correlation ID, never its payload."""
         payload = {"level": "warning", "event": event,
                    "requestId": getattr(self, "request_id", ""),
-                   "errorType": type(exc).__name__, "message": str(exc)[:300]}
-        payload.update(fields)
+                   "errorType": type(exc).__name__, "message": scrub_pii_text(str(exc))[:300]}
+        payload.update(scrub_pii_value(fields))
         try: print(json.dumps(payload, ensure_ascii=False), flush=True)
         except Exception: pass
     def error_response(self, status, message, code, headers=None):
@@ -4046,7 +4081,7 @@ class Handler(SimpleHTTPRequestHandler):
         # Keep request handling independent from a terminal that may be closed.
         if JSON_LOGS:
             try:
-                print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"requestId":getattr(self,"request_id",""),"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":redact_request_path(format%args)},ensure_ascii=False),flush=True)
+                print(json.dumps({"ts":int(time.time()*1000),"client":self.client_address[0],"requestId":getattr(self,"request_id",""),"method":getattr(self,"command",None),"path":redact_request_path(getattr(self,"path",None)),"message":scrub_pii_text(redact_request_path(format%args))},ensure_ascii=False),flush=True)
             except Exception as exc: _log.debug("cleanup failed: %s", exc)
     def end_headers(self):
         request_id=safe_request_id(getattr(self,"request_id",None) or self.headers.get("X-Request-ID")).replace("\r","").replace("\n","")
@@ -4486,7 +4521,7 @@ class Handler(SimpleHTTPRequestHandler):
                 metadata={**(metadata or {}),"impersonatedBy":origin["uid"]}
             write_audit_event(uid,action,target_type,target_id,metadata,self.client_ip())
         except Exception as exc:
-            if JSON_LOGS:print(json.dumps({"level":"warning","event":"audit_write_failed","message":str(exc)}),flush=True)
+            if JSON_LOGS:print(json.dumps({"level":"warning","event":"audit_write_failed","message":scrub_pii_text(str(exc))}),flush=True)
     def bot_protection_ok(self, action, token=""):
         if not BOT_PROTECTION_ENDPOINT:return True
         if not token:return False
@@ -4611,7 +4646,7 @@ class Handler(SimpleHTTPRequestHandler):
         if isinstance(exc, PlatformServiceError):
             return self.json(exc.status,{"error":str(exc),"code":exc.code,"requestId":getattr(self,"request_id","")})
         if JSON_LOGS:
-            print(json.dumps({"level":"error","event":"future_v52_request_failed","requestId":getattr(self,"request_id",""),"message":str(exc)},ensure_ascii=False),flush=True)
+            print(json.dumps({"level":"error","event":"future_v52_request_failed","requestId":getattr(self,"request_id",""),"message":scrub_pii_text(str(exc))},ensure_ascii=False),flush=True)
         return self.json(500,{"error":"Future platform operation failed","code":"future_platform_internal_error","requestId":getattr(self,"request_id","")})
     def future_v52_get(self,path):
         if not path.startswith("/api/platform/v52/"):return False
@@ -4638,7 +4673,7 @@ class Handler(SimpleHTTPRequestHandler):
         if isinstance(exc, PlatformServiceError):
             return self.json(exc.status,{"error":str(exc),"code":exc.code,"requestId":getattr(self,"request_id","")})
         if JSON_LOGS:
-            print(json.dumps({"level":"error","event":"platform_v32_request_failed","requestId":getattr(self,"request_id",""),"message":str(exc)},ensure_ascii=False),flush=True)
+            print(json.dumps({"level":"error","event":"platform_v32_request_failed","requestId":getattr(self,"request_id",""),"message":scrub_pii_text(str(exc))},ensure_ascii=False),flush=True)
         return self.json(500,{"error":"Platform operation failed","code":"platform_internal_error","requestId":getattr(self,"request_id","")})
     def platform_v32_user(self):
         user=self.require_user()
@@ -4825,6 +4860,11 @@ class Handler(SimpleHTTPRequestHandler):
             user=self.user(); return self.json(200,{"user":dict(user) if user else None})
         if path == "/api/account/export": return self.export_account()
         if path == "/api/account/export/archive": return self.export_account_archive()
+        if path == "/api/user/data-export": return self.user_data_export()
+        export_download = re.fullmatch(r"/api/user/data-export/([^/]+)/download/?", path)
+        if export_download: return self.user_data_export_download(unquote(export_download.group(1)))
+        export_status = re.fullmatch(r"/api/user/data-export/([^/]+)/?", path)
+        if export_status: return self.user_data_export_status(unquote(export_status.group(1)))
         if path == "/api/account/usage": return self.account_usage()
         if path == "/api/account/analytics/creations": return self.account_analytics_creations()
         if path == "/api/account/analytics/summary": return self.account_analytics_rollup()
@@ -5048,11 +5088,22 @@ class Handler(SimpleHTTPRequestHandler):
             self.json(422, {"error": str(exc), "code": "malware_detected"})
         except (ValueError, KeyError, json.JSONDecodeError) as exc:
             self.json(400, {"error": str(exc)})
+    def delete_invitation_content(self,path):
+        """Dispatch the simple guest/asset child deletes."""
+        if "/assets/" in path:
+            self.delete_asset(path.split("/")[3],path.split("/")[5])
+            return True
+        if "/guests/" in path:
+            self.delete_guest(path.split("/")[3],path.split("/")[5])
+            return True
+        return False
+
     def do_DELETE(self):
         if not self.guard_request_boundary():return
         if not self.guard_cookie_origin():return
         path=urlparse(self.path).path
         try:
+            if path == "/api/user/account": return self.delete_user_account()
             if path.startswith("/api/invitations/") and path.endswith("/analytics"):return self.purge_invitation_analytics_data(path.split("/")[3])
             if path.startswith("/api/account/sessions/") and path.count("/")==4:return self.revoke_session(path.split("/")[4] if len(path.split("/"))>4 else path.rsplit("/",1)[-1])
             if path.startswith("/api/account/webhooks/") and path.count("/")==4:return self.delete_webhook(path.split("/")[4])
@@ -5064,8 +5115,7 @@ class Handler(SimpleHTTPRequestHandler):
             material_cancel=re.fullmatch(r"/api/invitations/([^/]+)/materials/import-jobs/([^/]+)",path)
             if material_cancel:return self.cancel_material_import_job(unquote(material_cancel.group(1)),unquote(material_cancel.group(2)))
             if path.startswith("/api/invitations/") and "/comments/" in path and path.count("/")==5:return self.delete_comment(path.split("/")[3],path.split("/")[5])
-            if "/assets/" in path:return self.delete_asset(path.split("/")[3],path.split("/")[5])
-            if "/guests/" in path:return self.delete_guest(path.split("/")[3],path.split("/")[5])
+            if self.delete_invitation_content(path):return
             if "/rsvps/" in path:return self.delete_rsvp(path.split("/")[3],path.split("/")[5])
             if "/wishes/" in path:return self.delete_wish(path.split("/")[3],path.split("/")[5])
             if "/collaborators/" in path:return self.delete_collaborator(path.split("/")[3],path.split("/")[5])
@@ -6190,7 +6240,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "tier":tier,"interval":interval,
             })
         except Exception as exc:
-            if JSON_LOGS:print(json.dumps({"level":"warning","event":"stripe_checkout_failed","message":str(exc)[:300]}),flush=True)
+            if JSON_LOGS:print(json.dumps({"level":"warning","event":"stripe_checkout_failed","message":scrub_pii_text(str(exc))[:300]}),flush=True)
             return self.json(502,{"error":"Stripe Checkout session creation failed","code":"stripe_checkout_failed"})
 
     def billing_webhook_stripe(self):
@@ -7203,6 +7253,71 @@ class Handler(SimpleHTTPRequestHandler):
         with connect() as db:plan,usage,limits=self.plan_usage(db,user)
         self.json(200,{"plan":plan,"usage":usage,"limits":limits,"enforced":PLAN_LIMITS_ENFORCED})
 
+    def user_data_export(self):
+        """GET /api/user/data-export — comprehensive right-to-access export."""
+        user=self.require_user()
+        if not user:return
+        query=parse_qs(urlsplit(self.path).query)
+        export_format=str((query.get("format") or ["json"])[-1]).lower()
+        if export_format not in {"json","zip"}:return self.json(400,{"error":"format must be json or zip"})
+        export=collect_account_export(connect,user["id"])
+        encoded=json.dumps(export,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+        wants_async=str((query.get("async") or ["0"])[-1]).lower() in {"1","true","yes"}
+        if wants_async or len(encoded)>privacy_export_async_bytes():
+            service=get_platform_v32_service();workspace=service.workspace_for_user(user["id"])
+            export_id=uuid.uuid4().hex
+            job=service.jobs.submit(workspace["id"],user["id"],"privacy-export",{"userId":user["id"],"exportId":export_id},max_retries=0)
+            self.json(202,{"status":job["status"],"requestId":job["id"],"downloadUrl":f"/api/user/data-export/{job['id']}","format":"zip"}, {"Cache-Control":"private, no-store"})
+            return
+        if export_format=="zip":
+            raw=build_export_archive(export);self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="einvite-data-export-{int(time.time())}.zip"');self.send_header("Cache-Control","private, no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw);return
+        self.json(200,export,{"Cache-Control":"private, no-store"})
+
+    def _privacy_export_job(self,job_id):
+        with connect() as db:
+            return db.execute("SELECT * FROM platform_jobs WHERE id=? AND owner_id=?",(job_id,self.user()["id"])).fetchone()
+
+    def user_data_export_status(self,job_id):
+        user=self.require_user()
+        if not user:return
+        row=self._privacy_export_job(job_id)
+        if not row:return self.json(404,{"error":"Export not found"})
+        try:result=json.loads(row["result_json"] or "{}")
+        except Exception:result={}
+        payload={"requestId":row["id"],"status":row["status"],"progress":float(row["progress"] or 0)}
+        if row["status"]=="completed":
+            payload["downloadUrl"]=f"/api/user/data-export/{row['id']}/download";payload["sizeBytes"]=result.get("sizeBytes")
+        if row["status"] in {"failed","cancelled"}:payload["error"]=scrub_pii_text(row["error_text"] or "Export failed")
+        self.json(200,payload,{"Cache-Control":"private, no-store"})
+
+    def user_data_export_download(self,job_id):
+        user=self.require_user()
+        if not user:return
+        row=self._privacy_export_job(job_id)
+        if not row:return self.json(404,{"error":"Export not found"})
+        if row["status"]!="completed":return self.json(409,{"error":"Export is not ready"})
+        try:payload=json.loads(row["payload_json"] or "{}");export_id=str(payload.get("exportId") or "")
+        except Exception:export_id=""
+        if not re.fullmatch(r"[0-9a-f]{32}",export_id):return self.json(404,{"error":"Export not found"})
+        target=PRIVACY_EXPORTS/f"{export_id}.zip"
+        if not target.is_file():return self.json(404,{"error":"Export not found"})
+        raw=target.read_bytes();self.send_response(200);self.send_header("Content-Type","application/zip");self.send_header("Content-Disposition",f'attachment; filename="einvite-data-export-{export_id[:8]}.zip"');self.send_header("Cache-Control","private, no-store");self.send_header("Content-Length",str(len(raw)));self.end_headers();self.wfile.write(raw)
+
+    def delete_user_account(self):
+        """DELETE /api/user/account — confirmed right-to-be-forgotten erasure."""
+        user=self.require_user()
+        if not user:return
+        if not self.rate_limit(f"account-delete:{user['id']}",10,3600):return
+        data=self.body(30_000);password=str(data.get("password") or "")
+        with connect() as db:row=db.execute("SELECT password_hash,salt,password_algo FROM users WHERE id=? AND deleted_at IS NULL",(user["id"],)).fetchone();valid,_=account_verify_password(password,row["password_hash"],row["salt"],row["password_algo"] if row else "") if row else (False,False)
+        if not valid:return self.json(401,{"error":"Password confirmation is required"})
+        result=delete_account_data(connect,user["id"])
+        # Use the tombstone id explicitly: the session was shredded by erasure,
+        # so self.audit() must not depend on resolving the current session again.
+        write_audit_event(user["id"],"account.deleted","user",user["id"],
+                          {"deletedInvitations":result["deletedInvitations"],"anonymizedInvitations":result["anonymizedInvitations"]},self.client_ip())
+        self.json(200,result,{"Cache-Control":"private, no-store"})
+
     def export_account(self):
         user=self.require_user()
         if not user:return
@@ -7854,7 +7969,7 @@ class Handler(SimpleHTTPRequestHandler):
             data=self.body(50_000)
         except Exception as exc:
             if JSON_LOGS:
-                print(json.dumps({"level":"warning","event":"csp_report_body_invalid","message":str(exc)[:300]},ensure_ascii=False),flush=True)
+                print(json.dumps({"level":"warning","event":"csp_report_body_invalid","message":scrub_pii_text(str(exc))[:300]},ensure_ascii=False),flush=True)
             return self._send_csp_204()
         # Normalise legacy (single object with csp-report) vs Reporting API
         # (array of {type, body}) into a flat fields dict.
@@ -7908,7 +8023,7 @@ class Handler(SimpleHTTPRequestHandler):
                 })
         except Exception as exc:
             if JSON_LOGS:
-                print(json.dumps({"level":"warning","event":"csp_report_audit_failed","message":str(exc)[:300]},ensure_ascii=False),flush=True)
+                print(json.dumps({"level":"warning","event":"csp_report_audit_failed","message":scrub_pii_text(str(exc))[:300]},ensure_ascii=False),flush=True)
         return self._send_csp_204()
 
     @staticmethod
@@ -12750,14 +12865,24 @@ if __name__ == "__main__":
             exc=sys.exc_info()[1]
             expected_disconnect=isinstance(exc,(BrokenPipeError,ConnectionResetError,ConnectionAbortedError)) or (isinstance(exc,OSError) and getattr(exc,'winerror',None) in {10053,10054})
             if expected_disconnect:return
-            super().handle_error(request,client_address)
+            # Never let socketserver print a traceback: exception strings can
+            # contain guest names, emails or message bodies. Keep the type and a
+            # scrubbed one-line diagnostic only.
+            if JSON_LOGS:
+                try:
+                    print(json.dumps({"level":"error","event":"request_unhandled_error",
+                                      "client":str(client_address[0]) if client_address else "",
+                                      "errorType":type(exc).__name__,
+                                      "message":scrub_pii_text(str(exc))[:300]},ensure_ascii=False),flush=True)
+                except Exception:
+                    pass
     server=EInviteHTTPServer((args.host,args.port),Handler)
     stopping=threading.Event()
     def backup_scheduler_loop():
         while not stopping.is_set():
             try:process_due_studio_backups(limit=3)
             except Exception as exc:
-                if JSON_LOGS:print(json.dumps({"level":"warning","event":"studio_backup_scheduler_failed","message":str(exc)}),flush=True)
+                if JSON_LOGS:print(json.dumps({"level":"warning","event":"studio_backup_scheduler_failed","message":scrub_pii_text(str(exc))}),flush=True)
             if stopping.wait(60):break
     threading.Thread(target=backup_scheduler_loop,daemon=True,name="studio-backup-scheduler").start()
     def analytics_reconstruction_loop():
@@ -12783,9 +12908,24 @@ if __name__ == "__main__":
                         print(json.dumps({"level":"warning","event":"analytics_retention_audit_failed","message":str(audit_exc)}),flush=True)
                     print(json.dumps({"level":"info","event":"analytics_retention_run","ranAtMs":retention["ranAtMs"],"durationMs":retention["durationMs"],"prunedEvents":retention.get("events"),"prunedSessions":retention.get("sessions"),"prunedSummaries":retention.get("summaries"),"retentionDays":retention.get("retentionDays")},ensure_ascii=False),flush=True)
             except Exception as exc:
-                if JSON_LOGS:print(json.dumps({"level":"warning","event":"analytics_reconstruction_failed","message":str(exc)}),flush=True)
+                if JSON_LOGS:print(json.dumps({"level":"warning","event":"analytics_reconstruction_failed","message":scrub_pii_text(str(exc))}),flush=True)
             if stopping.wait(300):break
     threading.Thread(target=analytics_reconstruction_loop,daemon=True,name="analytics-reconstruction").start()
+    def pii_retention_loop():
+        # Phase 3: expired event PII is anonymized on a 24 h cadence. Running
+        # once at startup makes the policy effective immediately after a deploy.
+        while not stopping.is_set():
+            try:
+                retention=run_pii_retention(connect)
+                if retention["anonymizedInvitations"]:
+                    try:write_audit_event(None,"privacy.retention_anonymized","privacy","retention",retention,"system")
+                    except Exception as audit_exc:
+                        print(json.dumps({"level":"warning","event":"privacy_retention_audit_failed","message":str(audit_exc)[:200]}),flush=True)
+                    print(json.dumps({"level":"info","event":"privacy_retention_run",**retention},ensure_ascii=False),flush=True)
+            except Exception as exc:
+                print(json.dumps({"level":"warning","event":"privacy_retention_failed","message":scrub_pii_text(str(exc))[:200]}),flush=True)
+            if stopping.wait(86400):break
+    threading.Thread(target=pii_retention_loop,daemon=True,name="privacy-retention").start()
     if BACKGROUND_MEDIA_ENABLED:
         # Durable webhook retries: one attempt per due job, the queue's
         # available_at carries the backoff. It lives beside the storage-delete
@@ -12795,7 +12935,7 @@ if __name__ == "__main__":
                 try:
                     process_webhook_jobs(limit=25)
                 except Exception as exc:
-                    print(json.dumps({"level":"warning","event":"webhook_queue_failed","message":str(exc)[:200]}),flush=True)
+                    print(json.dumps({"level":"warning","event":"webhook_queue_failed","message":scrub_pii_text(str(exc))[:200]}),flush=True)
                 if stopping.wait(1.0):break
         threading.Thread(target=webhook_delivery_loop,daemon=True,name="webhook-delivery").start()
     def request_stop(*_):
