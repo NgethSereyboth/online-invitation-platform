@@ -38,6 +38,53 @@ test.describe('@security headers and cookies', () => {
 });
 
 test.describe('@security authorisation', () => {
+  test('account deletion requires authentication and CSRF, then blocks login', async ({ request, playwright, baseURL }) => {
+    const password = 'Qa-Passw0rd-2026';
+    const origin = { Origin: baseURL! };
+    const anonymous = await request.delete('/api/user/account', {
+      data: { password },
+      headers: origin,
+    });
+    expect(anonymous.status()).toBe(401);
+
+    const context = await playwright.request.newContext({ baseURL });
+    const email = `${uniqueSlug('qa-delete')}@einvite.test`;
+    const registered = await context.post('/api/auth/register', {
+      data: { email, password },
+      headers: origin,
+    });
+    expect(registered.status()).toBe(201);
+    const csrf = (await registered.json()).csrfToken as string;
+
+    const withoutCsrf = await context.delete('/api/user/account', {
+      data: { password },
+      headers: origin,
+    });
+    expect(withoutCsrf.status()).toBe(403);
+
+    const wrongPassword = await context.delete('/api/user/account', {
+      data: { password: 'not-the-password' },
+      headers: { ...origin, 'X-CSRF-Token': csrf },
+    });
+    expect(wrongPassword.status()).toBe(401);
+
+    const deleted = await context.delete('/api/user/account', {
+      data: { password },
+      headers: { ...origin, 'X-CSRF-Token': csrf },
+    });
+    expect(deleted.status()).toBe(200);
+    expect((await deleted.json()).loginDisabled).toBe(true);
+
+    const loginContext = await playwright.request.newContext({ baseURL });
+    const login = await loginContext.post('/api/auth/login', {
+      data: { email, password },
+      headers: origin,
+    });
+    expect(login.status()).toBe(401);
+    await loginContext.dispose();
+    await context.dispose();
+  });
+
   test('anonymous mutation is rejected with 401', async ({ request, baseURL }) => {
     const response = await request.post('/api/invitations', {
       data: { slug: uniqueSlug('qa-anon'), document: weddingDocument('Anonymous') },
