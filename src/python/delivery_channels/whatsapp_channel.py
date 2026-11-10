@@ -21,7 +21,8 @@ should pre-approve a WhatsApp template and use the dedicated template endpoint
 from __future__ import annotations
 from typing import Any, Dict
 
-from .base import DeliveryChannel, SendResult, _env, _require_http_url
+from core import resilience
+from .base import DeliveryChannel, SendResult, _env, _require_http_url, _post_json
 
 
 class WhatsAppChannel(DeliveryChannel):
@@ -51,33 +52,14 @@ class WhatsAppChannel(DeliveryChannel):
             "type": "text",
             "text": {"body": message[:4096]},
         }
-        import urllib.request, urllib.error, json
-        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(_require_http_url(url), data=data,
-                                     headers={
-                                         "Authorization": f"Bearer {self.token}",
-                                         "Content-Type": "application/json",
-                                     }, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                raw = response.read() or b"{}"
-                try:
-                    parsed = json.loads(raw)
-                except Exception:
-                    parsed = {"_raw": raw.decode("utf-8", errors="replace")}
-        except urllib.error.HTTPError as exc:
-            err_body = ""
-            try:
-                err_body = exc.read().decode("utf-8", errors="replace")[:500]
-            except Exception:
-                pass
-            return SendResult(channel=self.name, status="failed",
-                              error=f"HTTP {exc.code}: {err_body}")
-        except Exception as exc:
-            return SendResult(channel=self.name, status="failed",
-                              error=f"{type(exc).__name__}: {exc}")
+        parsed = _post_json(
+            _require_http_url(url), payload,
+            headers={"Authorization": f"Bearer {self.token}"},
+            timeout=float(resilience.read_timeout()),
+        )
         if parsed.get("_error"):
-            return SendResult(channel=self.name, status="failed", error=parsed["_error"])
+            return SendResult(channel=self.name, status="failed", error=parsed["_error"],
+                              retryable=bool(parsed.get("_retryable")))
         if parsed.get("error"):
             err = parsed["error"]
             return SendResult(channel=self.name, status="failed",

@@ -31,7 +31,9 @@ Environment
 """
 
 import argparse
+import atexit
 import os
+import signal
 import sys
 
 from waitress import serve
@@ -53,9 +55,24 @@ for _ in range(10):                                           # walk up to find 
 sys.path.insert(0, _HERE)                                      # src/python  (server.py, core/)
 sys.path.append(_REPO_ROOT)                                    # repo root   (ai_agent/, platform_v32/)
 
-from server import MAX_REQUEST_BODY_BYTES, create_app  # noqa: E402
+from server import MAX_REQUEST_BODY_BYTES, create_app, shutdown_platform_services  # noqa: E402
 
 app = create_app()
+atexit.register(shutdown_platform_services)
+
+
+def _graceful_stop(_signum, _frame):
+    """Join background workers before the process exits on SIGTERM/SIGINT."""
+    shutdown_platform_services(timeout=10)
+    raise SystemExit(0)
+
+
+for _signal in (getattr(signal, "SIGTERM", None), getattr(signal, "SIGINT", None)):
+    if _signal is not None:
+        try:
+            signal.signal(_signal, _graceful_stop)
+        except (ValueError, OSError):
+            pass
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

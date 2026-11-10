@@ -130,6 +130,13 @@ def _restore_data_dir_after_test():
             finally:
                 server_module._PLATFORM_V32_SERVICE = None
                 server_module._PLATFORM_SCHEMA_PATH = None
+        queue = getattr(server_module, "_OUTBOUND_QUEUE", None) if server_module else None
+        if queue is not None:
+            try:
+                queue.shutdown(timeout=5)
+            finally:
+                server_module._OUTBOUND_QUEUE = None
+                server_module._OUTBOUND_QUEUE_PATH = None
         if present:
             os.environ["EINVITE_DATA_DIR"] = previous
         else:

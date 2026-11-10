@@ -2,7 +2,7 @@
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, unquote, parse_qs, quote, urlsplit
 from pathlib import Path
-import argparse, base64, errno, hashlib, hmac, html, io, ipaddress, json, os, re, secrets, sqlite3, time, uuid, threading, smtplib, ssl, mimetypes, urllib.request, urllib.error, subprocess, shlex, shutil, warnings, zipfile, signal, sys  # nosec B404 - subprocess is used only with fixed argument lists and no shell input
+import argparse, atexit, base64, errno, hashlib, hmac, html, io, ipaddress, json, os, re, secrets, sqlite3, time, uuid, threading, smtplib, ssl, mimetypes, urllib.request, urllib.error, subprocess, shlex, shutil, warnings, zipfile, signal, sys  # nosec B404 - subprocess is used only with fixed argument lists and no shell input
 from http.cookies import SimpleCookie
 from html.parser import HTMLParser
 from contextlib import contextmanager
@@ -11,6 +11,7 @@ from email.utils import formatdate
 from core.auth import (ARGON2_AVAILABLE, API_KEY_PREFIX, generate_api_key, hash_api_key, verify_api_key, hash_password as account_hash_password, verify_password as account_verify_password, new_csrf_token, new_totp_secret, verify_totp, otpauth_uri, b64url, b64url_decode, parse_attestation_object, cose_ec2_to_pem, verify_es256_signature, verify_client_data, parse_assertion_auth_data, generate_recovery_codes, verify_recovery_code)
 from core.config import get as config_get
 from core import db_metrics, resilience
+from core.outbound_queue import OutboundRetryQueue
 # V54 security hardening: malware-scanner enforcement + auto secret generation.
 # Both modules are stdlib-only so the existing ``http.server`` backend can keep
 # importing ``server`` without adding new third-party dependencies.
@@ -2327,6 +2328,57 @@ def get_platform_v32_service():
         )
     return _PLATFORM_V32_SERVICE
 
+
+_OUTBOUND_QUEUE = None
+_OUTBOUND_QUEUE_PATH = None
+
+def get_outbound_queue(start=True):
+    """Return the process-wide durable retry queue, scoped to the data dir.
+
+    The queue owns one daemon polling thread. It is created lazily so a
+    read-only admin request does not start a worker, and a data-directory
+    change stops the old thread before a new table is opened.
+    """
+    global _OUTBOUND_QUEUE, _OUTBOUND_QUEUE_PATH
+    current_path = str(db_path())
+    if _OUTBOUND_QUEUE_PATH != current_path:
+        if _OUTBOUND_QUEUE is not None:
+            try:
+                _OUTBOUND_QUEUE.shutdown(timeout=5)
+            finally:
+                _OUTBOUND_QUEUE = None
+        _OUTBOUND_QUEUE_PATH = current_path
+    if _OUTBOUND_QUEUE is None:
+        _OUTBOUND_QUEUE = OutboundRetryQueue(connect, retry_outbound_message)
+    if start:
+        _OUTBOUND_QUEUE.start()
+    return _OUTBOUND_QUEUE
+
+
+def shutdown_platform_services(timeout=10):
+    """Close background workers before the process or temp directory exits."""
+    global _OUTBOUND_QUEUE, _OUTBOUND_QUEUE_PATH
+    failures = []
+    queue = _OUTBOUND_QUEUE
+    _OUTBOUND_QUEUE = None
+    _OUTBOUND_QUEUE_PATH = None
+    if queue is not None:
+        try:
+            if not queue.shutdown(timeout=timeout):
+                failures.append("outbound-retry")
+        except Exception as exc:
+            failures.append(f"outbound-retry:{type(exc).__name__}")
+    service = _PLATFORM_V32_SERVICE
+    if service is not None:
+        try:
+            if not service.jobs.shutdown(timeout=timeout):
+                failures.append("platform-jobs")
+        except Exception as exc:
+            failures.append(f"platform-jobs:{type(exc).__name__}")
+    if failures:
+        print(json.dumps({"level":"warning","event":"background_shutdown_incomplete","workers":failures},ensure_ascii=False),flush=True)
+    return not failures
+
 _FUTURE_V52_SERVICE = None
 _FUTURE_SCHEMA_PATH = None
 def get_future_v52_service():
@@ -3477,7 +3529,23 @@ def outbound_error_status(exc, timeout_status=504, failure_status=502):
     return timeout_status if getattr(exc, "kind", "") in {"timeout", "circuit_open"} else failure_status
 
 
-def send_message_provider(channel,recipient,message,metadata=None,request_id=""):
+def _queue_messaging_retry(channel,recipient,message,metadata,request_id,exc,queue_retry=True):
+    """Persist a transient messaging failure, or return None when not retryable."""
+    if not queue_retry or not getattr(exc,"retryable",False):return None
+    try:
+        retry_id=get_outbound_queue().enqueue(
+            channel,recipient,message,
+            invitation_id=str(metadata.get('invitationId') or ''),
+            route='messaging',metadata=metadata,request_id=request_id,
+            error='Messaging provider is temporarily unavailable',
+            error_kind=str(getattr(exc,'kind','transport') or 'transport'),
+        )
+        return {"status":"queued","error":"Messaging provider is temporarily unavailable","queuedForRetry":True,"retryId":retry_id}
+    except Exception as queue_exc:
+        print(json.dumps({"level":"warning","event":"outbound_queue_enqueue_failed","requestId":request_id,"message":str(queue_exc)[:300]},ensure_ascii=False),flush=True)
+        return None
+
+def send_message_provider(channel,recipient,message,metadata=None,request_id="",queue_retry=True):
     channel=str(channel or '').lower();recipient=str(recipient or '').strip();message=str(message or '')[:5000];metadata=metadata or {}
     if channel=='email':
         if not recipient or '@' not in recipient:return {"status":"skipped","error":"Guest email is missing"}
@@ -3492,7 +3560,35 @@ def send_message_provider(channel,recipient,message,metadata=None,request_id="")
         return {"status":"sent","providerId":str(body.get('id','webhook'))}
     except Exception as exc:
         print(json.dumps({"level":"warning","event":"messaging_provider_failed","requestId":request_id,"errorType":type(exc).__name__,"kind":getattr(exc,"kind",""),"message":str(exc)[:300]},ensure_ascii=False),flush=True)
-        return {"status":"failed","error":"Messaging provider is temporarily unavailable"}
+        queued=_queue_messaging_retry(channel,recipient,message,metadata,request_id,exc,queue_retry)
+        return queued or {"status":"failed","error":"Messaging provider is temporarily unavailable"}
+
+def _queue_row_metadata(row):
+    metadata=row.get('metadata') or {}
+    if not isinstance(metadata,dict):
+        try:metadata=json.loads(row.get('metadata_json') or '{}')
+        except Exception:metadata={}
+    return metadata
+
+def _retry_messaging_row(row,metadata):
+    result=send_message_provider(str(row.get('channel') or '').lower(),str(row.get('recipient') or ''),str(row.get('message_text') or ''),metadata,request_id=str(row.get('request_id') or ''),queue_retry=False)
+    return {"status":result.get('status','failed'),"error":result.get('error',''),"kind":str(result.get('kind') or '')}
+
+def _retry_channel_row(row,metadata):
+    channel=str(row.get('channel') or '').lower();recipient=str(row.get('recipient') or '')
+    message=str(row.get('message_text') or '');invitation_id=str(row.get('invitation_id') or '')
+    adapter=_delivery_get_channel(channel)
+    if adapter is None:
+        return {"status":"failed","error":f"Unknown channel: {channel}","kind":"config"}
+    result=adapter.send(invitation_id,recipient,message,metadata)
+    return {"status":result.status,"error":result.error,"kind":"transport" if result.retryable else ""}
+
+def retry_outbound_message(row):
+    """Re-send one durable queue row through its original transport."""
+    metadata=_queue_row_metadata(row)
+    if str(row.get('route') or 'channel')=='messaging':
+        return _retry_messaging_row(row,metadata)
+    return _retry_channel_row(row,metadata)
 
 def process_scheduled_campaigns():
     now=int(time.time()*1000)
@@ -4724,7 +4820,7 @@ class Handler(SimpleHTTPRequestHandler):
         if ai_threads:return self.ai_agent_list_threads(unquote(ai_threads.group(1)))
         ai_thread=re.fullmatch(r"/api/invitations/([^/]+)/ai/threads/([^/]+)/?",path)
         if ai_thread:return self.ai_agent_get_thread(unquote(ai_thread.group(1)),unquote(ai_thread.group(2)))
-        if path == "/api/admin/metrics": return self.admin_system_metrics()
+        if self._admin_get_dispatch(path): return
         if path == "/api/auth/me":
             user=self.user(); return self.json(200,{"user":dict(user) if user else None})
         if path == "/api/account/export": return self.export_account()
@@ -4745,25 +4841,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/api/account/audit": return self.list_audit_events()
         # V54.15 (sec-6 — §2.6) — Resource-scoped permissions Stage 3.
         if path == "/api/account/grants": return self.list_agent_grants()
-        if path == "/api/admin/overview": return self.admin_overview()
-        if path == "/api/admin/ai/providers": return self.admin_ai_providers()
-        if path == "/api/admin/users": return self.admin_users()
-        if path == "/api/admin/users-v2": return self.admin_users_v2()
-        if path == "/api/admin/settings": return self.admin_settings()
-        if path == "/api/admin/templates": return self.admin_templates()
-        if path == "/api/admin/invitations": return self.admin_invitations()
-        if path == "/api/admin/feature-flags": return self.admin_feature_flags()
-        # ROADMAP Part 5 §5.1–§5.7 (A2 contract): the versioned admin family the
-        # admin dashboard calls. Previously 404 for every caller — see
-        # docs/reviews/A2-2026-10-13.md.
-        if path == "/api/admin/metrics-v2": return self.admin_metrics_v2()
-        if path == "/api/admin/system-status": return self.admin_system_status()
-        if path == "/api/admin/invitations-v2": return self.admin_invitations_v2()
-        if path == "/api/admin/audit-events": return self.admin_audit_events()
-        if path == "/api/admin/health-detail": return self.admin_health_detail()
-        if path == "/api/admin/reports": return self.admin_reports_list()
-        admin_job_status_match = re.fullmatch(r"/api/admin/jobs/([^/]+)/?", path)
-        if admin_job_status_match: return self.admin_job_status(unquote(admin_job_status_match.group(1)))
+        # Admin GET routes are dispatched by _admin_get_dispatch below.
         if path == "/api/feature-flags": return self.public_feature_flags()
         if path == "/api/invitations": return self.list_invitations()
         cal_ics_match = re.fullmatch(r"/api/invitations/([^/]+)/calendar\.ics/?", path)
@@ -6698,6 +6776,18 @@ class Handler(SimpleHTTPRequestHandler):
         try:payload=json.loads(row["payload_json"] or "{}")
         except Exception:payload={}
         self.json(200,{"id":row["id"],"kind":row["kind"],"state":row["state"],"payload":payload,"attempts":row["attempts"],"lastError":row["last_error"],"createdAt":row["created_at"],"updatedAt":row["updated_at"]})
+
+    def admin_failed_outbound(self):
+        admin=self._admin_gate("/api/admin/failed-outbound","GET")
+        if not admin:return
+        query=parse_qs(urlparse(self.path).query)
+        try:limit=max(1,min(200,int((query.get("limit") or ["50"])[0])))
+        except (TypeError,ValueError):raise ValueError("Invalid limit")
+        try:offset=max(0,int((query.get("offset") or ["0"])[0]))
+        except (TypeError,ValueError):raise ValueError("Invalid offset")
+        queue=get_outbound_queue(start=False)
+        items=queue.list_failed(limit,offset)
+        self.json(200,{"items":items,"count":queue.count_failed(),"limit":limit,"offset":offset})
 
     def admin_bulk_operation(self, action):
         admin=self.require_admin_with_stepup(f"/api/admin/bulk-{action}","POST","super_admin")
@@ -11440,6 +11530,56 @@ class Handler(SimpleHTTPRequestHandler):
         if ctx is None: return
         self.json(200, {"channels": _delivery_channel_metadata()})
 
+    def _admin_get_dispatch(self, path):
+        """Dispatch static and parameterised admin GET routes."""
+        direct = {
+            "/api/admin/metrics": self.admin_system_metrics,
+            "/api/admin/failed-outbound": self.admin_failed_outbound,
+            "/api/admin/overview": self.admin_overview,
+            "/api/admin/ai/providers": self.admin_ai_providers,
+            "/api/admin/users": self.admin_users,
+            "/api/admin/users-v2": self.admin_users_v2,
+            "/api/admin/settings": self.admin_settings,
+            "/api/admin/templates": self.admin_templates,
+            "/api/admin/invitations": self.admin_invitations,
+            "/api/admin/feature-flags": self.admin_feature_flags,
+            "/api/admin/metrics-v2": self.admin_metrics_v2,
+            "/api/admin/system-status": self.admin_system_status,
+            "/api/admin/invitations-v2": self.admin_invitations_v2,
+            "/api/admin/audit-events": self.admin_audit_events,
+            "/api/admin/health-detail": self.admin_health_detail,
+            "/api/admin/reports": self.admin_reports_list,
+        }
+        handler = direct.get(path)
+        if handler is not None:
+            handler()
+            return True
+        job_status = re.fullmatch(r"/api/admin/jobs/([^/]+)/?", path)
+        if job_status:
+            self.admin_job_status(unquote(job_status.group(1)))
+            return True
+        return False
+
+    @staticmethod
+    def _delivery_sent_at(status):
+        return int(time.time() * 1000) if status in {"sent", "queued"} else None
+
+    def _delivery_outcome(self, channel_name, recipient, message, invite_id, cfg, result):
+        """Queue a retryable channel failure and return (status, retry_id)."""
+        if result.status != "failed" or not result.retryable:
+            return result.status, ""
+        try:
+            retry_id = get_outbound_queue().enqueue(
+                channel_name, recipient, message, invitation_id=invite_id,
+                route="channel", metadata=cfg,
+                request_id=getattr(self, "request_id", ""),
+                error=result.error, error_kind="transport",
+            )
+            return "queued", retry_id
+        except Exception as queue_exc:
+            print(json.dumps({"level":"warning","event":"outbound_queue_enqueue_failed","requestId":getattr(self,"request_id",""),"channel":channel_name,"message":str(queue_exc)[:300]},ensure_ascii=False),flush=True)
+            return result.status, ""
+
     def deliver_invitation(self, invite_id):
         ctx = self._p2a_resolve_access(invite_id, require_manage=True, allow_guest=False)
         if ctx is None: return
@@ -11507,19 +11647,23 @@ class Handler(SimpleHTTPRequestHandler):
                                    ("failed", f"Unknown channel: {channel_name}", attempt_id))
                         results.append({"channel": channel_name, "recipient": recipient, "status": "failed", "error": "Unknown channel"})
                         continue
-                    cfg = {"subject": subject, "guestName": name}
+                    cfg = {"subject": subject, "guestName": name, "invitationId": invite_id}
                     result = channel.send(invite_id, recipient, message, cfg)
-                    sent_at = int(time.time() * 1000) if result.status in {"sent", "queued"} else None
+                    final_status, retry_id = self._delivery_outcome(
+                        channel_name, recipient, message, invite_id, cfg, result
+                    )
+                    sent_at = self._delivery_sent_at(final_status)
                     db.execute(
                         "UPDATE delivery_attempts SET status=?, provider_message_id=?, error=?, sent_at=? WHERE id=?",
-                        (result.status, result.provider_message_id, result.error, sent_at, attempt_id)
+                        (final_status, result.provider_message_id, result.error, sent_at, attempt_id)
                     )
-                    if result.status == "sent" and guest_id:
+                    if final_status == "sent" and guest_id:
                         db.execute("UPDATE guests SET delivery_status='sent' WHERE id=?", (guest_id,))
                     results.append({
                         "channel": channel_name, "recipient": recipient,
-                        "status": result.status, "providerMessageId": result.provider_message_id,
+                        "status": final_status, "providerMessageId": result.provider_message_id,
                         "error": result.error, "attemptId": attempt_id,
+                        **(({"retryId": retry_id, "queuedForRetry": True}) if retry_id else {}),
                     })
         self.audit("invitation.delivered", "invitation", invite_id,
                    {"channels": channels, "recipientCount": len(recipients),
@@ -12523,6 +12667,9 @@ def create_app():
     return wsgi_app
 
 
+atexit.register(shutdown_platform_services)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the E-invitation-website development server.")
     parser.add_argument("--host", default=os.environ.get("HOST","127.0.0.1"), help="Bind host (default: 127.0.0.1; use 0.0.0.0 for deployment)")
@@ -12661,7 +12808,5 @@ if __name__ == "__main__":
     try:server.serve_forever(poll_interval=0.25)
     finally:
         server.server_close()
-        if _PLATFORM_V32_SERVICE is not None:
-            try:_PLATFORM_V32_SERVICE.jobs.shutdown(timeout=10)
-            except Exception as exc: _log.debug("cleanup failed: %s", exc)
+        shutdown_platform_services(timeout=10)
         process_storage_delete_jobs(limit=100)
