@@ -1,0 +1,145 @@
+name: Supply Chain
+
+# Sprint 11 — SBOM + strict lockfile + vulnerability gate.
+#
+# The Python job proves that docs/requirements-production.lock installs with
+# --require-hashes in a clean environment. The npm job proves that
+# package-lock.json is reproducible with `npm ci`. Both generate CycloneDX 1.5
+# JSON SBOMs with the official CycloneDX tooling and upload them as artifacts;
+# generated SBOMs are never committed.
+#
+# Vulnerability policy:
+#   * Python: pip-audit fails on ANY advisory affecting the hash-locked tree.
+#     This is intentionally stricter than "Critical only".
+#   * npm:    npm audit fails at Critical severity, matching the requested gate.
+#
+# Keep the workflow-level permissions read-only. Artifact uploads use the
+# Actions runtime token; no write permission is needed.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    # No base-branch filter: stacked sprint PRs must be validated too.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-sbom:
+    name: Python lock + SBOM + audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate hash-locked production install
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv-supply-chain
+          .venv-supply-chain/bin/python -m pip install --upgrade pip
+          .venv-supply-chain/bin/python -m pip install \
+            --require-hashes \
+            --no-deps \
+            -r docs/requirements-production.lock
+          .venv-supply-chain/bin/python -m pip check
+
+      - name: Install pinned SBOM and audit tools
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv-supply-tools
+          .venv-supply-tools/bin/python -m pip install --upgrade pip
+          .venv-supply-tools/bin/python -m pip install \
+            cyclonedx-bom==8.0.1 \
+            pip-audit==2.10.1
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/sbom
+          .venv-supply-tools/bin/cyclonedx-py requirements \
+            docs/requirements-production.lock \
+            --output-file artifacts/sbom/python.cdx.json \
+            --output-format JSON \
+            --spec-version 1.5 \
+            --validate
+
+      - name: Fail on known Python vulnerabilities
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/sbom
+          .venv-supply-tools/bin/pip-audit \
+            -r docs/requirements-production.lock \
+            --strict \
+            --desc \
+            --format json \
+            --output artifacts/sbom/python-audit.json
+
+      - name: Upload Python SBOM and audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-python-cyclonedx
+          path: artifacts/sbom/python*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  npm-sbom:
+    name: npm lock + SBOM + audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Validate lockfile install
+        run: npm ci --no-audit --no-fund
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/sbom
+          node_modules/.bin/cyclonedx-npm \
+            --package-lock-only \
+            --output-file artifacts/sbom/npm.cdx.json \
+            --output-format JSON \
+            --spec-version 1.5 \
+            --validate
+
+      - name: Fail on Critical npm vulnerabilities
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/sbom
+          set +e
+          npm audit --audit-level=critical --json > artifacts/sbom/npm-audit.json
+          status=$?
+          set -e
+          cat artifacts/sbom/npm-audit.json
+          exit "${status}"
+
+      - name: Upload npm SBOM and audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-npm-cyclonedx
+          path: artifacts/sbom/npm*.json
+          if-no-files-found: warn
+          retention-days: 90
