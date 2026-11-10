@@ -115,3 +115,80 @@ jobs:
           # A non-empty file after teardown would mean the fixtures leaked a
           # server process; the app_server fixture kills its whole process
           # group, so expect this to stay empty.
+
+  core-web-vitals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements-dev.txt
+
+      - name: Install Node dependencies and Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Build check
+        run: |
+          python3 build.py all --check
+          python3 build.py bundles --check
+
+      - name: Start application server
+        run: |
+          mkdir -p artifacts/playwright-e2e/data
+          EINVITE_DATA_DIR="$PWD/artifacts/playwright-e2e/data" \
+          EINVITE_ALLOW_NO_SCANNER=1 EINVITE_ALLOW_LOCAL_ADMIN_BOOTSTRAP=1 \
+          EINVITE_ADMIN_EMAIL="admin@einvite.test" PYTHONPATH=src/python:. \
+          .venv/bin/python src/python/server.py --port 4310 > /tmp/einvite-cwv-server.log 2>&1 &
+          echo $! > /tmp/einvite-cwv-server.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4310/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/einvite-cwv-server.log
+          exit 1
+
+      - name: Core Web Vitals gate
+        run: |
+          set -o pipefail
+          npx playwright test --config=e2e/playwright.config.ts \
+            e2e/specs/20-core-web-vitals.spec.ts --project=chromium --workers=1 --reporter=line \
+            2>&1 | tee artifacts/playwright-e2e/cwv-output.log
+          test ${PIPESTATUS[0]} -eq 0
+
+      - name: Upload CWV artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-web-vitals-${{ github.run_id }}
+          path: |
+            artifacts/playwright-e2e
+            /tmp/einvite-cwv-server.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop application server
+        if: always()
+        run: |
+          if [ -f /tmp/einvite-cwv-server.pid ]; then
+            kill "$(cat /tmp/einvite-cwv-server.pid)" 2>/dev/null || true
+          fi

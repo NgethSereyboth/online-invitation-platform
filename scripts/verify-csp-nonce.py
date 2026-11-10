@@ -12,10 +12,11 @@ Boots `src/python/server.py` through the shared V14 test harness, opens `/` and
   * no `Refused to apply inline style` (or other style-src) CSP violation is
     logged in the console or raised as a `securitypolicyviolation` event.
 
-The landing and check-in pages currently use external bundle CSS and contain no
-`<style>` elements, so the DOM-nonce assertion is reported as vacuous. The
-nonce-bearing probe is the meaningful positive control: it proves the policy
-accepts the server's nonce rather than merely printing one.
+The landing and check-in pages inline critical CSS with the per-response nonce
+and load the full route stylesheet asynchronously. The DOM-nonce assertion is
+therefore meaningful, and the nonce-bearing probe remains the positive control
+that proves the policy accepts the server's nonce rather than merely printing
+one.
 
 Usage:
     .venv/bin/python scripts/verify-csp-nonce.py
@@ -117,7 +118,7 @@ def verify_page(page, base: str, path: str) -> dict:
         """
         () => ({
           styles: [...document.querySelectorAll('style')].map((element) => ({
-            nonce: element.getAttribute('nonce'),
+            nonce: element.nonce,
             chars: (element.textContent || '').length
           })),
           stylesheets: [...document.querySelectorAll('link[rel="stylesheet"]')]

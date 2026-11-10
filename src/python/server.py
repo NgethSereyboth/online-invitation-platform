@@ -633,6 +633,27 @@ def inject_style_nonce(page, nonce):
         return page
     attr = f' nonce="{html.escape(nonce, quote=True)}"'
     return re.sub(r"(<style)(?=[\s>])", lambda match: match.group(1) + attr, page, flags=re.IGNORECASE)
+
+
+CRITICAL_CSS_MARKER = "<!--CRITICAL_CSS-->"
+
+
+def inject_critical_css(page):
+    """Inline the above-the-fold stylesheet at the marker, before CSP nonce injection.
+
+    The route stylesheets are preloaded and activated asynchronously, so this is
+    the only render-blocking CSS on the check-in and public invitation shells.
+    The style element is intentionally emitted without a nonce; the existing
+    ``inject_style_nonce`` pass adds the per-response nonce afterwards.
+    """
+    if CRITICAL_CSS_MARKER not in page:
+        return page
+    path = ROOT / "critical.css"
+    try:
+        critical = path.read_text(encoding="utf-8")
+    except OSError:
+        return page.replace(CRITICAL_CSS_MARKER, "", 1)
+    return page.replace(CRITICAL_CSS_MARKER, f"<style data-critical>{critical}</style>", 1)
 # Reporting API group config (https://www.w3.org/TR/reporting-1/) referenced
 # by the ``report-to csp`` directive appended to the report-only header.
 # ``max_age`` = 126 days (10886400 seconds); the endpoint is relative so it
@@ -4562,6 +4583,7 @@ class Handler(SimpleHTTPRequestHandler):
         path=HTML_PAGE_FILES.get(str(filename))
         if not path or not path.is_file():return self.json(404,{"error":"Page not found"})
         page=path.read_text(encoding="utf-8")
+        page=inject_critical_css(page)
         page=inject_style_nonce(page,self.csp_nonce)
         marker='<meta name="einvite-backend" content="full">'
         base='<base href="/">'
@@ -11857,6 +11879,7 @@ class Handler(SimpleHTTPRequestHandler):
         # scheme://host prefix otherwise).
         escaped_slug=html.escape(slug,quote=True)
         page=(ROOT/"public.html").read_text(encoding="utf-8").replace('<head>','<head><meta name="einvite-backend" content="full"><base href="/">',1).replace("__INVITATION_SLUG__",escaped_slug).replace("__INVITATION_TITLE__",html.escape(title,quote=True)).replace("__INVITATION_DESCRIPTION__",html.escape(description,quote=True)).replace("__INVITATION_OG_IMAGE__",html.escape(self.absolute_url(image_path),quote=True)).replace("__INVITATION_OG_TYPE__","image/png" if image_format=="png" else "image/svg+xml").replace("__INVITATION_PUBLIC_URL__",html.escape(self.absolute_url(public_path),quote=True))
+        page=inject_critical_css(page)
         page=inject_style_nonce(page,self.csp_nonce)
         body=page.encode()
         # A missing, draft, archived, deleted, expired or unpublished slug has

@@ -143,12 +143,15 @@
    ]
   },
   "checkin.html": {
+   "deferredScripts": [
+    "accessibility-polish.js"
+   ],
    "scripts": [
+    "route-deferred-loader.js",
     "core/i18n.js",
     "ui-dialogs.js",
     "invitation-context.js",
     "checkin.js",
-    "accessibility-polish.js",
     "ui/app-shell.js"
    ],
    "styles": [
@@ -620,5 +623,5 @@
    ]
   }
  },
- "version": 17
+ "version": 18
 }
