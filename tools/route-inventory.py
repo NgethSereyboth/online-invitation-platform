@@ -39,9 +39,11 @@ SERVER = ROOT / "src" / "python" / "server.py"
 HTTP_METHODS = ("GET", "POST", "PUT", "DELETE")
 
 # Routes whose probe would generate an artefact, stream a file or fan out work.
+# (`export` must be anchored: `/api/canva/export-formats` is a plain JSON route,
+# while `/api/account/analytics/export` and `…/data-export/<id>/download` are not.)
 PROBE_SKIP = re.compile(
     r"/(media|image|image-cache)/|social-card|/download|\.png|\.svg|\.ics"
-    r"|/export|/backup|/qr|/archive|/bundle|/campaigns/[^/]+/deliveries"
+    r"|/export(?:$|/|\?)|/backup|/qr|/archive|/bundle|/campaigns/[^/]+/deliveries"
 )
 
 DEF_RE = re.compile(r"^(\s*)def\s+(\w+)\s*\(")
