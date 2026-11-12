@@ -26,7 +26,7 @@ read again with `git checkout backup/pre-cleanup -- <path>`.
 | **Baseline attempt, 2026-11-01** | build, bundles and smoke **passed** (16 pages, 0 console errors, 0 non-2xx). Layout **failed once** on 3 long-task rows (index 375 light 622 ms, 375 dark 613 ms, 1440 light 606 ms; ceiling 600) and **passed on rerun** (`UI_LAYOUT_GUARD_PASSED`, long-task 0 failed, 173 s) with no other browser running. pytest, budgets, LHCI, CSP, canvas and `!important` did **not** run: the runner stops the chain at the first red |
 | Clean-up effect | documentation only — no `src/`, no dependency, no build-logic change. `build.py all` → `BUILD_OK`; `build.py bundles --check` → `ROUTE_BUNDLE_CHECK_PASSED` |
 | Working rules | **OD-3**: local commits only — no push, PR, merge or tag. Agents never write Khmer. Never stage `artifacts/`, `data/`, `src/python/data/`, `.claude/`, `deploy/sites/` |
-| Counts in this file | **11** open/owner-blocked defects (rows 4, 5 and 23 closed on 2026-11-03; **0 stuck**) · **36** open work-order tasks · **19** owner-held decisions (#19 added 2026-11-12) · **13** verification debts (11 open; #7 closed, #13 superseded) |
+| Counts in this file | **11** open/owner-blocked defects (rows 4, 5 and 23 closed on 2026-11-03; **0 stuck**) · **36** open work-order tasks (parked 2026-11-12, D10) · **18** open owner-held decisions (#19 D10 answered 2026-11-12) · **13** verification debts (11 open; #7 closed, #13 superseded) |
 
 **Status legend.** `OPEN` verified still present · `VERIFY` implemented but not re-measured · `OWNER` needs a
 decision only the owner can make · `NOT RUN` never executed in a valid environment · `DO NOT START` deferred
@@ -55,6 +55,7 @@ regressions, CI gaps) was closed and is recorded in `docs/HISTORY.md` §2.
 | 2026-11-01 | Phase-7/8 close-out: generated manifests, Khmer policy | `3d6ff85`, `f2bfcfe` | full suite **230 passed in 1125.10 s (exit 0)**; final build/compile/bundle checks recorded in `PROGRESS.md` |
 | 2026-11-02 | Round 6 six-width live pass: 219 checks, 204 pass, 15 harness failures; no product defect confirmed; clean rerun blocked by the daily allowance | `—` | 202 captures; console/network clean every width; guest/RSVP local 61/61; CLS untouched |
 | 2026-11-02 | Round 6 final local pass: Canvas/X dismissal, static context row, Pages tip, boot-safe selection/prewarm, deterministic mobile/brand markup, SQLite teardown shutdown | `7532368`, `f524c31` | **225/225 checks**, clean console/network; CLS desktop **0.0698 / 0.0679 / 0.0810**, mobile **0.0973 / 0.0973 / 0.0943**; full suite **247 passed / 16 plugin warnings in 1092.83 s**; single deploy attempt refused by allowance (10,301/10,000), no receipt |
+| 2026-11-12 | Language-migration S1: parity harness (record/replay/compare/self-check) + `EINVITE_TEST_BASE_URL` switch | `—` (see `docs/language-migration/S1-HARNESS.md`) | `--self-check` → **PARITY 95/96 identical, 0 diff, 1 skipped**, exit 0; switch short-circuits in 0.11 s with `process=None`; `build.py all --check` → `BUILD_OK` |
 | 2026-11-12 | Language-migration P2: route inventory frozen (345 declarations, 194 `/api` patterns), trailing-slash law probed on the live origin, plan §0.3 facts measured | `—` (see `docs/language-migration/P2-REPORT.md`) | `tools/route-inventory.py` → `ROUTE_INVENTORY` 345/11 unclassified, exit 0; `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`; `compileall` exit 0 |
 | 2026-11-01 | Phase-10: static Pages stylesheet/manager placement; deploy retry refused | `ff5f5c1` | CLS **0.5287 → 0.4959** (the earlier 0.4194 was invalid while the manager was hidden in Event); remaining deferred-module shifts documented as stuck; full suite **231 passed in 1068.91 s (exit 0)**; Sites quota daily **10,755/10,000**, reset **2026-11-02T00:00Z**; two attempts refused, no further retry queued |
 
@@ -163,7 +164,7 @@ Round-0 verdicts and evidence: `bugs/round-0/FINDINGS.md`.
 
 ---
 
-## 3. Owner-held decisions (19)
+## 3. Owner-held decisions (19; #19 answered 2026-11-12)
 
 Nothing here is blocked on an engineer; every row needs an answer, a purchase, or an account. Defaults
 already in force are listed so work can continue meanwhile.
@@ -188,7 +189,7 @@ already in force are listed so work can continue meanwhile.
 | 16 | Guest-page 401 blocks | Product choice: public read routes or hide when unauthenticated. | Blocks show (bug). |
 | 17 | Artboard fit / viewport rule | Lift the “don't change `updateCanvasView`” rule, or accept 251–275 px. | Accepted as blocked. |
 | 18 | Clean-up leftovers | Decide on deleting `tests/` (the gate contract) and `artifacts/` (2.7 GB, gitignored, no git backup). | Both kept; one revertable commit each. |
-| 19 | Language migration sequence (**D10**) | `WORKORDER_FREEBUFF.md` says “do NOT migrate frameworks”; `language-optimization-plan-v3.1.md` is a language migration, and its §3.1 says one agent run must never hold both. Decide: park Track W and start Track M now, finish Track W first, or run both under the per-phase feature freeze (plan Rule 5). P2 is done either way (`docs/language-migration/`); P1 and D2/D8 stay blocked. | Track W first, then Track M — nothing from Track M is cut over until this row is answered. |
+| 19 | Language migration sequence (**D10**) — **answered 2026-11-12: Track M now** | `WORKORDER_FREEBUFF.md` says “do NOT migrate frameworks”; `language-optimization-plan-v3.1.md` is a language migration, and its §3.1 says one agent run must never hold both. Owner answer: **Track M proceeds now, Track W is parked** (nothing deleted from this file; the 36 open work-order tasks stay queued and resume if the migration pauses at a planned stopping point). P2 and S1 are done; P1, D2, D8 and P4 still block S2 and every cutover. | Track M. No route is cut over until P1 (baseline) and P3/D2 (dependency override) exist. |
 
 ---
 

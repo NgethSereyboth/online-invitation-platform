@@ -73,7 +73,7 @@ Probe: `http://127.0.0.1:4175`.
 | `/api/auth/me` · probe 200 / 404 with slash | exact | `—` | public | public prefix, no guard in handler | exact only | do_GET() |
 | `/api/billing/status` · probe 401 / 404 with slash | exact | `billing_status()` | user | user | exact only | do_GET() |
 | `/api/canva/auth-status` · probe 401 / 404 with slash | exact | `canva_auth_status()` | user | user | exact only | do_GET() |
-| `/api/canva/export-formats` | exact | `canva_export_formats()` | unclassified | no guard symbol in handler or its callees | exact only | do_GET() |
+| `/api/canva/export-formats` · probe 200 / 404 with slash | exact | `canva_export_formats()` | unclassified | no guard symbol in handler or its callees | exact only | do_GET() |
 | `/api/components` · probe 401 / 404 with slash | exact | `list_components()` | user | user | exact only | do_GET() |
 | `/api/feature-flags` · probe 200 / 404 with slash | exact | `public_feature_flags()` | user | user | exact only | do_GET() |
 | `/api/health` · probe 200 / 404 with slash | exact | `—` | public | page or health endpoint | exact only | do_GET() |

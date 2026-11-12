@@ -425,3 +425,35 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   (up_to_date=732)`; `python3 -m compileall -q tools/route-inventory.py` exit 0. Full pytest
   was **not** re-run (docs/ and tools/ only); the last full record stays 252 passed on
   2026-11-03.
+
+## 2026-11-12 — language-migration S1 (round-trip equivalence harness)
+
+- **Decision recorded:** D10 answered **Track M now**, Track W parked (owner row #19 in
+  `docs/NEXT-WORK.md`; nothing was deleted from that queue). S1 is the first Track M step
+  that is not blocked by P1.
+- **Built:** `tools/parity-harness.py` with four modes — `--record`, `--replay`,
+  `--compare A B` (the shadow tee, R3) and `--self-check`. The corpus is a JSON file seeded
+  from the frozen P2 inventory, which is the plan's R4 replay alternative to a 72-hour
+  shadow window. It diffs status, nine headers and a normalised body, printing the first
+  differing offset with context; exit code is 1 on any diff so it can gate a wave.
+- **Exit criterion met:** `--self-check` boots two independent Python instances and reports
+  **PARITY 95/96 identical · 0 diff · 1 skipped**, exit 0. Two initial diffs were instance
+  facts, not behaviour — `uptimeSeconds`, and `localRoot` pointing at each instance's temp
+  dir — and were normalised with that reason recorded. The per-boot CSP nonce (`nonce-…`
+  header and `nonce="…"` markup) was the first noise source; folding only one form left
+  95/96 red, which is why both forms are normalised.
+- **Base-URL switch (plan C1).** `tests/v14_test_utils.fresh_server` now yields
+  `(None, EINVITE_TEST_BASE_URL, None)` instead of spawning when the variable is set;
+  unset keeps the old behaviour including the FB-09 port-race retry. `tests/conftest.py`
+  `server_url` inherits it, so Class A tests target another backend with one variable.
+  Verified: set → 0.11 s, `process=None`, no data dir.
+- **Known gaps, reported by every run:** no non-GET verb (writes need the plan's Rule 8
+  snapshot copy; S11), no authenticated corpus (needs the S6 shared session store), 16
+  artefact route families skipped, one route unexercised by transport
+  (`campaigns/<id>/deliveries`), and tests that spawn their own server are not yet
+  enumerated/converted — that enumeration is the next S1 task.
+- **Why it is safe:** no production code, no dependency, no gate or budget touched; the
+  helper edits are inert unless the variable is set. Docs: `docs/language-migration/S1-HARNESS.md`.
+- **Gates:** `python3 build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`;
+  `compileall` on both tools exit 0. Full pytest **not** re-run; the two test-helper edits
+  are additive branches and the harness itself exercises `fresh_server` on every self-check.
