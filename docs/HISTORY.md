@@ -382,3 +382,46 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   change was needed.
 - **Docs:** NEXT-WORK #23 is fixed, the missing-label bullet is closed, verification debt #13
   is superseded by the local-origin revision, and #7 records the suite run.
+
+## 2026-11-12 — language-migration P2 (route inventory freeze)
+
+- **Scope.** `language-optimization-plan-v3.1.md` §14 item 3 (precondition P2), the only
+  precondition that is fully executable inside this repo. No product code, no dependency, no
+  gate, no budget changed. The plan file itself stays untracked until the owner answers D10.
+- **What was missing.** The plan's numerator (“155 `/api` paths”) was unverified, the route
+  table does not exist (`src/python/server.py` is a hand-written `if` chain), and the 16-vs-17
+  page disagreement had no record. Each of those is an accounting unit a migration cannot do
+  without.
+- **Built:** `tools/route-inventory.py` — indexes defs by indentation, walks reachability from
+  each `do_<METHOD>` through `self.<helper>(path)` calls, extracts the five declaration forms
+  (exact, set, prefix+suffix, regex, dispatch dict), classifies auth from guard symbols across
+  the handler's callees, and probes GET-only against a running backend.
+- **Frozen:** **345** declarations (GET 143 / POST 144 / PUT 36 / DELETE 22); **336** `/api`
+  declarations over **194** distinct patterns (113 distinct exact strings). Auth: 121 user,
+  121 invitation-scoped, 36 platform-service, 32 admin, 24 public, 11 unclassified (listed for
+  manual read). Artifacts: `docs/language-migration/ROUTE-INVENTORY.md` and `P2-REPORT.md`.
+- **Verified, not inferred — the trailing-slash law.** 125 GET declarations probed twice against
+  `http://127.0.0.1:4175` (read-only, no writes): **88 pairs differ**. Exact `path ==` routes
+  accept no trailing slash (401 → 404 for account, admin, studio and auth routes; 200 → 404 for
+  `/api/health`, `/api/auth/me`, `/api/feature-flags`, `/_marketplace/crl.json`); regex routes
+  ending `/?` accept both. D6 (“byte-identical”) now has a testable list instead of a slogan.
+- **Correction to the plan's auth model.** 36 routes (`/api/platform/v32/*`, `/api/platform/v52/*`,
+  collaboration and raster families) are guarded inside `get_platform_v32_service()` /
+  `get_future_v52_service()`, not in `server.py`. S6/S9 must port that guard or those routes
+  arrive unauthenticated. Recorded in the report §4.
+- **Fact table resolved** (report §6): 24,889 Python LOC, 226 JS files / 63,196 LOC,
+  `ai_agent` 3,758 LOC / 12 files, 329 test files with **301** tests collected under `.venv`
+  (ambient `python3` lacks playwright and stops at 291 + 8 errors), `CIPHERTEXT_PREFIX =
+  "gAAAAA"`, passkeys in `server.py:7861–7932`. The 155-path and 716-SQL figures do not
+  reproduce; 695 SQL lines in `server.py` and 868 across `src/python` do.
+- **Pages:** 16 product pages + 11 test fixtures = 27 HTML files; `PAGE_ALIASES` has 15 entries.
+  Fixtures are served by the `.html` passthrough; recommendation is to keep that behaviour and
+  exclude fixtures from the S3 parity corpus.
+- **Blocked, recorded as blocked:** P1 (no result file, `k6` not installed, needs a staging
+  `EINVITE_LOAD_TEST_MODE=1`), P3/D2, P4, P8/D8, P6, P7. Decision D10 is added as owner row
+  #19 in `NEXT-WORK.md`.
+- **Gates:** `python3 build.py all --check` → `EDITOR_BUNDLE_CHECK_PASSED`,
+  `ROUTE_BUNDLE_CHECK_PASSED`, `PAGE_ASSET_MANIFEST_CHECK_PASSED`, `MIRROR_CHECK_PASSED
+  (up_to_date=732)`; `python3 -m compileall -q tools/route-inventory.py` exit 0. Full pytest
+  was **not** re-run (docs/ and tools/ only); the last full record stays 252 passed on
+  2026-11-03.
