@@ -564,6 +564,28 @@ exit 0; `supply-chain.yml` parses; `build.py all --check` still `BUILD_OK` with 
 - **Deliberately absent:** any Caddy/compose upstream (arrives at S3 with something to route),
   the S4 schema assertion, and the S6 session/CSRF interop.
 
+### S3 — the Node service serves the shell, byte for byte
+
+The contract was measured from a running Python instance first, which is why the port is
+faithful rather than plausible: pages get the critical-CSS inline, a per-response `<style>`
+nonce and the `<meta einvite-backend>`/`<base>` head bits, in that order; assets carry
+`public, max-age=3600, must-revalidate` plus `Last-Modified`; `If-Modified-Since` yields 304;
+**Range is ignored** (Python answers 200 with the whole body, so Node does too); a missing file
+is a `no-store` JSON 404 with Python's spacing; and `/i/<unknown>` is a 404 HTML shell with
+`no-store` and `X-Robots-Tag: noindex`.
+
+- **Parity:** `tools/static-parity.py` diffed 16 page routes + `/`, 40 mirrored assets, a
+  missing asset, `/i/no-such-invitation` and a Range request between Python `:8901` and Node
+  `:8902` → **59/59 identical, 0 failing**. Only the nonce, request id and each backend's own
+  `host:port` are folded.
+- **Service tests:** `npm test` → **5 passed**, including that the body's nonce equals the
+  header's and `/checkin` keeps `camera=(self)`.
+- **Container:** the first build omitted `lib/` and crashed on boot; fixed and re-verified —
+  `/checkin` 200 with one `data-critical` block and `/healthz` 200 with the mirror mounted.
+- **Known gaps:** published invitations (`/i/*` serves only the no-row branch until S9), the
+  social-card extension when Python lacks Pillow, and no router upstream — so traffic is still
+  0 % by construction, not by weight.
+
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
 - **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`

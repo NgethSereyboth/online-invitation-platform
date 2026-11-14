@@ -12,9 +12,13 @@ FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080 \
-    HOST=0.0.0.0
+    HOST=0.0.0.0 \
+    EINVITE_WEB_ROOT=/web
+# The mirror is mounted read-only at /web; it is the same tree Python serves,
+# so both runtimes must see one copy of the built pages.
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json app.mjs server.mjs ./
+COPY lib ./lib
 
 USER node
 EXPOSE 8080
