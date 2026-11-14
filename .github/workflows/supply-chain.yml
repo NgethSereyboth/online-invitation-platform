@@ -3,10 +3,12 @@ name: Supply Chain
 # Sprint 11 — SBOM + strict lockfile + vulnerability gate.
 #
 # The Python job proves that docs/requirements-production.lock installs with
-# --require-hashes in a clean environment. The npm job proves that
-# package-lock.json is reproducible with `npm ci`. Both generate CycloneDX 1.5
-# JSON SBOMs with the official CycloneDX tooling and upload them as artifacts;
-# generated SBOMs are never committed.
+# --require-hashes in a clean environment. The npm job proves that both
+# lockfiles are reproducible with `npm ci`: the root one (dev tooling) and
+# services/api-node (the strangler-fig service's own closure, installed with
+# --ignore-scripts). Both generate CycloneDX 1.5 JSON SBOMs with the official
+# CycloneDX tooling and upload them as artifacts; generated SBOMs are never
+# committed.
 #
 # Vulnerability policy:
 #   * Python: pip-audit fails on ANY advisory affecting the hash-locked tree.
@@ -109,9 +111,44 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            services/api-node/package-lock.json
 
       - name: Validate lockfile install
         run: npm ci --no-audit --no-fund
+
+      - name: Validate Node service lockfile install
+        # The service keeps its own closure; --ignore-scripts keeps the install
+        # side-effect free, matching the S2 install rule.
+        working-directory: services/api-node
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Generate Node service SBOM
+        # Reuses the root cyclonedx-npm binary against the service lockfile, so
+        # the service does not need SBOM tooling in its own dependency closure.
+        working-directory: services/api-node
+        run: |
+          set -euo pipefail
+          mkdir -p ../../artifacts/sbom
+          ../../node_modules/.bin/cyclonedx-npm \
+            --package-lock-only \
+            --output-file ../../artifacts/sbom/npm-service.cdx.json \
+            --output-format JSON \
+            --spec-version 1.5 \
+            --validate
+
+      - name: Fail on Critical npm vulnerabilities (Node service)
+        working-directory: services/api-node
+        run: |
+          set -euo pipefail
+          mkdir -p ../../artifacts/sbom
+          set +e
+          npm audit --audit-level=critical --json > ../../artifacts/sbom/npm-service-audit.json
+          status=$?
+          set -e
+          cat ../../artifacts/sbom/npm-service-audit.json
+          exit "${status}"
 
       - name: Generate CycloneDX SBOM
         run: |

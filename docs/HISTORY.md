@@ -542,6 +542,28 @@ data); `.guest-summary` is untouched in value and the layout guard covers its ge
 - `python3 build.py all` → `BUILD_OK`; `compileall` on the three touched Python files exit 0.
 - No budget, threshold, baseline or frozen canvas was changed (OD-6).
 
+### S2 — the Node service now exists, with no route ported
+
+`services/api-node/` is a Fastify skeleton pinned to **`fastify@5.12.8`** — the whole of the D2
+package set — with its own `package.json`, its own committed lockfile (47-component closure) and
+its own image. The root `package.json` is untouched, so the lint, bundle and SBOM tooling for the
+Python app cannot be perturbed by a service dependency.
+
+- **Route surface:** `GET /healthz` → 200 with `cache-control: no-store` and
+  `{status, service, version, uptimeSeconds}`; every other path is a JSON 404. Nothing product-
+  facing is routed to it, so it carries 0 % traffic by construction.
+- **Supply chain:** the existing `npm-sbom` job now also installs the service closure with
+  `npm ci --ignore-scripts`, emits `npm-service.cdx.json` through the root `cyclonedx-npm`
+  binary, and audits it at Critical. CodeQL's `javascript-typescript` job already covers
+  `services/**` because its config only ignores generated bundles.
+- **Verified:** `npm test` **3 passed**; `/healthz` **200** from a live process and from the
+  container built by the new Dockerfile; SBOM validates with **47 components**; critical audit
+exit 0; `supply-chain.yml` parses; `build.py all --check` still `BUILD_OK` with no drift.
+- **Not run:** CodeQL (no local binary — CI covers it) and the workflow end-to-end (runs on
+  push/PR; each command it invokes was run by hand instead).
+- **Deliberately absent:** any Caddy/compose upstream (arrives at S3 with something to route),
+  the S4 schema assertion, and the S6 session/CSRF interop.
+
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
 - **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`
