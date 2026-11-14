@@ -586,6 +586,31 @@ is a `no-store` JSON 404 with Python's spacing; and `/i/<unknown>` is a 404 HTML
   social-card extension when Python lacks Pillow, and no router upstream — so traffic is still
   0 % by construction, not by weight.
 
+### S4 — the data layer runs on PostgreSQL with the same answers
+
+The service gained a thin layer over `pg` (D2's second package) and two ported reads:
+`findUserByEmail` (hash-first, then the legacy plaintext fallback) and `findGuestBySlug`. Four
+parity choices carry the weight: a quote- and comment-aware `?`→`$n` rewrite, an `int8` parser
+that returns a number when lossless (so `created_at` does not turn into a string on the wire),
+both `statement_timeout` and `query_timeout` mapped to `QueryDeadlineExceeded`, and a **schema
+contract** asserted at boot because the schema has no version counter to compare.
+
+- **DB parity:** the same fixtures through `core.db` (SQLite) and the service (PostgreSQL) →
+  **9/9 identical**, values *and* types, covering hash hit, case/space normalisation, legacy
+  fallback, miss, empty string, `None`, guest hit and guest miss.
+- **Two real findings.** `docs/postgres_schema.sql` omits `users.email_hash` — Python adds it at
+  boot (`server.py:2018`), so a fresh PG instance is not the schema the queries expect; recorded
+  as defect #25 rather than patched, because Node must not migrate. And `pg`'s own timeout is an
+  uncoded `Error: Query read timeout`, so the first `57014`-only mapping never fired; a budgeted
+  `pg_sleep(1)` now raises `QueryDeadlineExceeded` in 185 ms and the error handler returns
+  Python's 504 body with `Retry-After: 1`.
+- **Boot assertion proven both ways:** a valid schema logs `schema contract satisfied` and serves
+  `/healthz` 200; an empty database exits **1** with `SchemaMismatchError`.
+- **Service tests:** `npm test` → **9 passed**.
+- **Known divergences:** SQLite's ASCII-only `lower()` versus PostgreSQL's Unicode-aware one (only
+  reaches unconverted rows), a per-statement budget where Python has a per-request one, `numeric`
+  left as a string, and a pool default of 10 that a multi-instance deployment must divide.
+
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
 - **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`

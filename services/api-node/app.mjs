@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import Fastify from 'fastify';
 
+import { QueryDeadlineExceeded } from './lib/db.mjs';
 import {
   pageFiles,
   pageForPath,
@@ -63,6 +64,34 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot() } = {}) {
       version: SERVICE_VERSION,
       uptimeSeconds: Math.floor(process.uptime()),
     };
+  });
+
+  // Python maps QueryDeadlineExceeded to 504 with this exact body and headers
+  // (server.py database_timeout). Registered once, so every ported route that
+  // queries inherits it rather than re-implementing the mapping.
+  app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof QueryDeadlineExceeded) {
+      const nonce = newNonce();
+      applySecurityHeaders(reply, { nonce, permissions: PERMISSIONS_DEFAULT });
+      const body = jsonBody({
+        error: 'The request took too long to read from the database. Please retry.',
+        code: 'database_timeout',
+        requestId: reply.getHeader('x-request-id') ?? '',
+      });
+      reply.code(504);
+      reply.header('retry-after', '1');
+      reply.header('content-type', 'application/json; charset=utf-8');
+      reply.header('content-length', String(Buffer.byteLength(body)));
+      reply.send(body);
+      return;
+    }
+    const nonce = newNonce();
+    applySecurityHeaders(reply, { nonce, permissions: PERMISSIONS_DEFAULT });
+    const body = jsonBody({ error: 'Internal server error' });
+    reply.code(500);
+    reply.header('content-type', 'application/json; charset=utf-8');
+    reply.header('content-length', String(Buffer.byteLength(body)));
+    reply.send(body);
   });
 
   // Same shape as Python's /api/health; the capability flags describe *this*
