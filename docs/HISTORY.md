@@ -493,7 +493,54 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   those declarations is a visual decision about the check-in/guest layout that needs a
   screenshot comparison, not a blind edit. P5 therefore stays **open**: one gate is red.
 - **Consequence for the migration:** S2's "the existing workflows and run-gates still pass"
-  exit criterion cannot be claimed until this is resolved.
+  exit criterion could not be claimed until this was resolved.
+
+## 2026-11-14 — owner decisions, the four-declaration ratchet, and a green matrix
+
+Seven decisions were answered by the owner and recorded in `docs/NEXT-WORK.md` §3: **D2** a
+minimal package set for the Node service, **P1** local disposable staging, **D8** PostgreSQL
+for the parallel run, **P4** undecided so phases stay serial, plus three code decisions.
+The three code decisions were implemented and verified in this pass.
+
+### The `!important` ratchet — 3837 → 3833, no threshold moved
+
+`src/css/critical.css` held exactly four `!important` declarations and was the whole excess:
+`.guest-summary{min-height:260px!important;padding-top:42px!important;padding-bottom:42px!important}`
+and `[hidden]{display:none!important}`. Every route bundle already carries the identical
+unlayered `.guest-summary` rule, so the critical copy only needs to win *before* the bundle
+arrives — where nothing competes with it, because `critical.css` lives in `@layer components`
+and layered rules lose to unlayered ones regardless. The four markers were removed; the
+declarations and their values are unchanged.
+
+- `important` phase: `OK important ratchet holds: 3833 ≤ pin 3833`.
+- Visual check on a disposable instance (`artifacts/lang-migration/checkin-1440.png`,
+  `checkin-390.png`): check-in page renders correctly at 1440×900 and 390×844, no horizontal
+  overflow, and **2 elements carry `[hidden]`, 0 of them compute to a visible display** — the
+  UA default plus the bundle rule keep hidden panels hidden.
+- Not claimed: a rendered published invitation page (the disposable instance has no
+data); `.guest-summary` is untouched in value and the layout guard covers its geometry.
+
+### Defects #24 and #13 (owner rows #24, #12)
+
+- **#24 webhook secret rotation.** `webhook_endpoints` → `secret` added to `PROTECTED_COLUMNS`
+  (`core/db.py`) and to `SENSITIVE_COLUMNS` in `scripts/migrate_encrypt_sensitive_fields.py`,
+  so `--reencrypt` now rewrites it instead of stranding the secret under the previous key.
+- **#13 malformed key.** `core/crypto.py` now raises when `EINVITE_FIELD_ENCRYPTION_KEY` is
+  set but malformed **and** `EINVITE_PRODUCTION` is truthy, refusing to boot instead of
+  minting an unpersisted key. Development keeps the soft path so scratch data dirs still start.
+  The Node port must match (`P6-ENCRYPTION-SPEC.md` §1.1).
+
+### Verification
+
+- **Full matrix, single run, final tree:** `run-gates.py --phase all`,
+  `artifacts/next-work/gates/20261114-192448` → **GATES_PASSED**, all eleven phases exit 0:
+  build, bundles, analyze, smoke (16 pages / 0 console errors), layout (no flake), pytest
+  **301 passed in 987.38 s**, budgets, LHCI, CSP, canvas (22 pass / 0 fail), important (3833).
+  This closes verification debt #1 and satisfies precondition **P5**.
+- Targeted tests before the matrix: `security_field_encryption_test`,
+  `lt_7_2_webhook_signing_test`, `lt_7_2_webhook_delivery_test` → **11 passed in 64.05 s**.
+- `python3 build.py all` → `BUILD_OK`; `compileall` on the three touched Python files exit 0.
+- No budget, threshold, baseline or frozen canvas was changed (OD-6).
 
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 

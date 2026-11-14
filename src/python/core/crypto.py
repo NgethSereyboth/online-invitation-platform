@@ -81,6 +81,12 @@ def _generate_key() -> str:
     return Fernet.generate_key().decode("ascii")
 
 
+def _production_mode() -> bool:
+    """Same flag the server reads (``EINVITE_PRODUCTION``), without importing it."""
+    value = str(_config_get("EINVITE_PRODUCTION", "0") or "0").strip().lower()
+    return value in {"1", "true", "yes"}
+
+
 def _load_or_create_key() -> tuple[str, str]:
     """Resolve the encryption key. Returns ``(key, reason)``.
 
@@ -89,12 +95,25 @@ def _load_or_create_key() -> tuple[str, str]:
     persisted to that sidecar (0600). The sidecar lives with the data it
     encrypts, so the key survives a restart; only a read-only data directory
     falls back to a process-local key, which is reported as such.
+
+    A *present but invalid* key used to mint an unpersisted key and carry on:
+    every row written after that boot was unreadable after a restart (open
+    defect #13). Owner decision 2026-11-14: **refuse to boot in production**.
+    Development keeps the old soft path so a scratch data dir still starts.
     """
     configured = str(_config_get(_KEY_ENV, "") or "").strip()
     if configured:
         if _valid_key(configured):
             return configured, "env"
-        # A wrong-shaped env value must not silently disable encryption; say so.
+        if _production_mode():
+            raise RuntimeError(
+                "EINVITE_FIELD_ENCRYPTION_KEY is set but is not a valid Fernet key "
+                "(32 urlsafe-base64 bytes). Refusing to start in production: the "
+                "previous fallback encrypted new rows under a key that died with "
+                "the process. Set a valid key, or unset it to use the data-dir key."
+            )
+        # Development: a wrong-shaped env value must not silently disable
+        # encryption, so say so and keep a working (ephemeral) key.
         return _generate_key(), "env-invalid"
     path = _data_dir() / _KEY_FILE
     try:

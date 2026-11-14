@@ -65,6 +65,10 @@ PROTECTED_COLUMNS = {
     "delivery_attempts": ("recipient",),
     "audit_events": ("metadata_json",),
     "invitation_edit_history": ("diff_json",),
+    # Encrypted by explicit protect() at server.py:7628/7639 but previously
+    # missing here and from the rotation script, so --reencrypt skipped it and
+    # a key rotation stranded every existing webhook signing secret.
+    "webhook_endpoints": ("secret",),
 }
 
 
