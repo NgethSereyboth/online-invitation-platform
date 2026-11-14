@@ -463,6 +463,30 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   is genuinely zero; that was checked before being reported.
 - **Why it is safe:** no production code, no dependency, no gate or budget touched; the
   helper edits are inert unless the variable is set. Docs: `docs/language-migration/S1-HARNESS.md`.
+
+## 2026-11-12 — preconditions P6 and P7 (encryption spec, shared-state inventory)
+
+- **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`
+  covers key resolution, the Fernet token layout, every `None`/empty/disabled edge, the
+  read boundary (`reveal` on every string column), the write boundary (explicit `protect()`),
+  rotation and the proof matrix S5 owes. Hash vectors are reproduced from `core.crypto`.
+- **Corrections it produced.** (1) `NEXT-WORK.md` #13 described a malformed key as falling
+  back to the data-dir key; `_load_or_create_key` actually mints an **unpersisted** key and
+  `decrypt_field` returns undecryptable tokens unchanged — rows written after that boot are
+  unreadable after restart. Row #13 is corrected, severity P3 → P2. (2) There are **seven**
+  encrypted columns, not six: `webhook_endpoints.secret` is written through `protect()` at
+  `server.py:7628/7639` but appears in neither `PROTECTED_COLUMNS` nor the rotation script,
+  so a key rotation strands existing webhook signing secrets. Recorded as open defect #24.
+- **P7 written** (`docs/language-migration/P7-SHARED-STATE.md`): 12 items classified.
+  Three are process-local — `RATE_BUCKETS`, `STUDIO_BACKUP_LOCKS`, `PRESENCE_STATE` — and
+  `PRESENCE_STATE` matters on Target A specifically because the deployment has no Redis and
+  the code's Redis-first branch never runs. Two plan wordings were corrected: job claiming is
+  already an atomic compare-and-swap (`platform_v32/jobs.py:65,72`), so the S12b gap is stale-
+  claim recovery rather than a missing lock; and account lockout is read-modify-write, so
+  porting it byte-identically would port a lost-update race.
+- **No product code changed.** Both documents assign treatments and owners; they do not
+  implement them. Gates: `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED` (docs
+  only).
 - **Gates:** `python3 build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`;
   `compileall` on both tools exit 0. Full pytest **not** re-run; the two test-helper edits
   are additive branches and the harness itself exercises `fresh_server` on every self-check.
