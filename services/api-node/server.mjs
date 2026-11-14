@@ -1,10 +1,26 @@
 import { buildApp } from './app.mjs';
+import { createFieldCipher } from './lib/crypto.mjs';
 import { assertSchema, createDatabase } from './lib/db.mjs';
 
 const port = Number.parseInt(process.env.PORT ?? '8080', 10);
 const host = process.env.HOST ?? '127.0.0.1';
 
-const app = buildApp({ logger: { level: process.env.LOG_LEVEL ?? 'info' } });
+let db = null;
+let cipher = null;
+if (process.env.EINVITE_DATABASE_URL) {
+  db = createDatabase();
+  try {
+    await assertSchema(db);
+    // A malformed key refuses production boot here, before any request runs.
+    cipher = createFieldCipher();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
+    await db.close();
+    process.exit(1);
+  }
+}
+
+const app = buildApp({ logger: { level: process.env.LOG_LEVEL ?? 'info' }, db, cipher });
 
 for (const signal of ['SIGTERM', 'SIGINT']) {
   process.once(signal, async () => {
@@ -19,23 +35,12 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
   });
 }
 
-// S4: Python owns migrations. When a database is configured this service
-// asserts the schema contract at boot and refuses to start on a mismatch, so a
+// The schema contract is asserted above, before the app exists, so a
 // half-migrated database fails loudly instead of 500-ing per request.
-if (process.env.EINVITE_DATABASE_URL) {
-  const db = createDatabase();
-  try {
-    await assertSchema(db);
-  } catch (error) {
-    app.log.error({ err: error }, 'schema contract check failed; refusing to start');
-    await db.close();
-    process.exit(1);
-  }
-  app.decorate('db', db);
+if (db) {
   app.addHook('onClose', async () => {
     await db.close();
   });
-  app.log.info('database schema contract satisfied');
 }
 
 try {

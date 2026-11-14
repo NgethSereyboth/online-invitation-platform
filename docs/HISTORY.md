@@ -632,6 +632,36 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### S6 — sessions ported, and Python's PostgreSQL path turned out not to work
+
+Sessions were already database rows keyed by `sha256(token)` with a `csrf_hash`, so the port is the
+checks around them: the join, the idle timeout (30 min admin, 7 days otherwise), the once-a-minute
+`last_seen_at` touch, and `guard_cookie_origin()` in order — `Sec-Fetch-Site`, `Origin`, the
+double-submit pair, then the stored hash — with Python's three 403 bodies. `GET /api/auth/me` and
+`POST /api/auth/logout` are wired, and **26 service tests** cover every rejection path over a stub
+query layer.
+
+Trying to prove it across backends is what found the larger problem: **the documented PostgreSQL
+deployment had never run.**
+
+1. `platform_v32/schema.py` declared V52 columns as `BLOB`, which PostgreSQL does not have, and it
+   parses DDL even under `CREATE TABLE IF NOT EXISTS` — boot aborted. The PostgreSQL adapter now
+   maps ` BLOB` → ` BYTEA`.
+2. `_try()` swallowed a failed statement, which SQLite tolerates and PostgreSQL does not: the
+   transaction aborted and every later statement failed with `InFailedSqlTransaction`. Optional
+   DDL now runs under a savepoint, restoring the SQLite behaviour on both backends.
+3. **Still open (#27):** the core schema — every `CREATE TABLE` and about fifty `ALTER`s — lives
+   inside `connect_sqlite()`, so a PostgreSQL database only gets `docs/postgres_schema.sql`, which
+   lacks `email_hash`, `suspended_at` and `session_never_expires`. A fresh PostgreSQL database, even
+   one Python bootstrapped itself, answers `/api/auth/me` by dropping the connection. The `PRAGMA
+   table_info` discovery is now backend-aware, but nothing runs the core ALTERs on PostgreSQL yet.
+
+Verified: Python boots on a fresh PostgreSQL database after fixes 1–2; SQLite boot still serves
+`/api/health` and `/checkin` with zero tracebacks; targeted Python tests pass; `npm test` 26/26.
+Not verified: the cross-backend session proof itself, which is exactly what #27 blocks. The honest
+conclusion is that **D8 is not yet viable** — and that this was invisible until two backends were
+actually pointed at one database.
+
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
 - **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`

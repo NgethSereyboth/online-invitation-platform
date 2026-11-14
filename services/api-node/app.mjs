@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import Fastify from 'fastify';
 
+import { registerSessionRoutes } from './lib/auth-routes.mjs';
 import { QueryDeadlineExceeded } from './lib/db.mjs';
 import {
   pageFiles,
@@ -52,9 +53,13 @@ function readCriticalCss(webRoot) {
   }
 }
 
-export function buildApp({ logger = false, webRoot = defaultWebRoot() } = {}) {
+export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null, cipher = null } = {}) {
   const app = Fastify({ logger, trustProxy: true });
   const pages = pageFiles(webRoot);
+
+  // Session routes exist only when a database and the field cipher do: without
+  // them there is nothing to resolve a cookie against.
+  if (db && cipher) registerSessionRoutes(app, { db, cipher });
 
   app.get('/healthz', async (_request, reply) => {
     reply.header('cache-control', 'no-store');

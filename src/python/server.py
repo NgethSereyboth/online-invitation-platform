@@ -542,6 +542,25 @@ REDIS_URL = platform_env("EINVITE_REDIS_URL", "").strip()
 _REDIS_CLIENT = None
 DATABASE_URL = platform_env("EINVITE_DATABASE_URL", "").strip()
 DATABASE_KIND = "postgresql" if DATABASE_URL.startswith(("postgres://", "postgresql://")) else "sqlite"
+
+
+def _table_columns(db, table):
+    """Column names for schema discovery on either backend.
+
+    PostgreSQL has no ``PRAGMA``. Before this helper every runtime ``ALTER``
+    was guarded by ``PRAGMA table_info(<table>)``, which raises on PostgreSQL
+    inside a swallowed ``try`` — so a PostgreSQL database never gained
+    ``users.email_hash``, ``users.suspended_at`` or
+    ``users.session_never_expires`` and those reads failed at request time.
+    """
+    if DATABASE_KIND == "postgresql":
+        rows = db.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema='public' AND table_name=?",
+            (table,),
+        )
+        return {row["column_name"] for row in rows}
+    return {row["name"] for row in db.execute(f"PRAGMA table_info({table})")}
 PUBLIC_BASE_URL = platform_env("EINVITE_PUBLIC_BASE_URL", "").strip().rstrip("/")
 # Parse EINVITE_TRUSTED_PROXY_IPS as CIDR ranges (e.g. "10.0.0.0/8") or bare
 # IPv4/IPv6 addresses.  Bare addresses are auto-suffixed to "/32" so operators
@@ -1971,7 +1990,7 @@ def connect_sqlite():
                     CREATE INDEX IF NOT EXISTS idx_auth_tokens_expiry ON auth_tokens(expires_at);
                     CREATE INDEX IF NOT EXISTS idx_guest_messages_invitation ON guest_messages(invitation_id,created_at DESC);
                     """)
-                    user_columns={row["name"] for row in db.execute("PRAGMA table_info(users)")}
+                    user_columns=_table_columns(db,"users")
                     if "role" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'customer'")
                     if "email_verified" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0")
                     if "plan" not in user_columns: db.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
@@ -2020,14 +2039,14 @@ def connect_sqlite():
                     # ROADMAP §4.1 — audit metadata is encrypted at rest, so the
                     # admin "admin-only events" filter cannot search the JSON in SQL;
                     # this indexed flag (written with the metadata) keeps it exact.
-                    audit_columns={row["name"] for row in db.execute("PRAGMA table_info(audit_events)")}
+                    audit_columns=_table_columns(db,"audit_events")
                     if "admin_only" not in audit_columns: db.execute("ALTER TABLE audit_events ADD COLUMN admin_only INTEGER NOT NULL DEFAULT 0")
                     db.execute("CREATE INDEX IF NOT EXISTS idx_audit_events_admin_only ON audit_events(admin_only,created_at DESC)")
                     settings.ensure_schema(db)
                     ensure_feature_flags_schema(db)
                     _ensure_webhook_schema(db)
                     _ensure_api_key_schema(db)
-                    session_columns={row["name"] for row in db.execute("PRAGMA table_info(sessions)")}
+                    session_columns=_table_columns(db,"sessions")
                     if "user_agent" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN user_agent TEXT NOT NULL DEFAULT ''")
                     if "ip_address" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN ip_address TEXT NOT NULL DEFAULT ''")
                     if "last_seen_at" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN last_seen_at INTEGER NOT NULL DEFAULT 0")
@@ -2035,7 +2054,7 @@ def connect_sqlite():
                     if "id" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN id TEXT NOT NULL DEFAULT ''")
                     if "csrf_hash" not in session_columns: db.execute("ALTER TABLE sessions ADD COLUMN csrf_hash TEXT NOT NULL DEFAULT ''")
                     db.execute("UPDATE sessions SET id=token_hash WHERE id IS NULL OR id='' ")
-                    columns={row["name"] for row in db.execute("PRAGMA table_info(invitations)")}
+                    columns=_table_columns(db,"invitations")
                     if "owner_id" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN owner_id TEXT")
                     if "archived" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
                     if "views" not in columns: db.execute("ALTER TABLE invitations ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
@@ -2082,7 +2101,7 @@ def connect_sqlite():
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_invitations_custom_domain ON invitations(custom_domain) WHERE custom_domain IS NOT NULL AND custom_domain<>''")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_update BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
                     db.execute("CREATE TRIGGER IF NOT EXISTS audit_events_no_delete BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'audit events are immutable'); END")
-                    guest_columns={row["name"] for row in db.execute("PRAGMA table_info(guests)")}
+                    guest_columns=_table_columns(db,"guests")
                     if "checked_in" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in INTEGER NOT NULL DEFAULT 0")
                     if "checked_in_at" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN checked_in_at INTEGER")
                     if "token_hash" not in guest_columns: db.execute("ALTER TABLE guests ADD COLUMN token_hash TEXT")
@@ -2109,9 +2128,9 @@ def connect_sqlite():
                         legacy=str(guest["token"] or "")
                         if not legacy:continue
                         db.execute("UPDATE guests SET token_hash=?,token=? WHERE id=?",(hashlib.sha256(legacy.encode()).hexdigest(),"legacy-"+guest["id"],guest["id"]))
-                    rsvp_columns={row["name"] for row in db.execute("PRAGMA table_info(rsvps)")}
+                    rsvp_columns=_table_columns(db,"rsvps")
                     if "answers_json" not in rsvp_columns: db.execute("ALTER TABLE rsvps ADD COLUMN answers_json TEXT NOT NULL DEFAULT '{}'")
-                    asset_columns={row["name"] for row in db.execute("PRAGMA table_info(assets)")}
+                    asset_columns=_table_columns(db,"assets")
                     if "folder" not in asset_columns: db.execute("ALTER TABLE assets ADD COLUMN folder TEXT NOT NULL DEFAULT ''")
                     if "tags_json" not in asset_columns: db.execute("ALTER TABLE assets ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'")
                     if "favorite" not in asset_columns: db.execute("ALTER TABLE assets ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0")
@@ -2128,7 +2147,7 @@ def connect_sqlite():
                         now_ms=int(time.time()*1000)
                         db.execute("INSERT OR IGNORE INTO stored_objects(id,owner_id,path,storage_key,sha256,mime,size,width,height,dominant_color,processing_state,quarantine_state,scan_status,ref_count,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,'ready','released','legacy',?,?,?)",(object_id,legacy["owner_id"] or "legacy",legacy["path"],legacy["path"],legacy["sha256"] or "",legacy["mime"],legacy["size"],legacy["width"],legacy["height"],legacy["dominant_color"],legacy["ref_count"],now_ms,now_ms))
                         db.execute("UPDATE assets SET object_id=? WHERE path=? AND (object_id IS NULL OR object_id='')",(object_id,legacy["path"]))
-                    rsvp_columns={row["name"] for row in db.execute("PRAGMA table_info(rsvps)")}
+                    rsvp_columns=_table_columns(db,"rsvps")
                     if "guest_id" not in rsvp_columns: db.execute("ALTER TABLE rsvps ADD COLUMN guest_id TEXT")
                     if "normalized_name" not in rsvp_columns: db.execute("ALTER TABLE rsvps ADD COLUMN normalized_name TEXT NOT NULL DEFAULT ''")
                     if "updated_at" not in rsvp_columns: db.execute("ALTER TABLE rsvps ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0")
@@ -2136,7 +2155,7 @@ def connect_sqlite():
                     db.execute("UPDATE rsvps SET updated_at=created_at WHERE updated_at=0 OR updated_at IS NULL")
                     db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_rsvps_guest_unique ON rsvps(invitation_id,guest_id) WHERE guest_id IS NOT NULL")
                     db.execute("CREATE INDEX IF NOT EXISTS idx_rsvps_name_lookup ON rsvps(invitation_id,normalized_name,created_at DESC)")
-                    template_columns={row["name"] for row in db.execute("PRAGMA table_info(user_templates)")}
+                    template_columns=_table_columns(db,"user_templates")
                     for column,definition in {
                         "description":"TEXT NOT NULL DEFAULT ''",
                         "tags_json":"TEXT NOT NULL DEFAULT '[]'",
@@ -2149,18 +2168,18 @@ def connect_sqlite():
                         "license_type":"TEXT NOT NULL DEFAULT 'personal'",
                     }.items():
                         if column not in template_columns: db.execute(f"ALTER TABLE user_templates ADD COLUMN {column} {definition}")
-                    comment_columns={row["name"] for row in db.execute("PRAGMA table_info(invitation_comments)")}
+                    comment_columns=_table_columns(db,"invitation_comments")
                     for column,definition in {
                         "page_id":"TEXT NOT NULL DEFAULT ''","parent_id":"TEXT NOT NULL DEFAULT ''","anchor_x":"REAL NOT NULL DEFAULT -1","anchor_y":"REAL NOT NULL DEFAULT -1",
                     }.items():
                         if column not in comment_columns:db.execute(f"ALTER TABLE invitation_comments ADD COLUMN {column} {definition}")
                     db.execute("CREATE INDEX IF NOT EXISTS idx_invitation_comments_parent ON invitation_comments(invitation_id,parent_id,created_at)")
-                    approval_columns={row["name"] for row in db.execute("PRAGMA table_info(approval_requests)")}
+                    approval_columns=_table_columns(db,"approval_requests")
                     for column,definition in {
                         "document_revision":"INTEGER NOT NULL DEFAULT 0","document_fingerprint":"TEXT NOT NULL DEFAULT ''","summary_json":"TEXT NOT NULL DEFAULT '{}'","decided_by":"TEXT NOT NULL DEFAULT ''","decided_at":"INTEGER",
                     }.items():
                         if column not in approval_columns:db.execute(f"ALTER TABLE approval_requests ADD COLUMN {column} {definition}")
-                    backup_columns={row["name"] for row in db.execute("PRAGMA table_info(backup_runs)")}
+                    backup_columns=_table_columns(db,"backup_runs")
                     for column,definition in {
                         "owner_id":"TEXT NOT NULL DEFAULT ''","initiated_by":"TEXT NOT NULL DEFAULT ''","archive_name":"TEXT NOT NULL DEFAULT ''","size_bytes":"INTEGER NOT NULL DEFAULT 0","error_text":"TEXT NOT NULL DEFAULT ''",
                     }.items():
@@ -2170,7 +2189,7 @@ def connect_sqlite():
                     db.execute("CREATE INDEX IF NOT EXISTS idx_material_folders_invitation ON material_folders(invitation_id,relative_key)")
                     db.execute("CREATE TABLE IF NOT EXISTS material_import_jobs(id TEXT PRIMARY KEY, invitation_id TEXT NOT NULL, owner_id TEXT NOT NULL, source_type TEXT NOT NULL, root_name TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'queued', total_files INTEGER NOT NULL DEFAULT 0, processed_files INTEGER NOT NULL DEFAULT 0, failed_files INTEGER NOT NULL DEFAULT 0, total_bytes INTEGER NOT NULL DEFAULT 0, processed_bytes INTEGER NOT NULL DEFAULT 0, failures_json TEXT NOT NULL DEFAULT '[]', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, cancelled_at INTEGER)")
                     db.execute("CREATE INDEX IF NOT EXISTS idx_material_import_jobs_invitation ON material_import_jobs(invitation_id,created_at DESC)")
-                    upload_columns={row["name"] for row in db.execute("PRAGMA table_info(upload_sessions)")}
+                    upload_columns=_table_columns(db,"upload_sessions")
                     if "folder" not in upload_columns: db.execute("ALTER TABLE upload_sessions ADD COLUMN folder TEXT NOT NULL DEFAULT ''")
                     if "import_job_id" not in upload_columns: db.execute("ALTER TABLE upload_sessions ADD COLUMN import_job_id TEXT NOT NULL DEFAULT ''")
                     # Backfill version history for templates created before versioning existed.
@@ -2196,6 +2215,12 @@ class PostgresAdapter:
     def __init__(self, connection):self.connection=connection
     def _query(self,sql):
         sql=sql.replace("INSERT OR IGNORE INTO","INSERT INTO")
+        # SQLite's BLOB does not exist in PostgreSQL, and the platform schema
+        # (platform_v32/schema.py) is shared between both backends. PostgreSQL
+        # parses the statement even when CREATE TABLE IF NOT EXISTS is a no-op,
+        # so a SQLite-typed column aborted the whole boot transaction. BYTEA is
+        # the equivalent binary type; the adapter is PostgreSQL-only.
+        if "CREATE TABLE" in sql:sql=sql.replace(" BLOB", " BYTEA")
         sql=re.sub(r"\?", "%s", sql)
         if "INSERT INTO template_versions" in sql and "ON CONFLICT" not in sql and "VALUES" in sql:
             sql += " ON CONFLICT DO NOTHING"
@@ -3223,7 +3248,7 @@ def clean_slug(value, fallback=None):
 def _migrate_guest_slugs_sqlite(db):
     """Add, backfill and index guests.slug on SQLite. Returns what it did."""
     result={"columnAdded":False,"backfilled":0,"index":"idx_guests_slug"}
-    columns={row["name"] for row in db.execute("PRAGMA table_info(guests)")}
+    columns=_table_columns(db,"guests")
     if "slug" not in columns:
         db.execute("ALTER TABLE guests ADD COLUMN slug TEXT NOT NULL DEFAULT ''")
         result["columnAdded"]=True
