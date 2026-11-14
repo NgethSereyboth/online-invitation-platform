@@ -114,10 +114,41 @@ test that uses the fixture becomes backend-agnostic by setting one variable:
 EINVITE_TEST_BASE_URL=http://127.0.0.1:3000 .venv/bin/python -m pytest tests/api_contract_test.py
 ```
 
-**Still owed (S1 follow-up):** tests that spawn their own server instead of using the
-fixture do not benefit. Each needs to be converted to the fixture or wired to the same
-variable, and the list is not yet enumerated — that enumeration is the next S1 task, not a
-claim of completion.
+### 4.1 Enumeration of the tests the switch does not reach
+
+The list is now generated, not guessed: `tools/class-a-coverage.py` classifies all **327**
+files under `tests/` and writes [`CLASS-A-COVERAGE.md`](CLASS-A-COVERAGE.md).
+
+| Class | Files | Meaning |
+|---|---|---|
+| `covered` | **153** | `server_url` / `app_server` / `fresh_server`, or a pure HTTP client — the switch reaches these today |
+| `needs-convert` | **35** | inline `Popen([sys.executable, 'server.py', …])` — invisible to the switch |
+| `not-backend` | 119 | browser runners and other non-backend processes (Class B) |
+| `not-portable` | 20 | import the backend in-process — Class C, deliberately stays Python |
+| `external` | 0 | nothing hard-codes `127.0.0.1:4175` |
+
+**None of the 35 was converted in this pass, and that is deliberate.** Each one builds its
+own environment (data dir, port, seeding) and asserts against it; a mechanical rewrite of 35
+contract tests that cannot all be re-run in one pass would trade a real risk for a nominal
+number. They are documented instead, which is what the plan's S1 exit requires.
+
+The conversion recipe, to be applied one file at a time with that file's tests run afterwards:
+
+1. the test's local `server()` helper already builds `env` with `EINVITE_DATA_DIR` and any
+   flags — pass that same dict as `fresh_server(extra_env=env)`;
+2. replace the `Popen` + `wait_http` pair with the context manager, which already retries the
+   FB-09 port race and kills the process group on exit;
+3. use the yielded `base` for every request (no `f'http://127.0.0.1:{port}'` reconstruction);
+4. run the file with `EINVITE_TEST_BASE_URL` unset (spawn path) **and** set to a live origin
+   (switch path) — both must behave, or the conversion is not finished.
+
+Until a file gets that treatment it is excluded from any `--compare` wave, and the ledger
+says so on every run rather than leaving the cutover looking more complete than it is.
+
+One near-miss worth recording: `tests/security_admin_ip_allowlist_test.py` matched a search
+for the owner's port, but the hit was `port = 14175`, a fixed test port. It is a
+`needs-convert` file for the spawn reason only, and the `external` class is genuinely empty.
+Checking that instead of reporting it was the difference between a finding and a wrong claim.
 
 ---
 

@@ -452,6 +452,15 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   artefact route families skipped, one route unexercised by transport
   (`campaigns/<id>/deliveries`), and tests that spawn their own server are not yet
   enumerated/converted — that enumeration is the next S1 task.
+- **Enumeration (S1 follow-up).** `tools/class-a-coverage.py` classified all **327** test
+  files: **153 covered** by the switch, **35** inline their own `Popen` of `server.py`
+  (`needs-convert`), **119** spawn a non-backend process, **20** import the backend in-process
+  (Class C, not portable by design), **0** hard-code the owner's origin. Artifacts:
+  `docs/language-migration/CLASS-A-COVERAGE.md`; the conversion recipe is in `S1-HARNESS.md`
+  §4.1. **No file was converted** — deliberate: 35 contract tests each carry their own env,
+  port and seeding, and rewriting them without running each would be an unverified change
+  dressed up as progress. A “4175” search hit turned out to be `port = 14175`, so `external`
+  is genuinely zero; that was checked before being reported.
 - **Why it is safe:** no production code, no dependency, no gate or budget touched; the
   helper edits are inert unless the variable is set. Docs: `docs/language-migration/S1-HARNESS.md`.
 - **Gates:** `python3 build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`;
