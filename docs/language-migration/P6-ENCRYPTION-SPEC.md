@@ -1,6 +1,6 @@
 # P6 — Field-encryption byte-compatibility spec (blocks S5)
 
-**Date:** 2026-11-12 · **Plan:** `language-optimization-plan-v3.1.md` §4 (P6), §5 (S5)
+**Date:** 2026-11-14 · **Plan:** `language-optimization-plan-v3.1.md` §4 (P6), §5 (S5)
 **Source of truth:** `src/python/core/crypto.py`, `src/python/core/db.py`,
 `scripts/migrate_encrypt_sensitive_fields.py` — read in full, line numbers cited.
 **Status:** spec **written and reviewed against the code**. It is not a port; S5 still needs

@@ -383,7 +383,7 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
 - **Docs:** NEXT-WORK #23 is fixed, the missing-label bullet is closed, verification debt #13
   is superseded by the local-origin revision, and #7 records the suite run.
 
-## 2026-11-12 — language-migration P2 (route inventory freeze)
+## 2026-11-14 — language-migration P2 (route inventory freeze)
 
 - **Scope.** `language-optimization-plan-v3.1.md` §14 item 3 (precondition P2), the only
   precondition that is fully executable inside this repo. No product code, no dependency, no
@@ -426,7 +426,7 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   was **not** re-run (docs/ and tools/ only); the last full record stays 252 passed on
   2026-11-03.
 
-## 2026-11-12 — language-migration S1 (round-trip equivalence harness)
+## 2026-11-14 — language-migration S1 (round-trip equivalence harness)
 
 - **Decision recorded:** D10 answered **Track M now**, Track W parked (owner row #19 in
   `docs/NEXT-WORK.md`; nothing was deleted from that queue). S1 is the first Track M step
@@ -464,7 +464,38 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
 - **Why it is safe:** no production code, no dependency, no gate or budget touched; the
   helper edits are inert unless the variable is set. Docs: `docs/language-migration/S1-HARNESS.md`.
 
-## 2026-11-12 — preconditions P6 and P7 (encryption spec, shared-state inventory)
+## 2026-11-14 — ten-phase gate matrix (P5 attempt)
+
+- **Run:** `tools/run-gates.py --phase all`, stamp `artifacts/next-work/gates/20261114-162656`,
+  started 16:26:56, finished 16:55:28. Ten of eleven phases exit 0; the chain stops at the last.
+
+| Phase | Result | Evidence |
+|---|---|---|
+| build | ✅ 5.3 s | `MIRROR_CHECK_PASSED (after sync)` + `BUILD_OK` |
+| bundles | ✅ 4.6 s | `ROUTE_BUNDLE_CHECK_PASSED` |
+| analyze | ✅ 4.4 s | exit 0 |
+| smoke | ✅ 36.2 s | `TOTAL pages=16 consoleErrors=0 non2xx=0` |
+| layout | ✅ 218.3 s | `UI_LAYOUT_GUARD_PASSED`, long-task 0 failed (**no flake this run**) |
+| pytest | ✅ 1064.7 s | **301 passed in 1063.37 s (0:17:43)** |
+| budgets | ✅ 0.0 s | `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED` (6 pages) |
+| lhci | ✅ 267.1 s | `Healthcheck passed!` |
+| csp | ✅ 59.5 s | `CSP_CHECK_PASSED` |
+| canvas | ✅ 43.8 s | `CANVAS_MOTION_VERIFY_PASSED`, 22 pass / 0 fail / 2 skipped |
+| important | ❌ 1.2 s | `FAIL important ratchet exceeded: 3837 > pin 3833` |
+
+- **The red is real and pre-existing, not a flake.** The tree carries no working changes; the
+  ratchet pin was set on 2026-11-09 at 3833 after measurement, and commit **`3ea09f5`
+  (2026-11-10)** — which precedes this session — added exactly four `!important`
+  declarations inside its critical-CSS block: `.guest-summary{min-height:260px!important;
+  padding-top:42px!important;padding-bottom:42px!important}` and `[hidden]{display:none!important}`.
+  The gate is doing its job.
+- **Not fixed here on purpose.** OD-6 forbids changing a threshold to pass, and removing
+  those declarations is a visual decision about the check-in/guest layout that needs a
+  screenshot comparison, not a blind edit. P5 therefore stays **open**: one gate is red.
+- **Consequence for the migration:** S2's "the existing workflows and run-gates still pass"
+  exit criterion cannot be claimed until this is resolved.
+
+## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
 - **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`
   covers key resolution, the Fernet token layout, every `None`/empty/disabled edge, the

@@ -1,6 +1,6 @@
 # P7 — Shared-state inventory (blocks S6)
 
-**Date:** 2026-11-12 · **Plan:** `language-optimization-plan-v3.1.md` §4 (P7), §5 (S6)
+**Date:** 2026-11-14 · **Plan:** `language-optimization-plan-v3.1.md` §4 (P7), §5 (S6)
 **Question:** when a second backend serves requests, which state is in two places at once?
 **Status:** inventory **complete for the state found in the code**. Nothing here is fixed by
 this document; it assigns each item a treatment and the step that owes it.

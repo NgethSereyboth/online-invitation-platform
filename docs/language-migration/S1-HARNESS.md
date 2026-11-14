@@ -1,6 +1,6 @@
 # S1 — round-trip equivalence harness
 
-**Date:** 2026-11-12 · **Plan:** `language-optimization-plan-v3.1.md` §5 (S1), §8 (Class A)
+**Date:** 2026-11-14 · **Plan:** `language-optimization-plan-v3.1.md` §5 (S1), §8 (Class A)
 **Status:** S1 first cut **built and self-verified**. This is the artefact the plan calls
 "the single highest-value artifact", and the one thing that survives a decision to stop.
 

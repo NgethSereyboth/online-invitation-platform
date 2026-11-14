@@ -1,6 +1,6 @@
 # P2 — Route inventory freeze and precondition facts
 
-**Date:** 2026-11-12 · **Plan:** `language-optimization-plan-v3.1.md` §4 (P2), §14 items 2–3
+**Date:** 2026-11-14 · **Plan:** `language-optimization-plan-v3.1.md` §4 (P2), §14 items 2–3
 **HEAD:** `44a25f4` on `improve/sprint-11-supply-chain-release` (the commit the plan was verified against)
 **Status:** P2 **executed**. P1, P3, P4, P8 remain owner-held (see §7).
 
