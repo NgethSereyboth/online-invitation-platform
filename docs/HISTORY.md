@@ -611,6 +611,27 @@ contract** asserted at boot because the schema has no version counter to compare
   reaches unconverted rows), a per-statement budget where Python has a per-request one, `numeric`
   left as a string, and a pool default of 10 that a multi-instance deployment must divide.
 
+### S5 — field encryption is byte-compatible in both directions
+
+Fernet is implemented on `node:crypto` (no package): the 0x80 header, big-endian timestamp,
+AES-128-CBC with PKCS7, HMAC-SHA256, urlsafe base64 **with its padding**. `protect`, `reveal`,
+`revealRow`, the previous-key rotation window and `isCurrentKeyCiphertext` are copied from
+`core/crypto.py` and `core/db.py`; `email_hash` is computed with Python's `lower()`/`strip()`
+semantics rather than JavaScript's.
+
+- **Two bugs the run caught, not the reading.** The key halves were swapped (bytes 0–15 sign and
+  16–31 encrypt — the opposite of the intuitive order), so every Python token failed with
+  `Signature mismatch` while both HMACs agreed with each other. And `isProduction()` read
+  `process.env` instead of the cipher's injected env, so the production refusal could be bypassed.
+- **Parity:** `tools/fernet-parity.py` → **11/11 identical** — Python→Node and Node→Python over
+  six values (accents, emoji, tabs, 4 KB, empty), previous-key decryption with the rotation
+  predicate false, tampered tokens returned unchanged on both sides, prefix-shaped plaintext left
+  alone, and identical hashes for `ΣΣ`, `ΑΣ`, `İstanbul`, `""`, `None` and a BOM-prefixed address.
+- **Owner decision on #13 now holds in both runtimes:** a malformed key refuses production boot;
+  development keeps the ephemeral path.
+- **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
+  and the sidecar key file end-to-end.
+
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
 - **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`

@@ -3,11 +3,13 @@
 // Semantics are copied from core/db.py and core/crypto.py, not reinvented.
 import { createHash } from 'node:crypto';
 
+import { pythonLower, pythonStrip } from './pystr.mjs';
+
 /** core.crypto.hash_for_lookup: None→None, ""→"", else sha256(lower(strip)). */
 export function hashForLookup(plaintext) {
   if (plaintext === null || plaintext === undefined) return null;
   if (!plaintext) return '';
-  return createHash('sha256').update(String(plaintext).toLowerCase().trim(), 'utf8').digest('hex');
+  return createHash('sha256').update(pythonStrip(pythonLower(plaintext)), 'utf8').digest('hex');
 }
 
 /**
