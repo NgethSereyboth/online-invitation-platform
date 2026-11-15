@@ -632,6 +632,31 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### S7 — the public read path moved, with its media signatures
+
+`GET /api/public/<slug>` (Python's `get_public`) is the first vertical slice: a read-heavy route with
+no write risk, except two writes that had to move with it — the view counter and a guest's first
+`opened_at` stamp. Both are copied; a port that dropped them would change the owner's analytics
+without anyone noticing.
+
+The subtle parts were the media signatures and gallery locking. Signed URLs use
+`hmac-sha256("<file>|<invitation>|<exp>")` with the shared signing secret, so the Node port has to
+produce a payload Python's verifier accepts, not merely a URL of the same shape. Gallery-only images
+— ones that appear nowhere else in the document — are cleared when locked and signed when
+unlocked; password-protected documents rewrite raw `/uploads/…` paths even inside rich-text strings.
+Guest tokens resolve only their own guest and bind `guest.*` objects in both canvas groups.
+
+Proof is `tools/public-parity.py`: one seeded PostgreSQL database, both backends, nine requests
+covering 404, 403 and 200 — plain, gallery locked, gallery unlocked, guest token, consent-gated,
+password required, password accepted. Each response's media signature is recomputed and verified
+with the shared secret before the expiry is masked, so the comparison cannot pass on two differently
+signed URLs. **9/9 identical, 0 failing**; 34 service tests.
+
+Not done, and recorded as such: the shadow → 5 % → 25 % → 100 % ramp is a deployment action, the p95
+"within 10 % of P1" exit criterion is unmeasured because P1 never ran, and the plan's "public RSVP
+status read" does not exist as a route — RSVP is write-only and status reads are the host's
+authenticated endpoint. The slice is the public document plus its guest data.
+
 ### S6 — sessions ported, and Python's PostgreSQL path turned out not to work
 
 Sessions were already database rows keyed by `sha256(token)` with a `csrf_hash`, so the port is the
