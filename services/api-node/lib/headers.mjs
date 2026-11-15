@@ -14,6 +14,18 @@ export function newRequestId() {
   return randomBytes(16).toString('hex');
 }
 
+/**
+ * safe_request_id(): keep correlation across the router and both backends.
+ * Python reflects a sanitized inbound id and falls back to a fresh one, so a
+ * request that crosses the boundary keeps one id in every log line.
+ */
+export function safeRequestId(value) {
+  const clean = String(value ?? '')
+    .replace(/[^A-Za-z0-9._:-]/g, '')
+    .slice(0, 80);
+  return clean || newRequestId();
+}
+
 export function cspHeader(nonce) {
   return (
     "default-src 'self'; script-src 'self'; style-src 'self' 'nonce-" +
@@ -28,8 +40,8 @@ export function cspHeader(nonce) {
  * Apply the shared header set. `permissions` differs per route: /checkin keeps
  * the camera carve-out for QR scanning, everything else denies it.
  */
-export function applySecurityHeaders(reply, { nonce, permissions }) {
-  reply.header('x-request-id', newRequestId());
+export function applySecurityHeaders(reply, { nonce, permissions, requestId }) {
+  reply.header('x-request-id', safeRequestId(requestId));
   reply.header('x-content-type-options', 'nosniff');
   reply.header('referrer-policy', 'strict-origin-when-cross-origin');
   reply.header('permissions-policy', permissions);

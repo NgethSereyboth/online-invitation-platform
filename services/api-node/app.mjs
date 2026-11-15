@@ -24,6 +24,7 @@ import {
   applySecurityHeaders,
   jsonBody,
   newNonce,
+  safeRequestId,
 } from './lib/headers.mjs';
 
 export const SERVICE_NAME = 'einvite-api-node';
@@ -58,6 +59,13 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
   const app = Fastify({ logger, trustProxy: true });
   const pages = pageFiles(webRoot);
 
+  // One correlation id per request: the router's id when it sends a safe one,
+  // otherwise a fresh id — Python's safe_request_id() rule, so a request that
+  // crosses the boundary is still one trace in the logs.
+  app.addHook('onRequest', async (request) => {
+    request.requestId = safeRequestId(request.headers['x-request-id']);
+  });
+
   // Session and public-read routes exist only when a database and the field
   // cipher do: without them there is nothing to resolve a cookie or document against.
   if (db && cipher) {
@@ -78,14 +86,14 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
   // Python maps QueryDeadlineExceeded to 504 with this exact body and headers
   // (server.py database_timeout). Registered once, so every ported route that
   // queries inherits it rather than re-implementing the mapping.
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error, request, reply) => {
     if (error instanceof QueryDeadlineExceeded) {
       const nonce = newNonce();
-      applySecurityHeaders(reply, { nonce, permissions: PERMISSIONS_DEFAULT });
+      applySecurityHeaders(reply, { nonce, permissions: PERMISSIONS_DEFAULT, requestId: request.requestId });
       const body = jsonBody({
         error: 'The request took too long to read from the database. Please retry.',
         code: 'database_timeout',
-        requestId: reply.getHeader('x-request-id') ?? '',
+        requestId: request.requestId ?? '',
       });
       reply.code(504);
       reply.header('retry-after', '1');
@@ -95,7 +103,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
       return;
     }
     const nonce = newNonce();
-    applySecurityHeaders(reply, { nonce, permissions: PERMISSIONS_DEFAULT });
+    applySecurityHeaders(reply, { nonce, permissions: PERMISSIONS_DEFAULT, requestId: request.requestId });
     const body = jsonBody({ error: 'Internal server error' });
     reply.code(500);
     reply.header('content-type', 'application/json; charset=utf-8');
@@ -105,8 +113,12 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
 
   // Same shape as Python's /api/health; the capability flags describe *this*
   // backend, so their values legitimately differ during the parallel run.
-  app.get('/api/health', async (_request, reply) => {
-    applySecurityHeaders(reply, { nonce: newNonce(), permissions: PERMISSIONS_DEFAULT });
+  app.get('/api/health', async (request, reply) => {
+    applySecurityHeaders(reply, {
+      nonce: newNonce(),
+      permissions: PERMISSIONS_DEFAULT,
+      requestId: request.requestId,
+    });
     reply.header('content-type', 'application/json; charset=utf-8');
     reply.header('cache-control', 'no-store');
     return {
@@ -135,7 +147,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
       if (pageName) {
         const body = renderPage(pages, pageName, { nonce, criticalCss: readCriticalCss(webRoot) });
         if (body) {
-          applySecurityHeaders(reply, { nonce, permissions });
+          applySecurityHeaders(reply, { nonce, permissions, requestId: request.requestId });
           reply.header('content-type', 'text/html; charset=utf-8');
           reply.header('cache-control', 'no-cache');
           reply.header('content-length', String(body.length));
@@ -146,7 +158,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
 
       const asset = resolveAsset(webRoot, pathname);
       if (asset) {
-        applySecurityHeaders(reply, { nonce, permissions });
+        applySecurityHeaders(reply, { nonce, permissions, requestId: request.requestId });
         sendAsset(reply, request, asset);
         return reply;
       }
@@ -175,7 +187,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
               'utf8',
             )
           : null;
-        applySecurityHeaders(reply, { nonce, permissions });
+        applySecurityHeaders(reply, { nonce, permissions, requestId: request.requestId });
         reply.code(404);
         reply.header('content-type', 'text/html; charset=utf-8');
         reply.header('cache-control', 'no-store');
@@ -190,7 +202,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
       }
 
       const body = jsonBody({ error: 'Not found' });
-      applySecurityHeaders(reply, { nonce, permissions });
+      applySecurityHeaders(reply, { nonce, permissions, requestId: request.requestId });
       reply.code(404);
       reply.header('content-type', 'application/json; charset=utf-8');
       reply.header('cache-control', 'no-store');

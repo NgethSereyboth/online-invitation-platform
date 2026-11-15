@@ -69,7 +69,11 @@ export function registerPublicRoutes(app, { db, cipher, signingSecret } = {}) {
   const secret = signingSecret ?? resolveSigningSecret();
 
   app.get('/api/public/*', async (request, reply) => {
-    applySecurityHeaders(reply, { nonce: newNonce(), permissions: PERMISSIONS_DEFAULT });
+    applySecurityHeaders(reply, {
+      nonce: newNonce(),
+      permissions: PERMISSIONS_DEFAULT,
+      requestId: request.requestId,
+    });
     reply.header('content-type', 'application/json; charset=utf-8');
     reply.header('cache-control', 'no-store');
 
