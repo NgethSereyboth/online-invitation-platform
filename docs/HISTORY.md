@@ -632,6 +632,23 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### S8 — the pattern frozen, and two header gaps it exposed
+
+Writing the ADR was the first time the port's conventions were stated as rules rather than
+implemented ad hoc, and it immediately found two divergences: the service always generated a fresh
+`X-Request-ID` instead of reflecting a sanitised inbound one (so a request crossing the boundary
+split into two traces), and `/api/auth/me` / `/api/auth/logout` sent no security headers at all
+because only the page and public routes applied them. Both are fixed; logout also sent its two
+`Set-Cookie` headers one at a time, which Fastify replaces, so only the CSRF cookie was ever cleared.
+
+`docs/adr/0001-language-migration-pattern.md` now freezes routing ownership and the pinned routes,
+the response/error/504 contract, auth-and-CSRF ordering, query conventions, logging and redaction,
+the Khmer-string rule, and the four artefacts a slice needs before cutover (parity harness, unit
+tests, written record, clean build). It is linked from `docs/ARCHITECTURE.md` §10. The service suite
+is **38 passed** and the S7 public parity proof still reports **9/9 identical** after the changes.
+
+This is the plan's first legitimate stopping point.
+
 ### S7 — the public read path moved, with its media signatures
 
 `GET /api/public/<slug>` (Python's `get_public`) is the first vertical slice: a read-heavy route with
