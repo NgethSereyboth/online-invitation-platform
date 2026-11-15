@@ -650,17 +650,25 @@ deployment had never run.**
 2. `_try()` swallowed a failed statement, which SQLite tolerates and PostgreSQL does not: the
    transaction aborted and every later statement failed with `InFailedSqlTransaction`. Optional
    DDL now runs under a savepoint, restoring the SQLite behaviour on both backends.
-3. **Still open (#27):** the core schema — every `CREATE TABLE` and about fifty `ALTER`s — lives
-   inside `connect_sqlite()`, so a PostgreSQL database only gets `docs/postgres_schema.sql`, which
-   lacks `email_hash`, `suspended_at` and `session_never_expires`. A fresh PostgreSQL database, even
-   one Python bootstrapped itself, answers `/api/auth/me` by dropping the connection. The `PRAGMA
-   table_info` discovery is now backend-aware, but nothing runs the core ALTERs on PostgreSQL yet.
+3. **The schema itself had drifted (#27).** Every core `CREATE TABLE` and runtime `ALTER` lives
+   inside `connect_sqlite()`, so `docs/postgres_schema.sql` — the only thing a PostgreSQL boot
+   applied — had fallen behind. Measured against a real pair: **6 tables and 12 columns missing**,
+   including `users.session_never_expires`, which is why `/api/auth/me` dropped the connection
+   instead of answering. The schema file now carries the missing tables (with their keys and
+   indexes) and columns, with `INTEGER` → `BIGINT` for epoch-millisecond columns, and column
+   discovery itself is backend-aware.
 
-Verified: Python boots on a fresh PostgreSQL database after fixes 1–2; SQLite boot still serves
-`/api/health` and `/checkin` with zero tracebacks; targeted Python tests pass; `npm test` 26/26.
-Not verified: the cross-backend session proof itself, which is exactly what #27 blocks. The honest
-conclusion is that **D8 is not yet viable** — and that this was invisible until two backends were
-actually pointed at one database.
+Because a stale schema file is how this happened, the fix ships its own watchdog:
+**`tools/pg-schema-parity.py`** boots a throwaway SQLite database through the server's own DDL,
+reads a real PostgreSQL database, and exits non-zero on any missing table or column. It is the check
+nobody had; on both a booted and a never-booted database it now reports zero drift.
+
+Verified: `tools/session-parity.py` reports **18/18 identical** on a booted and on a fresh database;
+`pg-schema-parity` reports 0 missing on both; the full Python suite is **301 passed**; SQLite boot
+still serves `/api/health` and `/checkin` with no tracebacks; `npm test` 26/26; `build --check`
+green. **D8 is now viable** — that was invisible until two backends were actually pointed at one
+database, which is the argument for proving interoperability by running it rather than reading a
+spec.
 
 ## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
 
