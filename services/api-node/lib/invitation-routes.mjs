@@ -8,6 +8,7 @@ import {
   INVITATION_NOT_FOUND,
   MANAGEMENT_REQUIRED,
   canManageInvitation,
+  canReadInvitation,
   currentUser,
   invitationRole,
   roleFromRow,
@@ -35,6 +36,8 @@ const GUEST_RSVP_STATUSES =
   'SELECT lower(name) lookup_name,status FROM rsvps WHERE invitation_id=? ORDER BY created_at DESC';
 
 const GUEST_ACCESS_COLUMNS = ['owner_id', 'deleted_at', 'collaborator_role'];
+
+const SNAPSHOT_LIMIT = 50;
 
 function secure(reply, request) {
   applySecurityHeaders(reply, {
@@ -166,6 +169,98 @@ export function registerInvitationRoutes(app, { db, cipher, guestTokenSecret } =
         purgeAt: row.purge_at,
       };
     });
+  });
+
+  // The version timeline merges publications with automatic snapshots. Both
+  // kinds are reads; `list_versions` swallows its own failure in Python, so a
+  // missing snapshot table degrades to "publications only" here as well.
+  app.get('/api/invitations/:id/versions', async (request, reply) => {
+    secure(reply, request);
+    const user = await currentUser(db, request);
+    if (!user) {
+      reply.code(401);
+      return AUTH_REQUIRED;
+    }
+    if (!canReadInvitation(await invitationRole(db, request.params.id, user.id))) {
+      reply.code(404);
+      return INVITATION_NOT_FOUND;
+    }
+    const publications = await db.query(
+      'SELECT id,version,published_at,length(document_json) document_bytes FROM publications ' +
+        'WHERE invitation_id=? ORDER BY published_at DESC',
+      [request.params.id],
+    );
+    let snapshots = [];
+    try {
+      const rows = await db.query(
+        'SELECT * FROM invitation_versions WHERE invitation_id=? ORDER BY created_at DESC LIMIT ?',
+        [request.params.id, SNAPSHOT_LIMIT],
+      );
+      snapshots = rows.rows.map((row) => ({
+        id: row.id,
+        authorName: row.author_name ?? '',
+        createdAt: row.created_at,
+      }));
+    } catch {
+      snapshots = [];
+    }
+    const timeline = publications.rows.map((row) => ({ ...row }));
+    for (const snapshot of snapshots) {
+      timeline.push({
+        id: snapshot.id,
+        version: 'auto',
+        published_at: snapshot.createdAt,
+        isAuto: true,
+        authorName: snapshot.authorName,
+      });
+    }
+    timeline.sort((left, right) => Number(right.published_at ?? 0) - Number(left.published_at ?? 0));
+    return timeline;
+  });
+
+  app.get('/api/invitations/:id/versions/:version', async (request, reply) => {
+    secure(reply, request);
+    const user = await currentUser(db, request);
+    if (!user) {
+      reply.code(401);
+      return AUTH_REQUIRED;
+    }
+    if (!canReadInvitation(await invitationRole(db, request.params.id, user.id))) {
+      reply.code(404);
+      return INVITATION_NOT_FOUND;
+    }
+    const wanted = String(request.params.version);
+    const published = await db.query(
+      'SELECT id,version,published_at,document_json FROM publications ' +
+        'WHERE invitation_id=? AND (id=? OR CAST(version AS TEXT)=?) ' +
+        'ORDER BY published_at DESC LIMIT 1',
+      [request.params.id, wanted, wanted],
+    );
+    if (published.rows.length) {
+      const row = cipher ? cipher.revealRow(published.rows[0]) : published.rows[0];
+      return {
+        id: row.id,
+        version: row.version,
+        publishedAt: row.published_at,
+        document: JSON.parse(row.document_json),
+      };
+    }
+    const found = await db.query(
+      'SELECT * FROM invitation_versions WHERE id=? AND invitation_id=?',
+      [wanted, request.params.id],
+    );
+    if (!found.rows.length) {
+      reply.code(404);
+      return { error: 'Version not found' };
+    }
+    const snapshot = cipher ? cipher.revealRow(found.rows[0]) : found.rows[0];
+    return {
+      id: snapshot.id,
+      version: 'auto',
+      publishedAt: snapshot.created_at,
+      isAuto: true,
+      document: JSON.parse(snapshot.document_json),
+    };
   });
 
   app.get('/api/invitations/:id/rsvps', async (request, reply) => {

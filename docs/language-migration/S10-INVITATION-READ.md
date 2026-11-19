@@ -1,6 +1,6 @@
 # S10 · Invitation read cluster
 
-Status: **ported and proven identical locally 2026-11-14.** Four authenticated GET routes moved;
+Status: **ported and proven identical locally 2026-11-14.** Six authenticated GET routes moved;
 writes and the version timeline stay on Python. Traffic ramp and p95 remain deployment work.
 
 ## What moved
@@ -10,12 +10,15 @@ services/api-node/lib/authz.mjs              current user, invitation roles, pre
 services/api-node/lib/invitation-routes.mjs  GET /api/invitations/:id
                                              GET /api/invitations/:id/guests
                                              GET /api/invitations/:id/rsvps
+                                             GET /api/invitations/:id/versions
+                                             GET /api/invitations/:id/versions/:version
                                              GET /api/trash
 services/api-node/test/invitation-authz.test.mjs
 tools/invitation-read-parity.py              16-case cross-backend proof
 ```
 
-These are the editor's first load, the guests/RSVP dashboards' first read, and the owner's trash list. Three behaviours are
+These are the editor's first load, the guests/RSVP dashboards' first read, the version timeline and the owner's trash
+list. Three behaviours are
 easy to get subtly wrong, and all three are copied rather than "cleaned up":
 
 - **Role resolution** — owner if `invitations.owner_id` matches **and** `deleted_at IS NULL`,
@@ -53,21 +56,32 @@ guests including revoked and expired links, two RSVPs) and sends every case to b
 | unauthenticated guests | 401 | 401 |
 | owner / manager RSVPs | 200 | 200 |
 | content / stranger RSVPs | 403 | 403 |
+| owner / collaborator versions | 200 | 200 |
+| stranger / unauthenticated versions | 404 / 401 | 404 / 401 |
+| version by number / by publication id | 200 | 200 |
+| auto snapshot by id | 200 | 200 |
+| missing version | 404 | 404 |
 | unauthenticated trash | 401 | 401 |
 | owner trash (titled + untitled) | 200 | 200 |
 | stranger trash (empty) | 200 (`[]`) | 200 (`[]`) |
 
-**INVITATION READ PARITY 19/19 identical, 0 failing.** Service suite **42 passed**.
+**INVITATION READ PARITY 27/27 identical, 0 failing.** Service suite **42 passed**.
 
 ## Not done, and why
 
-- **`GET /api/invitations/:id/versions` and `/versions/:version`** — both merge `publications` with
-  auto-snapshots from `features/invitation_versions.py`. That module is a separate port (its own
-  listing semantics and error handling); until it moves, the version timeline stays pinned to Python.
+- **Version writes and restore** — `create_snapshot`, `capture_auto_snapshot`, `_prune` and
+  `restore_version` stay on Python. The port covers only the two reads; writes need the
+  snapshot-state comparison Rule 8 requires.
 - **Every write** (archive, slug, guest add, RSVP update/delete) — Phase D writes need snapshot-based
   comparison (Rule 8), not a response diff, and RSVP is the load-test target. They stay Python.
-- **S9 (auth)** is blocked on a dependency decision, not on code: verifying seeded Argon2id hashes
-  needs an Argon2 implementation, and no pure-Node option exists — `argon2`/`@node-rs/argon2` are
-  native addons that the approved D2 set does not include. Reordering to S10 was the smallest
-  unblocked step; S9 needs a written D2 extension before it can start.
+- **S9 (auth) is owner-gated by D2, not by native-code availability.** An earlier note here claimed
+  every Node Argon2id implementation is a native addon; that is false (pure-JS and WASM packages
+  exist). The gate is the dependency policy itself. `docs/NEXT-WORK.md` §"Decisions taken
+  2026-11-14" records the owner answer verbatim: **"Approved and used at S2: `fastify@5.12.8` only
+  (closure pinned by `services/api-node/package-lock.json`); each package listed at S2 and installed
+  with `npm ci --ignore-scripts` into the Node service's own `package.json`/lockfile."** The plan's
+  P3 requires an **"Owner-written override of "never add a dependency" (D2), listing each package
+  and why."** No Argon2 package — native or WASM — is listed, so adding either would breach D2
+  regardless of how it is compiled. S9 therefore needs a written D2 extension naming the package;
+  it is not something code can settle.
 - **Traffic ramp and p95** — deployment steps; P1 still has no baseline.

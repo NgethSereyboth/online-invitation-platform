@@ -94,6 +94,7 @@ def seed(database_url: str) -> None:
         "privacy": {},
     }
     with psycopg.connect(database_url) as connection:
+        connection.execute("DELETE FROM invitation_versions WHERE invitation_id LIKE %s", ("parity-r-inv-%",))
         connection.execute("DELETE FROM sessions WHERE user_id LIKE %s", ("parity-r-%",))
         connection.execute("DELETE FROM invitations WHERE slug LIKE %s", ("parity-r-%",))
         connection.execute("DELETE FROM users WHERE id LIKE %s", ("parity-r-%",))
@@ -179,6 +180,27 @@ def seed(database_url: str) -> None:
                     slug,
                 ),
             )
+        connection.execute(
+            "INSERT INTO publications(id,invitation_id,version,document_json,published_at) "
+            "VALUES(%s,'parity-r-inv-owned',3,%s,%s)",
+            ("parity-r-pub-3", json.dumps({**draft, "version": 3}, sort_keys=True), now - 60_000),
+        )
+        connection.execute(
+            "INSERT INTO publications(id,invitation_id,version,document_json,published_at) "
+            "VALUES(%s,'parity-r-inv-owned',2,%s,%s)",
+            ("parity-r-pub-2", json.dumps({**draft, "version": 2}, sort_keys=True), now - 120_000),
+        )
+        for index, (snapshot_id, summary, created) in enumerate(
+            (
+                ("parity-r-auto-1", "Auto snapshot", now - 30_000),
+                ("parity-r-auto-2", "Second auto snapshot", now - 90_000),
+            )
+        ):
+            connection.execute(
+                "INSERT INTO invitation_versions(id,invitation_id,document_json,author_id,author_name,"
+                "summary,is_auto,created_at) VALUES(%s,'parity-r-inv-owned',%s,'parity-r-owner','Owner',%s,1,%s)",
+                (snapshot_id, json.dumps({**draft, "auto": index + 1}, sort_keys=True), summary, created),
+            )
         for index, (name, status, count, answers) in enumerate(
             (
                 ("Ada Lovelace", "Yes, joyfully", 2, {"meal": "vegetarian"}),
@@ -220,6 +242,14 @@ CASES = [
     ("manager rsvps", "/api/invitations/parity-r-inv-owned/rsvps", "manager"),
     ("content rsvps", "/api/invitations/parity-r-inv-owned/rsvps", "content"),
     ("stranger rsvps", "/api/invitations/parity-r-inv-owned/rsvps", "stranger"),
+    ("owner versions", "/api/invitations/parity-r-inv-owned/versions", "owner"),
+    ("collaborator versions", "/api/invitations/parity-r-inv-shared/versions", "content"),
+    ("stranger versions", "/api/invitations/parity-r-inv-owned/versions", "stranger"),
+    ("unauth versions", "/api/invitations/parity-r-inv-owned/versions", None),
+    ("version by number", "/api/invitations/parity-r-inv-owned/versions/2", "owner"),
+    ("version by publication id", "/api/invitations/parity-r-inv-owned/versions/parity-r-pub-3", "owner"),
+    ("auto snapshot by id", "/api/invitations/parity-r-inv-owned/versions/parity-r-auto-1", "owner"),
+    ("missing version", "/api/invitations/parity-r-inv-owned/versions/999", "owner"),
     ("unauth trash", "/api/trash", None),
     ("owner trash", "/api/trash", "owner"),
     ("stranger trash", "/api/trash", "stranger"),

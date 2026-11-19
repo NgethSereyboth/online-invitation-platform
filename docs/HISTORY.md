@@ -634,12 +634,14 @@ semantics rather than JavaScript's.
 
 ### S10 — the invitation read cluster, and why S9 waits
 
-S9 (auth) turned out to be blocked on a dependency decision rather than on code: verifying seeded
-Argon2id hashes needs an Argon2 implementation, and every Node option is a native addon that the
-approved D2 set does not contain. Rather than add one unilaterally, the next unblocked slice moved:
+S9 (auth) is gated by the dependency policy, not by native-code availability: pure-JS and WASM
+Argon2id implementations exist, but the recorded D2 answer is **"Approved and used at S2:
+`fastify@5.12.8` only"** and P3 requires an owner-written override **listing each package**. No
+Argon2 package is listed, so adding one would breach D2 however it is compiled. Rather than add one
+unilaterally, the next unblocked slice moved:
 the editor's first load and the guests/RSVP dashboards' first read.
 
-Four routes moved — `GET /api/invitations/:id`, `/guests`, `/rsvps` and `/api/trash` — with the parts that are easy
+Six routes moved — `GET /api/invitations/:id`, `/guests`, `/rsvps`, `/versions`, `/versions/:version` and `/api/trash` — with the parts that are easy
 to "improve" and therefore easy to break: a deleted invitation demotes its owner and answers 404;
 `/guests` answers **403** for a missing invitation while `/invitations/:id` answers 404, because
 Python's helper collapses both cases; and the guest payload mints personal links as a truncated
@@ -647,7 +649,7 @@ HMAC under the shared guest-token secret, with revoked and expired links returni
 proof compares those tokens as part of the payload, so a different key fails.
 
 `tools/invitation-read-parity.py` seeds four users with sessions, five invitations, both collaborator
-roles, four guests and two RSVPs, and compares nineteen requests: **19/19 identical, 0 failing**. The
+roles, four guests and two RSVPs, and compares twenty-seven requests: **27/27 identical, 0 failing**. The
 service suite is **42 passed**. The version timeline stays pinned to Python because it merges
 auto-snapshots from `features/invitation_versions.py`, which is its own port.
 
