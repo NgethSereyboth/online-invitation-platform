@@ -632,6 +632,24 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### Analytics and jobs reads ported, and a PostgreSQL-only analytics defect fixed
+
+The analytics dashboard and the jobs lists now run on Node: `/api/invitations/:id/analytics`,
+`/analytics/live`, `/api/account/analytics/summary`, `/api/account/analytics/creations`,
+`/api/studio/bulk-jobs` and `/api/invitations/:id/materials/import-jobs`. None of these handlers
+calls the Python rate limiter, so P7's pin rule did not apply, and none needed a new package.
+`tools/analytics-read-parity.py` compares twenty cases against one seeded PostgreSQL serving both
+backends — owner/collaborator/stranger access, a malformed `draft_json` that must fall back to
+`rsvpEnabled: true`, sort/filter/paging, and the live route with the flag off (403
+`feature_disabled`) and on — reporting **20/20 identical on two consecutive runs**.
+
+Proving it surfaced a real baseline defect rather than a porting difference: `queries.py` and the
+reconstruction job call `ensure_schema(db)` with no dialect, which defaulted to SQLite and emitted
+`AUTOINCREMENT` into PostgreSQL. Every analytics read there raised, and the server's `handle_error`
+swallowed it into an empty reply. `model.ensure_schema` now detects the dialect from the driver
+connection; the 24 existing analytics tests pass, and the parity run is against the fixed baseline.
+Still open in S12c: reports, backup/object storage and the plugin host.
+
 ### Remaining steps closed out with a ledger, and the flag read ported
 
 The migration plan was closed out as far as evidence allows. `docs/language-migration/REMAINING-STEPS.md`

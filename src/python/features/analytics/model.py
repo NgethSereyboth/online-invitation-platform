@@ -172,12 +172,28 @@ PG_SCHEMA_STATEMENTS = [
 
 # --- Schema -------------------------------------------------------------
 
-def ensure_schema(db, dialect: str = "sqlite") -> None:
+def _detect_dialect(db) -> str:
+    """PostgreSQL when the connection underneath is psycopg; else SQLite.
+
+    ``queries.py`` and the reconstruction job call ``ensure_schema(db)`` without a
+    dialect. Defaulting those calls to SQLite emitted ``AUTOINCREMENT`` on
+    PostgreSQL and aborted every analytics read there; the adapter in server.py
+    wraps the driver connection on ``.connection``, so its module identifies the
+    backend without either side importing the other.
+    """
+    connection = getattr(db, "connection", db)
+    module = type(connection).__module__.split(".")[0]
+    return "postgresql" if module == "psycopg" else "sqlite"
+
+
+def ensure_schema(db, dialect: Optional[str] = None) -> None:
     """Create the three analytics tables + indices if missing.
 
-    ``dialect`` picks the statement list; it defaults to the SQLite list so
-    every existing caller keeps working unchanged.
+    ``dialect`` picks the statement list; when omitted it is detected from the
+    connection so callers that pass no dialect still use the right SQL.
     """
+    if dialect is None:
+        dialect = _detect_dialect(db)
     statements = PG_SCHEMA_STATEMENTS if dialect == "postgresql" else SCHEMA_STATEMENTS
     for stmt in statements:
         db.execute(stmt)

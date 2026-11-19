@@ -94,7 +94,19 @@ decision is needed, but the work has not been done.
 
 ### S12c — storage, backup, analytics, reports, plugins
 
-**Status:** partially landed (`GET /api/feature-flags`). The rest is open.
+**Status:** analytics and jobs reads landed; backup, object storage, reports and the plugin host are open.
+
+Landed and proven (`tools/analytics-read-parity.py`, **20/20 identical on two consecutive runs**):
+`GET /api/invitations/:id/analytics`, `/analytics/live`, `/api/account/analytics/summary`,
+`/api/account/analytics/creations` (sort, order, status filter, paging), `GET /api/studio/bulk-jobs`,
+`GET /api/invitations/:id/materials/import-jobs`, plus `GET /api/feature-flags` from the earlier slice.
+None of these handlers calls `rate_limit`, so P7 row 1 does not pin them; no D2 package is needed.
+
+**Defect found and fixed while proving the port:** `features/analytics/queries.py` and the
+reconstruction job call `ensure_schema(db)` without a dialect, which defaulted to SQLite and emitted
+`AUTOINCREMENT` on PostgreSQL — every analytics read died with an unhandled error and an empty
+reply there. `model.ensure_schema` now detects the dialect from the driver connection when none is
+passed; Python's 24 analytics tests pass.
 
 **Controlling text** (plan §5 S12c, verbatim):
 
@@ -105,9 +117,9 @@ decision is needed, but the work has not been done.
 
 > Pin studio-backup routes to one backend, or use a DB advisory row.
 
-**Decider: plan rule for backups; engineering for the rest.** The analytics read model is a
-1,747-line module (`features/analytics/{model,queries,sessions,export}.py`); porting it is a step of
-its own and was not attempted here — **unmeasured**.
+**Decider: plan rule for backups; engineering for the rest.** The read half of
+`features/analytics` is now ported (above). Still open in S12c: `backup.py` and the object-storage
+migration (pinned by P7 row 2), `features/reports`, and the plugin sandbox host — **unmeasured**.
 
 ### S13 — media pipeline
 
@@ -177,7 +189,9 @@ route is not yet ported, so the precondition cannot be met today.
 - **Full gate matrix** (`tools/run-gates.py`) — not re-run since S2; the checks run per step are the
   parity harnesses, `npm test`, and `build.py all --check`.
 - **6-platform certification** and the 9 CI workflows — not run here; they require the owner's CI.
-- **Lang-density/analytics modules, jobs, media, decommission** — no attempt made.
+- **Reports, backup/object storage, plugin host, media, decommission** — no attempt made.
+- **Analytics writes** (`POST /api/analytics/events`, consent/purge/export) — not ported; the ingest
+  route carries `rate_limit(f"analytics-ingest:{self.client_ip()}",60,60)`, so P7 row 1 pins it.
 
 ## Summary of deciders
 
@@ -186,4 +200,5 @@ route is not yet ported, so the precondition cannot be met today.
 - **Plan rule (no owner):** S11 pinning, S12a single-writer/presence pin, S12b lease precondition,
   S13 benchmark + ClamAV, D4 build generators.
 - **Deployment traffic:** P1, shadow/ramp, 6-platform, S15.
-- **Unblocked but unattempted:** S12b lease work, S12c analytics/reports, S14 proxy (needs a sidecar).
+- **Unblocked but unattempted:** S12b lease work, S12c reports/backup/plugin host, S14 proxy
+  (needs a sidecar).
