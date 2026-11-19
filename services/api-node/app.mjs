@@ -10,6 +10,7 @@ import Fastify from 'fastify';
 import { registerSessionRoutes } from './lib/auth-routes.mjs';
 import { registerPublicRoutes } from './lib/public-routes.mjs';
 import { registerInvitationRoutes } from './lib/invitation-routes.mjs';
+import { registerMetaRoutes } from './lib/meta-routes.mjs';
 import { QueryDeadlineExceeded } from './lib/db.mjs';
 import {
   pageFiles,
@@ -73,6 +74,11 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
     registerSessionRoutes(app, { db, cipher });
     registerPublicRoutes(app, { db, cipher });
     registerInvitationRoutes(app, { db, cipher });
+  }
+  if (db) {
+    // The flag read needs only the database: anonymous callers get the
+    // tier-less set, so the cipher is irrelevant here.
+    registerMetaRoutes(app, { db });
   }
 
   app.get('/healthz', async (_request, reply) => {

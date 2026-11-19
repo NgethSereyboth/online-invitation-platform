@@ -632,6 +632,24 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### Remaining steps closed out with a ledger, and the flag read ported
+
+The migration plan was closed out as far as evidence allows. `docs/language-migration/REMAINING-STEPS.md`
+now carries every step S1–S15 with its status, and for each open one the controlling text quoted
+verbatim plus who can clear it. Two claims were tested rather than repeated: S11 is not owner-blocked
+— every write handler there calls the rate limiter (`rsvp`, `submit_wish`, `record_public_view`,
+`add_guest`, `update_guest`, `delete_guest`) and P7 says *"Share via Redis when `REDIS_URL` is set;
+otherwise pin every rate-limited route to one backend."* Pinning is therefore the plan's chosen
+state, not a missing decision. S9 remains owner-only for the D2 allow-list reason recorded there.
+
+The unblocked step was `GET /api/feature-flags`: defaults, DB merge order, tier filtering, the
+maintenance-mode exclusion and Python's 60-second process cache are all copied rather than
+"improved". `tools/feature-flags-parity.py` compares anonymous, free, creator and pro callers against
+one seeded database: **4/4 identical on two consecutive runs**, the invitation-read harness still
+reports **27/27**, service tests are **47 passed**, and `build --check` is green. Nothing beyond that
+is claimed: P1, the shadow ramp, 6-platform certification and the full gate matrix are recorded as
+unmeasured.
+
 ### S10 — the invitation read cluster, and why S9 waits
 
 S9 (auth) is gated by the dependency policy, not by native-code availability: pure-JS and WASM
