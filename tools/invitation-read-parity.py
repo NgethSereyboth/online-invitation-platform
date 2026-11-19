@@ -124,20 +124,25 @@ def seed(database_url: str) -> None:
             ("parity-r-inv-empty", "parity-r-empty", "owner", None),
             ("parity-r-inv-foreign", "parity-r-foreign", "stranger", None),
             ("parity-r-inv-deleted", "parity-r-deleted", "owner", now - 1_000),
+            ("parity-r-inv-deleted-titled", "parity-r-deleted-titled", "owner", now - 2_000),
         ]
         for invitation_id, slug, owner_key, deleted_at in fixtures:
+            body = dict(draft)
+            if invitation_id == "parity-r-inv-deleted-titled":
+                body = {**draft, "fields": {"names": "A titled trashed invitation"}}
             connection.execute(
                 "INSERT INTO invitations(id,slug,draft_json,updated_at,owner_id,archived,views,access_mode,"
-                "is_published,deleted_at,custom_domain,gallery_access_password_hash) "
-                "VALUES(%s,%s,%s,%s,%s,0,0,'unlisted',1,%s,%s,NULL)",
+                "is_published,deleted_at,custom_domain,gallery_access_password_hash,purge_at) "
+                "VALUES(%s,%s,%s,%s,%s,0,0,'unlisted',1,%s,%s,NULL,%s)",
                 (
                     invitation_id,
                     slug,
-                    json.dumps(draft, sort_keys=True),
+                    json.dumps(body, sort_keys=True),
                     now - 5_000,
                     USERS[owner_key],
                     deleted_at,
                     "owned.example.test" if invitation_id == "parity-r-inv-owned" else None,
+                    now + 86_400_000 if deleted_at else None,
                 ),
             )
         for invitation_id in ("parity-r-inv-shared", "parity-r-inv-owned"):
@@ -215,6 +220,9 @@ CASES = [
     ("manager rsvps", "/api/invitations/parity-r-inv-owned/rsvps", "manager"),
     ("content rsvps", "/api/invitations/parity-r-inv-owned/rsvps", "content"),
     ("stranger rsvps", "/api/invitations/parity-r-inv-owned/rsvps", "stranger"),
+    ("unauth trash", "/api/trash", None),
+    ("owner trash", "/api/trash", "owner"),
+    ("stranger trash", "/api/trash", "stranger"),
 ]
 
 

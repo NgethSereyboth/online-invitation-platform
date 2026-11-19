@@ -639,7 +639,7 @@ Argon2id hashes needs an Argon2 implementation, and every Node option is a nativ
 approved D2 set does not contain. Rather than add one unilaterally, the next unblocked slice moved:
 the editor's first load and the guests/RSVP dashboards' first read.
 
-Three routes moved — `GET /api/invitations/:id`, `/guests`, `/rsvps` — with the parts that are easy
+Four routes moved — `GET /api/invitations/:id`, `/guests`, `/rsvps` and `/api/trash` — with the parts that are easy
 to "improve" and therefore easy to break: a deleted invitation demotes its owner and answers 404;
 `/guests` answers **403** for a missing invitation while `/invitations/:id` answers 404, because
 Python's helper collapses both cases; and the guest payload mints personal links as a truncated
@@ -647,7 +647,7 @@ HMAC under the shared guest-token secret, with revoked and expired links returni
 proof compares those tokens as part of the payload, so a different key fails.
 
 `tools/invitation-read-parity.py` seeds four users with sessions, five invitations, both collaborator
-roles, four guests and two RSVPs, and compares sixteen requests: **16/16 identical, 0 failing**. The
+roles, four guests and two RSVPs, and compares nineteen requests: **19/19 identical, 0 failing**. The
 service suite is **42 passed**. The version timeline stays pinned to Python because it merges
 auto-snapshots from `features/invitation_versions.py`, which is its own port.
 

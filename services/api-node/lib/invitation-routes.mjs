@@ -143,6 +143,31 @@ export function registerInvitationRoutes(app, { db, cipher, guestTokenSecret } =
     });
   });
 
+  app.get('/api/trash', async (request, reply) => {
+    secure(reply, request);
+    const user = await currentUser(db, request);
+    if (!user) {
+      reply.code(401);
+      return AUTH_REQUIRED;
+    }
+    const rows = await db.query(
+      'SELECT id,slug,draft_json,deleted_at,purge_at FROM invitations ' +
+        'WHERE owner_id=? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC',
+      [user.id],
+    );
+    return rows.rows.map((raw) => {
+      const row = cipher ? cipher.revealRow(raw) : raw;
+      const document = parseJson(row.draft_json ?? '{}', {});
+      return {
+        id: row.id,
+        slug: row.slug,
+        title: document.fields?.names || 'Untitled invitation',
+        deletedAt: row.deleted_at,
+        purgeAt: row.purge_at,
+      };
+    });
+  });
+
   app.get('/api/invitations/:id/rsvps', async (request, reply) => {
     secure(reply, request);
     const user = await currentUser(db, request);
