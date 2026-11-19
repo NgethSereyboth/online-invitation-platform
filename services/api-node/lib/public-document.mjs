@@ -1,6 +1,8 @@
 // S7: guest bindings and the public document projection.
 // merge_fields/apply_guest_bindings/guest_token_hash are copied from server.py.
-import { createHash } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const MERGE_TOKEN = /\{\{\s*([\w.-]+)\s*\}\}/g;
 
@@ -42,4 +44,39 @@ export function applyGuestBindings(document, guestRow) {
 /** guest_token_hash(): sha256 of the raw token, hex. */
 export function guestTokenHash(token) {
   return createHash('sha256').update(String(token ?? ''), 'utf8').digest('hex');
+}
+
+/**
+ * persistent_data_secret("EINVITE_GUEST_TOKEN_SECRET", ".guest-token-secret"):
+ * personal links are HMACs under this key, so both runtimes must hold the same
+ * one or a link minted by Python would stop resolving on Node.
+ */
+export function resolveGuestTokenSecret({ env = process.env, dataDir = env.EINVITE_DATA_DIR } = {}) {
+  const configured = String(env.EINVITE_GUEST_TOKEN_SECRET ?? '').trim();
+  if (configured) return configured;
+  if (!dataDir) return randomBytes(36).toString('base64url');
+  const path = join(dataDir, '.guest-token-secret');
+  try {
+    const stored = readFileSync(path, 'utf8').trim();
+    if (stored) return stored;
+  } catch {
+    /* missing sidecar falls through to generation */
+  }
+  const value = randomBytes(36).toString('base64url');
+  try {
+    mkdirSync(dataDir, { recursive: true });
+    writeFileSync(path, value, { encoding: 'utf8', mode: 0o600 });
+    return value;
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * guest_token_value(): url-safe base64 of HMAC-SHA256("<id>|<salt>|<version>"),
+ * unpadded and truncated to 32 characters.
+ */
+export function guestTokenValue(guestId, tokenSalt, tokenVersion = 1, secret = resolveGuestTokenSecret()) {
+  const payload = `${guestId}|${tokenSalt}|${Math.trunc(Number(tokenVersion || 1))}`;
+  return createHmac('sha256', secret).update(payload, 'utf8').digest('base64url').slice(0, 32);
 }

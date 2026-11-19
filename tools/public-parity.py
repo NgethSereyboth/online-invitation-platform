@@ -18,6 +18,7 @@ import hmac
 import json
 import os
 import re
+import secrets
 import shutil
 import signal
 import socket
@@ -33,7 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PY = str(ROOT / ".venv" / "bin" / "python")
 NODE = shutil.which("node")
-SECRET = "s7-parity-media-secret-0123456789"
+SECRET = secrets.token_urlsafe(32)  # per run; passed to both backends
 SLUG = "parity-s7"
 MEDIA = re.compile(r"/api/media/([^?\"'\s]+)\?i=([^&]+)&exp=(\d+)&sig=([0-9a-f]{64})")
 

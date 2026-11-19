@@ -9,6 +9,7 @@ import Fastify from 'fastify';
 
 import { registerSessionRoutes } from './lib/auth-routes.mjs';
 import { registerPublicRoutes } from './lib/public-routes.mjs';
+import { registerInvitationRoutes } from './lib/invitation-routes.mjs';
 import { QueryDeadlineExceeded } from './lib/db.mjs';
 import {
   pageFiles,
@@ -71,6 +72,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
   if (db && cipher) {
     registerSessionRoutes(app, { db, cipher });
     registerPublicRoutes(app, { db, cipher });
+    registerInvitationRoutes(app, { db, cipher });
   }
 
   app.get('/healthz', async (_request, reply) => {

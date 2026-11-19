@@ -632,6 +632,25 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### S10 — the invitation read cluster, and why S9 waits
+
+S9 (auth) turned out to be blocked on a dependency decision rather than on code: verifying seeded
+Argon2id hashes needs an Argon2 implementation, and every Node option is a native addon that the
+approved D2 set does not contain. Rather than add one unilaterally, the next unblocked slice moved:
+the editor's first load and the guests/RSVP dashboards' first read.
+
+Three routes moved — `GET /api/invitations/:id`, `/guests`, `/rsvps` — with the parts that are easy
+to "improve" and therefore easy to break: a deleted invitation demotes its owner and answers 404;
+`/guests` answers **403** for a missing invitation while `/invitations/:id` answers 404, because
+Python's helper collapses both cases; and the guest payload mints personal links as a truncated
+HMAC under the shared guest-token secret, with revoked and expired links returning `null`. The
+proof compares those tokens as part of the payload, so a different key fails.
+
+`tools/invitation-read-parity.py` seeds four users with sessions, five invitations, both collaborator
+roles, four guests and two RSVPs, and compares sixteen requests: **16/16 identical, 0 failing**. The
+service suite is **42 passed**. The version timeline stays pinned to Python because it merges
+auto-snapshots from `features/invitation_versions.py`, which is its own port.
+
 ### S8 — the pattern frozen, and two header gaps it exposed
 
 Writing the ADR was the first time the port's conventions were stated as rules rather than
