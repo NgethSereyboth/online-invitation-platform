@@ -6974,9 +6974,14 @@ class Handler(SimpleHTTPRequestHandler):
         query=parse_qs(urlparse(self.path).query)
         status=str((query.get("status") or [""])[0]).strip().lower()
         target_type=str((query.get("targetType") or [""])[0]).strip().lower() or None
-        if status and status not in reports_feature.STATUS_VALUES:raise ValueError("Invalid status")
-        try:limit=max(1,min(int((query.get("limit") or ["100"])[0]),200))
-        except ValueError:raise ValueError("Invalid limit")
+        # Validation errors are a 400, not an unhandled ValueError: raising here
+        # aborted the request with no response at all (the same shape the
+        # analytics ingest route already answers with).
+        try:
+            if status and status not in reports_feature.STATUS_VALUES:raise ValueError("Invalid status")
+            try:limit=max(1,min(int((query.get("limit") or ["100"])[0]),200))
+            except ValueError:raise ValueError("Invalid limit")
+        except ValueError as exc:return self.json(400,{"error":str(exc)})
         cursor_raw=str((query.get("cursor") or [""])[0])
         cursor=int(cursor_raw) if cursor_raw.isdigit() else None
         with connect() as db:

@@ -49,9 +49,9 @@ SCHEMA_STATEMENTS = [
   body TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'open',
   resolved_by TEXT,
-  resolved_at INTEGER,
+  resolved_at BIGINT,
   resolution_note TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL
+  created_at BIGINT NOT NULL
 )""",
     "CREATE INDEX IF NOT EXISTS idx_reports_status_created ON reports(status,created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_reports_target ON reports(target_type,target_id,created_at DESC)",
@@ -71,9 +71,20 @@ RESOLVED_STATUSES: Tuple[str, ...] = (
 )
 
 
+def _is_postgres(db) -> bool:
+    connection = getattr(db, "connection", db)
+    return type(connection).__module__.split(".")[0] == "psycopg"
+
+
 def ensure_schema(db) -> None:
     for stmt in SCHEMA_STATEMENTS:
         db.execute(stmt)
+    if _is_postgres(db):
+        # Timestamps are epoch milliseconds. PostgreSQL INTEGER tops out at
+        # 2^31, so a table created by an older build rejected every insert with
+        # "integer out of range"; wider types are a no-op where already correct.
+        for column in ("created_at", "resolved_at"):
+            db.execute(f"ALTER TABLE reports ALTER COLUMN {column} TYPE BIGINT")
 
 
 def _now_ms() -> int:

@@ -632,6 +632,23 @@ semantics rather than JavaScript's.
 - **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
   and the sidecar key file end-to-end.
 
+### Reports queue read ported, with two baseline defects fixed
+
+`GET /api/admin/reports` now runs on Node behind the same gate as Python: the admin IP allowlist is
+checked before authentication, then `require_role("admin", "super_admin")` — 403
+"Insufficient permissions" for a denied IP or a non-admin, 401 "Authentication required" without a
+session. Filters, the 1–200 limit clamp, digit-only cursors and the `nextCursor` rule are copied.
+`tools/reports-read-parity.py` compares twenty cases across three restarts (allowlist unset, denying
+`10.0.0.0/8`, allowing loopback): **20/20 identical on two consecutive runs**.
+
+Proving it exposed two baseline defects. Invalid `status` or `limit` raised an unhandled
+`ValueError`, so Python closed the connection with no response; the route now answers 400
+`{"error": "Invalid status"}` or `{"error": "Invalid limit"}`. And `reports.created_at` was declared
+`INTEGER`, which cannot hold epoch milliseconds on PostgreSQL, so every report insert failed there
+("integer out of range"); both timestamp columns are now `BIGINT`, and `ensure_schema` widens a
+table created by an older build. The 12 reports tests pass. Reports writes remain in Python: the
+resolve route is rate-limited and both are writes.
+
 ### Analytics and jobs reads ported, and a PostgreSQL-only analytics defect fixed
 
 The analytics dashboard and the jobs lists now run on Node: `/api/invitations/:id/analytics`,

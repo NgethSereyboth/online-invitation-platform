@@ -18,6 +18,7 @@ Proof references are the harnesses that actually ran; see the per-step documents
 | S8 | Pattern ADR | `docs/adr/0001-language-migration-pattern.md` |
 | S10 | Invitation reads: invitation, guests, RSVPs, versions, trash | `tools/invitation-read-parity.py` 27/27 |
 | S12c (part) | `GET /api/feature-flags` public projection | `tools/feature-flags-parity.py` 4/4 |
+| S12c (part) | Analytics, jobs and reports reads | `tools/analytics-read-parity.py` 20/20; `tools/reports-read-parity.py` 20/20 |
 
 ## Still open
 
@@ -94,7 +95,7 @@ decision is needed, but the work has not been done.
 
 ### S12c — storage, backup, analytics, reports, plugins
 
-**Status:** analytics and jobs reads landed; backup, object storage, reports and the plugin host are open.
+**Status:** analytics, jobs and reports reads landed; backup, object storage and the plugin host are open.
 
 Landed and proven (`tools/analytics-read-parity.py`, **20/20 identical on two consecutive runs**):
 `GET /api/invitations/:id/analytics`, `/analytics/live`, `/api/account/analytics/summary`,
@@ -117,9 +118,24 @@ passed; Python's 24 analytics tests pass.
 
 > Pin studio-backup routes to one backend, or use a DB advisory row.
 
-**Decider: plan rule for backups; engineering for the rest.** The read half of
-`features/analytics` is now ported (above). Still open in S12c: `backup.py` and the object-storage
-migration (pinned by P7 row 2), `features/reports`, and the plugin sandbox host — **unmeasured**.
+The reports queue read (`GET /api/admin/reports`) is ported as well: `tools/reports-read-parity.py`
+reports **20/20 identical on two consecutive runs** (admin, super_admin, customer 403, anonymous 401,
+filters, limit clamping, cursor paging, invalid input 400, and the admin IP allowlist denying and
+allowing). Its handler carries no rate limiter — `admin_reports_list` opens with
+`admin=self._admin_gate("/api/admin/reports","GET")` — so P7 does not pin it, and no D2 package is
+involved. Only the resolve write is limited (`admin-report-resolve:{admin['id']}`) and stays in
+Python.
+
+Two baseline defects surfaced while proving the read. First, invalid `status`/`limit` raised an
+unhandled `ValueError`, so the request ended with no response at all; `admin_reports_list` now
+answers 400 `{"error": "Invalid status"|"Invalid limit"}` like the analytics ingest route does.
+Second, `reports.created_at`/`resolved_at` were `INTEGER`, which cannot hold epoch milliseconds on
+PostgreSQL, so every insert failed with `integer out of range`; the declaration is now `BIGINT` and
+`features/reports.ensure_schema` widens a table created by an older build.
+
+**Decider: plan rule for backups; engineering for the rest.** Still open in S12c: `backup.py` and the
+object-storage migration (pinned by P7 row 2, quoted above), and the plugin sandbox host —
+**unmeasured**.
 
 ### S13 — media pipeline
 
@@ -189,7 +205,9 @@ route is not yet ported, so the precondition cannot be met today.
 - **Full gate matrix** (`tools/run-gates.py`) — not re-run since S2; the checks run per step are the
   parity harnesses, `npm test`, and `build.py all --check`.
 - **6-platform certification** and the 9 CI workflows — not run here; they require the owner's CI.
-- **Reports, backup/object storage, plugin host, media, decommission** — no attempt made.
+- **Backup/object storage, plugin host, media, decommission** — no attempt made.
+- **Reports writes** (`POST /api/reports`, `PUT /api/admin/reports/:id`) — not ported; the resolve
+  route is rate-limited (`admin-report-resolve`) and both write, so they stay in Python.
 - **Analytics writes** (`POST /api/analytics/events`, consent/purge/export) — not ported; the ingest
   route carries `rate_limit(f"analytics-ingest:{self.client_ip()}",60,60)`, so P7 row 1 pins it.
 

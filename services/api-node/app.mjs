@@ -12,6 +12,7 @@ import { registerPublicRoutes } from './lib/public-routes.mjs';
 import { registerInvitationRoutes } from './lib/invitation-routes.mjs';
 import { registerMetaRoutes } from './lib/meta-routes.mjs';
 import { registerAnalyticsRoutes } from './lib/analytics-routes.mjs';
+import { registerAdminRoutes } from './lib/admin-routes.mjs';
 import { QueryDeadlineExceeded } from './lib/db.mjs';
 import {
   pageFiles,
@@ -81,6 +82,7 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
     // tier-less set, so the cipher is irrelevant here.
     registerMetaRoutes(app, { db });
     registerAnalyticsRoutes(app, { db });
+    registerAdminRoutes(app, { db });
   }
 
   app.get('/healthz', async (_request, reply) => {
