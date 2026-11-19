@@ -637,7 +637,9 @@ semantics rather than JavaScript's.
 S9 (auth) is gated by the dependency policy, not by native-code availability: pure-JS and WASM
 Argon2id implementations exist, but the recorded D2 answer is **"Approved and used at S2:
 `fastify@5.12.8` only"** and P3 requires an owner-written override **listing each package**. No
-Argon2 package is listed, so adding one would breach D2 however it is compiled. Rather than add one
+Argon2 package is listed, so adding one would breach D2 however it is compiled. The audit also found the
+record and the lockfile disagree about `pg` (the row says "fastify only", S4 called it "D2's second
+package"); that is flagged in `NEXT-WORK.md` for the owner to settle, not resolved unilaterally. Rather than add one
 unilaterally, the next unblocked slice moved:
 the editor's first load and the guests/RSVP dashboards' first read.
 

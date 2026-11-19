@@ -213,7 +213,7 @@ already in force are listed so work can continue meanwhile.
 
 | Decision | Answer | Effect |
 |---|---|---|
-| **D2** dependency override | **Approved and used at S2: `fastify@5.12.8` only** (closure pinned by `services/api-node/package-lock.json`); each package listed at S2 and installed with `npm ci --ignore-scripts` into the Node service's own `package.json`/lockfile. The root `package.json` stays dev-tooling only. | S2 unblocked |
+| **D2** dependency override | **Approved and used at S2: `fastify@5.12.8` only** (closure pinned by `services/api-node/package-lock.json`); each package listed at S2 and installed with `npm ci --ignore-scripts` into the Node service's own `package.json`/lockfile. The root `package.json` stays dev-tooling only. | S2 unblocked **Discrepancy (2026-11-14 audit):** the service also carries `pg@8.23.1`, recorded at S4 as "D2's second package", while this answer still reads "fastify only". Either amend this row to list `pg`, or treat it as a breach — the record and the lockfile disagree, and only the owner can settle which. | S2 unblocked |
 | **P1** load baseline | **Local disposable staging**, never the live origin: spawned instance + temp data dir, `EINVITE_LOAD_TEST_MODE=1`, `k6` installed without admin rights. | P1 runnable |
 | **D8** parallel-run DB | **PostgreSQL for the parallel period** (`migrate_sqlite_to_postgres.py` exists). SQLite-WAL stays the single-backend deployment. | S2 driver choice fixed; Rule 8 snapshots use PG templates |
 | **P4** capacity | **Undecided → phases stay serial.** No S9–S13 parallel band. | C8 applies: sequential only |
