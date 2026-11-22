@@ -840,6 +840,11 @@ chained `audit_events` row (sorted compact JSON, previous-hash link, protected m
 is also written by Node now, under Python's 60-second per-IP throttle, so a denied admin
 request leaves evidence on either backend.
 
+The reports 400 repair from the previous change had also pushed `admin_reports_list` one point
+over the complexity baseline (12 → 13), which made the CI static-analysis gate fail. Its filter
+parsing now lives in two module-level helpers; `make analyze` reports `ANALYSIS_OK` again and
+`tools/reports-read-parity.py` still reports 20/20 on two consecutive runs.
+
 Still unported: the reports resolve/queue writes, `backup.py` and object storage (P7 row 2),
 the plugin launch/install routes (rate-limited, so pinned), and the media/AI paths.
 

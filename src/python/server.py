@@ -4052,6 +4052,32 @@ def _touch_session_if_stale(db, token_hash, last_seen_at, now):
     except Exception as exc: _log.debug("cleanup failed: %s", exc)
 
 
+def _reports_list_limit(query):
+    """The 1–200 clamp, answering the same 400 text on a non-integer."""
+    try:
+        return max(1,min(int((query.get("limit") or ["100"])[0]),200)),None
+    except ValueError:
+        return None,"Invalid limit"
+
+
+def _parse_reports_list_query(query):
+    """Parse the reports queue filters into ((filters), None) or (None, error).
+
+    Validation errors are a 400, not an unhandled ValueError: raising them
+    aborted the request with no response at all (the same shape the analytics
+    ingest route already answers with).
+    """
+    status=str((query.get("status") or [""])[0]).strip().lower()
+    target_type=str((query.get("targetType") or [""])[0]).strip().lower() or None
+    if status and status not in reports_feature.STATUS_VALUES:
+        return None,"Invalid status"
+    limit,error=_reports_list_limit(query)
+    if error:return None,error
+    cursor_raw=str((query.get("cursor") or [""])[0])
+    cursor=int(cursor_raw) if cursor_raw.isdigit() else None
+    return (status or None,target_type,limit,cursor),None
+
+
 class Handler(SimpleHTTPRequestHandler):
     server_version="EInvite"
     sys_version=""
@@ -6973,22 +6999,12 @@ class Handler(SimpleHTTPRequestHandler):
     def admin_reports_list(self):
         admin=self._admin_gate("/api/admin/reports","GET")
         if not admin:return
-        query=parse_qs(urlparse(self.path).query)
-        status=str((query.get("status") or [""])[0]).strip().lower()
-        target_type=str((query.get("targetType") or [""])[0]).strip().lower() or None
-        # Validation errors are a 400, not an unhandled ValueError: raising here
-        # aborted the request with no response at all (the same shape the
-        # analytics ingest route already answers with).
-        try:
-            if status and status not in reports_feature.STATUS_VALUES:raise ValueError("Invalid status")
-            try:limit=max(1,min(int((query.get("limit") or ["100"])[0]),200))
-            except ValueError:raise ValueError("Invalid limit")
-        except ValueError as exc:return self.json(400,{"error":str(exc)})
-        cursor_raw=str((query.get("cursor") or [""])[0])
-        cursor=int(cursor_raw) if cursor_raw.isdigit() else None
+        parsed,error=_parse_reports_list_query(parse_qs(urlparse(self.path).query))
+        if error:return self.json(400,{"error":error})
+        status,target_type,limit,cursor=parsed
         with connect() as db:
             reports_feature.ensure_schema(db)
-            items,next_cursor=reports_feature.list_reports(db,status=status or None,target_type=target_type,limit=limit,cursor=cursor)
+            items,next_cursor=reports_feature.list_reports(db,status=status,target_type=target_type,limit=limit,cursor=cursor)
         self.json(200,{"items":items,"nextCursor":next_cursor})
 
     def admin_resolve_report(self, report_id):
