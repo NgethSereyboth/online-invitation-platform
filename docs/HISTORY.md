@@ -877,7 +877,33 @@ untouched until 31 minutes, and the kind filter honoured. `npm test` went 66 →
 unit suite; targeted pytest for webhook delivery, admin tools and security maintenance passes;
 `build.py all --check` stays green; `tools/pg-schema-parity.py` reports 0 missing columns.
 
-No job executes on Node yet: the webhook, storage-delete and media runners still live in
-`server.py`, and platform kinds still run through `platform_v32/jobs.py`. The lease is the
+At that point no job executed on Node: the webhook, storage-delete and media runners still lived
+in `server.py`, and platform kinds still ran through `platform_v32/jobs.py`. The lease was the
 precondition, not the port.
+
+## 2026-11-22 — webhook.deliver runs on Node, and PostgreSQL stops rejecting the completion
+
+`services/api-node/lib/webhook-runner.mjs` is the Node port of `process_webhook_jobs()`, built on
+the S12b lease, with `bin/webhook-runner.mjs` as a standalone worker (`npm run webhook:runner`,
+`--once` for a single pass). It signs each attempt as `t=<ms>,v1=<hmac>` with the endpoint secret,
+validates the destination and pins the address it checked (https/public unless
+`EINVITE_ALLOW_PRIVATE_WEBHOOKS` is set), refuses redirects, reads at most 64 KiB, and matches
+Python's queue rules: a 2xx completes, 400/3xx is final, 408/409/425/429/5xx retry at 1/2/4/8 s,
+the fifth failure is final, a missing or inactive endpoint completes with `endpoint removed`, and
+the endpoint's `last_delivery_at`/`last_status`/`failure_count` move identically.
+
+The parity harness found a baseline PostgreSQL defect on its first run. Python's completion
+update used `CASE WHEN ? THEN 0 …` with `1` as the parameter; SQLite accepts an integer as a
+boolean, PostgreSQL rejects it (`argument of CASE/WHEN must be type boolean, not type smallint`),
+so **every webhook completion or retry on PostgreSQL aborted** and left the job `running`. Both
+backends now use `CASE WHEN ?=1`, which means the same thing on both dialects. The Node runner
+would have inherited the same failure had the parity harness not exercised the real database.
+
+`tools/webhook-runner-parity.py` drives the real Python `process_webhook_jobs()` and the Node
+module against one PostgreSQL and one scripted receiver, comparing job state, attempts,
+`available_at` backoff, error text, endpoint counters and every body/signature. It reports
+**30/30 identical on two consecutive runs** across success, retry-then-success, five-attempt
+exhaustion, terminal 400, redirect 302, missing endpoint, inactive endpoint and an invalid URL.
+Service `npm test` went 76 → 86; `tests/lt_7_2_webhook_delivery_test.py` passes; `build.py all
+--check` stays green.
 
