@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""S12c webhook.deliver runner parity: Python vs Node.
+"""S12b/S12c background-runner parity: Python vs Node.
 
-Run both implementations against one PostgreSQL and one scripted local
-receiver. Each scenario seeds an identical endpoint and queued job, advances the
-same injected clock, and compares the job state, backoff timestamp, endpoint
-counters and received requests.
+Run both implementations against one PostgreSQL. The webhook scenarios use one
+scripted local receiver and compare job state, backoff, endpoint counters and
+received requests. The storage scenarios use one data directory per backend and
+compare job state, backoff, upload existence and the surviving derivative-cache
+entries.
 
 Usage:
   .venv/bin/python tools/webhook-runner-parity.py --database-url postgres://...
@@ -12,9 +13,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import http.server
 import json
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -138,8 +141,58 @@ def db_execute(database_url: str, sql: str, params=()) -> None:
 
 
 def reset(database_url: str) -> None:
-    db_execute(database_url, "DELETE FROM background_jobs WHERE kind='webhook.deliver' OR id LIKE %s", ("wh-job-%",))
+    db_execute(
+        database_url,
+        "DELETE FROM background_jobs WHERE kind IN ('webhook.deliver','storage.delete') "
+        "OR id LIKE %s OR id LIKE %s",
+        ("wh-job-%", "st-job-%"),
+    )
     db_execute(database_url, "DELETE FROM webhook_endpoints WHERE id LIKE %s", ("wh-parity-%",))
+
+
+def seed_storage_job(
+    database_url: str,
+    job_id: str,
+    payload: dict,
+    *,
+    attempts: int = 0,
+    state: str = "queued",
+    created_at: int = T0,
+    lock_owner: str = "",
+    lease_expires_at: int | None = None,
+) -> None:
+    db_execute(database_url, "DELETE FROM background_jobs WHERE id=%s", (job_id,))
+    db_execute(
+        database_url,
+        "INSERT INTO background_jobs(id,kind,payload_json,state,attempts,available_at,locked_at,"
+        "last_error,created_at,updated_at,lock_owner,lease_expires_at) "
+        "VALUES(%s,'storage.delete',%s,%s,%s,%s,%s,'',%s,%s,%s,%s)",
+        (
+            job_id,
+            json.dumps(payload, sort_keys=True, separators=(",", ":")),
+            state,
+            attempts,
+            T0,
+            created_at if state == "running" else None,
+            created_at,
+            created_at,
+            lock_owner,
+            lease_expires_at,
+        ),
+    )
+
+
+def storage_error_kind(message: str | None) -> str:
+    """Normalise the platform-specific wording of the same filesystem error."""
+    text = str(message or "")
+    if not text:
+        return ""
+    lowered = text.lower()
+    if "eisdir" in lowered or "is a directory" in lowered or "errno 21" in lowered:
+        return "is-a-directory"
+    if "eacces" in lowered or "permission denied" in lowered or "errno 13" in lowered:
+        return "permission-denied"
+    return "other"
 
 
 def seed_endpoint(database_url: str, endpoint_id: str, url: str, *, active: int = 1, failure_count: int = 0) -> None:
@@ -228,7 +281,16 @@ class Harness:
         if not ok:
             self.failures += 1
 
-    def run_backend(self, backend: str, now_ms: int, allow_private: bool) -> dict:
+    def run_backend(
+        self,
+        backend: str,
+        now_ms: int,
+        allow_private: bool,
+        *,
+        kind: str = "webhook.deliver",
+        data_dir: str | None = None,
+    ) -> dict:
+        env = {**self.env, "EINVITE_DATA_DIR": str(data_dir or self.data_dir)}
         if backend == "python":
             return run_json(
                 [
@@ -237,15 +299,17 @@ class Harness:
                     "--database-url",
                     self.database_url,
                     "--data-dir",
-                    self.data_dir,
+                    str(data_dir or self.data_dir),
                     "--now-ms",
                     str(now_ms),
                     "--limit",
                     "1",
                     "--allow-private",
                     "true" if allow_private else "false",
+                    "--kind",
+                    kind,
                 ],
-                self.env,
+                env,
             )
         return run_json(
             [
@@ -259,8 +323,10 @@ class Harness:
                 "1",
                 "--allow-private",
                 "true" if allow_private else "false",
+                "--kind",
+                kind,
             ],
-            self.env,
+            env,
         )
 
     def execute(
@@ -299,6 +365,127 @@ class Harness:
                 }
             )
         return observations
+
+    def observe_storage(self, base: Path, job_ids: list[str], clean: str) -> dict:
+        with psycopg.connect(self.database_url, autocommit=True) as connection:
+            with connection.cursor() as cursor:
+                jobs = []
+                for job_id in job_ids:
+                    cursor.execute(
+                        "SELECT state,attempts,available_at,locked_at,last_error,lock_owner "
+                        "FROM background_jobs WHERE id=%s",
+                        (job_id,),
+                    )
+                    row = cursor.fetchone()
+                    if not row:
+                        raise RuntimeError(f"missing storage job {job_id}")
+                    jobs.append(
+                        {
+                            "state": row[0],
+                            "attempts": row[1],
+                            "available_at": row[2],
+                            "locked_at_is_null": row[3] is None,
+                            "last_error_kind": storage_error_kind(row[4]),
+                            "has_error": bool(row[4]),
+                            "lock_owner": row[5],
+                        }
+                    )
+        upload = base / "uploads" / clean
+        cache = base / "image-cache"
+        return {
+            "jobs": jobs,
+            "asset_exists": upload.exists(),
+            "asset_is_dir": upload.is_dir(),
+            "cache_files": sorted(path.name for path in cache.iterdir()),
+        }
+
+    def execute_storage(
+        self,
+        backend: str,
+        name: str,
+        steps: list[int],
+        *,
+        path: str,
+        digest: str = "",
+        attempts: int = 0,
+        state: str = "queued",
+        lock_owner: str = "",
+        lease_expires_at: int | None = None,
+        make_file: bool = True,
+        make_directory: bool = False,
+        duplicate: bool = False,
+    ) -> list[dict]:
+        reset(self.database_url)
+        base = Path(self.data_dir) / f"storage-{backend}"
+        shutil.rmtree(base, ignore_errors=True)
+        uploads = base / "uploads"
+        cache = base / "image-cache"
+        uploads.mkdir(parents=True)
+        cache.mkdir(parents=True)
+        clean = Path(path).name
+        if make_directory:
+            (uploads / clean).mkdir(parents=True)
+        elif make_file and clean:
+            (uploads / clean).write_bytes(b"payload")
+        if digest and clean:
+            tag = digest[:20]
+            for width in (320, 480, 768, 960, 1440, 1920):
+                for fmt, suffix in (("webp", ".webp"), ("jpeg", ".jpg"), ("jpg", ".jpg"), ("png", ".png"), ("avif", ".avif")):
+                    key = hashlib.sha256(f"{clean}|{tag}|{width}|{fmt}".encode()).hexdigest()
+                    (cache / (key + suffix)).write_bytes(b"derivative")
+            wrong = hashlib.sha256(f"{clean}|{'b' * 20}|320|webp".encode()).hexdigest()
+            (cache / (wrong + ".webp")).write_bytes(b"other tag")
+            (cache / "unrelated.webp").write_bytes(b"unrelated")
+
+        payload = {"path": path, "sha256": digest}
+        job_ids = [f"st-job-{name}-{backend}"]
+        seed_storage_job(
+            self.database_url,
+            job_ids[0],
+            payload,
+            attempts=attempts,
+            state=state,
+            lock_owner=lock_owner,
+            lease_expires_at=lease_expires_at,
+        )
+        if duplicate:
+            job_ids.append(f"st-job-{name}-{backend}-2")
+            seed_storage_job(
+                self.database_url,
+                job_ids[1],
+                payload,
+                attempts=attempts,
+                state=state,
+                created_at=T0 + 1,
+                lock_owner=lock_owner,
+                lease_expires_at=lease_expires_at,
+            )
+
+        observations = []
+        for offset in steps:
+            result = self.run_backend(backend, T0 + offset, True, kind="storage.delete", data_dir=str(base))
+            observations.append(
+                {
+                    "processed": result["processed"],
+                    **self.observe_storage(base, job_ids, clean),
+                }
+            )
+        return observations
+
+    def storage_scenario(
+        self,
+        name: str,
+        steps: list[int],
+        **options,
+    ) -> None:
+        python_steps = self.execute_storage("python", name, steps, **options)
+        node_steps = self.execute_storage("node", name, steps, **options)
+        for index, (python_step, node_step) in enumerate(zip(python_steps, node_steps)):
+            self.check(
+                f"{name} step {index} (T+{steps[index]}ms) is identical",
+                python_step == node_step,
+                json.dumps({"python": python_step, "node": node_step}, sort_keys=True)[:1800],
+            )
 
     def scenario(
         self,
@@ -347,7 +534,31 @@ class Harness:
             url_override="http://127.0.0.1:9/hook",
             allow_private=False,
         )
-        print(f"\nWEBHOOK RUNNER PARITY {self.total - self.failures}/{self.total} identical")
+        # Python's storage.delete runner has no terminal failure: exceptions
+        # requeue forever, while a missing upload is a successful no-op. These
+        # cases prove both those final/retry states, plus duplicate payloads and
+        # a live S12b lease that must not be stolen.
+        self.storage_scenario("storage-success", [0], path="asset-success.bin", digest="a" * 64)
+        self.storage_scenario("storage-missing-file", [0], path="asset-missing.bin", digest="a" * 64, make_file=False)
+        self.storage_scenario("storage-retry-directory", [0], path="asset-retry.bin", make_directory=True, make_file=False)
+        self.storage_scenario(
+            "storage-retry-past-webhook-limit",
+            [0],
+            path="asset-retry.bin",
+            attempts=10,
+            make_directory=True,
+            make_file=False,
+        )
+        self.storage_scenario("storage-duplicate-jobs", [0, 1], path="asset-duplicate.bin", duplicate=True)
+        self.storage_scenario(
+            "storage-live-lease",
+            [0],
+            path="asset-owned.bin",
+            state="running",
+            lock_owner="other-worker",
+            lease_expires_at=T0 + 600_000,
+        )
+        print(f"\nRUNNER PARITY {self.total - self.failures}/{self.total} identical")
         return 0 if self.failures == 0 else 1
 
 
@@ -364,6 +575,7 @@ def main() -> int:
         "EINVITE_ALLOW_PRIVATE_WEBHOOKS": "1",
         "EINVITE_BACKGROUND_MEDIA": "0",
         "EINVITE_FIELD_ENCRYPTION": "0",
+        "EINVITE_OBJECT_STORAGE_BUCKET": "",
         "PYTHONPATH": f"{ROOT / 'src' / 'python'}{os.pathsep}{ROOT}",
     }
     port = free_port()
@@ -383,6 +595,7 @@ def main() -> int:
     finally:
         stop(warm)
         receiver.close()
+        shutil.rmtree(data_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

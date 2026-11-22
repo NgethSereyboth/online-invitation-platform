@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -6,8 +9,11 @@ import {
   QUEUE_MAX_ATTEMPTS,
   RETRYABLE_STATUSES,
   buildWebhookHeaders,
+  deleteStoredAsset,
   deliverWebhook,
+  processStorageDeleteJobs,
   processWebhookJobs,
+  purgeDerivativeCache,
   signWebhook,
   validateWebhookDestination,
 } from '../lib/webhook-runner.mjs';
@@ -194,6 +200,115 @@ test('a missing or inactive endpoint completes without a request', async () => {
     assert.equal(releaseCalls[0].error, 'endpoint removed');
     assert.equal(db.calls.length, 1);
   }
+});
+
+test('deleteStoredAsset removes the upload and every derivative-cache entry', async () => {
+  const { createHash } = await import('node:crypto');
+  const dataDir = mkdtempSync(join(tmpdir(), 'einvite-storage-delete-'));
+  try {
+    const uploads = join(dataDir, 'uploads');
+    const cache = join(dataDir, 'image-cache');
+    mkdirSync(uploads, { recursive: true });
+    mkdirSync(cache, { recursive: true });
+    writeFileSync(join(uploads, 'asset.bin'), 'payload');
+    const sourceHash = 'a'.repeat(64);
+    const tag = sourceHash.slice(0, 20);
+    const names = [];
+    for (const width of [320, 480, 768, 960, 1440, 1920]) {
+      for (const [format, suffix] of [
+        ['webp', '.webp'],
+        ['jpeg', '.jpg'],
+        ['jpg', '.jpg'],
+        ['png', '.png'],
+        ['avif', '.avif'],
+      ]) {
+        const key = createHash('sha256').update(`asset.bin|${tag}|${width}|${format}`).digest('hex');
+        names.push(key + suffix);
+        writeFileSync(join(cache, key + suffix), 'derivative');
+      }
+    }
+    writeFileSync(join(cache, 'unrelated.webp'), 'keep');
+
+    deleteStoredAsset('/uploads/asset.bin', sourceHash, { dataDir, env: {} });
+    assert.equal(readdirSync(uploads).length, 0);
+    assert.deepEqual(readdirSync(cache), ['unrelated.webp']);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+test('storage deletion is idempotent for missing and empty paths', () => {
+  const dataDir = mkdtempSync(join(tmpdir(), 'einvite-storage-missing-'));
+  try {
+    mkdirSync(join(dataDir, 'uploads'), { recursive: true });
+    deleteStoredAsset('missing.bin', 'abc', { dataDir, env: {} });
+    deleteStoredAsset('', 'abc', { dataDir, env: {} });
+    purgeDerivativeCache('missing.bin', '', { dataDir, env: {} });
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+});
+
+function storageRunner({ claim, deleteAsset, env = {}, dataDir = '/tmp/einvite-storage' }) {
+  const releaseCalls = [];
+  return processStorageDeleteJobs(
+    {},
+    {
+      workerId: 'node-runner',
+      limit: 1,
+      nowMs: 1000,
+      dataDir,
+      env,
+      claim: claim ?? (async () => ({ id: 'st-1', kind: 'storage.delete', attempts: 1, payload: { path: 'a.bin', sha256: 'x' } })),
+      release: async (_db, options) => {
+        releaseCalls.push(options);
+        return true;
+      },
+      deleteAsset: deleteAsset ?? (async () => {}),
+    },
+  ).then((processed) => ({ processed, releaseCalls }));
+}
+
+test('processStorageDeleteJobs completes a local deletion', async () => {
+  const { processed, releaseCalls } = await storageRunner({});
+  assert.equal(processed, 1);
+  assert.deepEqual(releaseCalls, [
+    { jobId: 'st-1', workerId: 'node-runner', state: 'done', error: '', availableAt: null, now: 1000 },
+  ]);
+});
+
+test('storage failures requeue with 30 s doubling and never become terminal', async () => {
+  const failing = async () => {
+    throw new Error('EISDIR: illegal operation on a directory');
+  };
+  for (const [attempts, delayMs] of [
+    [1, 30_000],
+    [5, 480_000],
+    [12, 1_920_000],
+  ]) {
+    const { processed, releaseCalls } = await storageRunner({
+      claim: async () => ({ id: 'st-1', kind: 'storage.delete', attempts, payload: { path: 'a.bin' } }),
+      deleteAsset: failing,
+    });
+    assert.equal(processed, 1);
+    assert.equal(releaseCalls[0].state, 'queued');
+    assert.equal(releaseCalls[0].availableAt, 1000 + delayMs);
+    assert.match(releaseCalls[0].error, /directory/i);
+  }
+});
+
+test('object-storage mode leaves storage.delete jobs for Python', async () => {
+  let claimed = 0;
+  const { processed, releaseCalls } = await storageRunner({
+    env: { EINVITE_OBJECT_STORAGE_BUCKET: 'materials' },
+    claim: async () => {
+      claimed += 1;
+      return null;
+    },
+  });
+  assert.equal(processed, 0);
+  assert.equal(claimed, 0);
+  assert.deepEqual(releaseCalls, []);
 });
 
 test('the runner decrypts the endpoint secret and stops when no job is due', async () => {

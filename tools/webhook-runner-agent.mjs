@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-// Harness probe for the Node webhook runner: process `--limit` due jobs at a
-// fixed clock and print the count. Production runs bin/webhook-runner.mjs.
+// Harness probe for the Node background runner: process `--limit` due jobs of
+// `--kind` at a fixed clock and print the count. Production runs
+// bin/webhook-runner.mjs.
 import { createDatabase } from '../services/api-node/lib/db.mjs';
-import { processWebhookJobs } from '../services/api-node/lib/webhook-runner.mjs';
+import {
+  processStorageDeleteJobs,
+  processWebhookJobs,
+} from '../services/api-node/lib/webhook-runner.mjs';
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -11,12 +15,19 @@ function arg(name, fallback = null) {
 
 const db = createDatabase({ connectionString: arg('database-url') });
 try {
-  const processed = await processWebhookJobs(db, {
+  const options = {
     workerId: arg('worker', 'node-webhook-probe'),
     limit: Number(arg('limit', '1')),
     nowMs: Number(arg('now-ms', String(Date.now()))),
-    allowPrivate: arg('allow-private', 'true') === 'true',
-  });
+  };
+  const kind = arg('kind', 'webhook.deliver');
+  const processed =
+    kind === 'storage.delete'
+      ? await processStorageDeleteJobs(db, { ...options, dataDir: process.env.EINVITE_DATA_DIR })
+      : await processWebhookJobs(db, {
+          ...options,
+          allowPrivate: arg('allow-private', 'true') === 'true',
+        });
   console.log(JSON.stringify({ processed }));
 } finally {
   await db.close();

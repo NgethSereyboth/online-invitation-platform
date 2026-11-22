@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Standalone webhook.deliver worker. The API server does not start it: one
-// process per queue during the parallel run, selected explicitly by ops.
+// Standalone background-job worker for webhook.deliver and storage.delete. The
+// API server does not start it: one process per queue during the parallel run,
+// selected explicitly by ops.
 import { randomUUID } from 'node:crypto';
 
 import { createFieldCipher } from '../lib/crypto.mjs';
 import { createDatabase } from '../lib/db.mjs';
-import { processWebhookJobs } from '../lib/webhook-runner.mjs';
+import { processStorageDeleteJobs, processWebhookJobs } from '../lib/webhook-runner.mjs';
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -37,15 +38,20 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 
 try {
   do {
-    const processed = await processWebhookJobs(db, {
+    const webhookProcessed = await processWebhookJobs(db, {
       workerId,
       limit,
       allowPrivate,
       cipher,
       logger: (entry) => console.log(JSON.stringify(entry)),
     });
+    const storageProcessed = await processStorageDeleteJobs(db, {
+      workerId,
+      limit,
+      logger: (entry) => console.log(JSON.stringify(entry)),
+    });
     if (once || stopping) break;
-    if (!processed) await sleep(intervalMs);
+    if (!webhookProcessed && !storageProcessed) await sleep(intervalMs);
   } while (!stopping);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
