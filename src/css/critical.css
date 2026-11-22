@@ -98,7 +98,10 @@
   .guest{min-height:700px;text-align:center;background:#fff8f2;padding:0;overflow:hidden}
   .guest-hero{position:relative;min-height:620px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:82px 28px 68px;isolation:isolate}
   .guest-hero h1{margin:16px auto 12px;max-width:760px;line-height:1.08}
-  .guest-summary{min-height:260px!important;padding-top:42px!important;padding-bottom:42px!important}
+  /* No !important here: every route bundle already carries the identical
+     declaration unlayered, so these values win before the bundle loads and the
+     bundle wins afterwards. `!important` only added four to the FB-32 ratchet. */
+  .guest-summary{min-height:260px;padding-top:42px;padding-bottom:42px}
   .template-symbol{display:block;font:42px Georgia,serif;color:var(--theme-accent,var(--accent));margin-bottom:4px}
   .invite-kicker{font-size:11px;letter-spacing:.32em;font-weight:700;margin:0;color:var(--theme-accent,var(--accent))}
   .template-rose{background:linear-gradient(180deg,#fffaf7,#f8ece8 42%,#fffaf7);color:#4a3238}
@@ -108,7 +111,9 @@
   .guest-demo-badge .status-dot{width:7px;height:7px;border-radius:50%;background:var(--app-warn)}
   .skip-link{position:absolute;left:-9999px;top:0;z-index:100;padding:10px 14px;background:var(--app-surface);color:var(--app-text)}
   .skip-link:focus{left:8px;top:8px}
-  [hidden]{display:none!important}
+  /* `[hidden]` is a UA default; the route bundles carry their own
+     `[hidden]{display:none!important}` for the post-load state. */
+  [hidden]{display:none}
   @media(max-width:640px){
     body[data-page="checkin"] .checkin-hero{flex-direction:column}
     body[data-page="checkin"] .checkin-hero button{width:100%;margin-left:0}

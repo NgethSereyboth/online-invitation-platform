@@ -145,7 +145,13 @@ def _restore_data_dir_after_test():
 
 @pytest.fixture(scope="module")
 def server_url():
-    """Base URL of a real app server, alive for the module that asks for it."""
+    """Base URL of a real app server, alive for the module that asks for it.
+
+    Set ``EINVITE_TEST_BASE_URL`` to point every consumer of this fixture at an
+    already-running backend (the parity harness does this; see
+    ``docs/language-migration/S1-HARNESS.md``). Unset means "spawn one", which
+    is the only behaviour that existed before the switch.
+    """
     from v14_test_utils import app_server
 
     with app_server() as (_process, base, _data):

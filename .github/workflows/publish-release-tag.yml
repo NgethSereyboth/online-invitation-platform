@@ -1,0 +1,63 @@
+name: Tag Published Release
+
+# Sprint 11 — enforce SemVer tags when a human publishes a draft release.
+#
+# GitHub normally creates the tag at publish time because Release Drafter sets
+# tag-template to v$RESOLVED_VERSION. This workflow is the deterministic guard:
+#   * rejects non-SemVer tag names,
+#   * verifies an existing tag points at the release commit (the normal path),
+#   * creates and pushes the annotated tag if a release was published without
+#     one (for example, an existing draft whose tag was removed).
+#
+# Only contents: write is required.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-tag-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  ensure-semver-tag:
+    name: Ensure SemVer tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout release target
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify or create tag
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+          TARGET_COMMITISH: ${{ github.event.release.target_commitish }}
+        run: |
+          set -euo pipefail
+
+          if ! [[ "${TAG_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "ERROR: release tag '${TAG_NAME}' is not SemVer (expected vMAJOR.MINOR.PATCH)." >&2
+            exit 1
+          fi
+
+          git fetch --tags --force
+          TARGET_SHA="$(git rev-list -n 1 "${TARGET_COMMITISH}")"
+
+          if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            TAG_SHA="$(git rev-list -n 1 "refs/tags/${TAG_NAME}")"
+            if [ "${TAG_SHA}" != "${TARGET_SHA}" ]; then
+              echo "ERROR: tag ${TAG_NAME} points at ${TAG_SHA}, not the release commit ${TARGET_SHA}." >&2
+              exit 1
+            fi
+            echo "Tag ${TAG_NAME} already exists at the release commit ${TARGET_SHA}."
+            exit 0
+          fi
+
+          git tag -a "${TAG_NAME}" "${TARGET_SHA}" -m "Release ${TAG_NAME}"
+          git push origin "refs/tags/${TAG_NAME}"
+          echo "Created ${TAG_NAME} at ${TARGET_SHA}."

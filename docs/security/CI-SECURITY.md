@@ -7,7 +7,7 @@
 > storage location, the CODEOWNERS policy, and the procedure for waiving
 > specific findings.
 
-**Last updated:** V54.28 (sec-7)
+**Last updated:** Sprint 11 (2026-11-10) — hash-locked SBOMs and release automation
 **Maintainer:** `@maintainer` (replace with the actual GitHub handle / team slug — see §5)
 
 ---
@@ -18,8 +18,9 @@
 |---|------|------|----------------|----------------|
 | 1 | SAST | [`bandit`](https://bandit.readthedocs.io) `-r src/python ai_agent platform_v32 future_platform_v52 -lll` | Python AST patterns: `exec()`/`eval()` on dynamic input, hardcoded passwords, weak crypto (`hashlib.md5`), `shell=True` on untrusted input, assert-as-security-check, YAML unsafe loaders, etc. | HIGH severity only (bandit `-lll` reports HIGH only; the 38 remaining MEDIUM findings are documented as a background queue in `docs/reviews/security-status.md`) |
 | 1b | SAST | [`semgrep`](https://semgrep.dev) `p/python` + `p/owasp-top-ten`, run by `scripts/semgrep_scan.py` | Python and generic security rules, including injection, deserialization, crypto, and secret patterns. Small modules run once; `src/python/server.py` runs in bounded rule batches so the 11k-line file cannot exhaust the CI timeout. | Any finding or scan error |
-| 2 | SCA / dependency audit | [`pip-audit`](https://github.com/pypa/pip-audit) `-r docs/requirements-production.txt --desc` | Known CVEs / GHSAs against every pinned production dependency, via the PyPA advisory DB + OSV. | HIGH or CRITICAL CVSS |
-| 3 | SBOM | [`scripts/generate-sbom.py`](../../scripts/generate-sbom.py) (stdlib-only) | Emits a CycloneDX 1.5 SBOM of every production dependency + checksum + license. Always runs; never fails the build (only warns). | n/a — informational |
+| 2 | SCA / dependency audit | [`pip-audit`](https://github.com/pypa/pip-audit) `-r docs/requirements-production.lock --strict --desc` | Known CVEs / GHSAs against every package in the hash-locked production closure, via the PyPA advisory DB + OSV. | Any known advisory (stricter than Critical-only) |
+| 3 | SBOM (canonical) | `cyclonedx-bom==8.0.1` + `@cyclonedx/cyclonedx-npm@7.0.0` in `.github/workflows/supply-chain.yml` | Emits Python and npm CycloneDX 1.5 JSON SBOMs from the committed locks and uploads them as Actions artifacts. | n/a — informational |
+| 3b | SBOM (legacy local scan) | [`scripts/generate-sbom.py`](../../scripts/generate-sbom.py) (stdlib-only) | Direct production dependencies + checksum + license, retained for offline/local `security-scan.sh` compatibility. | n/a — informational |
 | 4 | Secret scanning | [`gitleaks`](https://github.com/gitleaks/gitleaks) `detect --no-git --source . --config .gitleaks.toml --redact` | AWS keys, GitHub PATs, Slack tokens, private keys, generic high-entropy strings, etc. | Any finding (1+) |
 | 5 | Container scan | [`trivy`](https://aquasecurity.github.io/trivy/) `image --severity HIGH,CRITICAL --exit-code 1` | OS-package CVEs + library CVEs inside the `einvite-scan:latest` image built from `deploy/Dockerfile`. Only runs if `deploy/Dockerfile` exists AND both `trivy` and `docker` are installed. | HIGH or CRITICAL |
 
@@ -76,37 +77,50 @@ CI installs **all** tools (no WARNs expected). The workflow uploads the SBOM
 The gitleaks report (if any) is uploaded as `gitleaks-report`, retained 30
 days.
 
+### Sprint 11 supply-chain workflow
+
+`.github/workflows/supply-chain.yml` is the canonical lockfile + SBOM gate. It
+runs on every push to `main`, every pull request (including stacked sprint
+PRs), and manual dispatch, with read-only `contents: read` permissions:
+
+* **Python:** creates a clean virtual environment, runs
+  `pip install --require-hashes --no-deps -r docs/requirements-production.lock`,
+  then `pip check`, generates `python.cdx.json`, and runs `pip-audit` against
+the lock. Any known advisory fails the job.
+* **npm:** runs `npm ci`, generates `npm.cdx.json`, and runs
+  `npm audit --audit-level=critical`.
+* **Artifacts:** `sbom-python-cyclonedx` and `sbom-npm-cyclonedx`, retained
+  90 days. Generated files are never committed.
+
+The local equivalents are documented in
+[`docs/RELEASE-AUTOMATION.md`](../RELEASE-AUTOMATION.md).
+
 ---
 
 ## 4. The SBOM — format, location, lifecycle
 
 * **Format:** CycloneDX 1.5 JSON.
-  `bomFormat: "CycloneDX"`, `specVersion: "1.5"`, `serialNumber: urn:uuid:<uuid4>`.
-* **Filename:** `sbom.cdx.json` (written to the repo root by `scripts/security-scan.sh`).
-* **Components:** every entry in `docs/requirements-production.txt` becomes a
-  `library` component with a `pkg:pypi/{name}@{version}` purl + bom-ref.
-* **Checksums:** when the PyPI JSON API is reachable, each component carries
-  a `hashes: [{alg: "SHA-256", content: "<hex>"}]` entry — the SHA-256 of
-  the resolved wheel/sdist artifact. When PyPI is unreachable (sandbox, air-
-  gapped CI runner), the component is emitted without checksums and with a
-  `properties: [{name: "einvite:network", value: "pypi-unreachable"}]`
-  marker recording the gap. CI re-runs the SBOM with network access at
-  release time so published SBOMs always carry checksums.
-* **Licenses:** best-effort SPDX id extracted from the PyPI `info.license`
-  field (only emitted if it matches the SPDX id pattern; free-form license
-  strings are dropped to keep the document validatable).
-* **Top-level `metadata.component`:** `pkg:generic/einvite-platform@v54`
-  (the application itself — required by CycloneDX 1.5 so consumers can
-  distinguish the BOM owner from its dependencies).
-* **`dependencies` block:** a single edge from the application component to
-  every library component (no inter-package edges — that would require
-  resolving the full transitive closure with `pip freeze`; flagged as
-  follow-up §10).
-* **Storage:** committed as an artifact on every CI run; not committed to
-  the repo (it would create churn on every dependency bump).
-* **Downstream consumers:** the artifact can be ingested by Dependency-Track,
-  OWASP DepChain, or any CycloneDX-compatible tool. Re-use of the SBOM for
-  license compliance / supply-chain attestation is a §10 follow-up.
+  `bomFormat: "CycloneDX"`, `specVersion: "1.5"`.
+* **Canonical filenames:** `artifacts/sbom/python.cdx.json` and
+  `artifacts/sbom/npm.cdx.json`, generated by
+  `scripts/generate-sboms.sh` / `.github/workflows/supply-chain.yml`.
+* **Components:** the Python BOM contains the full hash-locked closure from
+  `docs/requirements-production.lock` (including transitive dependencies);
+  the npm BOM contains the package tree resolved from `package-lock.json`.
+  Python components use `pkg:pypi/{name}@{version}` purls; npm components
+  use `pkg:npm/...` purls.
+* **Checksums:** both generators consume the lockfile integrity data. Python
+  components carry distribution hashes as external references; npm
+  components carry the lockfile SHA-512 integrity value.
+* **Licenses:** best-effort SPDX ids from package metadata.
+* **`dependencies` block:** generated from each ecosystem's lock graph, not
+  just the direct dependency list.
+* **Storage:** uploaded as the `sbom-python-cyclonedx` and
+  `sbom-npm-cyclonedx` Actions artifacts, retained 90 days. Never committed
+  to the repo; the legacy root `sbom.cdx.json` is ignored and was removed
+  from version control in Sprint 11.
+* **Downstream consumers:** either artifact can be ingested by
+  Dependency-Track, OWASP DepChain, or any CycloneDX-compatible tool.
 
 ---
 
@@ -123,10 +137,14 @@ on every pull request that touches:
   helpers themselves (`security_v13.py`, `security_scanner_v54.py`,
   `secrets_v54.py`).
 * `deploy/` — Dockerfiles, compose files, Caddyfile, install scripts.
-* `scripts/security-scan.sh` + `scripts/generate-sbom.py` — the scan
-  entrypoint + SBOM generator (don't let a PR silently weaken the CI gate).
-* `.github/CODEOWNERS` + `.github/workflows/security.yml` — the gate
-  itself.
+* `scripts/security-scan.sh` + `scripts/generate-sbom.py` — the local scan
+  entrypoint + legacy SBOM generator (don't let a PR silently weaken the gate).
+* `scripts/generate-sboms.sh`, `docs/requirements-production.lock`,
+  `docs/requirements-test.txt`, `package.json`, `package-lock.json` — the
+  canonical lockfiles and SBOM generators.
+* `.github/CODEOWNERS`, `.github/workflows/security.yml`,
+  `.github/workflows/supply-chain.yml`, `.github/release-drafter.yml`, and
+  the release/tag workflows — the gate and release controls.
 
 **Action required:** replace `@maintainer` in `.github/CODEOWNERS` with the
 actual GitHub handle or team slug (e.g. `@einvite/security-team`) before
@@ -140,7 +158,12 @@ the branch protection rule for `main`:
 
 ---
 
-## 6. SBOM generator — network behaviour + failure modes
+## 6. Legacy SBOM generator — network behaviour + failure modes
+
+> Sprint 11 replaced the direct-dependency generator with the official
+> CycloneDX tools (see §4). The legacy behaviour below is retained because
+> `scripts/security-scan.sh` still calls `scripts/generate-sbom.py` as an
+> offline fallback.
 
 `scripts/generate-sbom.py` is **stdlib-only** (no `pip install` needed). It:
 
@@ -290,12 +313,12 @@ the current pinned dependencies. If a new CVE is published against
 
 ## 10. Follow-ups (non-blocking for V54.27)
 
-* **Inter-package dependency edges in the SBOM.** The current SBOM only
-  lists direct dependencies from `docs/requirements-production.txt` — it
-  doesn't resolve the transitive closure (would require `pip freeze` or
-  the `pip-requirements-parser` graph walker). A future iteration could
-  resolve the full tree and emit `dependencies: [{ref: ..., dependsOn:
-  [...]}]` edges between library components. Flagged as §2.7 follow-up.
+* **~~Inter-package dependency edges in the SBOM.~~** Closed by Sprint 11:
+  the canonical Python BOM is generated from the hash-locked transitive
+  closure and the npm BOM from `package-lock.json`.
+* **Correlate Python and npm BOMs.** The two canonical BOMs are uploaded as
+  separate artifacts. A future iteration could merge them into one release
+  asset with a single application root component.
 * **`bandit` JSON report upload as a CI artifact.** Currently bandit's
   output is captured only in the workflow log (stdout). A future
   iteration could run `bandit -f json -o bandit-report.json` and upload
@@ -359,6 +382,7 @@ No files outside the sec-7 modification scope were touched:
 |------|---------|--------|
 | 2026-09-15 | V54.27 | Initial version — created `scripts/security-scan.sh`, `scripts/generate-sbom.py`, `.github/CODEOWNERS`, `.github/workflows/security.yml`, and this document. Closes ROADMAP-V2 §2.7 (ASVS L2 Chapter 10). |
 | 2026-10-07 | V54.28 | SEC-05 consolidation: bandit threshold flipped to `-lll` (HIGH-only); 38 MEDIUM findings tracked as background queue; `docs/requirements-production.txt` consolidated to exact pins; root `requirements.txt` created; `src/python/requirements.txt` deleted; SBOM rebuilt (10 packages); `pip-audit` verified 0 CVEs via OSV API direct query. |
+| 2026-11-10 | Sprint 11 | Added hash-locked transitive Python requirements, exact npm pins, canonical CycloneDX 1.5 SBOMs from `cyclonedx-py` + `cyclonedx-npm`, `pip-audit`/`npm audit` gates, Release Drafter categories from PR titles, and published-release SemVer tag verification. Removed tracked `sbom.cdx.json`. |
 
 ---
 

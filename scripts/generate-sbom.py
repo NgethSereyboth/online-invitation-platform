@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""CycloneDX 1.5 SBOM generator (Python stdlib only).
+"""Legacy direct-dependency CycloneDX 1.5 SBOM generator (Python stdlib only).
+
+.. note::
+   The canonical Sprint 11 SBOMs are generated from the hash-locked Python
+   closure and the npm lockfile by ``scripts/generate-sboms.sh`` using the
+   official ``cyclonedx-py`` and ``cyclonedx-npm`` tools. This stdlib-only
+   generator remains as the offline fallback used by
+   ``scripts/security-scan.sh``; it lists direct production dependencies only.
 
 Reads ``docs/requirements-production.txt``, resolves each pinned dependency
 against the PyPI JSON API (when the network is available), and emits a

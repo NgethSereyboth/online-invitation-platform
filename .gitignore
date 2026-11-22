@@ -88,6 +88,18 @@ src/python/lang-km.html.bak
 docs/perf/lighthouse-budgets.local.json
 
 # ---------------------------------------------------------------------------
+# Supply-chain outputs.
+# SBOMs are generated in CI and uploaded as workflow artifacts (and can be
+# attached to releases). They are never source files: a committed SBOM goes
+# stale on the next dependency bump and creates noisy diffs.
+# ---------------------------------------------------------------------------
+sbom.cdx.json
+*.cdx.json
+*.spdx.json
+artifacts/sbom/
+.supply-chain-tmp/
+
+# ---------------------------------------------------------------------------
 # HYGIENE (instrument-and-closure pass).
 #
 # Each entry below decided something that had been left untracked across several

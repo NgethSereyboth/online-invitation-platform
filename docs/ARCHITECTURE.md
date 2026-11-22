@@ -582,6 +582,18 @@ npx playwright test --config=e2e/playwright.config.ts --project=chromium e2e/spe
 npx playwright test --config=e2e/playwright.config.ts --project=chromium e2e/specs/07-visual.spec.ts
 ```
 
+## 10. Language migration (2026)
+
+The product is moving off the Python stdlib server one verified slice at a time through
+`services/api-node/` (Fastify + `pg`, shared PostgreSQL, strangler fig). The rules every later
+slice must copy — routing ownership and pins, response/error/504 shape, auth and CSRF ordering,
+query conventions, logging and redaction, the Khmer-string rule, and the proof a slice needs before
+cutover — are frozen in **[ADR 0001](adr/0001-language-migration-pattern.md)**.
+
+Step records and proofs live in [`docs/language-migration/`](language-migration/):
+`ROUTE-INVENTORY.md` (what is ported), `P7-SHARED-STATE.md` (what cannot be split), and
+`S2`–`S7` (static parity, data layer, field encryption, sessions, public read path).
+
 Large refactors and deferred optimizations are tracked in `docs/FUTURE-IMPROVEMENTS.md`.
 
 ---

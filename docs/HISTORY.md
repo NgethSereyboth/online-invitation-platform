@@ -382,3 +382,469 @@ horizontal overflow, 0 page errors, 0 failed requests. PNG export 38,876 B.
   change was needed.
 - **Docs:** NEXT-WORK #23 is fixed, the missing-label bullet is closed, verification debt #13
   is superseded by the local-origin revision, and #7 records the suite run.
+
+## 2026-11-14 — language-migration P2 (route inventory freeze)
+
+- **Scope.** `language-optimization-plan-v3.1.md` §14 item 3 (precondition P2), the only
+  precondition that is fully executable inside this repo. No product code, no dependency, no
+  gate, no budget changed. The plan file itself stays untracked until the owner answers D10.
+- **What was missing.** The plan's numerator (“155 `/api` paths”) was unverified, the route
+  table does not exist (`src/python/server.py` is a hand-written `if` chain), and the 16-vs-17
+  page disagreement had no record. Each of those is an accounting unit a migration cannot do
+  without.
+- **Built:** `tools/route-inventory.py` — indexes defs by indentation, walks reachability from
+  each `do_<METHOD>` through `self.<helper>(path)` calls, extracts the five declaration forms
+  (exact, set, prefix+suffix, regex, dispatch dict), classifies auth from guard symbols across
+  the handler's callees, and probes GET-only against a running backend.
+- **Frozen:** **345** declarations (GET 143 / POST 144 / PUT 36 / DELETE 22); **336** `/api`
+  declarations over **194** distinct patterns (113 distinct exact strings). Auth: 121 user,
+  121 invitation-scoped, 36 platform-service, 32 admin, 24 public, 11 unclassified (listed for
+  manual read). Artifacts: `docs/language-migration/ROUTE-INVENTORY.md` and `P2-REPORT.md`.
+- **Verified, not inferred — the trailing-slash law.** 125 GET declarations probed twice against
+  `http://127.0.0.1:4175` (read-only, no writes): **88 pairs differ**. Exact `path ==` routes
+  accept no trailing slash (401 → 404 for account, admin, studio and auth routes; 200 → 404 for
+  `/api/health`, `/api/auth/me`, `/api/feature-flags`, `/_marketplace/crl.json`); regex routes
+  ending `/?` accept both. D6 (“byte-identical”) now has a testable list instead of a slogan.
+- **Correction to the plan's auth model.** 36 routes (`/api/platform/v32/*`, `/api/platform/v52/*`,
+  collaboration and raster families) are guarded inside `get_platform_v32_service()` /
+  `get_future_v52_service()`, not in `server.py`. S6/S9 must port that guard or those routes
+  arrive unauthenticated. Recorded in the report §4.
+- **Fact table resolved** (report §6): 24,889 Python LOC, 226 JS files / 63,196 LOC,
+  `ai_agent` 3,758 LOC / 12 files, 329 test files with **301** tests collected under `.venv`
+  (ambient `python3` lacks playwright and stops at 291 + 8 errors), `CIPHERTEXT_PREFIX =
+  "gAAAAA"`, passkeys in `server.py:7861–7932`. The 155-path and 716-SQL figures do not
+  reproduce; 695 SQL lines in `server.py` and 868 across `src/python` do.
+- **Pages:** 16 product pages + 11 test fixtures = 27 HTML files; `PAGE_ALIASES` has 15 entries.
+  Fixtures are served by the `.html` passthrough; recommendation is to keep that behaviour and
+  exclude fixtures from the S3 parity corpus.
+- **Blocked, recorded as blocked:** P1 (no result file, `k6` not installed, needs a staging
+  `EINVITE_LOAD_TEST_MODE=1`), P3/D2, P4, P8/D8, P6, P7. Decision D10 is added as owner row
+  #19 in `NEXT-WORK.md`.
+- **Gates:** `python3 build.py all --check` → `EDITOR_BUNDLE_CHECK_PASSED`,
+  `ROUTE_BUNDLE_CHECK_PASSED`, `PAGE_ASSET_MANIFEST_CHECK_PASSED`, `MIRROR_CHECK_PASSED
+  (up_to_date=732)`; `python3 -m compileall -q tools/route-inventory.py` exit 0. Full pytest
+  was **not** re-run (docs/ and tools/ only); the last full record stays 252 passed on
+  2026-11-03.
+
+## 2026-11-14 — language-migration S1 (round-trip equivalence harness)
+
+- **Decision recorded:** D10 answered **Track M now**, Track W parked (owner row #19 in
+  `docs/NEXT-WORK.md`; nothing was deleted from that queue). S1 is the first Track M step
+  that is not blocked by P1.
+- **Built:** `tools/parity-harness.py` with four modes — `--record`, `--replay`,
+  `--compare A B` (the shadow tee, R3) and `--self-check`. The corpus is a JSON file seeded
+  from the frozen P2 inventory, which is the plan's R4 replay alternative to a 72-hour
+  shadow window. It diffs status, nine headers and a normalised body, printing the first
+  differing offset with context; exit code is 1 on any diff so it can gate a wave.
+- **Exit criterion met:** `--self-check` boots two independent Python instances and reports
+  **PARITY 95/96 identical · 0 diff · 1 skipped**, exit 0. Two initial diffs were instance
+  facts, not behaviour — `uptimeSeconds`, and `localRoot` pointing at each instance's temp
+  dir — and were normalised with that reason recorded. The per-boot CSP nonce (`nonce-…`
+  header and `nonce="…"` markup) was the first noise source; folding only one form left
+  95/96 red, which is why both forms are normalised.
+- **Base-URL switch (plan C1).** `tests/v14_test_utils.fresh_server` now yields
+  `(None, EINVITE_TEST_BASE_URL, None)` instead of spawning when the variable is set;
+  unset keeps the old behaviour including the FB-09 port-race retry. `tests/conftest.py`
+  `server_url` inherits it, so Class A tests target another backend with one variable.
+  Verified: set → 0.11 s, `process=None`, no data dir.
+- **Known gaps, reported by every run:** no non-GET verb (writes need the plan's Rule 8
+  snapshot copy; S11), no authenticated corpus (needs the S6 shared session store), 16
+  artefact route families skipped, one route unexercised by transport
+  (`campaigns/<id>/deliveries`), and tests that spawn their own server are not yet
+  enumerated/converted — that enumeration is the next S1 task.
+- **Enumeration (S1 follow-up).** `tools/class-a-coverage.py` classified all **327** test
+  files: **153 covered** by the switch, **35** inline their own `Popen` of `server.py`
+  (`needs-convert`), **119** spawn a non-backend process, **20** import the backend in-process
+  (Class C, not portable by design), **0** hard-code the owner's origin. Artifacts:
+  `docs/language-migration/CLASS-A-COVERAGE.md`; the conversion recipe is in `S1-HARNESS.md`
+  §4.1. **No file was converted** — deliberate: 35 contract tests each carry their own env,
+  port and seeding, and rewriting them without running each would be an unverified change
+  dressed up as progress. A “4175” search hit turned out to be `port = 14175`, so `external`
+  is genuinely zero; that was checked before being reported.
+- **Why it is safe:** no production code, no dependency, no gate or budget touched; the
+  helper edits are inert unless the variable is set. Docs: `docs/language-migration/S1-HARNESS.md`.
+
+## 2026-11-14 — ten-phase gate matrix (P5 attempt)
+
+- **Run:** `tools/run-gates.py --phase all`, stamp `artifacts/next-work/gates/20261114-162656`,
+  started 16:26:56, finished 16:55:28. Ten of eleven phases exit 0; the chain stops at the last.
+
+| Phase | Result | Evidence |
+|---|---|---|
+| build | ✅ 5.3 s | `MIRROR_CHECK_PASSED (after sync)` + `BUILD_OK` |
+| bundles | ✅ 4.6 s | `ROUTE_BUNDLE_CHECK_PASSED` |
+| analyze | ✅ 4.4 s | exit 0 |
+| smoke | ✅ 36.2 s | `TOTAL pages=16 consoleErrors=0 non2xx=0` |
+| layout | ✅ 218.3 s | `UI_LAYOUT_GUARD_PASSED`, long-task 0 failed (**no flake this run**) |
+| pytest | ✅ 1064.7 s | **301 passed in 1063.37 s (0:17:43)** |
+| budgets | ✅ 0.0 s | `V55_ROUTE_WEIGHT_BUDGET_TEST_PASSED` (6 pages) |
+| lhci | ✅ 267.1 s | `Healthcheck passed!` |
+| csp | ✅ 59.5 s | `CSP_CHECK_PASSED` |
+| canvas | ✅ 43.8 s | `CANVAS_MOTION_VERIFY_PASSED`, 22 pass / 0 fail / 2 skipped |
+| important | ❌ 1.2 s | `FAIL important ratchet exceeded: 3837 > pin 3833` |
+
+- **The red is real and pre-existing, not a flake.** The tree carries no working changes; the
+  ratchet pin was set on 2026-11-09 at 3833 after measurement, and commit **`3ea09f5`
+  (2026-11-10)** — which precedes this session — added exactly four `!important`
+  declarations inside its critical-CSS block: `.guest-summary{min-height:260px!important;
+  padding-top:42px!important;padding-bottom:42px!important}` and `[hidden]{display:none!important}`.
+  The gate is doing its job.
+- **Not fixed here on purpose.** OD-6 forbids changing a threshold to pass, and removing
+  those declarations is a visual decision about the check-in/guest layout that needs a
+  screenshot comparison, not a blind edit. P5 therefore stays **open**: one gate is red.
+- **Consequence for the migration:** S2's "the existing workflows and run-gates still pass"
+  exit criterion could not be claimed until this was resolved.
+
+## 2026-11-14 — owner decisions, the four-declaration ratchet, and a green matrix
+
+Seven decisions were answered by the owner and recorded in `docs/NEXT-WORK.md` §3: **D2** a
+minimal package set for the Node service, **P1** local disposable staging, **D8** PostgreSQL
+for the parallel run, **P4** undecided so phases stay serial, plus three code decisions.
+The three code decisions were implemented and verified in this pass.
+
+### The `!important` ratchet — 3837 → 3833, no threshold moved
+
+`src/css/critical.css` held exactly four `!important` declarations and was the whole excess:
+`.guest-summary{min-height:260px!important;padding-top:42px!important;padding-bottom:42px!important}`
+and `[hidden]{display:none!important}`. Every route bundle already carries the identical
+unlayered `.guest-summary` rule, so the critical copy only needs to win *before* the bundle
+arrives — where nothing competes with it, because `critical.css` lives in `@layer components`
+and layered rules lose to unlayered ones regardless. The four markers were removed; the
+declarations and their values are unchanged.
+
+- `important` phase: `OK important ratchet holds: 3833 ≤ pin 3833`.
+- Visual check on a disposable instance (`artifacts/lang-migration/checkin-1440.png`,
+  `checkin-390.png`): check-in page renders correctly at 1440×900 and 390×844, no horizontal
+  overflow, and **2 elements carry `[hidden]`, 0 of them compute to a visible display** — the
+  UA default plus the bundle rule keep hidden panels hidden.
+- Not claimed: a rendered published invitation page (the disposable instance has no
+data); `.guest-summary` is untouched in value and the layout guard covers its geometry.
+
+### Defects #24 and #13 (owner rows #24, #12)
+
+- **#24 webhook secret rotation.** `webhook_endpoints` → `secret` added to `PROTECTED_COLUMNS`
+  (`core/db.py`) and to `SENSITIVE_COLUMNS` in `scripts/migrate_encrypt_sensitive_fields.py`,
+  so `--reencrypt` now rewrites it instead of stranding the secret under the previous key.
+- **#13 malformed key.** `core/crypto.py` now raises when `EINVITE_FIELD_ENCRYPTION_KEY` is
+  set but malformed **and** `EINVITE_PRODUCTION` is truthy, refusing to boot instead of
+  minting an unpersisted key. Development keeps the soft path so scratch data dirs still start.
+  The Node port must match (`P6-ENCRYPTION-SPEC.md` §1.1).
+
+### Verification
+
+- **Full matrix, single run, final tree:** `run-gates.py --phase all`,
+  `artifacts/next-work/gates/20261114-192448` → **GATES_PASSED**, all eleven phases exit 0:
+  build, bundles, analyze, smoke (16 pages / 0 console errors), layout (no flake), pytest
+  **301 passed in 987.38 s**, budgets, LHCI, CSP, canvas (22 pass / 0 fail), important (3833).
+  This closes verification debt #1 and satisfies precondition **P5**.
+- Targeted tests before the matrix: `security_field_encryption_test`,
+  `lt_7_2_webhook_signing_test`, `lt_7_2_webhook_delivery_test` → **11 passed in 64.05 s**.
+- `python3 build.py all` → `BUILD_OK`; `compileall` on the three touched Python files exit 0.
+- No budget, threshold, baseline or frozen canvas was changed (OD-6).
+
+### S2 — the Node service now exists, with no route ported
+
+`services/api-node/` is a Fastify skeleton pinned to **`fastify@5.12.8`** — the whole of the D2
+package set — with its own `package.json`, its own committed lockfile (47-component closure) and
+its own image. The root `package.json` is untouched, so the lint, bundle and SBOM tooling for the
+Python app cannot be perturbed by a service dependency.
+
+- **Route surface:** `GET /healthz` → 200 with `cache-control: no-store` and
+  `{status, service, version, uptimeSeconds}`; every other path is a JSON 404. Nothing product-
+  facing is routed to it, so it carries 0 % traffic by construction.
+- **Supply chain:** the existing `npm-sbom` job now also installs the service closure with
+  `npm ci --ignore-scripts`, emits `npm-service.cdx.json` through the root `cyclonedx-npm`
+  binary, and audits it at Critical. CodeQL's `javascript-typescript` job already covers
+  `services/**` because its config only ignores generated bundles.
+- **Verified:** `npm test` **3 passed**; `/healthz` **200** from a live process and from the
+  container built by the new Dockerfile; SBOM validates with **47 components**; critical audit
+exit 0; `supply-chain.yml` parses; `build.py all --check` still `BUILD_OK` with no drift.
+- **Not run:** CodeQL (no local binary — CI covers it) and the workflow end-to-end (runs on
+  push/PR; each command it invokes was run by hand instead).
+- **Deliberately absent:** any Caddy/compose upstream (arrives at S3 with something to route),
+  the S4 schema assertion, and the S6 session/CSRF interop.
+
+### S3 — the Node service serves the shell, byte for byte
+
+The contract was measured from a running Python instance first, which is why the port is
+faithful rather than plausible: pages get the critical-CSS inline, a per-response `<style>`
+nonce and the `<meta einvite-backend>`/`<base>` head bits, in that order; assets carry
+`public, max-age=3600, must-revalidate` plus `Last-Modified`; `If-Modified-Since` yields 304;
+**Range is ignored** (Python answers 200 with the whole body, so Node does too); a missing file
+is a `no-store` JSON 404 with Python's spacing; and `/i/<unknown>` is a 404 HTML shell with
+`no-store` and `X-Robots-Tag: noindex`.
+
+- **Parity:** `tools/static-parity.py` diffed 16 page routes + `/`, 40 mirrored assets, a
+  missing asset, `/i/no-such-invitation` and a Range request between Python `:8901` and Node
+  `:8902` → **59/59 identical, 0 failing**. Only the nonce, request id and each backend's own
+  `host:port` are folded.
+- **Service tests:** `npm test` → **5 passed**, including that the body's nonce equals the
+  header's and `/checkin` keeps `camera=(self)`.
+- **Container:** the first build omitted `lib/` and crashed on boot; fixed and re-verified —
+  `/checkin` 200 with one `data-critical` block and `/healthz` 200 with the mirror mounted.
+- **Known gaps:** published invitations (`/i/*` serves only the no-row branch until S9), the
+  social-card extension when Python lacks Pillow, and no router upstream — so traffic is still
+  0 % by construction, not by weight.
+
+### S4 — the data layer runs on PostgreSQL with the same answers
+
+The service gained a thin layer over `pg` (D2's second package) and two ported reads:
+`findUserByEmail` (hash-first, then the legacy plaintext fallback) and `findGuestBySlug`. Four
+parity choices carry the weight: a quote- and comment-aware `?`→`$n` rewrite, an `int8` parser
+that returns a number when lossless (so `created_at` does not turn into a string on the wire),
+both `statement_timeout` and `query_timeout` mapped to `QueryDeadlineExceeded`, and a **schema
+contract** asserted at boot because the schema has no version counter to compare.
+
+- **DB parity:** the same fixtures through `core.db` (SQLite) and the service (PostgreSQL) →
+  **9/9 identical**, values *and* types, covering hash hit, case/space normalisation, legacy
+  fallback, miss, empty string, `None`, guest hit and guest miss.
+- **Two real findings.** `docs/postgres_schema.sql` omits `users.email_hash` — Python adds it at
+  boot (`server.py:2018`), so a fresh PG instance is not the schema the queries expect; recorded
+  as defect #25 rather than patched, because Node must not migrate. And `pg`'s own timeout is an
+  uncoded `Error: Query read timeout`, so the first `57014`-only mapping never fired; a budgeted
+  `pg_sleep(1)` now raises `QueryDeadlineExceeded` in 185 ms and the error handler returns
+  Python's 504 body with `Retry-After: 1`.
+- **Boot assertion proven both ways:** a valid schema logs `schema contract satisfied` and serves
+  `/healthz` 200; an empty database exits **1** with `SchemaMismatchError`.
+- **Service tests:** `npm test` → **9 passed**.
+- **Known divergences:** SQLite's ASCII-only `lower()` versus PostgreSQL's Unicode-aware one (only
+  reaches unconverted rows), a per-statement budget where Python has a per-request one, `numeric`
+  left as a string, and a pool default of 10 that a multi-instance deployment must divide.
+
+### S5 — field encryption is byte-compatible in both directions
+
+Fernet is implemented on `node:crypto` (no package): the 0x80 header, big-endian timestamp,
+AES-128-CBC with PKCS7, HMAC-SHA256, urlsafe base64 **with its padding**. `protect`, `reveal`,
+`revealRow`, the previous-key rotation window and `isCurrentKeyCiphertext` are copied from
+`core/crypto.py` and `core/db.py`; `email_hash` is computed with Python's `lower()`/`strip()`
+semantics rather than JavaScript's.
+
+- **Two bugs the run caught, not the reading.** The key halves were swapped (bytes 0–15 sign and
+  16–31 encrypt — the opposite of the intuitive order), so every Python token failed with
+  `Signature mismatch` while both HMACs agreed with each other. And `isProduction()` read
+  `process.env` instead of the cipher's injected env, so the production refusal could be bypassed.
+- **Parity:** `tools/fernet-parity.py` → **11/11 identical** — Python→Node and Node→Python over
+  six values (accents, emoji, tabs, 4 KB, empty), previous-key decryption with the rotation
+  predicate false, tampered tokens returned unchanged on both sides, prefix-shaped plaintext left
+  alone, and identical hashes for `ΣΣ`, `ΑΣ`, `İstanbul`, `""`, `None` and a BOM-prefixed address.
+- **Owner decision on #13 now holds in both runtimes:** a malformed key refuses production boot;
+  development keeps the ephemeral path.
+- **Not yet exercised:** the DB-level plaintext-leak scan (no Node write route exists until S7)
+  and the sidecar key file end-to-end.
+
+### Reports queue read ported, with two baseline defects fixed
+
+`GET /api/admin/reports` now runs on Node behind the same gate as Python: the admin IP allowlist is
+checked before authentication, then `require_role("admin", "super_admin")` — 403
+"Insufficient permissions" for a denied IP or a non-admin, 401 "Authentication required" without a
+session. Filters, the 1–200 limit clamp, digit-only cursors and the `nextCursor` rule are copied.
+`tools/reports-read-parity.py` compares twenty cases across three restarts (allowlist unset, denying
+`10.0.0.0/8`, allowing loopback): **20/20 identical on two consecutive runs**.
+
+Proving it exposed two baseline defects. Invalid `status` or `limit` raised an unhandled
+`ValueError`, so Python closed the connection with no response; the route now answers 400
+`{"error": "Invalid status"}` or `{"error": "Invalid limit"}`. And `reports.created_at` was declared
+`INTEGER`, which cannot hold epoch milliseconds on PostgreSQL, so every report insert failed there
+("integer out of range"); both timestamp columns are now `BIGINT`, and `ensure_schema` widens a
+table created by an older build. The 12 reports tests pass. Reports writes remain in Python: the
+resolve route is rate-limited and both are writes.
+
+### Analytics and jobs reads ported, and a PostgreSQL-only analytics defect fixed
+
+The analytics dashboard and the jobs lists now run on Node: `/api/invitations/:id/analytics`,
+`/analytics/live`, `/api/account/analytics/summary`, `/api/account/analytics/creations`,
+`/api/studio/bulk-jobs` and `/api/invitations/:id/materials/import-jobs`. None of these handlers
+calls the Python rate limiter, so P7's pin rule did not apply, and none needed a new package.
+`tools/analytics-read-parity.py` compares twenty cases against one seeded PostgreSQL serving both
+backends — owner/collaborator/stranger access, a malformed `draft_json` that must fall back to
+`rsvpEnabled: true`, sort/filter/paging, and the live route with the flag off (403
+`feature_disabled`) and on — reporting **20/20 identical on two consecutive runs**.
+
+Proving it surfaced a real baseline defect rather than a porting difference: `queries.py` and the
+reconstruction job call `ensure_schema(db)` with no dialect, which defaulted to SQLite and emitted
+`AUTOINCREMENT` into PostgreSQL. Every analytics read there raised, and the server's `handle_error`
+swallowed it into an empty reply. `model.ensure_schema` now detects the dialect from the driver
+connection; the 24 existing analytics tests pass, and the parity run is against the fixed baseline.
+Still open in S12c: backup/object storage and the plugin host (the reports queue read landed in its
+own change).
+
+### Remaining steps closed out with a ledger, and the flag read ported
+
+The migration plan was closed out as far as evidence allows. `docs/language-migration/REMAINING-STEPS.md`
+now carries every step S1–S15 with its status, and for each open one the controlling text quoted
+verbatim plus who can clear it. Two claims were tested rather than repeated: S11 is not owner-blocked
+— every write handler there calls the rate limiter (`rsvp`, `submit_wish`, `record_public_view`,
+`add_guest`, `update_guest`, `delete_guest`) and P7 says *"Share via Redis when `REDIS_URL` is set;
+otherwise pin every rate-limited route to one backend."* Pinning is therefore the plan's chosen
+state, not a missing decision. S9 remains owner-only for the D2 allow-list reason recorded there.
+
+The unblocked step was `GET /api/feature-flags`: defaults, DB merge order, tier filtering, the
+maintenance-mode exclusion and Python's 60-second process cache are all copied rather than
+"improved". `tools/feature-flags-parity.py` compares anonymous, free, creator and pro callers against
+one seeded database: **4/4 identical on two consecutive runs**, the invitation-read harness still
+reports **27/27**, service tests are **47 passed**, and `build --check` is green. Nothing beyond that
+is claimed: P1, the shadow ramp, 6-platform certification and the full gate matrix are recorded as
+unmeasured.
+
+### S10 — the invitation read cluster, and why S9 waits
+
+S9 (auth) is gated by the dependency policy, not by native-code availability: pure-JS and WASM
+Argon2id implementations exist, but the recorded D2 answer is **"Approved and used at S2:
+`fastify@5.12.8` only"** and P3 requires an owner-written override **listing each package**. No
+Argon2 package is listed, so adding one would breach D2 however it is compiled. The audit also found the
+record and the lockfile disagree about `pg` (the row says "fastify only", S4 called it "D2's second
+package"); that is flagged in `NEXT-WORK.md` for the owner to settle, not resolved unilaterally. Rather than add one
+unilaterally, the next unblocked slice moved:
+the editor's first load and the guests/RSVP dashboards' first read.
+
+Six routes moved — `GET /api/invitations/:id`, `/guests`, `/rsvps`, `/versions`, `/versions/:version` and `/api/trash` — with the parts that are easy
+to "improve" and therefore easy to break: a deleted invitation demotes its owner and answers 404;
+`/guests` answers **403** for a missing invitation while `/invitations/:id` answers 404, because
+Python's helper collapses both cases; and the guest payload mints personal links as a truncated
+HMAC under the shared guest-token secret, with revoked and expired links returning `null`. The
+proof compares those tokens as part of the payload, so a different key fails.
+
+`tools/invitation-read-parity.py` seeds four users with sessions, five invitations, both collaborator
+roles, four guests and two RSVPs, and compares twenty-seven requests: **27/27 identical, 0 failing**. The
+service suite is **42 passed**. The version timeline stays pinned to Python because it merges
+auto-snapshots from `features/invitation_versions.py`, which is its own port.
+
+### S8 — the pattern frozen, and two header gaps it exposed
+
+Writing the ADR was the first time the port's conventions were stated as rules rather than
+implemented ad hoc, and it immediately found two divergences: the service always generated a fresh
+`X-Request-ID` instead of reflecting a sanitised inbound one (so a request crossing the boundary
+split into two traces), and `/api/auth/me` / `/api/auth/logout` sent no security headers at all
+because only the page and public routes applied them. Both are fixed; logout also sent its two
+`Set-Cookie` headers one at a time, which Fastify replaces, so only the CSRF cookie was ever cleared.
+
+`docs/adr/0001-language-migration-pattern.md` now freezes routing ownership and the pinned routes,
+the response/error/504 contract, auth-and-CSRF ordering, query conventions, logging and redaction,
+the Khmer-string rule, and the four artefacts a slice needs before cutover (parity harness, unit
+tests, written record, clean build). It is linked from `docs/ARCHITECTURE.md` §10. The service suite
+is **38 passed** and the S7 public parity proof still reports **9/9 identical** after the changes.
+
+This is the plan's first legitimate stopping point.
+
+### S7 — the public read path moved, with its media signatures
+
+`GET /api/public/<slug>` (Python's `get_public`) is the first vertical slice: a read-heavy route with
+no write risk, except two writes that had to move with it — the view counter and a guest's first
+`opened_at` stamp. Both are copied; a port that dropped them would change the owner's analytics
+without anyone noticing.
+
+The subtle parts were the media signatures and gallery locking. Signed URLs use
+`hmac-sha256("<file>|<invitation>|<exp>")` with the shared signing secret, so the Node port has to
+produce a payload Python's verifier accepts, not merely a URL of the same shape. Gallery-only images
+— ones that appear nowhere else in the document — are cleared when locked and signed when
+unlocked; password-protected documents rewrite raw `/uploads/…` paths even inside rich-text strings.
+Guest tokens resolve only their own guest and bind `guest.*` objects in both canvas groups.
+
+Proof is `tools/public-parity.py`: one seeded PostgreSQL database, both backends, nine requests
+covering 404, 403 and 200 — plain, gallery locked, gallery unlocked, guest token, consent-gated,
+password required, password accepted. Each response's media signature is recomputed and verified
+with the shared secret before the expiry is masked, so the comparison cannot pass on two differently
+signed URLs. **9/9 identical, 0 failing**; 34 service tests.
+
+Not done, and recorded as such: the shadow → 5 % → 25 % → 100 % ramp is a deployment action, the p95
+"within 10 % of P1" exit criterion is unmeasured because P1 never ran, and the plan's "public RSVP
+status read" does not exist as a route — RSVP is write-only and status reads are the host's
+authenticated endpoint. The slice is the public document plus its guest data.
+
+### S6 — sessions ported, and Python's PostgreSQL path turned out not to work
+
+Sessions were already database rows keyed by `sha256(token)` with a `csrf_hash`, so the port is the
+checks around them: the join, the idle timeout (30 min admin, 7 days otherwise), the once-a-minute
+`last_seen_at` touch, and `guard_cookie_origin()` in order — `Sec-Fetch-Site`, `Origin`, the
+double-submit pair, then the stored hash — with Python's three 403 bodies. `GET /api/auth/me` and
+`POST /api/auth/logout` are wired, and **26 service tests** cover every rejection path over a stub
+query layer.
+
+Trying to prove it across backends is what found the larger problem: **the documented PostgreSQL
+deployment had never run.**
+
+1. `platform_v32/schema.py` declared V52 columns as `BLOB`, which PostgreSQL does not have, and it
+   parses DDL even under `CREATE TABLE IF NOT EXISTS` — boot aborted. The PostgreSQL adapter now
+   maps ` BLOB` → ` BYTEA`.
+2. `_try()` swallowed a failed statement, which SQLite tolerates and PostgreSQL does not: the
+   transaction aborted and every later statement failed with `InFailedSqlTransaction`. Optional
+   DDL now runs under a savepoint, restoring the SQLite behaviour on both backends.
+3. **The schema itself had drifted (#27).** Every core `CREATE TABLE` and runtime `ALTER` lives
+   inside `connect_sqlite()`, so `docs/postgres_schema.sql` — the only thing a PostgreSQL boot
+   applied — had fallen behind. Measured against a real pair: **6 tables and 12 columns missing**,
+   including `users.session_never_expires`, which is why `/api/auth/me` dropped the connection
+   instead of answering. The schema file now carries the missing tables (with their keys and
+   indexes) and columns, with `INTEGER` → `BIGINT` for epoch-millisecond columns, and column
+   discovery itself is backend-aware.
+
+Because a stale schema file is how this happened, the fix ships its own watchdog:
+**`tools/pg-schema-parity.py`** boots a throwaway SQLite database through the server's own DDL,
+reads a real PostgreSQL database, and exits non-zero on any missing table or column. It is the check
+nobody had; on both a booted and a never-booted database it now reports zero drift.
+
+Verified: `tools/session-parity.py` reports **18/18 identical** on a booted and on a fresh database;
+`pg-schema-parity` reports 0 missing on both; the full Python suite is **301 passed**; SQLite boot
+still serves `/api/health` and `/checkin` with no tracebacks; `npm test` 26/26; `build --check`
+green. **D8 is now viable** — that was invisible until two backends were actually pointed at one
+database, which is the argument for proving interoperability by running it rather than reading a
+spec.
+
+## 2026-11-14 — preconditions P6 and P7 (encryption spec, shared-state inventory)
+
+- **P6 written from the code**, not from the plan: `docs/language-migration/P6-ENCRYPTION-SPEC.md`
+  covers key resolution, the Fernet token layout, every `None`/empty/disabled edge, the
+  read boundary (`reveal` on every string column), the write boundary (explicit `protect()`),
+  rotation and the proof matrix S5 owes. Hash vectors are reproduced from `core.crypto`.
+- **Corrections it produced.** (1) `NEXT-WORK.md` #13 described a malformed key as falling
+  back to the data-dir key; `_load_or_create_key` actually mints an **unpersisted** key and
+  `decrypt_field` returns undecryptable tokens unchanged — rows written after that boot are
+  unreadable after restart. Row #13 is corrected, severity P3 → P2. (2) There are **seven**
+  encrypted columns, not six: `webhook_endpoints.secret` is written through `protect()` at
+  `server.py:7628/7639` but appears in neither `PROTECTED_COLUMNS` nor the rotation script,
+  so a key rotation strands existing webhook signing secrets. Recorded as open defect #24.
+- **P7 written** (`docs/language-migration/P7-SHARED-STATE.md`): 12 items classified.
+  Three are process-local — `RATE_BUCKETS`, `STUDIO_BACKUP_LOCKS`, `PRESENCE_STATE` — and
+  `PRESENCE_STATE` matters on Target A specifically because the deployment has no Redis and
+  the code's Redis-first branch never runs. Two plan wordings were corrected: job claiming is
+  already an atomic compare-and-swap (`platform_v32/jobs.py:65,72`), so the S12b gap is stale-
+  claim recovery rather than a missing lock; and account lockout is read-modify-write, so
+  porting it byte-identically would port a lost-update race.
+- **No product code changed.** Both documents assign treatments and owners; they do not
+  implement them. Gates: `build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED` (docs
+  only).
+- **Gates:** `python3 build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`;
+  `compileall` on both tools exit 0. Full pytest **not** re-run; the two test-helper edits
+  are additive branches and the harness itself exercises `fresh_server` on every self-check.
+
+## 2026-11-22 — admin console reads ported, and the denial audit catches up
+
+The six remaining admin GETs now run on Node: `overview`, the legacy `users` array,
+`users-v2`, `invitations`, `audit-events` (JSON and CSV) and `jobs/:id`. They share the same
+gate as the reports read — IP allowlist first, then admin/super_admin — and none of their
+Python handlers calls `rate_limit`, so P7 did not pin them. `tools/admin-reads-parity.py` runs
+**42 cases across three restarts** (allowlist unset, denying `10.0.0.0/8`, allowing loopback)
+and reports **42/42 identical on two consecutive runs** against one PostgreSQL serving both
+backends. `npm test` went 53 → 66 with a new unit suite for the read models, CSV writer and
+Python-compatibility helpers; `build.py all --check` stayed green.
+
+The port did not find a schema defect this time — `docs/postgres_schema.sql` already declares
+`audit_events.created_at` as `BIGINT`, unlike the reports table repaired earlier. It did find
+four validation paths that answered with **no response at all** on Python (an unhandled
+`ValueError` in `users-v2`'s limit and cursor parsing, and in the audit explorer's limit and
+date parsing); all four now answer 400 with the message Python already used internally.
+
+One behavioural gap surfaced only because the port had to match a *write* inside a read: the
+`unmask=1` action calls `self.audit("admin.users_unmasked", …)`, so Node now writes the same
+chained `audit_events` row (sorted compact JSON, previous-hash link, protected metadata,
+`admin_only`) rather than unmasking without a trace. The allowlist's `admin.ip_denied` event
+is also written by Node now, under Python's 60-second per-IP throttle, so a denied admin
+request leaves evidence on either backend.
+
+The reports 400 repair from the previous change had also pushed `admin_reports_list` one point
+over the complexity baseline (12 → 13), which made the CI static-analysis gate fail. Its filter
+parsing now lives in two module-level helpers; `make analyze` reports `ANALYSIS_OK` again and
+`tools/reports-read-parity.py` still reports 20/20 on two consecutive runs.
+
+Still unported: the reports resolve/queue writes, `backup.py` and object storage (P7 row 2),
+the plugin launch/install routes (rate-limited, so pinned), and the media/AI paths.
+

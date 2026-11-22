@@ -8,8 +8,28 @@ def now_ms():return int(time.time()*1000)
 def uid():return str(uuid.uuid4())
 
 def _try(db,statement,params=()):
-    try:db.execute(statement,params);return True
-    except Exception:return False
+    """Run optional DDL without poisoning the surrounding transaction.
+
+    SQLite keeps going after a failed statement, but PostgreSQL aborts the
+    whole transaction — so a single optional ALTER/CREATE INDEX that does not
+    apply (a table this deployment does not have, a column already added on the
+    second boot) made every later statement fail with InFailedSqlTransaction
+    and Python could not boot on PostgreSQL at all. A savepoint per statement
+    gives both backends the SQLite behaviour the callers assume.
+    """
+    try:
+        db.execute("SAVEPOINT einvite_ddl")
+    except Exception:
+        try:db.execute(statement,params);return True
+        except Exception:return False
+    try:
+        db.execute(statement,params)
+        db.execute("RELEASE SAVEPOINT einvite_ddl")
+        return True
+    except Exception:
+        try:db.execute("ROLLBACK TO SAVEPOINT einvite_ddl")
+        except Exception:pass
+        return False
 
 
 def ensure_personal_workspace(connect: Callable[[],Any], user_id: str) -> str:

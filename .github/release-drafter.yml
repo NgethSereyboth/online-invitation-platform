@@ -1,0 +1,135 @@
+# Release Drafter configuration — Sprint 11.
+#
+# Release Drafter v7 parses conventional PR titles directly:
+#   feat:      → Features (minor)
+#   fix:       → Bug Fixes (patch)
+#   perf:      → Performance (patch)
+#   refactor:  → Refactoring (patch)
+#   docs:      → Documentation (patch)
+#   test:      → Tests (patch)
+#   ci:        → CI (patch)
+#   chore:     → Maintenance (patch)
+#   chore(deps): / build(deps): → Dependencies (patch)
+#   <type>!:   → Breaking change (major)
+#
+# Labels are optional fallbacks for maintainers, not a prerequisite. A human
+# publishes the draft; publishing creates the v<SemVer> tag at the release
+# commit, and publish-release-tag.yml verifies it.
+
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+change-template: '- $TITLE (#$NUMBER) — $AUTHORS'
+change-title-escapes: '\<*_&'
+
+exclude-contributors:
+  - 'dependabot[bot]'
+  - 'github-actions[bot]'
+
+categories:
+  - title: '🚀 Features'
+    semver-increment: minor
+    when:
+      - conventional:
+          type: feat
+      - labels:
+          - feature
+          - enhancement
+
+  - title: '🐛 Bug Fixes'
+    when:
+      - conventional:
+          type: fix
+      - labels:
+          - fix
+          - bug
+
+  - title: '⚡ Performance'
+    when:
+      - conventional:
+          type: perf
+      - labels:
+          - performance
+
+  - title: '♻️ Refactoring'
+    when:
+      - conventional:
+          type: refactor
+      - labels:
+          - refactor
+
+  - title: '🔐 Security'
+    when:
+      - conventional:
+          type: security
+      - labels:
+          - security
+
+  - title: '🧪 Tests'
+    when:
+      - conventional:
+          type: test
+      - labels:
+          - tests
+
+  - title: '📚 Documentation'
+    when:
+      - conventional:
+          type: docs
+      - labels:
+          - documentation
+
+  - title: '🤖 CI'
+    when:
+      - conventional:
+          type: ci
+      - labels:
+          - ci
+
+  - title: '⬆️ Dependencies'
+    collapse-after: 5
+    exclusive: true
+    when:
+      - conventional:
+          type: chore
+          scope: deps
+      - conventional:
+          type: build
+          scope: deps
+      - labels:
+          - dependencies
+
+  - title: '🧰 Maintenance'
+    when:
+      - conventional:
+          type: chore
+
+  - type: 'version-resolver'
+    semver-increment: major
+    when:
+      conventional:
+        breaking: true
+
+  - type: 'version-resolver'
+    semver-increment: minor
+    when:
+      conventional:
+        type: feat
+
+  - type: 'version-resolver'
+    semver-increment: patch
+
+  - type: 'pre-exclude'
+    when:
+      label: skip-changelog
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ## Contributors
+
+  $CONTRIBUTORS
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...$RESOLVED_TAG

@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""S1 follow-up — which tests the base-URL switch can and cannot reach.
+
+`tests/v14_test_utils.fresh_server` now honours `EINVITE_TEST_BASE_URL`
+(language-optimization-plan-v3.1.md C1 / §8). Any test that obtains its server
+through `app_server`, `fresh_server` or the `server_url` fixture therefore
+targets another backend with one environment variable. A test that inlines
+`subprocess.Popen([sys.executable, 'server.py', ...])` does not, and neither
+does one that imports the backend in-process — that last kind is Class C in the
+plan's three-class split (§8) and is deliberately *not* ported to Node.
+
+This tool classifies every `tests/*.py` file and prints the ledger. It is a
+report, not a gate: `--strict` exits 1 while any black-box test still spawns its
+own backend, which is the condition that makes a `--compare` run dishonest.
+
+Classes
+  covered        uses the fixture / app_server / fresh_server  → switch works
+  needs-convert  inline Popen of server.py                     → must be wired
+  not-portable   imports the backend in-process                → Class C, stays Python
+  not-backend    Popen of something else (http.server, node)   → out of scope
+  external       hard-codes 127.0.0.1:4175                     → ties a test to the owner's PC
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+TESTS = ROOT / "tests"
+
+SERVER_SPAWN = re.compile(r"subprocess\.Popen\((.*?)\)", re.S)
+IMPORT_SERVER = re.compile(r"^\s*(?:from\s+server\s+import|import\s+server\b)", re.M)
+COVERED = re.compile(r"\b(?:app_server|fresh_server)\s*\(|server_url")
+NON_SERVER_SPAWN = re.compile(r"http\.server|\bnode\b|npm\b|playwright", re.I)
+HARDCODED_ORIGIN = re.compile(r"127\.0\.0\.1:4175|localhost:4175")
+
+
+def classify(path: Path) -> tuple[str, str, bool]:
+    """(class, reason, hardcodes_owner_origin).
+
+    The hard-coded origin is a separate flag because a file can both spawn its
+    own backend and assume the owner's PC port; only the spawn decides whether
+    `EINVITE_TEST_BASE_URL` reaches it.
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    spawns_server = any(
+        "server.py" in match.group(1) for match in SERVER_SPAWN.finditer(text)
+    )
+    hardcoded = bool(HARDCODED_ORIGIN.search(text))
+    if not spawns_server and hardcoded:
+        return "external", "hard-coded 127.0.0.1:4175", hardcoded
+    if COVERED.search(text) and not spawns_server:
+        return "covered", "fixture / app_server / fresh_server", hardcoded
+    if spawns_server:
+        return "needs-convert", "inline Popen of server.py", hardcoded
+    if IMPORT_SERVER.search(text):
+        return "not-portable", "imports the backend in-process (Class C)", hardcoded
+    if NON_SERVER_SPAWN.search(text):
+        return "not-backend", "spawns a non-backend process", hardcoded
+    return "covered", "no spawn detected (HTTP client only)", hardcoded
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--json")
+    ap.add_argument("--markdown")
+    ap.add_argument("--strict", action="store_true")
+    args = ap.parse_args()
+
+    rows = []
+    for path in sorted(TESTS.glob("*.py")):
+        if path.name in {"conftest.py"} or path.name.startswith("v14_test_utils"):
+            continue
+        label, reason, hardcoded = classify(path)
+        rows.append(
+            {
+                "file": f"tests/{path.name}",
+                "class": label,
+                "reason": reason,
+                "hardcoded_owner_origin": hardcoded,
+            }
+        )
+
+    counts: dict[str, int] = {}
+    for row in rows:
+        counts[row["class"]] = counts.get(row["class"], 0) + 1
+
+    for row in rows:
+        if row["class"] != "covered":
+            print(f"{row['class']:14} {row['file']:62} {row['reason']}")
+    hardcoded_files = [r["file"] for r in rows if r["hardcoded_owner_origin"]]
+    print(
+        "CLASS_A_COVERAGE "
+        + json.dumps(
+            {"files": len(rows), "classes": counts, "hardcoded_owner_origin": hardcoded_files},
+            sort_keys=True,
+        )
+    )
+
+    if args.json:
+        Path(args.json).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.json).write_text(
+            json.dumps({"counts": counts, "rows": rows}, indent=1), encoding="utf-8"
+        )
+    if args.markdown:
+        Path(args.markdown).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.markdown).write_text(render(rows, counts), encoding="utf-8")
+
+    if args.strict and counts.get("needs-convert"):
+        print(
+            f"STRICT: {counts['needs-convert']} black-box tests still spawn their own backend",
+            file=sys.stderr,
+        )
+        return 1
+    return 0
+
+
+def render(rows: list[dict], counts: dict[str, int]) -> str:
+    out = ["# Class A base-URL coverage (S1 follow-up)", ""]
+    out.append(
+        "Generated by `tools/class-a-coverage.py`. **`covered`** means the test reaches its "
+        "backend through `server_url`, `app_server` or `fresh_server`, so "
+        "`EINVITE_TEST_BASE_URL` retargets it. Everything else is a gap for the S1 cutover."
+    )
+    out.append("")
+    out.append("| Class | Files | Meaning |")
+    out.append("|---|---|---|")
+    meaning = {
+        "covered": "switch works today",
+        "needs-convert": "inline `Popen` of `server.py` — invisible to the switch",
+        "not-portable": "imports the backend in-process — Class C, stays Python",
+        "not-backend": "spawns something that is not the backend",
+        "external": "hard-codes the owner's PC origin",
+    }
+    for label in ("covered", "needs-convert", "not-portable", "not-backend", "external"):
+        out.append(f"| {label} | {counts.get(label, 0)} | {meaning[label]} |")
+    out.append("")
+    hardcoded = [r for r in rows if r["hardcoded_owner_origin"]]
+    if hardcoded:
+        out.append(
+            f"`notes` — {len(hardcoded)} file(s) also assume the owner's PC origin "
+            "(`127.0.0.1:4175`); that is a second, independent reason they cannot join a "
+            "Node cutover wave without an edit: "
+            + ", ".join(f"`{r['file']}`" for r in hardcoded)
+            + "."
+        )
+        out.append("")
+    for label in ("needs-convert", "not-portable", "not-backend", "external"):
+        subset = [r for r in rows if r["class"] == label]
+        if not subset:
+            continue
+        out.append(f"## {label} ({len(subset)})")
+        out.append("")
+        out.append("| File | Reason | Owner origin |")
+        out.append("|---|---|---|")
+        for row in subset:
+            origin = "yes" if row["hardcoded_owner_origin"] else ""
+            out.append(f"| `{row['file']}` | {row['reason']} | {origin} |")
+        out.append("")
+    return "\n".join(out)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

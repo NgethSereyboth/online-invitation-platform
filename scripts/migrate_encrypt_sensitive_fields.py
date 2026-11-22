@@ -68,6 +68,9 @@ SENSITIVE_COLUMNS = [
     ("delivery_attempts", "recipient", False),
     ("audit_events", "metadata_json", False),
     ("invitation_edit_history", "diff_json", False),
+    # Encrypted by explicit protect() in server.py since the webhook feature
+    # shipped; without this row a key rotation leaves the secrets unreadable.
+    ("webhook_endpoints", "secret", False),
 ]
 
 BACKUP_SUFFIX = "_plaintext_backup"

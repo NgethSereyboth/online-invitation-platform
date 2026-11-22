@@ -1,0 +1,37 @@
+name: Release Drafter
+
+# Sprint 11 — keep a categorized draft release up to date from merged PR titles.
+#
+# A human still reviews and publishes the draft. Publishing a draft release
+# triggers .github/workflows/publish-release-tag.yml, which verifies (or
+# creates) the SemVer tag on the release commit.
+#
+# This job only needs to read PR metadata and write the draft release. It does
+# not check out or execute repository code.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release-drafter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-release-draft:
+    name: Update draft release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Draft next release
+        uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

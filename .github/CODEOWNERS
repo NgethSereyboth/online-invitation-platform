@@ -38,5 +38,23 @@ deploy/                        @NgethSereyboth
 # workflow file requires maintainer review.
 scripts/security-scan.sh       @NgethSereyboth
 scripts/generate-sbom.py      @NgethSereyboth
+scripts/generate-sboms.sh     @NgethSereyboth
 .github/CODEOWNERS             @NgethSereyboth
 .github/workflows/security.yml @NgethSereyboth
+
+# --- Supply chain / release automation ------------------------------------
+# Lockfiles, BOM generation, release drafting and tag creation are all
+# release-integrity controls. A PR must not change them without maintainer
+# review.
+docs/requirements-production.txt  @NgethSereyboth
+docs/requirements-production.lock @NgethSereyboth
+docs/requirements-test.txt        @NgethSereyboth
+requirements.txt                  @NgethSereyboth
+requirements-dev.txt              @NgethSereyboth
+tools/requirements.txt            @NgethSereyboth
+package.json                      @NgethSereyboth
+package-lock.json                 @NgethSereyboth
+.github/release-drafter.yml       @NgethSereyboth
+.github/workflows/supply-chain.yml @NgethSereyboth
+.github/workflows/release-drafter.yml @NgethSereyboth
+.github/workflows/publish-release-tag.yml @NgethSereyboth

@@ -1,5 +1,10 @@
 # Root-level requirements entry point.
-# All production pins live in docs/requirements-production.txt (the single
-# authoritative file scanned by scripts/security-scan.sh and pip-audit).
+# Production installs consume the generated hash-locked closure. Every
+# transitive package is exact-pinned and every artifact is hash-checked.
+#
+# Regenerate docs/requirements-production.lock from the authoritative input
+# (docs/requirements-production.txt) using the command in
+# docs/RELEASE-AUTOMATION.md.
+#
 # Deploy targets that look for ./requirements.txt will resolve this file.
--r docs/requirements-production.txt
+-r docs/requirements-production.lock

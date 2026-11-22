@@ -881,3 +881,60 @@ CREATE TABLE IF NOT EXISTS analytics_summary_daily(
 
 -- Per-invitation analytics enablement flag (added by this version)
 ALTER TABLE invitations ADD COLUMN IF NOT EXISTS analytics_enabled INTEGER NOT NULL DEFAULT 1;
+
+-- ---------------------------------------------------------------------------
+-- Runtime schema reconciliation (defect #27).
+--
+-- The SQLite path creates these tables and columns at runtime, inside
+-- connect_sqlite(); this file is what a PostgreSQL boot applies. Anything
+-- missing here was missing at runtime: a fresh PostgreSQL database answered
+-- GET /api/auth/me by dropping the connection, because users.session_never_expires
+-- did not exist. Keep this section in sync — `tools/pg-schema-parity.py`
+-- builds a real SQLite schema, compares it with a real PostgreSQL database and
+-- fails on drift, which is the check nobody had when this file was written.
+--
+-- SQLite INTEGER becomes BIGINT: these columns store epoch milliseconds, which
+-- overflow PostgreSQL's 4-byte INTEGER.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS settings(
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at BIGINT NOT NULL,
+  updated_by TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS feature_flags(
+  key TEXT PRIMARY KEY,
+  value BIGINT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  tier TEXT,
+  updated_at BIGINT NOT NULL,
+  updated_by TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS marketplace_plugins(id TEXT PRIMARY KEY, name TEXT NOT NULL, version TEXT NOT NULL, author TEXT NOT NULL, author_key_id TEXT NOT NULL, author_public_key TEXT NOT NULL, manifest_json TEXT NOT NULL, bundle_srcdoc TEXT NOT NULL, bundle_size BIGINT NOT NULL DEFAULT 0, author_signature TEXT NOT NULL, marketplace_signature TEXT NOT NULL, submitted_at BIGINT NOT NULL, approved_at BIGINT, status TEXT NOT NULL DEFAULT 'pending');
+
+CREATE TABLE IF NOT EXISTS plugin_installations_v48(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, plugin_id TEXT NOT NULL, version TEXT NOT NULL, manifest_json TEXT NOT NULL, approved_permissions_json TEXT NOT NULL DEFAULT '[]', installed_at BIGINT NOT NULL, uninstalled_at BIGINT);
+
+CREATE TABLE IF NOT EXISTS webhook_endpoints(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, url TEXT NOT NULL, events_json TEXT NOT NULL DEFAULT '[]', secret TEXT NOT NULL, secret_hint TEXT NOT NULL DEFAULT '', active BIGINT NOT NULL DEFAULT 1, created_at BIGINT NOT NULL, last_delivery_at BIGINT, last_status BIGINT, failure_count BIGINT NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS idx_webhook_endpoints_owner ON webhook_endpoints(owner_id,active);
+
+CREATE TABLE IF NOT EXISTS api_keys(id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', prefix TEXT NOT NULL, hint TEXT NOT NULL DEFAULT '', key_hash TEXT NOT NULL, scopes_json TEXT NOT NULL DEFAULT '[]', created_at BIGINT NOT NULL, last_used_at BIGINT, request_count BIGINT NOT NULL DEFAULT 0, revoked_at BIGINT);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_prefix ON api_keys(prefix);
+CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id,created_at DESC);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS canva_connected_at BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS force_mfa BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_step TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_skipped BIGINT NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at BIGINT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_never_expires BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE audit_events ADD COLUMN IF NOT EXISTS admin_only BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS flagged_at BIGINT;
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS flag_reason TEXT NOT NULL DEFAULT '';
+ALTER TABLE invitations ADD COLUMN IF NOT EXISTS flagged_by TEXT NOT NULL DEFAULT '';

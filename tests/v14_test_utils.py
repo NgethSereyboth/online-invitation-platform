@@ -85,8 +85,19 @@ def temporary_data(prefix='einvite-v14-'):
 def fresh_server(extra_env=None, readiness_timeout=24.0, start_attempts=3):
     """Start server.py on a free port, retrying the whole startup when the
     port was seized between free_port() and bind (FB-09 TOCTOU), and failing
-    fast when the child exits."""
+    fast when the child exits.
+
+    Base-URL switch (language-optimization-plan-v3.1.md C1 / §8): when
+    ``EINVITE_TEST_BASE_URL`` is set, no process is started and the caller is
+    pointed at that origin instead. This is what lets Class A contract tests
+    run against the Node service during a cutover wave without editing a single
+    test. The caller owns the lifecycle, so ``_process`` and ``_data`` are None.
+    """
     import urllib.error
+    external = os.environ.get('EINVITE_TEST_BASE_URL', '').strip().rstrip('/')
+    if external:
+        yield None, external, None
+        return
     with temporary_data('einvite-live-v14-') as data:
         base=None;process=None;log_path=data/'server-test.log'
         env={**os.environ,'EINVITE_DATA_DIR':str(data),'EINVITE_DEV_AUTH_TOKENS':'1','EINVITE_REQUIRE_EMAIL_VERIFICATION':'0','PYTHONPATH':os.pathsep.join([str(ROOT/'src'/'python'),str(ROOT)])}
