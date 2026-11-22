@@ -934,3 +934,39 @@ Service `npm test` went 86 → 91; `tests/v14_lifecycle_signing_test.py` and
 `tests/lt_7_2_webhook_delivery_test.py` pass; the npm worker's one-shot mode deleted a seeded
 upload and marked its job `done`; `build.py all --check` stays green.
 
+## 2026-11-22 — image.derivatives runs on Node; the card renderers stay Python's
+
+`media_worker.py` is the media runner: it claims any queued `background_jobs` row, dispatches on
+kind, and completes or fails it through `claim`/`complete`/`fail_background_job`. Only one of its
+kinds is a data transformation Node can reproduce — `image.derivatives` resizes an upload and
+re-encodes it as WEBP. `social.warm` and `social.guest_warm` compose a 1200×630 (and 1080×1080 /
+1080×1920) card with `PIL.ImageDraw`, vendored Khmer fonts and per-guest text, and
+`maintenance.cleanup` runs the security-row sweep; all three stay Python's until S13.
+
+That split needed an owner decision first. The Node service shipped `fastify` and `pg` only, and
+`sharp` sat in `S2-NODE-SERVICE.md` as an unapproved "S12 candidate"; `REMAINING-STEPS.md` §S13
+additionally requires a `pyvips` benchmark and the ClamAV gate. The owner approved
+**`sharp@0.35.5` for the `image.derivatives` runner only** on 2026-11-22, recorded as a D2
+extension in `NEXT-WORK.md`; it is installed with the service's `--ignore-scripts` convention and
+pinned in its own lockfile.
+
+`services/api-node/lib/media-runner.mjs` ports `pre_generate_common_derivatives()`: it warms 320,
+768 and 1440 at quality 84, keys each file by `sha256(f"{basename}|{sha256(source)[:20]}|{width}|webp")`
+in `image-cache/`, reuses an existing entry, never upscales, and reproduces PIL's round-half-even
+for the resized height instead of `Math.round`. It keeps Python's envelope — a non-image or GIF
+payload is a no-op, the first failing width stops the loop, so a broken or missing upload completes
+`done` — and its failure schedule: 60 s doubling, a 3,600 s cap, `failed` on the fifth attempt, with
+`available_at` written on both states. A payload without `path` is the one failure `run_job()`
+raises, and Node raises it too. `EINVITE_OBJECT_STORAGE_BUCKET` makes the runner claim nothing,
+because the source bytes would come from boto3. `bin/webhook-runner.mjs` now drains
+`webhook.deliver`, local `storage.delete` and `image.derivatives` in one pass.
+
+`tools/webhook-runner-parity.py` grew eight media cases and reports **61/61 identical on two
+consecutive runs**: three derivatives from one 900×600 PNG (both backends produce 320×213, 768×512
+and the no-upscale 900×600, with identical cache file names, dimensions and format), non-image and
+GIF no-ops, a missing upload, a missing payload path with its 60 s requeue, exhaustion through five
+attempts to `failed`, two duplicate queued jobs, and a live foreign lease neither backend steals.
+The Python probe drives the real `media_worker.run_job()`; `claim_background_job()`,
+`complete_background_job()` and `fail_background_job()` accept the same optional `now_ms` the two
+existing processors take, so the schedule is compared without sleeping. Service `npm test` went
+91 → 101; `build.py all --check` stays green.

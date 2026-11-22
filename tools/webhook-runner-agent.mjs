@@ -3,6 +3,7 @@
 // `--kind` at a fixed clock and print the count. Production runs
 // bin/webhook-runner.mjs.
 import { createDatabase } from '../services/api-node/lib/db.mjs';
+import { processMediaDerivativeJobs } from '../services/api-node/lib/media-runner.mjs';
 import {
   processStorageDeleteJobs,
   processWebhookJobs,
@@ -21,13 +22,17 @@ try {
     nowMs: Number(arg('now-ms', String(Date.now()))),
   };
   const kind = arg('kind', 'webhook.deliver');
-  const processed =
-    kind === 'storage.delete'
-      ? await processStorageDeleteJobs(db, { ...options, dataDir: process.env.EINVITE_DATA_DIR })
-      : await processWebhookJobs(db, {
-          ...options,
-          allowPrivate: arg('allow-private', 'true') === 'true',
-        });
+  let processed;
+  if (kind === 'storage.delete') {
+    processed = await processStorageDeleteJobs(db, { ...options, dataDir: process.env.EINVITE_DATA_DIR });
+  } else if (kind === 'image.derivatives') {
+    processed = await processMediaDerivativeJobs(db, { ...options, dataDir: process.env.EINVITE_DATA_DIR });
+  } else {
+    processed = await processWebhookJobs(db, {
+      ...options,
+      allowPrivate: arg('allow-private', 'true') === 'true',
+    });
+  }
   console.log(JSON.stringify({ processed }));
 } finally {
   await db.close();

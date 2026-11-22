@@ -34,7 +34,7 @@ The plan asked for every npm version in v3 to be re-resolved rather than copied
 | fastify | 5.12.8 | **pinned** |
 | @fastify/session | 11.1.6 | S6 candidate |
 | @simplewebauthn/server | 14.1.0 | passkey work, not scheduled |
-| sharp | 0.35.5 | S12 candidate |
+| sharp | 0.35.5 | **approved 2026-11-22** for `image.derivatives` only |
 | zod | 4.6.7 | S3+ validation |
 | drizzle-orm | 0.45.4 | **not planned** — S4 says no ORM codegen |
 | typescript | 7.0.2 | v3 doubted this; it resolves |
