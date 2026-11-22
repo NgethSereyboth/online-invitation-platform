@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Harness probe for Python's production webhook queue processor."""
+"""Harness probe for Python's production background-job processors."""
 from __future__ import annotations
 
 import argparse
@@ -18,6 +18,7 @@ def main() -> int:
     parser.add_argument("--now-ms", type=int, required=True)
     parser.add_argument("--limit", type=int, default=1)
     parser.add_argument("--allow-private", default="true")
+    parser.add_argument("--kind", choices=("webhook.deliver", "storage.delete"), default="webhook.deliver")
     args = parser.parse_args()
 
     os.environ["EINVITE_DATABASE_URL"] = args.database_url
@@ -31,7 +32,10 @@ def main() -> int:
     sys.path.insert(0, str(ROOT / "src" / "python"))
     import server  # noqa: E402 — configuration above must land first
 
-    processed = server.process_webhook_jobs(limit=args.limit, now_ms=args.now_ms)
+    if args.kind == "storage.delete":
+        processed = server.process_storage_delete_jobs(limit=args.limit, now_ms=args.now_ms)
+    else:
+        processed = server.process_webhook_jobs(limit=args.limit, now_ms=args.now_ms)
     print(json.dumps({"processed": processed}))
     return 0
 

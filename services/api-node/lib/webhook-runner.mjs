@@ -1,14 +1,19 @@
-// S12b/S12c: the Node port of server.process_webhook_jobs().
+// S12b/S12c: the Node port of server.process_webhook_jobs() and the local-disk
+// half of server.process_storage_delete_jobs().
 //
-// One due `webhook.deliver` job is claimed through the S12b lease, delivered
-// exactly once, and then completed, retried on Python's 1/2/4/8 s schedule, or
-// failed. Python owns the queue's schema and endpoint encryption; this module
-// only consumes them.
-import { createHmac } from 'node:crypto';
+// One due job is claimed through the S12b lease and processed exactly once.
+// `webhook.deliver` keeps Python's 1/2/4/8 s retry schedule; `storage.delete`
+// removes the upload and its derivative-cache entries, with Python's 30 s
+// doubling backoff and no terminal failure. Python owns the queue's schema and
+// endpoint encryption; this module only consumes them. Object-storage deletion
+// remains Python's until S12c ports the bucket client.
+import { createHash, createHmac } from 'node:crypto';
 import { lookup as dnsLookup } from 'node:dns/promises';
+import { existsSync, unlinkSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
+import { join, resolve } from 'node:path';
 
 import { DEFAULT_LEASE_MS, claimJob, releaseJob } from './jobs.mjs';
 
@@ -20,6 +25,16 @@ export const DEFAULT_TIMEOUT_MS = 5000;
 export const MAX_RESPONSE_BYTES = 64 * 1024;
 export const SIGNATURE_HEADER = 'X-EInvite-Signature';
 export const TIMESTAMP_HEADER = 'X-EInvite-Timestamp';
+export const IMAGE_WIDTH_ALLOWLIST = Object.freeze([320, 480, 768, 960, 1440, 1920]);
+export const DERIVATIVE_FORMATS = Object.freeze([
+  ['webp', '.webp'],
+  ['jpeg', '.jpg'],
+  ['jpg', '.jpg'],
+  ['png', '.png'],
+  ['avif', '.avif'],
+]);
+export const STORAGE_DELETE_BACKOFF_BASE_S = 30.0;
+export const STORAGE_DELETE_BACKOFF_MAX_S = 3600.0;
 
 const BLOCKED_ADDRESSES = new net.BlockList();
 for (const [address, prefix] of [
@@ -200,6 +215,131 @@ export async function deliverWebhook(
   } catch (error) {
     return { ok: false, status: null, error: `${error.name}: ${error.message}` };
   }
+}
+
+/** Path(...).name: Python splits on "/", never on the host platform. */
+function posixBasename(value) {
+  const parts = String(value ?? '').split('/');
+  return parts[parts.length - 1] || '';
+}
+
+/** Object-storage deletion is still Python's until S12c ports the bucket client. */
+export function objectStorageEnabled(env = process.env) {
+  return Boolean(String(env.EINVITE_OBJECT_STORAGE_BUCKET ?? '').trim());
+}
+
+function storageDataDir(dataDir, env) {
+  const raw = String(dataDir ?? env.EINVITE_DATA_DIR ?? '').trim();
+  if (!raw) throw new Error('EINVITE_DATA_DIR is required for storage.delete');
+  return resolve(raw);
+}
+
+/** purge_derivative_cache(): delete the resize cache entries keyed by path/hash. */
+export function purgeDerivativeCache(path, sourceHash = '', { dataDir, env = process.env } = {}) {
+  const clean = posixBasename(path);
+  if (!clean) return;
+  const tag = String(sourceHash ?? '').slice(0, 20);
+  if (!tag) return;
+  const cache = join(storageDataDir(dataDir, env), 'image-cache');
+  for (const width of IMAGE_WIDTH_ALLOWLIST) {
+    for (const [format, suffix] of DERIVATIVE_FORMATS) {
+      const key = createHash('sha256').update(`${clean}|${tag}|${width}|${format}`, 'utf8').digest('hex');
+      const target = join(cache, key + suffix);
+      try {
+        if (existsSync(target)) unlinkSync(target);
+      } catch {
+        // Python logs this cleanup failure and still completes the job.
+      }
+    }
+  }
+}
+
+/**
+ * delete_stored_asset(): local upload + derivative removal. Object storage is
+ * refused here so a Node worker can never mark a bucket object deleted.
+ */
+export function deleteStoredAsset(path, sourceHash = '', { dataDir, env = process.env } = {}) {
+  const clean = posixBasename(path);
+  if (!clean) return;
+  if (objectStorageEnabled(env)) throw new Error('object-storage deletion is still Python-owned');
+  const base = storageDataDir(dataDir, env);
+  const local = join(base, 'uploads', clean);
+  if (existsSync(local)) unlinkSync(local);
+  purgeDerivativeCache(clean, sourceHash, { dataDir: base, env });
+}
+
+/**
+ * Attempt due `storage.delete` jobs once each, scheduling Python's retries.
+ *
+ * Python has no terminal failure for this kind: every exception requeues with
+ * a 30 s base that doubles to 32 minutes, forever. A missing file is a
+ * successful no-op. When object storage is configured the jobs stay queued for
+ * Python's worker instead of being executed here.
+ */
+export async function processStorageDeleteJobs(
+  db,
+  {
+    limit = 25,
+    nowMs,
+    workerId,
+    leaseMs = DEFAULT_LEASE_MS,
+    dataDir = process.env.EINVITE_DATA_DIR,
+    env = process.env,
+    claim = claimJob,
+    release = releaseJob,
+    deleteAsset = deleteStoredAsset,
+    logger = null,
+  } = {},
+) {
+  if (!workerId) throw new TypeError('workerId is required');
+  if (objectStorageEnabled(env)) return 0;
+  const base = storageDataDir(dataDir, env);
+  const clock = () => (nowMs === undefined ? Date.now() : nowMs);
+  let processed = 0;
+  for (let index = 0; index < Math.max(0, Number(limit) || 0); index += 1) {
+    const now = clock();
+    const job = await claim(db, { workerId, leaseMs, kinds: ['storage.delete'], now });
+    if (!job) break;
+    const attempts = Number(job.attempts);
+    let ok = true;
+    let error = '';
+    try {
+      await deleteAsset(String(job.payload?.path ?? ''), String(job.payload?.sha256 ?? ''), {
+        dataDir: base,
+        env,
+      });
+      await release(db, { jobId: job.id, workerId, state: 'done', error: '', availableAt: null, now });
+    } catch (failure) {
+      ok = false;
+      error = String(failure instanceof Error ? failure.message : failure).slice(0, 1000);
+      const priorAttempts = Math.max(0, attempts - 1);
+      const delaySeconds = Math.min(
+        STORAGE_DELETE_BACKOFF_MAX_S,
+        STORAGE_DELETE_BACKOFF_BASE_S * 2 ** Math.min(priorAttempts, 6),
+      );
+      await release(db, {
+        jobId: job.id,
+        workerId,
+        state: 'queued',
+        error,
+        availableAt: now + delaySeconds * 1000,
+        now,
+      });
+    }
+    processed += 1;
+    if (logger) {
+      logger({
+        level: ok ? 'info' : 'warning',
+        event: 'storage_delete',
+        path: posixBasename(job.payload?.path),
+        attempts,
+        ok,
+        error: error || null,
+        jobId: job.id,
+      });
+    }
+  }
+  return processed;
 }
 
 /**

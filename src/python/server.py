@@ -2731,10 +2731,11 @@ def queue_physical_deletions(items):
     if not BACKGROUND_MEDIA_ENABLED:process_storage_delete_jobs(limit=len(normalized))
     return len(normalized)
 
-def process_storage_delete_jobs(limit=25):
+def process_storage_delete_jobs(limit=25, now_ms=None):
     processed=0
+    clock=lambda:int(now_ms if now_ms is not None else time.time()*1000)
     for _ in range(max(0,int(limit))):
-        now=int(time.time()*1000)
+        now=clock()
         with connect() as db:
             row=db.execute("SELECT id,payload_json,attempts FROM background_jobs WHERE kind='storage.delete' AND state='queued' AND available_at<=? ORDER BY created_at LIMIT 1",(now,)).fetchone()
             if not row:break
@@ -2742,10 +2743,10 @@ def process_storage_delete_jobs(limit=25):
             if not changed:continue
         try:
             payload=json.loads(row["payload_json"] or "{}");delete_stored_asset(payload.get("path",""),payload.get("sha256",""))
-            with connect() as db:db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,last_error='',updated_at=? WHERE id=?",(int(time.time()*1000),row["id"]))
+            with connect() as db:db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,last_error='',updated_at=? WHERE id=?",(clock(),row["id"]))
         except Exception as exc:
-            delay=min(3600,30*(2**min(int(row["attempts"] or 0),6)));available=int(time.time()*1000)+delay*1000
-            with connect() as db:db.execute("UPDATE background_jobs SET state='queued',locked_at=NULL,last_error=?,available_at=?,updated_at=? WHERE id=?",(str(exc)[:1000],available,int(time.time()*1000),row["id"]))
+            delay=min(3600,30*(2**min(int(row["attempts"] or 0),6)));available=clock()+delay*1000
+            with connect() as db:db.execute("UPDATE background_jobs SET state='queued',locked_at=NULL,last_error=?,available_at=?,updated_at=? WHERE id=?",(str(exc)[:1000],available,clock(),row["id"]))
         processed+=1
     return processed
 

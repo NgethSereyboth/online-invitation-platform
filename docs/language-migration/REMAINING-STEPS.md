@@ -85,9 +85,10 @@ processes without Redis. Writes additionally need the snapshot comparison Rule 8
 
 ### S12b — jobs and workers
 
-**Status:** the lease/lock is implemented and proven for both job queues Node could run, and the
-`webhook.deliver` runner is ported on top of it. Storage-delete, media and platform runners still
-run in Python (`server.py`, `platform_v32/jobs.py`).
+**Status:** the lease/lock is implemented and proven for both job queues Node could run. The
+`webhook.deliver` runner and the local-disk half of `storage.delete` are ported on top of it. The
+media and platform runners still run in Python (`server.py`, `platform_v32/jobs.py`), and
+`storage.delete` stays with Python whenever object storage is configured.
 
 **Controlling text** (plan §5 S12b, verbatim):
 
@@ -119,16 +120,28 @@ Python's completion rules: 2xx done, 400/3xx final, 408/409/425/429/5xx retried 
 the fifth failure final, missing/inactive endpoint `done` with `endpoint removed`, and the
 endpoint's `last_delivery_at`/`last_status`/`failure_count` updated the same way.
 
+**Storage-delete runner:** the same module's `processStorageDeleteJobs()` port covers the local
+half of `process_storage_delete_jobs()`: basename sanitation, upload removal, and the exact
+`image-cache` entries keyed by `sha256(f"{path}|{hash[:20]}|{width}|{format}")` for all 30
+width/format pairs. It keeps Python's 30 s base, doubling to a 1,920 s cap and **no terminal
+failure**; a missing file is a successful no-op. When `EINVITE_OBJECT_STORAGE_BUCKET` is set the
+Node runner claims no `storage.delete` job, so Python's boto3 path remains the only deleter until
+S12c ports object storage. The standalone worker (`npm run webhook:runner`, `--once`) drains both
+`webhook.deliver` and local `storage.delete` jobs.
+
 **Proof:** `tools/job-lease-harness.py` reports **49/49 checks on two consecutive runs** against one
 fresh disposable PostgreSQL shared by the real Python claims and the Node module. Two workers of
 each backend drain 18 `background_jobs` and 18 `platform_jobs` exactly once; live leases cannot be
 claimed, renewed or released by another worker; a heartbeat survives the original expiry; expired
 leases are recovered; a fresh Python row is untouched until 31 minutes. `tools/webhook-runner-parity.py`
-reports **30/30 identical on two consecutive runs**: success, retry-then-success, five-attempt
-exhaustion, terminal 400, redirect 302, missing endpoint, inactive endpoint and an invalid URL,
-comparing state, attempts, `available_at` backoff, error text, endpoint counters and every
-received body/signature. Service `npm test` **86 passed**; `tests/lt_7_2_webhook_delivery_test.py`
-**5 passed**; `build.py all --check` green; `tools/pg-schema-parity.py` reports **0 missing columns**.
+reports **37/37 identical on two consecutive runs** across the eight webhook cases (success,
+retry-then-success, five-attempt exhaustion, terminal 400, redirect 302, missing endpoint, inactive
+endpoint, invalid URL) and six storage cases (success, missing file, directory failure, failure past
+the webhook retry limit, duplicate queued jobs, live lease). It compares state, attempts,
+`available_at` backoff, normalized error class, endpoint counters, upload existence, surviving
+derivative-cache files and every received body/signature. Service `npm test` **91 passed**;
+`tests/v14_lifecycle_signing_test.py` and `tests/lt_7_2_webhook_delivery_test.py` pass;
+`build.py all --check` green; `tools/pg-schema-parity.py` reports **0 missing columns**.
 
 ### S12c — storage, backup, analytics, reports, plugins
 

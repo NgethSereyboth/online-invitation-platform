@@ -907,3 +907,30 @@ exhaustion, terminal 400, redirect 302, missing endpoint, inactive endpoint and 
 Service `npm test` went 76 → 86; `tests/lt_7_2_webhook_delivery_test.py` passes; `build.py all
 --check` stays green.
 
+## 2026-11-22 — storage.delete runs on Node for local disk; object storage stays Python's
+
+`services/api-node/lib/webhook-runner.mjs` now also ports the local half of
+`process_storage_delete_jobs()`. The runner claims `storage.delete` through the same S12b lease,
+keeps only the basename, removes `uploads/<path>`, and purges the exact `image-cache` entries
+Python derives from `sha256(f"{path}|{hash[:20]}|{width}|{format}")` for all six widths and five
+format names. Failures requeue at Python's 30 s base with doubling and a 1,920 s cap, and there is
+no terminal failure; a missing upload completes as a no-op. `bin/webhook-runner.mjs` drains both
+kinds in one pass, so `npm run webhook:runner -- --once` now handles either queue.
+
+Object-storage deletion is deliberately not ported. When `EINVITE_OBJECT_STORAGE_BUCKET` is set the
+Node runner claims no `storage.delete` job, leaving it for Python's boto3 path rather than marking
+a bucket object deleted without deleting it. S12c still owns the object-storage client.
+
+`tools/webhook-runner-parity.py` grew six storage cases and reports **37/37 identical on two
+consecutive runs**: successful upload+derivative deletion, missing-file no-op, directory failure,
+failure past the webhook's five-attempt limit (still queued, because storage has no terminal
+state), two duplicate queued payloads processed one per pass, and a live foreign lease that
+neither backend steals. It compares state, attempts, `available_at`, normalized error class,
+upload existence and the surviving cache file names; each backend uses its own data directory.
+The Python runner accepts an optional `now_ms` for deterministic observations, mirroring
+`process_webhook_jobs()`, without changing production timing.
+
+Service `npm test` went 86 → 91; `tests/v14_lifecycle_signing_test.py` and
+`tests/lt_7_2_webhook_delivery_test.py` pass; the npm worker's one-shot mode deleted a seeded
+upload and marked its job `done`; `build.py all --check` stays green.
+
