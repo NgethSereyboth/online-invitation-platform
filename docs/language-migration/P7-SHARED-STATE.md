@@ -21,7 +21,7 @@ process, doubles or splits the moment a second one runs · **disk** = per-data-d
 | 5 | JIT elevation requests/grants | `ai_agent/jit_elevation.py` (`JITElevationManager`, DB schema) | **shared** | Reads and writes go through the DB; no in-process cache was found. The repo already has an atomicity test (`jit_elevation_atomic_test`). | No change needed; S6 must re-run that test across the boundary. | S6 |
 | 6 | `idempotency_records` (24 h dedupe) | DB; swept by `platform_scheduler_v32.py:17` | **shared** | Correct across processes *if* the insert is a uniqueness constraint. Verify the constraint, not the convention, before S6 signs off. | Verify unique key. | S6 |
 | 7 | Collaboration revisions / Lamport state | DB via the platform service (`platform_v32/`, v31 + v52 endpoints) | **shared** | Revision ordering is DB-mediated, so it survives two backends. Risk is **single-writer compaction**: two compactors can race. | Pin compaction to one backend (compaction is not a request-handled action). | S12a |
-| 8 | Job queue claim | `platform_v32/jobs.py:65,72` — `UPDATE … SET status='claimed' WHERE id=? AND status='queued'` with a `rowcount` check | **shared, atomic** | The claim is a compare-and-swap, so **double-claiming is not the risk**. The gap: no lease/heartbeat anywhere in `platform_v32/` (no `lease` string), so a worker that dies after claiming leaves the row `claimed` forever. The plan's S12b wording ("add a lease/lock before any job runs in Node") is slightly off: the lock exists, the **recovery** does not. | Add stale-claim recovery before Node runs any job. | S12b |
+| 8 | Job queue claim | `platform_v32/jobs.py:65,72` (`platform_jobs`) and `server.py:claim_background_job` (`background_jobs`) — `SELECT …` then `UPDATE … WHERE id=? AND status/state='queued'` with a `rowcount` check | **shared, atomic; Node lease landed 2026-11-22** | Both claims are compare-and-swaps, so **double-claiming is not the risk**; recovery was. `services/api-node/lib/jobs.mjs` claims either table with `FOR UPDATE SKIP LOCKED`, records `lock_owner`/`lease_expires_at`, and only that owner can renew or release. A running row is stale at lease expiry, or after a 30-minute no-touch window when Python owns it (Python's sweep covers `background_jobs` only). Python's `JobQueue._run` now requires the `claimed → running` CAS, so it cannot execute a row Node already claimed. Python's completion stays unconditional and its workers still rely on the sweep. | Port the runners (webhook/storage/media and platform kinds); give Python owner-checked completion if it ever runs alongside Node workers. | S12b |
 | 9 | Sessions (`sessions` table, `token_hash`) | DB, `user()` `server.py:4461–4484` | **shared** | A session created by one backend is valid in the other. This is the part S6 can rely on. | None; S6 proves it with the cross-backend test. | S6 |
 | 10 | Image / social-card caches | `DATA/image-cache`, `DATA/social-cache` (`server.py:300–350`) | **disk, per data dir** | Two processes sharing one data dir share the cache (ok); two data dirs duplicate entries (waste, not corruption). | No action; document that the parallel run must share one data dir on Target A. | S4 |
 | 11 | Field-encryption key | `core/crypto.py` — env or sidecar | **per process** | Two processes must resolve the **same** key. Different `EINVITE_DATA_DIR` values mean different sidecar keys and unreadable cross-written rows. | Assert key fingerprint equality at boot in the parallel run (P6 §8 gives the diagnostic). | S5 |
@@ -35,9 +35,11 @@ process, doubles or splits the moment a second one runs · **disk** = per-data-d
   because Redis is optional and the running deployment has none. S6 should verify those two
   first; the session/CSRF proof (item 9) is the easy half.
 - **S12b**: the plan says to add a lock before any job runs in Node. The claim is already
-  atomic. The missing piece is recovery of stale `claimed` rows, which is a different (and
+  atomic. The missing piece was recovery of stale `claimed` rows, which is a different (and
   smaller) change — and it is also a bug in the single-backend deployment, not only a
-  migration risk.
+  migration risk. Node's lease landed for both queues on 2026-11-22; Python's background workers
+  still recover through the 30-minute sweep, platform jobs have no Python recovery, and Python
+  completion remains unconditional.
 - **S9**: porting the lockout read-modify-write preserves a race. That needs an owner answer,
   because "byte-identical" and "don't port a known race" conflict.
 
