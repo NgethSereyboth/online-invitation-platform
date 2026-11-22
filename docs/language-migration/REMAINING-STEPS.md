@@ -85,10 +85,9 @@ processes without Redis. Writes additionally need the snapshot comparison Rule 8
 
 ### S12b — jobs and workers
 
-**Status:** the lease/lock is implemented and proven for both job queues Node could run; no Node
-job runner exists yet, so no job executes on Node. The remaining work is the runner port itself
-(webhook, storage-delete and media kinds still run in `server.py`; platform jobs still run in
-`platform_v32/jobs.py`).
+**Status:** the lease/lock is implemented and proven for both job queues Node could run, and the
+`webhook.deliver` runner is ported on top of it. Storage-delete, media and platform runners still
+run in Python (`server.py`, `platform_v32/jobs.py`).
 
 **Controlling text** (plan §5 S12b, verbatim):
 
@@ -111,13 +110,25 @@ storage-delete claim gained the queued-state guard the webhook claim already had
 lazily to a database booted by an older build. Python's own stale sweep covers `background_jobs`
 only; it has no platform-job recovery, so Node's lease is the recovery path there.
 
+**Webhook runner:** `services/api-node/lib/webhook-runner.mjs` is the Node port of
+`process_webhook_jobs()`, with `bin/webhook-runner.mjs` as the standalone worker (`npm run
+webhook:runner`, `--once` for one pass). It claims through the lease, signs `t=<ms>,v1=<hmac>`
+with the endpoint secret, validates and pins the destination address (https/public unless
+`EINVITE_ALLOW_PRIVATE_WEBHOOKS` is set), refuses redirects, reads at most 64 KiB, and matches
+Python's completion rules: 2xx done, 400/3xx final, 408/409/425/429/5xx retried at 1/2/4/8 s,
+the fifth failure final, missing/inactive endpoint `done` with `endpoint removed`, and the
+endpoint's `last_delivery_at`/`last_status`/`failure_count` updated the same way.
+
 **Proof:** `tools/job-lease-harness.py` reports **49/49 checks on two consecutive runs** against one
 fresh disposable PostgreSQL shared by the real Python claims and the Node module. Two workers of
 each backend drain 18 `background_jobs` and 18 `platform_jobs` exactly once; live leases cannot be
 claimed, renewed or released by another worker; a heartbeat survives the original expiry; expired
-leases are recovered; a fresh Python row is untouched until 31 minutes. Service `npm test` **76
-passed**; targeted webhook/admin/security pytest passes; `build.py all --check` green;
-`tools/pg-schema-parity.py` reports **0 missing columns**.
+leases are recovered; a fresh Python row is untouched until 31 minutes. `tools/webhook-runner-parity.py`
+reports **30/30 identical on two consecutive runs**: success, retry-then-success, five-attempt
+exhaustion, terminal 400, redirect 302, missing endpoint, inactive endpoint and an invalid URL,
+comparing state, attempts, `available_at` backoff, error text, endpoint counters and every
+received body/signature. Service `npm test` **86 passed**; `tests/lt_7_2_webhook_delivery_test.py`
+**5 passed**; `build.py all --check` green; `tools/pg-schema-parity.py` reports **0 missing columns**.
 
 ### S12c — storage, backup, analytics, reports, plugins
 

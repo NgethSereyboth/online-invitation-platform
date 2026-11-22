@@ -262,7 +262,7 @@ def process_webhook_jobs(limit=25, now_ms=None):
         with connect() as db:
             db.execute(
                 "UPDATE webhook_endpoints SET last_delivery_at=?,last_status=?,"
-                "failure_count=CASE WHEN ? THEN 0 ELSE failure_count+1 END WHERE id=?",
+                "failure_count=CASE WHEN ?=1 THEN 0 ELSE failure_count+1 END WHERE id=?",
                 (now, status, 1 if ok else 0, endpoint_id),
             )
         print(json.dumps({"level":"info" if ok else "warning","event":"webhook_delivery","endpoint":endpoint_id,"eventName":event,"status":status,"attempts":attempt,"ok":ok,"error":result.get("error"),"jobId":row["id"]},ensure_ascii=False), flush=True)
