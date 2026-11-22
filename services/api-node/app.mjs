@@ -82,7 +82,8 @@ export function buildApp({ logger = false, webRoot = defaultWebRoot(), db = null
     // tier-less set, so the cipher is irrelevant here.
     registerMetaRoutes(app, { db });
     registerAnalyticsRoutes(app, { db });
-    registerAdminRoutes(app, { db });
+    // The admin reads reveal stored emails, so they take the cipher too.
+    registerAdminRoutes(app, { db, cipher });
   }
 
   app.get('/healthz', async (_request, reply) => {

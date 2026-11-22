@@ -6489,10 +6489,12 @@ class Handler(SimpleHTTPRequestHandler):
         admin = self._admin_gate("/api/admin/users-v2", "GET")
         if not admin: return
         query = parse_qs(urlparse(self.path).query)
+        # Validation errors are a 400, not an unhandled ValueError: raising here
+        # aborted the request with no response at all (same repair as reports).
         try:
             limit = max(1, min(int((query.get("limit") or ["25"])[0]), 100))
         except ValueError:
-            raise ValueError("Invalid limit")
+            return self.json(400, {"error": "Invalid limit"})
         unmask = (query.get("unmask") or ["0"])[0] == "1"
         search = str((query.get("q") or [""])[0]).strip().lower()[:254]
         cursor = (query.get("cursor") or [""])[0]
@@ -6508,7 +6510,7 @@ class Handler(SimpleHTTPRequestHandler):
                 cursor_created, cursor_id = cursor.split(":", 1)
                 cursor_created = int(cursor_created)
             except ValueError:
-                raise ValueError("Invalid cursor")
+                return self.json(400, {"error": "Invalid cursor"})
             clauses.append("(u.created_at < ? OR (u.created_at = ? AND u.id < ?))")
             params.extend([cursor_created, cursor_created, cursor_id])
         where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
@@ -6822,7 +6824,7 @@ class Handler(SimpleHTTPRequestHandler):
         def qp(name,default=""):
             return str((query.get(name) or [default])[0])
         try:limit=max(1,min(int(qp("limit","50") or 50),200))
-        except ValueError:raise ValueError("Invalid limit")
+        except ValueError:return self.json(400,{"error":"Invalid limit"})
         clauses=[];params=[]
         for param,column in (("user","user_id"),("action","action"),("targetType","target_type"),("targetId","target_id")):
             value=qp(param).strip()
@@ -6838,7 +6840,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not raw:continue
             try:
                 ts=int(raw) if raw.isdigit() else int(time.mktime(time.strptime(raw,"%Y-%m-%d"))*1000)
-            except ValueError:raise ValueError("Invalid date filter")
+            except ValueError:return self.json(400,{"error":"Invalid date filter"})
             clauses.append(f"created_at{op}?");params.append(ts)
         where=(" WHERE "+" AND ".join(clauses)) if clauses else ""
         with connect() as db:

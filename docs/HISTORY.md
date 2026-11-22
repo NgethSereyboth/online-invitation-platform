@@ -665,7 +665,8 @@ reconstruction job call `ensure_schema(db)` with no dialect, which defaulted to 
 `AUTOINCREMENT` into PostgreSQL. Every analytics read there raised, and the server's `handle_error`
 swallowed it into an empty reply. `model.ensure_schema` now detects the dialect from the driver
 connection; the 24 existing analytics tests pass, and the parity run is against the fixed baseline.
-Still open in S12c: reports, backup/object storage and the plugin host.
+Still open in S12c: backup/object storage and the plugin host (the reports queue read landed in its
+own change).
 
 ### Remaining steps closed out with a ledger, and the flag read ported
 
@@ -814,3 +815,31 @@ spec.
 - **Gates:** `python3 build.py all --check` → `BUILD_OK` + `MIRROR_CHECK_PASSED`;
   `compileall` on both tools exit 0. Full pytest **not** re-run; the two test-helper edits
   are additive branches and the harness itself exercises `fresh_server` on every self-check.
+
+## 2026-11-22 — admin console reads ported, and the denial audit catches up
+
+The six remaining admin GETs now run on Node: `overview`, the legacy `users` array,
+`users-v2`, `invitations`, `audit-events` (JSON and CSV) and `jobs/:id`. They share the same
+gate as the reports read — IP allowlist first, then admin/super_admin — and none of their
+Python handlers calls `rate_limit`, so P7 did not pin them. `tools/admin-reads-parity.py` runs
+**42 cases across three restarts** (allowlist unset, denying `10.0.0.0/8`, allowing loopback)
+and reports **42/42 identical on two consecutive runs** against one PostgreSQL serving both
+backends. `npm test` went 53 → 66 with a new unit suite for the read models, CSV writer and
+Python-compatibility helpers; `build.py all --check` stayed green.
+
+The port did not find a schema defect this time — `docs/postgres_schema.sql` already declares
+`audit_events.created_at` as `BIGINT`, unlike the reports table repaired earlier. It did find
+four validation paths that answered with **no response at all** on Python (an unhandled
+`ValueError` in `users-v2`'s limit and cursor parsing, and in the audit explorer's limit and
+date parsing); all four now answer 400 with the message Python already used internally.
+
+One behavioural gap surfaced only because the port had to match a *write* inside a read: the
+`unmask=1` action calls `self.audit("admin.users_unmasked", …)`, so Node now writes the same
+chained `audit_events` row (sorted compact JSON, previous-hash link, protected metadata,
+`admin_only`) rather than unmasking without a trace. The allowlist's `admin.ip_denied` event
+is also written by Node now, under Python's 60-second per-IP throttle, so a denied admin
+request leaves evidence on either backend.
+
+Still unported: the reports resolve/queue writes, `backup.py` and object storage (P7 row 2),
+the plugin launch/install routes (rate-limited, so pinned), and the media/AI paths.
+
