@@ -5,7 +5,8 @@ Run both implementations against one PostgreSQL. The webhook scenarios use one
 scripted local receiver and compare job state, backoff, endpoint counters and
 received requests. The storage scenarios use one data directory per backend and
 compare job state, backoff, upload existence and the surviving derivative-cache
-entries.
+entries. The media scenarios upload one real PNG and compare job state, backoff
+and every derivative file the runner writes (name, dimensions, format).
 
 Usage:
   .venv/bin/python tools/webhook-runner-parity.py --database-url postgres://...
@@ -15,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import http.server
+import io
 import json
 import os
 import shutil
@@ -143,9 +145,10 @@ def db_execute(database_url: str, sql: str, params=()) -> None:
 def reset(database_url: str) -> None:
     db_execute(
         database_url,
-        "DELETE FROM background_jobs WHERE kind IN ('webhook.deliver','storage.delete') "
-        "OR id LIKE %s OR id LIKE %s",
-        ("wh-job-%", "st-job-%"),
+        "DELETE FROM background_jobs WHERE kind IN "
+        "('webhook.deliver','storage.delete','image.derivatives') "
+        "OR id LIKE %s OR id LIKE %s OR id LIKE %s",
+        ("wh-job-%", "st-job-%", "md-job-%"),
     )
     db_execute(database_url, "DELETE FROM webhook_endpoints WHERE id LIKE %s", ("wh-parity-%",))
 
@@ -167,6 +170,89 @@ def seed_storage_job(
         "INSERT INTO background_jobs(id,kind,payload_json,state,attempts,available_at,locked_at,"
         "last_error,created_at,updated_at,lock_owner,lease_expires_at) "
         "VALUES(%s,'storage.delete',%s,%s,%s,%s,%s,'',%s,%s,%s,%s)",
+        (
+            job_id,
+            json.dumps(payload, sort_keys=True, separators=(",", ":")),
+            state,
+            attempts,
+            T0,
+            created_at if state == "running" else None,
+            created_at,
+            created_at,
+            lock_owner,
+            lease_expires_at,
+        ),
+    )
+
+
+_MEDIA_PNG: bytes | None = None
+
+
+def media_png(width: int = 900, height: int = 600) -> bytes:
+    """One deterministic source image, written byte-identically for both backends."""
+    global _MEDIA_PNG
+    if _MEDIA_PNG is None:
+        from PIL import Image
+
+        image = Image.new("RGB", (width, height))
+        pixels = image.load()
+        for y in range(height):
+            for x in range(width):
+                pixels[x, y] = (x % 256, y % 256, (x + y) % 256)
+        out = io.BytesIO()
+        image.save(out, "PNG")
+        _MEDIA_PNG = out.getvalue()
+    return _MEDIA_PNG
+
+
+def media_cache_detail(base: Path) -> dict:
+    from PIL import Image
+
+    cache = base / "image-cache"
+    detail: dict = {}
+    if not cache.is_dir():
+        return detail
+    for path in sorted(cache.iterdir()):
+        if not path.is_file():
+            continue
+        try:
+            with Image.open(path) as image:
+                detail[path.name] = {"width": image.width, "height": image.height, "format": image.format}
+        except Exception:
+            detail[path.name] = {"unreadable": True}
+    return detail
+
+
+def media_error_kind(message: str | None) -> str:
+    """Normalise Python's KeyError text and the Node message for the same fault."""
+    text = str(message or "")
+    if not text:
+        return ""
+    lowered = text.lower()
+    if "path" in lowered or "keyerror" in lowered:
+        return "missing-path"
+    if "not found" in lowered or "no such file" in lowered:
+        return "missing-upload"
+    return "other"
+
+
+def seed_media_job(
+    database_url: str,
+    job_id: str,
+    payload: dict,
+    *,
+    attempts: int = 0,
+    state: str = "queued",
+    created_at: int = T0,
+    lock_owner: str = "",
+    lease_expires_at: int | None = None,
+) -> None:
+    db_execute(database_url, "DELETE FROM background_jobs WHERE id=%s", (job_id,))
+    db_execute(
+        database_url,
+        "INSERT INTO background_jobs(id,kind,payload_json,state,attempts,available_at,locked_at,"
+        "last_error,created_at,updated_at,lock_owner,lease_expires_at) "
+        "VALUES(%s,'image.derivatives',%s,%s,%s,%s,%s,'',%s,%s,%s,%s)",
         (
             job_id,
             json.dumps(payload, sort_keys=True, separators=(",", ":")),
@@ -472,6 +558,114 @@ class Harness:
             )
         return observations
 
+    def observe_media(self, base: Path, job_ids: list[str]) -> dict:
+        with psycopg.connect(self.database_url, autocommit=True) as connection:
+            with connection.cursor() as cursor:
+                jobs = []
+                for job_id in job_ids:
+                    cursor.execute(
+                        "SELECT state,attempts,available_at,locked_at,last_error,lock_owner "
+                        "FROM background_jobs WHERE id=%s",
+                        (job_id,),
+                    )
+                    row = cursor.fetchone()
+                    if not row:
+                        raise RuntimeError(f"missing media job {job_id}")
+                    jobs.append(
+                        {
+                            "state": row[0],
+                            "attempts": row[1],
+                            "available_at": row[2],
+                            "locked_at_is_null": row[3] is None,
+                            "last_error_kind": media_error_kind(row[4]),
+                            "has_error": bool(row[4]),
+                            "lock_owner": row[5],
+                        }
+                    )
+        return {"jobs": jobs, "cache": media_cache_detail(base)}
+
+    def execute_media(
+        self,
+        backend: str,
+        name: str,
+        steps: list[int],
+        *,
+        path: str | None = "photo.png",
+        mime: str = "image/png",
+        make_file: bool = True,
+        duplicate: bool = False,
+        attempts: int = 0,
+        state: str = "queued",
+        lock_owner: str = "",
+        lease_expires_at: int | None = None,
+    ) -> list[dict]:
+        reset(self.database_url)
+        base = Path(self.data_dir) / f"media-{backend}"
+        shutil.rmtree(base, ignore_errors=True)
+        uploads = base / "uploads"
+        (base / "image-cache").mkdir(parents=True)
+        uploads.mkdir(parents=True)
+        clean = Path(path).name if path else ""
+        if make_file and clean:
+            (uploads / clean).write_bytes(media_png())
+        payload: dict = {"mime": mime, "sha256": "a" * 64}
+        if path:
+            payload["path"] = path
+        job_ids = [f"md-job-{name}-{backend}"]
+        seed_media_job(
+            self.database_url,
+            job_ids[0],
+            payload,
+            attempts=attempts,
+            state=state,
+            lock_owner=lock_owner,
+            lease_expires_at=lease_expires_at,
+        )
+        if duplicate:
+            job_ids.append(f"md-job-{name}-{backend}-2")
+            seed_media_job(
+                self.database_url,
+                job_ids[1],
+                payload,
+                attempts=attempts,
+                state=state,
+                created_at=T0 + 1,
+                lock_owner=lock_owner,
+                lease_expires_at=lease_expires_at,
+            )
+
+        observations = []
+        for offset in steps:
+            result = self.run_backend(
+                backend, T0 + offset, True, kind="image.derivatives", data_dir=str(base)
+            )
+            observations.append({"processed": result["processed"], **self.observe_media(base, job_ids)})
+        return observations
+
+    def media_scenario(
+        self,
+        name: str,
+        steps: list[int],
+        *,
+        expect_cache: int | None = None,
+        **options,
+    ) -> None:
+        python_steps = self.execute_media("python", name, steps, **options)
+        node_steps = self.execute_media("node", name, steps, **options)
+        for index, (python_step, node_step) in enumerate(zip(python_steps, node_steps)):
+            self.check(
+                f"{name} step {index} (T+{steps[index]}ms) is identical",
+                python_step == node_step,
+                json.dumps({"python": python_step, "node": node_step}, sort_keys=True)[:1800],
+            )
+        if expect_cache is not None:
+            for backend, observed in (("python", python_steps), ("node", node_steps)):
+                self.check(
+                    f"{name} leaves {expect_cache} derivative file(s) for {backend}",
+                    len(observed[-1]["cache"]) == expect_cache,
+                    json.dumps(observed[-1]["cache"], sort_keys=True)[:1200],
+                )
+
     def storage_scenario(
         self,
         name: str,
@@ -554,6 +748,27 @@ class Harness:
             "storage-live-lease",
             [0],
             path="asset-owned.bin",
+            state="running",
+            lock_owner="other-worker",
+            lease_expires_at=T0 + 600_000,
+        )
+        # media_worker's image.derivatives handler: warm 320/768/1440 WEBP from
+        # one upload, no-op for non-image/GIF/missing sources, and Python's
+        # 60 s doubling failure schedule up to the fifth, final attempt.
+        self.media_scenario("media-derivatives", [0], expect_cache=3)
+        self.media_scenario("media-non-image-mime", [0], mime="application/pdf", expect_cache=0)
+        self.media_scenario("media-gif-mime", [0], mime="image/gif", expect_cache=0)
+        self.media_scenario("media-missing-upload", [0], path="absent.png", make_file=False, expect_cache=0)
+        self.media_scenario("media-missing-path", [0, 60_000], path=None)
+        self.media_scenario(
+            "media-exhausted",
+            [0, 60_000, 180_000, 420_000, 900_000],
+            path=None,
+        )
+        self.media_scenario("media-duplicate-jobs", [0, 1], duplicate=True, expect_cache=3)
+        self.media_scenario(
+            "media-live-lease",
+            [0],
             state="running",
             lock_owner="other-worker",
             lease_expires_at=T0 + 600_000,

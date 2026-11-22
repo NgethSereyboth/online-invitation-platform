@@ -3447,8 +3447,8 @@ def enqueue_background_job(kind,payload,delay_ms=0):
     with connect() as db:db.execute("INSERT INTO background_jobs(id,kind,payload_json,state,attempts,available_at,created_at,updated_at) VALUES(?,?,?,'queued',0,?,?,?)",(job_id,str(kind),json.dumps(payload,ensure_ascii=False),now+max(0,int(delay_ms)),now,now))
     return job_id
 
-def claim_background_job(kinds=None):
-    now=int(time.time()*1000)
+def claim_background_job(kinds=None, now_ms=None):
+    now=int(now_ms if now_ms is not None else time.time()*1000)
     with connect() as db:
         params=[now];where="state='queued' AND available_at<=?"
         if kinds:
@@ -3459,11 +3459,11 @@ def claim_background_job(kinds=None):
         if not changed:return None
         result=dict(row);result["payload"]=json.loads(result.pop("payload_json") or "{}");return result
 
-def complete_background_job(job_id):
-    with connect() as db:db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,updated_at=? WHERE id=?",(int(time.time()*1000),job_id))
+def complete_background_job(job_id, now_ms=None):
+    with connect() as db:db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,updated_at=? WHERE id=?",(int(now_ms if now_ms is not None else time.time()*1000),job_id))
 
-def fail_background_job(job_id,error,retry=True):
-    now=int(time.time()*1000)
+def fail_background_job(job_id,error,retry=True,now_ms=None):
+    now=int(now_ms if now_ms is not None else time.time()*1000)
     with connect() as db:
         row=db.execute("SELECT attempts FROM background_jobs WHERE id=?",(job_id,)).fetchone();attempts=int(row["attempts"] or 0) if row else 0
         state='queued' if retry and attempts<5 else 'failed';delay=min(60_000*(2**max(0,attempts-1)),3_600_000)

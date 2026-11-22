@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Standalone background-job worker for webhook.deliver and storage.delete. The
-// API server does not start it: one process per queue during the parallel run,
-// selected explicitly by ops.
+// Standalone background-job worker for webhook.deliver, storage.delete and
+// image.derivatives. The API server does not start it: one process per queue
+// during the parallel run, selected explicitly by ops.
 import { randomUUID } from 'node:crypto';
 
 import { createFieldCipher } from '../lib/crypto.mjs';
 import { createDatabase } from '../lib/db.mjs';
+import { processMediaDerivativeJobs } from '../lib/media-runner.mjs';
 import { processStorageDeleteJobs, processWebhookJobs } from '../lib/webhook-runner.mjs';
 
 function arg(name, fallback = null) {
@@ -50,8 +51,13 @@ try {
       limit,
       logger: (entry) => console.log(JSON.stringify(entry)),
     });
+    const mediaProcessed = await processMediaDerivativeJobs(db, {
+      workerId,
+      limit,
+      logger: (entry) => console.log(JSON.stringify(entry)),
+    });
     if (once || stopping) break;
-    if (!webhookProcessed && !storageProcessed) await sleep(intervalMs);
+    if (!webhookProcessed && !storageProcessed && !mediaProcessed) await sleep(intervalMs);
   } while (!stopping);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
