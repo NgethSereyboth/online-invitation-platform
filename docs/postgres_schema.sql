@@ -532,7 +532,11 @@ ALTER TABLE stored_objects ADD COLUMN IF NOT EXISTS deleted_at BIGINT;
 UPDATE stored_objects SET storage_key=path WHERE storage_key='';
 CREATE TABLE IF NOT EXISTS background_jobs(
   id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload_json TEXT NOT NULL DEFAULT '{}', state TEXT NOT NULL DEFAULT 'queued',
-  attempts INTEGER NOT NULL DEFAULT 0, available_at BIGINT NOT NULL, locked_at BIGINT, last_error TEXT NOT NULL DEFAULT '', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL
+  attempts INTEGER NOT NULL DEFAULT 0, available_at BIGINT NOT NULL, locked_at BIGINT, last_error TEXT NOT NULL DEFAULT '', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL,
+  -- S12b — the worker that claimed the row and when its lease expires. Empty
+  -- owner means Python claimed it; Node waits for Python's own 30-minute stale
+  -- reset instead of stealing a live job.
+  lock_owner TEXT NOT NULL DEFAULT '', lease_expires_at BIGINT
 );
 CREATE INDEX IF NOT EXISTS idx_background_jobs_queue ON background_jobs(state, available_at, created_at);
 CREATE TABLE IF NOT EXISTS bandwidth_events(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, bytes BIGINT NOT NULL, created_at BIGINT NOT NULL);
@@ -673,7 +677,10 @@ CREATE TABLE IF NOT EXISTS platform_jobs(
   kind TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'queued',progress DOUBLE PRECISION NOT NULL DEFAULT 0,
   payload_json TEXT NOT NULL DEFAULT '{}',result_json TEXT NOT NULL DEFAULT '{}',idempotency_key TEXT NOT NULL DEFAULT '',
   retry_count INTEGER NOT NULL DEFAULT 0,max_retries INTEGER NOT NULL DEFAULT 3,cancellation_requested INTEGER NOT NULL DEFAULT 0,
-  error_text TEXT NOT NULL DEFAULT '',created_at BIGINT NOT NULL,updated_at BIGINT NOT NULL,started_at BIGINT,completed_at BIGINT
+  error_text TEXT NOT NULL DEFAULT '',created_at BIGINT NOT NULL,updated_at BIGINT NOT NULL,started_at BIGINT,completed_at BIGINT,
+  -- S12b — Node's lease on a platform job. Empty owner means Python claimed
+  -- it; Node waits for Python's 30-minute stale window before reclaiming.
+  lock_owner TEXT NOT NULL DEFAULT '',lease_expires_at BIGINT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_platform_job_idempotency ON platform_jobs(workspace_id,idempotency_key) WHERE idempotency_key<>'';
 CREATE INDEX IF NOT EXISTS idx_platform_jobs_status ON platform_jobs(status,created_at);

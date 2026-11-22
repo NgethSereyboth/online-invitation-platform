@@ -848,3 +848,36 @@ parsing now lives in two module-level helpers; `make analyze` reports `ANALYSIS_
 Still unported: the reports resolve/queue writes, `backup.py` and object storage (P7 row 2),
 the plugin launch/install routes (rate-limited, so pinned), and the media/AI paths.
 
+## 2026-11-22 — S12b: a job lease both backends can see
+
+The first thing the plan requires before a job may run on Node is a claim that one backend
+can hold and the other cannot duplicate. Both existing claims — `background_jobs` for webhook
+and storage work, `platform_jobs` for `platform_v32/jobs.py` — were already compare-and-swaps,
+so double-claiming was never the risk; the gap was recovery. A Node worker that died would leave
+its row `running` with no owner, indistinguishable from a live job until Python's 30-minute
+sweep, and a `platform_jobs` row had no recovery at all.
+
+`services/api-node/lib/jobs.mjs` now claims either table with a single `UPDATE … FROM (SELECT …
+FOR UPDATE SKIP LOCKED)`, records `lock_owner` and `lease_expires_at`, renews only for that
+owner, and releases only for that owner. A running row is reclaimable when its lease expired,
+or — when Python owns it — after a 30-minute no-touch window (Python's sweep covers
+`background_jobs` only). That second rule is what keeps
+a Python job safe: Python's queued-only claim has no heartbeat, and a row a Python worker took
+over is not mistaken for an expired Node lease. Both columns are declared in the SQLite and
+PostgreSQL schemas; Node adds them lazily to a database booted by an older build. Python's
+`JobQueue._run` also now requires its `claimed → running` compare-and-swap to succeed, so a
+duplicate queue entry or a row Node already claimed cannot execute a handler. The storage-delete
+claim gained the queued-state guard its webhook sibling already had.
+
+`tools/job-lease-harness.py` runs two Python and two Node workers against 18 `background_jobs`
+and 18 `platform_jobs` rows on one fresh PostgreSQL and reports **49/49 checks on two
+consecutive runs**: every job claimed exactly once, live leases not stolen or released, a
+heartbeat extending past the original expiry, expired leases recovered, a fresh Python row
+untouched until 31 minutes, and the kind filter honoured. `npm test` went 66 → 76 with the lease
+unit suite; targeted pytest for webhook delivery, admin tools and security maintenance passes;
+`build.py all --check` stays green; `tools/pg-schema-parity.py` reports 0 missing columns.
+
+No job executes on Node yet: the webhook, storage-delete and media runners still live in
+`server.py`, and platform kinds still run through `platform_v32/jobs.py`. The lease is the
+precondition, not the port.
+

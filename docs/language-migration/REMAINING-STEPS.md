@@ -85,14 +85,39 @@ processes without Redis. Writes additionally need the snapshot comparison Rule 8
 
 ### S12b — jobs and workers
 
-**Status:** open, not started.
+**Status:** the lease/lock is implemented and proven for both job queues Node could run; no Node
+job runner exists yet, so no job executes on Node. The remaining work is the runner port itself
+(webhook, storage-delete and media kinds still run in `server.py`; platform jobs still run in
+`platform_v32/jobs.py`).
 
 **Controlling text** (plan §5 S12b, verbatim):
 
 > A job must be claimed by exactly one backend; add a lease/lock before any job runs in Node.
 
-**Decider: plan precondition (engineering, not owner).** A lease/lock must exist first; no owner
-decision is needed, but the work has not been done.
+**Decider: plan precondition (engineering, not owner).** A lease/lock must exist first; it now
+does.
+
+**Landed:** `services/api-node/lib/jobs.mjs` covers both queues: `background_jobs`
+(webhook/storage) and `platform_jobs` (`platform_v32/jobs.py`). Each claim is one
+`UPDATE … FROM (SELECT … FOR UPDATE SKIP LOCKED)` that records `lock_owner` and
+`lease_expires_at`; renewal and release require that owner on a `running` row. A running row is
+reclaimable when its Node lease expired, or, when Python owns it (no lease), after a 30-minute
+no-touch window. Python's queued-only claims cannot take a running Node row, and Node cannot take
+a live Python row.
+`platform_v32/jobs.py` now also requires the `claimed → running` CAS to succeed before running a
+handler, so a duplicate queue entry or a row Node already claimed is not executed twice. The
+storage-delete claim gained the queued-state guard the webhook claim already had.
+`lock_owner`/`lease_expires_at` are declared in the SQLite and PostgreSQL schemas; Node adds them
+lazily to a database booted by an older build. Python's own stale sweep covers `background_jobs`
+only; it has no platform-job recovery, so Node's lease is the recovery path there.
+
+**Proof:** `tools/job-lease-harness.py` reports **49/49 checks on two consecutive runs** against one
+fresh disposable PostgreSQL shared by the real Python claims and the Node module. Two workers of
+each backend drain 18 `background_jobs` and 18 `platform_jobs` exactly once; live leases cannot be
+claimed, renewed or released by another worker; a heartbeat survives the original expiry; expired
+leases are recovered; a fresh Python row is untouched until 31 minutes. Service `npm test` **76
+passed**; targeted webhook/admin/security pytest passes; `build.py all --check` green;
+`tools/pg-schema-parity.py` reports **0 missing columns**.
 
 ### S12c — storage, backup, analytics, reports, plugins
 
@@ -230,5 +255,5 @@ route is not yet ported, so the precondition cannot be met today.
 - **Plan rule (no owner):** S11 pinning, S12a single-writer/presence pin, S12b lease precondition,
   S13 benchmark + ClamAV, D4 build generators.
 - **Deployment traffic:** P1, shadow/ramp, 6-platform, S15.
-- **Unblocked but unattempted:** S12b lease work, S12c reports/backup/plugin host, S14 proxy
-  (needs a sidecar).
+- **Unblocked but unattempted:** S12c backup/object storage and the plugin host, S14 proxy
+  (needs a sidecar). S12b's lease precondition is done; its job runners remain.

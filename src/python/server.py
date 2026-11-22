@@ -1817,7 +1817,7 @@ _P2A_SCHEMA_STATEMENTS = [
     # Platform job queue (platform_v32/jobs.py). Missing from the SQLite bootstrap
     # until 2026-11-01: the worker thread raised "no such table: platform_jobs"
     # and the request it served died with a RemoteDisconnected.
-    "CREATE TABLE IF NOT EXISTS platform_jobs(id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, invitation_id TEXT NOT NULL DEFAULT '', owner_id TEXT NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', progress REAL NOT NULL DEFAULT 0, payload_json TEXT NOT NULL DEFAULT '{}', result_json TEXT NOT NULL DEFAULT '{}', idempotency_key TEXT NOT NULL DEFAULT '', retry_count INTEGER NOT NULL DEFAULT 0, max_retries INTEGER NOT NULL DEFAULT 3, cancellation_requested INTEGER NOT NULL DEFAULT 0, error_text TEXT NOT NULL DEFAULT '', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL, started_at BIGINT, completed_at BIGINT)",
+    "CREATE TABLE IF NOT EXISTS platform_jobs(id TEXT PRIMARY KEY, workspace_id TEXT NOT NULL, invitation_id TEXT NOT NULL DEFAULT '', owner_id TEXT NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', progress REAL NOT NULL DEFAULT 0, payload_json TEXT NOT NULL DEFAULT '{}', result_json TEXT NOT NULL DEFAULT '{}', idempotency_key TEXT NOT NULL DEFAULT '', retry_count INTEGER NOT NULL DEFAULT 0, max_retries INTEGER NOT NULL DEFAULT 3, cancellation_requested INTEGER NOT NULL DEFAULT 0, error_text TEXT NOT NULL DEFAULT '', created_at BIGINT NOT NULL, updated_at BIGINT NOT NULL, started_at BIGINT, completed_at BIGINT, lock_owner TEXT NOT NULL DEFAULT '', lease_expires_at BIGINT)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_platform_job_idempotency ON platform_jobs(workspace_id,idempotency_key) WHERE idempotency_key<>''",
     "CREATE INDEX IF NOT EXISTS idx_platform_jobs_status ON platform_jobs(status,created_at)",
 ]
@@ -1906,7 +1906,7 @@ def connect_sqlite():
                     CREATE TABLE IF NOT EXISTS stored_objects(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, path TEXT UNIQUE NOT NULL, storage_key TEXT NOT NULL DEFAULT '', sha256 TEXT NOT NULL DEFAULT '', mime TEXT NOT NULL, size INTEGER NOT NULL, width INTEGER NOT NULL DEFAULT 0, height INTEGER NOT NULL DEFAULT 0, dominant_color TEXT NOT NULL DEFAULT '', processing_state TEXT NOT NULL DEFAULT 'ready', quarantine_state TEXT NOT NULL DEFAULT 'released', scan_status TEXT NOT NULL DEFAULT 'not-configured', ref_count INTEGER NOT NULL DEFAULT 0, deleted_at INTEGER, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
                     CREATE INDEX IF NOT EXISTS idx_stored_objects_owner_hash ON stored_objects(owner_id,sha256,size,mime);
                     CREATE INDEX IF NOT EXISTS idx_stored_objects_path ON stored_objects(path);
-                    CREATE TABLE IF NOT EXISTS background_jobs(id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload_json TEXT NOT NULL DEFAULT '{}', state TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, available_at INTEGER NOT NULL, locked_at INTEGER, last_error TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+                    CREATE TABLE IF NOT EXISTS background_jobs(id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload_json TEXT NOT NULL DEFAULT '{}', state TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, available_at INTEGER NOT NULL, locked_at INTEGER, last_error TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, lock_owner TEXT NOT NULL DEFAULT '', lease_expires_at BIGINT);
                     CREATE INDEX IF NOT EXISTS idx_background_jobs_queue ON background_jobs(state,available_at,created_at);
                     CREATE TABLE IF NOT EXISTS bandwidth_events(id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, bytes INTEGER NOT NULL, created_at INTEGER NOT NULL);
                     CREATE INDEX IF NOT EXISTS idx_bandwidth_events_owner_time ON bandwidth_events(owner_id,created_at);
@@ -2738,7 +2738,8 @@ def process_storage_delete_jobs(limit=25):
         with connect() as db:
             row=db.execute("SELECT id,payload_json,attempts FROM background_jobs WHERE kind='storage.delete' AND state='queued' AND available_at<=? ORDER BY created_at LIMIT 1",(now,)).fetchone()
             if not row:break
-            db.execute("UPDATE background_jobs SET state='running',locked_at=?,attempts=attempts+1,updated_at=? WHERE id=?",(now,now,row["id"]))
+            changed=db.execute("UPDATE background_jobs SET state='running',locked_at=?,attempts=attempts+1,updated_at=? WHERE id=? AND state='queued'",(now,now,row["id"])).rowcount
+            if not changed:continue
         try:
             payload=json.loads(row["payload_json"] or "{}");delete_stored_asset(payload.get("path",""),payload.get("sha256",""))
             with connect() as db:db.execute("UPDATE background_jobs SET state='done',locked_at=NULL,last_error='',updated_at=? WHERE id=?",(int(time.time()*1000),row["id"]))

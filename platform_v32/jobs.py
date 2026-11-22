@@ -71,7 +71,13 @@ class JobQueue:
             if row['status']=='queued':
                 changed=db.execute("UPDATE platform_jobs SET status='claimed',updated_at=? WHERE id=? AND status='queued'",(int(time.time()*1000),job_id)).rowcount
                 if not changed:return
-            now=int(time.time()*1000);db.execute("UPDATE platform_jobs SET status='running',started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status='claimed'",(now,now,job_id));row=db.execute("SELECT * FROM platform_jobs WHERE id=?",(job_id,)).fetchone()
+            # Only the worker that moved claimed -> running may run the handler.
+            # A Node claim goes straight to 'running' with an owner, and a second
+            # duplicate queue entry sees running too; both must not execute it.
+            now=int(time.time()*1000)
+            changed=db.execute("UPDATE platform_jobs SET status='running',started_at=COALESCE(started_at,?),updated_at=? WHERE id=? AND status='claimed'",(now,now,job_id)).rowcount
+            if not changed:return
+            row=db.execute("SELECT * FROM platform_jobs WHERE id=?",(job_id,)).fetchone()
         handler=self.handlers.get(row['kind'])
         if not handler:self._finish(job_id,'failed',{},f"No handler registered for {row['kind']}");return
         try:
