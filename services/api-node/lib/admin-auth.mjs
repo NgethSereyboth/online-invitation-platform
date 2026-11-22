@@ -1,8 +1,30 @@
 // Admin gate, copied from core/admin_ip_allowlist.py + _admin_gate():
 // an IP allowlist check runs before authentication, then require_role.
 import { currentUser } from './authz.mjs';
+import { writeAuditEvent } from './audit.mjs';
 
 const ADMIN_ROLES = new Set(['admin', 'super_admin']);
+const DENIAL_AUDIT_WINDOW_MS = 60_000;
+const denialAuditAt = new Map();
+
+/** audit_admin_ip_denied(): one event per IP per 60 s, never fatal. */
+async function auditDeniedIp(db, request, cipher) {
+  const now = Date.now();
+  if (now - (denialAuditAt.get(request.ip) ?? 0) < DENIAL_AUDIT_WINDOW_MS) return;
+  denialAuditAt.set(request.ip, now);
+  try {
+    await writeAuditEvent(db, {
+      cipher,
+      action: 'admin.ip_denied',
+      targetType: 'ip',
+      targetId: request.ip,
+      metadata: { path: request.url.split('?')[0], method: request.method },
+      ipAddress: request.ip,
+    });
+  } catch {
+    /* audit failures must not affect the request flow */
+  }
+}
 
 function expandIPv6(address) {
   // Returns eight 16-bit groups as BigInts, or null when unparseable.
@@ -93,8 +115,9 @@ export function checkAdminIpAllowed(clientIp, rawValue) {
  * the role is not admin-level; 401 "Authentication required" without a session.
  * Returns the user, or null after the caller has already sent the response.
  */
-export async function requireAdmin(db, request, reply, rawAllowlist) {
+export async function requireAdmin(db, request, reply, rawAllowlist, cipher = null) {
   if (!checkAdminIpAllowed(request.ip, rawAllowlist)) {
+    await auditDeniedIp(db, request, cipher);
     await reply.code(403).send({ error: 'Insufficient permissions' });
     return null;
   }

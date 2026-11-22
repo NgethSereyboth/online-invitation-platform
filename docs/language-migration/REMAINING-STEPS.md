@@ -19,6 +19,7 @@ Proof references are the harnesses that actually ran; see the per-step documents
 | S10 | Invitation reads: invitation, guests, RSVPs, versions, trash | `tools/invitation-read-parity.py` 27/27 |
 | S12c (part) | `GET /api/feature-flags` public projection | `tools/feature-flags-parity.py` 4/4 |
 | S12c (part) | Analytics, jobs and reports reads | `tools/analytics-read-parity.py` 20/20; `tools/reports-read-parity.py` 20/20 |
+| S12c (part) | Admin console reads: overview, users, users-v2, invitations, audit events (JSON + CSV), job status | `tools/admin-reads-parity.py` 42/42 |
 
 ## Still open
 
@@ -95,7 +96,7 @@ decision is needed, but the work has not been done.
 
 ### S12c — storage, backup, analytics, reports, plugins
 
-**Status:** analytics, jobs and reports reads landed; backup, object storage and the plugin host are open.
+**Status:** analytics, jobs, reports and the admin console reads landed; backup, object storage and the plugin host are open.
 
 Landed and proven (`tools/analytics-read-parity.py`, **20/20 identical on two consecutive runs**):
 `GET /api/invitations/:id/analytics`, `/analytics/live`, `/api/account/analytics/summary`,
@@ -132,6 +133,17 @@ answers 400 `{"error": "Invalid status"|"Invalid limit"}` like the analytics ing
 Second, `reports.created_at`/`resolved_at` were `INTEGER`, which cannot hold epoch milliseconds on
 PostgreSQL, so every insert failed with `integer out of range`; the declaration is now `BIGINT` and
 `features/reports.ensure_schema` widens a table created by an older build.
+
+The rest of the admin console reads are ported too: the overview counts, the legacy user array,
+`users-v2` (masking, exact/substring search, cursor paging, and an unmask action that writes the
+same chained audit event as Python), the invitation list, the audit explorer (filters, limit
+clamp, admin-only bit, date parsing and the CSV byte format) and one background-job status.
+`tools/admin-reads-parity.py` reports **42/42 identical on two consecutive runs** against one
+PostgreSQL serving both backends, including the allowlist denying and allowing loopback across
+restarts. Three validation paths that used to end with no response at all now answer 400 like the
+reports route: `users-v2`'s invalid `limit` and `cursor`, and the audit explorer's invalid `limit`
+and `date`. The denied-IP audit event is now written by both backends under the same 60-second
+per-IP throttle; before this port only Python left that trace.
 
 **Decider: plan rule for backups; engineering for the rest.** Still open in S12c: `backup.py` and the
 object-storage migration (pinned by P7 row 2, quoted above), and the plugin sandbox host —
