@@ -970,3 +970,43 @@ The Python probe drives the real `media_worker.run_job()`; `claim_background_job
 `complete_background_job()` and `fail_background_job()` accept the same optional `now_ms` the two
 existing processors take, so the schedule is compared without sleeping. Service `npm test` went
 91 → 101; `build.py all --check` stays green.
+
+## 2026-11-22 — `media-ingest` runs on Node; the rest of the platform kinds stay Python's
+
+The S12b lease covered `platform_jobs` from the start, but no platform handler ran on it, because
+the kinds that routes actually submit need Python libraries: `workspace-backup` and
+`workspace-restore` use `zipfile` (restore also normalizes the Python document model),
+`raster-render` edits with Pillow and writes to object storage, and `privacy-export` calls the
+Python account-export builders. Reading all five handlers in `platform_v32/service.py` found one
+more — `media-ingest` — whose whole body is a `progress(.5)` and an echoed asset id. Nothing
+submits it yet, but it is registered, so leaving it out would leave a documented kind unported for
+no reason.
+
+`bulk-personalize` was examined and deliberately left alone. Its result embeds
+`sha256(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")))`, and Python
+renders a float `1.0` as `1.0` while JavaScript renders the parsed number as `1`, so byte-identical
+output would need a number-preserving JSON parser — far more than the handler is worth, for a kind
+no route enqueues.
+
+`services/api-node/lib/platform-runner.mjs` ports `JobQueue._run()`'s lifecycle for the portable
+kind. It claims through `claimPlatformJob` with `kinds=['media-ingest']`, so a queued backup,
+restore, raster or privacy row is never taken from Python (a claimed but unregistered kind — which
+the kind filter should prevent — fails like Python's missing-handler path rather than idling under
+the lease). `progress` validates synchronously as Python's `float()` does and bounds the value to
+0..1; `cancelled` reads the row. Completion writes `completed`/`progress=1`/the compact
+`ensure_ascii=False` result capped at 1,000,000 chars, a failure requeues with `retry_count+1` and
+a 1,000-char error while `retry_count+1 <= max_retries`, and the exhausted or cancelled case writes
+`failed`/`cancelled` with `progress=0`, `result_json='{}'` and a 2,000-char error. A retry leaves
+`progress` and `started_at` untouched, and every terminal write requires this worker's ownership
+before clearing `lock_owner`/`lease_expires_at`. `bin/platform-runner.mjs` (`npm run
+platform:runner`, `--once`, SIGTERM-aware) is the standalone worker.
+
+`tools/platform-runner-parity.py` drives Python's real `JobQueue._run()` in a probe process
+(`EINVITE_WORKER_CONCURRENCY=0`) against the Node runner on one disposable PostgreSQL, and reports
+**9/9 on two consecutive runs**: the four payload shapes (asset id, empty payload, explicit null
+asset id, non-ASCII asset id) produce identical rows including the raw `result_json`; a live
+foreign lease and a cancelled row are untouched by both; Node recovers an expired lease that
+Python leaves `running` (Python has no platform-job sweep, so Node's lease is that path); and Node
+claims none of Python's kinds. Service `npm test` went 101 → 110; the worker's `--once` mode
+completed a seeded row with the lease released; `build.py all --check` and `tools/analyze.py` stay
+green.

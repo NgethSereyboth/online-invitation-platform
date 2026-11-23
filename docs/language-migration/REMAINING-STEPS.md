@@ -86,10 +86,12 @@ processes without Redis. Writes additionally need the snapshot comparison Rule 8
 ### S12b — jobs and workers
 
 **Status:** the lease/lock is implemented and proven for both job queues Node could run. The
-`webhook.deliver` runner, the local-disk half of `storage.delete` and `image.derivatives` are ported
-on top of it. The `social.*` card renderers, `maintenance.cleanup`, `admin.bulk_*` and the platform
-runners still run in Python (`media_worker.py`, `platform_v32/jobs.py`), and `storage.delete` stays
-with Python whenever object storage is configured.
+`webhook.deliver` runner, the local-disk half of `storage.delete`, `image.derivatives` and the one
+portable `platform_jobs` kind (`media-ingest`) are ported on top of it. The `social.*` card
+renderers, `maintenance.cleanup` and `admin.bulk_*` still run in Python (`media_worker.py`), as do
+the platform kinds that need `zipfile`, Pillow or the Python document model (`workspace-backup`,
+`workspace-restore`, `raster-render`, `privacy-export`, `bulk-personalize`), and `storage.delete`
+stays with Python whenever object storage is configured.
 
 **Controlling text** (plan §5 S12b, verbatim):
 
@@ -141,8 +143,25 @@ because the source bytes come from boto3. `sharp@0.35.5` is the owner-approved D
 (2026-11-22) for this handler only; `social.warm`/`social.guest_warm` stay Python's until S13, whose
 benchmark and ClamAV gate are unchanged.
 
-The standalone worker (`npm run webhook:runner`, `--once`) drains `webhook.deliver`, local
-`storage.delete` and `image.derivatives` jobs.
+**Platform runner:** `services/api-node/lib/platform-runner.mjs` ports `platform_v32/jobs.py`'s
+`JobQueue._run()` lifecycle for the kinds whose handler needs no Python-only library — today only
+`media-ingest`, whose handler is a provider hook (mark progress, echo the asset id). It claims
+through `claimPlatformJob` with only its own kinds, so a queued backup, restore, raster or privacy
+row is never touched, and it runs the handler with Python's `progress`/`cancelled` contract. The
+finish matches Python exactly: `completed` with `progress=1` and the compact `ensure_ascii=False`
+result (1,000,000-char cap), `queued` with `retry_count+1` and a 1,000-char error while
+`retry_count+1 <= max_retries`, otherwise `failed` — or `cancelled` when a cancel arrived — with
+`progress=0` and a 2,000-char error. A retry leaves `progress` and `started_at` untouched, and
+every terminal write is owner-checked and releases the lease. `bin/platform-runner.mjs` is the
+standalone worker (`npm run platform:runner`, `--once` for one pass). The remaining registered
+kinds stay Python's: backup and restore need `zipfile` plus the Python document model,
+`raster-render` needs Pillow and an object-storage write, `privacy-export` needs the Python export
+builders, and `bulk-personalize` fingerprints rows with Python's JSON rendition, which cannot
+distinguish `1` from `1.0` after a JavaScript parse.
+
+The standalone workers (`npm run webhook:runner`, `npm run platform:runner`, both `--once`) drain
+`webhook.deliver`, local `storage.delete` and `image.derivatives` jobs, and platform `media-ingest`
+jobs respectively.
 
 **Proof:** `tools/job-lease-harness.py` reports **49/49 checks on two consecutive runs** against one
 fresh disposable PostgreSQL shared by the real Python claims and the Node module. Two workers of
@@ -156,8 +175,12 @@ the webhook retry limit, duplicate queued jobs, live lease) and eight media case
 from one 900×600 PNG, non-image body, GIF body, missing upload, missing payload path, exhaustion to
 `failed`, duplicate queued jobs, live lease). It compares state, attempts, `available_at` backoff,
 normalized error class, endpoint counters, upload existence, surviving derivative-cache files — with
-each derivative's dimensions and format — and every received body/signature. Service `npm test`
-**101 passed**;
+each derivative's dimensions and format — and every received body/signature.
+`tools/platform-runner-parity.py` reports **9/9 on two consecutive runs** against one disposable
+PostgreSQL: the four payload shapes (asset id, empty payload, explicit null asset id, non-ASCII
+asset id) produce identical rows, a live lease and a cancelled row are untouched by both backends,
+and the two intentional differences hold — Node recovers an expired lease that Python leaves
+`running`, and Node claims none of Python's kinds. Service `npm test` **110 passed**;
 `tests/v14_lifecycle_signing_test.py` and `tests/lt_7_2_webhook_delivery_test.py` pass;
 `build.py all --check` green; `tools/pg-schema-parity.py` reports **0 missing columns**.
 

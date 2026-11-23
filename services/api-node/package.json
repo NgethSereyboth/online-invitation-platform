@@ -8,6 +8,7 @@
   "scripts": {
     "start": "node server.mjs",
     "webhook:runner": "node bin/webhook-runner.mjs",
+    "platform:runner": "node bin/platform-runner.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "engines": {
