@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Design - Rea Studio</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2300c4cc'/%3E%3Cstop offset='1' stop-color='%238b3dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M22 46V18h12c6 0 10 3.4 10 8.8 0 4.6-2.8 7.6-7 8.4L46 46h-7.4l-7.4-10.2H28V46zm6-16h5.6c2.8 0 4.4-1.2 4.4-3.4-0-2.2-1.6-3.5-4.4-3.5H28z' fill='white'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/editor.css" />
+  </head>
+  <body class="editor-body">
+    <header class="topbar">
+      <div class="tb-left">
+        <a class="tb-logo" href="index.html" title="Back to home" aria-label="Back to home">R</a>
+        <button class="tb-btn" id="fileMenuBtn" type="button">
+          File
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+        </button>
+        <div class="tb-title" id="designTitle" spellcheck="false"></div>
+        <span class="tb-sep"></span>
+        <button class="tb-icon" id="undoBtn" type="button" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m8 4.6-4 4 4 4" /><path d="M4 8.6h10.6a5.2 5.2 0 0 1 0 10.4H9" />
+          </svg>
+        </button>
+        <button class="tb-icon" id="redoBtn" type="button" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m16 4.6 4 4-4 4" /><path d="M20 8.6H9.4a5.2 5.2 0 0 0 0 10.4H15" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="tb-right">
+        <span class="save-state" id="saveState">Saved</span>
+        <button class="pill pill-ghost" id="previewBtn" type="button">Preview</button>
+        <button class="pill pill-ghost" id="shareBtn" type="button">Share</button>
+        <button class="pill pill-solid" id="downloadBtn" type="button">
+          Download
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m7 10 5 5 5-5" /></svg>
+        </button>
+        <span class="tb-avatar">R</span>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <nav class="rail" id="rail" aria-label="Design tools"></nav>
+      <aside class="panel" id="panelHost" aria-label="Tool panel"></aside>
+
+      <main class="canvas-area">
+        <div class="board" id="board" tabindex="-1">
+          <div class="stage" id="stage">
+            <div class="page-surface" id="pageSurface">
+              <div class="page-elements" id="pageElements"></div>
+            </div>
+          </div>
+          <div class="overlay" id="overlay">
+            <div class="guides" id="guides"></div>
+            <div class="marquee" id="marquee" hidden></div>
+            <div class="selection" id="selection" hidden></div>
+          </div>
+        </div>
+
+        <div class="hint-chip">
+          <span>Space + drag to pan</span>
+          <span class="hint-dot"></span>
+          <span>Ctrl + scroll to zoom</span>
+        </div>
+
+        <div class="pages-strip" id="pagesStrip" aria-label="Pages"></div>
+
+        <div class="zoom-hud">
+          <button class="zoom-btn" id="zoomOutBtn" type="button" title="Zoom out" aria-label="Zoom out">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+          </button>
+          <input class="zoom-slider" id="zoomSlider" type="range" min="0" max="1000" value="500" aria-label="Zoom level" />
+          <button class="zoom-btn" id="zoomInBtn" type="button" title="Zoom in" aria-label="Zoom in">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+          <span class="zoom-value" id="zoomValue">100%</span>
+          <span class="zoom-sep"></span>
+          <button class="zoom-fit" id="zoomFitBtn" type="button">Fit</button>
+        </div>
+
+        <div class="boot-screen" id="bootScreen">
+          <span class="boot-mark">R</span>
+          <p>Loading studio</p>
+        </div>
+      </main>
+
+      <aside class="inspector" id="inspector" aria-label="Properties"></aside>
+    </div>
+
+    <div class="preview-layer" id="previewLayer"></div>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <script type="module" src="js/editor/app.js"></script>
+  </body>
+</html>

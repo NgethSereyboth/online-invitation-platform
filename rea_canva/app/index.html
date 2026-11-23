@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rea Studio</title>
+    <meta name="description" content="Rea Studio - a browser design board for posts, decks, posters and print." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2300c4cc'/%3E%3Cstop offset='1' stop-color='%238b3dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M22 46V18h12c6 0 10 3.4 10 8.8 0 4.6-2.8 7.6-7 8.4L46 46h-7.4l-7.4-10.2H28V46zm6-16h5.6c2.8 0 4.4-1.2 4.4-3.4s-1.6-3.5-4.4-3.5H28z' fill='white'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body class="dashboard-body">
+    <div class="dash">
+      <aside class="dash-side">
+        <a class="logo-lockup" href="index.html" aria-label="Rea Studio home">
+          <span class="logo-mark">R</span>
+          <span class="logo-text">
+            <span class="logo-word">Rea</span>
+            <span class="logo-tag">Studio</span>
+          </span>
+        </a>
+
+        <button class="create-btn" id="createBtn" type="button">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Create a design</span>
+        </button>
+
+        <nav class="dash-nav" id="dashNav" aria-label="Workspace">
+          <button class="nav-item is-active" type="button" data-view="home">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3.6 10.4 12 3.8l8.4 6.6" /><path d="M5.5 9.4V20h13V9.4" /><path d="M9.6 20v-5.6h4.8V20" />
+            </svg>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" type="button" data-view="designs">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h6.4v6.4H4z" /><path d="M13.6 4H20v6.4h-6.4z" /><path d="M4 13.6h6.4V20H4z" /><path d="M13.6 13.6H20V20h-6.4z" />
+            </svg>
+            <span>Your designs</span>
+          </button>
+          <button class="nav-item" type="button" data-view="templates">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 4h16v16H4z" /><path d="M4 9.4h16" /><path d="M9.4 9.4V20" />
+            </svg>
+            <span>Templates</span>
+          </button>
+        </nav>
+
+        <div class="side-foot">
+          <div class="plan-card">
+            <span class="plan-kicker">Local studio</span>
+            <p>Designs are saved in this browser. No account, no upload server.</p>
+          </div>
+          <div class="account-row">
+            <span class="avatar avatar-soft">R</span>
+            <span class="account-copy">
+              <strong>Your workspace</strong>
+              <span>Rea Studio</span>
+            </span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="dash-main">
+        <header class="dash-top">
+          <label class="search-field">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.6" /><path d="m16 16 4.2 4.2" />
+            </svg>
+            <input id="searchInput" type="search" placeholder="Search your designs and templates" autocomplete="off" />
+          </label>
+          <div class="top-actions">
+            <button class="ghost-pill" id="helpBtn" type="button">Shortcuts</button>
+            <span class="avatar">R</span>
+          </div>
+        </header>
+
+        <div class="dash-scroll">
+          <section class="hero">
+            <div class="hero-copy">
+              <span class="hero-kicker">Rea Studio</span>
+              <h1 id="heroTitle">What will you design today?</h1>
+              <p class="hero-sub">Posts, decks, posters and print - a full design board that stays in this browser.</p>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+              <span class="hero-blob blob-a"></span>
+              <span class="hero-blob blob-b"></span>
+              <span class="hero-card">
+                <span class="hero-card-line"></span>
+                <span class="hero-card-line short"></span>
+                <span class="hero-card-chip"></span>
+              </span>
+            </div>
+          </section>
+
+          <section class="quick-section" aria-label="Start a new design">
+            <div class="quick-row" id="quickRow"></div>
+          </section>
+
+          <section class="section" id="recentSection">
+            <div class="section-head">
+              <h2>Recent designs</h2>
+              <button class="text-btn" type="button" data-view="designs">See all</button>
+            </div>
+            <div class="design-grid" id="recentGrid"></div>
+          </section>
+
+          <section class="section" id="templatesSection">
+            <div class="section-head">
+              <h2>Templates</h2>
+              <span class="muted">Start from a composition, then make it yours</span>
+            </div>
+            <div class="template-grid" id="templateGrid"></div>
+          </section>
+
+          <footer class="dash-foot">
+            <span>Rea Studio - a separate Canva-style design workspace, independent of eInvite.</span>
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <script type="module" src="js/dashboard.js"></script>
+  </body>
+</html>
