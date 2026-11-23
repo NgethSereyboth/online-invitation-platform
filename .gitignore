@@ -243,3 +243,9 @@ bugs/round-10/*.err
 # history until the owner runs the filter-repo scrub; keep it out of the index
 # and every future commit.
 /tools/evidence/rea-canva-bundle.json
+
+# Rea Studio research dumps: hundreds of MB of reverse-engineering captures
+# (bundle records, screenshots, probe output). They informed the board's
+# interaction model but are not inputs to the app. The standalone prototype was
+# folded into src/js/board; any copy left on disk stays out of the repository.
+/rea_canva/

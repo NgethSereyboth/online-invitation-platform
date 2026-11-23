@@ -6341,4 +6341,3034 @@ boot();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
+})();;
+
+
+
+
+
+
+
+
+
+(() => {
+  'use strict';
+
+  const RB = (window.ReaBoardCore = window.ReaBoardCore || {});
+
+
+
+
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  const uid = (prefix = 'rb') =>
+    `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const deepClone = (value) => {
+    if (typeof structuredClone === 'function') return structuredClone(value);
+    return JSON.parse(JSON.stringify(value));
+  };
+
+  const escapeHtml = (value) =>
+    String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[ch]);
+
+  function el(tag, props = {}, children = []) {
+    const node = document.createElement(tag);
+    for (const [key, value] of Object.entries(props)) {
+      if (value === undefined || value === null || value === false) continue;
+      if (key === 'class') node.className = value;
+      else if (key === 'text') node.textContent = value;
+      else if (key === 'style') Object.assign(node.style, value);
+      else if (key === 'dataset') Object.assign(node.dataset, value);
+      else if (key === 'on') {
+        for (const [event, handler] of Object.entries(value)) node.addEventListener(event, handler);
+      } else if (key in node && key !== 'list' && key !== 'type') {
+        node[key] = value;
+      } else {
+        node.setAttribute(key, value === true ? '' : String(value));
+      }
+    }
+    for (const child of [].concat(children)) {
+      if (child !== null && child !== undefined) node.append(child);
+    }
+    return node;
+  }
+
+  const svgIcon = (paths, size = 20) => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '1.7');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    for (const d of [].concat(paths)) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      svg.append(path);
+    }
+    return svg;
+  };
+
+  const ICONS = {
+    close: ['m6 6 12 12', 'm18 6-12 12'],
+    plus: ['M12 5v14', 'M5 12h14'],
+    minus: ['M5 12h14'],
+    undo: ['M8.6 7.4 4 12l4.6 4.6', 'M4 12h10.2a5.4 5.4 0 0 1 0 10.8H9.6'],
+    redo: ['m15.4 7.4 4.6 4.6-4.6 4.6', 'M20 12H9.8a5.4 5.4 0 0 0 0 10.8h4.6'],
+    text: ['M5 5.4h14', 'M12 5.4V19', 'M8.6 19h6.8'],
+    shape: ['M3.6 3.6h8v8h-8z', 'M17.6 9.4a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4Z'],
+    image: ['M4 4.6h16v14.8H4z', 'M4 15.4 9 10.6l4 3.8 3-2.8 4 3.8', 'M15.4 8.4h.01'],
+    layers: ['m12 3.4 8.4 4.5-8.4 4.5L3.6 7.9z', 'm4.4 12.4 7.6 4.1 7.6-4.1', 'm4.4 16.6 7.6 4.1 7.6-4.1'],
+    page: ['M6.4 3.6h7.2l4 4v12.8H6.4z', 'M13.4 3.6v4.2h4.2'],
+    download: ['M12 4v11.4', 'm7 10.4 5 5 5-5', 'M4.6 19.4h14.8'],
+    play: ['M8 5.4 18.6 12 8 18.6z'],
+    fit: ['M4 8.4V4.4h4', 'M16 4.4h4v4', 'M20 15.6v4h-4', 'M8 19.6H4v-4'],
+    eye: ['M2.8 12s3.4-6.2 9.2-6.2S21.2 12 21.2 12s-3.4 6.2-9.2 6.2S2.8 12 2.8 12Z', 'M12 9.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 0 0 0-5.2Z'],
+    eyeOff: ['M4 4.6 20 19.4', 'M9.8 6.2A9.8 9.8 0 0 1 12 5.8c5.8 0 9.2 6.2 9.2 6.2a17 17 0 0 1-3.2 3.8', 'M6.2 8a17 17 0 0 0-3.4 4s3.4 6.2 9.2 6.2a9.6 9.6 0 0 0 3.4-.6'],
+    lock: ['M6.4 10.4h11.2v9.2H6.4z', 'M8.8 10.4V7.6a3.2 3.2 0 0 1 6.4 0v2.8'],
+    unlock: ['M6.4 10.4h11.2v9.2H6.4z', 'M8.8 10.4V7.6a3.2 3.2 0 0 1 6.1-1.2'],
+    trash: ['M4.6 6.8h14.8', 'M9.4 6.8V4.6h5.2v2.2', 'M6.6 6.8 7.4 20h9.2l.8-13.2'],
+    copy: ['M8.4 8.4h11.2v11.2H8.4z', 'M15.6 5.4H4.4v11.2h4'],
+    alignLeft: ['M4.4 5.4h15.2', 'M4.4 10.4h9.4', 'M4.4 15.4h15.2', 'M4.4 20h9.4'],
+    alignCenter: ['M4.4 5.4h15.2', 'M7.3 10.4h9.4', 'M4.4 15.4h15.2', 'M7.3 20h9.4'],
+    alignRight: ['M4.4 5.4h15.2', 'M10.2 10.4h9.4', 'M4.4 15.4h15.2', 'M10.2 20h9.4'],
+    toFront: ['M4.6 4.6h14.8', 'M12 20.4V8', 'm7.4 12.6 4.6-4.6 4.6 4.6'],
+    forward: ['M12 20.4V5.6', 'm6.8 10.8 5.2-5.2 5.2 5.2'],
+    backward: ['M12 3.6v14.8', 'm6.8 13.2 5.2 5.2 5.2-5.2'],
+    toBack: ['M4.6 19.4h14.8', 'M12 3.6V16', 'm7.4 11.4 4.6 4.6 4.6-4.6'],
+    more: ['M6 12h.01', 'M12 12h.01', 'M18 12h.01'],
+    check: ['m4.5 12.6 4.8 4.8 10.2-10.2'],
+    arrowLeft: ['M19 12H5', 'm11 6-6 6 6 6'],
+    bold: ['M7 4.6h6.4a4 4 0 0 1 0 8H7z', 'M7 12.6h7.2a4.2 4.2 0 0 1 0 8.4H7z'],
+    italic: ['M15.4 4.6h-4.8', 'M13.4 4.6 10.6 19.4', 'M13.4 19.4H8.6'],
+    underline: ['M7 4.6v6.6a5 5 0 0 0 10 0V4.6', 'M5.4 20.4h13.2'],
+  };
+
+  let toastHost = null;
+
+  function toast(message, kind = 'default') {
+    if (!toastHost || !document.documentElement.contains(toastHost)) {
+      toastHost = $('#toasts');
+      if (!toastHost) {
+        toastHost = el('div', { id: 'toasts', class: 'toasts' });
+        document.body.append(toastHost);
+      }
+    }
+    const node = el('div', { class: `toast toast-${kind}`, role: 'status' }, message);
+    toastHost.append(node);
+    requestAnimationFrame(() => node.classList.add('is-in'));
+    window.setTimeout(() => {
+      node.classList.remove('is-in');
+      window.setTimeout(() => node.remove(), 220);
+    }, 2400);
+  }
+
+  async function downloadBlob(blob, filename) {
+
+
+
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error || new Error('read-failed'));
+      reader.readAsDataURL(blob);
+    });
+    if (!dataUrl) throw new Error('empty-blob');
+    const link = el('a', { href: dataUrl, download: filename });
+    document.body.append(link);
+    link.click();
+    link.remove();
+  }
+
+
+
+
+
+  const FALLBACK_FONTS = [
+    { id: 'noto-serif', label: 'Noto Serif', stack: "Georgia, 'Times New Roman', serif" },
+    { id: 'noto-sans', label: 'Noto Sans', stack: 'Arial, system-ui, sans-serif' },
+    { id: 'serif-georgia', label: 'Classic Serif', stack: 'Georgia, serif' },
+    { id: 'sans-arial', label: 'Modern Sans', stack: 'Arial, sans-serif' },
+  ];
+
+  function fontList() {
+    const registry = window.EInviteFontRegistry;
+    const fonts = registry && registry.data && registry.data.fonts;
+    if (fonts) {
+      const list = Object.entries(fonts)
+        .filter(([, meta]) => meta && meta.label)
+        .map(([id, meta]) => ({ id, label: meta.label, stack: meta.stack }));
+      if (list.length) return list;
+    }
+    return FALLBACK_FONTS;
+  }
+
+  function fontStack(id) {
+    const found = fontList().find((font) => font.id === id);
+    return (found || FALLBACK_FONTS[0]).stack;
+  }
+
+  const SWATCHES = [
+    '#ffffff', '#f6f3ee', '#fef3e2', '#ffe8d6', '#ffd166', '#ff8a5b',
+    '#ef476f', '#c9184a', '#8b3dff', '#5e5cff', '#00c4cc', '#2ec4b6',
+    '#06d6a0', '#118ab2', '#141821', '#3d4451', '#8b93a1', '#d9dee6',
+  ];
+
+  const GRADIENTS = [
+    { id: 'aurora', name: 'Aurora', from: '#00c4cc', to: '#7d2ae8', angle: 135 },
+    { id: 'sunset', name: 'Sunset', from: '#ffd166', to: '#ef476f', angle: 120 },
+    { id: 'ember', name: 'Ember', from: '#ff8a5b', to: '#c9184a', angle: 100 },
+    { id: 'midnight', name: 'Midnight', from: '#1b2140', to: '#0b0b12', angle: 160 },
+    { id: 'mint', name: 'Mint', from: '#d9f7ef', to: '#2ec4b6', angle: 130 },
+    { id: 'blush', name: 'Blush', from: '#ffe8d6', to: '#ef476f', angle: 125 },
+  ];
+
+  function isGradient(fill) {
+    return Boolean(fill && typeof fill === 'object' && fill.from && fill.to);
+  }
+
+  function fillCss(fill) {
+    if (!fill) return 'transparent';
+    if (typeof fill === 'string') return fill;
+    return `linear-gradient(${fill.angle ?? 135}deg, ${fill.from}, ${fill.to})`;
+  }
+
+  function hexColor(value, fallback = '#ffffff') {
+    return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value) : fallback;
+  }
+
+
+
+
+
+  const BASE = {
+    x: 0, y: 0, w: 240, h: 240,
+    rotation: 0, opacity: 1, locked: false, visible: true,
+  };
+
+  const TEXT_DEFAULTS = {
+    text: 'Add your text',
+    font: 'noto-serif',
+    size: 40,
+    weight: 400,
+    italic: false,
+    underline: false,
+    align: 'left',
+    color: '#141821',
+    lineHeight: 1.25,
+    letterSpacing: 0,
+  };
+
+  function createElement(type, overrides = {}) {
+    let kind = type;
+    let specific;
+    if (type === 'text') {
+      specific = { ...TEXT_DEFAULTS, w: 420, h: 170 };
+    } else if (type === 'image') {
+      specific = { src: '', fit: 'cover', radius: 0, w: 360, h: 260, alt: '' };
+    } else {
+      kind = 'shape';
+      if (type === 'line') {
+        specific = { shape: 'line', fill: '#141821', w: 300, h: 4 };
+      } else if (type === 'circle') {
+        specific = { shape: 'circle', fill: '#7d2ae8', w: 200, h: 200 };
+      } else {
+        specific = { shape: 'rectangle', fill: '#7d2ae8', radius: 0, w: 300, h: 200 };
+      }
+    }
+    return {
+      ...BASE,
+      id: uid(kind),
+      type: kind,
+      name: '',
+      ...specific,
+      ...overrides,
+    };
+  }
+
+  function elementName(element) {
+    if (element.type === 'text') {
+      const line = String(element.text || '').split('\n')[0].trim();
+      return line ? line.slice(0, 34) : 'Text';
+    }
+    if (element.type === 'image') return element.alt || 'Image';
+    return element.shape === 'circle' ? 'Circle' : element.shape === 'line' ? 'Line' : 'Rectangle';
+  }
+
+
+
+
+
+  function createElementNode(element) {
+    const node = document.createElement('div');
+    node.className = `rb-el rb-el-${element.type}`;
+
+
+    node.dataset.reaId = element.id;
+    node.dataset.type = element.type;
+
+    if (element.type === 'text') {
+      node.append(el('div', { class: 'rb-text-body' }));
+    } else if (element.type === 'image') {
+      node.append(el('img', { class: 'rb-image', alt: '', draggable: false }));
+    } else {
+      node.append(el('div', { class: 'rb-shape-body' }));
+    }
+    styleElementNode(node, element);
+    return node;
+  }
+
+  function styleElementNode(node, element) {
+    node.style.left = `${element.x}px`;
+    node.style.top = `${element.y}px`;
+    node.style.width = `${Math.max(0, element.w)}px`;
+    node.style.height = `${Math.max(0, element.h)}px`;
+    node.style.transform = `rotate(${element.rotation || 0}deg)`;
+    node.style.opacity = String(element.opacity ?? 1);
+    node.hidden = element.visible === false;
+    node.classList.toggle('is-locked', Boolean(element.locked));
+
+    if (element.type === 'text') {
+      const body = node.firstElementChild;
+      body.textContent = element.text ?? '';
+      body.style.fontFamily = fontStack(element.font);
+      body.style.fontSize = `${element.size || 40}px`;
+      body.style.fontWeight = String(element.weight || 400);
+      body.style.fontStyle = element.italic ? 'italic' : 'normal';
+      body.style.textDecoration = element.underline ? 'underline' : 'none';
+      body.style.textAlign = element.align || 'left';
+      body.style.color = element.color || '#141821';
+      body.style.lineHeight = String(element.lineHeight || 1.25);
+      body.style.letterSpacing = `${element.letterSpacing || 0}px`;
+      body.style.justifyContent = 'flex-start';
+    } else if (element.type === 'image') {
+      const image = node.firstElementChild;
+      if (image.getAttribute('src') !== (element.src || '')) image.src = element.src || '';
+      image.style.objectFit = element.fit === 'contain' ? 'contain' : 'cover';
+      image.style.borderRadius = `${element.radius || 0}px`;
+      node.classList.toggle('is-empty', !element.src);
+    } else {
+      const shape = node.firstElementChild;
+      shape.style.background = fillCss(element.fill);
+      shape.style.borderRadius = element.shape === 'circle'
+        ? '50%'
+        : `${element.radius || 0}px`;
+    }
+  }
+
+
+
+
+
+  const imageCache = new Map();
+
+  function loadImage(src) {
+    if (!src) return Promise.resolve(null);
+    if (imageCache.has(src)) return imageCache.get(src);
+    const promise = new Promise((resolve) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = src;
+    });
+    imageCache.set(src, promise);
+    return promise;
+  }
+
+  function paint(ctx, fill, w, h) {
+    if (isGradient(fill)) {
+      const angle = ((fill.angle ?? 135) * Math.PI) / 180;
+      const length = Math.abs(w * Math.sin(angle)) + Math.abs(h * Math.cos(angle));
+      const dx = (Math.sin(angle) * length) / 2;
+      const dy = (-Math.cos(angle) * length) / 2;
+      const gradient = ctx.createLinearGradient(w / 2 - dx, h / 2 - dy, w / 2 + dx, h / 2 + dy);
+      gradient.addColorStop(0, fill.from);
+      gradient.addColorStop(1, fill.to);
+      return gradient;
+    }
+    return fill || 'transparent';
+  }
+
+  function roundedRect(ctx, x, y, w, h, radius) {
+    const r = Math.max(0, Math.min(radius || 0, Math.min(w, h) / 2));
+    ctx.beginPath();
+    if (r <= 0.01) {
+      ctx.rect(x, y, w, h);
+      return;
+    }
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function wrapLines(ctx, text, maxWidth) {
+    const lines = [];
+    for (const paragraph of String(text ?? '').split('\n')) {
+      if (!paragraph) {
+        lines.push('');
+        continue;
+      }
+      let line = '';
+      for (const word of paragraph.split(' ')) {
+        const candidate = line ? `${line} ${word}` : word;
+        if (line && ctx.measureText(candidate).width > maxWidth) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = candidate;
+        }
+      }
+      lines.push(line);
+    }
+    return lines;
+  }
+
+  function drawText(ctx, element, w) {
+    const size = element.size || 40;
+    const lineHeight = size * (element.lineHeight || 1.25);
+    const weight = element.weight || 400;
+    ctx.font = `${element.italic ? 'italic ' : ''}${weight} ${size}px ${fontStack(element.font)}`;
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = element.color || '#141821';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = `${element.letterSpacing || 0}px`;
+    wrapLines(ctx, element.text, w).forEach((line, index) => {
+      const y = index * lineHeight;
+      const width = ctx.measureText(line).width;
+      const x = element.align === 'center' ? (w - width) / 2 : element.align === 'right' ? w - width : 0;
+      ctx.fillText(line, x, y);
+      if (element.underline) ctx.fillRect(x, y + size * 1.02, width, Math.max(1, size * 0.055));
+    });
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  }
+
+  function drawImage(ctx, image, element, w, h) {
+    const iw = image.naturalWidth || image.width;
+    const ih = image.naturalHeight || image.height;
+    if (!iw || !ih) return;
+    const fit = element.fit === 'contain' ? Math.min(w / iw, h / ih) : Math.max(w / iw, h / ih);
+    const dw = iw * fit;
+    const dh = ih * fit;
+    ctx.save();
+    roundedRect(ctx, 0, 0, w, h, element.radius || 0);
+    ctx.clip();
+    ctx.drawImage(image, (w - dw) / 2, (h - dh) / 2, dw, dh);
+    ctx.restore();
+  }
+
+  function drawElement(ctx, element, image) {
+    const w = Math.max(0, element.w);
+    const h = Math.max(0, element.h);
+    if (!w || !h) return;
+    ctx.save();
+    ctx.globalAlpha = element.opacity ?? 1;
+    ctx.translate(element.x + w / 2, element.y + h / 2);
+    ctx.rotate(((element.rotation || 0) * Math.PI) / 180);
+    ctx.translate(-w / 2, -h / 2);
+
+    if (element.type === 'text') {
+      drawText(ctx, element, w);
+    } else if (element.type === 'image') {
+      if (image) drawImage(ctx, image, element, w, h);
+    } else if (element.shape === 'circle') {
+      ctx.beginPath();
+      ctx.ellipse(w / 2, h / 2, Math.max(w / 2, 0.01), Math.max(h / 2, 0.01), 0, 0, Math.PI * 2);
+      ctx.fillStyle = paint(ctx, element.fill, w, h);
+      ctx.fill();
+    } else {
+      roundedRect(ctx, 0, 0, w, h, element.radius || 0);
+      ctx.fillStyle = paint(ctx, element.fill, w, h);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  async function renderPageToCanvas(doc, page, options = {}) {
+    const scale = options.scale || 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(doc.w * scale));
+    canvas.height = Math.max(1, Math.round(doc.h * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.fillStyle = page.background || '#ffffff';
+    ctx.fillRect(0, 0, doc.w, doc.h);
+
+    const images = await Promise.all(
+      page.elements.map((element) =>
+        element.type === 'image' && element.visible ? loadImage(element.src) : Promise.resolve(null),
+      ),
+    );
+    page.elements.forEach((element, index) => {
+      if (element.visible === false) return;
+      drawElement(ctx, element, images[index]);
+    });
+    return canvas;
+  }
+
+  function canvasToBlob(canvas, type = 'image/png', quality) {
+    return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+  }
+
+  async function paintThumbnail(canvas, doc, page, maxW = 58, maxH = 74) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const fit = Math.min(maxW / doc.w, maxH / doc.h);
+    const cssW = Math.max(1, Math.round(doc.w * fit));
+    const cssH = Math.max(1, Math.round(doc.h * fit));
+    const source = await renderPageToCanvas(doc, page, { scale: (cssW * dpr) / doc.w });
+    canvas.width = source.width;
+    canvas.height = source.height;
+    canvas.style.width = `${cssW}px`;
+    canvas.style.height = `${cssH}px`;
+    canvas.getContext('2d').drawImage(source, 0, 0);
+    return canvas;
+  }
+
+  Object.assign(RB, {
+    $, $$, uid, clamp, deepClone, escapeHtml, el, svgIcon, ICONS,
+    toast, downloadBlob,
+    fontList, fontStack, SWATCHES, GRADIENTS, isGradient, fillCss, hexColor,
+    createElement, elementName,
+    createElementNode, styleElementNode,
+    loadImage, renderPageToCanvas, canvasToBlob, paintThumbnail,
+  });
+})();;
+
+
+
+
+
+
+(() => {
+  'use strict';
+
+  const { createFrameBatcher } = (() => {
+
+    function createFrameBatcher(merge, apply) {
+      let pending = null;
+      let frame = 0;
+      const run = () => {
+        frame = 0;
+        const value = pending;
+        pending = null;
+        if (value !== null) apply(value);
+      };
+      return {
+        accumulate(value) {
+          pending = pending === null ? value : merge(pending, value);
+          if (!frame) frame = requestAnimationFrame(run);
+        },
+        flush() {
+          if (!frame) return;
+          cancelAnimationFrame(frame);
+          run();
+        },
+      };
+    }
+    return { createFrameBatcher };
+  })();
+
+  const MIN_ZOOM = 0.05;
+  const MAX_ZOOM = 8;
+  const MIN_SIZE = 12;
+  const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+  const DRAG_THRESHOLD = 3;
+
+  const rotatePoint = (point, radians) => ({
+    x: point.x * Math.cos(radians) - point.y * Math.sin(radians),
+    y: point.x * Math.sin(radians) + point.y * Math.cos(radians),
+  });
+
+  const unionBox = (elements) => {
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+    for (const element of elements) {
+      left = Math.min(left, element.x);
+      top = Math.min(top, element.y);
+      right = Math.max(right, element.x + element.w);
+      bottom = Math.max(bottom, element.y + element.h);
+    }
+    if (!Number.isFinite(left)) return { x: 0, y: 0, w: 0, h: 0 };
+    return { x: left, y: top, w: right - left, h: bottom - top };
+  };
+
+  class Board {
+    constructor(root, editor) {
+      const Core = window.ReaBoardCore;
+      this.Core = Core;
+      this.root = root;
+      this.editor = editor;
+      this.viewport = root.querySelector('[data-rea-viewport]');
+      this.stage = root.querySelector('[data-rea-stage]');
+      this.surface = root.querySelector('[data-rea-surface]');
+      this.layer = root.querySelector('[data-rea-elements]');
+      this.guidesHost = root.querySelector('[data-rea-guides]');
+      this.marqueeNode = root.querySelector('[data-rea-marquee]');
+      this.selection = root.querySelector('[data-rea-selection]');
+
+      this.zoom = 1;
+      this.pan = { x: 0, y: 0 };
+      this.autoFit = true;
+      this.nodes = new Map();
+      this.gesture = null;
+      this.editingId = null;
+      this.spaceDown = false;
+      this.onView = null;
+
+      this.zoomBatcher = createFrameBatcher(
+        (a, b) => ({ delta: a.delta + b.delta, x: b.x, y: b.y }),
+        ({ delta, x, y }) => {
+          const factor = 2 ** (-Math.max(-140, Math.min(140, delta)) / 200);
+          this.zoomAt(x, y, this.zoom * factor);
+        },
+      );
+      this.panBatcher = createFrameBatcher(
+        (a, b) => ({ dx: a.dx + b.dx, dy: a.dy + b.dy }),
+        ({ dx, dy }) => this.panBy(-dx, -dy),
+      );
+      this.gestureBatcher = createFrameBatcher(
+        (a, b) => b,
+        (point) => this.applyGesture(point),
+      );
+
+      this.buildHandles();
+      this.bind();
+    }
+
+
+
+
+
+    buildHandles() {
+      const frag = document.createDocumentFragment();
+      for (const handle of HANDLES) {
+        const node = document.createElement('div');
+        node.className = `rb-handle rb-handle-${handle}`;
+        node.dataset.handle = handle;
+        node.setAttribute('aria-hidden', 'true');
+        frag.append(node);
+      }
+      const rotate = document.createElement('div');
+      rotate.className = 'rb-handle rb-handle-rotate';
+      rotate.dataset.handle = 'rotate';
+      rotate.setAttribute('aria-hidden', 'true');
+      rotate.append(document.createElement('span'));
+      frag.append(rotate);
+      this.selection.append(frag);
+    }
+
+    bind() {
+      this.viewport.addEventListener('wheel', (event) => this.onWheel(event), { passive: false });
+      this.viewport.addEventListener('pointerdown', (event) => this.onPointerDown(event));
+      this.viewport.addEventListener('pointermove', (event) => this.onPointerMove(event));
+      this.viewport.addEventListener('pointerup', (event) => this.onPointerUp(event));
+      this.viewport.addEventListener('pointercancel', (event) => this.onPointerUp(event));
+      this.viewport.addEventListener('dblclick', (event) => this.onDoubleClick(event));
+      this.resizeObserver = new ResizeObserver(() => {
+        if (!this.editor.doc) return;
+        if (this.autoFit) this.fit();
+        else this.refreshOverlay();
+      });
+      this.resizeObserver.observe(this.viewport);
+    }
+
+    applyView() {
+      this.stage.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
+      this.surface.classList.toggle('is-tiny', this.zoom < 0.25);
+      this.onView?.(this.zoom);
+      this.refreshOverlay();
+    }
+
+    fit() {
+      if (!this.editor.doc) return;
+      const doc = this.editor.doc;
+      const vw = this.viewport.clientWidth;
+      const vh = this.viewport.clientHeight;
+      const pad = { left: 64, right: 64, top: 56, bottom: 124 };
+      const availW = Math.max(120, vw - pad.left - pad.right);
+      const availH = Math.max(120, vh - pad.top - pad.bottom);
+      const zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(availW / doc.w, availH / doc.h)));
+      this.zoom = zoom;
+      this.pan = {
+        x: Math.round(pad.left + (availW - doc.w * zoom) / 2),
+        y: Math.round(pad.top + (availH - doc.h * zoom) / 2),
+      };
+      this.autoFit = true;
+      this.applyView();
+    }
+
+    zoomAt(x, y, nextZoom) {
+      const zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoom));
+      if (Math.abs(zoom - this.zoom) < 0.0001) return;
+      const worldX = (x - this.pan.x) / this.zoom;
+      const worldY = (y - this.pan.y) / this.zoom;
+      this.zoom = zoom;
+      this.pan = { x: x - worldX * zoom, y: y - worldY * zoom };
+      this.autoFit = false;
+      this.applyView();
+    }
+
+    setZoom(nextZoom) {
+      this.zoomAt(this.viewport.clientWidth / 2, this.viewport.clientHeight / 2, nextZoom);
+    }
+
+    panBy(dx, dy) {
+      this.pan = { x: this.pan.x + dx, y: this.pan.y + dy };
+      this.autoFit = false;
+      this.applyView();
+    }
+
+    onWheel(event) {
+      if (!this.editor.doc) return;
+      event.preventDefault();
+      const rect = this.viewport.getBoundingClientRect();
+      if (event.ctrlKey || event.metaKey) {
+        this.zoomBatcher.accumulate({
+          delta: event.deltaY,
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        });
+        return;
+      }
+      const unit = event.deltaMode === 1 ? 40 : event.deltaMode === 2 ? 800 : 1;
+      const horizontal = event.shiftKey && !event.deltaX;
+      this.panBatcher.accumulate({
+        dx: (horizontal ? event.deltaY : event.deltaX) * unit,
+        dy: (horizontal ? 0 : event.deltaY) * unit,
+      });
+    }
+
+    setSpace(down) {
+      this.spaceDown = down;
+      this.viewport.classList.toggle('is-space', down);
+    }
+
+    worldFromClient(clientX, clientY) {
+      const rect = this.viewport.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left - this.pan.x) / this.zoom,
+        y: (clientY - rect.top - this.pan.y) / this.zoom,
+      };
+    }
+
+    localFromClient(clientX, clientY) {
+      const rect = this.viewport.getBoundingClientRect();
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+
+
+
+
+    renderPage() {
+      if (this.editingId) this.finishTextEdit(false);
+      const doc = this.editor.doc;
+      const page = this.editor.page;
+      if (!doc || !page) return;
+      this.surface.style.width = `${doc.w}px`;
+      this.surface.style.height = `${doc.h}px`;
+      this.surface.style.background = page.background || '#ffffff';
+      this.layer.replaceChildren();
+      this.nodes.clear();
+
+      for (const element of page.elements) {
+        const node = this.Core.createElementNode(element);
+        this.nodes.set(element.id, node);
+        if (element.type === 'text') {
+          const body = node.querySelector('.rb-text-body');
+          body.addEventListener('blur', () => this.finishTextEdit(true));
+          body.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              this.finishTextEdit(true);
+              this.viewport.focus({ preventScroll: true });
+            }
+          });
+          body.addEventListener('paste', (event) => {
+            event.preventDefault();
+            const text = event.clipboardData?.getData('text/plain') || '';
+            document.execCommand('insertText', false, text);
+          });
+        }
+        this.layer.append(node);
+      }
+      this.applyView();
+    }
+
+    refreshNodes(ids = null) {
+      const targets = ids
+        ? ids.map((id) => this.editor.findElement(id)).filter(Boolean)
+        : this.editor.page.elements;
+      for (const element of targets) {
+        const node = this.nodes.get(element.id);
+        if (node) this.Core.styleElementNode(node, element);
+      }
+      this.refreshOverlay();
+    }
+
+
+
+
+
+    refreshOverlay() {
+      if (!this.editor.doc || !this.editor.page) return;
+      const selected = this.editor.selectedElements().filter((element) => element.visible !== false);
+      if (!selected.length) {
+        this.selection.hidden = true;
+        this.guidesHost.replaceChildren();
+        return;
+      }
+      this.selection.hidden = false;
+
+      let box;
+      let rotation = 0;
+      if (selected.length === 1) {
+        const element = selected[0];
+        box = { x: element.x, y: element.y, w: element.w, h: element.h };
+        rotation = element.rotation || 0;
+      } else {
+        box = unionBox(selected);
+      }
+
+      const centerX = this.pan.x + (box.x + box.w / 2) * this.zoom;
+      const centerY = this.pan.y + (box.y + box.h / 2) * this.zoom;
+      this.selection.style.left = `${centerX}px`;
+      this.selection.style.top = `${centerY}px`;
+      this.selection.style.width = `${Math.max(0, box.w * this.zoom)}px`;
+      this.selection.style.height = `${Math.max(0, box.h * this.zoom)}px`;
+      this.selection.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+      this.selection.classList.toggle('is-locked', selected.every((element) => element.locked));
+      this.selection.classList.toggle('is-editing', Boolean(this.editingId));
+    }
+
+    showGuides(guides) {
+      this.guidesHost.replaceChildren();
+      for (const guide of guides) {
+        const node = document.createElement('div');
+        node.className = guide.axis === 'x' ? 'rb-guide rb-guide-v' : 'rb-guide rb-guide-h';
+        const position = guide.axis === 'x'
+          ? this.pan.x + guide.at * this.zoom
+          : this.pan.y + guide.at * this.zoom;
+        if (guide.axis === 'x') node.style.left = `${position}px`;
+        else node.style.top = `${position}px`;
+        this.guidesHost.append(node);
+      }
+    }
+
+
+
+
+
+    onPointerDown(event) {
+      if (!this.editor.doc) return;
+      if (event.button === 1 || (event.button === 0 && this.spaceDown)) {
+        event.preventDefault();
+        this.gesture = {
+          kind: 'pan',
+          pointerId: event.pointerId,
+          startClient: { x: event.clientX, y: event.clientY },
+          startPan: { ...this.pan },
+        };
+        this.viewport.classList.add('is-panning');
+        this.capturePointer(event);
+        return;
+      }
+      if (event.button !== 0) return;
+
+      const handle = event.target.closest('[data-handle]');
+      if (handle && !this.selection.hidden) {
+        event.preventDefault();
+        this.startTransform(event, handle.dataset.handle);
+        return;
+      }
+
+      const node = event.target.closest('.rb-el');
+      if (node) {
+        const id = node.dataset.reaId;
+        if (this.editingId === id) return;
+        const additive = event.shiftKey || event.metaKey || event.ctrlKey;
+        const selected = this.editor.selected;
+        if (additive) this.editor.toggleSelection(id);
+        else if (!selected.has(id)) this.editor.select([id]);
+        const element = this.editor.findElement(id);
+        if (element && !element.locked && this.editor.selected.has(id)) {
+          this.startMove(event, id, additive);
+        }
+        return;
+      }
+
+      if (this.editingId) this.finishTextEdit(true);
+      if (!event.shiftKey && !event.metaKey && !event.ctrlKey) this.editor.select([]);
+      this.gesture = {
+        kind: 'marquee',
+        pointerId: event.pointerId,
+        startLocal: this.localFromClient(event.clientX, event.clientY),
+        base: new Set(event.shiftKey || event.metaKey || event.ctrlKey ? this.editor.selected : []),
+        moved: false,
+      };
+      this.capturePointer(event);
+      this.marqueeNode.hidden = false;
+    }
+
+    capturePointer(event) {
+      try {
+        this.viewport.setPointerCapture(event.pointerId);
+      } catch {
+
+      }
+    }
+
+    startMove(event, id, additive) {
+      this.editor.beginChange?.();
+      const selected = this.editor.selectedElements().filter((element) => !element.locked);
+      this.gesture = {
+        kind: 'move',
+        pointerId: event.pointerId,
+        id,
+        additive,
+        startClient: { x: event.clientX, y: event.clientY },
+        startWorld: this.worldFromClient(event.clientX, event.clientY),
+        starts: selected.map((element) => ({
+          id: element.id, x: element.x, y: element.y, w: element.w, h: element.h,
+        })),
+        moved: false,
+      };
+    }
+
+    startTransform(event, handle) {
+      const selected = this.editor.selectedElements();
+      if (!selected.length || selected.some((element) => element.locked)) return;
+      this.editor.beginChange?.();
+      if (handle === 'rotate') {
+        const box = unionBox(selected);
+        const center = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+        const origin = this.worldFromClient(event.clientX, event.clientY);
+        this.gesture = {
+          kind: 'rotate',
+          pointerId: event.pointerId,
+          center,
+          startAngle: Math.atan2(origin.y - center.y, origin.x - center.x),
+          starts: selected.map((element) => ({
+            id: element.id,
+            x: element.x,
+            y: element.y,
+            w: element.w,
+            h: element.h,
+            rotation: element.rotation || 0,
+          })),
+          box,
+          moved: false,
+        };
+        this.capturePointer(event);
+        return;
+      }
+
+      if (selected.length === 1) {
+        const element = selected[0];
+        const center = { x: element.x + element.w / 2, y: element.y + element.h / 2 };
+        this.gesture = {
+          kind: 'resize',
+          mode: 'single',
+          handle,
+          pointerId: event.pointerId,
+          center,
+          theta: ((element.rotation || 0) * Math.PI) / 180,
+          start: { ...element },
+          starts: null,
+          moved: false,
+        };
+        this.capturePointer(event);
+        return;
+      }
+
+      this.gesture = {
+        kind: 'resize',
+        mode: 'group',
+        handle,
+        pointerId: event.pointerId,
+        box: unionBox(selected),
+        pointerStart: this.worldFromClient(event.clientX, event.clientY),
+        starts: selected.map((element) => ({
+          id: element.id, x: element.x, y: element.y, w: element.w, h: element.h,
+        })),
+        moved: false,
+      };
+      this.capturePointer(event);
+    }
+
+    onPointerMove(event) {
+      if (!this.gesture) return;
+      const gesture = this.gesture;
+      if (gesture.pointerId !== event.pointerId) return;
+
+      if (gesture.kind === 'pan') {
+        this.panBatcher.flush();
+        this.pan = {
+          x: gesture.startPan.x + (event.clientX - gesture.startClient.x),
+          y: gesture.startPan.y + (event.clientY - gesture.startClient.y),
+        };
+        this.autoFit = false;
+        this.applyView();
+        return;
+      }
+
+      if (gesture.kind === 'marquee') {
+        this.gestureBatcher.accumulate(this.localFromClient(event.clientX, event.clientY));
+        return;
+      }
+
+      if (gesture.kind === 'move') {
+        if (!gesture.moved) {
+          const distance = Math.hypot(
+            event.clientX - gesture.startClient.x,
+            event.clientY - gesture.startClient.y,
+          );
+          if (distance < DRAG_THRESHOLD) return;
+          gesture.moved = true;
+          this.viewport.classList.add('is-dragging');
+          this.capturePointer(event);
+        }
+        this.gestureBatcher.accumulate({
+          kind: 'move',
+          clientX: event.clientX,
+          clientY: event.clientY,
+          shiftKey: event.shiftKey,
+        });
+        return;
+      }
+
+      gesture.moved = true;
+      this.gestureBatcher.accumulate({
+        kind: gesture.kind,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        shiftKey: event.shiftKey,
+      });
+    }
+
+    applyGesture(input) {
+      if (!this.gesture) return;
+      if (this.gesture.kind === 'marquee') this.applyMarquee(input);
+      else if (this.gesture.kind === 'move') this.applyMove(input);
+      else if (this.gesture.kind === 'resize') this.applyResize(input);
+      else if (this.gesture.kind === 'rotate') this.applyRotate(input);
+    }
+
+    applyMove(input) {
+      const gesture = this.gesture;
+      const world = this.worldFromClient(input.clientX, input.clientY);
+      let dx = world.x - gesture.startWorld.x;
+      let dy = world.y - gesture.startWorld.y;
+
+      const moving = gesture.starts
+        .map((start) => ({ start, element: this.editor.findElement(start.id) }))
+        .filter((entry) => entry.element);
+
+      const box = unionBox(moving.map(({ start }) => start));
+      const threshold = 6 / this.zoom;
+      const targets = this.snapTargets(gesture.starts.map((start) => start.id));
+      const guides = [];
+
+      const snapX = this.findSnap(
+        [box.x + dx, box.x + dx + box.w / 2, box.x + dx + box.w],
+        targets.xs,
+        threshold,
+      );
+      if (snapX) {
+        dx += snapX.delta;
+        guides.push({ axis: 'x', at: snapX.at });
+      }
+      const snapY = this.findSnap(
+        [box.y + dy, box.y + dy + box.h / 2, box.y + dy + box.h],
+        targets.ys,
+        threshold,
+      );
+      if (snapY) {
+        dy += snapY.delta;
+        guides.push({ axis: 'y', at: snapY.at });
+      }
+
+      for (const { start, element } of moving) {
+        element.x = Math.round((start.x + dx) * 100) / 100;
+        element.y = Math.round((start.y + dy) * 100) / 100;
+        const node = this.nodes.get(element.id);
+        if (node) {
+          node.style.left = `${element.x}px`;
+          node.style.top = `${element.y}px`;
+        }
+      }
+      this.showGuides(guides);
+      this.refreshOverlay();
+    }
+
+    applyResize(input) {
+      const world = this.worldFromClient(input.clientX, input.clientY);
+      if (this.gesture.mode === 'single') this.applyResizeSingle(input, world);
+      else this.applyResizeGroup(input, world);
+      this.refreshOverlay();
+    }
+
+    applyResizeSingle(input, world) {
+      const gesture = this.gesture;
+      const element = this.editor.findElement(gesture.start.id);
+      if (!element) return;
+      const local = rotatePoint(
+        { x: world.x - gesture.center.x, y: world.y - gesture.center.y },
+        -gesture.theta,
+      );
+      const start = gesture.start;
+      let left = -start.w / 2;
+      let right = start.w / 2;
+      let top = -start.h / 2;
+      let bottom = start.h / 2;
+      const handle = gesture.handle;
+
+      if (handle.includes('w')) left = Math.min(local.x, right - MIN_SIZE);
+      if (handle.includes('e')) right = Math.max(local.x, left + MIN_SIZE);
+      if (handle.includes('n')) top = Math.min(local.y, bottom - MIN_SIZE);
+      if (handle.includes('s')) bottom = Math.max(local.y, top + MIN_SIZE);
+
+      let width = right - left;
+      let height = bottom - top;
+
+      if (input.shiftKey && handle.length === 2) {
+        const scale = Math.max(width / start.w, height / start.h);
+        width = start.w * scale;
+        height = start.h * scale;
+        if (handle.includes('w')) left = right - width;
+        else right = left + width;
+        if (handle.includes('n')) top = bottom - height;
+        else bottom = top + height;
+      }
+
+      const localCenter = { x: (left + right) / 2, y: (top + bottom) / 2 };
+      const worldCenter = rotatePoint(localCenter, gesture.theta);
+      element.w = Math.round(width * 100) / 100;
+      element.h = Math.round(height * 100) / 100;
+      element.x = Math.round((gesture.center.x + worldCenter.x - width / 2) * 100) / 100;
+      element.y = Math.round((gesture.center.y + worldCenter.y - height / 2) * 100) / 100;
+
+      const node = this.nodes.get(element.id);
+      if (node) this.Core.styleElementNode(node, element);
+      this.showGuides([]);
+    }
+
+    applyResizeGroup(input, world) {
+      const gesture = this.gesture;
+      const box = gesture.box;
+      const handle = gesture.handle;
+      let left = box.x;
+      let right = box.x + box.w;
+      let top = box.y;
+      let bottom = box.y + box.h;
+
+      if (handle.includes('w')) left = Math.min(world.x, right - MIN_SIZE);
+      if (handle.includes('e')) right = Math.max(world.x, left + MIN_SIZE);
+      if (handle.includes('n')) top = Math.min(world.y, bottom - MIN_SIZE);
+      if (handle.includes('s')) bottom = Math.max(world.y, top + MIN_SIZE);
+
+      const scaleX = (right - left) / Math.max(1, box.w);
+      const scaleY = (bottom - top) / Math.max(1, box.h);
+
+      for (const start of gesture.starts) {
+        const element = this.editor.findElement(start.id);
+        if (!element) continue;
+        element.x = Math.round((left + (start.x - box.x) * scaleX) * 100) / 100;
+        element.y = Math.round((top + (start.y - box.y) * scaleY) * 100) / 100;
+        element.w = Math.max(2, Math.round(start.w * scaleX * 100) / 100);
+        element.h = Math.max(2, Math.round(start.h * scaleY * 100) / 100);
+        const node = this.nodes.get(element.id);
+        if (node) this.Core.styleElementNode(node, element);
+      }
+      this.showGuides([]);
+    }
+
+    applyRotate(input) {
+      const gesture = this.gesture;
+      const world = this.worldFromClient(input.clientX, input.clientY);
+      const angle = Math.atan2(world.y - gesture.center.y, world.x - gesture.center.x);
+      let delta = ((angle - gesture.startAngle) * 180) / Math.PI;
+      if (input.shiftKey) delta = Math.round(delta / 15) * 15;
+      const radians = (delta * Math.PI) / 180;
+
+      for (const start of gesture.starts) {
+        const element = this.editor.findElement(start.id);
+        if (!element) continue;
+        element.rotation = Math.round((start.rotation + delta) * 10) / 10;
+        if (gesture.starts.length > 1) {
+          const offset = {
+            x: start.x + start.w / 2 - gesture.center.x,
+            y: start.y + start.h / 2 - gesture.center.y,
+          };
+          const rotated = rotatePoint(offset, radians);
+          element.x = Math.round((gesture.center.x + rotated.x - start.w / 2) * 100) / 100;
+          element.y = Math.round((gesture.center.y + rotated.y - start.h / 2) * 100) / 100;
+        }
+        const node = this.nodes.get(element.id);
+        if (node) this.Core.styleElementNode(node, element);
+      }
+      this.showGuides([]);
+    }
+
+    applyMarquee(point) {
+      const gesture = this.gesture;
+      const start = gesture.startLocal;
+      const left = Math.min(start.x, point.x);
+      const top = Math.min(start.y, point.y);
+      const width = Math.abs(point.x - start.x);
+      const height = Math.abs(point.y - start.y);
+      this.marqueeNode.style.left = `${left}px`;
+      this.marqueeNode.style.top = `${top}px`;
+      this.marqueeNode.style.width = `${width}px`;
+      this.marqueeNode.style.height = `${height}px`;
+      gesture.moved = width > 4 || height > 4;
+
+      const worldLeft = (left - this.pan.x) / this.zoom;
+      const worldTop = (top - this.pan.y) / this.zoom;
+      const worldRight = (left + width - this.pan.x) / this.zoom;
+      const worldBottom = (top + height - this.pan.y) / this.zoom;
+
+      const hits = this.editor.page.elements
+        .filter((element) => element.visible !== false)
+        .filter((element) => {
+          const right = element.x + element.w;
+          const bottom = element.y + element.h;
+          return element.x < worldRight && right > worldLeft && element.y < worldBottom && bottom > worldTop;
+        })
+        .map((element) => element.id);
+
+      this.editor.select([...gesture.base, ...hits]);
+    }
+
+    onPointerUp(event) {
+      if (!this.gesture) return;
+      if (this.gesture.pointerId !== event.pointerId) return;
+      const gesture = this.gesture;
+      this.gestureBatcher.flush();
+
+      if (gesture.kind === 'pan') {
+        this.viewport.classList.remove('is-panning');
+      } else if (gesture.kind === 'marquee') {
+        this.marqueeNode.hidden = true;
+        this.marqueeNode.style.cssText = '';
+        if (!gesture.moved && !event.shiftKey) this.editor.select([]);
+      } else if (gesture.kind === 'move') {
+        this.viewport.classList.remove('is-dragging');
+        if (gesture.moved) this.editor.commit('Move elements');
+        else if (!gesture.additive) this.editor.select([gesture.id]);
+      } else if (gesture.kind === 'resize') {
+        if (gesture.moved) this.editor.commit('Resize elements');
+      } else if (gesture.kind === 'rotate') {
+        if (gesture.moved) this.editor.commit('Rotate elements');
+      }
+
+      this.showGuides([]);
+      try {
+        this.viewport.releasePointerCapture(event.pointerId);
+      } catch {
+
+      }
+      this.gesture = null;
+      this.refreshOverlay();
+    }
+
+    snapTargets(excludeIds) {
+      const doc = this.editor.doc;
+      const xs = [0, doc.w / 2, doc.w];
+      const ys = [0, doc.h / 2, doc.h];
+      for (const element of this.editor.page.elements) {
+        if (excludeIds.includes(element.id) || element.visible === false) continue;
+        xs.push(element.x, element.x + element.w / 2, element.x + element.w);
+        ys.push(element.y, element.y + element.h / 2, element.y + element.h);
+      }
+      return { xs, ys };
+    }
+
+    findSnap(values, targets, threshold) {
+      let best = null;
+      for (const value of values) {
+        for (const target of targets) {
+          const delta = target - value;
+          if (Math.abs(delta) <= threshold && (!best || Math.abs(delta) < Math.abs(best.delta))) {
+            best = { delta, at: target };
+          }
+        }
+      }
+      return best;
+    }
+
+
+
+
+
+    onDoubleClick(event) {
+      const node = event.target.closest('.rb-el');
+      if (!node) return;
+      const element = this.editor.findElement(node.dataset.reaId);
+      if (!element) return;
+      if (element.type === 'text') {
+        event.preventDefault();
+        this.startTextEdit(element.id);
+      } else if (element.type === 'image') {
+        event.preventDefault();
+        this.editor.emit('replace-image', element.id);
+      }
+    }
+
+    startTextEdit(id) {
+      const element = this.editor.findElement(id);
+      if (!element || element.type !== 'text' || element.locked) return;
+      const node = this.nodes.get(id);
+      if (!node) return;
+      this.editor.select([id]);
+      this.editor.beginChange?.();
+      this.editingId = id;
+      const body = node.querySelector('.rb-text-body');
+      body.contentEditable = 'true';
+      body.spellcheck = false;
+      node.classList.add('is-editing');
+      this.selection.classList.add('is-editing');
+      body.focus({ preventScroll: true });
+      const range = document.createRange();
+      range.selectNodeContents(body);
+      if (!/^(Add |$)/.test(element.text || '')) range.collapse(false);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      this.textSnapshot = element.text;
+    }
+
+    finishTextEdit(commit) {
+      if (!this.editingId) return;
+      const id = this.editingId;
+      this.editingId = null;
+      const element = this.editor.findElement(id);
+      const node = this.nodes.get(id);
+      if (!node) return;
+      const body = node.querySelector('.rb-text-body');
+      body.contentEditable = 'false';
+      node.classList.remove('is-editing');
+      this.selection.classList.remove('is-editing');
+      if (element) {
+        const text = (body.innerText || '').replace(/\u00a0/g, ' ').replace(/\n$/, '');
+        if (commit && text !== this.textSnapshot) {
+          element.text = text;
+
+          const needed = body.scrollHeight + 4;
+          if (needed > element.h + 2) element.h = Math.round(needed);
+          this.editor.commit('Edit text');
+        } else if (text !== element.text) {
+          body.textContent = element.text;
+        }
+      }
+      this.refreshOverlay();
+    }
+
+
+
+
+
+    nudge(dx, dy) {
+      const selected = this.editor.selectedElements().filter((element) => !element.locked);
+      if (!selected.length) return;
+      this.editor.beginChange?.();
+      for (const element of selected) {
+        element.x = Math.round((element.x + dx) * 100) / 100;
+        element.y = Math.round((element.y + dy) * 100) / 100;
+        const node = this.nodes.get(element.id);
+        if (node) {
+          node.style.left = `${element.x}px`;
+          node.style.top = `${element.y}px`;
+        }
+      }
+      this.refreshOverlay();
+      this.editor.commit('Nudge elements');
+    }
+
+    updateSelected(patch, label = 'Update elements') {
+      const selected = this.editor.selectedElements();
+      if (!selected.length) return;
+      this.editor.beginChange?.();
+      for (const element of selected) Object.assign(element, patch);
+      this.refreshNodes(selected.map((element) => element.id));
+      this.editor.commit(label);
+    }
+
+    duplicateSelection() {
+      const selected = this.editor.selectedElements();
+      if (!selected.length) return;
+      this.editor.beginChange?.();
+      const copies = selected.map((element) => ({
+        ...this.Core.deepClone(element),
+        id: this.Core.uid(element.type),
+        x: element.x + 24,
+        y: element.y + 24,
+      }));
+      this.editor.page.elements.push(...copies);
+      this.editor.select(copies.map((copy) => copy.id));
+      this.editor.commit('Duplicate elements');
+      this.renderPage();
+      this.editor.emit('selection');
+    }
+
+    deleteSelection() {
+      const selected = this.editor.selectedElements();
+      if (!selected.length) return;
+      this.editor.beginChange?.();
+      const ids = new Set(selected.map((element) => element.id));
+      this.editor.page.elements = this.editor.page.elements.filter((element) => !ids.has(element.id));
+      this.editor.select([]);
+      this.editor.commit('Delete elements');
+      this.renderPage();
+      this.editor.emit('selection');
+    }
+
+    arrange(mode) {
+      const selected = this.editor.selectedElements();
+      if (!selected.length) return;
+      this.editor.beginChange?.();
+      const layers = this.editor.page.elements;
+      const chosen = new Set(selected);
+      if (mode === 'front' || mode === 'back') {
+        const picked = layers.filter((element) => chosen.has(element));
+        const rest = layers.filter((element) => !chosen.has(element));
+        this.editor.page.elements = mode === 'front' ? [...rest, ...picked] : [...picked, ...rest];
+      } else if (mode === 'forward') {
+        for (let index = layers.length - 2; index >= 0; index -= 1) {
+          if (chosen.has(layers[index]) && !chosen.has(layers[index + 1])) {
+            [layers[index], layers[index + 1]] = [layers[index + 1], layers[index]];
+          }
+        }
+      } else {
+        for (let index = 1; index < layers.length; index += 1) {
+          if (chosen.has(layers[index]) && !chosen.has(layers[index - 1])) {
+            [layers[index], layers[index - 1]] = [layers[index - 1], layers[index]];
+          }
+        }
+      }
+      this.editor.commit('Arrange elements');
+      this.renderPage();
+    }
+
+    selectAll() {
+      this.editor.select(this.editor.page.elements.filter((element) => element.visible !== false).map((element) => element.id));
+    }
+  }
+
+  window.ReaBoardSurface = Board;
+})();;
+
+
+
+
+
+
+(() => {
+  'use strict';
+
+  const Core = window.ReaBoardCore;
+  const Surface = window.ReaBoardSurface;
+  if (!Core || !Surface) return;
+
+  const bridge = () => window.EInviteEditorBridge;
+
+  let root = null;
+  let board = null;
+  let opened = false;
+  let pageIndex = 0;
+  let doc = null;
+  let activeTab = 'elements';
+  let history = [];
+  let future = [];
+  let pendingBefore = null;
+  let quietCommit = false;
+  let fileInput = null;
+  let replaceTargetId = null;
+  let previewOpen = false;
+
+  const selected = new Set();
+
+  function strings() {
+    return window.ReaBoardStrings || { en: {}, km: {} };
+  }
+
+  function t(key, vars) {
+    const dict = strings();
+    const km = document.documentElement.lang === 'km';
+    let text = (km ? dict.km : dict.en)?.[key] || dict.en?.[key] || key;
+    if (vars) {
+      for (const [name, value] of Object.entries(vars)) {
+        text = text.replace(`{${name}}`, String(value));
+      }
+    }
+    return text;
+  }
+
+
+
+
+
+  const round = (value, places = 2) => {
+    const factor = 10 ** places;
+    return Math.round(Number(value || 0) * factor) / factor;
+  };
+
+  const percent = (value, total) => `${round((Number(value || 0) / Math.max(1, total)) * 100, 3)}%`;
+
+  function measure(value, total, fallback = 0) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    const text = String(value ?? '');
+    const number = parseFloat(text);
+    if (!Number.isFinite(number)) return fallback;
+    return text.includes('%') ? (number / 100) * total : number;
+  }
+
+  function plainText(html) {
+    if (window.EInviteRenderer?.plainText) return window.EInviteRenderer.plainText(html || '');
+    const div = document.createElement('div');
+    div.innerHTML = String(html || '');
+    return div.textContent || '';
+  }
+
+  function fontId(value) {
+    const registry = window.EInviteFontRegistry;
+    if (registry?.fontId) {
+      try {
+        return registry.fontId(value);
+      } catch {
+        return registry.data?.defaultFontId || 'noto-serif';
+      }
+    }
+    return value || 'noto-serif';
+  }
+
+  function toBoardElement(id, object, width, height) {
+    if (!object || typeof object !== 'object') return null;
+    const type = object.type === 'image' ? 'image' : object.type === 'shape' ? 'shape' : 'text';
+    if (!['text', 'image', 'shape', 'decoration'].includes(String(object.type || 'text'))) return null;
+
+    const base = {
+      id: String(id),
+      docType: String(object.type || 'text'),
+      type,
+      x: measure(object.left, width, 0),
+      y: measure(object.top, height, 0),
+      w: Math.max(8, measure(object.width, width, width * 0.4)),
+      h: Math.max(8, measure(object.height, height, 60)),
+      rotation: Number(object.rotation || 0),
+      opacity: Math.max(0.05, Math.min(1, Number(object.opacity ?? 1))),
+      locked: object.locked === true,
+      visible: object.visible !== false,
+    };
+
+    if (type === 'text') {
+      return {
+        ...base,
+        text: plainText(object.html || object.text || ''),
+        font: fontId(object.font),
+        size: Math.max(8, Math.min(240, Number(object.fontSize || 32))),
+        weight: Number(object.fontWeight || 400),
+        italic: object.fontStyle === 'italic',
+        underline: String(object.textDecoration || '').includes('underline'),
+        align: ['left', 'center', 'right', 'justify'].includes(object.textAlign) ? object.textAlign : 'left',
+        color: Core.hexColor(object.color, '#141821'),
+        lineHeight: Math.max(0.8, Math.min(2.4, Number(object.lineHeight || 1.35))),
+        letterSpacing: Number(object.letterSpacing || 0),
+      };
+    }
+
+    if (type === 'image') {
+      return {
+        ...base,
+        src: String(object.src || ''),
+        alt: String(object.alt || ''),
+        fit: object.imageFit === 'contain' ? 'contain' : 'cover',
+        radius: Math.max(0, Number(object.borderRadius || 0)),
+      };
+    }
+
+    const gradient = object.fillMode === 'gradient';
+    return {
+      ...base,
+      shape: ['rectangle', 'circle', 'line'].includes(object.shapeKind) ? object.shapeKind : 'rectangle',
+      fill: gradient
+        ? {
+            from: object.gradientStart || '#00c4cc',
+            to: object.gradientEnd || '#7d2ae8',
+            angle: Number(object.gradientAngle ?? 135),
+          }
+        : object.fillColor || '#7d2ae8',
+      radius: Math.max(0, Number(object.borderRadius || 0)),
+      docType: 'shape',
+    };
+  }
+
+  function boardElementObject(element, zIndex, previous) {
+    const base = {
+      ...(previous || {}),
+      type: element.type === 'image'
+        ? 'image'
+        : element.type === 'shape'
+          ? 'shape'
+          : (element.docType === 'decoration' ? 'decoration' : 'text'),
+      left: percent(element.x, doc.w),
+      top: percent(element.y, doc.h),
+      width: percent(element.w, doc.w),
+      height: percent(element.h, doc.h),
+      rotation: round(element.rotation, 1),
+      zIndex: Math.max(1, zIndex + 1),
+      opacity: Math.max(0.05, Math.min(1, Number(element.opacity ?? 1))),
+      visible: element.visible !== false,
+      locked: element.locked === true,
+    };
+
+    if (element.type === 'text') {
+
+
+
+      const previousText = previous ? plainText(previous.html || '') : '';
+      const textChanged = Boolean(previous) && previousText !== (element.text ?? '');
+      const cleaned = { ...base };
+      if (textChanged) {
+        delete cleaned.richText;
+        delete cleaned.richTextModelVersion;
+        delete cleaned.text;
+      }
+      return {
+        ...cleaned,
+        html: Core.escapeHtml(element.text ?? '').replace(/\n/g, '<br>'),
+        font: element.font,
+        fontSize: Math.round(element.size || 32),
+        fontWeight: String(element.weight || 400),
+        fontStyle: element.italic ? 'italic' : 'normal',
+        textDecoration: element.underline ? 'underline' : 'none',
+        textAlign: element.align || 'left',
+        color: Core.hexColor(element.color, '#141821'),
+        lineHeight: round(element.lineHeight || 1.35, 2),
+        letterSpacing: round(element.letterSpacing || 0, 2),
+        textVerticalAlign: 'top',
+        textPadding: 0,
+        textAutoFit: 'none',
+        textWrap: 'normal',
+      };
+    }
+
+    if (element.type === 'image') {
+      return {
+        ...base,
+        src: element.src || '',
+        alt: element.alt || '',
+        imageFit: element.fit === 'contain' ? 'contain' : 'cover',
+        borderRadius: Math.round(element.radius || 0),
+      };
+    }
+
+    const gradient = Core.isGradient(element.fill);
+    return {
+      ...base,
+      shapeKind: element.shape || 'rectangle',
+      fillMode: gradient ? 'gradient' : 'solid',
+      fillColor: gradient ? (previous?.fillColor || '#7d2ae8') : Core.hexColor(element.fill, '#7d2ae8'),
+      gradientStart: gradient ? element.fill.from : (previous?.gradientStart || '#00c4cc'),
+      gradientEnd: gradient ? element.fill.to : (previous?.gradientEnd || '#7d2ae8'),
+      gradientAngle: gradient ? Number(element.fill.angle ?? 135) : Number(previous?.gradientAngle ?? 135),
+      borderRadius: Math.round(element.radius || 0),
+    };
+  }
+
+  function hydrate() {
+    const state = bridge()?.getState?.() || {};
+    const stage = document.querySelector('#stage');
+    const width = Math.max(240, Math.round(stage?.clientWidth || 720));
+    const height = Math.max(240, Math.round(stage?.clientHeight || 960));
+    const title = String(state.fields?.names || state.fields?.namesKm || 'Invitation');
+
+    const pages = (Array.isArray(state.designPages) ? state.designPages : []).map((page) => {
+      const elements = [];
+      let unsupported = 0;
+      const entries = Object.entries(page.objects || {}).sort(
+        (a, b) => Number(a[1]?.zIndex || 0) - Number(b[1]?.zIndex || 0),
+      );
+      for (const [id, object] of entries) {
+        const element = toBoardElement(id, object, width, height);
+        if (element) elements.push(element);
+        else unsupported += 1;
+      }
+      return {
+        id: String(page.id),
+        sourceId: String(page.id),
+        name: String(page.name || 'Page'),
+        background: Core.hexColor(page.background, '#fffaf6'),
+        elements,
+        managedIds: elements.map((element) => element.id),
+        unsupported,
+      };
+    });
+
+    doc = { w: width, h: height, title, pages };
+    pageIndex = Math.min(pageIndex, Math.max(0, pages.length - 1));
+
+    const active = bridge()?.getActiveCanvasId?.() || '';
+    if (String(active).startsWith('page:')) {
+      const index = pages.findIndex((page) => page.sourceId === String(active).slice(5));
+      if (index >= 0) pageIndex = index;
+    }
+    history = [];
+    future = [];
+    pendingBefore = null;
+    select([]);
+  }
+
+  function currentPage() {
+    return doc?.pages?.[pageIndex] || null;
+  }
+
+
+
+
+
+  function beginChange() {
+    if (!doc || pendingBefore) return;
+    pendingBefore = Core.deepClone(doc);
+  }
+
+  function writeToDocument(label) {
+    const api = bridge();
+    if (!api?.transact || !doc) return;
+    api.transact(label || 'Board edit', (state) => {
+      const existing = new Map(
+        (Array.isArray(state.designPages) ? state.designPages : []).map((page) => [String(page.id), page]),
+      );
+      const next = [];
+
+      for (const page of doc.pages) {
+        const source = page.sourceId ? existing.get(String(page.sourceId)) : null;
+        const base = source || {
+          id: page.sourceId || Core.uid('page'),
+          name: page.name,
+          preset: 'custom',
+          enabled: true,
+          objects: {},
+        };
+        const objects = { ...(base.objects || {}) };
+        const keep = new Set();
+
+        page.elements.forEach((element, index) => {
+          objects[element.id] = boardElementObject(element, index, objects[element.id]);
+          keep.add(element.id);
+        });
+        for (const id of page.managedIds || []) {
+          if (!keep.has(id)) delete objects[id];
+        }
+
+        const normalized = {
+          ...base,
+          name: page.name || base.name,
+          background: Core.hexColor(page.background, base.background || '#fffaf6'),
+          objects,
+        };
+        page.sourceId = String(normalized.id);
+        page.managedIds = [...keep];
+        next.push(normalized);
+      }
+
+      state.designPages = next;
+      const tokens = next.map((page) => `page:${page.id}`);
+      const order = (Array.isArray(state.sectionOrder) ? state.sectionOrder : []).filter(
+        (token) => !String(token).startsWith('page:'),
+      );
+      state.sectionOrder = [...tokens, ...order];
+    });
+  }
+
+  let pagesTimer = 0;
+
+  function schedulePages() {
+    window.clearTimeout(pagesTimer);
+    pagesTimer = window.setTimeout(() => refreshPages(), 180);
+  }
+
+  function commit(label) {
+    if (!doc) return;
+    const quiet = quietCommit;
+    quietCommit = false;
+    if (pendingBefore) {
+      history.push(pendingBefore);
+      if (history.length > 60) history.shift();
+      future = [];
+      pendingBefore = null;
+    }
+    writeToDocument(label);
+    schedulePages();
+    refreshSaveState();
+    if (!quiet) {
+      refreshInspector();
+      refreshLayers();
+    }
+  }
+
+  function undo() {
+    if (!history.length) return;
+    const previous = history.pop();
+    future.push(Core.deepClone(doc));
+    doc = previous;
+    pageIndex = Math.min(pageIndex, Math.max(0, doc.pages.length - 1));
+    select([]);
+    writeToDocument('Undo board edit');
+    renderAll();
+  }
+
+  function redo() {
+    if (!future.length) return;
+    const next = future.pop();
+    history.push(Core.deepClone(doc));
+    doc = next;
+    pageIndex = Math.min(pageIndex, Math.max(0, doc.pages.length - 1));
+    select([]);
+    writeToDocument('Redo board edit');
+    renderAll();
+  }
+
+
+
+
+
+  const editor = {
+    get doc() {
+      return doc;
+    },
+    get page() {
+      return currentPage();
+    },
+    selected,
+    findElement(id) {
+      return currentPage()?.elements.find((element) => element.id === id) || null;
+    },
+    selectedElements() {
+      const page = currentPage();
+      if (!page) return [];
+      return page.elements.filter((element) => selected.has(element.id));
+    },
+    select(ids) {
+      selected.clear();
+      for (const id of ids || []) selected.add(id);
+      root?.classList.toggle('rb-has-selection', selected.size > 0);
+      board?.refreshOverlay();
+      refreshInspector();
+      refreshLayers();
+    },
+    toggleSelection(id) {
+      if (selected.has(id)) selected.delete(id);
+      else selected.add(id);
+      root?.classList.toggle('rb-has-selection', selected.size > 0);
+      board?.refreshOverlay();
+      refreshInspector();
+      refreshLayers();
+    },
+    beginChange,
+    commit,
+    emit(name, payload) {
+      if (name === 'replace-image') pickReplacement(payload);
+      if (name === 'selection') refreshInspector();
+    },
+  };
+
+  function select(ids) {
+    editor.select(ids);
+  }
+
+
+
+
+
+  function iconButton(icon, label, attributes = {}, hint) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'rb-icon-btn';
+    button.append(Core.svgIcon(Core.ICONS[icon] || Core.ICONS.plus, 19));
+    button.setAttribute('aria-label', label);
+    if (hint) button.title = hint;
+    for (const [key, value] of Object.entries(attributes)) button.setAttribute(key, value);
+    return button;
+  }
+
+  function buildShell() {
+    root = document.createElement('div');
+    root.className = 'rea-board';
+    root.hidden = true;
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+
+    const topbar = document.createElement('header');
+    topbar.className = 'rb-topbar';
+
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'rb-back';
+    back.setAttribute('aria-label', t('back'));
+    back.title = t('back');
+    back.append(Core.svgIcon(Core.ICONS.arrowLeft, 18), Core.el('span', { text: t('back') }));
+    back.addEventListener('click', close);
+
+    const brand = document.createElement('div');
+    brand.className = 'rb-brand';
+    brand.append(
+      Core.el('span', { class: 'rb-brand-mark', text: 'Rea' }),
+      Core.el('span', { class: 'rb-brand-name', text: t('board') }),
+      Core.el('span', { class: 'rb-doc-title', text: doc?.title || '' , dataset: { rbTitle: 'true' } }),
+    );
+
+    const actions = document.createElement('div');
+    actions.className = 'rb-top-actions';
+
+    const save = Core.el('span', { class: 'rb-save', text: t('saved'), dataset: { rbSave: 'true' } });
+    const undoBtn = iconButton('undo', t('undo'), { 'data-rb-undo': 'true' }, t('undo'));
+    const redoBtn = iconButton('redo', t('redo'), { 'data-rb-redo': 'true' }, t('redo'));
+    const previewBtn = Core.el('button', { class: 'rb-text-btn', type: 'button', dataset: { rbPreviewBtn: 'true' } }, [
+      Core.svgIcon(Core.ICONS.play, 17),
+      Core.el('span', { text: t('preview') }),
+    ]);
+    const exportBtn = Core.el('button', { class: 'rb-text-btn rb-primary', type: 'button', dataset: { rbExport: 'true' } }, [
+      Core.svgIcon(Core.ICONS.download, 17),
+      Core.el('span', { text: t('export') }),
+    ]);
+    actions.append(save, undoBtn, redoBtn, previewBtn, exportBtn);
+
+    topbar.append(back, brand, actions);
+
+    const body = document.createElement('div');
+    body.className = 'rb-body';
+
+    const rail = document.createElement('nav');
+    rail.className = 'rb-rail';
+    rail.setAttribute('aria-label', t('board'));
+
+    const tabs = [
+      ['elements', 'shape', 'elements'],
+      ['text', 'text', 'text'],
+      ['layers', 'layers', 'layers'],
+    ];
+    for (const [key, icon, label] of tabs) {
+      const button = Core.el('button', { class: 'rb-rail-btn', type: 'button', dataset: { rbTab: key } }, [
+        Core.svgIcon(Core.ICONS[icon], 21),
+        Core.el('span', { text: t(label) }),
+      ]);
+      button.addEventListener('click', () => setTab(key));
+      rail.append(button);
+    }
+
+    const panel = document.createElement('aside');
+    panel.className = 'rb-panel';
+    panel.dataset.rbPanel = 'true';
+
+    const viewport = document.createElement('main');
+    viewport.className = 'rb-viewport';
+    viewport.tabIndex = 0;
+    viewport.dataset.reaViewport = 'true';
+
+    const stage = Core.el('div', { class: 'rb-stage', dataset: { reaStage: 'true' } });
+    const surface = Core.el('div', { class: 'rb-surface', dataset: { reaSurface: 'true' } });
+    const elements = Core.el('div', { class: 'rb-elements', dataset: { reaElements: 'true' } });
+    surface.append(elements);
+    stage.append(surface);
+
+    const guides = Core.el('div', { class: 'rb-guides', dataset: { reaGuides: 'true' } });
+    const marquee = Core.el('div', { class: 'rb-marquee', dataset: { reaMarquee: 'true' } });
+    marquee.hidden = true;
+    const selectionNode = Core.el('div', { class: 'rb-selection', dataset: { reaSelection: 'true' } });
+    selectionNode.hidden = true;
+
+    const empty = Core.el('div', { class: 'rb-empty', dataset: { rbEmpty: 'true' } });
+    empty.hidden = true;
+    const emptyCard = Core.el('div', { class: 'rb-empty-card' }, [
+      Core.el('span', { class: 'rb-empty-icon' }, Core.svgIcon(Core.ICONS.page, 30)),
+      Core.el('h2', { text: t('emptyBoard') }),
+      Core.el('p', { text: t('emptyCopy') }),
+    ]);
+    const createFirst = Core.el('button', { class: 'rb-primary', type: 'button', text: t('createPage') });
+    createFirst.addEventListener('click', () => addPage(true));
+    emptyCard.append(createFirst);
+    empty.append(emptyCard);
+
+    const pages = Core.el('div', { class: 'rb-pages', dataset: { rbPages: 'true' } });
+
+    const zoom = Core.el('div', { class: 'rb-zoom' });
+    const zoomOut = iconButton('minus', t('zoom'));
+    const zoomIn = iconButton('plus', t('zoom'));
+    const zoomRange = Core.el('input', {
+      type: 'range',
+      min: '5',
+      max: '400',
+      value: '100',
+      class: 'rb-zoom-range',
+      'aria-label': t('zoom'),
+      dataset: { rbZoom: 'true' },
+    });
+    const zoomValue = Core.el('span', { class: 'rb-zoom-value', text: '100%', dataset: { rbZoomValue: 'true' } });
+    const fit = Core.el('button', { class: 'rb-text-btn rb-ghost', type: 'button', text: t('fit') });
+    zoomOut.addEventListener('click', () => board?.setZoom(board.zoom / 1.2));
+    zoomIn.addEventListener('click', () => board?.setZoom(board.zoom * 1.2));
+    fit.addEventListener('click', () => board?.fit());
+    zoomRange.addEventListener('input', () => board?.setZoom(Number(zoomRange.value) / 100));
+    zoom.append(zoomOut, zoomRange, zoomValue, zoomIn, fit);
+
+    const hint = Core.el('div', { class: 'rb-hint', text: t('spaceHint') });
+
+    viewport.append(stage, guides, marquee, selectionNode, empty, pages, zoom, hint);
+
+    const inspector = document.createElement('aside');
+    inspector.className = 'rb-inspector';
+    inspector.dataset.rbInspector = 'true';
+
+    body.append(rail, panel, viewport, inspector);
+
+    const preview = Core.el('div', { class: 'rb-preview', dataset: { rbPreview: 'true' } });
+    preview.hidden = true;
+    const previewCard = Core.el('div', { class: 'rb-preview-card' });
+    const closePreview = Core.el('button', { class: 'rb-preview-close', type: 'button', 'aria-label': t('close') }, Core.svgIcon(Core.ICONS.close, 20));
+    closePreview.addEventListener('click', () => hidePreview());
+    previewCard.append(closePreview);
+    preview.append(previewCard);
+    preview.addEventListener('click', (event) => {
+      if (event.target === preview) hidePreview();
+    });
+
+    fileInput = Core.el('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif', hidden: true, dataset: { rbFile: 'true' } });
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      fileInput.value = '';
+      if (file) handleImageFile(file);
+    });
+
+    root.append(topbar, body, preview, fileInput);
+    document.body.append(root);
+
+    board = new Surface(root, editor);
+    board.onView = (zoomValueCurrent) => {
+      const percentage = Math.round(zoomValueCurrent * 100);
+      const value = root.querySelector('[data-rb-zoom-value]');
+      const range = root.querySelector('[data-rb-zoom]');
+      if (value) value.textContent = `${percentage}%`;
+      if (range && document.activeElement !== range) range.value = String(percentage);
+    };
+
+    root.querySelector('[data-rb-undo]').addEventListener('click', undo);
+    root.querySelector('[data-rb-redo]').addEventListener('click', redo);
+    root.querySelector('[data-rb-export]').addEventListener('click', exportPng);
+    root.querySelector('[data-rb-preview-btn]').addEventListener('click', showPreview);
+  }
+
+  function setTab(tab) {
+    const narrow = window.matchMedia('(max-width: 720px)').matches;
+    if (narrow && activeTab === tab && root.classList.contains('rb-panel-open')) {
+      root.classList.remove('rb-panel-open');
+      return;
+    }
+    activeTab = tab;
+    root.classList.add('rb-panel-open');
+    for (const button of Core.$$('[data-rb-tab]', root)) {
+      button.classList.toggle('is-active', button.dataset.rbTab === tab);
+    }
+    refreshPanel();
+  }
+
+  function refreshPanel() {
+    const host = root?.querySelector('[data-rb-panel]');
+    if (!host) return;
+    host.replaceChildren();
+    if (activeTab === 'text') buildTextPanel(host);
+    else if (activeTab === 'layers') buildLayersPanel(host);
+    else buildElementsPanel(host);
+  }
+
+  function panelTitle(host, key) {
+    host.append(Core.el('h2', { class: 'rb-panel-title', text: t(key) }));
+  }
+
+  function buildElementsPanel(host) {
+    panelTitle(host, 'elements');
+
+    host.append(Core.el('h3', { class: 'rb-group-title', text: t('shapes') }));
+    const shapes = Core.el('div', { class: 'rb-shape-grid' });
+    const shapeButtons = [
+      ['rectangle', 'rectangle', 'M4 6h16v12H4z'],
+      ['circle', 'circle', 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z'],
+      ['line', 'line', 'M4 18 20 6'],
+    ];
+    for (const [shape, label, path] of shapeButtons) {
+      const button = Core.el('button', { class: 'rb-tile', type: 'button', title: t(label), 'aria-label': t(label) }, [
+        Core.svgIcon(path, 24),
+      ]);
+      button.addEventListener('click', () => insertShape(shape));
+      shapes.append(button);
+    }
+    host.append(shapes);
+
+    host.append(Core.el('h3', { class: 'rb-group-title', text: t('gradients') }));
+    const gradients = Core.el('div', { class: 'rb-gradient-grid' });
+    for (const gradient of Core.GRADIENTS) {
+      const button = Core.el('button', {
+        class: 'rb-gradient',
+        type: 'button',
+        title: gradient.name,
+        'aria-label': gradient.name,
+        style: { background: Core.fillCss(gradient) },
+      });
+      button.addEventListener('click', () => insertShape('rectangle', { ...gradient }));
+      gradients.append(button);
+    }
+    host.append(gradients);
+
+    host.append(Core.el('h3', { class: 'rb-group-title', text: t('image') }));
+    const upload = Core.el('button', { class: 'rb-wide-btn', type: 'button' }, [
+      Core.svgIcon(Core.ICONS.image, 18),
+      Core.el('span', { text: t('addImage') }),
+    ]);
+    upload.addEventListener('click', () => pickImage(false));
+    host.append(upload);
+    host.append(Core.el('p', { class: 'rb-note', text: t('uploadNote') }));
+  }
+
+  function buildTextPanel(host) {
+    panelTitle(host, 'text');
+    const presets = [
+      ['heading', 'Add a heading', { size: 64, weight: 700, w: 420, h: 170 }],
+      ['subheading', 'Add a subheading', { size: 36, weight: 600, w: 380, h: 100 }],
+      ['body', 'Add body text', { size: 22, weight: 400, w: 340, h: 130 }],
+    ];
+    for (const [key, label, overrides] of presets) {
+      const button = Core.el('button', { class: 'rb-text-preset', type: 'button' }, [
+        Core.el('strong', { text: t(key), style: { fontSize: key === 'heading' ? '19px' : key === 'subheading' ? '16px' : '14px' } }),
+        Core.el('span', { text: t('text') }),
+      ]);
+      button.addEventListener('click', () => insertText(overrides, key));
+      host.append(button);
+    }
+    host.append(Core.el('p', { class: 'rb-note', text: t('textHint') }));
+  }
+
+  function buildLayersPanel(host) {
+    panelTitle(host, 'layers');
+    const list = Core.el('div', { class: 'rb-layer-list', dataset: { rbLayerList: 'true' } });
+    host.append(list);
+    fillLayers(list);
+  }
+
+  function fillLayers(list) {
+    list.replaceChildren();
+    const page = currentPage();
+    if (!page) {
+      list.append(Core.el('p', { class: 'rb-note', text: t('noPage') }));
+      return;
+    }
+    if (!page.elements.length) {
+      list.append(Core.el('p', { class: 'rb-note', text: t('noLayers') }));
+      return;
+    }
+    const stack = [...page.elements].reverse();
+    for (const element of stack) {
+      const row = Core.el('div', {
+        class: `rb-layer${selected.has(element.id) ? ' is-active' : ''}`,
+        dataset: { rbLayer: element.id },
+      });
+      const label = Core.el('button', { class: 'rb-layer-name', type: 'button' }, [
+        Core.svgIcon(
+          element.type === 'text' ? Core.ICONS.text : element.type === 'image' ? Core.ICONS.image : Core.ICONS.shape,
+          16,
+        ),
+        Core.el('span', { text: Core.elementName(element) }),
+      ]);
+      label.addEventListener('click', () => {
+        select([element.id]);
+        board.refreshOverlay();
+      });
+      label.addEventListener('dblclick', () => {
+        if (element.type === 'text') board.startTextEdit(element.id);
+      });
+
+      const eye = iconButton(element.visible === false ? 'eyeOff' : 'eye', t('visibility'));
+      eye.classList.toggle('is-off', element.visible === false);
+      eye.addEventListener('click', () => {
+        beginChange();
+        element.visible = element.visible === false;
+        quietCommit = true;
+        commit('Toggle layer visibility');
+        board.renderPage();
+        refreshLayers();
+      });
+
+      const lock = iconButton(element.locked ? 'lock' : 'unlock', element.locked ? t('unlock') : t('lock'));
+      lock.classList.toggle('is-off', !element.locked);
+      lock.addEventListener('click', () => {
+        beginChange();
+        element.locked = !element.locked;
+        quietCommit = true;
+        commit('Toggle layer lock');
+        refreshLayers();
+      });
+
+      row.append(label, eye, lock);
+      list.append(row);
+    }
+  }
+
+  function refreshLayers() {
+    const list = root?.querySelector('[data-rb-layer-list]');
+    if (list) fillLayers(list);
+  }
+
+
+
+
+
+  function viewportCenter() {
+    const rect = board.viewport.getBoundingClientRect();
+    return board.worldFromClient(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
+
+  function insertElement(element, label) {
+    if (!currentPage()) {
+      addPage(true);
+      if (!currentPage()) return;
+    }
+    beginChange();
+    element.w = Math.max(24, Math.min(element.w, doc.w - 48));
+    element.h = Math.max(16, Math.min(element.h, doc.h - 48));
+    const center = viewportCenter();
+    element.x = Math.round(Math.max(24, Math.min(doc.w - element.w - 24, center.x - element.w / 2)));
+    element.y = Math.round(Math.max(24, Math.min(doc.h - element.h - 24, center.y - element.h / 2)));
+    currentPage().elements.push(element);
+    currentPage().managedIds.push(element.id);
+    commit(label || 'Add element');
+    board.renderPage();
+    select([element.id]);
+    setTab(activeTab);
+  }
+
+  function insertShape(shape, gradient) {
+    const element = Core.createElement(shape);
+    if (shape === 'circle') {
+      element.w = 220;
+      element.h = 220;
+    } else if (shape === 'line') {
+      element.w = 320;
+      element.h = 6;
+      element.fill = '#141821';
+    } else {
+      element.w = 320;
+      element.h = 220;
+    }
+    if (gradient) element.fill = { from: gradient.from, to: gradient.to, angle: gradient.angle };
+    element.name = t(shape === 'circle' ? 'circle' : shape === 'line' ? 'line' : 'rectangle');
+    insertElement(element, 'Add shape');
+  }
+
+  function insertText(overrides, preset) {
+    const element = Core.createElement('text', overrides);
+    element.name = t(preset || 'text');
+    element.text = t(preset || 'body');
+    element.font = 'noto-serif';
+    element.color = '#141821';
+    insertElement(element, 'Add text');
+  }
+
+  function insertImage(src, alt = '') {
+    const element = Core.createElement('image', {
+      src,
+      alt,
+      w: Math.min(doc.w * 0.5, 360),
+      h: Math.min(doc.h * 0.4, 300),
+    });
+    insertElement(element, 'Add image');
+  }
+
+
+
+
+
+  function pickImage(replaceId) {
+    replaceTargetId = replaceId || null;
+    fileInput?.click();
+  }
+
+  function pickReplacement(id) {
+    if (selected.size !== 1) select([id]);
+    pickImage(id);
+  }
+
+  async function handleImageFile(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    if (file.size > 12 * 1024 * 1024) {
+      Core.toast(t('uploadTooLarge'), 'error');
+      return;
+    }
+    const invitationId = window.EInviteContext?.getInvitationId?.() || '';
+    if (!invitationId || !window.EInviteUpload?.upload) {
+      Core.toast(t('uploadFailed'), 'error');
+      return;
+    }
+    Core.toast(t('uploading'));
+    try {
+      const result = await window.EInviteUpload.upload(invitationId, file, {});
+      const url = result?.url || result?.src || result?.path || '';
+      if (!url) throw new Error('No upload URL');
+      if (replaceTargetId) {
+        const element = editor.findElement(replaceTargetId);
+        if (element) {
+          beginChange();
+          element.src = url;
+          element.alt = file.name || element.alt || '';
+          commit('Replace image');
+          board.renderPage();
+          select([element.id]);
+        }
+      } else {
+        insertImage(url, file.name || '');
+      }
+    } catch {
+      Core.toast(t('uploadFailed'), 'error');
+    } finally {
+      replaceTargetId = null;
+    }
+  }
+
+
+
+
+
+  function pageCount() {
+    return doc?.pages?.length || 0;
+  }
+
+  function addPage(selectIt = true) {
+    if (!doc) return;
+    beginChange();
+    const id = Core.uid('page');
+    doc.pages.push({
+      id,
+      sourceId: null,
+      name: t('page') + ' ' + (doc.pages.length + 1),
+      background: '#fffaf6',
+      elements: [],
+      managedIds: [],
+      unsupported: 0,
+    });
+    if (selectIt) pageIndex = doc.pages.length - 1;
+    commit('Add page');
+    renderAll();
+    board.fit();
+  }
+
+  function duplicatePage() {
+    const page = currentPage();
+    if (!doc || !page) return;
+    beginChange();
+    const copy = Core.deepClone(page);
+    copy.id = Core.uid('page');
+    copy.sourceId = null;
+    copy.name = `${page.name} ${t('copySuffix')}`;
+    copy.elements = copy.elements.map((element) => ({ ...element, id: Core.uid(element.type) }));
+    copy.managedIds = copy.elements.map((element) => element.id);
+    doc.pages.splice(pageIndex + 1, 0, copy);
+    pageIndex += 1;
+    commit('Duplicate page');
+    renderAll();
+  }
+
+  function deletePage() {
+    const page = currentPage();
+    if (!doc || !page) return;
+    if (!window.confirm(t('deletePageConfirm'))) return;
+    beginChange();
+    doc.pages.splice(pageIndex, 1);
+    pageIndex = Math.max(0, Math.min(pageIndex, doc.pages.length - 1));
+    commit('Delete page');
+    select([]);
+    renderAll();
+  }
+
+  function switchPage(index) {
+    if (!doc || index === pageIndex || !doc.pages[index]) return;
+    board.finishTextEdit(true);
+    pageIndex = index;
+    select([]);
+    board.renderPage();
+    board.fit();
+    refreshPages();
+    refreshInspector();
+    refreshLayers();
+  }
+
+  function refreshPages() {
+    const host = root?.querySelector('[data-rb-pages]');
+    if (!host) return;
+    host.replaceChildren();
+    const page = currentPage();
+    if (!page) {
+      host.hidden = true;
+      return;
+    }
+    host.hidden = false;
+
+    doc.pages.forEach((item, index) => {
+      const button = Core.el('button', {
+        class: `rb-page-chip${index === pageIndex ? ' is-active' : ''}`,
+        type: 'button',
+        'aria-label': `${t('page')} ${index + 1}`,
+        title: item.name,
+      });
+      const canvas = document.createElement('canvas');
+      button.append(canvas);
+      button.addEventListener('click', () => switchPage(index));
+      host.append(button);
+      Core.paintThumbnail(canvas, doc, item, 46, 58).catch(() => null);
+    });
+
+    const add = Core.el('button', { class: 'rb-page-add', type: 'button', 'aria-label': t('addPage'), title: t('addPage') }, Core.svgIcon(Core.ICONS.plus, 18));
+    add.addEventListener('click', () => addPage(true));
+    host.append(add);
+  }
+
+
+
+
+
+  function field(label, control, className = '') {
+    return Core.el('label', { class: `rb-field ${className}`.trim() }, [
+      Core.el('span', { class: 'rb-field-label', text: label }),
+      control,
+    ]);
+  }
+
+  function numberInput(value, onInput, onCommit, options = {}) {
+    const input = Core.el('input', {
+      type: 'number',
+      value: String(Math.round(value)),
+      class: 'rb-input',
+      inputmode: 'decimal',
+      min: options.min !== undefined ? String(options.min) : undefined,
+      max: options.max !== undefined ? String(options.max) : undefined,
+      step: options.step !== undefined ? String(options.step) : '1',
+    });
+    input.addEventListener('focus', () => beginChange());
+    input.addEventListener('input', () => {
+      const number = Number(input.value);
+      if (Number.isFinite(number)) onInput(number);
+    });
+    input.addEventListener('change', () => onCommit());
+    return input;
+  }
+
+  function colorRow(value, apply) {
+    const row = Core.el('div', { class: 'rb-colors' });
+    for (const color of Core.SWATCHES) {
+      const swatch = Core.el('button', {
+        class: `rb-swatch${String(value).toLowerCase() === color ? ' is-active' : ''}`,
+        type: 'button',
+        'aria-label': color,
+        style: { background: color },
+      });
+      swatch.addEventListener('click', () => {
+        beginChange();
+        apply(color);
+        quietCommit = true;
+        commit('Set color');
+        refreshInspector();
+      });
+      row.append(swatch);
+    }
+    return row;
+  }
+
+  function alignSelection(mode) {
+    const elements = editor.selectedElements();
+    if (!elements.length) return;
+    beginChange();
+    const minX = Math.min(...elements.map((element) => element.x));
+    const maxX = Math.max(...elements.map((element) => element.x + element.w));
+    const minY = Math.min(...elements.map((element) => element.y));
+    const maxY = Math.max(...elements.map((element) => element.y + element.h));
+    for (const element of elements) {
+      if (mode === 'left') element.x = minX;
+      if (mode === 'right') element.x = maxX - element.w;
+      if (mode === 'center') element.x = (minX + maxX) / 2 - element.w / 2;
+      if (mode === 'top') element.y = minY;
+      if (mode === 'bottom') element.y = maxY - element.h;
+      if (mode === 'middle') element.y = (minY + maxY) / 2 - element.h / 2;
+    }
+    quietCommit = true;
+    commit('Align elements');
+    board.refreshNodes();
+    refreshInspector();
+  }
+
+  function refreshInspector() {
+    const host = root?.querySelector('[data-rb-inspector]');
+    if (!host) return;
+    host.replaceChildren();
+
+    const page = currentPage();
+    if (!page) {
+      host.append(Core.el('p', { class: 'rb-note', text: t('noPage') }));
+      return;
+    }
+
+    const chosen = editor.selectedElements();
+
+    if (!chosen.length) {
+      host.append(Core.el('h2', { class: 'rb-inspector-title', text: t('pageSettings') }));
+      const name = Core.el('input', { class: 'rb-input', type: 'text', value: page.name, maxlength: '80' });
+      name.addEventListener('focus', () => beginChange());
+      name.addEventListener('change', () => {
+        page.name = name.value.trim() || page.name;
+        quietCommit = true;
+        commit('Rename page');
+        refreshPages();
+      });
+      host.append(field(t('pageName'), name));
+
+      host.append(Core.el('h3', { class: 'rb-group-title', text: t('background') }));
+      host.append(colorRow(page.background, (color) => {
+        page.background = color;
+        board.renderPage();
+      }));
+
+      if (page.unsupported) {
+        host.append(Core.el('p', { class: 'rb-note', text: t('unsupported', { n: page.unsupported }) }));
+      }
+
+      const actions = Core.el('div', { class: 'rb-stack' });
+      const duplicate = Core.el('button', { class: 'rb-wide-btn', type: 'button', text: t('duplicatePage') });
+      duplicate.addEventListener('click', duplicatePage);
+      const remove = Core.el('button', { class: 'rb-wide-btn is-danger', type: 'button', text: t('deletePage') });
+      remove.addEventListener('click', deletePage);
+      actions.append(duplicate, remove);
+      host.append(actions);
+      return;
+    }
+
+    if (chosen.length > 1) {
+      host.append(Core.el('h2', { class: 'rb-inspector-title', text: t('elementsCount', { n: chosen.length }) }));
+      host.append(alignButtons());
+      host.append(arrangeButtons());
+      host.append(elementActions());
+      return;
+    }
+
+    const element = chosen[0];
+    host.append(Core.el('h2', { class: 'rb-inspector-title', text: Core.elementName(element) }));
+
+    host.append(Core.el('h3', { class: 'rb-group-title', text: t('position') }));
+    const grid = Core.el('div', { class: 'rb-grid-2' });
+    const x = numberInput(element.x, (value) => { element.x = value; board.refreshNodes([element.id]); }, () => commitFromInspector('Move element'));
+    const y = numberInput(element.y, (value) => { element.y = value; board.refreshNodes([element.id]); }, () => commitFromInspector('Move element'));
+    const w = numberInput(element.w, (value) => { element.w = Math.max(8, value); board.refreshNodes([element.id]); }, () => commitFromInspector('Resize element'), { min: 8 });
+    const h = numberInput(element.h, (value) => { element.h = Math.max(8, value); board.refreshNodes([element.id]); }, () => commitFromInspector('Resize element'), { min: 8 });
+    grid.append(field('X', x), field('Y', y), field('W', w), field('H', h));
+    host.append(grid);
+
+    const rotation = numberInput(element.rotation || 0, (value) => {
+      element.rotation = value;
+      board.refreshNodes([element.id]);
+    }, () => commitFromInspector('Rotate element'), { min: -360, max: 360 });
+    host.append(field(t('rotation'), rotation));
+
+    const opacity = Core.el('input', { type: 'range', min: '5', max: '100', value: String(Math.round((element.opacity ?? 1) * 100)), class: 'rb-range' });
+    opacity.addEventListener('focus', () => beginChange());
+    opacity.addEventListener('input', () => {
+      element.opacity = Number(opacity.value) / 100;
+      board.refreshNodes([element.id]);
+    });
+    opacity.addEventListener('change', () => commitFromInspector('Set opacity'));
+    host.append(field(t('opacity'), opacity));
+
+    if (element.type === 'text') host.append(textControls(element));
+    if (element.type === 'shape') host.append(shapeControls(element));
+    if (element.type === 'image') host.append(imageControls(element));
+
+    host.append(arrangeButtons());
+    host.append(elementActions());
+  }
+
+  function commitFromInspector(label) {
+    quietCommit = true;
+    commit(label);
+  }
+
+  function textControls(element) {
+    const frag = document.createDocumentFragment();
+    frag.append(Core.el('h3', { class: 'rb-group-title', text: t('typography') }));
+
+    const font = Core.el('select', { class: 'rb-input' });
+    for (const option of Core.fontList()) {
+      font.append(Core.el('option', { value: option.id, text: option.label, selected: option.id === element.font }));
+    }
+    font.addEventListener('focus', () => beginChange());
+    font.addEventListener('change', () => {
+      element.font = font.value;
+      commitFromInspector('Set font');
+      board.refreshNodes([element.id]);
+    });
+    frag.append(field(t('font'), font));
+
+    const size = numberInput(element.size, (value) => {
+      element.size = value;
+      board.refreshNodes([element.id]);
+    }, () => commitFromInspector('Set font size'), { min: 8, max: 240 });
+    frag.append(field(t('size'), size));
+
+    const weight = Core.el('select', { class: 'rb-input' });
+    for (const [value, label] of [['400', 'Regular'], ['500', 'Medium'], ['600', 'Semibold'], ['700', 'Bold'], ['800', 'Extrabold']]) {
+      weight.append(Core.el('option', { value, text: label, selected: String(element.weight) === value }));
+    }
+    weight.addEventListener('focus', () => beginChange());
+    weight.addEventListener('change', () => {
+      element.weight = Number(weight.value);
+      commitFromInspector('Set font weight');
+      board.refreshNodes([element.id]);
+    });
+    frag.append(field(t('weight'), weight));
+
+    const alignRow = Core.el('div', { class: 'rb-btn-row' });
+    for (const mode of ['left', 'center', 'right']) {
+      const button = iconButton(`align${mode[0].toUpperCase()}${mode.slice(1)}`, mode);
+      button.classList.toggle('is-active', element.align === mode);
+      button.addEventListener('click', () => {
+        beginChange();
+        element.align = mode;
+        commitFromInspector('Set text alignment');
+        board.refreshNodes([element.id]);
+        refreshInspector();
+      });
+      alignRow.append(button);
+    }
+    const bold = iconButton('bold', t('bold'));
+    bold.classList.toggle('is-active', Number(element.weight) >= 700);
+    bold.addEventListener('click', () => {
+      beginChange();
+      element.weight = Number(element.weight) >= 700 ? 400 : 700;
+      commitFromInspector('Toggle bold');
+      board.refreshNodes([element.id]);
+      refreshInspector();
+    });
+    const italic = iconButton('italic', t('italic'));
+    italic.classList.toggle('is-active', element.italic);
+    italic.addEventListener('click', () => {
+      beginChange();
+      element.italic = !element.italic;
+      commitFromInspector('Toggle italic');
+      board.refreshNodes([element.id]);
+      refreshInspector();
+    });
+    const underline = iconButton('underline', t('underline'));
+    underline.classList.toggle('is-active', element.underline);
+    underline.addEventListener('click', () => {
+      beginChange();
+      element.underline = !element.underline;
+      commitFromInspector('Toggle underline');
+      board.refreshNodes([element.id]);
+      refreshInspector();
+    });
+    frag.append(field(t('align'), alignRow));
+
+    const styleRow = Core.el('div', { class: 'rb-btn-row' });
+    styleRow.append(bold, italic, underline);
+    frag.append(field(t('style'), styleRow));
+
+    frag.append(Core.el('h3', { class: 'rb-group-title', text: t('color') }));
+    frag.append(colorRow(element.color, (color) => {
+      element.color = color;
+      board.refreshNodes([element.id]);
+    }));
+    return frag;
+  }
+
+  function shapeControls(element) {
+    const frag = document.createDocumentFragment();
+    frag.append(Core.el('h3', { class: 'rb-group-title', text: t('fill') }));
+    frag.append(colorRow(Core.isGradient(element.fill) ? '#7d2ae8' : element.fill, (color) => {
+      element.fill = color;
+      board.refreshNodes([element.id]);
+    }));
+
+    const gradients = Core.el('div', { class: 'rb-gradient-grid' });
+    for (const gradient of Core.GRADIENTS) {
+      const button = Core.el('button', {
+        class: 'rb-gradient',
+        type: 'button',
+        title: gradient.name,
+        style: { background: Core.fillCss(gradient) },
+      });
+      button.addEventListener('click', () => {
+        beginChange();
+        element.fill = { from: gradient.from, to: gradient.to, angle: gradient.angle };
+        commitFromInspector('Set gradient');
+        board.refreshNodes([element.id]);
+      });
+      gradients.append(button);
+    }
+    frag.append(gradients);
+
+    if (element.shape !== 'circle') {
+      const radius = Core.el('input', { type: 'range', min: '0', max: '120', value: String(element.radius || 0), class: 'rb-range' });
+      radius.addEventListener('focus', () => beginChange());
+      radius.addEventListener('input', () => {
+        element.radius = Number(radius.value);
+        board.refreshNodes([element.id]);
+      });
+      radius.addEventListener('change', () => commitFromInspector('Set corner radius'));
+      frag.append(field(t('corners'), radius));
+    }
+    return frag;
+  }
+
+  function imageControls(element) {
+    const frag = document.createDocumentFragment();
+    frag.append(Core.el('h3', { class: 'rb-group-title', text: t('image') }));
+
+    const fit = Core.el('select', { class: 'rb-input' });
+    fit.append(Core.el('option', { value: 'cover', text: t('fillFrame'), selected: element.fit !== 'contain' }));
+    fit.append(Core.el('option', { value: 'contain', text: t('fitInside'), selected: element.fit === 'contain' }));
+    fit.addEventListener('focus', () => beginChange());
+    fit.addEventListener('change', () => {
+      element.fit = fit.value;
+      commitFromInspector('Set image fit');
+      board.refreshNodes([element.id]);
+    });
+    frag.append(field(t('fit'), fit));
+
+    const radius = Core.el('input', { type: 'range', min: '0', max: '200', value: String(element.radius || 0), class: 'rb-range' });
+    radius.addEventListener('focus', () => beginChange());
+    radius.addEventListener('input', () => {
+      element.radius = Number(radius.value);
+      board.refreshNodes([element.id]);
+    });
+    radius.addEventListener('change', () => commitFromInspector('Set image corners'));
+    frag.append(field(t('corners'), radius));
+
+    const replace = Core.el('button', { class: 'rb-wide-btn', type: 'button', text: t('replaceImage') });
+    replace.addEventListener('click', () => pickImage(element.id));
+    frag.append(replace);
+    return frag;
+  }
+
+  function alignButtons() {
+    const row = Core.el('div', { class: 'rb-btn-row rb-btn-row-wide' });
+    for (const mode of ['left', 'center', 'right', 'top', 'middle', 'bottom']) {
+      const button = iconButton(`align${mode[0].toUpperCase()}${mode.slice(1)}`, mode);
+      button.addEventListener('click', () => alignSelection(mode));
+      row.append(button);
+    }
+    return row;
+  }
+
+  function arrangeButtons() {
+    const frag = document.createDocumentFragment();
+    frag.append(Core.el('h3', { class: 'rb-group-title', text: t('arrange') }));
+    const row = Core.el('div', { class: 'rb-btn-row' });
+    for (const [icon, mode, label] of [
+      ['toFront', 'front', 'toFront'],
+      ['forward', 'forward', 'forward'],
+      ['backward', 'backward', 'backward'],
+      ['toBack', 'back', 'toBack'],
+    ]) {
+      const button = iconButton(icon, t(label));
+      button.addEventListener('click', () => {
+        board.arrange(mode);
+        refreshLayers();
+        refreshInspector();
+      });
+      row.append(button);
+    }
+    frag.append(row);
+    return frag;
+  }
+
+  function elementActions() {
+    const frag = document.createDocumentFragment();
+    const actions = Core.el('div', { class: 'rb-btn-row' });
+    const single = editor.selectedElements()[0];
+    const duplicate = iconButton('copy', t('duplicate'));
+    duplicate.addEventListener('click', () => {
+      board.duplicateSelection();
+      refreshLayers();
+      refreshInspector();
+    });
+    actions.append(duplicate);
+
+    if (single) {
+      const lock = iconButton(single.locked ? 'lock' : 'unlock', single.locked ? t('unlock') : t('lock'));
+      lock.classList.toggle('is-active', single.locked);
+      lock.addEventListener('click', () => {
+        beginChange();
+        single.locked = !single.locked;
+        commitFromInspector('Toggle lock');
+        refreshInspector();
+      });
+      actions.append(lock);
+    }
+
+    const remove = iconButton('trash', t('remove'));
+    remove.classList.add('is-danger');
+    remove.addEventListener('click', () => {
+      board.deleteSelection();
+      refreshLayers();
+      refreshInspector();
+    });
+    actions.append(remove);
+    frag.append(actions);
+    return frag;
+  }
+
+
+
+
+
+  function hidePreview() {
+    const layer = root?.querySelector('[data-rb-preview]');
+    if (layer) {
+      layer.hidden = true;
+      layer.querySelector('canvas')?.remove();
+    }
+    previewOpen = false;
+  }
+
+  async function showPreview() {
+    const page = currentPage();
+    if (!page || previewOpen) return;
+    try {
+      const canvas = await Core.renderPageToCanvas(doc, page, { scale: 1 });
+      canvas.className = 'rb-preview-canvas';
+      const layer = root.querySelector('[data-rb-preview]');
+      layer.querySelector('canvas')?.remove();
+      layer.querySelector('.rb-preview-card').append(canvas);
+      layer.hidden = false;
+      previewOpen = true;
+    } catch {
+      Core.toast(t('exportFailed'), 'error');
+    }
+  }
+
+  async function exportPng() {
+    const page = currentPage();
+    if (!page) return;
+    try {
+      const canvas = await Core.renderPageToCanvas(doc, page, { scale: 2 });
+      const blob = await Core.canvasToBlob(canvas, 'image/png');
+      if (!blob) throw new Error('No blob');
+      const name = String(page.name || 'invitation-page')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'invitation-page';
+      await Core.downloadBlob(blob, `${name}.png`);
+    } catch {
+      Core.toast(t('exportFailed'), 'error');
+    }
+  }
+
+
+
+
+
+  function refreshSaveState() {
+    const save = root?.querySelector('[data-rb-save]');
+    if (!save) return;
+    save.textContent = t('saved');
+  }
+
+  function renderAll() {
+    if (!doc) return;
+    board.renderPage();
+    refreshPages();
+    refreshInspector();
+    refreshLayers();
+    refreshPanel();
+    const empty = root.querySelector('[data-rb-empty]');
+    if (empty) empty.hidden = pageCount() > 0;
+    const title = root.querySelector('[data-rb-title]');
+    if (title) title.textContent = doc.title;
+  }
+
+  function setBackgroundInert(on) {
+    for (const child of Array.from(document.body.children)) {
+      if (child === root || child.id === 'toasts') continue;
+      if (/^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(child.tagName)) continue;
+      if (on) child.setAttribute('inert', '');
+      else child.removeAttribute('inert');
+    }
+  }
+
+  function open() {
+    if (!bridge()?.getState) {
+      Core.toast(t('editorNotReady'), 'error');
+      return;
+    }
+    if (!root) buildShell();
+    hydrate();
+    opened = true;
+    pageIndex = Math.min(pageIndex, Math.max(0, pageCount() - 1));
+    root.hidden = false;
+    document.body.classList.add('rb-open');
+    setBackgroundInert(true);
+    setTab(activeTab);
+    renderAll();
+    board.fit();
+    root.querySelector('[data-rea-viewport]')?.focus({ preventScroll: true });
+  }
+
+  function close() {
+    if (!root) return;
+    hidePreview();
+    board?.finishTextEdit(true);
+    root.hidden = true;
+    opened = false;
+    root.classList.remove('rb-panel-open');
+    document.body.classList.remove('rb-open');
+    setBackgroundInert(false);
+    document.getElementById('reaBoardBtn')?.focus({ preventScroll: true });
+  }
+
+  function isTypingTarget(target) {
+    return Boolean(
+      target &&
+        (target.isContentEditable ||
+          /^(INPUT|TEXTAREA|SELECT|OPTION)$/.test(target.tagName || '')),
+    );
+  }
+
+  function onKeyDown(event) {
+    if (!opened) return;
+    if (event.key === 'Escape') {
+      if (previewOpen) {
+        hidePreview();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (selected.size) {
+        select([]);
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      close();
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (isTypingTarget(event.target)) return;
+
+    const mod = event.ctrlKey || event.metaKey;
+    if (mod && event.key.toLowerCase() === 'z') {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.shiftKey) redo();
+      else undo();
+      return;
+    }
+    if (mod && event.key.toLowerCase() === 'y') {
+      event.preventDefault();
+      event.stopPropagation();
+      redo();
+      return;
+    }
+    if (mod && event.key.toLowerCase() === 'd') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.duplicateSelection();
+      refreshLayers();
+      refreshInspector();
+      return;
+    }
+    if (mod && event.key.toLowerCase() === 'a') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.selectAll();
+      return;
+    }
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.deleteSelection();
+      refreshLayers();
+      refreshInspector();
+      return;
+    }
+    if (event.key === ' ') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.setSpace(true);
+      return;
+    }
+    const step = event.shiftKey ? 10 : 1;
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.nudge(-step, 0);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.nudge(step, 0);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.nudge(0, -step);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      event.stopPropagation();
+      board.nudge(0, step);
+    }
+  }
+
+  function onKeyUp(event) {
+    if (opened && event.key === ' ') board?.setSpace(false);
+  }
+
+  function wireEntry() {
+    const button = document.getElementById('reaBoardBtn');
+    if (!button || button.dataset.rbWired === 'true') return;
+    button.dataset.rbWired = 'true';
+    button.addEventListener('click', open);
+  }
+
+  document.addEventListener('keydown', onKeyDown, true);
+  document.addEventListener('keyup', onKeyUp, true);
+  document.addEventListener('einvite:lang-changed', () => {
+    if (!root) return;
+    root.querySelector('.rb-back span').textContent = t('back');
+    const brand = root.querySelector('.rb-brand-name');
+    if (brand) brand.textContent = t('board');
+    refreshSaveState();
+    renderAll();
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireEntry, { once: true });
+  } else {
+    wireEntry();
+  }
+
+  window.ReaBoardApp = { open, close, isOpen: () => opened };
 })();

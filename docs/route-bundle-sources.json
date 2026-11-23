@@ -364,7 +364,10 @@
     "editor/inspector-reorg.js",
     "ui/app-shell.js",
     "editor-responsive-contract.js",
-    "editor/first-selection-prewarm.js"
+    "editor/first-selection-prewarm.js",
+    "board/board-core.js",
+    "board/board-surface.js",
+    "board/board-app.js"
    ],
    "styles": [
     "typography-fonts.css",
@@ -397,7 +400,8 @@
     "editor-inspector.css",
     "app-shell.css",
     "design-fix.css",
-    "editor-responsive-contract.css"
+    "editor-responsive-contract.css",
+    "board.css"
    ],
    "scriptSplitAt": 24
   },

@@ -2977,6 +2977,56 @@ function serverDocumentToAdopt(){
 let state=migrateDocument(serverDocumentToAdopt()||inviteStore.read(draftKey,inviteStore.read('sovan-invite-draft-v3',initial)));
 editorSelectionIds=Array.isArray(state.editorModel?.selectionIds)?state.editorModel.selectionIds.map(String):[];
 if(state.editorModel)delete state.editorModel.selectionIds;
+
+
+window.ReaBoardStrings=Object.freeze({
+ en:{
+  back:'Back to editor',board:'Design board',undo:'Undo',redo:'Redo',preview:'Preview',export:'Export',
+  elements:'Elements',text:'Text',layers:'Layers',shapes:'Shapes',gradients:'Gradients',image:'Image',
+  addImage:'Upload image',uploadNote:'Uploaded images are stored with this invitation.',
+  heading:'Add a heading',subheading:'Add a subheading',body:'Add body text',
+  textHint:'Double-click text on the board to edit it.',
+  noPage:'There is no page yet.',noLayers:'No elements on this page yet.',visibility:'Visibility',
+  lock:'Lock',unlock:'Unlock',pageSettings:'Page settings',pageName:'Page name',background:'Page background',
+  unsupported:'{n} element(s) can only be edited in the classic editor.',
+  duplicatePage:'Duplicate page',deletePage:'Delete page',elementsCount:'{n} elements',
+  position:'Position',rotation:'Rotation',opacity:'Opacity',typography:'Typography',font:'Font',
+  size:'Size',weight:'Weight',align:'Align',style:'Style',color:'Color',bold:'Bold',italic:'Italic',underline:'Underline',
+  fill:'Fill',corners:'Corners',fillFrame:'Fill frame',fitInside:'Fit inside',replaceImage:'Replace image',
+  arrange:'Arrange',toFront:'Bring to front',forward:'Bring forward',backward:'Send backward',toBack:'Send to back',
+  duplicate:'Duplicate',remove:'Delete',page:'Page',addPage:'Add page',copySuffix:'copy',
+  createPage:'Create first page',emptyBoard:'Start with a page',
+  emptyCopy:'The board edits this invitation’s visual pages.',
+  deletePageConfirm:'Delete this page and its elements? You can undo afterwards.',
+  zoom:'Zoom',fit:'Fit',spaceHint:'Space + drag to pan · Ctrl + scroll to zoom',saved:'Saved',close:'Close',
+  uploadTooLarge:'Keep images under 12 MB.',uploading:'Uploading image…',uploadFailed:'The image could not be uploaded.',
+  exportFailed:'The page could not be exported.',editorNotReady:'The editor is still loading.',
+  circle:'Circle',rectangle:'Rectangle',line:'Line'
+ },
+ km:{
+  back:'ត្រឡប់ទៅកម្មវិធីកែសម្រួល',board:'ក្តាររចនា',undo:'មិនធ្វើវិញ',redo:'ធ្វើឡើងវិញ',preview:'មើលជាមុន',export:'នាំចេញ',
+  elements:'ធាតុ',text:'អក្សរ',layers:'ស្រទាប់',shapes:'រាង',gradients:'ពណ៌ជម្រាល',image:'រូបភាព',
+  addImage:'ផ្ទុករូបភាពឡើង',uploadNote:'រូបភាពដែលបានផ្ទុកឡើងនឹងរក្សាទុកជាមួយការអញ្ជើញនេះ។',
+  heading:'បន្ថែមចំណងជើង',subheading:'បន្ថែមចំណងជើងរង',body:'បន្ថែមអត្ថបទ',
+  textHint:'ចុចពីរដងលើអក្សរនៅលើក្តារដើម្បីកែសម្រួល។',
+  noPage:'មិនទាន់មានទំព័រទេ។',noLayers:'មិនទាន់មានធាតុនៅលើទំព័រនេះទេ។',visibility:'ការមើលឃើញ',
+  lock:'ចាក់សោ',unlock:'ដោះសោ',pageSettings:'ការកំណត់ទំព័រ',pageName:'ឈ្មោះទំព័រ',background:'ផ្ទៃខាងក្រោយ',
+  unsupported:'ធាតុ {n} អាចកែបានតែក្នុងកម្មវិធីកែសម្រួលបុរាណ។',
+  duplicatePage:'ចម្លងទំព័រ',deletePage:'លុបទំព័រ',elementsCount:'ធាតុ {n}',
+  position:'ទីតាំង',rotation:'ការបង្វិល',opacity:'ភាពស្រអាប់',typography:'ពុម្ពអក្សរ',font:'ពុម្ពអក្សរ',
+  size:'ទំហំ',weight:'ទម្ងន់',align:'តម្រឹម',style:'រចនាប័ទ្ម',color:'ពណ៌',bold:'ដិត',italic:'ទ្រេត',underline:'បន្ទាត់ក្រោម',
+  fill:'ការបំពេញ',corners:'ជ្រុងមូល',fillFrame:'បំពេញស៊ុម',fitInside:'សមក្នុងស៊ុម',replaceImage:'ប្តូររូបភាព',
+  arrange:'រៀបចំ',toFront:'នាំទៅមុខ',forward:'នាំមុខមួយកម្រិត',backward:'ផ្លាស់ក្រោយមួយកម្រិត',toBack:'ផ្ញើទៅក្រោយ',
+  duplicate:'ចម្លង',remove:'លុប',page:'ទំព័រ',addPage:'បន្ថែមទំព័រ',copySuffix:'ចម្លង',
+  createPage:'បង្កើតទំព័រដំបូង',emptyBoard:'ចាប់ផ្តើមដោយទំព័រមួយ',
+  emptyCopy:'ក្តារនេះកែសម្រួលទំព័ររូបភាពរបស់ការអញ្ជើញនេះ។',
+  deletePageConfirm:'លុបទំព័រនេះ និងធាតុរបស់វា? អ្នកអាចត្រឡប់វិញបាន។',
+  zoom:'ពង្រីក',fit:'សម',spaceHint:'Space + អូសដើម្បីរំកិល · Ctrl + រំកិលដើម្បីពង្រីក',saved:'បានរក្សាទុក',close:'បិទ',
+  uploadTooLarge:'សូមរក្សារូបភាពក្រោម 12 MB។',uploading:'កំពុងផ្ទុករូបភាពឡើង…',uploadFailed:'មិនអាចផ្ទុករូបភាពឡើងបានទេ។',
+  exportFailed:'មិនអាចនាំចេញទំព័របានទេ។',editorNotReady:'កម្មវិធីកែសម្រួលមិនទាន់រួចរាល់ទេ។',
+  circle:'រង្វង់',rectangle:'ចតុកោណ',line:'បន្ទាត់'
+ }
+});
 window.EInviteEditorBridge={
 getState:()=>state,
 beginUndoTransaction,
