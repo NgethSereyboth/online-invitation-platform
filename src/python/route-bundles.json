@@ -371,10 +371,10 @@
       "deferredStylesheetSha256": "946bb5fd2544f721789aa640be4ea6c71ae7846371dda68836dfea9c9e91bb3e",
       "javascript": "bundle-index.js",
       "javascript2": "bundle-index-2.js",
-      "javascript2Bytes": 553149,
-      "javascript2Sha256": "50536ad8bbf05ae0cd5299609e746bb238ce765955aadd5f452deacaf714d01e",
-      "scriptBytes": 522785,
-      "scriptSha256": "761ae463b36e41523e277a69f5f256fd863b5805e64d31df6b096e3919aff495",
+      "javascript2Bytes": 657770,
+      "javascript2Sha256": "de29d3faeae71203e63ee0721cbbf3e31e30fa2ae1a979f4b4507e06ba64edc4",
+      "scriptBytes": 528613,
+      "scriptSha256": "b48159cbac3952814b16543301c328dc11165f986e7d1b1299fa744dd1120ff4",
       "scriptSplitAt": 24,
       "sources": {
         "deferredScripts": [
@@ -456,7 +456,10 @@
           "editor/inspector-reorg.js",
           "ui/app-shell.js",
           "editor-responsive-contract.js",
-          "editor/first-selection-prewarm.js"
+          "editor/first-selection-prewarm.js",
+          "board/board-core.js",
+          "board/board-surface.js",
+          "board/board-app.js"
         ],
         "styles": [
           "typography-fonts.css",
@@ -489,11 +492,12 @@
           "editor-inspector.css",
           "app-shell.css",
           "design-fix.css",
-          "editor-responsive-contract.css"
+          "editor-responsive-contract.css",
+          "board.css"
         ]
       },
-      "styleBytes": 469828,
-      "styleSha256": "e7f25a5c6035b52c99ea5ab5306f84d6ee6a969ca13c60f64e9599aa04274fac",
+      "styleBytes": 484763,
+      "styleSha256": "22689ca52911efd279002cdbf317178507c8e2a2d8f52c63d661604f2d2fd876",
       "stylesheet": "bundle-index.css"
     },
     "materials.html": {

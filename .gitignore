@@ -246,6 +246,6 @@ bugs/round-10/*.err
 
 # Rea Studio research dumps: hundreds of MB of reverse-engineering captures
 # (bundle records, screenshots, probe output). They informed the board's
-# interaction model but are not inputs to the app; `rea_canva/app/` is tracked.
-/rea_canva/_rea-canva/
-/rea_canva/_canva-verify/
+# interaction model but are not inputs to the app. The standalone prototype was
+# folded into src/js/board; any copy left on disk stays out of the repository.
+/rea_canva/
